@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 import functools as ft
 import logging
+import time
 from typing import Any, Awaitable, Callable, Dict, Iterable, Optional, Union
 
 import attr
@@ -320,8 +321,9 @@ def async_track_point_in_utc_time(
         """Listen for matching time_changed events."""
         hass.async_run_job(action, point_in_time)
 
-    cancel_callback = hass.loop.call_later(
-        (point_in_time - dt_util.utcnow()).total_seconds(), point_in_time_listener
+    cancel_callback = hass.loop.call_at(
+        hass.loop.time() + point_in_time.timestamp() - time.time(),
+        point_in_time_listener,
     )
 
     @callback
