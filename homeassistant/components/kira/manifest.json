@@ -1,10 +1,7 @@
 {
   "domain": "kira",
   "name": "Kira",
-  "documentation": "https://www.home-assistant.io/components/kira",
-  "requirements": [
-    "pykira==0.1.1"
-  ],
-  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/kira",
+  "requirements": ["pykira==0.1.1"],
   "codeowners": []
 }

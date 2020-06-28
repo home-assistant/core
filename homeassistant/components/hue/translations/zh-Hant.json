@@ -1,0 +1,51 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "\u6240\u6709 Philips Hue Bridge \u7686\u5df2\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "Bridge \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_in_progress": "Bridge \u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d\u3002",
+            "cannot_connect": "\u7121\u6cd5\u9023\u7dda\u81f3 Bridge",
+            "discover_timeout": "\u7121\u6cd5\u641c\u5c0b\u5230 Hue Bridge",
+            "no_bridges": "\u672a\u641c\u5c0b\u5230 Philips Hue Bridge",
+            "not_hue_bridge": "\u975e Hue Bridge \u8a2d\u5099",
+            "unknown": "\u767c\u751f\u672a\u77e5\u932f\u8aa4"
+        },
+        "error": {
+            "linking": "\u767c\u751f\u672a\u77e5\u9023\u7d50\u932f\u8aa4\u3002",
+            "register_failed": "\u8a3b\u518a\u5931\u6557\uff0c\u8acb\u7a0d\u5f8c\u518d\u8a66"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef"
+                },
+                "title": "\u9078\u64c7 Hue Bridge"
+            },
+            "link": {
+                "description": "\u6309\u4e0b Bridge \u4e0a\u7684\u6309\u9215\uff0c\u4ee5\u5c07 Philips Hue \u8a3b\u518a\u81f3 Home Assistant\u3002\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)",
+                "title": "\u9023\u7d50 Hub"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "\u7b2c\u4e00\u500b\u6309\u9215",
+            "button_2": "\u7b2c\u4e8c\u500b\u6309\u9215",
+            "button_3": "\u7b2c\u4e09\u500b\u6309\u9215",
+            "button_4": "\u7b2c\u56db\u500b\u6309\u9215",
+            "dim_down": "\u8abf\u6697",
+            "dim_up": "\u8abf\u4eae",
+            "double_buttons_1_3": "\u7b2c\u4e00\u8207\u7b2c\u4e09\u500b\u6309\u9215",
+            "double_buttons_2_4": "\u7b2c\u4e8c\u8207\u7b2c\u56db\u500b\u6309\u9215",
+            "turn_off": "\u95dc\u9589",
+            "turn_on": "\u958b\u555f"
+        },
+        "trigger_type": {
+            "remote_button_long_release": "\"{subtype}\" \u6309\u9215\u9577\u6309\u5f8c\u91cb\u653e",
+            "remote_button_short_press": "\"{subtype}\" \u6309\u9215\u5df2\u6309\u4e0b",
+            "remote_button_short_release": "\"{subtype}\" \u6309\u9215\u5df2\u91cb\u653e",
+            "remote_double_button_long_press": "\"{subtype}\" \u4e00\u8d77\u9577\u6309\u5f8c\u91cb\u653e",
+            "remote_double_button_short_press": "\"{subtype}\" \u4e00\u8d77\u91cb\u653e"
+        }
+    }
+}

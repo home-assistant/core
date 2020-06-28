@@ -1,5 +1,6 @@
 """Support for KNX/IP sensors."""
 import voluptuous as vol
+from xknx.devices import Sensor as XknxSensor
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_TYPE
@@ -9,20 +10,21 @@ from homeassistant.helpers.entity import Entity
 
 from . import ATTR_DISCOVER_DEVICES, DATA_KNX
 
-CONF_STATE_ADDRESS = 'state_address'
-CONF_SYNC_STATE = 'sync_state'
-DEFAULT_NAME = 'KNX Sensor'
+CONF_STATE_ADDRESS = "state_address"
+CONF_SYNC_STATE = "sync_state"
+DEFAULT_NAME = "KNX Sensor"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SYNC_STATE, default=True): cv.boolean,
-    vol.Required(CONF_STATE_ADDRESS): cv.string,
-    vol.Required(CONF_TYPE): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_SYNC_STATE, default=True): cv.boolean,
+        vol.Required(CONF_STATE_ADDRESS): cv.string,
+        vol.Required(CONF_TYPE): cv.string,
+    }
+)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up sensor(s) for KNX platform."""
     if discovery_info is not None:
         async_add_entities_discovery(hass, discovery_info, async_add_entities)
@@ -43,13 +45,13 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
 @callback
 def async_add_entities_config(hass, config, async_add_entities):
     """Set up sensor for KNX platform configured within platform."""
-    import xknx
-    sensor = xknx.devices.Sensor(
+    sensor = XknxSensor(
         hass.data[DATA_KNX].xknx,
         name=config[CONF_NAME],
         group_address_state=config[CONF_STATE_ADDRESS],
         sync_state=config[CONF_SYNC_STATE],
-        value_type=config[CONF_TYPE])
+        value_type=config[CONF_TYPE],
+    )
     hass.data[DATA_KNX].xknx.devices.add(sensor)
     async_add_entities([KNXSensor(sensor)])
 
@@ -64,14 +66,20 @@ class KNXSensor(Entity):
     @callback
     def async_register_callbacks(self):
         """Register callbacks to update hass after device was changed."""
+
         async def after_update_callback(device):
             """Call after device was updated."""
-            await self.async_update_ha_state()
+            self.async_write_ha_state()
+
         self.device.register_device_updated_cb(after_update_callback)
 
     async def async_added_to_hass(self):
         """Store register state change callback."""
         self.async_register_callbacks()
+
+    async def async_update(self):
+        """Update the state from KNX."""
+        await self.device.sync()
 
     @property
     def name(self):

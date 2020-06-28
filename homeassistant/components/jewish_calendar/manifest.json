@@ -1,12 +1,7 @@
 {
   "domain": "jewish_calendar",
-  "name": "Jewish calendar",
-  "documentation": "https://www.home-assistant.io/components/jewish_calendar",
-  "requirements": [
-    "hdate==0.8.8"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@tsvi"
-  ]
+  "name": "Jewish Calendar",
+  "documentation": "https://www.home-assistant.io/integrations/jewish_calendar",
+  "requirements": ["hdate==0.9.5"],
+  "codeowners": ["@tsvi"]
 }

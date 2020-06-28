@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive messages from Traccar.",
+            "one_instance_allowed": "Only a single instance is necessary."
+        },
+        "create_entry": {
+            "default": "To send events to Home Assistant, you will need to setup the webhook feature in Traccar.\n\nUse the following url: `{webhook_url}`\n\nSee [the documentation]({docs_url}) for further details."
+        },
+        "step": {
+            "user": {
+                "description": "Are you sure you want to set up Traccar?",
+                "title": "Set up Traccar"
+            }
+        }
+    }
+}

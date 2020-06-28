@@ -1,51 +1,63 @@
 """Support for getting data from websites with scraping."""
 import logging
 
-import voluptuous as vol
+from bs4 import BeautifulSoup
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.rest.sensor import RestData
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_RESOURCE, CONF_UNIT_OF_MEASUREMENT,
-    CONF_VALUE_TEMPLATE, CONF_VERIFY_SSL, CONF_USERNAME, CONF_HEADERS,
-    CONF_PASSWORD, CONF_AUTHENTICATION, HTTP_BASIC_AUTHENTICATION,
-    HTTP_DIGEST_AUTHENTICATION)
-from homeassistant.helpers.entity import Entity
+    CONF_AUTHENTICATION,
+    CONF_HEADERS,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_RESOURCE,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_USERNAME,
+    CONF_VALUE_TEMPLATE,
+    CONF_VERIFY_SSL,
+    HTTP_BASIC_AUTHENTICATION,
+    HTTP_DIGEST_AUTHENTICATION,
+)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTR = 'attribute'
-CONF_SELECT = 'select'
-CONF_INDEX = 'index'
+CONF_ATTR = "attribute"
+CONF_SELECT = "select"
+CONF_INDEX = "index"
 
-DEFAULT_NAME = 'Web scrape'
+DEFAULT_NAME = "Web scrape"
 DEFAULT_VERIFY_SSL = True
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE): cv.string,
-    vol.Required(CONF_SELECT): cv.string,
-    vol.Optional(CONF_ATTR): cv.string,
-    vol.Optional(CONF_INDEX, default=0): cv.positive_int,
-    vol.Optional(CONF_AUTHENTICATION):
-        vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
-    vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_RESOURCE): cv.string,
+        vol.Required(CONF_SELECT): cv.string,
+        vol.Optional(CONF_ATTR): cv.string,
+        vol.Optional(CONF_INDEX, default=0): cv.positive_int,
+        vol.Optional(CONF_AUTHENTICATION): vol.In(
+            [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
+        ),
+        vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Web scrape sensor."""
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
-    method = 'GET'
+    method = "GET"
     payload = None
     headers = config.get(CONF_HEADERS)
     verify_ssl = config.get(CONF_VERIFY_SSL)
@@ -72,9 +84,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if rest.data is None:
         raise PlatformNotReady
 
-    add_entities([
-        ScrapeSensor(rest, name, select, attr, index, value_template, unit)],
-                 True)
+    add_entities(
+        [ScrapeSensor(rest, name, select, attr, index, value_template, unit)], True
+    )
 
 
 class ScrapeSensor(Entity):
@@ -113,16 +125,18 @@ class ScrapeSensor(Entity):
             _LOGGER.error("Unable to retrieve data")
             return
 
-        from bs4 import BeautifulSoup
-
-        raw_data = BeautifulSoup(self.rest.data, 'html.parser')
+        raw_data = BeautifulSoup(self.rest.data, "html.parser")
         _LOGGER.debug(raw_data)
 
         try:
             if self._attr is not None:
                 value = raw_data.select(self._select)[self._index][self._attr]
             else:
-                value = raw_data.select(self._select)[self._index].text
+                tag = raw_data.select(self._select)[self._index]
+                if tag.name in ("style", "script", "template"):
+                    value = tag.string
+                else:
+                    value = tag.text
             _LOGGER.debug(value)
         except IndexError:
             _LOGGER.error("Unable to extract data from HTML")
@@ -130,6 +144,7 @@ class ScrapeSensor(Entity):
 
         if self._value_template is not None:
             self._state = self._value_template.render_with_possible_json_value(
-                value, None)
+                value, None
+            )
         else:
             self._state = value

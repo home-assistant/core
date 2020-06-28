@@ -1,8 +1,7 @@
 """Support for Fibaro binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import (
-    ENTITY_ID_FORMAT, BinarySensorDevice)
+from homeassistant.components.binary_sensor import DOMAIN, BinarySensorEntity
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ICON
 
 from . import FIBARO_DEVICES, FibaroDevice
@@ -10,13 +9,13 @@ from . import FIBARO_DEVICES, FibaroDevice
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    'com.fibaro.floodSensor':   ['Flood', 'mdi:water', 'flood'],
-    'com.fibaro.motionSensor':   ['Motion', 'mdi:run', 'motion'],
-    'com.fibaro.doorSensor':   ['Door', 'mdi:window-open', 'door'],
-    'com.fibaro.windowSensor': ['Window', 'mdi:window-open', 'window'],
-    'com.fibaro.smokeSensor': ['Smoke', 'mdi:smoking', 'smoke'],
-    'com.fibaro.FGMS001': ['Motion', 'mdi:run', 'motion'],
-    'com.fibaro.heatDetector': ['Heat', 'mdi:fire', 'heat'],
+    "com.fibaro.floodSensor": ["Flood", "mdi:water", "flood"],
+    "com.fibaro.motionSensor": ["Motion", "mdi:run", "motion"],
+    "com.fibaro.doorSensor": ["Door", "mdi:window-open", "door"],
+    "com.fibaro.windowSensor": ["Window", "mdi:window-open", "window"],
+    "com.fibaro.smokeSensor": ["Smoke", "mdi:smoking", "smoke"],
+    "com.fibaro.FGMS001": ["Motion", "mdi:run", "motion"],
+    "com.fibaro.heatDetector": ["Heat", "mdi:fire", "heat"],
 }
 
 
@@ -26,18 +25,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     add_entities(
-        [FibaroBinarySensor(device)
-         for device in hass.data[FIBARO_DEVICES]['binary_sensor']], True)
+        [
+            FibaroBinarySensor(device)
+            for device in hass.data[FIBARO_DEVICES]["binary_sensor"]
+        ],
+        True,
+    )
 
 
-class FibaroBinarySensor(FibaroDevice, BinarySensorDevice):
+class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
     """Representation of a Fibaro Binary Sensor."""
 
     def __init__(self, fibaro_device):
         """Initialize the binary_sensor."""
         self._state = None
         super().__init__(fibaro_device)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
+        self.entity_id = f"{DOMAIN}.{self.ha_id}"
         stype = None
         devconf = fibaro_device.device_config
         if fibaro_device.type in SENSOR_TYPES:
@@ -51,8 +54,7 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorDevice):
             self._device_class = None
             self._icon = None
         # device_config overrides:
-        self._device_class = devconf.get(CONF_DEVICE_CLASS,
-                                         self._device_class)
+        self._device_class = devconf.get(CONF_DEVICE_CLASS, self._device_class)
         self._icon = devconf.get(CONF_ICON, self._icon)
 
     @property

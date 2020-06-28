@@ -1,39 +1,46 @@
 """Support for TCP socket based sensors."""
 import logging
-import socket
 import select
+import socket
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT, CONF_PAYLOAD, CONF_TIMEOUT,
-    CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE)
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PAYLOAD,
+    CONF_PORT,
+    CONF_TIMEOUT,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_VALUE_TEMPLATE,
+)
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_BUFFER_SIZE = 'buffer_size'
-CONF_VALUE_ON = 'value_on'
+CONF_BUFFER_SIZE = "buffer_size"
+CONF_VALUE_ON = "value_on"
 
 DEFAULT_BUFFER_SIZE = 1024
-DEFAULT_NAME = 'TCP Sensor'
+DEFAULT_NAME = "TCP Sensor"
 DEFAULT_TIMEOUT = 10
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PORT): cv.port,
-    vol.Required(CONF_PAYLOAD): cv.string,
-    vol.Optional(CONF_BUFFER_SIZE, default=DEFAULT_BUFFER_SIZE):
-        cv.positive_int,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_VALUE_ON): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PORT): cv.port,
+        vol.Required(CONF_PAYLOAD): cv.string,
+        vol.Optional(CONF_BUFFER_SIZE, default=DEFAULT_BUFFER_SIZE): cv.positive_int,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_VALUE_ON): cv.string,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -44,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class TcpSensor(Entity):
     """Implementation of a TCP socket based sensor."""
 
-    required = tuple()
+    required = ()
 
     def __init__(self, hass, config):
         """Set all the config values if they exist and get initial state."""
@@ -74,7 +81,7 @@ class TcpSensor(Entity):
         name = self._config[CONF_NAME]
         if name is not None:
             return name
-        return super(TcpSensor, self).name
+        return super().name
 
     @property
     def state(self):
@@ -91,44 +98,52 @@ class TcpSensor(Entity):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(self._config[CONF_TIMEOUT])
             try:
-                sock.connect(
-                    (self._config[CONF_HOST], self._config[CONF_PORT]))
-            except socket.error as err:
+                sock.connect((self._config[CONF_HOST], self._config[CONF_PORT]))
+            except OSError as err:
                 _LOGGER.error(
                     "Unable to connect to %s on port %s: %s",
-                    self._config[CONF_HOST], self._config[CONF_PORT], err)
+                    self._config[CONF_HOST],
+                    self._config[CONF_PORT],
+                    err,
+                )
                 return
 
             try:
                 sock.send(self._config[CONF_PAYLOAD].encode())
-            except socket.error as err:
+            except OSError as err:
                 _LOGGER.error(
                     "Unable to send payload %r to %s on port %s: %s",
-                    self._config[CONF_PAYLOAD], self._config[CONF_HOST],
-                    self._config[CONF_PORT], err)
+                    self._config[CONF_PAYLOAD],
+                    self._config[CONF_HOST],
+                    self._config[CONF_PORT],
+                    err,
+                )
                 return
 
-            readable, _, _ = select.select(
-                [sock], [], [], self._config[CONF_TIMEOUT])
+            readable, _, _ = select.select([sock], [], [], self._config[CONF_TIMEOUT])
             if not readable:
                 _LOGGER.warning(
                     "Timeout (%s second(s)) waiting for a response after "
                     "sending %r to %s on port %s.",
-                    self._config[CONF_TIMEOUT], self._config[CONF_PAYLOAD],
-                    self._config[CONF_HOST], self._config[CONF_PORT])
+                    self._config[CONF_TIMEOUT],
+                    self._config[CONF_PAYLOAD],
+                    self._config[CONF_HOST],
+                    self._config[CONF_PORT],
+                )
                 return
 
             value = sock.recv(self._config[CONF_BUFFER_SIZE]).decode()
 
         if self._config[CONF_VALUE_TEMPLATE] is not None:
             try:
-                self._state = self._config[CONF_VALUE_TEMPLATE].render(
-                    value=value)
+                self._state = self._config[CONF_VALUE_TEMPLATE].render(value=value)
                 return
             except TemplateError:
                 _LOGGER.error(
                     "Unable to render template of %r with value: %r",
-                    self._config[CONF_VALUE_TEMPLATE], value)
+                    self._config[CONF_VALUE_TEMPLATE],
+                    value,
+                )
                 return
 
         self._state = value

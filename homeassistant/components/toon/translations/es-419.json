@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "client_id": "La identificaci\u00f3n del cliente de la configuraci\u00f3n no es v\u00e1lida.",
+            "client_secret": "El secreto del cliente de la configuraci\u00f3n no es v\u00e1lido.",
+            "no_agreements": "Esta cuenta no tiene pantallas Toon.",
+            "no_app": "Debe configurar Toon antes de poder autenticarse con \u00e9l. [Lea las instrucciones] (https://www.home-assistant.io/components/toon/).",
+            "unknown_auth_fail": "Ocurri\u00f3 un error inesperado, mientras se autenticaba."
+        },
+        "error": {
+            "credentials": "Las credenciales proporcionadas no son v\u00e1lidas.",
+            "display_exists": "La pantalla seleccionada ya est\u00e1 configurada."
+        },
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "tenant": "Tenant",
+                    "username": "Nombre de usuario"
+                },
+                "description": "Autent\u00edquese con su cuenta de Eneco Toon (no con la cuenta de desarrollador).",
+                "title": "Vincula tu cuenta de Toon"
+            },
+            "display": {
+                "data": {
+                    "display": "Elegir pantalla"
+                },
+                "description": "Seleccione la pantalla Toon para conectarse.",
+                "title": "Seleccionar pantalla"
+            }
+        }
+    }
+}

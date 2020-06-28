@@ -27,3 +27,10 @@ connect_lte:
     host:
       description: The modem that should connect.
       example: 192.168.5.1
+
+disconnect_lte:
+  description: Ask the modem to close the LTE connection.
+  fields:
+    host:
+      description: The modem that should disconnect.
+      example: 192.168.5.1

@@ -2,47 +2,67 @@
 from datetime import timedelta
 import logging
 
+from haphilipsjs import PhilipsTV
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
-    MEDIA_TYPE_CHANNEL, SUPPORT_PLAY_MEDIA)
+    MEDIA_TYPE_CHANNEL,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
+)
 from homeassistant.const import (
-    CONF_API_VERSION, CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
+    CONF_API_VERSION,
+    CONF_HOST,
+    CONF_NAME,
+    STATE_OFF,
+    STATE_ON,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import call_later, track_time_interval
 from homeassistant.helpers.script import Script
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_PHILIPS_JS = SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP | \
-                     SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-                     SUPPORT_SELECT_SOURCE | SUPPORT_NEXT_TRACK | \
-                     SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY_MEDIA
+SUPPORT_PHILIPS_JS = (
+    SUPPORT_TURN_OFF
+    | SUPPORT_VOLUME_STEP
+    | SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_SELECT_SOURCE
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_PLAY_MEDIA
+)
 
-CONF_ON_ACTION = 'turn_on_action'
+CONF_ON_ACTION = "turn_on_action"
 
 DEFAULT_NAME = "Philips TV"
-DEFAULT_API_VERSION = '1'
+DEFAULT_API_VERSION = "1"
 DEFAULT_SCAN_INTERVAL = 30
 
 DELAY_ACTION_DEFAULT = 2.0
 DELAY_ACTION_ON = 10.0
 
-PREFIX_SEPARATOR = ': '
-PREFIX_SOURCE = 'Input'
-PREFIX_CHANNEL = 'Channel'
+PREFIX_SEPARATOR = ": "
+PREFIX_SOURCE = "Input"
+PREFIX_CHANNEL = "Channel"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERSION): cv.string,
-    vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERSION): cv.string,
+        vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+    }
+)
 
 
 def _inverted(data):
@@ -51,20 +71,18 @@ def _inverted(data):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Philips TV platform."""
-    import haphilipsjs
-
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     api_version = config.get(CONF_API_VERSION)
     turn_on_action = config.get(CONF_ON_ACTION)
 
-    tvapi = haphilipsjs.PhilipsTV(host, api_version)
+    tvapi = PhilipsTV(host, api_version)
     on_script = Script(hass, turn_on_action) if turn_on_action else None
 
-    add_entities([PhilipsTV(tvapi, name, on_script)])
+    add_entities([PhilipsTVMediaPlayer(tvapi, name, on_script)])
 
 
-class PhilipsTV(MediaPlayerDevice):
+class PhilipsTVMediaPlayer(MediaPlayerEntity):
     """Representation of a Philips TV exposing the JointSpace API."""
 
     def __init__(self, tv, name, on_script):
@@ -85,8 +103,7 @@ class PhilipsTV(MediaPlayerDevice):
             self._update_task()
             self._update_task = None
 
-        self.schedule_update_ha_state(
-            force_refresh=False)
+        self.schedule_update_ha_state(force_refresh=False)
 
         def update_forced(event_time):
             self.schedule_update_ha_state(force_refresh=True)
@@ -94,15 +111,14 @@ class PhilipsTV(MediaPlayerDevice):
         def update_and_restart(event_time):
             update_forced(event_time)
             self._update_task = track_time_interval(
-                self.hass, update_forced,
-                timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+                self.hass, update_forced, timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+            )
 
         call_later(self.hass, delay, update_and_restart)
 
     async def async_added_to_hass(self):
         """Start running updates once we are added to hass."""
-        await self.hass.async_add_executor_job(
-            self._update_soon, 0)
+        await self.hass.async_add_executor_job(self._update_soon, 0)
 
     @property
     def name(self):
@@ -181,18 +197,18 @@ class PhilipsTV(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn off the device."""
-        self._tv.sendKey('Standby')
+        self._tv.sendKey("Standby")
         self._tv.on = False
         self._update_soon(DELAY_ACTION_DEFAULT)
 
     def volume_up(self):
         """Send volume up command."""
-        self._tv.sendKey('VolumeUp')
+        self._tv.sendKey("VolumeUp")
         self._update_soon(DELAY_ACTION_DEFAULT)
 
     def volume_down(self):
         """Send volume down command."""
-        self._tv.sendKey('VolumeDown')
+        self._tv.sendKey("VolumeDown")
         self._update_soon(DELAY_ACTION_DEFAULT)
 
     def mute_volume(self, mute):
@@ -207,12 +223,12 @@ class PhilipsTV(MediaPlayerDevice):
 
     def media_previous_track(self):
         """Send rewind command."""
-        self._tv.sendKey('Previous')
+        self._tv.sendKey("Previous")
         self._update_soon(DELAY_ACTION_DEFAULT)
 
     def media_next_track(self):
         """Send fast forward command."""
-        self._tv.sendKey('Next')
+        self._tv.sendKey("Next")
         self._update_soon(DELAY_ACTION_DEFAULT)
 
     @property
@@ -232,9 +248,9 @@ class PhilipsTV(MediaPlayerDevice):
     @property
     def media_content_type(self):
         """Return content type of playing media."""
-        if (self._tv.source_id == 'tv' or self._tv.source_id == '11'):
+        if self._tv.source_id == "tv" or self._tv.source_id == "11":
             return MEDIA_TYPE_CHANNEL
-        if (self._tv.source_id is None and self._tv.channels):
+        if self._tv.source_id is None and self._tv.channels:
             return MEDIA_TYPE_CHANNEL
         return None
 
@@ -248,14 +264,11 @@ class PhilipsTV(MediaPlayerDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
-            'channel_list': list(self._channels.values())
-        }
+        return {"channel_list": list(self._channels.values())}
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
-        _LOGGER.debug(
-            "Call play media type <%s>, Id <%s>", media_type, media_id)
+        _LOGGER.debug("Call play media type <%s>, Id <%s>", media_type, media_id)
 
         if media_type == MEDIA_TYPE_CHANNEL:
             channel_id = _inverted(self._channels).get(media_id)
@@ -272,11 +285,10 @@ class PhilipsTV(MediaPlayerDevice):
         self._tv.update()
 
         self._sources = {
-            srcid: source['name'] or "Source {}".format(srcid)
+            srcid: source["name"] or f"Source {srcid}"
             for srcid, source in (self._tv.sources or {}).items()
         }
 
         self._channels = {
-            chid: channel['name']
-            for chid, channel in (self._tv.channels or {}).items()
+            chid: channel["name"] for chid, channel in (self._tv.channels or {}).items()
         }

@@ -1,0 +1,10 @@
+{
+    "config": {
+        "abort": {
+            "port_exists": "Ez a port m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "port_exists": "Ez a port m\u00e1r konfigur\u00e1lva van"
+        }
+    }
+}

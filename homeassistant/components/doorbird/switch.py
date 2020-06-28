@@ -2,35 +2,41 @@
 import datetime
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
+import homeassistant.util.dt as dt_util
 
-from . import DOMAIN as DOORBIRD_DOMAIN
+from .const import DOMAIN, DOOR_STATION, DOOR_STATION_INFO
+from .entity import DoorBirdEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-IR_RELAY = '__ir_light__'
+IR_RELAY = "__ir_light__"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the DoorBird switch platform."""
-    switches = []
+    entities = []
+    config_entry_id = config_entry.entry_id
 
-    for doorstation in hass.data[DOORBIRD_DOMAIN]:
-        relays = doorstation.device.info()['RELAYS']
-        relays.append(IR_RELAY)
+    doorstation = hass.data[DOMAIN][config_entry_id][DOOR_STATION]
+    doorstation_info = hass.data[DOMAIN][config_entry_id][DOOR_STATION_INFO]
 
-        for relay in relays:
-            switch = DoorBirdSwitch(doorstation, relay)
-            switches.append(switch)
+    relays = doorstation_info["RELAYS"]
+    relays.append(IR_RELAY)
 
-    add_entities(switches)
+    for relay in relays:
+        switch = DoorBirdSwitch(doorstation, doorstation_info, relay)
+        entities.append(switch)
+
+    async_add_entities(entities)
 
 
-class DoorBirdSwitch(SwitchDevice):
+class DoorBirdSwitch(DoorBirdEntity, SwitchEntity):
     """A relay in a DoorBird device."""
 
-    def __init__(self, doorstation, relay):
+    def __init__(self, doorstation, doorstation_info, relay):
         """Initialize a relay in a DoorBird device."""
+        super().__init__(doorstation, doorstation_info)
         self._doorstation = doorstation
         self._relay = relay
         self._state = False
@@ -40,14 +46,20 @@ class DoorBirdSwitch(SwitchDevice):
             self._time = datetime.timedelta(minutes=5)
         else:
             self._time = datetime.timedelta(seconds=5)
+        self._unique_id = f"{self._mac_addr}_{self._relay}"
+
+    @property
+    def unique_id(self):
+        """Switch unique id."""
+        return self._unique_id
 
     @property
     def name(self):
         """Return the name of the switch."""
         if self._relay == IR_RELAY:
-            return "{} IR".format(self._doorstation.name)
+            return f"{self._doorstation.name} IR"
 
-        return "{} Relay {}".format(self._doorstation.name, self._relay)
+        return f"{self._doorstation.name} Relay {self._relay}"
 
     @property
     def icon(self):
@@ -66,16 +78,15 @@ class DoorBirdSwitch(SwitchDevice):
         else:
             self._state = self._doorstation.device.energize_relay(self._relay)
 
-        now = datetime.datetime.now()
+        now = dt_util.utcnow()
         self._assume_off = now + self._time
 
     def turn_off(self, **kwargs):
         """Turn off the relays is not needed. They are time-based."""
-        raise NotImplementedError(
-            "DoorBird relays cannot be manually turned off.")
+        raise NotImplementedError("DoorBird relays cannot be manually turned off.")
 
     def update(self):
         """Wait for the correct amount of assumed time to pass."""
-        if self._state and self._assume_off <= datetime.datetime.now():
+        if self._state and self._assume_off <= dt_util.utcnow():
             self._state = False
             self._assume_off = datetime.datetime.min

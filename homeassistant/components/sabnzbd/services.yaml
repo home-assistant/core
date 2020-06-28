@@ -1,0 +1,11 @@
+pause:
+  description: Pauses downloads.
+resume:
+  description: Resumes downloads.
+set_speed:
+  description: Sets the download speed limit.
+  fields:
+    speed:
+      description: Speed limit. If specified as a number with no units, will be interpreted as a percent. If units are provided (e.g., 500K) will be interpreted absolutely.
+      example: 100
+      default: 100

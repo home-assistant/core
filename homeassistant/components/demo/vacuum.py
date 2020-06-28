@@ -2,54 +2,100 @@
 import logging
 
 from homeassistant.components.vacuum import (
-    ATTR_CLEANED_AREA, STATE_CLEANING, STATE_DOCKED, STATE_IDLE, STATE_PAUSED,
-    STATE_RETURNING, SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,
-    SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND,
-    SUPPORT_START, SUPPORT_STATE, SUPPORT_STATUS, SUPPORT_STOP,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, StateVacuumDevice, VacuumDevice)
+    ATTR_CLEANED_AREA,
+    STATE_CLEANING,
+    STATE_DOCKED,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_RETURNING,
+    SUPPORT_BATTERY,
+    SUPPORT_CLEAN_SPOT,
+    SUPPORT_FAN_SPEED,
+    SUPPORT_LOCATE,
+    SUPPORT_PAUSE,
+    SUPPORT_RETURN_HOME,
+    SUPPORT_SEND_COMMAND,
+    SUPPORT_START,
+    SUPPORT_STATE,
+    SUPPORT_STATUS,
+    SUPPORT_STOP,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    StateVacuumEntity,
+    VacuumEntity,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_MINIMAL_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
-SUPPORT_BASIC_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
-                         SUPPORT_STATUS | SUPPORT_BATTERY
+SUPPORT_BASIC_SERVICES = (
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_STATUS | SUPPORT_BATTERY
+)
 
-SUPPORT_MOST_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_STOP | \
-                        SUPPORT_RETURN_HOME | SUPPORT_STATUS | SUPPORT_BATTERY
+SUPPORT_MOST_SERVICES = (
+    SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+    | SUPPORT_STOP
+    | SUPPORT_RETURN_HOME
+    | SUPPORT_STATUS
+    | SUPPORT_BATTERY
+)
 
-SUPPORT_ALL_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
-                       SUPPORT_STOP | SUPPORT_RETURN_HOME | \
-                       SUPPORT_FAN_SPEED | SUPPORT_SEND_COMMAND | \
-                       SUPPORT_LOCATE | SUPPORT_STATUS | SUPPORT_BATTERY | \
-                       SUPPORT_CLEAN_SPOT
+SUPPORT_ALL_SERVICES = (
+    SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+    | SUPPORT_PAUSE
+    | SUPPORT_STOP
+    | SUPPORT_RETURN_HOME
+    | SUPPORT_FAN_SPEED
+    | SUPPORT_SEND_COMMAND
+    | SUPPORT_LOCATE
+    | SUPPORT_STATUS
+    | SUPPORT_BATTERY
+    | SUPPORT_CLEAN_SPOT
+)
 
-SUPPORT_STATE_SERVICES = SUPPORT_STATE | SUPPORT_PAUSE | SUPPORT_STOP | \
-                         SUPPORT_RETURN_HOME | SUPPORT_FAN_SPEED | \
-                         SUPPORT_BATTERY | SUPPORT_CLEAN_SPOT | SUPPORT_START
+SUPPORT_STATE_SERVICES = (
+    SUPPORT_STATE
+    | SUPPORT_PAUSE
+    | SUPPORT_STOP
+    | SUPPORT_RETURN_HOME
+    | SUPPORT_FAN_SPEED
+    | SUPPORT_BATTERY
+    | SUPPORT_CLEAN_SPOT
+    | SUPPORT_START
+)
 
-FAN_SPEEDS = ['min', 'medium', 'high', 'max']
-DEMO_VACUUM_COMPLETE = '0_Ground_floor'
-DEMO_VACUUM_MOST = '1_First_floor'
-DEMO_VACUUM_BASIC = '2_Second_floor'
-DEMO_VACUUM_MINIMAL = '3_Third_floor'
-DEMO_VACUUM_NONE = '4_Fourth_floor'
-DEMO_VACUUM_STATE = '5_Fifth_floor'
+FAN_SPEEDS = ["min", "medium", "high", "max"]
+DEMO_VACUUM_COMPLETE = "0_Ground_floor"
+DEMO_VACUUM_MOST = "1_First_floor"
+DEMO_VACUUM_BASIC = "2_Second_floor"
+DEMO_VACUUM_MINIMAL = "3_Third_floor"
+DEMO_VACUUM_NONE = "4_Fourth_floor"
+DEMO_VACUUM_STATE = "5_Fifth_floor"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo config entry."""
+    await async_setup_platform(hass, {}, async_add_entities)
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Demo vacuums."""
-    add_entities([
-        DemoVacuum(DEMO_VACUUM_COMPLETE, SUPPORT_ALL_SERVICES),
-        DemoVacuum(DEMO_VACUUM_MOST, SUPPORT_MOST_SERVICES),
-        DemoVacuum(DEMO_VACUUM_BASIC, SUPPORT_BASIC_SERVICES),
-        DemoVacuum(DEMO_VACUUM_MINIMAL, SUPPORT_MINIMAL_SERVICES),
-        DemoVacuum(DEMO_VACUUM_NONE, 0),
-        StateDemoVacuum(DEMO_VACUUM_STATE),
-    ])
+    async_add_entities(
+        [
+            DemoVacuum(DEMO_VACUUM_COMPLETE, SUPPORT_ALL_SERVICES),
+            DemoVacuum(DEMO_VACUUM_MOST, SUPPORT_MOST_SERVICES),
+            DemoVacuum(DEMO_VACUUM_BASIC, SUPPORT_BASIC_SERVICES),
+            DemoVacuum(DEMO_VACUUM_MINIMAL, SUPPORT_MINIMAL_SERVICES),
+            DemoVacuum(DEMO_VACUUM_NONE, 0),
+            StateDemoVacuum(DEMO_VACUUM_STATE),
+        ]
+    )
 
 
-class DemoVacuum(VacuumDevice):
+class DemoVacuum(VacuumEntity):
     """Representation of a demo vacuum."""
 
     def __init__(self, name, supported_features):
@@ -57,7 +103,7 @@ class DemoVacuum(VacuumDevice):
         self._name = name
         self._supported_features = supported_features
         self._state = False
-        self._status = 'Charging'
+        self._status = "Charging"
         self._fan_speed = FAN_SPEEDS[1]
         self._cleaned_area = 0
         self._battery_level = 100
@@ -80,31 +126,21 @@ class DemoVacuum(VacuumDevice):
     @property
     def status(self):
         """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_STATUS == 0:
-            return
-
         return self._status
 
     @property
     def fan_speed(self):
         """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_FAN_SPEED == 0:
-            return
-
         return self._fan_speed
 
     @property
     def fan_speed_list(self):
         """Return the status of the vacuum."""
-        assert self.supported_features & SUPPORT_FAN_SPEED != 0
         return FAN_SPEEDS
 
     @property
     def battery_level(self):
         """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_BATTERY == 0:
-            return
-
         return max(0, min(100, self._battery_level))
 
     @property
@@ -125,7 +161,7 @@ class DemoVacuum(VacuumDevice):
         self._state = True
         self._cleaned_area += 5.32
         self._battery_level -= 2
-        self._status = 'Cleaning'
+        self._status = "Cleaning"
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
@@ -134,7 +170,7 @@ class DemoVacuum(VacuumDevice):
             return
 
         self._state = False
-        self._status = 'Charging'
+        self._status = "Charging"
         self.schedule_update_ha_state()
 
     def stop(self, **kwargs):
@@ -143,7 +179,7 @@ class DemoVacuum(VacuumDevice):
             return
 
         self._state = False
-        self._status = 'Stopping the current task'
+        self._status = "Stopping the current task"
         self.schedule_update_ha_state()
 
     def clean_spot(self, **kwargs):
@@ -172,11 +208,11 @@ class DemoVacuum(VacuumDevice):
 
         self._state = not self._state
         if self._state:
-            self._status = 'Resuming the current task'
+            self._status = "Resuming the current task"
             self._cleaned_area += 1.32
             self._battery_level -= 1
         else:
-            self._status = 'Pausing the current task'
+            self._status = "Pausing the current task"
         self.schedule_update_ha_state()
 
     def set_fan_speed(self, fan_speed, **kwargs):
@@ -194,7 +230,7 @@ class DemoVacuum(VacuumDevice):
             return
 
         self._state = False
-        self._status = 'Returning home...'
+        self._status = "Returning home..."
         self._battery_level += 5
         self.schedule_update_ha_state()
 
@@ -203,12 +239,12 @@ class DemoVacuum(VacuumDevice):
         if self.supported_features & SUPPORT_SEND_COMMAND == 0:
             return
 
-        self._status = 'Executing {}({})'.format(command, params)
+        self._status = f"Executing {command}({params})"
         self._state = True
         self.schedule_update_ha_state()
 
 
-class StateDemoVacuum(StateVacuumDevice):
+class StateDemoVacuum(StateVacuumEntity):
     """Representation of a demo vacuum supporting states."""
 
     def __init__(self, name):
@@ -243,24 +279,16 @@ class StateDemoVacuum(StateVacuumDevice):
     @property
     def battery_level(self):
         """Return the current battery level of the vacuum."""
-        if self.supported_features & SUPPORT_BATTERY == 0:
-            return
-
         return max(0, min(100, self._battery_level))
 
     @property
     def fan_speed(self):
         """Return the current fan speed of the vacuum."""
-        if self.supported_features & SUPPORT_FAN_SPEED == 0:
-            return
-
         return self._fan_speed
 
     @property
     def fan_speed_list(self):
         """Return the list of supported fan speeds."""
-        if self.supported_features & SUPPORT_FAN_SPEED == 0:
-            return
         return FAN_SPEEDS
 
     @property

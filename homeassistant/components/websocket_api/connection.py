@@ -1,11 +1,15 @@
 """Connection session."""
 import asyncio
+from typing import Any, Callable, Dict, Hashable, Optional
+
 import voluptuous as vol
 
-from homeassistant.core import callback, Context
+from homeassistant.core import Context, callback
 from homeassistant.exceptions import Unauthorized
 
 from . import const, messages
+
+# mypy: allow-untyped-calls, allow-untyped-defs
 
 
 class ActiveConnection:
@@ -22,7 +26,7 @@ class ActiveConnection:
         else:
             self.refresh_token_id = None
 
-        self.subscriptions = {}
+        self.subscriptions: Dict[Hashable, Callable[[], Any]] = {}
         self.last_id = 0
 
     def context(self, msg):
@@ -33,7 +37,7 @@ class ActiveConnection:
         return Context(user_id=user.id)
 
     @callback
-    def send_result(self, msg_id, result=None):
+    def send_result(self, msg_id: int, result: Optional[Any] = None) -> None:
         """Send a result message."""
         self.send_message(messages.result_message(msg_id, result))
 
@@ -45,7 +49,7 @@ class ActiveConnection:
         self.send_message(content)
 
     @callback
-    def send_error(self, msg_id, code, message):
+    def send_error(self, msg_id: int, code: str, message: str) -> None:
         """Send a error message."""
         self.send_message(messages.error_message(msg_id, code, message))
 
@@ -56,29 +60,36 @@ class ActiveConnection:
 
         try:
             msg = messages.MINIMAL_MESSAGE_SCHEMA(msg)
-            cur_id = msg['id']
+            cur_id = msg["id"]
         except vol.Invalid:
-            self.logger.error('Received invalid command', msg)
-            self.send_message(messages.error_message(
-                msg.get('id'), const.ERR_INVALID_FORMAT,
-                'Message incorrectly formatted.'))
+            self.logger.error("Received invalid command", msg)
+            self.send_message(
+                messages.error_message(
+                    msg.get("id"),
+                    const.ERR_INVALID_FORMAT,
+                    "Message incorrectly formatted.",
+                )
+            )
             return
 
         if cur_id <= self.last_id:
-            self.send_message(messages.error_message(
-                cur_id, const.ERR_ID_REUSE,
-                'Identifier values have to increase.'))
+            self.send_message(
+                messages.error_message(
+                    cur_id, const.ERR_ID_REUSE, "Identifier values have to increase."
+                )
+            )
             return
 
-        if msg['type'] not in handlers:
-            self.logger.error(
-                'Received invalid command: {}'.format(msg['type']))
-            self.send_message(messages.error_message(
-                cur_id, const.ERR_UNKNOWN_COMMAND,
-                'Unknown command.'))
+        if msg["type"] not in handlers:
+            self.logger.error("Received invalid command: {}".format(msg["type"]))
+            self.send_message(
+                messages.error_message(
+                    cur_id, const.ERR_UNKNOWN_COMMAND, "Unknown command."
+                )
+            )
             return
 
-        handler, schema = handlers[msg['type']]
+        handler, schema = handlers[msg["type"]]
 
         try:
             handler(self.hass, self, schema(msg))
@@ -96,19 +107,22 @@ class ActiveConnection:
     @callback
     def async_handle_exception(self, msg, err):
         """Handle an exception while processing a handler."""
+        log_handler = self.logger.error
+
         if isinstance(err, Unauthorized):
             code = const.ERR_UNAUTHORIZED
-            err_message = 'Unauthorized'
+            err_message = "Unauthorized"
         elif isinstance(err, vol.Invalid):
             code = const.ERR_INVALID_FORMAT
             err_message = vol.humanize.humanize_error(msg, err)
         elif isinstance(err, asyncio.TimeoutError):
             code = const.ERR_TIMEOUT
-            err_message = 'Timeout'
+            err_message = "Timeout"
         else:
             code = const.ERR_UNKNOWN_ERROR
-            err_message = 'Unknown error'
+            err_message = "Unknown error"
+            log_handler = self.logger.exception
 
-        self.logger.exception('Error handling message: %s', err_message)
-        self.send_message(
-            messages.error_message(msg['id'], code, err_message))
+        log_handler("Error handling message: %s", err_message)
+
+        self.send_message(messages.error_message(msg["id"], code, err_message))

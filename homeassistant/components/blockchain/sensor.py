@@ -1,38 +1,40 @@
-"""Support for Blockchain.info sensors."""
-import logging
+"""Support for Blockchain.com sensors."""
 from datetime import timedelta
+import logging
 
+from pyblockchain import get_balance, validate_address
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by blockchain.info"
+ATTRIBUTION = "Data provided by blockchain.com"
 
-CONF_ADDRESSES = 'addresses'
+CONF_ADDRESSES = "addresses"
 
-DEFAULT_NAME = 'Bitcoin Balance'
+DEFAULT_NAME = "Bitcoin Balance"
 
-ICON = 'mdi:currency-btc'
+ICON = "mdi:currency-btc"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ADDRESSES): [cv.string],
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_ADDRESSES): [cv.string],
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Blockchain.info sensors."""
-    from pyblockchain import validate_address
+    """Set up the Blockchain.com sensors."""
 
-    addresses = config.get(CONF_ADDRESSES)
-    name = config.get(CONF_NAME)
+    addresses = config[CONF_ADDRESSES]
+    name = config[CONF_NAME]
 
     for address in addresses:
         if not validate_address(address):
@@ -43,14 +45,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class BlockchainSensor(Entity):
-    """Representation of a Blockchain.info sensor."""
+    """Representation of a Blockchain.com sensor."""
 
     def __init__(self, name, addresses):
         """Initialize the sensor."""
         self._name = name
         self.addresses = addresses
         self._state = None
-        self._unit_of_measurement = 'BTC'
+        self._unit_of_measurement = "BTC"
 
     @property
     def name(self):
@@ -75,11 +77,9 @@ class BlockchainSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
+        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def update(self):
         """Get the latest state of the sensor."""
-        from pyblockchain import get_balance
+
         self._state = get_balance(self.addresses)

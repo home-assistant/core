@@ -1,17 +1,19 @@
 """Support for the Asterisk CDR interface."""
-import logging
-import hashlib
 import datetime
+import hashlib
+import logging
 
-from homeassistant.core import callback
-from homeassistant.components.asterisk_mbox import SIGNAL_CDR_UPDATE
-from homeassistant.components.asterisk_mbox import DOMAIN as ASTERISK_DOMAIN
+from homeassistant.components.asterisk_mbox import (
+    DOMAIN as ASTERISK_DOMAIN,
+    SIGNAL_CDR_UPDATE,
+)
 from homeassistant.components.mailbox import Mailbox
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
 
-MAILBOX_NAME = 'asterisk_cdr'
+MAILBOX_NAME = "asterisk_cdr"
 
 
 async def async_get_handler(hass, config, discovery_info=None):
@@ -26,8 +28,7 @@ class AsteriskCDR(Mailbox):
         """Initialize Asterisk CDR."""
         super().__init__(hass, name)
         self.cdr = []
-        async_dispatcher_connect(
-            self.hass, SIGNAL_CDR_UPDATE, self._update_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_CDR_UPDATE, self._update_callback)
 
     @callback
     def _update_callback(self, msg):
@@ -40,16 +41,20 @@ class AsteriskCDR(Mailbox):
         cdr = []
         for entry in self.hass.data[ASTERISK_DOMAIN].cdr:
             timestamp = datetime.datetime.strptime(
-                entry['time'], "%Y-%m-%d %H:%M:%S").timestamp()
+                entry["time"], "%Y-%m-%d %H:%M:%S"
+            ).timestamp()
             info = {
-                'origtime': timestamp,
-                'callerid': entry['callerid'],
-                'duration': entry['duration'],
+                "origtime": timestamp,
+                "callerid": entry["callerid"],
+                "duration": entry["duration"],
             }
-            sha = hashlib.sha256(str(entry).encode('utf-8')).hexdigest()
-            msg = "Destination: {}\nApplication: {}\n Context: {}".format(
-                entry['dest'], entry['application'], entry['context'])
-            cdr.append({'info': info, 'sha': sha, 'text': msg})
+            sha = hashlib.sha256(str(entry).encode("utf-8")).hexdigest()
+            msg = (
+                f"Destination: {entry['dest']}\n"
+                f"Application: {entry['application']}\n "
+                f"Context: {entry['context']}"
+            )
+            cdr.append({"info": info, "sha": sha, "text": msg})
         self.cdr = cdr
 
     async def async_get_messages(self):

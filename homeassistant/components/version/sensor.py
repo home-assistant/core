@@ -1,52 +1,69 @@
 """Sensor that can display the current Home Assistant versions."""
-import logging
 from datetime import timedelta
+import logging
 
+from pyhaversion import (
+    DockerVersion,
+    HaIoVersion,
+    HassioVersion,
+    LocalVersion,
+    PyPiVersion,
+)
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_SOURCE
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
 ALL_IMAGES = [
-    'default', 'intel-nuc', 'qemux86', 'qemux86-64', 'qemuarm',
-    'qemuarm-64', 'raspberrypi', 'raspberrypi2', 'raspberrypi3',
-    'raspberrypi3-64', 'tinker', 'odroid-c2', 'odroid-xu'
+    "default",
+    "intel-nuc",
+    "qemux86",
+    "qemux86-64",
+    "qemuarm",
+    "qemuarm-64",
+    "raspberrypi",
+    "raspberrypi2",
+    "raspberrypi3",
+    "raspberrypi3-64",
+    "raspberrypi4",
+    "raspberrypi4-64",
+    "tinker",
+    "odroid-c2",
+    "odroid-xu",
 ]
-ALL_SOURCES = [
-    'local', 'pypi', 'hassio', 'docker'
-]
+ALL_SOURCES = ["local", "pypi", "hassio", "docker", "haio"]
 
-CONF_BETA = 'beta'
-CONF_IMAGE = 'image'
+CONF_BETA = "beta"
+CONF_IMAGE = "image"
 
-DEFAULT_IMAGE = 'default'
+DEFAULT_IMAGE = "default"
 DEFAULT_NAME_LATEST = "Latest Version"
 DEFAULT_NAME_LOCAL = "Current Version"
-DEFAULT_SOURCE = 'local'
+DEFAULT_SOURCE = "local"
 
-ICON = 'mdi:package-up'
+ICON = "mdi:package-up"
 
 TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_BETA, default=False): cv.boolean,
-    vol.Optional(CONF_IMAGE, default=DEFAULT_IMAGE): vol.In(ALL_IMAGES),
-    vol.Optional(CONF_NAME, default=''): cv.string,
-    vol.Optional(CONF_SOURCE, default=DEFAULT_SOURCE): vol.In(ALL_SOURCES),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_BETA, default=False): cv.boolean,
+        vol.Optional(CONF_IMAGE, default=DEFAULT_IMAGE): vol.In(ALL_IMAGES),
+        vol.Optional(CONF_NAME, default=""): cv.string,
+        vol.Optional(CONF_SOURCE, default=DEFAULT_SOURCE): vol.In(ALL_SOURCES),
+    }
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Version sensor platform."""
-    from pyhaversion import (
-        LocalVersion, DockerVersion, HassioVersion, PyPiVersion)
+
     beta = config.get(CONF_BETA)
     image = config.get(CONF_IMAGE)
     name = config.get(CONF_NAME)
@@ -55,22 +72,20 @@ async def async_setup_platform(
     session = async_get_clientsession(hass)
 
     if beta:
-        branch = 'beta'
+        branch = "beta"
     else:
-        branch = 'stable'
+        branch = "stable"
 
-    if source == 'pypi':
-        haversion = VersionData(
-            PyPiVersion(hass.loop, session, branch))
-    elif source == 'hassio':
-        haversion = VersionData(
-            HassioVersion(hass.loop, session, branch, image))
-    elif source == 'docker':
-        haversion = VersionData(
-            DockerVersion(hass.loop, session, branch, image))
+    if source == "pypi":
+        haversion = VersionData(PyPiVersion(hass.loop, session, branch))
+    elif source == "hassio":
+        haversion = VersionData(HassioVersion(hass.loop, session, branch, image))
+    elif source == "docker":
+        haversion = VersionData(DockerVersion(hass.loop, session, branch, image))
+    elif source == "haio":
+        haversion = VersionData(HaIoVersion(hass.loop, session))
     else:
-        haversion = VersionData(
-            LocalVersion(hass.loop, session))
+        haversion = VersionData(LocalVersion(hass.loop, session))
 
     if not name:
         if source == DEFAULT_SOURCE:

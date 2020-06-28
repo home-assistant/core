@@ -3,33 +3,22 @@ import logging
 
 import homeassistant.core as ha
 
-from .const import API_DIRECTIVE, API_HEADER
-from .errors import (
-    AlexaError,
-    AlexaBridgeUnreachableError,
-)
+from .const import API_DIRECTIVE, API_HEADER, EVENT_ALEXA_SMART_HOME
+from .errors import AlexaBridgeUnreachableError, AlexaError
 from .handlers import HANDLERS
 from .messages import AlexaDirective
 
 _LOGGER = logging.getLogger(__name__)
 
-EVENT_ALEXA_SMART_HOME = 'alexa_smart_home'
 
-
-async def async_handle_message(
-        hass,
-        config,
-        request,
-        context=None,
-        enabled=True,
-):
+async def async_handle_message(hass, config, request, context=None, enabled=True):
     """Handle incoming API messages.
 
     If enabled is False, the response to all messagess will be a
     BRIDGE_UNREACHABLE error. This can be used if the API has been disabled in
     configuration.
     """
-    assert request[API_DIRECTIVE][API_HEADER]['payloadVersion'] == '3'
+    assert request[API_DIRECTIVE][API_HEADER]["payloadVersion"] == "3"
 
     if context is None:
         context = ha.Context()
@@ -39,7 +28,8 @@ async def async_handle_message(
     try:
         if not enabled:
             raise AlexaBridgeUnreachableError(
-                'Alexa API not enabled in Home Assistant configuration')
+                "Alexa API not enabled in Home Assistant configuration"
+            )
 
         if directive.has_endpoint:
             directive.load_entity(hass, config)
@@ -51,30 +41,26 @@ async def async_handle_message(
                 response.merge_context_properties(directive.endpoint)
         else:
             _LOGGER.warning(
-                "Unsupported API request %s/%s",
-                directive.namespace,
-                directive.name,
+                "Unsupported API request %s/%s", directive.namespace, directive.name
             )
             response = directive.error()
     except AlexaError as err:
         response = directive.error(
-            error_type=err.error_type,
-            error_message=err.error_message)
+            error_type=err.error_type, error_message=err.error_message
+        )
 
-    request_info = {
-        'namespace': directive.namespace,
-        'name': directive.name,
-    }
+    request_info = {"namespace": directive.namespace, "name": directive.name}
 
     if directive.has_endpoint:
-        request_info['entity_id'] = directive.entity_id
+        request_info["entity_id"] = directive.entity_id
 
-    hass.bus.async_fire(EVENT_ALEXA_SMART_HOME, {
-        'request': request_info,
-        'response': {
-            'namespace': response.namespace,
-            'name': response.name,
-        }
-    }, context=context)
+    hass.bus.async_fire(
+        EVENT_ALEXA_SMART_HOME,
+        {
+            "request": request_info,
+            "response": {"namespace": response.namespace, "name": response.name},
+        },
+        context=context,
+    )
 
     return response.serialize()

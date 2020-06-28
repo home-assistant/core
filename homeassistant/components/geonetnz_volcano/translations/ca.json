@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Ubicaci\u00f3 ja registrada"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radius": "Radi"
+                },
+                "title": "Introducci\u00f3 dels detalls del filtre."
+            }
+        }
+    }
+}

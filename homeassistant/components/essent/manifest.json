@@ -1,8 +1,7 @@
 {
   "domain": "essent",
   "name": "Essent",
-  "documentation": "https://www.home-assistant.io/components/essent",
-  "requirements": ["PyEssent==0.12"],
-  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/essent",
+  "requirements": ["PyEssent==0.13"],
   "codeowners": ["@TheLastProject"]
 }

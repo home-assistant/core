@@ -1,39 +1,32 @@
 """Support for PCA 301 smart switch."""
 import logging
 
-import voluptuous as vol
+import pypca
+from serial import SerialException
 
-from homeassistant.components.switch import (
-    SwitchDevice, PLATFORM_SCHEMA, ATTR_CURRENT_POWER_W)
-from homeassistant.const import (
-    CONF_NAME, CONF_DEVICE, EVENT_HOMEASSISTANT_STOP)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchEntity
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_TOTAL_ENERGY_KWH = 'total_energy_kwh'
+ATTR_TOTAL_ENERGY_KWH = "total_energy_kwh"
 
-DEFAULT_NAME = 'PCA 301'
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_DEVICE): cv.string
-})
+DEFAULT_NAME = "PCA 301"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the PCA switch platform."""
-    import pypca
-    from serial import SerialException
 
-    name = config[CONF_NAME]
-    usb_device = config[CONF_DEVICE]
+    if discovery_info is None:
+        return
+
+    serial_device = discovery_info["device"]
 
     try:
-        pca = pypca.PCA(usb_device)
+        pca = pypca.PCA(serial_device)
         pca.open()
-        entities = [SmartPlugSwitch(pca, device, name)
-                    for device in pca.get_devices()]
+
+        entities = [SmartPlugSwitch(pca, device) for device in pca.get_devices()]
         add_entities(entities, True)
 
     except SerialException as exc:
@@ -45,13 +38,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     pca.start_scan()
 
 
-class SmartPlugSwitch(SwitchDevice):
+class SmartPlugSwitch(SwitchEntity):
     """Representation of a PCA Smart Plug switch."""
 
-    def __init__(self, pca, device_id, name):
+    def __init__(self, pca, device_id):
         """Initialize the switch."""
         self._device_id = device_id
-        self._name = name
+        self._name = "PCA 301"
         self._state = None
         self._available = True
         self._emeter_params = {}
@@ -88,16 +81,17 @@ class SmartPlugSwitch(SwitchDevice):
     def update(self):
         """Update the PCA switch's state."""
         try:
-            self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.1f}".format(
-                self._pca.get_current_power(self._device_id))
-            self._emeter_params[ATTR_TOTAL_ENERGY_KWH] = "{:.2f}".format(
-                self._pca.get_total_consumption(self._device_id))
+            self._emeter_params[
+                ATTR_CURRENT_POWER_W
+            ] = f"{self._pca.get_current_power(self._device_id):.1f}"
+            self._emeter_params[
+                ATTR_TOTAL_ENERGY_KWH
+            ] = f"{self._pca.get_total_consumption(self._device_id):.2f}"
 
             self._available = True
             self._state = self._pca.get_state(self._device_id)
 
         except (OSError) as ex:
             if self._available:
-                _LOGGER.warning(
-                    "Could not read state for %s: %s", self.name, ex)
+                _LOGGER.warning("Could not read state for %s: %s", self.name, ex)
                 self._available = False

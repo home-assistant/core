@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Er kan slechts \u00e9\u00e9n Atag-apparaat worden toegevoegd aan Home Assistant "
+        },
+        "error": {
+            "connection_error": "Verbinding mislukt, probeer het opnieuw",
+            "unauthorized": "Koppelen geweigerd, controleer apparaat op autorisatieverzoek"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Poort (10000)"
+                },
+                "title": "Verbinding maken met het apparaat"
+            }
+        }
+    },
+    "title": ""
+}

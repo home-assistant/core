@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigureret"
+        },
+        "error": {
+            "access": "Kunne ikke f\u00e5 adgang til Enedis.fr, kontroller din internetforbindelse",
+            "enedis": "Enedis.fr svarede med en fejl: Pr\u00f8v igen senere (normalt ikke mellem 23:00 og 02:00)",
+            "unknown": "Ukendt fejl: Pr\u00f8v igen senere (normalt ikke mellem 23:00 og 02:00)",
+            "wrong_login": "Loginfejl: Kontroller din e-mail og adgangskode"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Adgangskode",
+                    "username": "E-mail"
+                },
+                "description": "Indtast dine legitimationsoplysninger",
+                "title": "Linky"
+            }
+        }
+    }
+}

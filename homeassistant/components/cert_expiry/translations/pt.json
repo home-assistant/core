@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "resolve_failed": "N\u00e3o \u00e9 possivel resolver o servidor"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Servidor"
+                }
+            }
+        }
+    }
+}

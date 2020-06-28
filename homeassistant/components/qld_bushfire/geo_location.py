@@ -6,65 +6,73 @@ from typing import Optional
 from georss_qld_bushfire_alert_client import QldBushfireAlertFeedManager
 import voluptuous as vol
 
-from homeassistant.components.geo_location import (
-    PLATFORM_SCHEMA, GeolocationEvent)
+from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS,
-    CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START)
+    ATTR_ATTRIBUTION,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_RADIUS,
+    CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_START,
+    LENGTH_KILOMETERS,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.event import track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CATEGORY = 'category'
-ATTR_EXTERNAL_ID = 'external_id'
-ATTR_PUBLICATION_DATE = 'publication_date'
-ATTR_STATUS = 'status'
-ATTR_UPDATED_DATE = 'updated_date'
+ATTR_CATEGORY = "category"
+ATTR_EXTERNAL_ID = "external_id"
+ATTR_PUBLICATION_DATE = "publication_date"
+ATTR_STATUS = "status"
+ATTR_UPDATED_DATE = "updated_date"
 
-CONF_CATEGORIES = 'categories'
+CONF_CATEGORIES = "categories"
 
 DEFAULT_RADIUS_IN_KM = 20.0
-DEFAULT_UNIT_OF_MEASUREMENT = 'km'
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-SIGNAL_DELETE_ENTITY = 'qld_bushfire_delete_{}'
-SIGNAL_UPDATE_ENTITY = 'qld_bushfire_update_{}'
+SIGNAL_DELETE_ENTITY = "qld_bushfire_delete_{}"
+SIGNAL_UPDATE_ENTITY = "qld_bushfire_update_{}"
 
-SOURCE = 'qld_bushfire'
+SOURCE = "qld_bushfire"
 
 VALID_CATEGORIES = [
-    'Emergency Warning',
-    'Watch and Act',
-    'Advice',
-    'Notification',
-    'Information',
+    "Emergency Warning",
+    "Watch and Act",
+    "Advice",
+    "Notification",
+    "Information",
 ]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_LATITUDE): cv.latitude,
-    vol.Optional(CONF_LONGITUDE): cv.longitude,
-    vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
-    vol.Optional(CONF_CATEGORIES, default=[]):
-        vol.All(cv.ensure_list, [vol.In(VALID_CATEGORIES)]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_LATITUDE): cv.latitude,
+        vol.Optional(CONF_LONGITUDE): cv.longitude,
+        vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
+        vol.Optional(CONF_CATEGORIES, default=[]): vol.All(
+            cv.ensure_list, [vol.In(VALID_CATEGORIES)]
+        ),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Queensland Bushfire Alert Feed platform."""
     scan_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
-    coordinates = (config.get(CONF_LATITUDE, hass.config.latitude),
-                   config.get(CONF_LONGITUDE, hass.config.longitude))
+    coordinates = (
+        config.get(CONF_LATITUDE, hass.config.latitude),
+        config.get(CONF_LONGITUDE, hass.config.longitude),
+    )
     radius_in_km = config[CONF_RADIUS]
     categories = config[CONF_CATEGORIES]
     # Initialize the entity manager.
     feed = QldBushfireFeedEntityManager(
-        hass, add_entities, scan_interval, coordinates, radius_in_km,
-        categories)
+        hass, add_entities, scan_interval, coordinates, radius_in_km, categories
+    )
 
     def start_feed_manager(event):
         """Start feed manager."""
@@ -76,14 +84,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class QldBushfireFeedEntityManager:
     """Feed Entity Manager for Qld Bushfire Alert GeoRSS feed."""
 
-    def __init__(self, hass, add_entities, scan_interval, coordinates,
-                 radius_in_km, categories):
+    def __init__(
+        self, hass, add_entities, scan_interval, coordinates, radius_in_km, categories
+    ):
         """Initialize the Feed Entity Manager."""
         self._hass = hass
         self._feed_manager = QldBushfireAlertFeedManager(
-            self._generate_entity, self._update_entity, self._remove_entity,
-            coordinates, filter_radius=radius_in_km,
-            filter_categories=categories)
+            self._generate_entity,
+            self._update_entity,
+            self._remove_entity,
+            coordinates,
+            filter_radius=radius_in_km,
+            filter_categories=categories,
+        )
         self._add_entities = add_entities
         self._scan_interval = scan_interval
 
@@ -95,8 +108,8 @@ class QldBushfireFeedEntityManager:
     def _init_regular_updates(self):
         """Schedule regular updates at the specified interval."""
         track_time_interval(
-            self._hass, lambda now: self._feed_manager.update(),
-            self._scan_interval)
+            self._hass, lambda now: self._feed_manager.update(), self._scan_interval
+        )
 
     def get_entry(self, external_id):
         """Get feed entry by external id."""
@@ -139,11 +152,15 @@ class QldBushfireLocationEvent(GeolocationEvent):
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self._remove_signal_delete = async_dispatcher_connect(
-            self.hass, SIGNAL_DELETE_ENTITY.format(self._external_id),
-            self._delete_callback)
+            self.hass,
+            SIGNAL_DELETE_ENTITY.format(self._external_id),
+            self._delete_callback,
+        )
         self._remove_signal_update = async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_ENTITY.format(self._external_id),
-            self._update_callback)
+            self.hass,
+            SIGNAL_UPDATE_ENTITY.format(self._external_id),
+            self._update_callback,
+        )
 
     @callback
     def _delete_callback(self):
@@ -182,6 +199,11 @@ class QldBushfireLocationEvent(GeolocationEvent):
         self._status = feed_entry.status
 
     @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        return "mdi:fire"
+
+    @property
     def source(self) -> str:
         """Return source value of this external event."""
         return SOURCE
@@ -209,19 +231,19 @@ class QldBushfireLocationEvent(GeolocationEvent):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return DEFAULT_UNIT_OF_MEASUREMENT
+        return LENGTH_KILOMETERS
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         attributes = {}
         for key, value in (
-                (ATTR_EXTERNAL_ID, self._external_id),
-                (ATTR_CATEGORY, self._category),
-                (ATTR_ATTRIBUTION, self._attribution),
-                (ATTR_PUBLICATION_DATE, self._publication_date),
-                (ATTR_UPDATED_DATE, self._updated_date),
-                (ATTR_STATUS, self._status)
+            (ATTR_EXTERNAL_ID, self._external_id),
+            (ATTR_CATEGORY, self._category),
+            (ATTR_ATTRIBUTION, self._attribution),
+            (ATTR_PUBLICATION_DATE, self._publication_date),
+            (ATTR_UPDATED_DATE, self._updated_date),
+            (ATTR_STATUS, self._status),
         ):
             if value or isinstance(value, bool):
                 attributes[key] = value

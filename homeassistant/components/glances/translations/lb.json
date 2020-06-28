@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Kann sech net mam Server verbannen.",
+            "wrong_version": "Versioun net \u00ebnnerst\u00ebtzt (n\u00ebmmen 2 oder 3)"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Apparat",
+                    "name": "Numm",
+                    "password": "Passwuert",
+                    "port": "Port",
+                    "ssl": "Benotzt SSL/TLS fir sech mam Usiichte System ze verbannen",
+                    "username": "Benotzernumm",
+                    "verify_ssl": "Zertifikatioun vum System iwwerpr\u00e9iwen",
+                    "version": "API Versioun vun den Usiichten  (2 oder 3)"
+                },
+                "title": "Usiichten konfigur\u00e9ieren"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Intervalle vun de Mise \u00e0 jour"
+                },
+                "description": "Optioune konfigur\u00e9ieren fir d'Usiichten"
+            }
+        }
+    }
+}

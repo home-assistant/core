@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Va\u0161 Home Assistant mora biti dostopek prek interneta, da boste lahko prejemali GPSlogger sporo\u010dila.",
+            "one_instance_allowed": "Potrebna je samo ena instanca."
+        },
+        "create_entry": {
+            "default": "\u010ce \u017eelite dogodke poslati v Home Assistant, morate v GPSLoggerju nastaviti funkcijo webhook. \n\n Izpolnite naslednje podatke: \n\n - URL: ` {webhook_url} ` \n - Metoda: POST \n\n Za ve\u010d podrobnosti si oglejte [dokumentacijo] ( {docs_url} )."
+        },
+        "step": {
+            "user": {
+                "description": "Ali ste prepri\u010dani, da \u017eelite nastaviti GPSloggerWebhook?",
+                "title": "Nastavite GPSlogger Webhook"
+            }
+        }
+    }
+}

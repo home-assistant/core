@@ -4,39 +4,38 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import bbb_gpio
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (DEVICE_DEFAULT_NAME, CONF_NAME)
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PINS = 'pins'
-CONF_BOUNCETIME = 'bouncetime'
-CONF_INVERT_LOGIC = 'invert_logic'
-CONF_PULL_MODE = 'pull_mode'
+CONF_PINS = "pins"
+CONF_BOUNCETIME = "bouncetime"
+CONF_INVERT_LOGIC = "invert_logic"
+CONF_PULL_MODE = "pull_mode"
 
 DEFAULT_BOUNCETIME = 50
 DEFAULT_INVERT_LOGIC = False
-DEFAULT_PULL_MODE = 'UP'
+DEFAULT_PULL_MODE = "UP"
 
-PIN_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_BOUNCETIME, default=DEFAULT_BOUNCETIME): cv.positive_int,
-    vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
-    vol.Optional(CONF_PULL_MODE, default=DEFAULT_PULL_MODE):
-        vol.In(['UP', 'DOWN'])
-})
+PIN_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_BOUNCETIME, default=DEFAULT_BOUNCETIME): cv.positive_int,
+        vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
+        vol.Optional(CONF_PULL_MODE, default=DEFAULT_PULL_MODE): vol.In(["UP", "DOWN"]),
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PINS, default={}):
-        vol.Schema({cv.string: PIN_SCHEMA}),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_PINS, default={}): vol.Schema({cv.string: PIN_SCHEMA})}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Beaglebone Black GPIO devices."""
-    pins = config.get(CONF_PINS)
+    pins = config[CONF_PINS]
 
     binary_sensors = []
 
@@ -45,16 +44,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(binary_sensors)
 
 
-class BBBGPIOBinarySensor(BinarySensorDevice):
+class BBBGPIOBinarySensor(BinarySensorEntity):
     """Representation of a binary sensor that uses Beaglebone Black GPIO."""
 
     def __init__(self, pin, params):
         """Initialize the Beaglebone Black binary sensor."""
         self._pin = pin
-        self._name = params.get(CONF_NAME) or DEVICE_DEFAULT_NAME
-        self._bouncetime = params.get(CONF_BOUNCETIME)
-        self._pull_mode = params.get(CONF_PULL_MODE)
-        self._invert_logic = params.get(CONF_INVERT_LOGIC)
+        self._name = params[CONF_NAME] or DEVICE_DEFAULT_NAME
+        self._bouncetime = params[CONF_BOUNCETIME]
+        self._pull_mode = params[CONF_PULL_MODE]
+        self._invert_logic = params[CONF_INVERT_LOGIC]
 
         bbb_gpio.setup_input(self._pin, self._pull_mode)
         self._state = bbb_gpio.read_input(self._pin)

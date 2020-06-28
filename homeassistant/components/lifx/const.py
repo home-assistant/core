@@ -1,3 +1,3 @@
 """Const for LIFX."""
 
-DOMAIN = 'lifx'
+DOMAIN = "lifx"

@@ -34,8 +34,7 @@ async def test_show_set_form(hass):
 async def test_connection_error(hass, aioclient_mock):
     """Test we show user form on Twente Milieu connection error."""
     aioclient_mock.post(
-        "https://wasteapi.2go-mobile.com/api/FetchAdress",
-        exc=aiohttp.ClientError,
+        "https://twentemilieuapi.ximmio.com/api/FetchAdress", exc=aiohttp.ClientError
     )
 
     flow = config_flow.TwenteMilieuFlowHandler()
@@ -50,7 +49,7 @@ async def test_connection_error(hass, aioclient_mock):
 async def test_invalid_address(hass, aioclient_mock):
     """Test we show user form on Twente Milieu invalid address error."""
     aioclient_mock.post(
-        "https://wasteapi.2go-mobile.com/api/FetchAdress",
+        "https://twentemilieuapi.ximmio.com/api/FetchAdress",
         json={"dataList": []},
         headers={"Content-Type": "application/json"},
     )
@@ -66,12 +65,12 @@ async def test_invalid_address(hass, aioclient_mock):
 
 async def test_address_already_set_up(hass, aioclient_mock):
     """Test we abort if address has already been set up."""
-    MockConfigEntry(
-        domain=DOMAIN, data=FIXTURE_USER_INPUT, title="12345"
-    ).add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, data=FIXTURE_USER_INPUT, title="12345").add_to_hass(
+        hass
+    )
 
     aioclient_mock.post(
-        "https://wasteapi.2go-mobile.com/api/FetchAdress",
+        "https://twentemilieuapi.ximmio.com/api/FetchAdress",
         json={"dataList": [{"UniqueId": "12345"}]},
         headers={"Content-Type": "application/json"},
     )
@@ -87,7 +86,7 @@ async def test_address_already_set_up(hass, aioclient_mock):
 async def test_full_flow_implementation(hass, aioclient_mock):
     """Test registering an integration and finishing flow works."""
     aioclient_mock.post(
-        "https://wasteapi.2go-mobile.com/api/FetchAdress",
+        "https://twentemilieuapi.ximmio.com/api/FetchAdress",
         json={"dataList": [{"UniqueId": "12345"}]},
         headers={"Content-Type": "application/json"},
     )
@@ -102,11 +101,5 @@ async def test_full_flow_implementation(hass, aioclient_mock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "12345"
     assert result["data"][CONF_POST_CODE] == FIXTURE_USER_INPUT[CONF_POST_CODE]
-    assert (
-        result["data"][CONF_HOUSE_NUMBER]
-        == FIXTURE_USER_INPUT[CONF_HOUSE_NUMBER]
-    )
-    assert (
-        result["data"][CONF_HOUSE_LETTER]
-        == FIXTURE_USER_INPUT[CONF_HOUSE_LETTER]
-    )
+    assert result["data"][CONF_HOUSE_NUMBER] == FIXTURE_USER_INPUT[CONF_HOUSE_NUMBER]
+    assert result["data"][CONF_HOUSE_LETTER] == FIXTURE_USER_INPUT[CONF_HOUSE_LETTER]

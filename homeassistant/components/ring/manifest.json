@@ -1,12 +1,9 @@
 {
   "domain": "ring",
   "name": "Ring",
-  "documentation": "https://www.home-assistant.io/components/ring",
-  "requirements": [
-    "ring_doorbell==0.2.3"
-  ],
-  "dependencies": [
-    "ffmpeg"
-  ],
-  "codeowners": []
+  "documentation": "https://www.home-assistant.io/integrations/ring",
+  "requirements": ["ring_doorbell==0.6.0"],
+  "dependencies": ["ffmpeg"],
+  "codeowners": ["@balloob"],
+  "config_flow": true
 }

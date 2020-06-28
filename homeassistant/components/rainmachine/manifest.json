@@ -1,13 +1,8 @@
 {
   "domain": "rainmachine",
-  "name": "Rainmachine",
+  "name": "RainMachine",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/rainmachine",
-  "requirements": [
-    "regenmaschine==1.5.1"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@bachya"
-  ]
+  "documentation": "https://www.home-assistant.io/integrations/rainmachine",
+  "requirements": ["regenmaschine==1.5.1"],
+  "codeowners": ["@bachya"]
 }

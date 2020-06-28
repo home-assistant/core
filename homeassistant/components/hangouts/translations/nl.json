@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Google Hangouts is al geconfigureerd",
+            "unknown": "Onbekende fout opgetreden."
+        },
+        "error": {
+            "invalid_2fa": "Ongeldige twee-factor-authenticatie, probeer het opnieuw.",
+            "invalid_2fa_method": "Ongeldige 2FA-methode (verifi\u00ebren op telefoon).",
+            "invalid_login": "Ongeldige aanmelding, probeer het opnieuw."
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "2FA pin"
+                },
+                "description": "Leeg",
+                "title": "Twee-factor-authenticatie"
+            },
+            "user": {
+                "data": {
+                    "authorization_code": "Autorisatiecode (vereist voor handmatige authenticatie)",
+                    "email": "E-mailadres",
+                    "password": "Wachtwoord"
+                },
+                "description": "Leeg",
+                "title": "Google Hangouts inlog"
+            }
+        }
+    }
+}

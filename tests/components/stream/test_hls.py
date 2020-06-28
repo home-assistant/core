@@ -4,13 +4,13 @@ from urllib.parse import urlparse
 
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components.stream import request_stream
+from homeassistant.const import HTTP_NOT_FOUND
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
-from tests.components.stream.common import (
-    generate_h264_video, preload_stream)
+from tests.components.stream.common import generate_h264_video, preload_stream
 
 
 @pytest.mark.skip("Flaky in CI")
@@ -21,14 +21,12 @@ async def test_hls_stream(hass, hass_client):
     Purposefully not mocking anything here to test full
     integration with the stream component.
     """
-    await async_setup_component(hass, 'stream', {
-        'stream': {}
-    })
+    await async_setup_component(hass, "stream", {"stream": {}})
 
     # Setup demo HLS track
     source = generate_h264_video()
     stream = preload_stream(hass, source)
-    stream.add_provider('hls')
+    stream.add_provider("hls")
 
     # Request stream
     url = request_stream(hass, source)
@@ -42,7 +40,7 @@ async def test_hls_stream(hass, hass_client):
 
     # Fetch segment
     playlist = await playlist_response.text()
-    playlist_url = '/'.join(parsed_url.path.split('/')[:-1])
+    playlist_url = "/".join(parsed_url.path.split("/")[:-1])
     segment_url = playlist_url + playlist.splitlines()[-1][1:]
     segment_response = await http_client.get(segment_url)
     assert segment_response.status == 200
@@ -50,22 +48,20 @@ async def test_hls_stream(hass, hass_client):
     # Stop stream, if it hasn't quit already
     stream.stop()
 
-    # Ensure playlist not accessable after stream ends
+    # Ensure playlist not accessible after stream ends
     fail_response = await http_client.get(parsed_url.path)
-    assert fail_response.status == 404
+    assert fail_response.status == HTTP_NOT_FOUND
 
 
 @pytest.mark.skip("Flaky in CI")
 async def test_stream_timeout(hass, hass_client):
     """Test hls stream timeout."""
-    await async_setup_component(hass, 'stream', {
-        'stream': {}
-    })
+    await async_setup_component(hass, "stream", {"stream": {}})
 
     # Setup demo HLS track
     source = generate_h264_video()
     stream = preload_stream(hass, source)
-    stream.add_provider('hls')
+    stream.add_provider("hls")
 
     # Request stream
     url = request_stream(hass, source)
@@ -89,22 +85,20 @@ async def test_stream_timeout(hass, hass_client):
     future = dt_util.utcnow() + timedelta(minutes=5)
     async_fire_time_changed(hass, future)
 
-    # Ensure playlist not accessable
+    # Ensure playlist not accessible
     fail_response = await http_client.get(parsed_url.path)
-    assert fail_response.status == 404
+    assert fail_response.status == HTTP_NOT_FOUND
 
 
 @pytest.mark.skip("Flaky in CI")
 async def test_stream_ended(hass):
     """Test hls stream packets ended."""
-    await async_setup_component(hass, 'stream', {
-        'stream': {}
-    })
+    await async_setup_component(hass, "stream", {"stream": {}})
 
     # Setup demo HLS track
     source = generate_h264_video()
     stream = preload_stream(hass, source)
-    track = stream.add_provider('hls')
+    track = stream.add_provider("hls")
     track.num_segments = 2
 
     # Request stream

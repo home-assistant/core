@@ -1,8 +1,6 @@
 {
   "domain": "supervisord",
   "name": "Supervisord",
-  "documentation": "https://www.home-assistant.io/components/supervisord",
-  "requirements": [],
-  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/supervisord",
   "codeowners": []
 }

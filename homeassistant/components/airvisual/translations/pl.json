@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ten klucz API jest ju\u017c w u\u017cyciu."
+        },
+        "error": {
+            "general_error": "Nieoczekiwany b\u0142\u0105d.",
+            "invalid_api_key": "Nieprawid\u0142owy klucz API.",
+            "unable_to_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z jednostk\u0105 Node/Pro."
+        },
+        "step": {
+            "geography": {
+                "data": {
+                    "api_key": "Klucz API",
+                    "latitude": "Szeroko\u015b\u0107 geograficzna",
+                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna"
+                },
+                "description": "U\u017cyj interfejsu API chmury AirVisual do monitorowania lokalizacji geograficznej.",
+                "title": "Konfiguracja Geography"
+            },
+            "node_pro": {
+                "data": {
+                    "ip_address": "Nazwa hosta lub adres IP",
+                    "password": "Has\u0142o"
+                },
+                "description": "Monitoruj jednostk\u0119 AirVisual. Has\u0142o mo\u017cna odzyska\u0107 z interfejsu u\u017cytkownika urz\u0105dzenia.",
+                "title": "Konfiguracja AirVisual Node/Pro"
+            },
+            "user": {
+                "data": {
+                    "cloud_api": "Lokalizacja geograficzna",
+                    "node_pro": "AirVisual Node Pro",
+                    "type": "Typ integracji"
+                },
+                "description": "Monitoruj jako\u015b\u0107 powietrza w okre\u015blonej lokalizacji geograficznej.",
+                "title": "Konfiguracja AirVisual"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Wy\u015bwietlaj encje na mapie"
+                },
+                "title": "Konfiguracja AirVisual"
+            }
+        }
+    }
+}

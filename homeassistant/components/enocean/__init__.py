@@ -1,25 +1,26 @@
 """Support for EnOcean devices."""
 import logging
 
+from enocean.communicators.serialcommunicator import SerialCommunicator
+from enocean.protocol.packet import Packet, RadioPacket
+from enocean.utils import combine_hex
 import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICE
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'enocean'
-DATA_ENOCEAN = 'enocean'
+DOMAIN = "enocean"
+DATA_ENOCEAN = "enocean"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_DEVICE): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
+)
 
-SIGNAL_RECEIVE_MESSAGE = 'enocean.receive_message'
-SIGNAL_SEND_MESSAGE = 'enocean.send_message'
+SIGNAL_RECEIVE_MESSAGE = "enocean.receive_message"
+SIGNAL_SEND_MESSAGE = "enocean.send_message"
 
 
 def setup(hass, config):
@@ -36,13 +37,13 @@ class EnOceanDongle:
 
     def __init__(self, hass, ser):
         """Initialize the EnOcean dongle."""
-        from enocean.communicators.serialcommunicator import SerialCommunicator
-        self.__communicator = SerialCommunicator(
-            port=ser, callback=self.callback)
+
+        self.__communicator = SerialCommunicator(port=ser, callback=self.callback)
         self.__communicator.start()
         self.hass = hass
         self.hass.helpers.dispatcher.dispatcher_connect(
-            SIGNAL_SEND_MESSAGE, self._send_message_callback)
+            SIGNAL_SEND_MESSAGE, self._send_message_callback
+        )
 
     def _send_message_callback(self, command):
         """Send a command through the EnOcean dongle."""
@@ -54,11 +55,10 @@ class EnOceanDongle:
         This is the callback function called by python-enocan whenever there
         is an incoming packet.
         """
-        from enocean.protocol.packet import RadioPacket
+
         if isinstance(packet, RadioPacket):
             _LOGGER.debug("Received radio packet: %s", packet)
-            self.hass.helpers.dispatcher.dispatcher_send(
-                SIGNAL_RECEIVE_MESSAGE, packet)
+            self.hass.helpers.dispatcher.dispatcher_send(SIGNAL_RECEIVE_MESSAGE, packet)
 
 
 class EnOceanDevice(Entity):
@@ -71,22 +71,23 @@ class EnOceanDevice(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_RECEIVE_MESSAGE, self._message_received_callback)
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_RECEIVE_MESSAGE, self._message_received_callback
+            )
+        )
 
     def _message_received_callback(self, packet):
         """Handle incoming packets."""
-        from enocean.utils import combine_hex
+
         if packet.sender_int == combine_hex(self.dev_id):
             self.value_changed(packet)
 
     def value_changed(self, packet):
         """Update the internal state of the device when a packet arrives."""
 
-    # pylint: disable=no-self-use
     def send_command(self, data, optional, packet_type):
         """Send a command via the EnOcean dongle."""
-        from enocean.protocol.packet import Packet
+
         packet = Packet(packet_type, data=data, optional=optional)
-        self.hass.helpers.dispatcher.dispatcher_send(
-            SIGNAL_SEND_MESSAGE, packet)
+        self.hass.helpers.dispatcher.dispatcher_send(SIGNAL_SEND_MESSAGE, packet)

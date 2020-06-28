@@ -1,11 +1,11 @@
 """The test for the moon sensor platform."""
-import unittest
 from datetime import datetime
-from unittest.mock import patch
+import unittest
 
-import homeassistant.util.dt as dt_util
 from homeassistant.setup import setup_component
+import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 DAY1 = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
@@ -23,34 +23,24 @@ class TestMoonSensor(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @patch('homeassistant.components.moon.sensor.dt_util.utcnow',
-           return_value=DAY1)
+    @patch("homeassistant.components.moon.sensor.dt_util.utcnow", return_value=DAY1)
     def test_moon_day1(self, mock_request):
         """Test the Moon sensor."""
-        config = {
-            'sensor': {
-                'platform': 'moon',
-                'name': 'moon_day1',
-            }
-        }
+        config = {"sensor": {"platform": "moon", "name": "moon_day1"}}
 
-        assert setup_component(self.hass, 'sensor', config)
+        assert setup_component(self.hass, "sensor", config)
+        self.hass.block_till_done()
 
-        state = self.hass.states.get('sensor.moon_day1')
-        assert state.state == 'waxing_crescent'
+        state = self.hass.states.get("sensor.moon_day1")
+        assert state.state == "waxing_crescent"
 
-    @patch('homeassistant.components.moon.sensor.dt_util.utcnow',
-           return_value=DAY2)
+    @patch("homeassistant.components.moon.sensor.dt_util.utcnow", return_value=DAY2)
     def test_moon_day2(self, mock_request):
         """Test the Moon sensor."""
-        config = {
-            'sensor': {
-                'platform': 'moon',
-                'name': 'moon_day2',
-            }
-        }
+        config = {"sensor": {"platform": "moon", "name": "moon_day2"}}
 
-        assert setup_component(self.hass, 'sensor', config)
+        assert setup_component(self.hass, "sensor", config)
+        self.hass.block_till_done()
 
-        state = self.hass.states.get('sensor.moon_day2')
-        assert state.state == 'waning_gibbous'
+        state = self.hass.states.get("sensor.moon_day2")
+        assert state.state == "waning_gibbous"

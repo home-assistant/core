@@ -1,0 +1,25 @@
+{
+  "config": {
+    "flow_title": "Tuya configuration",
+    "step": {
+      "user": {
+        "title": "Tuya",
+        "description": "Enter your Tuya credential.",
+        "data": {
+          "country_code": "Your account country code (e.g., 1 for USA or 86 for China)",
+          "password": "[%key:common::config_flow::data::password%]",
+          "platform": "The app where your account register",
+          "username": "[%key:common::config_flow::data::username%]"
+        }
+      }
+    },
+    "abort": {
+      "auth_failed": "[%key:common::config_flow::error::invalid_auth%]",
+      "conn_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "auth_failed": "[%key:common::config_flow::error::invalid_auth%]"
+    }
+  }
+}

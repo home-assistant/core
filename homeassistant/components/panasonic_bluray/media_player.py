@@ -2,15 +2,24 @@
 from datetime import timedelta
 import logging
 
+from panacotta import PanasonicBD
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
-    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_STOP,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_STOP,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_IDLE, STATE_OFF, STATE_PLAYING)
+    CONF_HOST,
+    CONF_NAME,
+    STATE_IDLE,
+    STATE_OFF,
+    STATE_PLAYING,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
@@ -20,13 +29,16 @@ DEFAULT_NAME = "Panasonic Blu-Ray"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
-SUPPORT_PANASONIC_BD = (SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY |
-                        SUPPORT_STOP | SUPPORT_PAUSE)
+SUPPORT_PANASONIC_BD = (
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY | SUPPORT_STOP | SUPPORT_PAUSE
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -37,14 +49,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([PanasonicBluRay(conf[CONF_HOST], conf[CONF_NAME])])
 
 
-class PanasonicBluRay(MediaPlayerDevice):
+class PanasonicBluRay(MediaPlayerEntity):
     """Representation of a Panasonic Blu-ray device."""
 
     def __init__(self, ip, name):
         """Initialize the Panasonic Blue-ray device."""
-        import panacotta
-
-        self._device = panacotta.PanasonicBD(ip)
+        self._device = PanasonicBD(ip)
         self._name = name
         self._state = STATE_OFF
         self._position = 0
@@ -54,7 +64,7 @@ class PanasonicBluRay(MediaPlayerDevice):
     @property
     def icon(self):
         """Return a disc player icon for the device."""
-        return 'mdi:disc-player'
+        return "mdi:disc-player"
 
     @property
     def name(self):
@@ -91,16 +101,16 @@ class PanasonicBluRay(MediaPlayerDevice):
         # This can take 5+ seconds to complete
         state = self._device.get_play_status()
 
-        if state[0] == 'error':
+        if state[0] == "error":
             self._state = None
-        elif state[0] in ['off', 'standby']:
+        elif state[0] in ["off", "standby"]:
             # We map both of these to off. If it's really off we can't
             # turn it on, but from standby we can go to idle by pressing
             # POWER.
             self._state = STATE_OFF
-        elif state[0] in ['paused', 'stopped']:
+        elif state[0] in ["paused", "stopped"]:
             self._state = STATE_IDLE
-        elif state[0] == 'playing':
+        elif state[0] == "playing":
             self._state = STATE_PLAYING
 
         # Update our current media position + length
@@ -121,25 +131,25 @@ class PanasonicBluRay(MediaPlayerDevice):
         can thus turn it back on when desired.
         """
         if self._state != STATE_OFF:
-            self._device.send_key('POWER')
+            self._device.send_key("POWER")
 
         self._state = STATE_OFF
 
     def turn_on(self):
         """Wake the device back up from standby."""
         if self._state == STATE_OFF:
-            self._device.send_key('POWER')
+            self._device.send_key("POWER")
 
         self._state = STATE_IDLE
 
     def media_play(self):
         """Send play command."""
-        self._device.send_key('PLAYBACK')
+        self._device.send_key("PLAYBACK")
 
     def media_pause(self):
         """Send pause command."""
-        self._device.send_key('PAUSE')
+        self._device.send_key("PAUSE")
 
     def media_stop(self):
         """Send stop command."""
-        self._device.send_key('STOP')
+        self._device.send_key("STOP")

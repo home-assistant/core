@@ -2,41 +2,49 @@
 import json
 import logging
 
+import pyfttt
 import requests
 import voluptuous as vol
 
-from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.const import CONF_WEBHOOK_ID, HTTP_OK
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
+
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-EVENT_RECEIVED = 'ifttt_webhook_received'
+EVENT_RECEIVED = "ifttt_webhook_received"
 
-ATTR_EVENT = 'event'
-ATTR_TARGET = 'target'
-ATTR_VALUE1 = 'value1'
-ATTR_VALUE2 = 'value2'
-ATTR_VALUE3 = 'value3'
+ATTR_EVENT = "event"
+ATTR_TARGET = "target"
+ATTR_VALUE1 = "value1"
+ATTR_VALUE2 = "value2"
+ATTR_VALUE3 = "value3"
 
-CONF_KEY = 'key'
+CONF_KEY = "key"
 
-SERVICE_TRIGGER = 'trigger'
+SERVICE_PUSH_ALARM_STATE = "push_alarm_state"
+SERVICE_TRIGGER = "trigger"
 
-SERVICE_TRIGGER_SCHEMA = vol.Schema({
-    vol.Required(ATTR_EVENT): cv.string,
-    vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(ATTR_VALUE1): cv.string,
-    vol.Optional(ATTR_VALUE2): cv.string,
-    vol.Optional(ATTR_VALUE3): cv.string,
-})
+SERVICE_TRIGGER_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_EVENT): cv.string,
+        vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_VALUE1): cv.string,
+        vol.Optional(ATTR_VALUE2): cv.string,
+        vol.Optional(ATTR_VALUE3): cv.string,
+    }
+)
 
-CONFIG_SCHEMA = vol.Schema({
-    vol.Optional(DOMAIN): vol.Schema({
-        vol.Required(CONF_KEY): vol.Any({cv.string: cv.string}, cv.string),
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Optional(DOMAIN): vol.Schema(
+            {vol.Required(CONF_KEY): vol.Any({cv.string: cv.string}, cv.string)}
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
@@ -56,7 +64,7 @@ async def async_setup(hass, config):
         value2 = call.data.get(ATTR_VALUE2)
         value3 = call.data.get(ATTR_VALUE3)
 
-        target_keys = dict()
+        target_keys = {}
         for target in targets:
             if target not in api_keys:
                 _LOGGER.error("No IFTTT api key for %s", target)
@@ -64,17 +72,17 @@ async def async_setup(hass, config):
             target_keys[target] = api_keys[target]
 
         try:
-            import pyfttt
+
             for target, key in target_keys.items():
                 res = pyfttt.send_event(key, event, value1, value2, value3)
-                if res.status_code != 200:
-                    _LOGGER.error("IFTTT reported error sending event to %s.",
-                                  target)
+                if res.status_code != HTTP_OK:
+                    _LOGGER.error("IFTTT reported error sending event to %s.", target)
         except requests.exceptions.RequestException:
             _LOGGER.exception("Error communicating with IFTTT")
 
-    hass.services.async_register(DOMAIN, SERVICE_TRIGGER, trigger_service,
-                                 schema=SERVICE_TRIGGER_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_TRIGGER, trigger_service, schema=SERVICE_TRIGGER_SCHEMA
+    )
 
     return True
 
@@ -85,17 +93,27 @@ async def handle_webhook(hass, webhook_id, request):
     try:
         data = json.loads(body) if body else {}
     except ValueError:
-        return None
+        _LOGGER.error(
+            "Received invalid data from IFTTT. Data needs to be formatted as JSON: %s",
+            body,
+        )
+        return
 
-    if isinstance(data, dict):
-        data['webhook_id'] = webhook_id
+    if not isinstance(data, dict):
+        _LOGGER.error(
+            "Received invalid data from IFTTT. Data needs to be a dictionary: %s", data
+        )
+        return
+
+    data["webhook_id"] = webhook_id
     hass.bus.async_fire(EVENT_RECEIVED, data)
 
 
 async def async_setup_entry(hass, entry):
     """Configure based on config entry."""
     hass.components.webhook.async_register(
-        DOMAIN, 'IFTTT', entry.data[CONF_WEBHOOK_ID], handle_webhook)
+        DOMAIN, "IFTTT", entry.data[CONF_WEBHOOK_ID], handle_webhook
+    )
     return True
 
 

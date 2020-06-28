@@ -1,12 +1,7 @@
 {
   "domain": "amazon_polly",
-  "name": "Amazon polly",
-  "documentation": "https://www.home-assistant.io/components/amazon_polly",
-  "requirements": [
-    "boto3==1.9.16"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@robbiet480"
-  ]
+  "name": "Amazon Polly",
+  "documentation": "https://www.home-assistant.io/integrations/amazon_polly",
+  "requirements": ["boto3==1.9.252"],
+  "codeowners": ["@robbiet480"]
 }

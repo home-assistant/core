@@ -1,0 +1,22 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Onbekannten Awair API Feeler"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "access_token": "Acc\u00e8s Jeton",
+                    "email": "E-Mail"
+                },
+                "description": "G\u00ebff d\u00e4in Awair Developpeur Acc\u00e8s jeton nach emol un."
+            },
+            "user": {
+                "data": {
+                    "access_token": "Acc\u00e8s Jeton",
+                    "email": "E-Mail"
+                }
+            }
+        }
+    }
+}

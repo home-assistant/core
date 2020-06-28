@@ -1,6 +1,8 @@
 """Common utilities for VeSync Component."""
 import logging
+
 from homeassistant.helpers.entity import ToggleEntity
+
 from .const import VS_SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,8 +23,7 @@ async def async_process_devices(hass, manager):
         for switch in manager.switches:
             if not switch.is_dimmable():
                 devices[VS_SWITCHES].append(switch)
-        _LOGGER.info(
-            "%d VeSync standard switches found", len(manager.switches))
+        _LOGGER.info("%d VeSync standard switches found", len(manager.switches))
 
     return devices
 
@@ -38,8 +39,7 @@ class VeSyncDevice(ToggleEntity):
     def unique_id(self):
         """Return the ID of this device."""
         if isinstance(self.device.sub_device_no, int):
-            return ('{}{}'.format(
-                self.device.cid, str(self.device.sub_device_no)))
+            return "{}{}".format(self.device.cid, str(self.device.sub_device_no))
         return self.device.cid
 
     @property

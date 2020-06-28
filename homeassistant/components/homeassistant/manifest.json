@@ -1,10 +1,7 @@
 {
   "domain": "homeassistant",
   "name": "Home Assistant Core Integration",
-  "documentation": "https://www.home-assistant.io/components/homeassistant",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": [
-    "@home-assistant/core"
-  ]
+  "documentation": "https://www.home-assistant.io/integrations/homeassistant",
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
 }

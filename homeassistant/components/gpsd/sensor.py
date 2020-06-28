@@ -1,32 +1,40 @@
 """Support for GPSD."""
 import logging
+import socket
 
+from gps3.agps3threaded import AGPS3mechanism
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_LATITUDE, ATTR_LONGITUDE, CONF_HOST, CONF_PORT,
-    CONF_NAME)
-from homeassistant.helpers.entity import Entity
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    ATTR_MODE,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CLIMB = 'climb'
-ATTR_ELEVATION = 'elevation'
-ATTR_GPS_TIME = 'gps_time'
-ATTR_MODE = 'mode'
-ATTR_SPEED = 'speed'
+ATTR_CLIMB = "climb"
+ATTR_ELEVATION = "elevation"
+ATTR_GPS_TIME = "gps_time"
+ATTR_SPEED = "speed"
 
-DEFAULT_HOST = 'localhost'
-DEFAULT_NAME = 'GPS'
+DEFAULT_HOST = "localhost"
+DEFAULT_NAME = "GPS"
 DEFAULT_PORT = 2947
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -44,14 +52,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # except GPSError:
     #     _LOGGER.warning('Not able to connect to GPSD')
     #     return False
-    import socket
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         sock.connect((host, port))
         sock.shutdown(2)
         _LOGGER.debug("Connection to GPSD possible")
-    except socket.error:
+    except OSError:
         _LOGGER.error("Not able to connect to GPSD")
         return False
 
@@ -63,8 +70,6 @@ class GpsdSensor(Entity):
 
     def __init__(self, hass, name, host, port):
         """Initialize the GPSD sensor."""
-        from gps3.agps3threaded import AGPS3mechanism
-
         self.hass = hass
         self._name = name
         self._host = host

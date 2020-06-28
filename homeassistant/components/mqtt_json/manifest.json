@@ -1,10 +1,7 @@
 {
   "domain": "mqtt_json",
-  "name": "Mqtt json",
-  "documentation": "https://www.home-assistant.io/components/mqtt_json",
-  "requirements": [],
-  "dependencies": [
-    "mqtt"
-  ],
+  "name": "MQTT JSON",
+  "documentation": "https://www.home-assistant.io/integrations/mqtt_json",
+  "dependencies": ["mqtt"],
   "codeowners": []
 }

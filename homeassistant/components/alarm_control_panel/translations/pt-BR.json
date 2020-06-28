@@ -1,0 +1,40 @@
+{
+    "device_automation": {
+        "action_type": {
+            "arm_away": "Armar {entity_name} longe",
+            "arm_home": "Armar {entity_name} casa",
+            "arm_night": "Armar {entity_name} noite",
+            "disarm": "Desarmar {entity_name}",
+            "trigger": "Disparar {entidade_nome}"
+        },
+        "condition_type": {
+            "is_armed_away": "{entity_name} est\u00e1 armado modo longe",
+            "is_armed_home": "{entity_name} est\u00e1 armadado modo casa",
+            "is_armed_night": "{entity_name} est\u00e1 armadado modo noite",
+            "is_disarmed": "{entity_name} est\u00e1 desarmado",
+            "is_triggered": "{entity_name} est\u00e1 acionado"
+        },
+        "trigger_type": {
+            "armed_away": "{entity_name} armado modo longe",
+            "armed_home": "{entity_name} armadado modo casa",
+            "armed_night": "{entity_name} armadado para noite",
+            "disarmed": "{entity_name} desarmado",
+            "triggered": "{entity_name} acionado"
+        }
+    },
+    "state": {
+        "_": {
+            "armed": "Armado",
+            "armed_away": "Armado ausente",
+            "armed_custom_bypass": "Armado em \u00e1reas espec\u00edficas",
+            "armed_home": "Armado casa",
+            "armed_night": "Armado noite",
+            "arming": "Armando",
+            "disarmed": "Desarmado",
+            "disarming": "Desarmando",
+            "pending": "Pendente",
+            "triggered": "Acionado"
+        }
+    },
+    "title": "Painel de controle do alarme"
+}

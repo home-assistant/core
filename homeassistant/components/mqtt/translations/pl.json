@@ -1,0 +1,51 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Dozwolona jest tylko jedna konfiguracja MQTT."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z po\u015brednikiem."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Po\u015brednik",
+                    "discovery": "W\u0142\u0105cz wykrywanie",
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Wprowad\u017a informacje o po\u0142\u0105czeniu po\u015brednika MQTT."
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "W\u0142\u0105cz wykrywanie"
+                },
+                "description": "Czy chcesz skonfigurowa\u0107 Home Assistanta, aby po\u0142\u0105czy\u0142 si\u0119 z po\u015brednikiem MQTT dostarczonym przez dodatek Hass.io {addon}?",
+                "title": "Po\u015brednik MQTT za po\u015brednictwem dodatku Hass.io"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "pierwszy przycisk",
+            "button_2": "drugi przycisk",
+            "button_3": "trzeci przycisk",
+            "button_4": "czwarty przycisk",
+            "button_5": "pi\u0105ty przycisk",
+            "button_6": "sz\u00f3sty przycisk",
+            "turn_off": "nast\u0105pi wy\u0142\u0105czenie",
+            "turn_on": "nast\u0105pi w\u0142\u0105czenie"
+        },
+        "trigger_type": {
+            "button_double_press": "\"{subtype}\" zostanie podw\u00f3jnie naci\u015bni\u0119ty",
+            "button_long_press": "\"{subtype}\" zostanie naci\u015bni\u0119ty w spos\u00f3b ci\u0105g\u0142y",
+            "button_long_release": "\"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
+            "button_quadruple_press": "\"{subtype}\" zostanie czterokrotnie naci\u015bni\u0119ty",
+            "button_quintuple_press": "\"{subtype}\" zostanie pi\u0119ciokrotnie naci\u015bni\u0119ty",
+            "button_short_press": "\"{subtype}\" zostanie naci\u015bni\u0119ty",
+            "button_short_release": "\"{subtype}\" zostanie zwolniony",
+            "button_triple_press": "\"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty"
+        }
+    }
+}

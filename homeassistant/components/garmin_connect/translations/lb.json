@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kont ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen, prob\u00e9iert w.e.g. nach emol.",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun.",
+            "too_many_requests": "Ze vill Ufroen, prob\u00e9iert sp\u00e9ider nach emol.",
+            "unknown": "Onerwaarte Feeler."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                },
+                "description": "F\u00ebllt \u00e4r Umeldungs Informatiounen aus.",
+                "title": "Garmin Connect"
+            }
+        }
+    }
+}

@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "Een ElkM1 mat d\u00ebser Adress ass scho konfigur\u00e9iert",
+            "already_configured": "Een ElkM1 mat d\u00ebsem Prefix ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "IP Adress oder Domain oder Serielle Port falls d'Verbindung seriell ass.",
+                    "password": "Passwuert",
+                    "prefix": "Een eenzegaartege Pr\u00e4fix (eidel lossen wann et n\u00ebmmen 1 ElkM1 g\u00ebtt)",
+                    "protocol": "Protokoll",
+                    "temperature_unit": "Temperatur Eenheet d\u00e9i den ElkM1 benotzt.",
+                    "username": "Benotzernumm"
+                },
+                "description": "D'Adress muss an der Form 'adress[:port]' fir 'ges\u00e9chert' an 'onges\u00e9chert' sinn. Beispill: '192.168.1.1'. De Port os optionell an ass standardm\u00e9isseg op 2101 fir 'onges\u00e9chert' an op 2601 fir 'ges\u00e9chert' d\u00e9fin\u00e9iert. Fir de serielle Protokoll, muss d'Adress an der Form 'tty[:baud]' sinn. Beispill: '/dev/ttyS1'. Baud Rate ass optionell an ass standardm\u00e9isseg op 115200 d\u00e9fin\u00e9iert.",
+                "title": "Mat Elk-M1 Control verbannen"
+            }
+        }
+    }
+}

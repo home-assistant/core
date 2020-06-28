@@ -1,14 +1,15 @@
 """Logging utilities."""
 import asyncio
-from asyncio.events import AbstractEventLoop
 from functools import partial, wraps
 import inspect
 import logging
-import threading
+import logging.handlers
+import queue
 import traceback
-from typing import Any, Callable, Coroutine, Optional
+from typing import Any, Callable, Coroutine
 
-from .async_ import run_coroutine_threadsafe
+from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
+from homeassistant.core import HomeAssistant, callback
 
 
 class HideSensitiveDataFilter(logging.Filter):
@@ -21,123 +22,96 @@ class HideSensitiveDataFilter(logging.Filter):
 
     def filter(self, record: logging.LogRecord) -> bool:
         """Hide sensitive data in messages."""
-        record.msg = record.msg.replace(self.text, '*******')
+        record.msg = record.msg.replace(self.text, "*******")
 
         return True
 
 
-# pylint: disable=invalid-name
-class AsyncHandler:
-    """Logging handler wrapper to add an async layer."""
+class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
+    """Process the log in another thread."""
 
-    def __init__(
-            self, loop: AbstractEventLoop, handler: logging.Handler) -> None:
-        """Initialize async logging handler wrapper."""
-        self.handler = handler
-        self.loop = loop
-        self._queue = asyncio.Queue(loop=loop)  # type: asyncio.Queue
-        self._thread = threading.Thread(target=self._process)
+    def emit(self, record: logging.LogRecord) -> None:
+        """Emit a log record."""
+        try:
+            self.enqueue(record)
+        except asyncio.CancelledError:  # pylint: disable=try-except-raise
+            raise
+        except Exception:  # pylint: disable=broad-except
+            self.handleError(record)
 
-        # Delegate from handler
-        self.setLevel = handler.setLevel
-        self.setFormatter = handler.setFormatter
-        self.addFilter = handler.addFilter
-        self.removeFilter = handler.removeFilter
-        self.filter = handler.filter
-        self.flush = handler.flush
-        self.handle = handler.handle
-        self.handleError = handler.handleError
-        self.format = handler.format
-
-        self._thread.start()
-
-    def close(self) -> None:
-        """Wrap close to handler."""
-        self.emit(None)
-
-    async def async_close(self, blocking: bool = False) -> None:
-        """Close the handler.
-
-        When blocking=True, will wait till closed.
+    def handle(self, record: logging.LogRecord) -> Any:
         """
-        await self._queue.put(None)
+        Conditionally emit the specified logging record.
 
-        if blocking:
-            while self._thread.is_alive():
-                await asyncio.sleep(0)
+        Depending on which filters have been added to the handler, push the new
+        records onto the backing Queue.
 
-    def emit(self, record: Optional[logging.LogRecord]) -> None:
-        """Process a record."""
-        ident = self.loop.__dict__.get("_thread_ident")
+        The default python logger Handler acquires a lock
+        in the parent class which we do not need as
+        SimpleQueue is already thread safe.
 
-        # inside eventloop
-        if ident is not None and ident == threading.get_ident():
-            self._queue.put_nowait(record)
-        # from a thread/executor
-        else:
-            self.loop.call_soon_threadsafe(self._queue.put_nowait, record)
+        See https://bugs.python.org/issue24645
+        """
+        return_value = self.filter(record)
+        if return_value:
+            self.emit(record)
+        return return_value
 
-    def __repr__(self) -> str:
-        """Return the string names."""
-        return str(self.handler)
 
-    def _process(self) -> None:
-        """Process log in a thread."""
-        while True:
-            record = run_coroutine_threadsafe(
-                self._queue.get(), self.loop).result()
+@callback
+def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
+    """
+    Migrate the existing log handlers to use the queue.
 
-            if record is None:
-                self.handler.close()
-                return
+    This allows us to avoid blocking I/O and formatting messages
+    in the event loop as log messages are written in another thread.
+    """
+    simple_queue = queue.SimpleQueue()  # type: ignore
+    queue_handler = HomeAssistantQueueHandler(simple_queue)
+    logging.root.addHandler(queue_handler)
 
-            self.handler.emit(record)
+    migrated_handlers = []
+    for handler in logging.root.handlers[:]:
+        if handler is queue_handler:
+            continue
+        logging.root.removeHandler(handler)
+        migrated_handlers.append(handler)
 
-    def createLock(self) -> None:
-        """Ignore lock stuff."""
-        pass
+    listener = logging.handlers.QueueListener(simple_queue, *migrated_handlers)
 
-    def acquire(self) -> None:
-        """Ignore lock stuff."""
-        pass
+    listener.start()
 
-    def release(self) -> None:
-        """Ignore lock stuff."""
-        pass
+    @callback
+    def _async_stop_queue_handler(_: Any) -> None:
+        """Cleanup handler."""
+        logging.root.removeHandler(queue_handler)
+        listener.stop()
 
-    @property
-    def level(self) -> int:
-        """Wrap property level to handler."""
-        return self.handler.level
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_queue_handler)
 
-    @property
-    def formatter(self) -> Optional[logging.Formatter]:
-        """Wrap property formatter to handler."""
-        return self.handler.formatter
 
-    @property
-    def name(self) -> str:
-        """Wrap property set_name to handler."""
-        return self.handler.get_name()  # type: ignore
+def log_exception(format_err: Callable[..., Any], *args: Any) -> None:
+    """Log an exception with additional context."""
+    module = inspect.getmodule(inspect.stack()[1][0])
+    if module is not None:
+        module_name = module.__name__
+    else:
+        # If Python is unable to access the sources files, the call stack frame
+        # will be missing information, so let's guard.
+        # https://github.com/home-assistant/home-assistant/issues/24982
+        module_name = __name__
 
-    @name.setter
-    def name(self, name: str) -> None:
-        """Wrap property get_name to handler."""
-        self.handler.set_name(name)  # type: ignore
+    # Do not print the wrapper in the traceback
+    frames = len(inspect.trace()) - 1
+    exc_msg = traceback.format_exc(-frames)
+    friendly_msg = format_err(*args)
+    logging.getLogger(module_name).error("%s\n%s", friendly_msg, exc_msg)
 
 
 def catch_log_exception(
-        func: Callable[..., Any],
-        format_err: Callable[..., Any],
-        *args: Any) -> Callable[[], None]:
+    func: Callable[..., Any], format_err: Callable[..., Any], *args: Any
+) -> Callable[[], None]:
     """Decorate a callback to catch and log exceptions."""
-    def log_exception(*args: Any) -> None:
-        module_name = inspect.getmodule(inspect.trace()[1][0]).__name__
-        # Do not print the wrapper in the traceback
-        frames = len(inspect.trace()) - 1
-        exc_msg = traceback.format_exc(-frames)
-        friendly_msg = format_err(*args)
-        logging.getLogger(module_name).error('%s\n%s', friendly_msg, exc_msg)
 
     # Check for partials to properly determine if coroutine function
     check_func = func
@@ -146,49 +120,47 @@ def catch_log_exception(
 
     wrapper_func = None
     if asyncio.iscoroutinefunction(check_func):
+
         @wraps(func)
         async def async_wrapper(*args: Any) -> None:
             """Catch and log exception."""
             try:
                 await func(*args)
             except Exception:  # pylint: disable=broad-except
-                log_exception(*args)
+                log_exception(format_err, *args)
+
         wrapper_func = async_wrapper
     else:
+
         @wraps(func)
         def wrapper(*args: Any) -> None:
             """Catch and log exception."""
             try:
                 func(*args)
             except Exception:  # pylint: disable=broad-except
-                log_exception(*args)
+                log_exception(format_err, *args)
+
         wrapper_func = wrapper
     return wrapper_func
 
 
 def catch_log_coro_exception(
-        target: Coroutine[Any, Any, Any],
-        format_err: Callable[..., Any],
-        *args: Any) -> Coroutine[Any, Any, Any]:
+    target: Coroutine[Any, Any, Any], format_err: Callable[..., Any], *args: Any
+) -> Coroutine[Any, Any, Any]:
     """Decorate a coroutine to catch and log exceptions."""
+
     async def coro_wrapper(*args: Any) -> Any:
         """Catch and log exception."""
         try:
             return await target
         except Exception:  # pylint: disable=broad-except
-            module_name = inspect.getmodule(inspect.trace()[1][0]).__name__
-            # Do not print the wrapper in the traceback
-            frames = len(inspect.trace()) - 1
-            exc_msg = traceback.format_exc(-frames)
-            friendly_msg = format_err(*args)
-            logging.getLogger(module_name).error('%s\n%s',
-                                                 friendly_msg, exc_msg)
+            log_exception(format_err, *args)
             return None
+
     return coro_wrapper()
 
 
-def async_create_catching_coro(
-        target: Coroutine) -> Coroutine:
+def async_create_catching_coro(target: Coroutine) -> Coroutine:
     """Wrap a coroutine to catch and log exceptions.
 
     The exception will be logged together with a stacktrace of where the
@@ -198,9 +170,11 @@ def async_create_catching_coro(
     """
     trace = traceback.extract_stack()
     wrapped_target = catch_log_coro_exception(
-        target, lambda *args:
-        "Exception in {} called from\n {}".format(
+        target,
+        lambda *args: "Exception in {} called from\n {}".format(
             target.__name__,  # type: ignore
-            "".join(traceback.format_list(trace[:-1]))))
+            "".join(traceback.format_list(trace[:-1])),
+        ),
+    )
 
     return wrapped_target

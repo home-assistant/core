@@ -1,41 +1,41 @@
-"""Pencom relay control.
-
-For more details about this component, please refer to the documentation at
-http://home-assistant.io/components/switch.pencom
-"""
+"""Pencom relay control."""
 import logging
 
+from pencompy.pencompy import Pencompy
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_NAME
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_BOARDS = 'boards'
-CONF_BOARD = 'board'
-CONF_ADDR = 'addr'
-CONF_RELAYS = 'relays'
+CONF_BOARDS = "boards"
+CONF_BOARD = "board"
+CONF_ADDR = "addr"
+CONF_RELAYS = "relays"
 
-RELAY_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_ADDR): cv.positive_int,
-    vol.Optional(CONF_BOARD, default=0): cv.positive_int,
-})
+RELAY_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_ADDR): cv.positive_int,
+        vol.Optional(CONF_BOARD, default=0): cv.positive_int,
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PORT): cv.port,
-    vol.Optional(CONF_BOARDS, default=1): cv.positive_int,
-    vol.Required(CONF_RELAYS): vol.All(cv.ensure_list, [RELAY_SCHEMA]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PORT): cv.port,
+        vol.Optional(CONF_BOARDS, default=1): cv.positive_int,
+        vol.Required(CONF_RELAYS): vol.All(cv.ensure_list, [RELAY_SCHEMA]),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Pencom relay platform (pencompy)."""
-    from pencompy.pencompy import Pencompy
 
     # Assign configuration variables.
     host = config[CONF_HOST]
@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devs, True)
 
 
-class PencomRelay(SwitchDevice):
+class PencomRelay(SwitchEntity):
     """Representation of a pencom relay."""
 
     def __init__(self, hub, board, addr, name):
@@ -95,5 +95,4 @@ class PencomRelay(SwitchDevice):
     @property
     def device_state_attributes(self):
         """Return supported attributes."""
-        return {"board": self._board,
-                "addr": self._addr}
+        return {"board": self._board, "addr": self._addr}

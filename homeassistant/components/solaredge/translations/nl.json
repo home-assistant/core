@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "site_exists": "Deze site_id is al geconfigureerd"
+        },
+        "error": {
+            "site_exists": "Deze site_id is al geconfigureerd"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "De API-sleutel voor deze site",
+                    "name": "De naam van deze installatie",
+                    "site_id": "De SolarEdge site-id"
+                },
+                "title": "Definieer de API-parameters voor deze installatie"
+            }
+        }
+    }
+}

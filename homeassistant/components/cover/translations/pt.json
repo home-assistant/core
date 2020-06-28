@@ -1,0 +1,36 @@
+{
+    "device_automation": {
+        "action_type": {
+            "close": "Fechar {entity_name}",
+            "close_tilt": "Fechar a inclina\u00e7\u00e3o da {entity_name}",
+            "open": "Abrir {entity_name}",
+            "open_tilt": "Abra a inclina\u00e7\u00e3o da {entity_name}",
+            "set_position": "Definir posi\u00e7\u00e3o de {entity_name}",
+            "set_tilt_position": "Definir a posi\u00e7\u00e3o de inclina\u00e7\u00e3o de {entity_name}"
+        },
+        "condition_type": {
+            "is_closed": "{entity_name} est\u00e1 fechada",
+            "is_closing": "{entity_name} est\u00e1 a fechar",
+            "is_open": "{entity_name} est\u00e1 aberta",
+            "is_opening": "{entity_name} est\u00e1 a abrir",
+            "is_position": "A posi\u00e7\u00e3o atual de {entity_name} \u00e9",
+            "is_tilt_position": "A inclina\u00e7\u00e3o actual de {entity_name} \u00e9"
+        },
+        "trigger_type": {
+            "closed": "{entity_name} fechou",
+            "closing": "{entity_name} est\u00e1 a fechar",
+            "opened": "{entity_name} abriu",
+            "opening": "{entity_name} est\u00e1 a abrir"
+        }
+    },
+    "state": {
+        "_": {
+            "closed": "Fechada",
+            "closing": "A fechar",
+            "open": "Aberta",
+            "opening": "A abrir",
+            "stopped": "Parado"
+        }
+    },
+    "title": "Cobertura"
+}

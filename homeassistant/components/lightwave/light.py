@@ -1,6 +1,9 @@
 """Support for LightwaveRF lights."""
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
+    ATTR_BRIGHTNESS,
+    SUPPORT_BRIGHTNESS,
+    LightEntity,
+)
 from homeassistant.const import CONF_NAME
 
 from . import LIGHTWAVE_LINK
@@ -8,8 +11,7 @@ from . import LIGHTWAVE_LINK
 MAX_BRIGHTNESS = 255
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Find and return LightWave lights."""
     if not discovery_info:
         return
@@ -24,7 +26,7 @@ async def async_setup_platform(
     async_add_entities(lights)
 
 
-class LWRFLight(Light):
+class LWRFLight(LightEntity):
     """Representation of a LightWaveRF light."""
 
     def __init__(self, name, device_id, lwlink):
@@ -69,14 +71,15 @@ class LWRFLight(Light):
 
         if self._brightness != MAX_BRIGHTNESS:
             self._lwlink.turn_on_with_brightness(
-                self._device_id, self._name, self._brightness)
+                self._device_id, self._name, self._brightness
+            )
         else:
             self._lwlink.turn_on_light(self._device_id, self._name)
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the LightWave light off."""
         self._state = False
         self._lwlink.turn_off(self._device_id, self._name)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

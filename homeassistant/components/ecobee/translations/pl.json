@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_only": "Komponent obs\u0142uguje tylko jedn\u0105 instancj\u0119 ecobee"
+        },
+        "error": {
+            "pin_request_failed": "B\u0142\u0105d podczas \u017c\u0105dania kodu PIN od ecobee; sprawd\u017a, czy klucz API jest poprawny.",
+            "token_request_failed": "B\u0142\u0105d podczas \u017c\u0105dania token\u00f3w od ecobee. Spr\u00f3buj ponownie."
+        },
+        "step": {
+            "authorize": {
+                "description": "Autoryzuj t\u0119 aplikacj\u0119 na https://www.ecobee.com/consumerportal/index.html za pomoc\u0105 kodu PIN: \n\n {pin} \n \n Nast\u0119pnie naci\u015bnij przycisk \"Zatwierd\u017a\".",
+                "title": "Autoryzuj aplikacj\u0119 na ecobee.com"
+            },
+            "user": {
+                "data": {
+                    "api_key": "Klucz API"
+                },
+                "description": "Prosz\u0119 wprowadzi\u0107 klucz API uzyskany na ecobee.com.",
+                "title": "Klucz API"
+            }
+        }
+    }
+}

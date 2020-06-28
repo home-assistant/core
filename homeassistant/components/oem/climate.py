@@ -5,25 +5,39 @@ from oemthermostat import Thermostat
 import requests
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, CURRENT_HVAC_OFF, HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_TARGET_TEMPERATURE)
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    SUPPORT_TARGET_TEMPERATURE,
+)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT,
-    CONF_USERNAME, TEMP_CELSIUS)
+    ATTR_TEMPERATURE,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    TEMP_CELSIUS,
+)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default="Thermostat"): cv.string,
-    vol.Optional(CONF_PORT, default=80): cv.port,
-    vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
-    vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME, default="Thermostat"): cv.string,
+        vol.Optional(CONF_PORT, default=80): cv.port,
+        vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
+        vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
+    }
+)
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
@@ -38,15 +52,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     password = config.get(CONF_PASSWORD)
 
     try:
-        therm = Thermostat(
-            host, port=port, username=username, password=password)
+        therm = Thermostat(host, port=port, username=username, password=password)
     except (ValueError, AssertionError, requests.RequestException):
         return False
 
-    add_entities((ThermostatDevice(therm, name), ), True)
+    add_entities((ThermostatDevice(therm, name),), True)
 
 
-class ThermostatDevice(ClimateDevice):
+class ThermostatDevice(ClimateEntity):
     """Interface class for the oemthermostat module."""
 
     def __init__(self, thermostat, name):

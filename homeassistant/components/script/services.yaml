@@ -8,18 +8,18 @@ turn_on:
   fields:
     entity_id:
       description: Name(s) of script to be turned on.
-      example: 'script.arrive_home'
+      example: "script.arrive_home"
 
 turn_off:
   description: Turn off script
   fields:
     entity_id:
       description: Name(s) of script to be turned off.
-      example: 'script.arrive_home'
+      example: "script.arrive_home"
 
 toggle:
   description: Toggle script
   fields:
     entity_id:
       description: Name(s) of script to be toggled.
-      example: 'script.arrive_home'
+      example: "script.arrive_home"

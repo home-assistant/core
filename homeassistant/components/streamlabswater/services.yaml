@@ -1,4 +1,6 @@
 set_away_mode:
-  description: 'Set the home/away mode for a Streamlabs Water Monitor.'
+  description: "Set the home/away mode for a Streamlabs Water Monitor."
   fields:
-    away_mode: {description: home or away, example: 'home'}
+    away_mode:
+      description: home or away
+      example: "home"

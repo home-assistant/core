@@ -1,5 +1,15 @@
 # Describes the format for available Envisalink services.
 
+alarm_keypress:
+  description: Send custom keypresses to the alarm.
+  fields:
+    entity_id:
+      description: Name of the alarm control panel to trigger.
+      example: "alarm_control_panel.downstairs"
+    keypress:
+      description: "String to send to the alarm panel (1-6 characters)."
+      example: "*71"
+
 invoke_custom_function:
   description: >
     Allows users with DSC panels to trigger a PGM output (1-4).

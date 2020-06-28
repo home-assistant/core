@@ -1,13 +1,13 @@
 """Test cases around the demo fan platform."""
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import fan
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.setup import async_setup_component
 
 from tests.components.fan import common
 
-FAN_ENTITY_ID = 'fan.living_room_fan'
+FAN_ENTITY_ID = "fan.living_room_fan"
 
 
 def get_entity(hass):
@@ -16,13 +16,10 @@ def get_entity(hass):
 
 
 @pytest.fixture(autouse=True)
-def setup_comp(hass):
+async def setup_comp(hass):
     """Initialize components."""
-    hass.loop.run_until_complete(async_setup_component(hass, fan.DOMAIN, {
-        'fan': {
-            'platform': 'demo',
-        }
-    }))
+    assert await async_setup_component(hass, fan.DOMAIN, {"fan": {"platform": "demo"}})
+    await hass.async_block_till_done()
 
 
 async def test_turn_on(hass):
@@ -34,8 +31,7 @@ async def test_turn_on(hass):
 
     await common.async_turn_on(hass, FAN_ENTITY_ID, fan.SPEED_HIGH)
     assert STATE_ON == get_entity(hass).state
-    assert fan.SPEED_HIGH == \
-        get_entity(hass).attributes[fan.ATTR_SPEED]
+    assert fan.SPEED_HIGH == get_entity(hass).attributes[fan.ATTR_SPEED]
 
 
 async def test_turn_off(hass):
@@ -64,10 +60,8 @@ async def test_set_direction(hass):
     """Test setting the direction of the device."""
     assert STATE_OFF == get_entity(hass).state
 
-    await common.async_set_direction(hass, FAN_ENTITY_ID,
-                                     fan.DIRECTION_REVERSE)
-    assert fan.DIRECTION_REVERSE == \
-        get_entity(hass).attributes.get('direction')
+    await common.async_set_direction(hass, FAN_ENTITY_ID, fan.DIRECTION_REVERSE)
+    assert fan.DIRECTION_REVERSE == get_entity(hass).attributes.get("direction")
 
 
 async def test_set_speed(hass):
@@ -75,19 +69,18 @@ async def test_set_speed(hass):
     assert STATE_OFF == get_entity(hass).state
 
     await common.async_set_speed(hass, FAN_ENTITY_ID, fan.SPEED_LOW)
-    assert fan.SPEED_LOW == \
-        get_entity(hass).attributes.get('speed')
+    assert fan.SPEED_LOW == get_entity(hass).attributes.get("speed")
 
 
 async def test_oscillate(hass):
     """Test oscillating the fan."""
-    assert not get_entity(hass).attributes.get('oscillating')
+    assert not get_entity(hass).attributes.get("oscillating")
 
     await common.async_oscillate(hass, FAN_ENTITY_ID, True)
-    assert get_entity(hass).attributes.get('oscillating')
+    assert get_entity(hass).attributes.get("oscillating")
 
     await common.async_oscillate(hass, FAN_ENTITY_ID, False)
-    assert not get_entity(hass).attributes.get('oscillating')
+    assert not get_entity(hass).attributes.get("oscillating")
 
 
 async def test_is_on(hass):

@@ -1,25 +1,30 @@
 """Support for showing random states."""
 import logging
+from random import getrandbits
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA)
-from homeassistant.const import CONF_NAME, CONF_DEVICE_CLASS
+    DEVICE_CLASSES_SCHEMA,
+    PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Random Binary Sensor'
+DEFAULT_NAME = "Random Binary Sensor"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    }
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Random binary sensor."""
     name = config.get(CONF_NAME)
     device_class = config.get(CONF_DEVICE_CLASS)
@@ -27,7 +32,7 @@ async def async_setup_platform(
     async_add_entities([RandomSensor(name, device_class)], True)
 
 
-class RandomSensor(BinarySensorDevice):
+class RandomSensor(BinarySensorEntity):
     """Representation of a Random binary sensor."""
 
     def __init__(self, name, device_class):
@@ -53,5 +58,5 @@ class RandomSensor(BinarySensorDevice):
 
     async def async_update(self):
         """Get new state and update the sensor's state."""
-        from random import getrandbits
+
         self._state = bool(getrandbits(1))

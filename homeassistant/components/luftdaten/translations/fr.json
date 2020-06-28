@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "communication_error": "Impossible de communiquer avec l'API Luftdaten",
+            "invalid_sensor": "Capteur non disponible ou invalide",
+            "sensor_exists": "Capteur d\u00e9j\u00e0 enregistr\u00e9"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "show_on_map": "Montrer sur la carte",
+                    "station_id": "ID capteur Luftdaten"
+                },
+                "title": "D\u00e9finir Luftdaten"
+            }
+        }
+    }
+}

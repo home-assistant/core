@@ -1,6 +1,8 @@
 """Support for Qwikswitch Sensors."""
 import logging
 
+from pyqwikswitch.qwikswitch import SENSORS
+
 from homeassistant.core import callback
 
 from . import DOMAIN as QWIKSWITCH, QSEntity
@@ -26,25 +28,32 @@ class QSSensor(QSEntity):
 
     def __init__(self, sensor):
         """Initialize the sensor."""
-        from pyqwikswitch.qwikswitch import SENSORS
 
-        super().__init__(sensor['id'], sensor['name'])
-        self.channel = sensor['channel']
-        sensor_type = sensor['type']
+        super().__init__(sensor["id"], sensor["name"])
+        self.channel = sensor["channel"]
+        sensor_type = sensor["type"]
 
         self._decode, self.unit = SENSORS[sensor_type]
-        if isinstance(self.unit, type):
-            self.unit = "{}:{}".format(sensor_type, self.channel)
+        # this cannot happen because it only happens in bool and this should be redirected to binary_sensor
+        assert not isinstance(
+            self.unit, type
+        ), f"boolean sensor id={sensor['id']} name={sensor['name']}"
 
     @callback
     def update_packet(self, packet):
         """Receive update packet from QSUSB."""
         val = self._decode(packet, channel=self.channel)
-        _LOGGER.debug("Update %s (%s:%s) decoded as %s: %s",
-                      self.entity_id, self.qsid, self.channel, val, packet)
+        _LOGGER.debug(
+            "Update %s (%s:%s) decoded as %s: %s",
+            self.entity_id,
+            self.qsid,
+            self.channel,
+            val,
+            packet,
+        )
         if val is not None:
             self._val = val
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def state(self):
@@ -54,7 +63,7 @@ class QSSensor(QSEntity):
     @property
     def unique_id(self):
         """Return a unique identifier for this sensor."""
-        return "qs{}:{}".format(self.qsid, self.channel)
+        return f"qs{self.qsid}:{self.channel}"
 
     @property
     def unit_of_measurement(self):

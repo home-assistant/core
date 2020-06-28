@@ -27,13 +27,14 @@ class LeafClimateSwitch(LeafEntity, ToggleEntity):
     @property
     def name(self):
         """Switch name."""
-        return "{} {}".format(self.car.leaf.nickname, "Climate Control")
+        return f"{self.car.leaf.nickname} Climate Control"
 
     def log_registration(self):
         """Log registration."""
         _LOGGER.debug(
-            "Registered LeafClimateSwitch integration with HASS for VIN %s",
-            self.car.leaf.vin)
+            "Registered LeafClimateSwitch integration with Home Assistant for VIN %s",
+            self.car.leaf.vin,
+        )
 
     @property
     def device_state_attributes(self):

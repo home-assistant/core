@@ -1,15 +1,13 @@
-"""
-Support for SmartHab device integration.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/smarthab/
-"""
-import logging
+"""Support for SmartHab device integration."""
 from datetime import timedelta
+import logging
+
+import pysmarthab
 from requests.exceptions import Timeout
 
-from homeassistant.components.light import Light
-from . import DOMAIN, DATA_HUB
+from homeassistant.components.light import LightEntity
+
+from . import DATA_HUB, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,20 +16,20 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the SmartHab lights platform."""
-    import pysmarthab
 
     hub = hass.data[DOMAIN][DATA_HUB]
     devices = hub.get_device_list()
 
     _LOGGER.debug("Found a total of %s devices", str(len(devices)))
 
-    entities = (SmartHabLight(light)
-                for light in devices if isinstance(light, pysmarthab.Light))
+    entities = (
+        SmartHabLight(light) for light in devices if isinstance(light, pysmarthab.Light)
+    )
 
     add_entities(entities, True)
 
 
-class SmartHabLight(Light):
+class SmartHabLight(LightEntity):
     """Representation of a SmartHab Light."""
 
     def __init__(self, light):
@@ -66,5 +64,6 @@ class SmartHabLight(Light):
         try:
             self._light.update()
         except Timeout:
-            _LOGGER.error("Reached timeout while updating light %s from API",
-                          self.entity_id)
+            _LOGGER.error(
+                "Reached timeout while updating light %s from API", self.entity_id
+            )

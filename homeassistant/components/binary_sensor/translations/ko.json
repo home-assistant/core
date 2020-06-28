@@ -1,0 +1,175 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_bat_low": "{entity_name} \uc758 \ubc30\ud130\ub9ac \uc794\ub7c9\uc774 \ubd80\uc871\ud558\uba74",
+            "is_cold": "{entity_name} \uc628\ub3c4\uac00 \ub0ae\uc73c\uba74",
+            "is_connected": "{entity_name} \uc774(\uac00) \uc5f0\uacb0\ub418\uc5b4 \uc788\uc73c\uba74",
+            "is_gas": "{entity_name} \uc774(\uac00) \uac00\uc2a4\ub97c \uac10\uc9c0\ud558\uba74",
+            "is_hot": "{entity_name} \uc628\ub3c4\uac00 \ub192\uc73c\uba74",
+            "is_light": "{entity_name} \uc774(\uac00) \ube5b\uc744 \uac10\uc9c0\ud558\uba74",
+            "is_locked": "{entity_name} \uc774(\uac00) \uc7a0\uaca8\uc788\uc73c\uba74",
+            "is_moist": "{entity_name} \uc774(\uac00) \uc2b5\ud558\uba74",
+            "is_motion": "{entity_name} \uc774(\uac00) \uc6c0\uc9c1\uc784\uc744 \uac10\uc9c0\ud558\uba74",
+            "is_moving": "{entity_name} \uc774(\uac00) \uc6c0\uc9c1\uc774\uba74",
+            "is_no_gas": "{entity_name} \uc774(\uac00) \uac00\uc2a4\ub97c \uac10\uc9c0\ud558\uc9c0 \uc54a\uc73c\uba74",
+            "is_no_light": "{entity_name} \uc774(\uac00) \ube5b\uc744 \uac10\uc9c0\ud558\uc9c0 \uc54a\uc73c\uba74",
+            "is_no_motion": "{entity_name} \uc774(\uac00) \uc6c0\uc9c1\uc784\uc744 \uac10\uc9c0\ud558\uc9c0 \uc54a\uc73c\uba74",
+            "is_no_problem": "{entity_name} \uc774(\uac00) \ubb38\uc81c\ub97c \uac10\uc9c0\ud558\uc9c0 \uc54a\uc73c\uba74",
+            "is_no_smoke": "{entity_name} \uc774(\uac00) \uc5f0\uae30\ub97c \uac10\uc9c0\ud558\uc9c0 \uc54a\uc73c\uba74",
+            "is_no_sound": "{entity_name} \uc774(\uac00) \uc18c\ub9ac\ub97c \uac10\uc9c0\ud558\uc9c0 \uc54a\uc73c\uba74",
+            "is_no_vibration": "{entity_name} \uc774(\uac00) \uc9c4\ub3d9\uc744 \uac10\uc9c0\ud558\uc9c0 \uc54a\uc73c\uba74",
+            "is_not_bat_low": "{entity_name} \uc758 \ubc30\ud130\ub9ac\uac00 \uc815\uc0c1\uc774\uba74",
+            "is_not_cold": "{entity_name}  \uc628\ub3c4\uac00 \ub0ae\uc9c0 \uc54a\uc73c\uba74",
+            "is_not_connected": "{entity_name} \uc758 \uc5f0\uacb0\uc774 \ub04a\uc5b4\uc838 \uc788\ub2e4\uba74",
+            "is_not_hot": "{entity_name} \uc628\ub3c4\uac00 \ub192\uc9c0 \uc54a\uc73c\uba74",
+            "is_not_locked": "{entity_name} \uc774(\uac00) \uc7a0\uaca8\uc788\uc9c0 \uc54a\uc73c\uba74",
+            "is_not_moist": "{entity_name} \uc774(\uac00) \uac74\uc870\ud558\uba74",
+            "is_not_moving": "{entity_name} \uc774(\uac00) \uc6c0\uc9c1\uc774\uc9c0 \uc54a\uc73c\uba74",
+            "is_not_occupied": "{entity_name} \uc774(\uac00) \uc7ac\uc2e4 \uc0c1\ud0dc\uac00 \uc544\ub2c8\uba74",
+            "is_not_open": "{entity_name} \uc774(\uac00) \ub2eb\ud600 \uc788\uc73c\uba74",
+            "is_not_plugged_in": "{entity_name} \ud50c\ub7ec\uadf8\uac00 \ubf51\ud600 \uc788\uc73c\uba74",
+            "is_not_powered": "{entity_name} \uc5d0 \uc804\uc6d0\uc774 \uacf5\uae09\ub418\uc9c0 \uc54a\uc73c\uba74",
+            "is_not_present": "{entity_name} \uc774(\uac00) \uc678\ucd9c \uc911\uc774\uba74",
+            "is_not_unsafe": "{entity_name} \uc774(\uac00) \uc548\uc804\ud558\uba74",
+            "is_occupied": "{entity_name} \uc774(\uac00) \uc7ac\uc2e4 \uc0c1\ud0dc\uc774\uba74",
+            "is_off": "{entity_name} \uc774(\uac00) \uaebc\uc838 \uc788\uc73c\uba74",
+            "is_on": "{entity_name} \uc774(\uac00) \ucf1c\uc838 \uc788\uc73c\uba74",
+            "is_open": "{entity_name} \uc774(\uac00) \uc5f4\ub824 \uc788\uc73c\uba74",
+            "is_plugged_in": "{entity_name} \ud50c\ub7ec\uadf8\uac00 \uaf3d\ud600 \uc788\uc73c\uba74",
+            "is_powered": "{entity_name} \uc5d0 \uc804\uc6d0\uc774 \uacf5\uae09\ub418\uace0 \uc788\uc73c\uba74",
+            "is_present": "{entity_name} \uc774(\uac00) \uc7ac\uc2e4 \uc911\uc774\uba74",
+            "is_problem": "{entity_name} \uc774(\uac00) \ubb38\uc81c\ub97c \uac10\uc9c0\ud558\uba74",
+            "is_smoke": "{entity_name} \uc774(\uac00) \uc5f0\uae30\ub97c \uac10\uc9c0\ud558\uba74",
+            "is_sound": "{entity_name} \uc774(\uac00) \uc18c\ub9ac\ub97c \uac10\uc9c0\ud558\uba74",
+            "is_unsafe": "{entity_name} \uc740(\ub294) \uc548\uc804\ud558\uc9c0 \uc54a\uc73c\uba74",
+            "is_vibration": "{entity_name} \uc774(\uac00) \uc9c4\ub3d9\uc744 \uac10\uc9c0\ud558\uba74"
+        },
+        "trigger_type": {
+            "bat_low": "{entity_name} \ubc30\ud130\ub9ac \uc794\ub7c9\uc774 \ubd80\uc871\ud574\uc9c8 \ub54c",
+            "cold": "{entity_name} \uc628\ub3c4\uac00 \ub0ae\uc544\uc84c\uc744 \ub54c",
+            "connected": "{entity_name} \uc774(\uac00) \uc5f0\uacb0\ub420 \ub54c",
+            "gas": "{entity_name} \uc774(\uac00) \uac00\uc2a4\ub97c \uac10\uc9c0\ud560 \ub54c",
+            "hot": "{entity_name} \uc628\ub3c4\uac00 \ub192\uc544\uc84c\uc744 \ub54c",
+            "light": "{entity_name} \uc774(\uac00) \ube5b\uc744 \uac10\uc9c0\ud560 \ub54c",
+            "locked": "{entity_name} \uc774(\uac00) \uc7a0\uae38 \ub54c",
+            "moist": "{entity_name} \uc774(\uac00) \uc2b5\ud574\uc9c8 \ub54c",
+            "motion": "{entity_name} \uc774(\uac00) \uc6c0\uc9c1\uc784\uc744 \uac10\uc9c0\ud560 \ub54c",
+            "moving": "{entity_name} \uc774(\uac00) \uc6c0\uc9c1\uc77c \ub54c",
+            "no_gas": "{entity_name} \uc774(\uac00) \uac00\uc2a4\ub97c \uac10\uc9c0\ud558\uc9c0 \uc54a\uac8c \ub420 \ub54c",
+            "no_light": "{entity_name} \uc774(\uac00) \ube5b\uc744 \uac10\uc9c0\ud558\uc9c0 \uc54a\uac8c \ub420 \ub54c",
+            "no_motion": "{entity_name} \uc774(\uac00) \uc6c0\uc9c1\uc784\uc744 \uac10\uc9c0\ud558\uc9c0 \uc54a\uac8c \ub420 \ub54c",
+            "no_problem": "{entity_name} \uc774(\uac00) \ubb38\uc81c\ub97c \uac10\uc9c0\ud558\uc9c0 \uc54a\uac8c \ub420 \ub54c",
+            "no_smoke": "{entity_name} \uc774(\uac00) \uc5f0\uae30\ub97c \uac10\uc9c0\ud558\uc9c0 \uc54a\uac8c \ub420 \ub54c",
+            "no_sound": "{entity_name} \uc774(\uac00) \uc18c\ub9ac\ub97c \uac10\uc9c0\ud558\uc9c0 \uc54a\uac8c \ub420 \ub54c",
+            "no_vibration": "{entity_name} \uc774(\uac00) \uc9c4\ub3d9\uc744 \uac10\uc9c0\ud558\uc9c0 \uc54a\uac8c \ub420 \ub54c",
+            "not_bat_low": "{entity_name} \ubc30\ud130\ub9ac\uac00 \uc815\uc0c1\uc774 \ub420 \ub54c",
+            "not_cold": "{entity_name} \uc628\ub3c4\uac00 \ub0ae\uc9c0 \uc54a\uac8c \ub410\uc744 \ub54c",
+            "not_connected": "{entity_name} \uc758 \uc5f0\uacb0\uc774 \ub04a\uc5b4\uc9c8 \ub54c",
+            "not_hot": "{entity_name} \uc628\ub3c4\uac00 \ub192\uc9c0 \uc54a\uac8c \ub410\uc744 \ub54c",
+            "not_locked": "{entity_name} \uc758 \uc7a0\uae08\uc774 \ud574\uc81c\ub420 \ub54c",
+            "not_moist": "{entity_name} \uc774(\uac00) \uac74\uc870\ud574\uc9c8 \ub54c",
+            "not_moving": "{entity_name} \uc774(\uac00) \uc6c0\uc9c1\uc774\uc9c0 \uc54a\uc744 \ub54c",
+            "not_occupied": "{entity_name} \uc774(\uac00) \uc7ac\uc2e4 \uc0c1\ud0dc\uac00 \uc544\ub2c8\uac8c \ub420 \ub54c",
+            "not_opened": "{entity_name} \uc774(\uac00) \ub2eb\ud790 \ub54c",
+            "not_plugged_in": "{entity_name} \ud50c\ub7ec\uadf8\uac00 \ubf51\ud790 \ub54c",
+            "not_powered": "{entity_name} \uc5d0 \uc804\uc6d0\uc774 \uacf5\uae09\ub418\uc9c0 \uc54a\uc744 \ub54c",
+            "not_present": "{entity_name} \uc774(\uac00) \uc678\ucd9c \uc0c1\ud0dc\uac00 \ub420 \ub54c",
+            "not_unsafe": "{entity_name} \uc740(\ub294) \uc548\uc804\ud574\uc9c8 \ub54c",
+            "occupied": "{entity_name} \uc774(\uac00) \uc7ac\uc2e4 \uc0c1\ud0dc\uac00 \ub420 \ub54c",
+            "opened": "{entity_name} \uc774(\uac00) \uc5f4\ub9b4 \ub54c",
+            "plugged_in": "{entity_name} \ud50c\ub7ec\uadf8\uac00 \uaf3d\ud790 \ub54c",
+            "powered": "{entity_name} \uc5d0 \uc804\uc6d0\uc774 \uacf5\uae09\ub420 \ub54c",
+            "present": "{entity_name} \uc774(\uac00) \uc7ac\uc2e4 \uc0c1\ud0dc\uac00 \ub420 \ub54c",
+            "problem": "{entity_name} \uc774(\uac00) \ubb38\uc81c\ub97c \uac10\uc9c0\ud560 \ub54c",
+            "smoke": "{entity_name} \uc774(\uac00) \uc5f0\uae30\ub97c \uac10\uc9c0\ud560 \ub54c",
+            "sound": "{entity_name} \uc774(\uac00) \uc18c\ub9ac\ub97c \uac10\uc9c0\ud560 \ub54c",
+            "turned_off": "{entity_name} \uc774(\uac00) \uaebc\uc9c8 \ub54c",
+            "turned_on": "{entity_name} \uc774(\uac00) \ucf1c\uc9c8 \ub54c",
+            "unsafe": "{entity_name} \uc774(\uac00) \uc548\uc804\ud558\uc9c0 \uc54a\uc744 \ub54c",
+            "vibration": "{entity_name} \uc774(\uac00) \uc9c4\ub3d9\uc744 \uac10\uc9c0\ud560 \ub54c"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "\uaebc\uc9d0",
+            "on": "\ucf1c\uc9d0"
+        },
+        "battery": {
+            "off": "\ubcf4\ud1b5",
+            "on": "\ub0ae\uc74c"
+        },
+        "cold": {
+            "off": "\ubcf4\ud1b5",
+            "on": "\uc800\uc628"
+        },
+        "connectivity": {
+            "off": "\uc5f0\uacb0\ud574\uc81c\ub428",
+            "on": "\uc5f0\uacb0\ub428"
+        },
+        "door": {
+            "off": "\ub2eb\ud798",
+            "on": "\uc5f4\ub9bc"
+        },
+        "garage_door": {
+            "off": "\ub2eb\ud798",
+            "on": "\uc5f4\ub9bc"
+        },
+        "gas": {
+            "off": "\uc774\uc0c1\uc5c6\uc74c",
+            "on": "\uac10\uc9c0\ub428"
+        },
+        "heat": {
+            "off": "\ubcf4\ud1b5",
+            "on": "\uace0\uc628"
+        },
+        "lock": {
+            "off": "\uc7a0\uae40",
+            "on": "\ud574\uc81c"
+        },
+        "moisture": {
+            "off": "\uac74\uc870\ud568",
+            "on": "\uc2b5\ud568"
+        },
+        "motion": {
+            "off": "\uc774\uc0c1\uc5c6\uc74c",
+            "on": "\uac10\uc9c0\ub428"
+        },
+        "occupancy": {
+            "off": "\uc774\uc0c1\uc5c6\uc74c",
+            "on": "\uac10\uc9c0\ub428"
+        },
+        "opening": {
+            "off": "\ub2eb\ud798",
+            "on": "\uc5f4\ub9bc"
+        },
+        "presence": {
+            "off": "\uc678\ucd9c",
+            "on": "\uc7ac\uc2e4"
+        },
+        "problem": {
+            "off": "\ubb38\uc81c\uc5c6\uc74c",
+            "on": "\ubb38\uc81c\uc788\uc74c"
+        },
+        "safety": {
+            "off": "\uc548\uc804",
+            "on": "\uc704\ud5d8"
+        },
+        "smoke": {
+            "off": "\uc774\uc0c1\uc5c6\uc74c",
+            "on": "\uac10\uc9c0\ub428"
+        },
+        "sound": {
+            "off": "\uc774\uc0c1\uc5c6\uc74c",
+            "on": "\uac10\uc9c0\ub428"
+        },
+        "vibration": {
+            "off": "\uc774\uc0c1\uc5c6\uc74c",
+            "on": "\uac10\uc9c0\ub428"
+        },
+        "window": {
+            "off": "\ub2eb\ud798",
+            "on": "\uc5f4\ub9bc"
+        }
+    },
+    "title": "\uc774\uc9c4\uc13c\uc11c"
+}

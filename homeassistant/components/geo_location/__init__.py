@@ -4,19 +4,23 @@ import logging
 from typing import Optional
 
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
-from homeassistant.helpers.config_validation import (  # noqa
-    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+from homeassistant.helpers.config_validation import (  # noqa: F401
+    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA_BASE,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DISTANCE = 'distance'
-ATTR_SOURCE = 'source'
+ATTR_DISTANCE = "distance"
+ATTR_SOURCE = "source"
 
-DOMAIN = 'geo_location'
+DOMAIN = "geo_location"
 
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -24,7 +28,8 @@ SCAN_INTERVAL = timedelta(seconds=60)
 async def async_setup(hass, config):
     """Set up the Geolocation component."""
     component = hass.data[DOMAIN] = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
+    )
     await component.async_setup(config)
     return True
 

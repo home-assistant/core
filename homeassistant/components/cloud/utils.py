@@ -1,7 +1,7 @@
 """Helper functions for cloud components."""
 from typing import Any, Dict
 
-from aiohttp import web, payload
+from aiohttp import payload, web
 
 
 def aiohttp_serialize_response(response: web.Response) -> Dict[str, Any]:
@@ -14,12 +14,8 @@ def aiohttp_serialize_response(response: web.Response) -> Dict[str, Any]:
         # pylint: disable=protected-access
         body = body._value.decode(body.encoding)
     elif isinstance(body, bytes):
-        body = body.decode(response.charset or 'utf-8')
+        body = body.decode(response.charset or "utf-8")
     else:
         raise ValueError("Unknown payload encoding")
 
-    return {
-        'status': response.status,
-        'body': body,
-        'headers': dict(response.headers),
-    }
+    return {"status": response.status, "body": body, "headers": dict(response.headers)}

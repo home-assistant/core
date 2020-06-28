@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Csak egyetlen ZHA konfigur\u00e1ci\u00f3 megengedett."
+        },
+        "error": {
+            "cannot_connect": "Nem lehet csatlakozni a ZHA eszk\u00f6zh\u00f6z."
+        },
+        "step": {
+            "port_config": {
+                "data": {
+                    "baudrate": "port sebess\u00e9g"
+                },
+                "title": "Be\u00e1ll\u00edt\u00e1sok"
+            },
+            "user": {
+                "title": "ZHA"
+            }
+        }
+    }
+}

@@ -6,7 +6,7 @@ from homeassistant.core import Config, HomeAssistant
 from .config_flow import smhi_locations  # noqa: F401
 from .const import DOMAIN  # noqa: F401
 
-DEFAULT_NAME = 'smhi'
+DEFAULT_NAME = "smhi"
 
 
 async def async_setup(hass: HomeAssistant, config: Config) -> bool:
@@ -15,17 +15,15 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
     return True
 
 
-async def async_setup_entry(
-        hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up SMHI forecast as config entry."""
-    hass.async_create_task(hass.config_entries.async_forward_entry_setup(
-        config_entry, 'weather'))
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(config_entry, "weather")
+    )
     return True
 
 
-async def async_unload_entry(
-        hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    await hass.config_entries.async_forward_entry_unload(
-        config_entry, 'weather')
+    await hass.config_entries.async_forward_entry_unload(config_entry, "weather")
     return True

@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Aquest dispositiu Guardian ja est\u00e0 configurat.",
+            "already_in_progress": "La configuraci\u00f3 del dispositiu Guardian ja est\u00e0 en curs.",
+            "connection_error": "No s'ha pogut connectar amb el dispositiu Guardian."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Adre\u00e7a IP",
+                    "port": "Port"
+                },
+                "description": "Configura un dispositiu Elexa Guardian local."
+            },
+            "zeroconf_confirm": {
+                "description": "Vols configurar aquest dispositiu Guardian?"
+            }
+        }
+    },
+    "title": "Elexa Guardian"
+}

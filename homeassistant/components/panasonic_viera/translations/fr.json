@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Une erreur inconnue est survenue. Veuillez consulter les journaux pour obtenir plus de d\u00e9tails."
+        },
+        "step": {
+            "pairing": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "description": "Entrer le code PIN affich\u00e9 sur votre t\u00e9l\u00e9viseur",
+                "title": "Appairage"
+            },
+            "user": {
+                "data": {
+                    "host": "Adresse IP",
+                    "name": "Nom"
+                },
+                "description": "Entrez l'adresse IP de votre t\u00e9l\u00e9viseur Panasonic Viera",
+                "title": "Configurer votre t\u00e9l\u00e9viseur"
+            }
+        }
+    },
+    "title": "Panasonic Viera"
+}

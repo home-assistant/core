@@ -1,10 +1,7 @@
 {
   "domain": "telegram",
   "name": "Telegram",
-  "documentation": "https://www.home-assistant.io/components/telegram",
-  "requirements": [],
-  "dependencies": [
-    "telegram_bot"
-  ],
+  "documentation": "https://www.home-assistant.io/integrations/telegram",
+  "dependencies": ["telegram_bot"],
   "codeowners": []
 }

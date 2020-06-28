@@ -1,0 +1,15 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Flu Near You",
+        "description": "Monitor user-based and CDC repots for a pair of coordinates.",
+        "data": { "latitude": "Latitude", "longitude": "Longitude" }
+      }
+    },
+    "error": { "general_error": "There was an unknown error." },
+    "abort": {
+      "already_configured": "These coordinates are already registered."
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane."
+        },
+        "error": {
+            "device_fail": "Nieoczekiwany b\u0142\u0105d.",
+            "device_timeout": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia.",
+            "forbidden": "Niepoprawne uwierzytelnienie."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "key": "Klucz API",
+                    "password": "Has\u0142o"
+                },
+                "description": "Wprowad\u017a adres IP Daikin AC.",
+                "title": "Konfiguracja Daikin AC"
+            }
+        }
+    }
+}

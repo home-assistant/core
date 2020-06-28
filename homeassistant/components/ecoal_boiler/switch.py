@@ -2,7 +2,7 @@
 import logging
 from typing import Optional
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from . import AVAILABLE_PUMPS, DATA_ECOAL_BOILER
 
@@ -21,7 +21,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(switches, True)
 
 
-class EcoalSwitch(SwitchDevice):
+class EcoalSwitch(SwitchEntity):
     """Representation of Ecoal switch."""
 
     def __init__(self, ecoal_contr, name, state_attr):
@@ -38,7 +38,7 @@ class EcoalSwitch(SwitchDevice):
         #   set_<attr>()
         # as attribute name in status instance:
         #   status.<attr>
-        self._contr_set_fun = getattr(self._ecoal_contr, "set_" + state_attr)
+        self._contr_set_fun = getattr(self._ecoal_contr, f"set_{state_attr}")
         # No value set, will be read from controller instead
         self._state = None
 

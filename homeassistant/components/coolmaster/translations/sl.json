@@ -1,0 +1,22 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "Povezava s CoolMasterNet ni uspela. Preverite svojega gostitelja.",
+            "no_units": "V gostitelju CoolMasterNet ni bilo mogo\u010de najti nobenih enot HVAC."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "cool": "Podpira na\u010din hlajenja",
+                    "dry": "Podpira na\u010din su\u0161enja",
+                    "fan_only": "Podpira samo na\u010din ventilacije",
+                    "heat": "Podpira na\u010din ogrevanja",
+                    "heat_cool": "Podpira samodejni na\u010din ogrevanja / hlajenja",
+                    "host": "Gostitelj",
+                    "off": "Lahko se izklopi"
+                },
+                "title": "Nastavite svoje podatke CoolMasterNet."
+            }
+        }
+    }
+}

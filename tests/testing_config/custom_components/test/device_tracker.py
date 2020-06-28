@@ -75,7 +75,7 @@ class MockScanner(DeviceScanner):
 
         Return None for dev1 for testing.
         """
-        return None if device == 'DEV1' else device.lower()
+        return None if device == "DEV1" else device.lower()
 
 
 SCANNER = MockScanner()

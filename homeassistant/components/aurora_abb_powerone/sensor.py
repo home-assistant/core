@@ -2,13 +2,17 @@
 
 import logging
 
+from aurorapy.client import AuroraError, AuroraSerialClient
 import voluptuous as vol
-from aurorapy.client import AuroraSerialClient, AuroraError
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_ADDRESS, CONF_DEVICE, CONF_NAME, DEVICE_CLASS_POWER,
-    POWER_WATT)
+    CONF_ADDRESS,
+    CONF_DEVICE,
+    CONF_NAME,
+    DEVICE_CLASS_POWER,
+    POWER_WATT,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -17,11 +21,13 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_ADDRESS = 2
 DEFAULT_NAME = "Solar PV"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICE): cv.string,
-    vol.Optional(CONF_ADDRESS, default=DEFAULT_ADDRESS): cv.positive_int,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_DEVICE): cv.string,
+        vol.Optional(CONF_ADDRESS, default=DEFAULT_ADDRESS): cv.positive_int,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -32,9 +38,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config[CONF_NAME]
 
     _LOGGER.debug("Intitialising com port=%s address=%s", comport, address)
-    client = AuroraSerialClient(address, comport, parity='N', timeout=1)
+    client = AuroraSerialClient(address, comport, parity="N", timeout=1)
 
-    devices.append(AuroraABBSolarPVMonitorSensor(client, name, 'Power'))
+    devices.append(AuroraABBSolarPVMonitorSensor(client, name, "Power"))
     add_entities(devices, True)
 
 
@@ -43,7 +49,7 @@ class AuroraABBSolarPVMonitorSensor(Entity):
 
     def __init__(self, client, name, typename):
         """Initialize the sensor."""
-        self._name = "{} {}".format(name, typename)
+        self._name = f"{name} {typename}"
         self.client = client
         self._state = None
 
@@ -90,7 +96,6 @@ class AuroraABBSolarPVMonitorSensor(Entity):
             if "No response after" in str(error):
                 _LOGGER.debug("No response from inverter (could be dark)")
             else:
-                # print("Exception!!: {}".format(str(e)))
                 raise error
             self._state = None
         finally:

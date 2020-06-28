@@ -1,7 +1,9 @@
 """Support for Eufy switches."""
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+import lakeside
+
+from homeassistant.components.switch import SwitchEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -13,18 +15,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([EufySwitch(discovery_info)], True)
 
 
-class EufySwitch(SwitchDevice):
+class EufySwitch(SwitchEntity):
     """Representation of a Eufy switch."""
 
     def __init__(self, device):
         """Initialize the light."""
-        import lakeside
 
         self._state = None
-        self._name = device['name']
-        self._address = device['address']
-        self._code = device['code']
-        self._type = device['type']
+        self._name = device["name"]
+        self._address = device["address"]
+        self._code = device["code"]
+        self._type = device["type"]
         self._switch = lakeside.switch(self._address, self._code, self._type)
         self._switch.connect()
 

@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "missing_configuration": "Home Connecz Komponent ass nach net konfigur\u00e9iert. Folleg w.e.g der Dokumentatioun."
+        },
+        "create_entry": {
+            "default": "Erfollegr\u00e4ich mat Home Connect authentifiz\u00e9iert."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Wiel Authentifikatiouns Method aus"
+            }
+        }
+    }
+}

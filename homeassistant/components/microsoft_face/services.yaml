@@ -1,28 +1,48 @@
 create_group:
   description: Create a new person group.
   fields:
-    name: {description: Name of the group., example: family}
+    name:
+      description: Name of the group.
+      example: family
 create_person:
   description: Create a new person in the group.
   fields:
-    group: {description: Name of the group, example: family}
-    name: {description: Name of the person, example: Hans}
+    group:
+      description: Name of the group
+      example: family
+    name:
+      description: Name of the person
+      example: Hans
 delete_group:
   description: Delete a new person group.
   fields:
-    name: {description: Name of the group., example: family}
+    name:
+      description: Name of the group.
+      example: family
 delete_person:
   description: Delete a person in the group.
   fields:
-    group: {description: Name of the group., example: family}
-    name: {description: Name of the person., example: Hans}
+    group:
+      description: Name of the group.
+      example: family
+    name:
+      description: Name of the person.
+      example: Hans
 face_person:
   description: Add a new picture to a person.
   fields:
-    camera_entity: {description: Camera to take a picture., example: camera.door}
-    group: {description: Name of the group., example: family}
-    person: {description: Name of the person., example: Hans}
+    camera_entity:
+      description: Camera to take a picture.
+      example: camera.door
+    group:
+      description: Name of the group.
+      example: family
+    person:
+      description: Name of the person.
+      example: Hans
 train_group:
   description: Train a person group.
   fields:
-    group: {description: Name of the group, example: family}
+    group:
+      description: Name of the group
+      example: family

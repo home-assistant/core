@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ta drukarka jest ju\u017c skonfigurowana.",
+            "unsupported_model": "Ten model drukarki nie jest obs\u0142ugiwany."
+        },
+        "error": {
+            "connection_error": "B\u0142\u0105d po\u0142\u0105czenia.",
+            "snmp_error": "Serwer SNMP wy\u0142\u0105czony lub drukarka nie jest obs\u0142ugiwana.",
+            "wrong_host": "Niepoprawna nazwa hosta lub adres IP drukarki."
+        },
+        "flow_title": "Drukarka Brother: {model} {serial_number}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "type": "Typ drukarki"
+                },
+                "description": "Konfiguracja integracji drukarek Brother. Je\u015bli masz problemy z konfiguracj\u0105, przejd\u017a na stron\u0119: https://www.home-assistant.io/integrations/brother"
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "type": "Typ drukarki"
+                },
+                "description": "Czy chcesz doda\u0107 drukark\u0119 Brother {model} o numerze seryjnym `{serial_number}` do Home Assistanta?",
+                "title": "Wykryto drukark\u0119 Brother"
+            }
+        }
+    }
+}

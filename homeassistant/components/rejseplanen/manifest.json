@@ -1,10 +1,7 @@
 {
   "domain": "rejseplanen",
   "name": "Rejseplanen",
-  "documentation": "https://www.home-assistant.io/components/rejseplanen",
-  "requirements": [
-    "rjpl==0.3.5"
-  ],
-  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/rejseplanen",
+  "requirements": ["rjpl==0.3.5"],
   "codeowners": []
 }

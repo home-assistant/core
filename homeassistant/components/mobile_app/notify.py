@@ -1,24 +1,37 @@
 """Support for mobile_app push notifications."""
 import asyncio
-from datetime import datetime, timezone
 import logging
 
 import async_timeout
 
 from homeassistant.components.notify import (
-    ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT,
-    BaseNotificationService)
-
+    ATTR_DATA,
+    ATTR_MESSAGE,
+    ATTR_TARGET,
+    ATTR_TITLE,
+    ATTR_TITLE_DEFAULT,
+    BaseNotificationService,
+)
+from homeassistant.const import HTTP_OK
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.util.dt as dt_util
 
-from .const import (ATTR_APP_DATA, ATTR_APP_ID, ATTR_APP_VERSION,
-                    ATTR_DEVICE_NAME, ATTR_OS_VERSION, ATTR_PUSH_RATE_LIMITS,
-                    ATTR_PUSH_RATE_LIMITS_ERRORS,
-                    ATTR_PUSH_RATE_LIMITS_MAXIMUM,
-                    ATTR_PUSH_RATE_LIMITS_RESETS_AT,
-                    ATTR_PUSH_RATE_LIMITS_SUCCESSFUL, ATTR_PUSH_TOKEN,
-                    ATTR_PUSH_URL, DATA_CONFIG_ENTRIES, DOMAIN)
+from .const import (
+    ATTR_APP_DATA,
+    ATTR_APP_ID,
+    ATTR_APP_VERSION,
+    ATTR_DEVICE_NAME,
+    ATTR_OS_VERSION,
+    ATTR_PUSH_RATE_LIMITS,
+    ATTR_PUSH_RATE_LIMITS_ERRORS,
+    ATTR_PUSH_RATE_LIMITS_MAXIMUM,
+    ATTR_PUSH_RATE_LIMITS_RESETS_AT,
+    ATTR_PUSH_RATE_LIMITS_SUCCESSFUL,
+    ATTR_PUSH_TOKEN,
+    ATTR_PUSH_URL,
+    DATA_CONFIG_ENTRIES,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,17 +59,21 @@ def log_rate_limits(hass, device_name, resp, level=logging.INFO):
 
     rate_limits = resp[ATTR_PUSH_RATE_LIMITS]
     resetsAt = rate_limits[ATTR_PUSH_RATE_LIMITS_RESETS_AT]
-    resetsAtTime = (dt_util.parse_datetime(resetsAt) -
-                    datetime.now(timezone.utc))
-    rate_limit_msg = ("mobile_app push notification rate limits for %s: "
-                      "%d sent, %d allowed, %d errors, "
-                      "resets in %s")
-    _LOGGER.log(level, rate_limit_msg,
-                device_name,
-                rate_limits[ATTR_PUSH_RATE_LIMITS_SUCCESSFUL],
-                rate_limits[ATTR_PUSH_RATE_LIMITS_MAXIMUM],
-                rate_limits[ATTR_PUSH_RATE_LIMITS_ERRORS],
-                str(resetsAtTime).split(".")[0])
+    resetsAtTime = dt_util.parse_datetime(resetsAt) - dt_util.utcnow()
+    rate_limit_msg = (
+        "mobile_app push notification rate limits for %s: "
+        "%d sent, %d allowed, %d errors, "
+        "resets in %s"
+    )
+    _LOGGER.log(
+        level,
+        rate_limit_msg,
+        device_name,
+        rate_limits[ATTR_PUSH_RATE_LIMITS_SUCCESSFUL],
+        rate_limits[ATTR_PUSH_RATE_LIMITS_MAXIMUM],
+        rate_limits[ATTR_PUSH_RATE_LIMITS_ERRORS],
+        str(resetsAtTime).split(".")[0],
+    )
 
 
 async def async_get_service(hass, config, discovery_info=None):
@@ -111,29 +128,27 @@ class MobileAppNotificationService(BaseNotificationService):
             if ATTR_OS_VERSION in entry_data:
                 reg_info[ATTR_OS_VERSION] = entry_data[ATTR_OS_VERSION]
 
-            data['registration_info'] = reg_info
+            data["registration_info"] = reg_info
 
             try:
                 with async_timeout.timeout(10):
                     response = await self._session.post(push_url, json=data)
                     result = await response.json()
 
-                if response.status == 201:
-                    log_rate_limits(self.hass,
-                                    entry_data[ATTR_DEVICE_NAME], result)
-                    return
+                if response.status in [HTTP_OK, 201, 202]:
+                    log_rate_limits(self.hass, entry_data[ATTR_DEVICE_NAME], result)
+                    continue
 
-                fallback_error = result.get("errorMessage",
-                                            "Unknown error")
-                fallback_message = ("Internal server error, "
-                                    "please try again later: "
-                                    "{}").format(fallback_error)
+                fallback_error = result.get("errorMessage", "Unknown error")
+                fallback_message = (
+                    f"Internal server error, please try again later: {fallback_error}"
+                )
                 message = result.get("message", fallback_message)
                 if response.status == 429:
                     _LOGGER.warning(message)
-                    log_rate_limits(self.hass,
-                                    entry_data[ATTR_DEVICE_NAME],
-                                    result, logging.WARNING)
+                    log_rate_limits(
+                        self.hass, entry_data[ATTR_DEVICE_NAME], result, logging.WARNING
+                    )
                 else:
                     _LOGGER.error(message)
 

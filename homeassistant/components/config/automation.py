@@ -3,24 +3,44 @@ from collections import OrderedDict
 import uuid
 
 from homeassistant.components.automation import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.automation.config import async_validate_config_item
+from homeassistant.config import AUTOMATION_CONFIG_PATH
 from homeassistant.const import CONF_ID, SERVICE_RELOAD
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry
 
-from . import EditIdBasedConfigView
-
-CONFIG_PATH = 'automations.yaml'
+from . import ACTION_DELETE, EditIdBasedConfigView
 
 
 async def async_setup(hass):
     """Set up the Automation config API."""
-    async def hook(hass):
+
+    async def hook(action, config_key):
         """post_write_hook for Config View that reloads automations."""
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD)
 
-    hass.http.register_view(EditAutomationConfigView(
-        DOMAIN, 'config', CONFIG_PATH, cv.string,
-        PLATFORM_SCHEMA, post_write_hook=hook
-    ))
+        if action != ACTION_DELETE:
+            return
+
+        ent_reg = await entity_registry.async_get_registry(hass)
+
+        entity_id = ent_reg.async_get_entity_id(DOMAIN, DOMAIN, config_key)
+
+        if entity_id is None:
+            return
+
+        ent_reg.async_remove(entity_id)
+
+    hass.http.register_view(
+        EditAutomationConfigView(
+            DOMAIN,
+            "config",
+            AUTOMATION_CONFIG_PATH,
+            cv.string,
+            PLATFORM_SCHEMA,
+            post_write_hook=hook,
+            data_validator=async_validate_config_item,
+        )
+    )
     return True
 
 
@@ -46,7 +66,7 @@ class EditAutomationConfigView(EditIdBasedConfigView):
 
         # Iterate through some keys that we want to have ordered in the output
         updated_value = OrderedDict()
-        for key in ('id', 'alias', 'trigger', 'condition', 'action'):
+        for key in ("id", "alias", "description", "trigger", "condition", "action"):
             if key in cur_value:
                 updated_value[key] = cur_value[key]
             if key in new_value:

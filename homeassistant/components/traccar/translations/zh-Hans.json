@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "\u60a8\u7684 Home Assistant \u5b9e\u4f8b\u9700\u8981\u53ef\u4ece\u4e92\u8054\u7f51\u8bbf\u95ee\u4ee5\u63a5\u6536Traccar\u6d88\u606f\u3002",
+            "one_instance_allowed": "\u53ea\u6709\u4e00\u4e2a\u5b9e\u4f8b\u662f\u5fc5\u9700\u7684\u3002"
+        }
+    }
+}

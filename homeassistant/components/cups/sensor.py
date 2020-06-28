@@ -1,72 +1,68 @@
 """Details about printers which are connected to CUPS."""
+from datetime import timedelta
 import importlib
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, UNIT_PERCENTAGE
 from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_MARKER_TYPE = 'marker_type'
-ATTR_MARKER_LOW_LEVEL = 'marker_low_level'
-ATTR_MARKER_HIGH_LEVEL = 'marker_high_level'
-ATTR_PRINTER_NAME = 'printer_name'
-ATTR_DEVICE_URI = 'device_uri'
-ATTR_PRINTER_INFO = 'printer_info'
-ATTR_PRINTER_IS_SHARED = 'printer_is_shared'
-ATTR_PRINTER_LOCATION = 'printer_location'
-ATTR_PRINTER_MODEL = 'printer_model'
-ATTR_PRINTER_STATE_MESSAGE = 'printer_state_message'
-ATTR_PRINTER_STATE_REASON = 'printer_state_reason'
-ATTR_PRINTER_TYPE = 'printer_type'
-ATTR_PRINTER_URI_SUPPORTED = 'printer_uri_supported'
+ATTR_MARKER_TYPE = "marker_type"
+ATTR_MARKER_LOW_LEVEL = "marker_low_level"
+ATTR_MARKER_HIGH_LEVEL = "marker_high_level"
+ATTR_PRINTER_NAME = "printer_name"
+ATTR_DEVICE_URI = "device_uri"
+ATTR_PRINTER_INFO = "printer_info"
+ATTR_PRINTER_IS_SHARED = "printer_is_shared"
+ATTR_PRINTER_LOCATION = "printer_location"
+ATTR_PRINTER_MODEL = "printer_model"
+ATTR_PRINTER_STATE_MESSAGE = "printer_state_message"
+ATTR_PRINTER_STATE_REASON = "printer_state_reason"
+ATTR_PRINTER_TYPE = "printer_type"
+ATTR_PRINTER_URI_SUPPORTED = "printer_uri_supported"
 
-CONF_PRINTERS = 'printers'
-CONF_IS_CUPS_SERVER = 'is_cups_server'
+CONF_PRINTERS = "printers"
+CONF_IS_CUPS_SERVER = "is_cups_server"
 
-DEFAULT_HOST = '127.0.0.1'
+DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 631
 DEFAULT_IS_CUPS_SERVER = True
 
-ICON_PRINTER = 'mdi:printer'
-ICON_MARKER = 'mdi:water'
+ICON_PRINTER = "mdi:printer"
+ICON_MARKER = "mdi:water"
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
-PRINTER_STATES = {
-    3: 'idle',
-    4: 'printing',
-    5: 'stopped',
-}
+PRINTER_STATES = {3: "idle", 4: "printing", 5: "stopped"}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PRINTERS): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_IS_CUPS_SERVER,
-                 default=DEFAULT_IS_CUPS_SERVER): cv.boolean,
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_PRINTERS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_IS_CUPS_SERVER, default=DEFAULT_IS_CUPS_SERVER): cv.boolean,
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the CUPS sensor."""
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    printers = config.get(CONF_PRINTERS)
-    is_cups = config.get(CONF_IS_CUPS_SERVER)
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
+    printers = config[CONF_PRINTERS]
+    is_cups = config[CONF_IS_CUPS_SERVER]
 
     if is_cups:
         data = CupsData(host, port, None)
         data.update()
         if data.available is False:
-            _LOGGER.error("Unable to connect to CUPS server: %s:%s",
-                          host, port)
+            _LOGGER.error("Unable to connect to CUPS server: %s:%s", host, port)
             raise PlatformNotReady()
 
         dev = []
@@ -86,8 +82,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     data = CupsData(host, port, printers)
     data.update()
     if data.available is False:
-        _LOGGER.error("Unable to connect to IPP printer: %s:%s",
-                      host, port)
+        _LOGGER.error("Unable to connect to IPP printer: %s:%s", host, port)
         raise PlatformNotReady()
 
     dev = []
@@ -122,7 +117,7 @@ class CupsSensor(Entity):
         if self._printer is None:
             return None
 
-        key = self._printer['printer-state']
+        key = self._printer["printer-state"]
         return PRINTER_STATES.get(key, key)
 
     @property
@@ -142,18 +137,15 @@ class CupsSensor(Entity):
             return None
 
         return {
-            ATTR_DEVICE_URI: self._printer['device-uri'],
-            ATTR_PRINTER_INFO: self._printer['printer-info'],
-            ATTR_PRINTER_IS_SHARED: self._printer['printer-is-shared'],
-            ATTR_PRINTER_LOCATION: self._printer['printer-location'],
-            ATTR_PRINTER_MODEL: self._printer['printer-make-and-model'],
-            ATTR_PRINTER_STATE_MESSAGE:
-                self._printer['printer-state-message'],
-            ATTR_PRINTER_STATE_REASON:
-                self._printer['printer-state-reasons'],
-            ATTR_PRINTER_TYPE: self._printer['printer-type'],
-            ATTR_PRINTER_URI_SUPPORTED:
-                self._printer['printer-uri-supported'],
+            ATTR_DEVICE_URI: self._printer["device-uri"],
+            ATTR_PRINTER_INFO: self._printer["printer-info"],
+            ATTR_PRINTER_IS_SHARED: self._printer["printer-is-shared"],
+            ATTR_PRINTER_LOCATION: self._printer["printer-location"],
+            ATTR_PRINTER_MODEL: self._printer["printer-make-and-model"],
+            ATTR_PRINTER_STATE_MESSAGE: self._printer["printer-state-message"],
+            ATTR_PRINTER_STATE_REASON: self._printer["printer-state-reasons"],
+            ATTR_PRINTER_TYPE: self._printer["printer-type"],
+            ATTR_PRINTER_URI_SUPPORTED: self._printer["printer-uri-supported"],
         }
 
     def update(self):
@@ -179,7 +171,7 @@ class IPPSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._attributes['printer-make-and-model']
+        return self._attributes["printer-make-and-model"]
 
     @property
     def icon(self):
@@ -197,7 +189,7 @@ class IPPSensor(Entity):
         if self._attributes is None:
             return None
 
-        key = self._attributes['printer-state']
+        key = self._attributes["printer-state"]
         return PRINTER_STATES.get(key, key)
 
     @property
@@ -208,25 +200,28 @@ class IPPSensor(Entity):
 
         state_attributes = {}
 
-        if 'printer-info' in self._attributes:
-            state_attributes[ATTR_PRINTER_INFO] = \
-                self._attributes['printer-info']
+        if "printer-info" in self._attributes:
+            state_attributes[ATTR_PRINTER_INFO] = self._attributes["printer-info"]
 
-        if 'printer-location' in self._attributes:
-            state_attributes[ATTR_PRINTER_LOCATION] = \
-                self._attributes['printer-location']
+        if "printer-location" in self._attributes:
+            state_attributes[ATTR_PRINTER_LOCATION] = self._attributes[
+                "printer-location"
+            ]
 
-        if 'printer-state-message' in self._attributes:
-            state_attributes[ATTR_PRINTER_STATE_MESSAGE] = \
-                self._attributes['printer-state-message']
+        if "printer-state-message" in self._attributes:
+            state_attributes[ATTR_PRINTER_STATE_MESSAGE] = self._attributes[
+                "printer-state-message"
+            ]
 
-        if 'printer-state-reasons' in self._attributes:
-            state_attributes[ATTR_PRINTER_STATE_REASON] = \
-                self._attributes['printer-state-reasons']
+        if "printer-state-reasons" in self._attributes:
+            state_attributes[ATTR_PRINTER_STATE_REASON] = self._attributes[
+                "printer-state-reasons"
+            ]
 
-        if 'printer-uri-supported' in self._attributes:
-            state_attributes[ATTR_PRINTER_URI_SUPPORTED] = \
-                self._attributes['printer-uri-supported']
+        if "printer-uri-supported" in self._attributes:
+            state_attributes[ATTR_PRINTER_URI_SUPPORTED] = self._attributes[
+                "printer-uri-supported"
+            ]
 
         return state_attributes
 
@@ -248,7 +243,7 @@ class MarkerSensor(Entity):
         self.data = data
         self._name = name
         self._printer = printer
-        self._index = data.attributes[printer]['marker-names'].index(name)
+        self._index = data.attributes[printer]["marker-names"].index(name)
         self._is_cups = is_cups
         self._attributes = None
 
@@ -268,12 +263,12 @@ class MarkerSensor(Entity):
         if self._attributes is None:
             return None
 
-        return self._attributes[self._printer]['marker-levels'][self._index]
+        return self._attributes[self._printer]["marker-levels"][self._index]
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "%"
+        return UNIT_PERCENTAGE
 
     @property
     def device_state_attributes(self):
@@ -281,30 +276,28 @@ class MarkerSensor(Entity):
         if self._attributes is None:
             return None
 
-        high_level = self._attributes[self._printer]['marker-high-levels']
+        high_level = self._attributes[self._printer].get("marker-high-levels")
         if isinstance(high_level, list):
             high_level = high_level[self._index]
 
-        low_level = self._attributes[self._printer]['marker-low-levels']
+        low_level = self._attributes[self._printer].get("marker-low-levels")
         if isinstance(low_level, list):
             low_level = low_level[self._index]
 
-        marker_types = self._attributes[self._printer]['marker-types']
+        marker_types = self._attributes[self._printer]["marker-types"]
         if isinstance(marker_types, list):
             marker_types = marker_types[self._index]
 
         if self._is_cups:
             printer_name = self._printer
         else:
-            printer_name = \
-                self._attributes[self._printer]['printer-make-and-model']
+            printer_name = self._attributes[self._printer]["printer-make-and-model"]
 
         return {
             ATTR_MARKER_HIGH_LEVEL: high_level,
             ATTR_MARKER_LOW_LEVEL: low_level,
             ATTR_MARKER_TYPE: marker_types,
-            ATTR_PRINTER_NAME: printer_name
-
+            ATTR_PRINTER_NAME: printer_name,
         }
 
     def update(self):
@@ -313,7 +306,6 @@ class MarkerSensor(Entity):
         self._attributes = self.data.attributes
 
 
-# pylint: disable=no-name-in-module
 class CupsData:
     """Get the latest data from CUPS and update the state."""
 
@@ -322,27 +314,26 @@ class CupsData:
         self._host = host
         self._port = port
         self._ipp_printers = ipp_printers
-        self.is_cups = (ipp_printers is None)
+        self.is_cups = ipp_printers is None
         self.printers = None
         self.attributes = {}
         self.available = False
 
     def update(self):
         """Get the latest data from CUPS."""
-        cups = importlib.import_module('cups')
+        cups = importlib.import_module("cups")
 
         try:
             conn = cups.Connection(host=self._host, port=self._port)
             if self.is_cups:
                 self.printers = conn.getPrinters()
                 for printer in self.printers:
-                    self.attributes[printer] = conn.getPrinterAttributes(
-                        name=printer)
+                    self.attributes[printer] = conn.getPrinterAttributes(name=printer)
             else:
                 for ipp_printer in self._ipp_printers:
                     self.attributes[ipp_printer] = conn.getPrinterAttributes(
-                        uri="ipp://{}:{}/{}"
-                        .format(self._host, self._port, ipp_printer))
+                        uri=f"ipp://{self._host}:{self._port}/{ipp_printer}"
+                    )
 
             self.available = True
         except RuntimeError:

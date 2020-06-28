@@ -11,8 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the BMW tracker."""
     accounts = hass.data[BMW_DOMAIN]
-    _LOGGER.debug('Found BMW accounts: %s',
-                  ', '.join([a.name for a in accounts]))
+    _LOGGER.debug("Found BMW accounts: %s", ", ".join([a.name for a in accounts]))
     for account in accounts:
         for vehicle in account.account.vehicles:
             tracker = BMWDeviceTracker(see, vehicle)
@@ -32,21 +31,21 @@ class BMWDeviceTracker:
     def update(self) -> None:
         """Update the device info.
 
-        Only update the state in home assistant if tracking in
+        Only update the state in Home Assistant if tracking in
         the car is enabled.
         """
         dev_id = slugify(self.vehicle.name)
 
         if not self.vehicle.state.is_vehicle_tracking_enabled:
-            _LOGGER.debug('Tracking is disabled for vehicle %s', dev_id)
+            _LOGGER.debug("Tracking is disabled for vehicle %s", dev_id)
             return
 
-        _LOGGER.debug('Updating %s', dev_id)
-        attrs = {
-            'vin': self.vehicle.vin,
-        }
+        _LOGGER.debug("Updating %s", dev_id)
+        attrs = {"vin": self.vehicle.vin}
         self._see(
-            dev_id=dev_id, host_name=self.vehicle.name,
-            gps=self.vehicle.state.gps_position, attributes=attrs,
-            icon='mdi:car'
+            dev_id=dev_id,
+            host_name=self.vehicle.name,
+            gps=self.vehicle.state.gps_position,
+            attributes=attrs,
+            icon="mdi:car",
         )

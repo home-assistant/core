@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Denne konto er allerede konfigureret."
+        },
+        "error": {
+            "cannot_connect": "Kunne ikke oprette forbindelse - pr\u00f8v igen.",
+            "invalid_auth": "Ugyldig godkendelse.",
+            "too_many_requests": "For mange anmodninger - pr\u00f8v igen senere.",
+            "unknown": "Uventet fejl."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Adgangskode",
+                    "username": "Brugernavn"
+                },
+                "description": "Indtast dine legitimationsoplysninger.",
+                "title": "Garmin Connect"
+            }
+        }
+    }
+}

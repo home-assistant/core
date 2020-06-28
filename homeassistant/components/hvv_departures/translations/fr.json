@@ -1,0 +1,27 @@
+{
+    "config": {
+        "step": {
+            "station_select": {
+                "title": "S\u00e9lectionner la station/l\u2019adresse"
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "offset": "D\u00e9calage (minutes)",
+                    "real_time": "Utiliser des donn\u00e9es en temps r\u00e9el"
+                },
+                "title": "Options"
+            }
+        }
+    }
+}

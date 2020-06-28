@@ -1,0 +1,14 @@
+{
+    "device_automation": {
+        "trigger_subtype": {
+            "button_2": "Druh\u00e9 tla\u010d\u00edtko",
+            "button_3": "T\u0159et\u00ed tla\u010d\u00edtko",
+            "button_4": "\u010ctvrt\u00e9 tla\u010d\u00edtko",
+            "button_5": "P\u00e1t\u00e9 tla\u010d\u00edtko",
+            "button_6": "\u0160est\u00e9 tla\u010d\u00edtko",
+            "close": "Zav\u0159\u00edt",
+            "dim_down": "ztmavit",
+            "dim_up": "ro\u017ehnout"
+        }
+    }
+}

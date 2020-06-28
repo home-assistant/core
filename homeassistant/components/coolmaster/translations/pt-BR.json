@@ -1,0 +1,17 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "cool": "Suporta o modo de resfriamento",
+                    "dry": "Suporta o modo seco",
+                    "fan_only": "Suporte apenas o modo ventilador",
+                    "heat": "Suporta o modo de aquecimento",
+                    "heat_cool": "Suporta o modo de aquecimento/resfriamento autom\u00e1tico",
+                    "host": "Host",
+                    "off": "Pode ser desligado"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "accessory_not_found_error": "Impossible d'ajouter le couplage car l'appareil est introuvable.",
+            "already_configured": "L'accessoire est d\u00e9j\u00e0 configur\u00e9 avec ce contr\u00f4leur.",
+            "already_in_progress": "Le flux de configuration de l'appareil est d\u00e9j\u00e0 en cours.",
+            "already_paired": "Cet accessoire est d\u00e9j\u00e0 associ\u00e9 \u00e0 un autre appareil. R\u00e9initialisez l\u2019accessoire et r\u00e9essayez.",
+            "ignored_model": "La prise en charge de HomeKit pour ce mod\u00e8le est bloqu\u00e9e car une int\u00e9gration native plus compl\u00e8te est disponible.",
+            "invalid_config_entry": "Cet appareil est pr\u00eat \u00e0 \u00eatre coupl\u00e9, mais il existe d\u00e9j\u00e0 une entr\u00e9e de configuration en conflit dans Home Assistant \u00e0 supprimer.",
+            "no_devices": "Aucun appareil non appair\u00e9 n'a pu \u00eatre trouv\u00e9"
+        },
+        "error": {
+            "authentication_error": "Code HomeKit incorrect. S'il vous pla\u00eet v\u00e9rifier et essayez \u00e0 nouveau.",
+            "busy_error": "L'appareil a refus\u00e9 d'ajouter le couplage car il est d\u00e9j\u00e0 coupl\u00e9 avec un autre contr\u00f4leur.",
+            "max_peers_error": "L'appareil a refus\u00e9 d'ajouter le couplage car il ne dispose pas de stockage de couplage libre.",
+            "max_tries_error": "Le p\u00e9riph\u00e9rique a refus\u00e9 d'ajouter le couplage car il a re\u00e7u plus de 100 tentatives d'authentification infructueuses.",
+            "pairing_failed": "Une erreur non g\u00e9r\u00e9e s'est produite lors de la tentative d'appairage avec cet appareil. Il se peut qu'il s'agisse d'une panne temporaire ou que votre appareil ne soit pas pris en charge actuellement.",
+            "unable_to_pair": "Impossible d'appairer, veuillez r\u00e9essayer.",
+            "unknown_error": "L'appareil a signal\u00e9 une erreur inconnue. L'appairage a \u00e9chou\u00e9."
+        },
+        "flow_title": "Accessoire HomeKit: {name}",
+        "step": {
+            "pair": {
+                "data": {
+                    "pairing_code": "Code d\u2019appairage"
+                },
+                "description": "Entrez votre code de jumelage HomeKit (au format XXX-XX-XXX) pour utiliser cet accessoire.",
+                "title": "Appairer avec l'accessoire HomeKit"
+            },
+            "user": {
+                "data": {
+                    "device": "Appareil"
+                },
+                "description": "S\u00e9lectionnez l'appareil avec lequel vous voulez appairer",
+                "title": "Appairer avec l'accessoire HomeKit"
+            }
+        }
+    },
+    "title": "Accessoire HomeKit"
+}

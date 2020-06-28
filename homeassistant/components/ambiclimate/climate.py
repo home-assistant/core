@@ -5,37 +5,48 @@ import logging
 import ambiclimate
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_OFF, HVAC_MODE_HEAT)
-from homeassistant.const import ATTR_NAME, ATTR_TEMPERATURE, TEMP_CELSIUS
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    SUPPORT_TARGET_TEMPERATURE,
+)
+from homeassistant.const import (
+    ATTR_NAME,
+    ATTR_TEMPERATURE,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    TEMP_CELSIUS,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from .const import (ATTR_VALUE, CONF_CLIENT_ID, CONF_CLIENT_SECRET,
-                    DOMAIN, SERVICE_COMFORT_FEEDBACK, SERVICE_COMFORT_MODE,
-                    SERVICE_TEMPERATURE_MODE, STORAGE_KEY, STORAGE_VERSION)
+
+from .const import (
+    ATTR_VALUE,
+    DOMAIN,
+    SERVICE_COMFORT_FEEDBACK,
+    SERVICE_COMFORT_MODE,
+    SERVICE_TEMPERATURE_MODE,
+    STORAGE_KEY,
+    STORAGE_VERSION,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 
-SEND_COMFORT_FEEDBACK_SCHEMA = vol.Schema({
-    vol.Required(ATTR_NAME): cv.string,
-    vol.Required(ATTR_VALUE): cv.string,
-})
+SEND_COMFORT_FEEDBACK_SCHEMA = vol.Schema(
+    {vol.Required(ATTR_NAME): cv.string, vol.Required(ATTR_VALUE): cv.string}
+)
 
-SET_COMFORT_MODE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_NAME): cv.string,
-})
+SET_COMFORT_MODE_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): cv.string})
 
-SET_TEMPERATURE_MODE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_NAME): cv.string,
-    vol.Required(ATTR_VALUE): cv.string,
-})
+SET_TEMPERATURE_MODE_SCHEMA = vol.Schema(
+    {vol.Required(ATTR_NAME): cv.string, vol.Required(ATTR_VALUE): cv.string}
+)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Ambicliamte device."""
 
 
@@ -46,10 +57,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
     token_info = await store.async_load()
 
-    oauth = ambiclimate.AmbiclimateOAuth(config[CONF_CLIENT_ID],
-                                         config[CONF_CLIENT_SECRET],
-                                         config['callback_url'],
-                                         websession)
+    oauth = ambiclimate.AmbiclimateOAuth(
+        config[CONF_CLIENT_ID],
+        config[CONF_CLIENT_SECRET],
+        config["callback_url"],
+        websession,
+    )
 
     try:
         token_info = await oauth.refresh_access_token(token_info)
@@ -62,9 +75,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     await store.async_save(token_info)
 
-    data_connection = ambiclimate.AmbiclimateConnection(oauth,
-                                                        token_info=token_info,
-                                                        websession=websession)
+    data_connection = ambiclimate.AmbiclimateConnection(
+        oauth, token_info=token_info, websession=websession
+    )
 
     if not await data_connection.find_devices():
         _LOGGER.error("No devices found")
@@ -88,10 +101,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
         if device:
             await device.set_comfort_feedback(service.data[ATTR_VALUE])
 
-    hass.services.async_register(DOMAIN,
-                                 SERVICE_COMFORT_FEEDBACK,
-                                 send_comfort_feedback,
-                                 schema=SEND_COMFORT_FEEDBACK_SCHEMA)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_COMFORT_FEEDBACK,
+        send_comfort_feedback,
+        schema=SEND_COMFORT_FEEDBACK_SCHEMA,
+    )
 
     async def set_comfort_mode(service):
         """Set comfort mode."""
@@ -100,10 +115,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
         if device:
             await device.set_comfort_mode()
 
-    hass.services.async_register(DOMAIN,
-                                 SERVICE_COMFORT_MODE,
-                                 set_comfort_mode,
-                                 schema=SET_COMFORT_MODE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_COMFORT_MODE, set_comfort_mode, schema=SET_COMFORT_MODE_SCHEMA
+    )
 
     async def set_temperature_mode(service):
         """Set temperature mode."""
@@ -112,13 +126,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
         if device:
             await device.set_temperature_mode(service.data[ATTR_VALUE])
 
-    hass.services.async_register(DOMAIN,
-                                 SERVICE_TEMPERATURE_MODE,
-                                 set_temperature_mode,
-                                 schema=SET_TEMPERATURE_MODE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_TEMPERATURE_MODE,
+        set_temperature_mode,
+        schema=SET_TEMPERATURE_MODE_SCHEMA,
+    )
 
 
-class AmbiclimateEntity(ClimateDevice):
+class AmbiclimateEntity(ClimateEntity):
     """Representation of a Ambiclimate Thermostat device."""
 
     def __init__(self, heater, store):
@@ -141,11 +157,9 @@ class AmbiclimateEntity(ClimateDevice):
     def device_info(self):
         """Return the device info."""
         return {
-            'identifiers': {
-                (DOMAIN, self.unique_id)
-            },
-            'name': self.name,
-            'manufacturer': 'Ambiclimate',
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "Ambiclimate",
         }
 
     @property
@@ -156,7 +170,7 @@ class AmbiclimateEntity(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the target temperature."""
-        return self._data.get('target_temperature')
+        return self._data.get("target_temperature")
 
     @property
     def target_temperature_step(self):
@@ -166,12 +180,12 @@ class AmbiclimateEntity(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self._data.get('temperature')
+        return self._data.get("temperature")
 
     @property
     def current_humidity(self):
         """Return the current humidity."""
-        return self._data.get('humidity')
+        return self._data.get("humidity")
 
     @property
     def min_temp(self):
@@ -196,7 +210,7 @@ class AmbiclimateEntity(ClimateDevice):
     @property
     def hvac_mode(self):
         """Return current operation."""
-        if self._data.get('power', '').lower() == 'on':
+        if self._data.get("power", "").lower() == "on":
             return HVAC_MODE_HEAT
 
         return HVAC_MODE_OFF

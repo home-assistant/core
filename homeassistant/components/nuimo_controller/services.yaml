@@ -1,0 +1,17 @@
+led_matrix:
+  description: Sends an LED Matrix to your display
+  fields:
+    matrix:
+      description: "A string representation of the matrix to be displayed. See the SDK documentation for more info: https://github.com/getSenic/nuimo-linux-python#write-to-nuimos-led-matrix"
+      example: "........
+        0000000.
+        .000000.
+        ..00000.
+        .0.0000.
+        .00.000.
+        .000000.
+        .000000.
+        ........"
+    interval:
+      description: Display interval in seconds
+      example: 0.5

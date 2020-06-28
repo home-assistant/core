@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Authentification non valide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "ID client (facultatif)",
+                    "client_secret": "Secret client (facultatif)",
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                }
+            }
+        }
+    },
+    "title": "Flick Electric"
+}

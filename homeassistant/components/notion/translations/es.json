@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Este nombre de usuario ya est\u00e1 en uso."
+        },
+        "error": {
+            "invalid_credentials": "Usuario o contrase\u00f1a no v\u00e1lido",
+            "no_devices": "No se han encontrado dispositivos en la cuenta"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Usuario/correo electr\u00f3nico"
+                },
+                "title": "Completa tu informaci\u00f3n"
+            }
+        }
+    }
+}
