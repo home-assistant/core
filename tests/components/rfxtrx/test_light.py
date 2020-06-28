@@ -64,27 +64,6 @@ class TestLightRfxtrx(unittest.TestCase):
             },
         )
 
-    def test_invalid_config(self):
-        """Test configuration."""
-        assert not setup_component(
-            self.hass,
-            "light",
-            {
-                "light": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "invalid_key": "afda",
-                    "devices": {
-                        "213c7f216": {
-                            "name": "Test",
-                            "packetid": "0b1100cd0213c7f210010f51",
-                            rfxtrx_core.ATTR_FIRE_EVENT: True,
-                        }
-                    },
-                }
-            },
-        )
-
     def test_default_config(self):
         """Test with 0 switches."""
         assert setup_component(
