@@ -123,7 +123,7 @@ class HumidifierDehumidifier(HomeAccessory):
 
         if CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER in char_values:
             # We support either humidifiers or dehumidifiers. If incompatible setting is requested
-            # then we swich off the device to avoid humidifying when the user wants to dehumidify and vice versa
+            # then we switch off the device to avoid humidifying when the user wants to dehumidify and vice versa
             hk_value = char_values[CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER]
             if (self._hk_device_class == HC_HUMIDIFIER and hk_value == 0) or (
                 self._hk_device_class == HC_DEHUMIDIFIER and hk_value == 1
