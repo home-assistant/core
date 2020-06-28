@@ -126,7 +126,7 @@ class ArubaDeviceScanner(DeviceScanner):
     def get_aruba_data(self):
         """Retrieve data from Aruba Access Point and return parsed result."""
 
-        if USE_API == True:
+        if USE_API is True:
             _LOGGER.debug("Using REST API")
             show_clients_data = ""
             show_clients_headers = {"Content-Type": "application/json"}
