@@ -489,6 +489,9 @@ plexauth==0.0.5
 # homeassistant.components.plex
 plexwebsocket==0.0.11
 
+# homeassistant.components.plum_lightpad
+plumlightpad==0.0.11
+
 # homeassistant.components.mhz19
 # homeassistant.components.serial_pm
 pmsensor==0.4
