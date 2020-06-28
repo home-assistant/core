@@ -13,7 +13,17 @@ from homeassistant.const import (
 from homeassistant.core import callback
 
 from . import get_api
-from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    CONF_LIMIT,
+    CONF_ORDER,
+    DEFAULT_LIMIT,
+    DEFAULT_NAME,
+    DEFAULT_ORDER,
+    DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    SUPPORTED_ORDER_MODES,
+)
 from .errors import AuthenticationError, CannotConnect, UnknownError
 
 DATA_SCHEMA = vol.Schema(
@@ -94,7 +104,15 @@ class TransmissionOptionsFlowHandler(config_entries.OptionsFlow):
                 default=self.config_entry.options.get(
                     CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                 ),
-            ): int
+            ): int,
+            vol.Optional(
+                CONF_LIMIT,
+                default=self.config_entry.options.get(CONF_LIMIT, DEFAULT_LIMIT),
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=500)),
+            vol.Optional(
+                CONF_ORDER,
+                default=self.config_entry.options.get(CONF_ORDER, DEFAULT_ORDER),
+            ): vol.All(vol.Coerce(str), vol.In(SUPPORTED_ORDER_MODES.keys())),
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
