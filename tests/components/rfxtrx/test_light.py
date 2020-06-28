@@ -1,7 +1,6 @@
 """The tests for the Rfxtrx light platform."""
 import unittest
 
-import RFXtrx as rfxtrxmod
 import pytest
 
 from homeassistant.components import rfxtrx as rfxtrx_core
@@ -70,59 +69,6 @@ class TestLightRfxtrx(unittest.TestCase):
             self.hass, "light", {"light": {"platform": "rfxtrx", "devices": {}}}
         )
         assert 0 == len(rfxtrx_core.RFX_DEVICES)
-
-    def test_old_config(self):
-        """Test with 1 light."""
-        assert setup_component(
-            self.hass,
-            "light",
-            {
-                "light": {
-                    "platform": "rfxtrx",
-                    "devices": {
-                        "123efab1": {
-                            "name": "Test",
-                            "packetid": "0b1100cd0213c7f210010f51",
-                        }
-                    },
-                }
-            },
-        )
-
-        self.hass.data[rfxtrx_core.DATA_RFXOBJECT] = rfxtrxmod.Core(
-            "", transport_protocol=rfxtrxmod.DummyTransport
-        )
-
-        assert 1 == len(rfxtrx_core.RFX_DEVICES)
-        entity = rfxtrx_core.RFX_DEVICES["213c7f216"]
-        assert "Test" == entity.name
-        assert "off" == entity.state
-        assert entity.assumed_state
-        assert entity.signal_repetitions == 1
-        assert not entity.should_fire_event
-        assert not entity.should_poll
-
-        assert not entity.is_on
-
-        entity.turn_on()
-        assert entity.is_on
-        assert entity.brightness == 255
-
-        entity.turn_off()
-        assert not entity.is_on
-        assert entity.brightness == 0
-
-        entity.turn_on(brightness=100)
-        assert entity.is_on
-        assert entity.brightness == 100
-
-        entity.turn_on(brightness=10)
-        assert entity.is_on
-        assert entity.brightness == 10
-
-        entity.turn_on(brightness=255)
-        assert entity.is_on
-        assert entity.brightness == 255
 
     def test_one_light(self):
         """Test with 1 light."""
