@@ -113,6 +113,7 @@ class RfxtrxSensor(Entity):
     def __init__(self, event, device, name, data_type, should_fire_event=False):
         """Initialize the sensor."""
         self.event = event
+        self._device = device
         self._name = name
         self.should_fire_event = should_fire_event
         self.data_type = data_type
@@ -128,7 +129,7 @@ class RfxtrxSensor(Entity):
             if not isinstance(event, SensorEvent):
                 return
 
-            if event.device.id_string != self.event.device.id_string:
+            if event.device.id_string != self._device.id_string:
                 return
 
             if self.data_type not in event.values:
