@@ -114,6 +114,7 @@ async def test_update_sensor(hass):
     starting_time = static_datetime()
     timestamp = future_timestamp(100)
 
+    assert 0
     with patch("homeassistant.util.dt.utcnow", return_value=starting_time), patch(
         "homeassistant.helpers.update_coordinator.utcnow", return_value=starting_time
     ), patch(
@@ -175,6 +176,7 @@ async def test_update_sensor_network_errors(hass):
     starting_time = static_datetime()
     timestamp = future_timestamp(100)
 
+    assert 0
     with patch("homeassistant.util.dt.utcnow", return_value=starting_time), patch(
         "homeassistant.helpers.update_coordinator.utcnow", return_value=starting_time
     ), patch(
