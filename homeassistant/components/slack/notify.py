@@ -29,11 +29,39 @@ ATTR_BLOCKS = "blocks"
 ATTR_BLOCKS_TEMPLATE = "blocks_template"
 ATTR_FILE = "file"
 ATTR_PASSWORD = "password"
+ATTR_PATH = "path"
+ATTR_URL = "url"
 ATTR_USERNAME = "username"
 
 CONF_DEFAULT_CHANNEL = "default_channel"
 
 DEFAULT_TIMEOUT_SECONDS = 15
+
+FILE_PATH_SCHEMA = vol.Schema({vol.Required(ATTR_PATH): cv.isfile})
+
+FILE_URL_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_URL): cv.url,
+        vol.Inclusive(ATTR_USERNAME, "credentials"): cv.string,
+        vol.Inclusive(ATTR_PASSWORD, "credentials"): cv.string,
+    }
+)
+
+DATA_FILE_SCHEMA = vol.Schema(
+    {vol.Required(ATTR_FILE): vol.Any(FILE_PATH_SCHEMA, FILE_URL_SCHEMA)}
+)
+
+DATA_TEXT_ONLY_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_ATTACHMENTS): list,
+        vol.Optional(ATTR_BLOCKS): list,
+        vol.Optional(ATTR_BLOCKS_TEMPLATE): list,
+    }
+)
+
+DATA_SCHEMA = vol.All(
+    cv.ensure_list, [vol.Any(DATA_FILE_SCHEMA, DATA_TEXT_ONLY_SCHEMA)]
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -76,12 +104,11 @@ async def _async_get_remote_file_contents(hass, url, *, username=None, password=
     """Get the binary contents of a remote file."""
     session = aiohttp_client.async_get_clientsession(hass)
 
+    kwargs = {}
     if username and password:
-        resp = session.request("get", url, auth=BasicAuth(username, password=password))
-    else:
-        resp = session.request("get", url)
+        kwargs = {"auth": BasicAuth(username, password=password)}
 
-    async with resp:
+    async with session.request("get", url, **kwargs) as resp:
         resp.raise_for_status()
         return await resp.read()
 
@@ -194,7 +221,14 @@ class SlackNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message, **kwargs):
         """Send a message to Slack."""
-        data = kwargs[ATTR_DATA] or {}
+        data = kwargs.get(ATTR_DATA, {})
+
+        try:
+            DATA_SCHEMA(data)
+        except vol.Invalid as err:
+            _LOGGER.error("Invalid message data: %s", err)
+            data = {}
+
         title = kwargs.get(ATTR_TITLE)
         targets = _async_sanitize_channel_names(
             kwargs.get(ATTR_TARGET, [self._default_channel])
@@ -223,17 +257,17 @@ class SlackNotificationService(BaseNotificationService):
             )
 
         # Message Type 2: A message that uploads a remote file
-        if data[ATTR_FILE].startswith(("http://", "https://")):
+        if ATTR_URL in data[ATTR_FILE]:
             return await self._async_send_remote_file_message(
-                data[ATTR_FILE],
+                data[ATTR_FILE][ATTR_URL],
                 targets,
                 message,
                 title,
-                username=data.get(ATTR_USERNAME),
-                password=data.get(ATTR_PASSWORD),
+                username=data[ATTR_FILE].get(ATTR_USERNAME),
+                password=data[ATTR_FILE].get(ATTR_PASSWORD),
             )
 
         # Message Type 3: A message that uploads a local file
         return await self._async_send_local_file_message(
-            data[ATTR_FILE], targets, message, title
+            data[ATTR_FILE][ATTR_PATH], targets, message, title
         )
