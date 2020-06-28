@@ -103,7 +103,7 @@ class TestSensorRfxtrx(unittest.TestCase):
         assert 2 == len(rfxtrx_core.RFX_DEVICES)
         device_num = 0
         for id in rfxtrx_core.RFX_DEVICES:
-            if id == "sensor_0601":
+            if id == "sensor_06_01":
                 device_num = device_num + 1
                 assert len(rfxtrx_core.RFX_DEVICES[id]) == 2
                 _entity_temp = rfxtrx_core.RFX_DEVICES[id]["Temperature"]
@@ -113,7 +113,7 @@ class TestSensorRfxtrx(unittest.TestCase):
                 assert _entity_hum.state is None
                 assert TEMP_CELSIUS == _entity_temp.unit_of_measurement
                 assert "Bath" == _entity_temp.__str__()
-            elif id == "sensor_0502":
+            elif id == "sensor_05_02":
                 device_num = device_num + 1
                 entity = rfxtrx_core.RFX_DEVICES[id]["Temperature"]
                 assert entity.state is None
@@ -238,7 +238,7 @@ class TestSensorRfxtrx(unittest.TestCase):
         assert 2 == len(rfxtrx_core.RFX_DEVICES)
         device_num = 0
         for id in rfxtrx_core.RFX_DEVICES:
-            if id == "sensor_0601":
+            if id == "sensor_06_01":
                 device_num = device_num + 1
                 assert len(rfxtrx_core.RFX_DEVICES[id]) == 2
                 _entity_temp = rfxtrx_core.RFX_DEVICES[id]["Temperature"]
@@ -248,7 +248,7 @@ class TestSensorRfxtrx(unittest.TestCase):
                 assert _entity_temp.state is None
                 assert TEMP_CELSIUS == _entity_temp.unit_of_measurement
                 assert "Bath" == _entity_temp.__str__()
-            elif id == "sensor_0502":
+            elif id == "sensor_05_02":
                 device_num = device_num + 1
                 entity = rfxtrx_core.RFX_DEVICES[id]["Temperature"]
                 assert entity.state is None
@@ -270,7 +270,7 @@ class TestSensorRfxtrx(unittest.TestCase):
 
         device_num = 0
         for id in rfxtrx_core.RFX_DEVICES:
-            if id == "sensor_0601":
+            if id == "sensor_06_01":
                 device_num = device_num + 1
                 assert len(rfxtrx_core.RFX_DEVICES[id]) == 2
                 _entity_temp = rfxtrx_core.RFX_DEVICES[id]["Temperature"]
@@ -298,7 +298,7 @@ class TestSensorRfxtrx(unittest.TestCase):
                     "Rssi numeric": 6,
                 } == _entity_temp.device_state_attributes
                 assert "Bath" == _entity_temp.__str__()
-            elif id == "sensor_0502":
+            elif id == "sensor_05_02":
                 device_num = device_num + 1
                 entity = rfxtrx_core.RFX_DEVICES[id]["Temperature"]
                 assert TEMP_CELSIUS == entity.unit_of_measurement
