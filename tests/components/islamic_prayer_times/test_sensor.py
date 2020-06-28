@@ -17,7 +17,7 @@ async def test_islamic_prayer_times_sensors(hass):
         "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
         return_value=PRAYER_TIMES,
     ), patch("homeassistant.util.dt.now", return_value=NOW):
-
+        assert 0
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
