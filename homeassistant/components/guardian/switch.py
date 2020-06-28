@@ -64,7 +64,7 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
         """Turn the valve off (closed)."""
         try:
             async with self._guardian.client:
-                await self._guardian.client.valve.valve_close()
+                await self._guardian.client.valve.close()
         except GuardianError as err:
             LOGGER.error("Error while closing the valve: %s", err)
             return
@@ -76,7 +76,7 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
         """Turn the valve on (open)."""
         try:
             async with self._guardian.client:
-                await self._guardian.client.valve.valve_open()
+                await self._guardian.client.valve.open()
         except GuardianError as err:
             LOGGER.error("Error while opening the valve: %s", err)
             return

@@ -178,7 +178,7 @@ aiofreepybox==0.0.8
 aioftp==0.12.0
 
 # homeassistant.components.guardian
-aioguardian==0.2.3
+aioguardian==1.0.0
 
 # homeassistant.components.harmony
 aioharmony==0.2.5

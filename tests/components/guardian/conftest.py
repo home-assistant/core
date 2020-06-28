@@ -9,7 +9,7 @@ def ping_client():
     with patch(
         "homeassistant.components.guardian.async_setup_entry", return_value=True
     ), patch("aioguardian.client.Client.connect"), patch(
-        "aioguardian.commands.device.Device.ping",
+        "aioguardian.commands.system.SystemCommands.ping",
         return_value={"command": 0, "status": "ok", "data": {"uid": "ABCDEF123456"}},
     ), patch(
         "aioguardian.client.Client.disconnect"
