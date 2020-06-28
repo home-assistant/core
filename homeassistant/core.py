@@ -1219,7 +1219,16 @@ class ServiceRegistry:
             raise ServiceNotFound(domain, service) from None
 
         if handler.schema:
-            processed_data = handler.schema(service_data)
+            try:
+                processed_data = handler.schema(service_data)
+            except vol.Invalid:
+                _LOGGER.debug(
+                    "Invalid data for service call %s.%s: %s",
+                    domain,
+                    service,
+                    service_data,
+                )
+                raise
         else:
             processed_data = service_data
 
