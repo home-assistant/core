@@ -107,7 +107,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
             },
         )
 
-        rfxtrx_core.RFXOBJECT = rfxtrxmod.Core(
+        self.hass.data[rfxtrx_core.DATA_RFXOBJECT] = rfxtrxmod.Core(
             "", transport_protocol=rfxtrxmod.DummyTransport
         )
 
