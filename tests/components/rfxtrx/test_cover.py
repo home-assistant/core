@@ -47,26 +47,6 @@ class TestCoverRfxtrx(unittest.TestCase):
             },
         )
 
-    def test_invalid_config_extra_key(self):
-        """Test configuration."""
-        assert not setup_component(
-            self.hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "invalid_key": "afda",
-                    "devices": {
-                        "0b1100cd0213c7f210010f51": {
-                            "name": "Test",
-                            rfxtrx_core.ATTR_FIRE_EVENT: True,
-                        }
-                    },
-                }
-            },
-        )
-
     def test_default_config(self):
         """Test with 0 cover."""
         assert setup_component(
