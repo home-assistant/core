@@ -225,6 +225,8 @@ async def test_discover_platform(mock_demo_setup_scanner, mock_see, hass):
 
 async def test_update_stale(hass, mock_device_tracker_conf):
     """Test stalled update."""
+
+    assert 0
     scanner = getattr(hass.components, "test.device_tracker").SCANNER
     scanner.reset()
     scanner.come_home("DEV1")
@@ -451,6 +453,7 @@ async def test_see_passive_zone_state(hass, mock_device_tracker_conf):
     scanner.reset()
     scanner.come_home("dev1")
 
+    assert 0
     with patch(
         "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
         return_value=register_time,
