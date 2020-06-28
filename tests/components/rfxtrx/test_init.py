@@ -199,4 +199,4 @@ class TestRFXTRX(unittest.TestCase):
 
         self.hass.block_till_done()
         assert 1 == len(calls)
-        assert calls[0].data == {"entity_id": "sensor.test"}
+        assert calls[0].data == {"entity_id": "sensor.test_temperature"}
