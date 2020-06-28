@@ -178,11 +178,18 @@ async def test_async_track_state_change_event(hass):
 
         multiple_entity_id_tracker.append((old_state, new_state))
 
+    @ha.callback
+    def callback_that_throws(event):
+        raise ValueError
+
     unsub_single = async_track_state_change_event(
         hass, ["light.Bowl"], single_run_callback
     )
     unsub_multi = async_track_state_change_event(
         hass, ["light.Bowl", "switch.kitchen"], multiple_run_callback
+    )
+    unsub_throws = async_track_state_change_event(
+        hass, ["light.Bowl", "switch.kitchen"], callback_that_throws
     )
 
     # Adding state to state machine
@@ -242,6 +249,7 @@ async def test_async_track_state_change_event(hass):
     assert len(multiple_entity_id_tracker) == 7
 
     unsub_multi()
+    unsub_throws()
 
 
 async def test_track_template(hass):
@@ -423,6 +431,7 @@ async def test_track_same_state_simple_trigger_check_funct(hass):
 
     # Adding state to state machine
     hass.states.async_set("light.Bowl", "on")
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert len(callback_runs) == 0
     assert check_func[-1][2].state == "on"

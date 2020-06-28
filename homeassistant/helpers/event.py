@@ -1,6 +1,7 @@
 """Helpers for listening to events."""
 from datetime import datetime, timedelta
 import functools as ft
+import logging
 import time
 from typing import Any, Awaitable, Callable, Dict, Iterable, Optional, Union
 
@@ -24,6 +25,8 @@ from homeassistant.util.async_ import run_callback_threadsafe
 
 TRACK_STATE_CHANGE_CALLBACKS = "track_state_change_callbacks"
 TRACK_STATE_CHANGE_LISTENER = "track_state_change_listener"
+
+_LOGGER = logging.getLogger(__name__)
 
 # PyLint does not like the use of threaded_listener_factory
 # pylint: disable=invalid-name
@@ -147,7 +150,12 @@ def async_track_state_change_event(
                 return
 
             for action in entity_callbacks[entity_id]:
-                hass.async_run_job(action, event)
+                try:
+                    hass.async_run_job(action, event)
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception(
+                        "Error while processing state changed for %s", entity_id
+                    )
 
         hass.data[TRACK_STATE_CHANGE_LISTENER] = hass.bus.async_listen(
             EVENT_STATE_CHANGED, _async_state_change_dispatcher
