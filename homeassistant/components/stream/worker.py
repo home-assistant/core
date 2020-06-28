@@ -64,16 +64,12 @@ def stream_worker(hass, stream, quit_event):
     audio_packets = {}
     # The presentation timestamp of the first video packet we receive
     first_pts = 0
-    # Packet count
-    packet_count = 0
     # The decoder timestamp of the latest packet we processed
     last_dts = None
 
     while not quit_event.is_set():
         try:
             packet = next(container.demux(video_stream))
-            packet_count += 1
-            _LOGGER.debug("got packet: %s", packet)
             if packet.dts is None:
                 if first_packet:
                     continue
@@ -96,8 +92,7 @@ def stream_worker(hass, stream, quit_event):
         packet.pts -= first_pts
 
         # Reset segment on every keyframe
-        if packet.is_keyframe or packet_count == 20:
-            _LOGGER.debug("put packet to %s outputs: %s", packet.dts, outputs)
+        if packet.is_keyframe:
             # Calculate the segment duration by multiplying the presentation
             # timestamp by the time base, which gets us total seconds.
             # By then dividing by the sequence, we can calculate how long
