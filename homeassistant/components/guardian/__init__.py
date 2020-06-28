@@ -3,7 +3,7 @@ import asyncio
 from datetime import timedelta
 
 from aioguardian import Client
-from aioguardian.commands.device import (
+from aioguardian.commands.system import (
     DEFAULT_FIRMWARE_UPGRADE_FILENAME,
     DEFAULT_FIRMWARE_UPGRADE_PORT,
     DEFAULT_FIRMWARE_UPGRADE_URL,
@@ -102,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         """Disable the device's onboard access point."""
         try:
             async with guardian.client:
-                await guardian.client.device.wifi_disable_ap()
+                await guardian.client.wifi.disable_ap()
         except GuardianError as err:
             LOGGER.error("Error during service call: %s", err)
             return
@@ -112,7 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         """Enable the device's onboard access point."""
         try:
             async with guardian.client:
-                await guardian.client.device.wifi_enable_ap()
+                await guardian.client.wifi.enable_ap()
         except GuardianError as err:
             LOGGER.error("Error during service call: %s", err)
             return
@@ -122,7 +122,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         """Reboot the device."""
         try:
             async with guardian.client:
-                await guardian.client.device.reboot()
+                await guardian.client.system.reboot()
         except GuardianError as err:
             LOGGER.error("Error during service call: %s", err)
             return
@@ -132,7 +132,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         """Fully reset system motor diagnostics."""
         try:
             async with guardian.client:
-                await guardian.client.valve.valve_reset()
+                await guardian.client.valve.reset()
         except GuardianError as err:
             LOGGER.error("Error during service call: %s", err)
             return
@@ -142,7 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         """Upgrade the device firmware."""
         try:
             async with guardian.client:
-                await guardian.client.device.upgrade_firmware(
+                await guardian.client.system.upgrade_firmware(
                     url=call.data[CONF_URL],
                     port=call.data[CONF_PORT],
                     filename=call.data[CONF_FILENAME],
@@ -191,12 +191,12 @@ class Guardian:
         self.uid = entry.data[CONF_UID]
 
         self._api_coros = {
-            DATA_DIAGNOSTICS: self.client.device.diagnostics,
+            DATA_DIAGNOSTICS: self.client.system.diagnostics,
             DATA_PAIR_DUMP: self.client.sensor.pair_dump,
-            DATA_PING: self.client.device.ping,
-            DATA_SENSOR_STATUS: self.client.sensor.sensor_status,
-            DATA_VALVE_STATUS: self.client.valve.valve_status,
-            DATA_WIFI_STATUS: self.client.device.wifi_status,
+            DATA_PING: self.client.system.ping,
+            DATA_SENSOR_STATUS: self.client.system.onboard_sensor_status,
+            DATA_VALVE_STATUS: self.client.valve.status,
+            DATA_WIFI_STATUS: self.client.wifi.status,
         }
 
         self._api_category_count = {
