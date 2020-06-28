@@ -327,9 +327,12 @@ def _async_register_events_and_services(hass: HomeAssistant):
             if HOMEKIT not in hass.data[DOMAIN][entry_id]:
                 continue
             homekit = hass.data[DOMAIN][entry_id][HOMEKIT]
+            if homekit.status == STATUS_RUNNING:
+                _LOGGER.debug("HomeKit is already running")
+                continue
             if homekit.status != STATUS_READY:
                 _LOGGER.warning(
-                    "HomeKit is not ready. Either it is already running or has "
+                    "HomeKit is not ready. Either it is already starting up or has "
                     "been stopped."
                 )
                 continue
