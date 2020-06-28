@@ -54,7 +54,7 @@ class TestSensorRfxtrx(unittest.TestCase):
         )
 
         assert 1 == len(rfxtrx_core.RFX_DEVICES)
-        entity = rfxtrx_core.RFX_DEVICES["sensor_0502"]["Temperature"]
+        entity = rfxtrx_core.RFX_DEVICES["sensor_05_02"]["Temperature"]
         assert "Test" == entity.name
         assert TEMP_CELSIUS == entity.unit_of_measurement
         assert entity.state is None
@@ -73,7 +73,7 @@ class TestSensorRfxtrx(unittest.TestCase):
         )
 
         assert 1 == len(rfxtrx_core.RFX_DEVICES)
-        entity = rfxtrx_core.RFX_DEVICES["sensor_0502"]["Temperature"]
+        entity = rfxtrx_core.RFX_DEVICES["sensor_05_02"]["Temperature"]
         assert "Test" == entity.name
         assert TEMP_CELSIUS == entity.unit_of_measurement
         assert entity.state is None
