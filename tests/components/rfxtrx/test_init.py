@@ -23,11 +23,10 @@ class TestRFXTRX(unittest.TestCase):
 
     def tear_down_cleanup(self):
         """Stop everything that was started."""
-        rfxtrx.RECEIVED_EVT_SUBSCRIBERS = []
-        rfxtrx.RFX_DEVICES = {}
+        rfxtrx.RECEIVED_EVT_SUBSCRIBERS.clear()
+        rfxtrx.RFX_DEVICES.clear()
         if rfxtrx.DATA_RFXOBJECT in self.hass.data:
             self.hass.data[rfxtrx.DATA_RFXOBJECT].close_connection()
-            del self.hass.data[rfxtrx.DATA_RFXOBJECT]
         self.hass.stop()
 
     def test_default_config(self):
