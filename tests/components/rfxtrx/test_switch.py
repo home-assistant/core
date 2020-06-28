@@ -7,7 +7,7 @@ import pytest
 from homeassistant.components import rfxtrx as rfxtrx_core
 from homeassistant.setup import setup_component
 
-from tests.common import get_test_home_assistant, mock_component
+from tests.common import assert_setup_component, get_test_home_assistant, mock_component
 
 
 @pytest.mark.skipif("os.environ.get('RFXTRX') != 'RUN'")
@@ -66,82 +66,26 @@ class TestSwitchRfxtrx(unittest.TestCase):
             },
         )
 
-    def test_invalid_config1(self):
-        """Test invalid configuration."""
-        assert not setup_component(
-            self.hass,
-            "switch",
-            {
-                "switch": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "2FF7f216": {
-                            "name": "Test",
-                            "packetid": "0b1100cd0213c7f210010f51",
-                            "signal_repetitions": 3,
-                        }
-                    },
-                }
-            },
-        )
-
     def test_invalid_config2(self):
         """Test invalid configuration."""
-        assert not setup_component(
-            self.hass,
-            "switch",
-            {
-                "switch": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "invalid_key": "afda",
-                    "devices": {
-                        "213c7f216": {
-                            "name": "Test",
-                            "packetid": "0b1100cd0213c7f210010f51",
-                            rfxtrx_core.ATTR_FIRE_EVENT: True,
-                        }
-                    },
-                }
-            },
-        )
-
-    def test_invalid_config3(self):
-        """Test invalid configuration."""
-        assert not setup_component(
-            self.hass,
-            "switch",
-            {
-                "switch": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "213c7f216": {
-                            "name": "Test",
-                            "packetid": "AA1100cd0213c7f210010f51",
-                            rfxtrx_core.ATTR_FIRE_EVENT: True,
-                        }
-                    },
-                }
-            },
-        )
-
-    def test_invalid_config4(self):
-        """Test configuration."""
-        assert not setup_component(
-            self.hass,
-            "switch",
-            {
-                "switch": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "213c7f216": {"name": "Test", rfxtrx_core.ATTR_FIRE_EVENT: True}
-                    },
-                }
-            },
-        )
+        with assert_setup_component(0):
+            setup_component(
+                self.hass,
+                "switch",
+                {
+                    "switch": {
+                        "platform": "rfxtrx",
+                        "automatic_add": True,
+                        "invalid_key": "afda",
+                        "devices": {
+                            "0b1100cd0213c7f210010f51": {
+                                "name": "Test",
+                                rfxtrx_core.ATTR_FIRE_EVENT: True,
+                            }
+                        },
+                    }
+                },
+            )
 
     def test_default_config(self):
         """Test with 0 switches."""
@@ -149,43 +93,6 @@ class TestSwitchRfxtrx(unittest.TestCase):
             self.hass, "switch", {"switch": {"platform": "rfxtrx", "devices": {}}}
         )
         assert 0 == len(rfxtrx_core.RFX_DEVICES)
-
-    def test_old_config(self):
-        """Test with 1 switch."""
-        assert setup_component(
-            self.hass,
-            "switch",
-            {
-                "switch": {
-                    "platform": "rfxtrx",
-                    "devices": {
-                        "123efab1": {
-                            "name": "Test",
-                            "packetid": "0b1100cd0213c7f210010f51",
-                        }
-                    },
-                }
-            },
-        )
-
-        rfxtrx_core.RFXOBJECT = rfxtrxmod.Core(
-            "", transport_protocol=rfxtrxmod.DummyTransport
-        )
-
-        assert 1 == len(rfxtrx_core.RFX_DEVICES)
-        entity = rfxtrx_core.RFX_DEVICES["213c7f216"]
-        assert "Test" == entity.name
-        assert "off" == entity.state
-        assert entity.assumed_state
-        assert entity.signal_repetitions == 1
-        assert not entity.should_fire_event
-        assert not entity.should_poll
-
-        assert not entity.is_on
-        entity.turn_on()
-        assert entity.is_on
-        entity.turn_off()
-        assert not entity.is_on
 
     def test_one_switch(self):
         """Test with 1 switch."""
