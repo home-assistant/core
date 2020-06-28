@@ -10,6 +10,8 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
     SERVICE_SELECT_SOURCE,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
@@ -255,6 +257,7 @@ class TelevisionMediaPlayer(HomeAccessory):
         state = self.hass.states.get(self.entity_id)
 
         self.support_select_source = False
+        self._supports_play_pause = False
 
         self.sources = []
 
@@ -263,6 +266,8 @@ class TelevisionMediaPlayer(HomeAccessory):
         self.chars_speaker = []
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
+        if features & (SUPPORT_PLAY | SUPPORT_PAUSE):
+            self._supports_play_pause = True
         if features & SUPPORT_VOLUME_MUTE or features & SUPPORT_VOLUME_STEP:
             self.chars_speaker.extend(
                 (CHAR_NAME, CHAR_ACTIVE, CHAR_VOLUME_CONTROL_TYPE, CHAR_VOLUME_SELECTOR)
@@ -378,7 +383,7 @@ class TelevisionMediaPlayer(HomeAccessory):
             _LOGGER.warning("%s: Unhandled key press for %s", self.entity_id, value)
             return
 
-        if key_name == KEY_PLAY_PAUSE:
+        if key_name == KEY_PLAY_PAUSE and self._supports_play_pause:
             # Handle Play Pause by directly updating the media player entity.
             state = self.hass.states.get(self.entity_id).state
             if state in (STATE_PLAYING, STATE_PAUSED):
@@ -389,12 +394,12 @@ class TelevisionMediaPlayer(HomeAccessory):
                 service = SERVICE_MEDIA_PLAY_PAUSE
             params = {ATTR_ENTITY_ID: self.entity_id}
             self.call_service(DOMAIN, service, params)
-
-        # All keys can be also handled by listening to the event bus
-        self.hass.bus.fire(
-            EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
-            {ATTR_KEY_NAME: key_name, ATTR_ENTITY_ID: self.entity_id},
-        )
+        else:
+            # Unhandled keys can be handled by listening to the event bus
+            self.hass.bus.fire(
+                EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
+                {ATTR_KEY_NAME: key_name, ATTR_ENTITY_ID: self.entity_id},
+            )
 
     @callback
     def async_update_state(self, new_state):
