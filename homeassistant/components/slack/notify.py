@@ -105,7 +105,7 @@ async def _async_get_remote_file_contents(hass, url, *, username=None, password=
     session = aiohttp_client.async_get_clientsession(hass)
 
     kwargs = {}
-    if username and password:
+    if username and password is not None:
         kwargs = {"auth": BasicAuth(username, password=password)}
 
     async with session.request("get", url, **kwargs) as resp:
