@@ -35,31 +35,6 @@ class TestSensorRfxtrx(unittest.TestCase):
         )
         assert 0 == len(rfxtrx_core.RFX_DEVICES)
 
-    def test_old_config_sensor(self):
-        """Test with 1 sensor."""
-        assert setup_component(
-            self.hass,
-            "sensor",
-            {
-                "sensor": {
-                    "platform": "rfxtrx",
-                    "devices": {
-                        "sensor_0502": {
-                            "name": "Test",
-                            "packetid": "0a52080705020095220269",
-                            "data_type": "Temperature",
-                        }
-                    },
-                }
-            },
-        )
-
-        assert 1 == len(rfxtrx_core.RFX_DEVICES)
-        entity = rfxtrx_core.RFX_DEVICES["sensor_0502"]["Temperature"]
-        assert "Test" == entity.name
-        assert TEMP_CELSIUS == entity.unit_of_measurement
-        assert entity.state is None
-
     def test_one_sensor(self):
         """Test with 1 sensor."""
         assert setup_component(
