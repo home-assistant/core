@@ -17,15 +17,15 @@ class TestCoverRfxtrx(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        mock_component("rfxtrx")
+        mock_component(self.hass, "rfxtrx")
         self.addCleanup(self.tear_down_cleanup)
 
     def tear_down_cleanup(self):
         """Stop everything that was started."""
-        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS = []
-        rfxtrx_core.RFX_DEVICES = {}
-        if rfxtrx_core.RFXOBJECT:
-            rfxtrx_core.RFXOBJECT.close_connection()
+        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS.clear()
+        rfxtrx_core.RFX_DEVICES.clear()
+        if rfxtrx_core.DATA_RFXOBJECT in self.hass.data:
+            self.hass.data[rfxtrx_core.DATA_RFXOBJECT].close_connection()
         self.hass.stop()
 
     def test_valid_config(self):
@@ -40,85 +40,8 @@ class TestCoverRfxtrx(unittest.TestCase):
                     "devices": {
                         "0b1100cd0213c7f210010f51": {
                             "name": "Test",
-                            rfxtrx_core.ATTR_FIREEVENT: True,
+                            rfxtrx_core.ATTR_FIRE_EVENT: True,
                         }
-                    },
-                }
-            },
-        )
-
-    def test_invalid_config_capital_letters(self):
-        """Test configuration."""
-        assert not setup_component(
-            self.hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "2FF7f216": {
-                            "name": "Test",
-                            "packetid": "0b1100cd0213c7f210010f51",
-                            "signal_repetitions": 3,
-                        }
-                    },
-                }
-            },
-        )
-
-    def test_invalid_config_extra_key(self):
-        """Test configuration."""
-        assert not setup_component(
-            self.hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "invalid_key": "afda",
-                    "devices": {
-                        "213c7f216": {
-                            "name": "Test",
-                            "packetid": "0b1100cd0213c7f210010f51",
-                            rfxtrx_core.ATTR_FIREEVENT: True,
-                        }
-                    },
-                }
-            },
-        )
-
-    def test_invalid_config_capital_packetid(self):
-        """Test configuration."""
-        assert not setup_component(
-            self.hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "213c7f216": {
-                            "name": "Test",
-                            "packetid": "AA1100cd0213c7f210010f51",
-                            rfxtrx_core.ATTR_FIREEVENT: True,
-                        }
-                    },
-                }
-            },
-        )
-
-    def test_invalid_config_missing_packetid(self):
-        """Test configuration."""
-        assert not setup_component(
-            self.hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "213c7f216": {"name": "Test", rfxtrx_core.ATTR_FIREEVENT: True}
                     },
                 }
             },
@@ -143,8 +66,8 @@ class TestCoverRfxtrx(unittest.TestCase):
                 }
             },
         )
-
-        rfxtrx_core.RFXOBJECT = rfxtrxmod.Core(
+        self.hass.block_till_done()
+        self.hass.data[rfxtrx_core.DATA_RFXOBJECT] = rfxtrxmod.Core(
             "", transport_protocol=rfxtrxmod.DummyTransport
         )
 

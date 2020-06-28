@@ -1,5 +1,6 @@
 """The tests for the Rfxtrx component."""
 # pylint: disable=protected-access
+import time
 import unittest
 
 import pytest
@@ -22,10 +23,10 @@ class TestRFXTRX(unittest.TestCase):
 
     def tear_down_cleanup(self):
         """Stop everything that was started."""
-        rfxtrx.RECEIVED_EVT_SUBSCRIBERS = []
-        rfxtrx.RFX_DEVICES = {}
-        if rfxtrx.RFXOBJECT:
-            rfxtrx.RFXOBJECT.close_connection()
+        rfxtrx.RECEIVED_EVT_SUBSCRIBERS.clear()
+        rfxtrx.RFX_DEVICES.clear()
+        if rfxtrx.DATA_RFXOBJECT in self.hass.data:
+            self.hass.data[rfxtrx.DATA_RFXOBJECT].close_connection()
         self.hass.stop()
 
     def test_default_config(self):
@@ -48,7 +49,9 @@ class TestRFXTRX(unittest.TestCase):
             {"sensor": {"platform": "rfxtrx", "automatic_add": True, "devices": {}}},
         )
 
-        assert len(rfxtrx.RFXOBJECT.sensors()) == 2
+        time.sleep(1)  # Dummy startup is slow
+
+        assert len(self.hass.data[rfxtrx.DATA_RFXOBJECT].sensors()) == 2
 
     def test_valid_config(self):
         """Test configuration."""
@@ -118,7 +121,7 @@ class TestRFXTRX(unittest.TestCase):
                     "devices": {
                         "0b1100cd0213c7f210010f51": {
                             "name": "Test",
-                            rfxtrx.ATTR_FIREEVENT: True,
+                            rfxtrx.ATTR_FIRE_EVENT: True,
                         }
                     },
                 }
@@ -134,8 +137,8 @@ class TestRFXTRX(unittest.TestCase):
 
         self.hass.bus.listen(rfxtrx.EVENT_BUTTON_PRESSED, record_event)
         self.hass.block_till_done()
-
-        entity = rfxtrx.RFX_DEVICES["213c7f216"]
+        entity = rfxtrx.RFX_DEVICES["213c7f2_16"]
+        entity.update_state(False, 0)
         assert "Test" == entity.name
         assert "off" == entity.state
         assert entity.should_fire_event
@@ -176,7 +179,7 @@ class TestRFXTRX(unittest.TestCase):
                     "devices": {
                         "0a520802060100ff0e0269": {
                             "name": "Test",
-                            rfxtrx.ATTR_FIREEVENT: True,
+                            rfxtrx.ATTR_FIRE_EVENT: True,
                         }
                     },
                 }
@@ -198,4 +201,4 @@ class TestRFXTRX(unittest.TestCase):
 
         self.hass.block_till_done()
         assert 1 == len(calls)
-        assert calls[0].data == {"entity_id": "sensor.test"}
+        assert calls[0].data == {"entity_id": "sensor.test_temperature"}

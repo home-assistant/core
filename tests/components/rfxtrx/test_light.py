@@ -1,7 +1,6 @@
 """The tests for the Rfxtrx light platform."""
 import unittest
 
-import RFXtrx as rfxtrxmod
 import pytest
 
 from homeassistant.components import rfxtrx as rfxtrx_core
@@ -22,10 +21,10 @@ class TestLightRfxtrx(unittest.TestCase):
 
     def tear_down_cleanup(self):
         """Stop everything that was started."""
-        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS = []
-        rfxtrx_core.RFX_DEVICES = {}
-        if rfxtrx_core.RFXOBJECT:
-            rfxtrx_core.RFXOBJECT.close_connection()
+        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS.clear()
+        rfxtrx_core.RFX_DEVICES.clear()
+        if rfxtrx_core.DATA_RFXOBJECT in self.hass.data:
+            self.hass.data[rfxtrx_core.DATA_RFXOBJECT].close_connection()
         self.hass.stop()
 
     def test_valid_config(self):
@@ -40,7 +39,7 @@ class TestLightRfxtrx(unittest.TestCase):
                     "devices": {
                         "0b1100cd0213c7f210010f51": {
                             "name": "Test",
-                            rfxtrx_core.ATTR_FIREEVENT: True,
+                            rfxtrx_core.ATTR_FIRE_EVENT: True,
                         }
                     },
                 }
@@ -55,31 +54,9 @@ class TestLightRfxtrx(unittest.TestCase):
                     "platform": "rfxtrx",
                     "automatic_add": True,
                     "devices": {
-                        "213c7f216": {
+                        "0b1100cd0213c7f210010f51": {
                             "name": "Test",
-                            "packetid": "0b1100cd0213c7f210010f51",
                             "signal_repetitions": 3,
-                        }
-                    },
-                }
-            },
-        )
-
-    def test_invalid_config(self):
-        """Test configuration."""
-        assert not setup_component(
-            self.hass,
-            "light",
-            {
-                "light": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "invalid_key": "afda",
-                    "devices": {
-                        "213c7f216": {
-                            "name": "Test",
-                            "packetid": "0b1100cd0213c7f210010f51",
-                            rfxtrx_core.ATTR_FIREEVENT: True,
                         }
                     },
                 }
@@ -92,59 +69,6 @@ class TestLightRfxtrx(unittest.TestCase):
             self.hass, "light", {"light": {"platform": "rfxtrx", "devices": {}}}
         )
         assert 0 == len(rfxtrx_core.RFX_DEVICES)
-
-    def test_old_config(self):
-        """Test with 1 light."""
-        assert setup_component(
-            self.hass,
-            "light",
-            {
-                "light": {
-                    "platform": "rfxtrx",
-                    "devices": {
-                        "123efab1": {
-                            "name": "Test",
-                            "packetid": "0b1100cd0213c7f210010f51",
-                        }
-                    },
-                }
-            },
-        )
-
-        rfxtrx_core.RFXOBJECT = rfxtrxmod.Core(
-            "", transport_protocol=rfxtrxmod.DummyTransport
-        )
-
-        assert 1 == len(rfxtrx_core.RFX_DEVICES)
-        entity = rfxtrx_core.RFX_DEVICES["213c7f216"]
-        assert "Test" == entity.name
-        assert "off" == entity.state
-        assert entity.assumed_state
-        assert entity.signal_repetitions == 1
-        assert not entity.should_fire_event
-        assert not entity.should_poll
-
-        assert not entity.is_on
-
-        entity.turn_on()
-        assert entity.is_on
-        assert entity.brightness == 255
-
-        entity.turn_off()
-        assert not entity.is_on
-        assert entity.brightness == 0
-
-        entity.turn_on(brightness=100)
-        assert entity.is_on
-        assert entity.brightness == 100
-
-        entity.turn_on(brightness=10)
-        assert entity.is_on
-        assert entity.brightness == 10
-
-        entity.turn_on(brightness=255)
-        assert entity.is_on
-        assert entity.brightness == 255
 
     def test_one_light(self):
         """Test with 1 light."""
@@ -161,12 +85,13 @@ class TestLightRfxtrx(unittest.TestCase):
 
         import RFXtrx as rfxtrxmod
 
-        rfxtrx_core.RFXOBJECT = rfxtrxmod.Core(
+        self.hass.data[rfxtrx_core.DATA_RFXOBJECT] = rfxtrxmod.Core(
             "", transport_protocol=rfxtrxmod.DummyTransport
         )
 
         assert 1 == len(rfxtrx_core.RFX_DEVICES)
-        entity = rfxtrx_core.RFX_DEVICES["213c7f216"]
+        entity = rfxtrx_core.RFX_DEVICES["213c7f2_16"]
+        entity.hass = self.hass
         assert "Test" == entity.name
         assert "off" == entity.state
         assert entity.assumed_state
@@ -197,30 +122,23 @@ class TestLightRfxtrx(unittest.TestCase):
         assert entity.brightness == 255
 
         entity.turn_off()
-        entity_id = rfxtrx_core.RFX_DEVICES["213c7f216"].entity_id
-        entity_hass = self.hass.states.get(entity_id)
-        assert "Test" == entity_hass.name
-        assert "off" == entity_hass.state
+        assert "Test" == entity.name
+        assert "off" == entity.state
 
         entity.turn_on()
-        entity_hass = self.hass.states.get(entity_id)
-        assert "on" == entity_hass.state
+        assert "on" == entity.state
 
         entity.turn_off()
-        entity_hass = self.hass.states.get(entity_id)
-        assert "off" == entity_hass.state
+        assert "off" == entity.state
 
         entity.turn_on(brightness=100)
-        entity_hass = self.hass.states.get(entity_id)
-        assert "on" == entity_hass.state
+        assert "on" == entity.state
 
         entity.turn_on(brightness=10)
-        entity_hass = self.hass.states.get(entity_id)
-        assert "on" == entity_hass.state
+        assert "on" == entity.state
 
         entity.turn_on(brightness=255)
-        entity_hass = self.hass.states.get(entity_id)
-        assert "on" == entity_hass.state
+        assert "on" == entity.state
 
     def test_several_lights(self):
         """Test with 3 lights."""
@@ -272,7 +190,7 @@ class TestLightRfxtrx(unittest.TestCase):
         event.data = bytearray(b"\x0b\x11\x00\x9e\x00\xe6\x11b\x02\x02\x00p")
 
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
-        entity = rfxtrx_core.RFX_DEVICES["0e611622"]
+        entity = rfxtrx_core.RFX_DEVICES["0e61162_2"]
         assert 1 == len(rfxtrx_core.RFX_DEVICES)
         assert "<Entity 0b11009e00e6116202020070: on>" == entity.__str__()
 
@@ -288,7 +206,7 @@ class TestLightRfxtrx(unittest.TestCase):
         )
 
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
-        entity = rfxtrx_core.RFX_DEVICES["118cdea2"]
+        entity = rfxtrx_core.RFX_DEVICES["118cdea_2"]
         assert 2 == len(rfxtrx_core.RFX_DEVICES)
         assert "<Entity 0b1100120118cdea02020070: on>" == entity.__str__()
 
