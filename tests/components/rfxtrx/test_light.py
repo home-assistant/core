@@ -271,7 +271,7 @@ class TestLightRfxtrx(unittest.TestCase):
         event.data = bytearray(b"\x0b\x11\x00\x9e\x00\xe6\x11b\x02\x02\x00p")
 
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
-        entity = rfxtrx_core.RFX_DEVICES["0e611622"]
+        entity = rfxtrx_core.RFX_DEVICES["0e61162_2"]
         assert 1 == len(rfxtrx_core.RFX_DEVICES)
         assert "<Entity 0b11009e00e6116202020070: on>" == entity.__str__()
 
@@ -287,7 +287,7 @@ class TestLightRfxtrx(unittest.TestCase):
         )
 
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
-        entity = rfxtrx_core.RFX_DEVICES["118cdea2"]
+        entity = rfxtrx_core.RFX_DEVICES["118cdea_2"]
         assert 2 == len(rfxtrx_core.RFX_DEVICES)
         assert "<Entity 0b1100120118cdea02020070: on>" == entity.__str__()
 
