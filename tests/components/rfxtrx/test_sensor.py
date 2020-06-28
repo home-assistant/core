@@ -137,7 +137,7 @@ async def test_discover_sensor(hass, rfxtrx):
 
     event = rfxtrx_core.get_rfx_object("0a52080405020095240279")
     event.data = bytearray(b"\nR\x08\x04\x05\x02\x00\x95$\x02y")
-    await hass.async_add_executor_job(rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0], event)
+    await _signal_event(hass, event)
     entity = rfxtrx_core.RFX_DEVICES["sensor_05_02"]["Temperature"]
     assert 2 == len(rfxtrx_core.RFX_DEVICES)
     assert {
