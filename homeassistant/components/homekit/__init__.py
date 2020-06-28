@@ -591,6 +591,7 @@ class HomeKit:
             type_sensors,
             type_switches,
             type_thermostats,
+            type_humidifiers,
         )
 
         for state in bridged_states:
