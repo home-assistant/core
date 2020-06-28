@@ -90,7 +90,8 @@ class TestLightRfxtrx(unittest.TestCase):
         )
 
         assert 1 == len(rfxtrx_core.RFX_DEVICES)
-        entity = rfxtrx_core.RFX_DEVICES["213c7f216"]
+        entity = rfxtrx_core.RFX_DEVICES["213c7f2_16"]
+        entity.hass = self.hass
         assert "Test" == entity.name
         assert "off" == entity.state
         assert entity.assumed_state
@@ -121,30 +122,23 @@ class TestLightRfxtrx(unittest.TestCase):
         assert entity.brightness == 255
 
         entity.turn_off()
-        entity_id = rfxtrx_core.RFX_DEVICES["213c7f216"].entity_id
-        entity_hass = self.hass.states.get(entity_id)
-        assert "Test" == entity_hass.name
-        assert "off" == entity_hass.state
+        assert "Test" == entity.name
+        assert "off" == entity.state
 
         entity.turn_on()
-        entity_hass = self.hass.states.get(entity_id)
-        assert "on" == entity_hass.state
+        assert "on" == entity.state
 
         entity.turn_off()
-        entity_hass = self.hass.states.get(entity_id)
-        assert "off" == entity_hass.state
+        assert "off" == entity.state
 
         entity.turn_on(brightness=100)
-        entity_hass = self.hass.states.get(entity_id)
-        assert "on" == entity_hass.state
+        assert "on" == entity.state
 
         entity.turn_on(brightness=10)
-        entity_hass = self.hass.states.get(entity_id)
-        assert "on" == entity_hass.state
+        assert "on" == entity.state
 
         entity.turn_on(brightness=255)
-        entity_hass = self.hass.states.get(entity_id)
-        assert "on" == entity_hass.state
+        assert "on" == entity.state
 
     def test_several_lights(self):
         """Test with 3 lights."""
