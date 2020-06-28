@@ -135,8 +135,8 @@ class TestRFXTRX(unittest.TestCase):
 
         self.hass.bus.listen(rfxtrx.EVENT_BUTTON_PRESSED, record_event)
         self.hass.block_till_done()
-
-        entity = rfxtrx.RFX_DEVICES["213c7f216"]
+        entity = rfxtrx.RFX_DEVICES["213c7f2_16"]
+        entity.update_state(False, 0)
         assert "Test" == entity.name
         assert "off" == entity.state
         assert entity.should_fire_event
