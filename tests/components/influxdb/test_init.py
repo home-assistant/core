@@ -1244,20 +1244,21 @@ async def test_event_listener_attribute_name_conflict(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_connection_failure_on_startup(
-    hass, mock_client, config_ext, get_write_api, get_mock_call, test_exception
+    hass, caplog, mock_client, config_ext, get_write_api, get_mock_call, test_exception
 ):
-    """Test the event listener when an attribute conflicts with another field."""
+    """Test the event listener when it fails to connect to Influx on startup."""
     write_api = get_write_api(mock_client)
     write_api.side_effect = test_exception
     config = {"influxdb": config_ext}
 
-    with patch(f"{INFLUX_PATH}._LOGGER") as logger, patch(
-        f"{INFLUX_PATH}.event_helper"
-    ) as event_helper:
+    with patch(f"{INFLUX_PATH}.event_helper") as event_helper:
         assert await async_setup_component(hass, influxdb.DOMAIN, config)
         await hass.async_block_till_done()
 
-        logger.error.assert_called_once()
+        assert (
+            len([record for record in caplog.records if record.levelname == "ERROR"])
+            == 1
+        )
         event_helper.call_later.assert_called_once()
         hass.bus.listen.assert_not_called()
 
@@ -1283,7 +1284,7 @@ async def test_connection_failure_on_startup(
     indirect=["mock_client", "get_mock_call"],
 )
 async def test_invalid_inputs_error(
-    hass, mock_client, config_ext, get_write_api, get_mock_call, test_exception
+    hass, caplog, mock_client, config_ext, get_write_api, get_mock_call, test_exception
 ):
     """
     Test the event listener when influx returns invalid inputs on write.
@@ -1309,12 +1310,13 @@ async def test_invalid_inputs_error(
     )
     event = MagicMock(data={"new_state": state}, time_fired=12345)
 
-    with patch(f"{INFLUX_PATH}._LOGGER") as logger, patch(
-        f"{INFLUX_PATH}.time.sleep"
-    ) as sleep:
+    with patch(f"{INFLUX_PATH}.time.sleep") as sleep:
         handler_method(event)
         hass.data[influxdb.DOMAIN].block_till_done()
 
         write_api.assert_called_once()
-        logger.error.assert_called_once()
+        assert (
+            len([record for record in caplog.records if record.levelname == "ERROR"])
+            == 1
+        )
         sleep.assert_not_called()

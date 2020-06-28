@@ -72,10 +72,21 @@ def mock_client_fixture(request):
 
 
 @pytest.fixture(autouse=True)
-def mock_influx_recorder_setup():
-    """Mock the influx recorder setup since the sensor is actually independent."""
-    with patch(f"{INFLUXDB_PATH}.setup", return_value=True) as mock_setup:
-        yield mock_setup
+def mock_influx_platform():
+    """
+    Mock the influx client and queue in the main platform.
+
+    Successful sensor setup is really independent of the main platform.
+    But since its one integration there is an internal dependency.
+    Mocking the client library there prevents failures and mocking the queue
+    to return `None` on get makes the listener shutdown immediately after initialization.
+    """
+    with patch(f"{INFLUXDB_PATH}.InfluxDBClient") as mock_v1_client, patch(
+        f"{INFLUXDB_PATH}.InfluxDBClientV2"
+    ) as mock_v2_client, patch(
+        f"{INFLUXDB_PATH}.queue.Queue.get", return_value=None
+    ) as queue_get:
+        yield (mock_v1_client, mock_v2_client, queue_get)
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -141,7 +152,10 @@ def _set_query_mock_v2(mock_influx_client, return_value=None, side_effect=None):
 
 async def _setup(hass, config_ext, queries, expected_sensors):
     """Create client and test expected sensors."""
-    config = {sensor.DOMAIN: {"platform": DOMAIN}}
+    config = {
+        DOMAIN: {},
+        sensor.DOMAIN: {"platform": DOMAIN},
+    }
     influx_config = config[sensor.DOMAIN]
     influx_config.update(config_ext)
     influx_config.update(queries)
@@ -296,15 +310,16 @@ async def test_state_matches_query_result(
     indirect=["mock_client"],
 )
 async def test_state_matches_first_query_result_for_multiple_return(
-    hass, mock_client, config_ext, queries, set_query_mock, make_resultset
+    hass, caplog, mock_client, config_ext, queries, set_query_mock, make_resultset
 ):
     """Test state of sensor matches respone from query api."""
     set_query_mock(mock_client, return_value=make_resultset(42, "not used"))
 
-    with patch(f"{INFLUXDB_SENSOR_PATH}._LOGGER") as logger:
-        sensors = await _setup(hass, config_ext, queries, ["sensor.test"])
-        assert sensors[0].state == "42"
-        logger.warning.assert_called_once()
+    sensors = await _setup(hass, config_ext, queries, ["sensor.test"])
+    assert sensors[0].state == "42"
+    assert (
+        len([record for record in caplog.records if record.levelname == "WARNING"]) == 1
+    )
 
 
 @pytest.mark.parametrize(
@@ -316,15 +331,16 @@ async def test_state_matches_first_query_result_for_multiple_return(
     indirect=["mock_client"],
 )
 async def test_state_for_no_results(
-    hass, mock_client, config_ext, queries, set_query_mock
+    hass, caplog, mock_client, config_ext, queries, set_query_mock
 ):
     """Test state of sensor matches respone from query api."""
     set_query_mock(mock_client)
 
-    with patch(f"{INFLUXDB_SENSOR_PATH}._LOGGER") as logger:
-        sensors = await _setup(hass, config_ext, queries, ["sensor.test"])
-        assert sensors[0].state == STATE_UNKNOWN
-        logger.warning.assert_called_once()
+    sensors = await _setup(hass, config_ext, queries, ["sensor.test"])
+    assert sensors[0].state == STATE_UNKNOWN
+    assert (
+        len([record for record in caplog.records if record.levelname == "WARNING"]) == 1
+    )
 
 
 @pytest.mark.parametrize(
@@ -376,7 +392,7 @@ async def test_state_for_no_results(
     indirect=["mock_client"],
 )
 async def test_error_querying_influx(
-    hass, mock_client, config_ext, queries, set_query_mock, query_exception
+    hass, caplog, mock_client, config_ext, queries, set_query_mock, query_exception
 ):
     """Test behavior of sensor when influx returns error."""
 
@@ -388,10 +404,11 @@ async def test_error_querying_influx(
 
     set_query_mock(mock_client, side_effect=mock_query_error)
 
-    with patch(f"{INFLUXDB_SENSOR_PATH}._LOGGER") as logger:
-        sensors = await _setup(hass, config_ext, queries, ["sensor.test"])
-        assert sensors[0].state == STATE_UNKNOWN
-        logger.error.assert_called_once()
+    sensors = await _setup(hass, config_ext, queries, ["sensor.test"])
+    assert sensors[0].state == STATE_UNKNOWN
+    assert (
+        len([record for record in caplog.records if record.levelname == "ERROR"]) == 1
+    )
 
 
 @pytest.mark.parametrize(
@@ -424,12 +441,13 @@ async def test_error_querying_influx(
     indirect=["mock_client"],
 )
 async def test_error_rendering_template(
-    hass, mock_client, config_ext, queries, set_query_mock, make_resultset
+    hass, caplog, mock_client, config_ext, queries, set_query_mock, make_resultset
 ):
     """Test behavior of sensor with error rendering template."""
     set_query_mock(mock_client, return_value=make_resultset(42))
 
-    with patch(f"{INFLUXDB_SENSOR_PATH}._LOGGER") as logger:
-        sensors = await _setup(hass, config_ext, queries, ["sensor.test"])
-        assert sensors[0].state == STATE_UNKNOWN
-        logger.error.assert_called_once()
+    sensors = await _setup(hass, config_ext, queries, ["sensor.test"])
+    assert sensors[0].state == STATE_UNKNOWN
+    assert (
+        len([record for record in caplog.records if record.levelname == "ERROR"]) == 1
+    )
