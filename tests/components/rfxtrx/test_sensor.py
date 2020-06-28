@@ -159,12 +159,13 @@ class TestSensorRfxtrx(unittest.TestCase):
             "sensor",
             {"sensor": {"platform": "rfxtrx", "automatic_add": True, "devices": {}}},
         )
+        self.hass.block_till_done()
 
         event = rfxtrx_core.get_rfx_object("0a520801070100b81b0279")
         event.data = bytearray(b"\nR\x08\x01\x07\x01\x00\xb8\x1b\x02y")
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
 
-        entity = rfxtrx_core.RFX_DEVICES["sensor_0701"]["Temperature"]
+        entity = rfxtrx_core.RFX_DEVICES["sensor_07_01"]["Temperature"]
         assert 1 == len(rfxtrx_core.RFX_DEVICES)
         assert {
             "Humidity status": "normal",
@@ -182,7 +183,7 @@ class TestSensorRfxtrx(unittest.TestCase):
         event = rfxtrx_core.get_rfx_object("0a52080405020095240279")
         event.data = bytearray(b"\nR\x08\x04\x05\x02\x00\x95$\x02y")
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
-        entity = rfxtrx_core.RFX_DEVICES["sensor_0502"]["Temperature"]
+        entity = rfxtrx_core.RFX_DEVICES["sensor_05_02"]["Temperature"]
         assert 2 == len(rfxtrx_core.RFX_DEVICES)
         assert {
             "Humidity status": "normal",
@@ -197,7 +198,7 @@ class TestSensorRfxtrx(unittest.TestCase):
         event = rfxtrx_core.get_rfx_object("0a52085e070100b31b0279")
         event.data = bytearray(b"\nR\x08^\x07\x01\x00\xb3\x1b\x02y")
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
-        entity = rfxtrx_core.RFX_DEVICES["sensor_0701"]["Temperature"]
+        entity = rfxtrx_core.RFX_DEVICES["sensor_07_01"]["Temperature"]
         assert 2 == len(rfxtrx_core.RFX_DEVICES)
         assert {
             "Humidity status": "normal",
