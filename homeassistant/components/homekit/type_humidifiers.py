@@ -19,8 +19,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
     STATE_ON,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 
@@ -119,7 +119,6 @@ class HumidifierDehumidifier(HomeAccessory):
         events = []
         params = {}
         service = None
-        state = self.hass.states.get(self.entity_id)
 
         if CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER in char_values:
             # We support either humidifiers or dehumidifiers. If incompatible setting is requested
@@ -137,7 +136,7 @@ class HumidifierDehumidifier(HomeAccessory):
             service = SERVICE_SET_HUMIDITY
             params = {ATTR_HUMIDITY: humidity}
             events.append(
-                f"{self._target_humidity_char_name} to {char_values[self._target_humidity_char_name]}"
+                f"{self._target_humidity_char_name} to {char_values[self._target_humidity_char_name]}{UNIT_PERCENTAGE}"
             )
         elif CHAR_ACTIVE in char_values:
             service = SERVICE_TURN_ON if char_values[CHAR_ACTIVE] else SERVICE_TURN_OFF

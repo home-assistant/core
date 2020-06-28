@@ -122,7 +122,7 @@ async def test_humidifier(hass, hk_driver, cls, events):
     assert call_set_humidity[0].data[ATTR_HUMIDITY] == 39.0
     assert acc.char_target_humidity.value == 39.0
     assert len(events) == 1
-    assert events[-1].data[ATTR_VALUE] == "RelativeHumidityHumidifierThreshold to 39.0"
+    assert events[-1].data[ATTR_VALUE] == "RelativeHumidityHumidifierThreshold to 39.0%"
 
 
 async def test_dehumidifier(hass, hk_driver, cls, events):
@@ -194,7 +194,7 @@ async def test_dehumidifier(hass, hk_driver, cls, events):
     assert acc.char_target_humidity.value == 39.0
     assert len(events) == 1
     assert (
-        events[-1].data[ATTR_VALUE] == "RelativeHumidityDehumidifierThreshold to 39.0"
+        events[-1].data[ATTR_VALUE] == "RelativeHumidityDehumidifierThreshold to 39.0%"
     )
 
 
@@ -225,7 +225,7 @@ async def test_hygrostat_power_state(hass, hk_driver, cls, events):
     assert acc.char_active.value == 0
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
+    call_turn_on = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
 
     char_active_iid = acc.char_active.to_HAP()[HAP_REPR_IID]
 
@@ -249,7 +249,7 @@ async def test_hygrostat_power_state(hass, hk_driver, cls, events):
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] == "Active to 1"
 
-    call_turn_off = async_mock_service(hass, DOMAIN, "turn_off")
+    call_turn_off = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
 
     hk_driver.set_characteristics(
         {
