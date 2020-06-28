@@ -1,6 +1,7 @@
 """Helpers for listening to events."""
 from datetime import datetime, timedelta
 import functools as ft
+import time
 from typing import Any, Awaitable, Callable, Dict, Iterable, Optional, Union
 
 import attr
@@ -310,10 +311,21 @@ def async_track_point_in_utc_time(
     @callback
     def point_in_time_listener() -> None:
         """Listen for matching time_changed events."""
+        if hasattr(point_in_time_listener, "run"):
+            return
+
+        # Set variable so that we will never run twice.
+        # Because the event bus might have to wait till a thread comes
+        # available to execute this listener it might occur that the
+        # listener gets lined up twice to be executed. This will make
+        # sure the second time it does nothing.
+        setattr(point_in_time_listener, "run", True)
+
         hass.async_run_job(action, point_in_time)
 
-    cancel_callback = hass.loop.call_later(
-        (point_in_time - dt_util.utcnow()).total_seconds(), point_in_time_listener
+    cancel_callback = hass.loop.call_at(
+        hass.loop.time() + point_in_time.timestamp() - time.time(),
+        point_in_time_listener,
     )
 
     @callback

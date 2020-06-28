@@ -480,6 +480,8 @@ async def test_track_sunrise(hass):
     utc_now = datetime(2014, 5, 24, 12, 0, 0, tzinfo=dt_util.UTC)
     utc_today = utc_now.date()
 
+    assert 0
+
     mod = -1
     while True:
         next_rising = astral.sunrise_utc(
@@ -538,6 +540,8 @@ async def test_track_sunrise_update_location(hass):
     utc_now = datetime(2014, 5, 24, 12, 0, 0, tzinfo=dt_util.UTC)
     utc_today = utc_now.date()
 
+    assert 0
+
     mod = -1
     while True:
         next_rising = astral.sunrise_utc(
@@ -567,6 +571,8 @@ async def test_track_sunrise_update_location(hass):
     await hass.async_block_till_done()
     # Did not increase
     assert len(runs) == 1
+
+    assert 0
 
     # Get next sunrise
     mod = -1
@@ -600,6 +606,8 @@ async def test_track_sunset(hass):
     astral = Astral()
     utc_now = datetime(2014, 5, 24, 12, 0, 0, tzinfo=dt_util.UTC)
     utc_today = utc_now.date()
+
+    assert 0
 
     mod = -1
     while True:
