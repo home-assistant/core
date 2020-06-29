@@ -1,6 +1,6 @@
 """Support for Meteo-France weather service."""
-import time
 import logging
+import time
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -22,8 +22,8 @@ from .const import (
     CONDITION_CLASSES,
     COORDINATOR_FORECAST,
     DOMAIN,
-    FORECAST_MODE_HOURLY,
     FORECAST_MODE_DAILY,
+    FORECAST_MODE_HOURLY,
 )
 
 _LOGGER = logging.getLogger(__name__)
