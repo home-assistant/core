@@ -994,6 +994,9 @@ class MqttAvailability(Entity):
         await self._availability_subscribe_topics()
         async_dispatcher_connect(self.hass, MQTT_CONNECTED, self.async_mqtt_connect)
         async_dispatcher_connect(self.hass, MQTT_DISCONNECTED, self.async_mqtt_connect)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, MQTT_CONNECTED, self.async_mqtt_connect)
+        )
 
     async def availability_discovery_update(self, config: dict):
         """Handle updated discovery message."""
