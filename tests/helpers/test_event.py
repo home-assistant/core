@@ -472,7 +472,7 @@ async def test_track_time_interval(hass):
     assert len(specific_runs) == 2
 
 
-async def test_track_sunrise(hass):
+async def test_track_sunrise(hass, patchable_time):
     """Test track the sunrise."""
     latitude = 32.87336
     longitude = 117.22743
@@ -488,8 +488,6 @@ async def test_track_sunrise(hass):
     astral = Astral()
     utc_now = datetime(2014, 5, 24, 12, 0, 0, tzinfo=dt_util.UTC)
     utc_today = utc_now.date()
-
-    assert 0
 
     mod = -1
     while True:
@@ -535,7 +533,7 @@ async def test_track_sunrise(hass):
     assert len(offset_runs) == 1
 
 
-async def test_track_sunrise_update_location(hass):
+async def test_track_sunrise_update_location(hass, patchable_time):
     """Test track the sunrise."""
     # Setup sun component
     hass.config.latitude = 32.87336
@@ -548,8 +546,6 @@ async def test_track_sunrise_update_location(hass):
     astral = Astral()
     utc_now = datetime(2014, 5, 24, 12, 0, 0, tzinfo=dt_util.UTC)
     utc_today = utc_now.date()
-
-    assert 0
 
     mod = -1
     while True:
@@ -581,8 +577,6 @@ async def test_track_sunrise_update_location(hass):
     # Did not increase
     assert len(runs) == 1
 
-    assert 0
-
     # Get next sunrise
     mod = -1
     while True:
@@ -599,7 +593,7 @@ async def test_track_sunrise_update_location(hass):
     assert len(runs) == 2
 
 
-async def test_track_sunset(hass):
+async def test_track_sunset(hass, patchable_time):
     """Test track the sunset."""
     latitude = 32.87336
     longitude = 117.22743
@@ -615,8 +609,6 @@ async def test_track_sunset(hass):
     astral = Astral()
     utc_now = datetime(2014, 5, 24, 12, 0, 0, tzinfo=dt_util.UTC)
     utc_today = utc_now.date()
-
-    assert 0
 
     mod = -1
     while True:
