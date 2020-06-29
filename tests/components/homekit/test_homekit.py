@@ -605,6 +605,8 @@ async def test_homekit_stop(hass):
         entry_id=entry.entry_id,
     )
     homekit.driver = Mock()
+    homekit.bridge = Mock()
+    homekit.bridge.accessories = {}
 
     await async_init_integration(hass)
 
