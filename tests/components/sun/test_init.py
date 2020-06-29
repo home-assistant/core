@@ -12,7 +12,7 @@ import homeassistant.util.dt as dt_util
 from tests.async_mock import patch
 
 
-async def test_setting_rising(hass):
+async def test_setting_rising(hass, legacy_patchable_time):
     """Test retrieving sun setting and rising."""
     utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
     with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=utc_now):
