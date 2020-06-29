@@ -39,7 +39,7 @@ async def test_platform_manually_configured(hass):
     assert mikrotik.DOMAIN not in hass.data
 
 
-async def test_device_trackers(hass):
+async def test_device_trackers(hass, patchable_time):
     """Test device_trackers created by mikrotik."""
 
     # test devices are added from wireless list only
@@ -51,7 +51,6 @@ async def test_device_trackers(hass):
     device_2 = hass.states.get("device_tracker.device_2")
     assert device_2 is None
 
-    assert 0
     with patch.object(mikrotik.hub.MikrotikData, "command", new=mock_command):
         # test device_2 is added after connecting to wireless network
         WIRELESS_DATA.append(DEVICE_2_WIRELESS)
