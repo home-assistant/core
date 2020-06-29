@@ -4,7 +4,7 @@ from ipaddress import ip_address
 import logging
 
 import broadlink as blk
-from broadlink.exceptions import BroadlinkException
+from broadlink.exceptions import BroadlinkException, CommandNotSupportedError
 import voluptuous as vol
 
 from homeassistant.components.switch import DOMAIN, PLATFORM_SCHEMA, SwitchEntity
@@ -264,13 +264,19 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
     async def async_update(self):
         """Update the state of the device."""
         try:
-            state = await self.device.async_request(self.device.api.check_power)
-            load_power = await self.device.async_request(self.device.api.get_energy)
+            self._state = await self.device.async_request(self.device.api.check_power)
         except BroadlinkException as err_msg:
             _LOGGER.error("Failed to update state: %s", err_msg)
             return
-        self._state = state
-        self._load_power = load_power
+
+        try:
+            self._load_power = await self.device.async_request(
+                self.device.api.get_energy
+            )
+        except CommandNotSupportedError:
+            return
+        except BroadlinkException as err_msg:
+            _LOGGER.error("Failed to update load power: %s", err_msg)
 
 
 class BroadlinkMP1Slot(BroadlinkRMSwitch):

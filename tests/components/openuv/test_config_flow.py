@@ -1,5 +1,6 @@
 """Define tests for the OpenUV config flow."""
 from pyopenuv.errors import InvalidApiKeyError
+import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.openuv import DOMAIN
@@ -13,6 +14,17 @@ from homeassistant.const import (
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def mock_setup():
+    """Prevent setup."""
+    with patch(
+        "homeassistant.components.openuv.async_setup", return_value=True,
+    ), patch(
+        "homeassistant.components.openuv.async_setup_entry", return_value=True,
+    ):
+        yield
 
 
 async def test_duplicate_error(hass):

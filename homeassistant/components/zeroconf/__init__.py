@@ -130,10 +130,10 @@ def setup(hass, config):
         "location_name": hass.config.location_name,
         "uuid": uuid,
         "version": __version__,
-        "external_url": None,
-        "internal_url": None,
+        "external_url": "",
+        "internal_url": "",
         # Old base URL, for backward compatibility
-        "base_url": None,
+        "base_url": "",
         # Always needs authentication
         "requires_api_password": True,
     }

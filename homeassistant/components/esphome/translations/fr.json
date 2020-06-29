@@ -15,8 +15,7 @@
                 "data": {
                     "password": "Mot de passe"
                 },
-                "description": "Veuillez saisir le mot de passe que vous avez d\u00e9fini dans votre configuration pour {name}",
-                "title": "Entrer votre mot de passe"
+                "description": "Veuillez saisir le mot de passe que vous avez d\u00e9fini dans votre configuration pour {name}"
             },
             "discovery_confirm": {
                 "description": "Voulez-vous ajouter le n\u0153ud ESPHome ` {name} ` \u00e0 Home Assistant?",
@@ -27,8 +26,7 @@
                     "host": "H\u00f4te",
                     "port": "Port"
                 },
-                "description": "Veuillez saisir les param\u00e8tres de connexion de votre n\u0153ud [ESPHome] (https://esphomelib.com/).",
-                "title": "[%key:component::esphome::title%]"
+                "description": "Veuillez saisir les param\u00e8tres de connexion de votre n\u0153ud [ESPHome] (https://esphomelib.com/)."
             }
         }
     }

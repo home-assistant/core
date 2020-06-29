@@ -358,6 +358,7 @@ class TestSetup:
             "switch",
             {"comp_a": {"valid": True}, "switch": {"platform": "platform_a"}},
         )
+        self.hass.block_till_done()
         assert "comp_a" in self.hass.config.components
 
     def test_platform_specific_config_validation(self):
@@ -380,6 +381,7 @@ class TestSetup:
                 "switch",
                 {"switch": {"platform": "platform_a", "invalid": True}},
             )
+            self.hass.block_till_done()
             assert mock_setup.call_count == 0
 
         self.hass.data.pop(setup.DATA_SETUP)
@@ -397,6 +399,7 @@ class TestSetup:
                     }
                 },
             )
+            self.hass.block_till_done()
             assert mock_setup.call_count == 0
 
         self.hass.data.pop(setup.DATA_SETUP)
@@ -408,6 +411,7 @@ class TestSetup:
                 "switch",
                 {"switch": {"platform": "platform_a", "valid": True}},
             )
+            self.hass.block_till_done()
             assert mock_setup.call_count == 1
 
     def test_disable_component_if_invalid_return(self):
@@ -474,12 +478,6 @@ class TestSetup:
         self.hass.block_till_done()
         self.hass.start()
         assert call_order == [1, 1, 2]
-
-
-async def test_component_cannot_depend_config(hass):
-    """Test config is not allowed to be a dependency."""
-    result = await setup._async_process_dependencies(hass, None, "test", ["config"])
-    assert not result
 
 
 async def test_component_warn_slow_setup(hass):

@@ -2,6 +2,7 @@
 import asyncio
 from ipaddress import ip_network
 
+import aiohttp
 from hass_nabucasa import thingtalk
 from hass_nabucasa.auth import Unauthenticated, UnknownError
 from hass_nabucasa.const import STATE_CONNECTED
@@ -24,15 +25,15 @@ from tests.components.google_assistant import MockConfig
 SUBSCRIPTION_INFO_URL = "https://api-test.hass.io/subscription_info"
 
 
-@pytest.fixture()
-def mock_auth():
+@pytest.fixture(name="mock_auth")
+def mock_auth_fixture():
     """Mock check token."""
     with patch("hass_nabucasa.auth.CognitoAuth.async_check_token"):
         yield
 
 
-@pytest.fixture()
-def mock_cloud_login(hass, setup_api):
+@pytest.fixture(name="mock_cloud_login")
+def mock_cloud_login_fixture(hass, setup_api):
     """Mock cloud is logged in."""
     hass.data[DOMAIN].id_token = jwt.encode(
         {
@@ -44,8 +45,8 @@ def mock_cloud_login(hass, setup_api):
     )
 
 
-@pytest.fixture(autouse=True)
-def setup_api(hass, aioclient_mock):
+@pytest.fixture(autouse=True, name="setup_api")
+def setup_api_fixture(hass, aioclient_mock):
     """Initialize HTTP API."""
     hass.loop.run_until_complete(
         mock_cloud(
@@ -67,15 +68,15 @@ def setup_api(hass, aioclient_mock):
     return mock_cloud_prefs(hass)
 
 
-@pytest.fixture
-def cloud_client(hass, hass_client):
+@pytest.fixture(name="cloud_client")
+def cloud_client_fixture(hass, hass_client):
     """Fixture that can fetch from the cloud client."""
     with patch("hass_nabucasa.Cloud.write_user_info"):
         yield hass.loop.run_until_complete(hass_client())
 
 
-@pytest.fixture
-def mock_cognito():
+@pytest.fixture(name="mock_cognito")
+def mock_cognito_fixture():
     """Mock warrant."""
     with patch("hass_nabucasa.auth.CognitoAuth._cognito") as mock_cog:
         yield mock_cog()
@@ -279,6 +280,17 @@ async def test_forgot_password_view_unknown_error(mock_cognito, cloud_client):
     assert req.status == 502
 
 
+async def test_forgot_password_view_aiohttp_error(mock_cognito, cloud_client):
+    """Test unknown error while logging out."""
+    mock_cognito.initiate_forgot_password.side_effect = aiohttp.ClientResponseError(
+        Mock(), Mock()
+    )
+    req = await cloud_client.post(
+        "/api/cloud/forgot_password", json={"email": "hello@bla.com"}
+    )
+    assert req.status == 500
+
+
 async def test_resend_confirm_view(mock_cognito, cloud_client):
     """Test logging out."""
     req = await cloud_client.post(
@@ -350,14 +362,18 @@ async def test_websocket_status(
         },
         "alexa_entities": {
             "include_domains": [],
+            "include_entity_globs": [],
             "include_entities": ["light.kitchen", "switch.ac"],
             "exclude_domains": [],
+            "exclude_entity_globs": [],
             "exclude_entities": [],
         },
         "google_entities": {
             "include_domains": ["light"],
+            "include_entity_globs": [],
             "include_entities": [],
             "exclude_domains": [],
+            "exclude_entity_globs": [],
             "exclude_entities": [],
         },
         "remote_domain": None,
@@ -582,6 +598,7 @@ async def test_enabling_remote_trusted_networks_local4(
     hass, hass_ws_client, setup_api, mock_cloud_login
 ):
     """Test we cannot enable remote UI when trusted networks active."""
+    # pylint: disable=protected-access
     hass.auth._providers[
         ("trusted_networks", None)
     ] = tn_auth.TrustedNetworksAuthProvider(
@@ -614,6 +631,7 @@ async def test_enabling_remote_trusted_networks_local6(
     hass, hass_ws_client, setup_api, mock_cloud_login
 ):
     """Test we cannot enable remote UI when trusted networks active."""
+    # pylint: disable=protected-access
     hass.auth._providers[
         ("trusted_networks", None)
     ] = tn_auth.TrustedNetworksAuthProvider(
@@ -646,6 +664,7 @@ async def test_enabling_remote_trusted_networks_other(
     hass, hass_ws_client, setup_api, mock_cloud_login
 ):
     """Test we can enable remote UI when trusted networks active."""
+    # pylint: disable=protected-access
     hass.auth._providers[
         ("trusted_networks", None)
     ] = tn_auth.TrustedNetworksAuthProvider(

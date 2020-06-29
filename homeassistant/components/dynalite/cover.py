@@ -1,11 +1,17 @@
 """Support for the Dynalite channels as covers."""
 from typing import Callable
 
-from homeassistant.components.cover import DEVICE_CLASSES, CoverEntity
+from homeassistant.components.cover import (
+    DEVICE_CLASS_SHUTTER,
+    DEVICE_CLASSES,
+    CoverEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
 from .dynalitebase import DynaliteBase, async_setup_entry_base
+
+DEFAULT_COVER_CLASS = DEVICE_CLASS_SHUTTER
 
 
 async def async_setup_entry(
@@ -31,8 +37,10 @@ class DynaliteCover(DynaliteBase, CoverEntity):
     def device_class(self) -> str:
         """Return the class of the device."""
         dev_cls = self._device.device_class
-        assert dev_cls in DEVICE_CLASSES
-        return dev_cls
+        ret_val = DEFAULT_COVER_CLASS
+        if dev_cls in DEVICE_CLASSES:
+            ret_val = dev_cls
+        return ret_val
 
     @property
     def current_cover_position(self) -> int:

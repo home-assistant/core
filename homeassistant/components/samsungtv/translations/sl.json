@@ -18,8 +18,7 @@
                     "host": "Gostitelj ali IP naslov",
                     "name": "Ime"
                 },
-                "description": "Vnesite podatke o televizorju Samsung. \u010ce \u0161e nikoli niste povezali Home Assistant, bi morali na televizorju videli pojavno okno, ki zahteva va\u0161e dovoljenje.",
-                "title": "Samsung TV"
+                "description": "Vnesite podatke o televizorju Samsung. \u010ce \u0161e nikoli niste povezali Home Assistant, bi morali na televizorju videli pojavno okno, ki zahteva va\u0161e dovoljenje."
             }
         }
     }

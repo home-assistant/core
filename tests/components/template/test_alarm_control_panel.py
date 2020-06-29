@@ -54,6 +54,7 @@ async def test_template_state_text(hass):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -136,6 +137,7 @@ async def test_optimistic_states(hass):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -189,6 +191,7 @@ async def test_no_action_scripts(hass):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -261,6 +264,7 @@ async def test_template_syntax_error(hass, caplog):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -305,6 +309,7 @@ async def test_invalid_name_does_not_create(hass, caplog):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -325,6 +330,7 @@ async def test_invalid_panel_does_not_create(hass, caplog):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -338,6 +344,7 @@ async def test_no_panels_does_not_create(hass, caplog):
         hass, "alarm_control_panel", {"alarm_control_panel": {"platform": "template"}},
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -383,6 +390,7 @@ async def test_name(hass):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -425,6 +433,7 @@ async def test_arm_home_action(hass):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -471,6 +480,7 @@ async def test_arm_away_action(hass):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -517,6 +527,7 @@ async def test_arm_night_action(hass):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -563,6 +574,7 @@ async def test_disarm_action(hass):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 

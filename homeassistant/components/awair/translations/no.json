@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Ukjent Awair API-feil."
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "email": "Epost"
+                },
+                "description": "Skriv inn tilgangstokenet for Awair-utviklere p\u00e5 nytt."
+            },
+            "user": {
+                "data": {
+                    "email": "Epost "
+                },
+                "description": "Du m\u00e5 registrere deg for et Awair-utviklertilgangstoken p\u00e5: https://developer.getawair.com/onboard/login"
+            }
+        }
+    }
+}

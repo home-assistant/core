@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\uc774 TV \ub294 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+            "already_configured": "\uc774 TV \ub294 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "no_ip_control": "TV \uc5d0\uc11c IP \uc81c\uc5b4\uac00 \ube44\ud65c\uc131\ud654\ub418\uc5c8\uac70\ub098 TV \uac00 \uc9c0\uc6d0\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4."
         },
         "error": {
             "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. \ud638\uc2a4\ud2b8 \ub610\ub294 PIN \ucf54\ub4dc\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",

@@ -5,14 +5,14 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.somfy import DOMAIN, config_flow
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
-CLIENT_SECRET_VALUE = "5678"
-
 CLIENT_ID_VALUE = "1234"
+CLIENT_SECRET_VALUE = "5678"
 
 
 @pytest.fixture()
@@ -56,18 +56,18 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,
-        "somfy",
+        DOMAIN,
         {
-            "somfy": {
-                "client_id": CLIENT_ID_VALUE,
-                "client_secret": CLIENT_SECRET_VALUE,
+            DOMAIN: {
+                CONF_CLIENT_ID: CLIENT_ID_VALUE,
+                CONF_CLIENT_SECRET: CLIENT_SECRET_VALUE,
             },
             "http": {"base_url": "https://example.com"},
         },
     )
 
     result = await hass.config_entries.flow.async_init(
-        "somfy", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
 
@@ -97,7 +97,7 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
     with patch("homeassistant.components.somfy.api.ConfigEntrySomfyApi"):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["data"]["auth_implementation"] == "somfy"
+    assert result["data"]["auth_implementation"] == DOMAIN
 
     result["data"]["token"].pop("expires_at")
     assert result["data"]["token"] == {
@@ -107,8 +107,8 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
         "expires_in": 60,
     }
 
-    assert "somfy" in hass.config.components
-    entry = hass.config_entries.async_entries("somfy")[0]
+    assert DOMAIN in hass.config.components
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.state == config_entries.ENTRY_STATE_LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)

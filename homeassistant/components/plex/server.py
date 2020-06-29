@@ -1,9 +1,10 @@
 """Shared class to maintain Plex server instances."""
 import logging
 import ssl
+import time
 from urllib.parse import urlparse
 
-from plexapi.exceptions import NotFound, Unauthorized
+from plexapi.exceptions import BadRequest, NotFound, Unauthorized
 import plexapi.myplex
 import plexapi.playqueue
 import plexapi.server
@@ -17,13 +18,12 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_VIDEO,
 )
-from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_CLIENT_ID, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
-    CONF_CLIENT_IDENTIFIER,
     CONF_IGNORE_NEW_SHARED_USERS,
     CONF_IGNORE_PLEX_WEB_CLIENTS,
     CONF_MONITORED_USERS,
@@ -32,9 +32,11 @@ from .const import (
     DEBOUNCE_TIMEOUT,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    PLAYER_SOURCE,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
+    PLEXTV_THROTTLE,
     X_PLEX_DEVICE_NAME,
     X_PLEX_PLATFORM,
     X_PLEX_PRODUCT,
@@ -71,6 +73,10 @@ class PlexServer:
         self.server_choice = None
         self._accounts = []
         self._owner_username = None
+        self._plextv_clients = None
+        self._plextv_client_timestamp = 0
+        self._plextv_device_cache = {}
+        self._use_plex_tv = self._token is not None
         self._version = None
         self.async_update_platforms = Debouncer(
             hass,
@@ -81,27 +87,49 @@ class PlexServer:
         ).async_call
 
         # Header conditionally added as it is not available in config entry v1
-        if CONF_CLIENT_IDENTIFIER in server_config:
-            plexapi.X_PLEX_IDENTIFIER = server_config[CONF_CLIENT_IDENTIFIER]
+        if CONF_CLIENT_ID in server_config:
+            plexapi.X_PLEX_IDENTIFIER = server_config[CONF_CLIENT_ID]
         plexapi.myplex.BASE_HEADERS = plexapi.reset_base_headers()
         plexapi.server.BASE_HEADERS = plexapi.reset_base_headers()
 
     @property
     def account(self):
         """Return a MyPlexAccount instance."""
-        if not self._plex_account:
-            self._plex_account = plexapi.myplex.MyPlexAccount(token=self._token)
+        if not self._plex_account and self._use_plex_tv:
+            try:
+                self._plex_account = plexapi.myplex.MyPlexAccount(token=self._token)
+            except (BadRequest, Unauthorized):
+                self._use_plex_tv = False
+                _LOGGER.error("Not authorized to access plex.tv with provided token")
+                raise
         return self._plex_account
+
+    def plextv_clients(self):
+        """Return available clients linked to Plex account."""
+        if self.account is None:
+            return []
+
+        now = time.time()
+        if now - self._plextv_client_timestamp > PLEXTV_THROTTLE:
+            self._plextv_client_timestamp = now
+            self._plextv_clients = [
+                x
+                for x in self.account.resources()
+                if "player" in x.provides and x.presence
+            ]
+            _LOGGER.debug(
+                "Current available clients from plex.tv: %s", self._plextv_clients
+            )
+        return self._plextv_clients
 
     def connect(self):
         """Connect to a Plex server directly, obtaining direct URL if necessary."""
         config_entry_update_needed = False
 
         def _connect_with_token():
-            account = plexapi.myplex.MyPlexAccount(token=self._token)
             available_servers = [
                 (x.name, x.clientIdentifier)
-                for x in account.resources()
+                for x in self.account.resources()
                 if "server" in x.provides
             ]
 
@@ -113,7 +141,9 @@ class PlexServer:
             self.server_choice = (
                 self._server_name if self._server_name else available_servers[0][0]
             )
-            self._plex_server = account.resource(self.server_choice).connect(timeout=10)
+            self._plex_server = self.account.resource(self.server_choice).connect(
+                timeout=10
+            )
 
         def _connect_with_url():
             session = None
@@ -125,13 +155,18 @@ class PlexServer:
             )
 
         def _update_plexdirect_hostname():
-            account = plexapi.myplex.MyPlexAccount(token=self._token)
-            matching_server = [
+            matching_servers = [
                 x.name
-                for x in account.resources()
+                for x in self.account.resources()
                 if x.clientIdentifier == self._server_id
-            ][0]
-            self._plex_server = account.resource(matching_server).connect(timeout=10)
+            ]
+            if matching_servers:
+                self._plex_server = self.account.resource(matching_servers[0]).connect(
+                    timeout=10
+                )
+                return True
+            _LOGGER.error("Attempt to update plex.direct hostname failed")
+            return False
 
         if self._url:
             try:
@@ -147,8 +182,12 @@ class PlexServer:
                         _LOGGER.warning(
                             "Plex SSL certificate's hostname changed, updating."
                         )
-                        _update_plexdirect_hostname()
-                        config_entry_update_needed = True
+                        if _update_plexdirect_hostname():
+                            config_entry_update_needed = True
+                        else:
+                            raise Unauthorized(
+                                "New certificate cannot be validated with provided token"
+                            )
                     else:
                         raise
                 else:
@@ -194,7 +233,11 @@ class PlexServer:
 
     def _fetch_platform_data(self):
         """Fetch all data from the Plex server in a single method."""
-        return (self._plex_server.clients(), self._plex_server.sessions())
+        return (
+            self._plex_server.clients(),
+            self._plex_server.sessions(),
+            self.plextv_clients(),
+        )
 
     async def _async_update_platforms(self):
         """Update the platform entities."""
@@ -218,7 +261,7 @@ class PlexServer:
                 monitored_users.add(new_user)
 
         try:
-            devices, sessions = await self.hass.async_add_executor_job(
+            devices, sessions, plextv_clients = await self.hass.async_add_executor_job(
                 self._fetch_platform_data
             )
         except (
@@ -233,6 +276,9 @@ class PlexServer:
         def process_device(source, device):
             self._known_idle.discard(device.machineIdentifier)
             available_clients.setdefault(device.machineIdentifier, {"device": device})
+            available_clients[device.machineIdentifier].setdefault(
+                PLAYER_SOURCE, source
+            )
 
             if device.machineIdentifier not in ignored_clients:
                 if self.option_ignore_plexweb_clients and device.product == "Plex Web":
@@ -246,18 +292,43 @@ class PlexServer:
                         )
                     return
 
-            if (
-                device.machineIdentifier not in self._created_clients
-                and device.machineIdentifier not in ignored_clients
-                and device.machineIdentifier not in new_clients
+            if device.machineIdentifier not in (
+                self._created_clients | ignored_clients | new_clients
             ):
                 new_clients.add(device.machineIdentifier)
                 _LOGGER.debug(
-                    "New %s %s: %s", device.product, source, device.machineIdentifier
+                    "New %s from %s: %s",
+                    device.product,
+                    source,
+                    device.machineIdentifier,
                 )
 
         for device in devices:
-            process_device("device", device)
+            process_device("PMS", device)
+
+        def connect_to_resource(resource):
+            """Connect to a plex.tv resource and return a Plex client."""
+            client_id = resource.clientIdentifier
+            if client_id in self._plextv_device_cache:
+                return self._plextv_device_cache[client_id]
+
+            client = None
+            try:
+                client = resource.connect(timeout=3)
+                _LOGGER.debug("plex.tv resource connection successful: %s", client)
+            except NotFound:
+                _LOGGER.error("plex.tv resource connection failed: %s", resource.name)
+
+            self._plextv_device_cache[client_id] = client
+            return client
+
+        for plextv_client in plextv_clients:
+            if plextv_client.clientIdentifier not in available_clients:
+                device = await self.hass.async_add_executor_job(
+                    connect_to_resource, plextv_client
+                )
+                if device:
+                    process_device("plex.tv", device)
 
         for session in sessions:
             if session.TYPE == "photo":
@@ -297,6 +368,7 @@ class PlexServer:
         for client_id in idle_clients:
             self.async_refresh_entity(client_id, None, None)
             self._known_idle.add(client_id)
+            self._plextv_device_cache.pop(client_id, None)
 
         if new_entity_configs:
             async_dispatcher_send(
@@ -354,7 +426,7 @@ class PlexServer:
     @property
     def option_use_episode_art(self):
         """Return use_episode_art option."""
-        return self.options[MP_DOMAIN][CONF_USE_EPISODE_ART]
+        return self.options[MP_DOMAIN].get(CONF_USE_EPISODE_ART, False)
 
     @property
     def option_monitored_users(self):
@@ -391,7 +463,7 @@ class PlexServer:
             key = kwargs["plex_key"]
             try:
                 return self.fetch_item(key)
-            except plexapi.exceptions.NotFound:
+            except NotFound:
                 _LOGGER.error("Media for key %s not found", key)
                 return None
 

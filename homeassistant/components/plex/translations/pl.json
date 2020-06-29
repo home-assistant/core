@@ -35,10 +35,6 @@
                 "description": "Dost\u0119pnych jest wiele serwer\u00f3w, wybierz jeden:",
                 "title": "Wybierz serwer Plex"
             },
-            "start_website_auth": {
-                "description": "Kontynuuj, by dokona\u0107 autoryzacji w plex.tv.",
-                "title": "Po\u0142\u0105czenie z serwerem Plex"
-            },
             "user": {
                 "description": "Przejd\u017a do [plex.tv](https://plex.tv), aby po\u0142\u0105czy\u0107 serwer Plex.",
                 "title": "Serwer medi\u00f3w Plex"

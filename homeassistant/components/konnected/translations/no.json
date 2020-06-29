@@ -23,8 +23,7 @@
                     "host": "Konnected enhet IP-adresse",
                     "port": "Koblet enhetsport"
                 },
-                "description": "Vennligst skriv inn verten informasjon for din Konnected Panel.",
-                "title": "Oppdag Konnected Enheten"
+                "description": "Vennligst skriv inn verten informasjon for din Konnected Panel."
             }
         }
     },

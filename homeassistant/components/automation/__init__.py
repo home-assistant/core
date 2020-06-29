@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_ID,
     CONF_PLATFORM,
     CONF_ZONE,
-    EVENT_AUTOMATION_TRIGGERED,
     EVENT_HOMEASSISTANT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
@@ -60,6 +59,9 @@ CONDITION_TYPE_OR = "or"
 
 DEFAULT_CONDITION_TYPE = CONDITION_TYPE_AND
 DEFAULT_INITIAL_STATE = True
+
+EVENT_AUTOMATION_RELOADED = "automation_reloaded"
+EVENT_AUTOMATION_TRIGGERED = "automation_triggered"
 
 ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_VARIABLES = "variables"
@@ -214,6 +216,7 @@ async def async_setup(hass, config):
         if conf is None:
             return
         await _async_process_config(hass, conf, component)
+        hass.bus.async_fire(EVENT_AUTOMATION_RELOADED, context=service_call.context)
 
     async_register_admin_service(
         hass, DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
@@ -373,6 +376,8 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         trigger_context = Context(parent_id=parent_id)
 
         self.async_set_context(trigger_context)
+        self._last_triggered = utcnow()
+        self.async_write_ha_state()
         self.hass.bus.async_fire(
             EVENT_AUTOMATION_TRIGGERED,
             {ATTR_NAME: self._name, ATTR_ENTITY_ID: self.entity_id},
@@ -385,9 +390,6 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             await self.action_script.async_run(variables, trigger_context)
         except Exception:  # pylint: disable=broad-except
             pass
-
-        self._last_triggered = utcnow()
-        self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self):
         """Remove listeners when removing automation from Home Assistant."""

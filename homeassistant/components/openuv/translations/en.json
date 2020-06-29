@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "[%key:common::config_flow::data::api_key%]",
+                    "api_key": "API Key",
                     "elevation": "Elevation",
                     "latitude": "Latitude",
                     "longitude": "Longitude"

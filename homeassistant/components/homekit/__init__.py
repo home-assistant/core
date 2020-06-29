@@ -6,7 +6,6 @@ import os
 
 from aiohttp import web
 import voluptuous as vol
-from zeroconf import InterfaceChoice
 
 from homeassistant.components import zeroconf
 from homeassistant.components.binary_sensor import (
@@ -22,7 +21,6 @@ from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
-    ATTR_SERVICE,
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PORT,
@@ -34,14 +32,7 @@ from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, Unauthorized
 from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entityfilter import (
-    BASE_FILTER_SCHEMA,
-    CONF_EXCLUDE_DOMAINS,
-    CONF_EXCLUDE_ENTITIES,
-    CONF_INCLUDE_DOMAINS,
-    CONF_INCLUDE_ENTITIES,
-    convert_filter,
-)
+from homeassistant.helpers.entityfilter import BASE_FILTER_SCHEMA, FILTER_SCHEMA
 from homeassistant.loader import async_get_integration
 from homeassistant.util import get_local_ip
 
@@ -49,12 +40,10 @@ from .accessories import get_accessory
 from .aidmanager import AccessoryAidStorage
 from .const import (
     AID_STORAGE,
-    ATTR_DISPLAY_NAME,
     ATTR_INTERGRATION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SOFTWARE_VERSION,
-    ATTR_VALUE,
     BRIDGE_NAME,
     BRIDGE_SERIAL_NUMBER,
     CONF_ADVERTISE_IP,
@@ -71,9 +60,7 @@ from .const import (
     DEFAULT_AUTO_START,
     DEFAULT_PORT,
     DEFAULT_SAFE_MODE,
-    DEFAULT_ZEROCONF_DEFAULT_INTERFACE,
     DOMAIN,
-    EVENT_HOMEKIT_CHANGED,
     HOMEKIT,
     HOMEKIT_PAIRING_QR,
     HOMEKIT_PAIRING_QR_SECRET,
@@ -113,23 +100,24 @@ def _has_all_unique_names_and_ports(bridges):
     return bridges
 
 
-BRIDGE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME, default=BRIDGE_NAME): vol.All(
-            cv.string, vol.Length(min=3, max=25)
-        ),
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_IP_ADDRESS): vol.All(ipaddress.ip_address, cv.string),
-        vol.Optional(CONF_ADVERTISE_IP): vol.All(ipaddress.ip_address, cv.string),
-        vol.Optional(CONF_AUTO_START, default=DEFAULT_AUTO_START): cv.boolean,
-        vol.Optional(CONF_SAFE_MODE, default=DEFAULT_SAFE_MODE): cv.boolean,
-        vol.Optional(CONF_FILTER, default={}): BASE_FILTER_SCHEMA,
-        vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
-        vol.Optional(
-            CONF_ZEROCONF_DEFAULT_INTERFACE, default=DEFAULT_ZEROCONF_DEFAULT_INTERFACE,
-        ): cv.boolean,
-    },
-    extra=vol.ALLOW_EXTRA,
+BRIDGE_SCHEMA = vol.All(
+    cv.deprecated(CONF_ZEROCONF_DEFAULT_INTERFACE),
+    vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=BRIDGE_NAME): vol.All(
+                cv.string, vol.Length(min=3, max=25)
+            ),
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            vol.Optional(CONF_IP_ADDRESS): vol.All(ipaddress.ip_address, cv.string),
+            vol.Optional(CONF_ADVERTISE_IP): vol.All(ipaddress.ip_address, cv.string),
+            vol.Optional(CONF_AUTO_START, default=DEFAULT_AUTO_START): cv.boolean,
+            vol.Optional(CONF_SAFE_MODE, default=DEFAULT_SAFE_MODE): cv.boolean,
+            vol.Optional(CONF_FILTER, default={}): BASE_FILTER_SCHEMA,
+            vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
+            vol.Optional(CONF_ZEROCONF_DEFAULT_INTERFACE): cv.boolean,
+        },
+        extra=vol.ALLOW_EXTRA,
+    ),
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -145,7 +133,6 @@ RESET_ACCESSORY_SERVICE_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the HomeKit from yaml."""
-
     hass.data.setdefault(DOMAIN, {})
 
     _async_register_events_and_services(hass)
@@ -222,22 +209,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     entity_config = options.get(CONF_ENTITY_CONFIG, {}).copy()
     auto_start = options.get(CONF_AUTO_START, DEFAULT_AUTO_START)
     safe_mode = options.get(CONF_SAFE_MODE, DEFAULT_SAFE_MODE)
-    entity_filter = convert_filter(
-        options.get(
-            CONF_FILTER,
-            {
-                CONF_INCLUDE_DOMAINS: [],
-                CONF_EXCLUDE_DOMAINS: [],
-                CONF_INCLUDE_ENTITIES: [],
-                CONF_EXCLUDE_ENTITIES: [],
-            },
-        )
-    )
-    interface_choice = (
-        InterfaceChoice.Default
-        if options.get(CONF_ZEROCONF_DEFAULT_INTERFACE)
-        else None
-    )
+    entity_filter = FILTER_SCHEMA(options.get(CONF_FILTER, {}))
 
     homekit = HomeKit(
         hass,
@@ -248,11 +220,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entity_config,
         safe_mode,
         advertise_ip,
-        interface_choice,
         entry.entry_id,
     )
-    await hass.async_add_executor_job(homekit.setup)
-    await homekit.async_setup_zeroconf()
+    zeroconf_instance = await zeroconf.async_get_instance(hass)
+    await hass.async_add_executor_job(homekit.setup, zeroconf_instance)
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 
@@ -279,7 +250,6 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-
     dismiss_setup_message(hass, entry.entry_id)
 
     hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
@@ -326,7 +296,6 @@ def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: Confi
 @callback
 def _async_register_events_and_services(hass: HomeAssistant):
     """Register events and services for HomeKit."""
-
     hass.http.register_view(HomeKitPairingQRView)
 
     def handle_homekit_reset_accessory(service):
@@ -350,26 +319,6 @@ def _async_register_events_and_services(hass: HomeAssistant):
         SERVICE_HOMEKIT_RESET_ACCESSORY,
         handle_homekit_reset_accessory,
         schema=RESET_ACCESSORY_SERVICE_SCHEMA,
-    )
-
-    @callback
-    def async_describe_logbook_event(event):
-        """Describe a logbook event."""
-        data = event.data
-        entity_id = data.get(ATTR_ENTITY_ID)
-        value = data.get(ATTR_VALUE)
-
-        value_msg = f" to {value}" if value else ""
-        message = f"send command {data[ATTR_SERVICE]}{value_msg} for {data[ATTR_DISPLAY_NAME]}"
-
-        return {
-            "name": "HomeKit",
-            "message": message,
-            "entity_id": entity_id,
-        }
-
-    hass.components.logbook.async_describe_event(
-        DOMAIN, EVENT_HOMEKIT_CHANGED, async_describe_logbook_event
     )
 
     async def async_handle_homekit_service_start(service):
@@ -404,7 +353,6 @@ class HomeKit:
         entity_config,
         safe_mode,
         advertise_ip=None,
-        interface_choice=None,
         entry_id=None,
     ):
         """Initialize a HomeKit object."""
@@ -416,14 +364,13 @@ class HomeKit:
         self._config = entity_config
         self._safe_mode = safe_mode
         self._advertise_ip = advertise_ip
-        self._interface_choice = interface_choice
         self._entry_id = entry_id
         self.status = STATUS_READY
 
         self.bridge = None
         self.driver = None
 
-    def setup(self):
+    def setup(self, zeroconf_instance):
         """Set up bridge and accessory driver."""
         # pylint: disable=import-outside-toplevel
         from .accessories import HomeBridge, HomeDriver
@@ -440,7 +387,7 @@ class HomeKit:
             port=self._port,
             persist_file=persist_file,
             advertised_address=self._advertise_ip,
-            interface_choice=self._interface_choice,
+            zeroconf_instance=zeroconf_instance,
         )
 
         # If we do not load the mac address will be wrong
@@ -454,12 +401,6 @@ class HomeKit:
         if self._safe_mode:
             _LOGGER.debug("Safe_mode selected for %s", self._name)
             self.driver.safe_mode = True
-
-    async def async_setup_zeroconf(self):
-        """Share the system zeroconf instance."""
-        # Replace the existing zeroconf instance.
-        await self.hass.async_add_executor_job(self.driver.advertiser.close)
-        self.driver.advertiser = await zeroconf.async_get_instance(self.hass)
 
     def reset_accessories(self, entity_ids):
         """Reset the accessory to load the latest configuration."""
@@ -519,7 +460,6 @@ class HomeKit:
 
     async def async_start(self, *args):
         """Start the accessory driver."""
-
         if self.status != STATUS_READY:
             return
         self.status = STATUS_WAIT

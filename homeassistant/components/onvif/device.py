@@ -100,16 +100,6 @@ class ONVIFDevice:
             if self.capabilities.ptz:
                 self.device.create_ptz_service()
 
-            if self._dt_diff_seconds > 300 and self.capabilities.events:
-                self.capabilities.events = False
-                LOGGER.warning(
-                    "The system clock on '%s' is more than 5 minutes off. "
-                    "Although this device supports events, they will be "
-                    "disabled until the device clock is fixed as we will "
-                    "not be able to renew the subscription.",
-                    self.name,
-                )
-
             if self.capabilities.events:
                 self.events = EventManager(
                     self.hass, self.device, self.config_entry.unique_id
@@ -217,10 +207,20 @@ class ONVIFDevice:
 
         # Grab the last MAC address for backwards compatibility
         mac = None
-        network_interfaces = await device_mgmt.GetNetworkInterfaces()
-        for interface in network_interfaces:
-            if interface.Enabled:
-                mac = interface.Info.HwAddress
+        try:
+            network_interfaces = await device_mgmt.GetNetworkInterfaces()
+            for interface in network_interfaces:
+                if interface.Enabled:
+                    mac = interface.Info.HwAddress
+        except Fault as fault:
+            if "not implemented" not in fault.message:
+                raise fault
+
+            LOGGER.debug(
+                "Couldn't get network interfaces from ONVIF deivice '%s'. Error: %s",
+                self.name,
+                fault,
+            )
 
         return DeviceInfo(
             device_info.Manufacturer,

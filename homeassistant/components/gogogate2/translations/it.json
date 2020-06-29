@@ -14,7 +14,7 @@
                     "password": "Password",
                     "username": "Nome utente"
                 },
-                "description": "Fornire le informazioni richieste di seguito.",
+                "description": "Fornire le informazioni richieste di seguito. Nota: solo l'utente \"admin\" funziona..",
                 "title": "Configurazione GogoGate2"
             }
         }

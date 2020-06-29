@@ -20,7 +20,6 @@
             },
             "link": {
                 "data": {
-                    "api_version": "Wersja DSM",
                     "password": "Has\u0142o",
                     "port": "Port",
                     "ssl": "U\u017cyj SSL/TLS, aby po\u0142\u0105czy\u0107 si\u0119 z serwerem NAS",
@@ -31,7 +30,6 @@
             },
             "user": {
                 "data": {
-                    "api_version": "Wersja DSM",
                     "host": "Nazwa hosta lub adres IP",
                     "password": "Has\u0142o",
                     "port": "Port",

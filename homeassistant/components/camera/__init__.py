@@ -34,6 +34,7 @@ from homeassistant.components.stream.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_FILENAME,
+    EVENT_HOMEASSISTANT_START,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
@@ -48,7 +49,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
 from homeassistant.loader import bind_hass
-from homeassistant.setup import async_when_setup
 
 from .const import DATA_CAMERA_PREFS, DOMAIN
 from .prefs import CameraPreferences
@@ -259,7 +259,7 @@ async def async_setup(hass, config):
 
     await component.async_setup(config)
 
-    async def preload_stream(hass, _):
+    async def preload_stream(_):
         for camera in component.entities:
             camera_prefs = prefs.get(camera.entity_id)
             if not camera_prefs.preload_stream:
@@ -273,7 +273,7 @@ async def async_setup(hass, config):
 
             request_stream(hass, source, keepalive=True, options=camera.stream_options)
 
-    async_when_setup(hass, DOMAIN_STREAM, preload_stream)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, preload_stream)
 
     @callback
     def update_tokens(time):

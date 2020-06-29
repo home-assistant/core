@@ -56,6 +56,9 @@ from .const import (
     USER_DATA,
 )
 
+PARALLEL_UPDATES = 1
+
+
 DEVICE_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_HOST): cv.string})}, extra=vol.ALLOW_EXTRA
 )

@@ -21,8 +21,7 @@
                 "data": {
                     "host": "H\u00f4te ou adresse IP"
                 },
-                "description": "Entrez vos informations Roku.",
-                "title": "Roku"
+                "description": "Entrez vos informations Roku."
             }
         }
     }

@@ -5,8 +5,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Wilt u de Mobile App component instellen?",
-                "title": "Mobiele app"
+                "description": "Wilt u de Mobile App component instellen?"
             }
         }
     }

@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Ali \u017eelite nastaviti Google Cast?",
-                "title": "Google Cast"
+                "description": "Ali \u017eelite nastaviti Google Cast?"
             }
         }
     }

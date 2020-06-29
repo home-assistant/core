@@ -53,6 +53,7 @@ CONF_VACUUMS = "vacuums"
 CONF_BATTERY_LEVEL_TEMPLATE = "battery_level_template"
 CONF_FAN_SPEED_LIST = "fan_speeds"
 CONF_FAN_SPEED_TEMPLATE = "fan_speed_template"
+CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 _VALID_STATES = [
@@ -71,6 +72,9 @@ VACUUM_SCHEMA = vol.Schema(
         vol.Optional(CONF_BATTERY_LEVEL_TEMPLATE): cv.template,
         vol.Optional(CONF_FAN_SPEED_TEMPLATE): cv.template,
         vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
+        vol.Optional(CONF_ATTRIBUTE_TEMPLATES, default={}): vol.Schema(
+            {cv.string: cv.template}
+        ),
         vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
         vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
         vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
@@ -99,6 +103,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         battery_level_template = device_config.get(CONF_BATTERY_LEVEL_TEMPLATE)
         fan_speed_template = device_config.get(CONF_FAN_SPEED_TEMPLATE)
         availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
+        attribute_templates = device_config.get(CONF_ATTRIBUTE_TEMPLATES)
 
         start_action = device_config[SERVICE_START]
         pause_action = device_config.get(SERVICE_PAUSE)
@@ -117,8 +122,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             CONF_AVAILABILITY_TEMPLATE: availability_template,
         }
 
-        initialise_templates(hass, templates)
-        entity_ids = extract_entities(device, "vacuum", None, templates)
+        initialise_templates(hass, templates, attribute_templates)
+        entity_ids = extract_entities(
+            device, "vacuum", None, templates, attribute_templates
+        )
 
         vacuums.append(
             TemplateVacuum(
@@ -138,6 +145,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 set_fan_speed_action,
                 fan_speed_list,
                 entity_ids,
+                attribute_templates,
             )
         )
 
@@ -165,6 +173,7 @@ class TemplateVacuum(StateVacuumEntity):
         set_fan_speed_action,
         fan_speed_list,
         entity_ids,
+        attribute_templates,
     ):
         """Initialize the vacuum."""
         self.hass = hass
@@ -178,6 +187,8 @@ class TemplateVacuum(StateVacuumEntity):
         self._fan_speed_template = fan_speed_template
         self._availability_template = availability_template
         self._supported_features = SUPPORT_START
+        self._attribute_templates = attribute_templates
+        self._attributes = {}
 
         self._start_script = Script(hass, start_action)
 
@@ -264,6 +275,11 @@ class TemplateVacuum(StateVacuumEntity):
     def available(self) -> bool:
         """Return if the device is available."""
         return self._available
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._attributes
 
     async def async_start(self):
         """Start or resume the cleaning task."""
@@ -419,3 +435,13 @@ class TemplateVacuum(StateVacuumEntity):
                     self._name,
                     ex,
                 )
+        # Update attribute if attribute template is defined
+        if self._attribute_templates is not None:
+            attrs = {}
+            for key, value in self._attribute_templates.items():
+                try:
+                    attrs[key] = value.async_render()
+                except TemplateError as err:
+                    _LOGGER.error("Error rendering attribute %s: %s", key, err)
+
+            self._attributes = attrs

@@ -23,7 +23,7 @@ from homeassistant.auth import (
     providers as auth_providers,
 )
 from homeassistant.auth.permissions import system_policies
-from homeassistant.components import mqtt, recorder
+from homeassistant.components import recorder
 from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
     _async_get_device_automations as async_get_device_automations,
@@ -53,13 +53,13 @@ from homeassistant.helpers import (
     storage,
 )
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.setup import async_setup_component, setup_component
+from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as date_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.yaml.loader as yaml_loader
 
-from tests.async_mock import AsyncMock, MagicMock, Mock, patch
+from tests.async_mock import AsyncMock, Mock, patch
 
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
@@ -324,36 +324,6 @@ def mock_state_change_event(hass, new_state, old_state=None):
     hass.bus.fire(EVENT_STATE_CHANGED, event_data, context=new_state.context)
 
 
-async def async_mock_mqtt_component(hass, config=None):
-    """Mock the MQTT component."""
-    if config is None:
-        config = {mqtt.CONF_BROKER: "mock-broker"}
-
-    @ha.callback
-    def _async_fire_mqtt_message(topic, payload, qos, retain):
-        async_fire_mqtt_message(hass, topic, payload, qos, retain)
-
-    with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client = mock_client.return_value
-        mock_client.connect.return_value = 0
-        mock_client.subscribe.return_value = (0, 0)
-        mock_client.unsubscribe.return_value = (0, 0)
-        mock_client.publish.side_effect = _async_fire_mqtt_message
-
-        result = await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-        assert result
-        await hass.async_block_till_done()
-
-        hass.data["mqtt"] = MagicMock(
-            spec_set=hass.data["mqtt"], wraps=hass.data["mqtt"]
-        )
-
-        return hass.data["mqtt"]
-
-
-mock_mqtt_component = threadsafe_coroutine_factory(async_mock_mqtt_component)
-
-
 @ha.callback
 def mock_component(hass, component):
     """Mock a component is setup."""
@@ -381,10 +351,11 @@ def mock_area_registry(hass, mock_entries=None):
     return registry
 
 
-def mock_device_registry(hass, mock_entries=None):
+def mock_device_registry(hass, mock_entries=None, mock_deleted_entries=None):
     """Mock the Device Registry."""
     registry = device_registry.DeviceRegistry(hass)
     registry.devices = mock_entries or OrderedDict()
+    registry.deleted_devices = mock_deleted_entries or OrderedDict()
 
     hass.data[device_registry.DATA_REGISTRY] = registry
     return registry
@@ -989,6 +960,8 @@ def mock_integration(hass, module):
     _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
     hass.data.setdefault(loader.DATA_INTEGRATIONS, {})[module.DOMAIN] = integration
     hass.data.setdefault(loader.DATA_COMPONENTS, {})[module.DOMAIN] = module
+
+    return integration
 
 
 def mock_entity_platform(hass, platform_path, module):

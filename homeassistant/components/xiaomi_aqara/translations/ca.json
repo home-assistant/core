@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "invalid_interface": "Interf\u00edcie de xarxa no v\u00e0lida",
+            "invalid_key": "Clau de la passarel\u00b7la no v\u00e0lida"
+        },
+        "flow_title": "Passarel\u00b7la Xiaomi Aqara: {name}",
+        "step": {
+            "select": {
+                "data": {
+                    "select_ip": "IP de la passarel\u00b7la"
+                }
+            },
+            "settings": {
+                "data": {
+                    "key": "Clau de la passarel\u00b7la",
+                    "name": "Nom de la passarel\u00b7la"
+                }
+            }
+        }
+    }
+}

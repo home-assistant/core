@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Met Office DataPoint API Schl\u00ebssel",
+                    "latitude": "Breedegrad",
+                    "longitude": "L\u00e4ngegrad"
+                },
+                "description": "L\u00e4ngegrad a Breedegrad gi benotzt fir d\u00e9i nooste Statioun auszewielen."
+            }
+        }
+    }
+}

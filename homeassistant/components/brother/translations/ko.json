@@ -16,8 +16,7 @@
                     "host": "\ud638\uc2a4\ud2b8",
                     "type": "\ud504\ub9b0\ud130\uc758 \uc885\ub958"
                 },
-                "description": "\ube0c\ub77c\ub354 \ud504\ub9b0\ud130 \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\ub97c \uc124\uc815\ud569\ub2c8\ub2e4. \uad6c\uc131\uc5d0 \ubb38\uc81c\uac00\uc788\ub294 \uacbd\uc6b0 https://www.home-assistant.io/integrations/brother \ub97c \ucc38\uc870\ud574\uc8fc\uc138\uc694",
-                "title": "\ube0c\ub77c\ub354 \ud504\ub9b0\ud130"
+                "description": "\ube0c\ub77c\ub354 \ud504\ub9b0\ud130 \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\ub97c \uc124\uc815\ud569\ub2c8\ub2e4. \uad6c\uc131\uc5d0 \ubb38\uc81c\uac00\uc788\ub294 \uacbd\uc6b0 https://www.home-assistant.io/integrations/brother \ub97c \ucc38\uc870\ud574\uc8fc\uc138\uc694"
             },
             "zeroconf_confirm": {
                 "data": {
