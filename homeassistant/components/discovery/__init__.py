@@ -88,7 +88,6 @@ MIGRATED_SERVICE_HANDLERS = [
     "homekit",
     "ikea_tradfri",
     "philips_hue",
-    SERVICE_SAMSUNG_PRINTER,
     "sonos",
     "songpal",
     SERVICE_WEMO,
