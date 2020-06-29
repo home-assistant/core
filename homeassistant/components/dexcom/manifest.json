@@ -3,7 +3,7 @@
   "name": "Dexcom",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/dexcom",
-  "requirements": ["pydexcom==0.1.6"],
+  "requirements": ["pydexcom==0.2.0"],
   "codeowners": [
     "@gagebenne"
   ]

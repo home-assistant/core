@@ -1275,7 +1275,7 @@ pydeconz==71
 pydelijn==0.6.0
 
 # homeassistant.components.dexcom
-pydexcom==0.1.6
+pydexcom==0.2.0
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
