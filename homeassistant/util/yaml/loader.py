@@ -313,7 +313,7 @@ def secret_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
 
 
 def _global_set(loader: SafeLineLoader, node: yaml.nodes.Node):
-    """Cache the given node mapping, to be reused in future calls"""
+    """Cache the given node mapping, to be reused in future calls."""
     if not isinstance(node, yaml.MappingNode):
         raise HomeAssistantError("Tag '!global_set' can be used only in MappingNodes")
 
@@ -326,7 +326,7 @@ def _global_set(loader: SafeLineLoader, node: yaml.nodes.Node):
 
 
 def _global_get(loader: SafeLineLoader, node: yaml.nodes.Node) -> str:
-    """Set the value previously cached within the __global_tags__ attribute"""
+    """Set the value previously cached within the __global_tags__ attribute."""
     if node.value not in loader.__global_tags__:
         raise HomeAssistantError(
             f"Can not find any cached global value with key {node.value}"
