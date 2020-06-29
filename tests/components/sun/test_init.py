@@ -103,7 +103,7 @@ async def test_setting_rising(hass, legacy_patchable_time):
     )
 
 
-async def test_state_change(hass):
+async def test_state_change(hass, legacy_patchable_time):
     """Test if the state changes at next setting/rising."""
     now = datetime(2016, 6, 1, 8, 0, 0, tzinfo=dt_util.UTC)
     with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=now):
