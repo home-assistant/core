@@ -576,6 +576,8 @@ class HomeKit:
         self.status = STATUS_STOPPED
         _LOGGER.debug("Driver stop for %s", self._name)
         self.hass.add_job(self.driver.stop)
+        for acc in self.bridge.accessories.values():
+            acc.async_stop()
 
     @callback
     def _async_configure_linked_sensors(self, ent_reg_ent, device_lookup, state):

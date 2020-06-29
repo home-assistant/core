@@ -45,6 +45,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     __version__,
 )
+from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
 import homeassistant.util.dt as dt_util
 
 from tests.async_mock import Mock, patch
@@ -81,6 +82,22 @@ async def test_debounce(hass):
     hass.bus.async_fire(EVENT_TIME_CHANGED, {ATTR_NOW: now + timedelta(seconds=3)})
     await hass.async_block_till_done()
     assert counter == 2
+
+
+async def test_accessory_cancels_track_state_change_on_stop(hass, hk_driver):
+    """Ensure homekit state changed listeners are unsubscribed on reload."""
+    entity_id = "sensor.accessory"
+    hass.states.async_set(entity_id, None)
+    acc = HomeAccessory(
+        hass, hk_driver, "Home Accessory", entity_id, 2, {"platform": "isy994"}
+    )
+    with patch(
+        "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
+    ):
+        await acc.run_handler()
+    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS][entity_id]) == 1
+    acc.async_stop()
+    assert entity_id not in hass.data[TRACK_STATE_CHANGE_CALLBACKS]
 
 
 async def test_home_accessory(hass, hk_driver):

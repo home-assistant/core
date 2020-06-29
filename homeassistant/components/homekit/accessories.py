@@ -270,6 +270,7 @@ class HomeAccessory(Accessory):
         self.entity_id = entity_id
         self.hass = hass
         self.debounce = {}
+        self._subscriptions = []
         self._char_battery = None
         self._char_charging = None
         self._char_low_battery = None
@@ -343,8 +344,10 @@ class HomeAccessory(Accessory):
         """
         state = self.hass.states.get(self.entity_id)
         self.async_update_state_callback(None, None, state)
-        async_track_state_change(
-            self.hass, self.entity_id, self.async_update_state_callback
+        self._subscriptions.append(
+            async_track_state_change(
+                self.hass, self.entity_id, self.async_update_state_callback
+            )
         )
 
         battery_charging_state = None
@@ -357,10 +360,12 @@ class HomeAccessory(Accessory):
             battery_charging_state = linked_battery_sensor_state.attributes.get(
                 ATTR_BATTERY_CHARGING
             )
-            async_track_state_change(
-                self.hass,
-                self.linked_battery_sensor,
-                self.async_update_linked_battery_callback,
+            self._subscriptions.append(
+                async_track_state_change(
+                    self.hass,
+                    self.linked_battery_sensor,
+                    self.async_update_linked_battery_callback,
+                )
             )
         else:
             battery_state = state.attributes.get(ATTR_BATTERY_LEVEL)
@@ -369,10 +374,12 @@ class HomeAccessory(Accessory):
                 self.hass.states.get(self.linked_battery_charging_sensor).state
                 == STATE_ON
             )
-            async_track_state_change(
-                self.hass,
-                self.linked_battery_charging_sensor,
-                self.async_update_linked_battery_charging_callback,
+            self._subscriptions.append(
+                async_track_state_change(
+                    self.hass,
+                    self.linked_battery_charging_sensor,
+                    self.async_update_linked_battery_charging_callback,
+                )
             )
         elif battery_charging_state is None:
             battery_charging_state = state.attributes.get(ATTR_BATTERY_CHARGING)
@@ -480,6 +487,12 @@ class HomeAccessory(Accessory):
 
         self.hass.bus.async_fire(EVENT_HOMEKIT_CHANGED, event_data)
         await self.hass.services.async_call(domain, service, service_data)
+
+    @ha_callback
+    def async_stop(self):
+        """Cancel any subscriptions when the bridge is stopped."""
+        while self._subscriptions:
+            self._subscriptions.pop(0)()
 
 
 class HomeBridge(Bridge):
