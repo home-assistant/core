@@ -17,7 +17,9 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch("plumlightpad.Plum.loadCloudData"), patch(
+    with patch(
+        "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData"
+    ), patch(
         "homeassistant.components.plum_lightpad.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.plum_lightpad.async_setup_entry", return_value=True,
@@ -45,7 +47,8 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "plumlightpad.Plum.loadCloudData", side_effect=ConnectTimeout,
+        "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData",
+        side_effect=ConnectTimeout,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -60,7 +63,9 @@ async def test_import(hass):
     """Test configuring the flow using configuration.yaml."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    with patch("plumlightpad.Plum.loadCloudData"), patch(
+    with patch(
+        "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData"
+    ), patch(
         "homeassistant.components.plum_lightpad.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.plum_lightpad.async_setup_entry", return_value=True,
