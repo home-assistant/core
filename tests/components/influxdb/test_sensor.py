@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from typing import Dict, List, Type
 
-from influxdb.exceptions import InfluxDBClientError
+from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from influxdb_client.rest import ApiException
 import pytest
 from voluptuous import Invalid
@@ -469,6 +469,13 @@ async def test_error_rendering_template(
             BASE_V1_QUERY,
             _set_query_mock_v1,
             InfluxDBClientError("fail"),
+        ),
+        (
+            DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            BASE_V1_QUERY,
+            _set_query_mock_v1,
+            InfluxDBServerError("fail"),
         ),
         (
             API_VERSION_2,
