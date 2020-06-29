@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(HYGROSTAT_SCHEMA.schema)
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the generic hygrostat platform."""
     if discovery_info:
-        config = PLATFORM_SCHEMA(discovery_info)
+        config = discovery_info
     name = config.get(CONF_NAME)
     switch_entity_id = config.get(CONF_HUMIDIFIER)
     sensor_entity_id = config.get(CONF_SENSOR)
