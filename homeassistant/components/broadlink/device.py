@@ -12,16 +12,14 @@ from broadlink.exceptions import (
     DeviceOfflineError,
 )
 
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TIMEOUT, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN, DOMAINS_AND_TYPES
+from .const import DEFAULT_PORT, DOMAIN, DOMAINS_AND_TYPES
 from .updater import get_update_coordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_PORT = 80
 
 
 class BroadlinkDevice:
@@ -167,8 +165,11 @@ class BroadlinkDevice:
             "The device at %s is locked for authentication. Follow the configuration flow to unlock it",
             self.config.data[CONF_HOST],
         )
+
         self.hass.async_create_task(
             self.hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": "reauth"}, data=self.api,
+                DOMAIN,
+                context={"source": "reauth"},
+                data={CONF_NAME: self.name, **self.config.data},
             )
         )

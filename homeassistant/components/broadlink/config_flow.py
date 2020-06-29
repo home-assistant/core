@@ -16,9 +16,11 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CO
 from homeassistant.helpers import config_validation as cv
 
 from . import LOGGER
-from .const import DOMAIN  # pylint: disable=unused-import
-
-DEFAULT_TIMEOUT = 5
+from .const import (  # pylint: disable=unused-import
+    DEFAULT_PORT,
+    DEFAULT_TIMEOUT,
+    DOMAIN,
+)
 
 
 class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -81,11 +83,13 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     await self.async_set_device(device, raise_on_progress=False)
                     return await self.async_step_auth()
 
+                target_mac = ":".join([format(octet, "x") for octet in self.device.mac])
+                given_mac = ":".join([format(octet, "x") for octet in device.mac])
+
                 errors["base"] = "invalid_host"
-                mac_addr = ":".join([format(octet, "x") for octet in self.device.mac])
                 err_msg = (
-                    "Invalid host for this configuration flow. "
-                    f"The MAC address should be {mac_addr}"
+                    "Invalid host for this configuration flow. The MAC address "
+                    f"should be {target_mac}, but {given_mac} was given"
                 )
 
             LOGGER.error("Failed to discover the device at %s: %s", host, err_msg)
@@ -107,7 +111,8 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(device.auth)
 
         except AuthenticationError:
-            return await self.async_step_reset()
+            errors["base"] = "invalid_auth"
+            return await self.async_step_reset(errors=errors)
 
         except DeviceOfflineError as err:
             errors["base"] = "cannot_connect"
@@ -127,17 +132,26 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="auth", errors=errors)
 
-    async def async_step_reset(self, user_input=None):
-        """Guide the user to unlock the device manually."""
+    async def async_step_reset(self, user_input=None, errors=None):
+        """Guide the user to unlock the device manually.
+
+        We are unable to authenticate because the device is locked.
+        The user needs to factory reset the device to make it work
+        with Home Assistant.
+        """
         if user_input is None:
-            return self.async_show_form(step_id="reset")
+            return self.async_show_form(step_id="reset", errors=errors)
 
         return await self.async_step_user(
             {CONF_HOST: self.device.host[0], CONF_TIMEOUT: self.device.timeout}
         )
 
     async def async_step_unlock(self, user_input=None):
-        """Unlock the device to prevent authorization errors."""
+        """Unlock the device.
+
+        The authentication succeeded, but the device is locked.
+        We can offer an unlock to prevent authorization errors.
+        """
         device = self.device
         errors = {}
 
@@ -174,6 +188,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_finish(self, user_input=None):
         """Choose a name for the device and create config entry."""
         device = self.device
+        errors = {}
 
         if user_input is not None:
             return self.async_create_entry(
@@ -188,10 +203,17 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         data_schema = {vol.Required(CONF_NAME, default=device.name): str}
         return self.async_show_form(
-            step_id="finish", data_schema=vol.Schema(data_schema)
+            step_id="finish", data_schema=vol.Schema(data_schema), errors=errors
         )
 
-    async def async_step_reauth(self, device):
+    async def async_step_reauth(self, data):
         """Reauthenticate to the device."""
+        device = blk.gendevice(
+            data[CONF_TYPE],
+            (data[CONF_HOST], DEFAULT_PORT),
+            bytes.fromhex(data[CONF_MAC]),
+            name=data[CONF_NAME],
+        )
+        device.timeout = data[CONF_TIMEOUT]
         await self.async_set_device(device)
         return await self.async_step_reset()
