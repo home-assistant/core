@@ -98,7 +98,7 @@ MOCK_CALLS_ENTRY_WS = {
     "host": "fake",
     "name": "HomeAssistant",
     "port": 8001,
-    "timeout": 1,
+    "timeout": 5,
     "token": "abcde",
 }
 
