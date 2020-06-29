@@ -570,7 +570,7 @@ async def webhook_get_entities_by_area(hass, config_entry, data):
     for area_id, entities in area_to_entity_map.items():
         area = area_registry.async_get_area(area_id)
 
-        area_obj = {"id": area.id, "name": area.name, "entities": entities}
+        area_obj = {"id": area.id, "name": area.name, "entity_ids": entity_ids}
 
         resp.append(area_obj)
 
