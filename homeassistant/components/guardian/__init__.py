@@ -6,10 +6,7 @@ from aioguardian import Client
 from aioguardian.errors import GuardianError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_IP_ADDRESS,
-)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
