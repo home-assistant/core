@@ -44,7 +44,7 @@ def clear_secret_cache() -> None:
 class SafeLineLoader(yaml.SafeLoader):
     """Loader class that keeps track of line numbers."""
 
-    __global_tags__ = {}
+    __global_tags__: Dict[str, str] = {}
 
     def compose_node(self, parent: yaml.nodes.Node, index: int) -> yaml.nodes.Node:
         """Annotate a node with the first line it was seen."""
@@ -312,7 +312,7 @@ def secret_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
     raise HomeAssistantError(f"Secret {node.value} not defined")
 
 
-def _global_set(loader: SafeLineLoader, node: yaml.nodes.Node):
+def _global_set(loader: SafeLineLoader, node: yaml.nodes.Node) -> None:
     """Cache the given node mapping, to be reused in future calls."""
     if not isinstance(node, yaml.MappingNode):
         raise HomeAssistantError("Tag '!global_set' can be used only in MappingNodes")
@@ -331,7 +331,7 @@ def _global_get(loader: SafeLineLoader, node: yaml.nodes.Node) -> str:
         raise HomeAssistantError(
             f"Can not find any cached global value with key {node.value}"
         )
-    return loader.__global_tags__.get(node.value)
+    return loader.__global_tags__[node.value]
 
 
 yaml.SafeLoader.add_constructor("!include", _include_yaml)
