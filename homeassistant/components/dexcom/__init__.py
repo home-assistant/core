@@ -38,6 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except SessionError:
         raise ConfigEntryNotReady
 
+    entry.update_listeners = []
     entry.add_update_listener(update_listener)
     if not entry.options:
         hass.config_entries.async_update_entry(
