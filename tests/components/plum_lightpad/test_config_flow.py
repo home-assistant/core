@@ -45,8 +45,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.test_lightpad.config_flow.PlaceholderHub.authenticate",
-        side_effect=ConnectTimeout,
+        "plumlightpad.Plum.loadCloudData", side_effect=ConnectTimeout,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
