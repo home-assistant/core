@@ -1,5 +1,4 @@
 """Support for switching Arduino pins on and off."""
-import asyncio
 import logging
 
 import voluptuous as vol

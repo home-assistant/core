@@ -1,5 +1,4 @@
 """Support for getting information from Arduino analog pins."""
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -56,11 +55,11 @@ class ArduinoSensor(Entity):
         else:
             self._board.set_pin_mode_analog_input(self._pin, self._cb, self._diff)
             self._value = self._board.analog_read(self._pin)[0]
-            self.async_write_ha_state()
 
     def _cb(self, data):
-        self._value = data[2]
-        self.async_write_ha_state()
+        if self.hass is not None:
+            self._value = data[2]
+            self.async_write_ha_state()
 
     @property
     def state(self):

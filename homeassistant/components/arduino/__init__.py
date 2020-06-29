@@ -1,5 +1,4 @@
 """Support for Arduino boards running with the Firmata firmware."""
-import asyncio
 import logging
 
 from pymata4.pymata4 import Pymata4
@@ -19,12 +18,15 @@ DOMAIN = "arduino"
 CONF_BAUD = "baud_rate"
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema(
-        {
-            vol.Required(CONF_PORT): cv.string,
-            vol.Optional(CONF_BAUD, default=57600): cv.positive_int
-        }
-    )}, extra=vol.ALLOW_EXTRA
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_PORT): cv.string,
+                vol.Optional(CONF_BAUD, default=57600): cv.positive_int,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 
