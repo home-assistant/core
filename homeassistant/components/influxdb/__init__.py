@@ -2,7 +2,6 @@
 import logging
 import math
 import queue
-import re
 import threading
 import time
 from typing import Dict
@@ -16,16 +15,7 @@ import urllib3.exceptions
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_API_VERSION,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PATH,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_TOKEN,
     CONF_URL,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
@@ -39,38 +29,48 @@ from homeassistant.helpers.entityfilter import (
     convert_include_exclude_filter,
 )
 
+from .const import (
+    API_VERSION_2,
+    BATCH_BUFFER_SIZE,
+    BATCH_TIMEOUT,
+    CLIENT_ERROR_V1_WITH_RETRY,
+    CLIENT_ERROR_V2_WITH_RETRY,
+    COMPONENT_CONFIG_SCHEMA_CONNECTION,
+    CONF_API_VERSION,
+    CONF_BUCKET,
+    CONF_COMPONENT_CONFIG,
+    CONF_COMPONENT_CONFIG_DOMAIN,
+    CONF_COMPONENT_CONFIG_GLOB,
+    CONF_DB_NAME,
+    CONF_DEFAULT_MEASUREMENT,
+    CONF_HOST,
+    CONF_ORG,
+    CONF_OVERRIDE_MEASUREMENT,
+    CONF_PASSWORD,
+    CONF_PATH,
+    CONF_PORT,
+    CONF_RETRY_COUNT,
+    CONF_SSL,
+    CONF_TAGS,
+    CONF_TAGS_ATTRIBUTES,
+    CONF_TOKEN,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    CONNECTION_ERROR_WITH_RETRY,
+    DEFAULT_API_VERSION,
+    DEFAULT_HOST_V2,
+    DEFAULT_SSL_V2,
+    DOMAIN,
+    QUEUE_BACKLOG_SECONDS,
+    RE_DECIMAL,
+    RE_DIGIT_TAIL,
+    RETRY_DELAY,
+    RETRY_INTERVAL,
+    TIMEOUT,
+    WRITE_ERROR,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-CONF_DB_NAME = "database"
-CONF_BUCKET = "bucket"
-CONF_ORG = "organization"
-CONF_TAGS = "tags"
-CONF_DEFAULT_MEASUREMENT = "default_measurement"
-CONF_OVERRIDE_MEASUREMENT = "override_measurement"
-CONF_TAGS_ATTRIBUTES = "tags_attributes"
-CONF_COMPONENT_CONFIG = "component_config"
-CONF_COMPONENT_CONFIG_GLOB = "component_config_glob"
-CONF_COMPONENT_CONFIG_DOMAIN = "component_config_domain"
-CONF_RETRY_COUNT = "max_retries"
-
-DEFAULT_DATABASE = "home_assistant"
-DEFAULT_HOST_V2 = "us-west-2-1.aws.cloud2.influxdata.com"
-DEFAULT_SSL_V2 = True
-DEFAULT_BUCKET = "Home Assistant"
-DEFAULT_VERIFY_SSL = True
-DEFAULT_API_VERSION = "1"
-
-DOMAIN = "influxdb"
-API_VERSION_2 = "2"
-TIMEOUT = 5
-RETRY_DELAY = 20
-QUEUE_BACKLOG_SECONDS = 30
-RETRY_INTERVAL = 60  # seconds
-
-BATCH_TIMEOUT = 1
-BATCH_BUFFER_SIZE = 100
-
-DB_CONNECTION_FAILURE_MSG = ()
 
 
 def create_influx_url(conf: Dict) -> Dict:
@@ -120,26 +120,6 @@ def validate_version_specific_config(conf: Dict) -> Dict:
     return conf
 
 
-COMPONENT_CONFIG_SCHEMA_CONNECTION = {
-    # Connection config for V1 and V2 APIs.
-    vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERSION): vol.All(
-        vol.Coerce(str), vol.In([DEFAULT_API_VERSION, API_VERSION_2]),
-    ),
-    vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_PATH): cv.string,
-    vol.Optional(CONF_PORT): cv.port,
-    vol.Optional(CONF_SSL): cv.boolean,
-    # Connection config for V1 API only.
-    vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
-    vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
-    vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    # Connection config for V2 API only.
-    vol.Inclusive(CONF_TOKEN, "v2_authentication"): cv.string,
-    vol.Inclusive(CONF_ORG, "v2_authentication"): cv.string,
-    vol.Optional(CONF_BUCKET, default=DEFAULT_BUCKET): cv.string,
-}
-
 _CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string})
 
 _CONFIG_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
@@ -173,9 +153,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-RE_DIGIT_TAIL = re.compile(r"^[^\.]*\d+\.?\d+[^\.]*$")
-RE_DECIMAL = re.compile(r"[^\d.]+")
 
 
 def get_influx_connection(client_kwargs, bucket):
@@ -254,26 +231,20 @@ def setup(hass, config):
         influx = get_influx_connection(kwargs, bucket)
         if use_v2_api:
             write_api = influx.write_api(write_options=ASYNCHRONOUS)
-    except (exceptions.InfluxDBClientError, requests.exceptions.ConnectionError) as exc:
-        _LOGGER.error(
-            "Database host is not accessible due to '%s', please "
-            "check your entries in the configuration file (host, "
-            "port, etc.) and verify that the database exists and is "
-            "READ/WRITE. Retrying again in %s seconds.",
-            exc,
-            RETRY_INTERVAL,
-        )
+    except (
+        OSError,
+        requests.exceptions.ConnectionError,
+        urllib3.exceptions.HTTPError,
+    ) as exc:
+        _LOGGER.error(CONNECTION_ERROR_WITH_RETRY, exc)
         event_helper.call_later(hass, RETRY_INTERVAL, lambda _: setup(hass, config))
         return True
-    except (ApiException, urllib3.exceptions.HTTPError) as exc:
-        _LOGGER.error(
-            "Bucket is not accessible due to '%s', please "
-            "check your entries in the configuration file (url, org, "
-            "bucket, etc.) and verify that the org and bucket exist and the "
-            "provided token has WRITE access. Retrying again in %s seconds.",
-            exc,
-            RETRY_INTERVAL,
-        )
+    except exceptions.InfluxDBClientError as exc:
+        _LOGGER.error(CLIENT_ERROR_V1_WITH_RETRY, exc)
+        event_helper.call_later(hass, RETRY_INTERVAL, lambda _: setup(hass, config))
+        return True
+    except ApiException as exc:
+        _LOGGER.error(CLIENT_ERROR_V2_WITH_RETRY, exc)
         event_helper.call_later(hass, RETRY_INTERVAL, lambda _: setup(hass, config))
         return True
 
@@ -468,7 +439,7 @@ class InfluxThread(threading.Thread):
                     time.sleep(RETRY_DELAY)
                 else:
                     if not self.write_errors:
-                        _LOGGER.error("Write error: %s", err)
+                        _LOGGER.error(WRITE_ERROR, json, err)
                     self.write_errors += len(json)
 
     def run(self):

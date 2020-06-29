@@ -5,6 +5,7 @@ import datetime
 import pytest
 
 import homeassistant.components.influxdb as influxdb
+from homeassistant.components.influxdb.const import DEFAULT_BUCKET
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_OFF,
@@ -17,6 +18,8 @@ from homeassistant.setup import async_setup_component
 
 from tests.async_mock import MagicMock, Mock, call, patch
 
+INFLUX_PATH = "homeassistant.components.influxdb"
+INFLUX_CLIENT_PATH = f"{INFLUX_PATH}.InfluxDBClient"
 BASE_V1_CONFIG = {}
 BASE_V2_CONFIG = {
     "api_version": influxdb.API_VERSION_2,
@@ -38,8 +41,7 @@ def mock_batch_timeout(hass, monkeypatch):
     """Mock the event bus listener and the batch timeout for tests."""
     hass.bus.listen = MagicMock()
     monkeypatch.setattr(
-        "homeassistant.components.influxdb.InfluxThread.batch_timeout",
-        Mock(return_value=0),
+        f"{INFLUX_PATH}.InfluxThread.batch_timeout", Mock(return_value=0),
     )
 
 
@@ -47,9 +49,9 @@ def mock_batch_timeout(hass, monkeypatch):
 def mock_client_fixture(request):
     """Patch the InfluxDBClient object with mock for version under test."""
     if request.param == influxdb.API_VERSION_2:
-        client_target = "homeassistant.components.influxdb.InfluxDBClientV2"
+        client_target = f"{INFLUX_CLIENT_PATH}V2"
     else:
-        client_target = "homeassistant.components.influxdb.InfluxDBClient"
+        client_target = INFLUX_CLIENT_PATH
 
     with patch(client_target) as client:
         yield client
@@ -59,7 +61,7 @@ def mock_client_fixture(request):
 def get_mock_call_fixture(request):
     """Get version specific lambda to make write API call mock."""
     if request.param == influxdb.API_VERSION_2:
-        return lambda body: call(bucket=influxdb.DEFAULT_BUCKET, record=body)
+        return lambda body: call(bucket=DEFAULT_BUCKET, record=body)
     # pylint: disable=unnecessary-lambda
     return lambda body: call(body)
 
@@ -144,7 +146,16 @@ async def test_setup_minimal_config(hass, mock_client, config_ext, get_write_api
     "mock_client, config_ext, get_write_api",
     [
         (influxdb.DEFAULT_API_VERSION, {"username": "user"}, _get_write_api_mock_v1),
-        (influxdb.DEFAULT_API_VERSION, {"token": "token"}, _get_write_api_mock_v1),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            {"token": "token", "organization": "organization"},
+            _get_write_api_mock_v1,
+        ),
+        (
+            influxdb.API_VERSION_2,
+            {"api_version": influxdb.API_VERSION_2},
+            _get_write_api_mock_v2,
+        ),
         (
             influxdb.API_VERSION_2,
             {"api_version": influxdb.API_VERSION_2, "organization": "organization"},
@@ -1147,3 +1158,165 @@ async def test_event_listener_backlog_full(
         hass.data[influxdb.DOMAIN].block_till_done()
 
         assert get_write_api(mock_client).call_count == 0
+
+
+@pytest.mark.parametrize(
+    "mock_client, config_ext, get_write_api, get_mock_call",
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
+async def test_event_listener_attribute_name_conflict(
+    hass, mock_client, config_ext, get_write_api, get_mock_call
+):
+    """Test the event listener when an attribute conflicts with another field."""
+    handler_method = await _setup(hass, mock_client, config_ext, get_write_api)
+
+    attrs = {"value": "value_str"}
+    state = MagicMock(
+        state=1,
+        domain="fake",
+        entity_id="fake.something",
+        object_id="something",
+        attributes=attrs,
+    )
+    event = MagicMock(data={"new_state": state}, time_fired=12345)
+    body = [
+        {
+            "measurement": "fake.something",
+            "tags": {"domain": "fake", "entity_id": "something"},
+            "time": 12345,
+            "fields": {"value": 1, "value__str": "value_str"},
+        }
+    ]
+    handler_method(event)
+    hass.data[influxdb.DOMAIN].block_till_done()
+
+    write_api = get_write_api(mock_client)
+    assert write_api.call_count == 1
+    assert write_api.call_args == get_mock_call(body)
+
+
+@pytest.mark.parametrize(
+    "mock_client, config_ext, get_write_api, get_mock_call, test_exception",
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+            ConnectionError("fail"),
+        ),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+            influxdb.exceptions.InfluxDBClientError("fail"),
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+            ConnectionError("fail"),
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+            influxdb.ApiException(),
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
+async def test_connection_failure_on_startup(
+    hass, caplog, mock_client, config_ext, get_write_api, get_mock_call, test_exception
+):
+    """Test the event listener when it fails to connect to Influx on startup."""
+    write_api = get_write_api(mock_client)
+    write_api.side_effect = test_exception
+    config = {"influxdb": config_ext}
+
+    with patch(f"{INFLUX_PATH}.event_helper") as event_helper:
+        assert await async_setup_component(hass, influxdb.DOMAIN, config)
+        await hass.async_block_till_done()
+
+        assert (
+            len([record for record in caplog.records if record.levelname == "ERROR"])
+            == 1
+        )
+        event_helper.call_later.assert_called_once()
+        hass.bus.listen.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "mock_client, config_ext, get_write_api, get_mock_call, test_exception",
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+            influxdb.exceptions.InfluxDBClientError("fail", code=400),
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+            influxdb.ApiException(status=400),
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
+async def test_invalid_inputs_error(
+    hass, caplog, mock_client, config_ext, get_write_api, get_mock_call, test_exception
+):
+    """
+    Test the event listener when influx returns invalid inputs on write.
+
+    The difference in error handling in this case is that we do not sleep
+    and try again, if an input is invalid it is logged and dropped.
+
+    Note that this shouldn't actually occur, if its possible for the current
+    code to send an invalid input then it should be adjusted to stop that.
+    But Influx is an external service so there may be edge cases that
+    haven't been encountered yet.
+    """
+    handler_method = await _setup(hass, mock_client, config_ext, get_write_api)
+
+    write_api = get_write_api(mock_client)
+    write_api.side_effect = test_exception
+    state = MagicMock(
+        state=1,
+        domain="fake",
+        entity_id="fake.something",
+        object_id="something",
+        attributes={},
+    )
+    event = MagicMock(data={"new_state": state}, time_fired=12345)
+
+    with patch(f"{INFLUX_PATH}.time.sleep") as sleep:
+        handler_method(event)
+        hass.data[influxdb.DOMAIN].block_till_done()
+
+        write_api.assert_called_once()
+        assert (
+            len([record for record in caplog.records if record.levelname == "ERROR"])
+            == 1
+        )
+        sleep.assert_not_called()
