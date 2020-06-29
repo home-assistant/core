@@ -84,6 +84,16 @@ class TileDeviceTracker(TileEntity, TrackerEntity):
 
         Value in meters.
         """
+        if self._tile["last_tile_state"].get("h_accuracy") and not self._tile[
+            "last_tile_state"
+        ].get("v_accuracy"):
+            return self._tile["last_tile_state"]["h_accuracy"]
+
+        if not self._tile["last_tile_state"].get("h_accuracy") and self._tile[
+            "last_tile_state"
+        ].get("v_accuracy"):
+            return self._tile["last_tile_state"]["v_accuracy"]
+
         return round(
             (
                 self._tile["last_tile_state"]["h_accuracy"]
