@@ -28,6 +28,7 @@ FLOWS = [
     "bsblan",
     "cast",
     "cert_expiry",
+    "control4",
     "coolmaster",
     "coronavirus",
     "daikin",
