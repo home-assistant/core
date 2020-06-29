@@ -11,6 +11,7 @@ import logging
 import os
 import sys
 import threading
+import time
 import uuid
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa
@@ -284,9 +285,22 @@ fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
 
 
 @ha.callback
-def async_fire_time_changed(hass, time):
+def async_fire_time_changed(hass, datetime_):
     """Fire a time changes event."""
-    hass.bus.async_fire(EVENT_TIME_CHANGED, {"now": date_util.as_utc(time)})
+    hass.bus.async_fire(EVENT_TIME_CHANGED, {"now": date_util.as_utc(datetime_)})
+
+    for task in list(hass.loop._scheduled):
+        if not isinstance(task, asyncio.TimerHandle):
+            continue
+        if task.cancelled():
+            continue
+
+        future_seconds = task.when() - hass.loop.time()
+        mock_seconds_into_future = datetime_.timestamp() - time.time()
+
+        if mock_seconds_into_future >= future_seconds:
+            task._run()
+            task.cancel()
 
 
 fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)

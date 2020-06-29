@@ -1348,7 +1348,7 @@ async def test_trigger_with_specific_pending(hass, mqtt_mock):
     assert STATE_ALARM_DISARMED == hass.states.get(entity_id).state
 
 
-async def test_arm_away_after_disabled_disarmed(hass, mqtt_mock):
+async def test_arm_away_after_disabled_disarmed(hass, legacy_patchable_time, mqtt_mock):
     """Test pending state with and without zero trigger time."""
     assert await async_setup_component(
         hass,
