@@ -320,7 +320,7 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
 
 
 @pytest.fixture
-async def legacy_patchable_time():
+def legacy_patchable_time():
     """Allow time to be patchable by using event listeners instead of asyncio loop."""
 
     @ha.callback
@@ -352,4 +352,8 @@ async def legacy_patchable_time():
 
         return async_unsub
 
-    event.async_track_point_in_utc_time = async_track_point_in_utc_time
+    with patch(
+        "homeassistant.helpers.event.async_track_point_in_utc_time",
+        async_track_point_in_utc_time,
+    ):
+        yield
