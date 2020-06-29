@@ -20,10 +20,9 @@ from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
     "datapoint.Forecast.datetime.datetime",
     Mock(now=Mock(return_value=datetime(2020, 4, 25, 12, tzinfo=timezone.utc))),
 )
-async def test_site_cannot_connect(hass, requests_mock):
+async def test_site_cannot_connect(hass, requests_mock, legacy_patchable_time):
     """Test we handle cannot connect error."""
 
-    assert 0
     requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text="")
     requests_mock.get("/public/data/val/wxfcs/all/json/354107?res=3hourly", text="")
 
@@ -43,10 +42,9 @@ async def test_site_cannot_connect(hass, requests_mock):
     "datapoint.Forecast.datetime.datetime",
     Mock(now=Mock(return_value=datetime(2020, 4, 25, 12, tzinfo=timezone.utc))),
 )
-async def test_site_cannot_update(hass, requests_mock):
+async def test_site_cannot_update(hass, requests_mock, legacy_patchable_time):
     """Test we handle cannot connect error."""
 
-    assert 0
     # all metoffice test data encapsulated in here
     mock_json = json.loads(load_fixture("metoffice.json"))
     all_sites = json.dumps(mock_json["all_sites"])
@@ -79,10 +77,9 @@ async def test_site_cannot_update(hass, requests_mock):
     "datapoint.Forecast.datetime.datetime",
     Mock(now=Mock(return_value=datetime(2020, 4, 25, 12, tzinfo=timezone.utc))),
 )
-async def test_one_weather_site_running(hass, requests_mock):
+async def test_one_weather_site_running(hass, requests_mock, legacy_patchable_time):
     """Test the Met Office weather platform."""
 
-    assert 0
     # all metoffice test data encapsulated in here
     mock_json = json.loads(load_fixture("metoffice.json"))
     all_sites = json.dumps(mock_json["all_sites"])
@@ -114,10 +111,9 @@ async def test_one_weather_site_running(hass, requests_mock):
     "datapoint.Forecast.datetime.datetime",
     Mock(now=Mock(return_value=datetime(2020, 4, 25, 12, tzinfo=timezone.utc))),
 )
-async def test_two_weather_sites_running(hass, requests_mock):
+async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_time):
     """Test we handle two different weather sites both running."""
 
-    assert 0
     # all metoffice test data encapsulated in here
     mock_json = json.loads(load_fixture("metoffice.json"))
     all_sites = json.dumps(mock_json["all_sites"])
