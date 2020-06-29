@@ -14,9 +14,10 @@ from homeassistant.components.influxdb.const import (
     TEST_QUERY_V1,
     TEST_QUERY_V2,
 )
-from homeassistant.components.influxdb.sensor import PLATFORM_SCHEMA
+from homeassistant.components.influxdb.sensor import PLATFORM_SCHEMA, setup_platform
 import homeassistant.components.sensor as sensor
 from homeassistant.const import STATE_UNKNOWN
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import MagicMock, patch
@@ -499,11 +500,13 @@ async def test_connection_error_at_startup(
 ):
     """Test behavior of sensor when influx returns error."""
     set_query_mock(mock_client, side_effect=test_exception)
+    config = {"platform": DOMAIN}
+    config.update(config_ext)
+    config.update(queries)
 
-    with patch(f"{INFLUXDB_SENSOR_PATH}.event_helper") as event_helper:
-        await _setup(hass, config_ext, queries, [])
-        assert (
-            len([record for record in caplog.records if record.levelname == "ERROR"])
-            == 1
-        )
-        event_helper.call_later.assert_called_once()
+    with pytest.raises(PlatformNotReady):
+        setup_platform(hass, PLATFORM_SCHEMA(config), MagicMock(), None)
+
+    assert (
+        len([record for record in caplog.records if record.levelname == "ERROR"]) == 1
+    )

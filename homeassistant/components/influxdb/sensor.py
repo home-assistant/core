@@ -13,8 +13,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_UNKNOWN,
 )
-from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import event as event_helper
+from homeassistant.exceptions import PlatformNotReady, TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -53,8 +52,6 @@ from .const import (
     RENDERING_QUERY_MESSAGE,
     RENDERING_WHERE_ERROR_MESSAGE,
     RENDERING_WHERE_MESSAGE,
-    RETRY_INTERVAL,
-    RETRY_MESSAGE,
     RUNNING_QUERY_MESSAGE,
 )
 
@@ -142,20 +139,15 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def setup_platform(hass, conf, add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the InfluxDB component."""
     try:
-        influx = get_influx_connection(conf, test_read=True)
+        influx = get_influx_connection(config, test_read=True)
     except ConnectionError as exc:
-        _LOGGER.error(RETRY_MESSAGE, exc)
-        event_helper.call_later(
-            hass,
-            RETRY_INTERVAL,
-            lambda _: setup_platform(hass, conf, add_entities, discovery_info),
-        )
-        return True
+        _LOGGER.error(exc)
+        raise PlatformNotReady()
 
-    queries = conf[CONF_QUERIES_FLUX if CONF_QUERIES_FLUX in conf else CONF_QUERIES]
+    queries = config[CONF_QUERIES_FLUX if CONF_QUERIES_FLUX in config else CONF_QUERIES]
     entities = [InfluxSensor(hass, influx, query) for query in queries]
     add_entities(entities, update_before_add=True)
 
