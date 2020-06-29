@@ -1,5 +1,4 @@
 """InfluxDB component which allows you to get data from an Influx database."""
-from datetime import timedelta
 import logging
 from typing import Dict
 
@@ -30,39 +29,34 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from . import (
+from . import create_influx_url, validate_version_specific_config
+from .const import (
     API_VERSION_2,
     COMPONENT_CONFIG_SCHEMA_CONNECTION,
     CONF_BUCKET,
     CONF_DB_NAME,
+    CONF_FIELD,
+    CONF_GROUP_FUNCTION,
+    CONF_IMPORTS,
+    CONF_MEASUREMENT_NAME,
     CONF_ORG,
+    CONF_QUERIES,
+    CONF_QUERIES_FLUX,
+    CONF_QUERY,
+    CONF_RANGE_START,
+    CONF_RANGE_STOP,
+    CONF_WHERE,
     DEFAULT_API_VERSION,
-    create_influx_url,
-    validate_version_specific_config,
+    DEFAULT_FIELD,
+    DEFAULT_GROUP_FUNCTION,
+    DEFAULT_RANGE_START,
+    DEFAULT_RANGE_STOP,
+    MIN_TIME_BETWEEN_UPDATES,
+    TEST_QUERY_V1,
+    TEST_QUERY_V2,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_GROUP_FUNCTION = "mean"
-DEFAULT_FIELD = "value"
-
-CONF_QUERIES = "queries"
-CONF_QUERIES_FLUX = "queries_flux"
-CONF_GROUP_FUNCTION = "group_function"
-CONF_FIELD = "field"
-CONF_MEASUREMENT_NAME = "measurement"
-CONF_WHERE = "where"
-
-CONF_RANGE_START = "range_start"
-CONF_RANGE_STOP = "range_stop"
-CONF_FUNCTION = "function"
-CONF_QUERY = "query"
-CONF_IMPORTS = "imports"
-
-DEFAULT_RANGE_START = "-15m"
-DEFAULT_RANGE_STOP = "now()"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 _QUERY_SENSOR_SCHEMA = vol.Schema(
     {
@@ -217,9 +211,7 @@ class InfluxSensor(Entity):
 
         try:
             if query_api is not None:
-                query_api.query(
-                    f'from(bucket: "{bucket}") |> range(start: -1ms) |> keep(columns: ["_time"]) |> limit(n: 1)'
-                )
+                query_api.query(TEST_QUERY_V2)
                 self.connected = True
                 self.data = InfluxSensorDataV2(
                     query_api,
@@ -232,7 +224,7 @@ class InfluxSensor(Entity):
                 )
 
             else:
-                influx.query("SHOW SERIES LIMIT 1;")
+                influx.query(TEST_QUERY_V1)
                 self.connected = True
                 self.data = InfluxSensorDataV1(
                     influx,
@@ -336,7 +328,7 @@ class InfluxSensorDataV2:
 
         try:
             tables = self.query_api.query(self.full_query)
-        except ApiException as exc:
+        except (OSError, ApiException) as exc:
             _LOGGER.error(
                 "Could not execute query '%s' due to '%s', "
                 "Check the syntax of your query",
@@ -390,7 +382,7 @@ class InfluxSensorDataV1:
 
         try:
             points = list(self.influx.query(self.query).get_points())
-        except exceptions.InfluxDBClientError as exc:
+        except (OSError, exceptions.InfluxDBClientError) as exc:
             _LOGGER.error(
                 "Could not execute query '%s' due to '%s', "
                 "Check the syntax of your query",
