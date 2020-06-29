@@ -61,7 +61,7 @@ class ZWaveCoverEntity(ZWaveDeviceEntity, CoverEntity):
     @property
     def current_cover_position(self):
         """Return the current position of cover where 0 means closed and 100 is fully open."""
-        return self.values.primary.value
+        return round((self.values.primary.value / 99) * 100)
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""

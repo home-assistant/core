@@ -35,7 +35,7 @@ async def test_cover(hass, cover_data, sent_messages, cover_msg):
     state = hass.states.get("cover.roller_shutter_3_instance_1_level")
     assert state is not None
     assert state.state == "open"
-    assert state.attributes[ATTR_CURRENT_POSITION] == 99
+    assert state.attributes[ATTR_CURRENT_POSITION] == 100
 
     # Test closing
     await hass.services.async_call(
