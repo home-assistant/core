@@ -86,10 +86,10 @@ class TileDeviceTracker(TileEntity, TrackerEntity):
         """
         state = self._tile["last_tile_state"]
 
-        if h_accuracy in state and "v_accuracy" not in state:
+        if "h_accuracy" in state and "v_accuracy" not in state:
             return state["h_accuracy"]
 
-        if h_accuracy not in state and "v_accuracy" in state:
+        if "h_accuracy" not in state and "v_accuracy" in state:
             return self._tile["last_tile_state"]["v_accuracy"]
 
         return round(
