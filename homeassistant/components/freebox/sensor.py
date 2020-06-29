@@ -65,7 +65,8 @@ class FreeboxSensor(Entity):
         self._device_class = sensor[SENSOR_DEVICE_CLASS]
         self._unique_id = f"{self._router.mac} {self._name}"
 
-    async def async_update(self) -> None:
+    @callback
+    def async_update_state(self) -> None:
         """Update the Freebox sensor."""
         state = self._router.sensors[self._sensor_type]
         if self._unit == DATA_RATE_KILOBYTES_PER_SECOND:
@@ -114,12 +115,14 @@ class FreeboxSensor(Entity):
         return False
 
     @callback
-    async def async_on_demand_update(self):
+    def async_on_demand_update(self):
         """Update state."""
-        self.async_schedule_update_ha_state(True)
+        self.async_update_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Register state update callback."""
+        self.async_update_state()
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -139,7 +142,8 @@ class FreeboxCallSensor(FreeboxSensor):
         self._call_list_for_type = []
         super().__init__(router, sensor_type, sensor)
 
-    async def async_update(self) -> None:
+    @callback
+    def async_update_state(self) -> None:
         """Update the Freebox call sensor."""
         self._call_list_for_type = []
         for call in self._router.call_list:
