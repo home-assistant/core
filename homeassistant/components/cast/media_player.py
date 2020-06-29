@@ -180,10 +180,9 @@ async def _async_setup_platform(
     @callback
     def async_cast_discovered(discover: ChromecastInfo) -> None:
         """Handle discovery of a new chromecast."""
-        if (
-            info is not None
-            and info.uuid != discover.uuid
-            and info.host_port != discover.host_port
+        if info is not None and (
+            (info.uuid is not None and info.uuid != discover.uuid)
+            or (info.host is not None and info.host_port != discover.host_port)
         ):
             # Waiting for a specific cast device, this is not it.
             return
