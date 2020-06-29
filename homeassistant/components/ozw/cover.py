@@ -37,9 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities([ZWaveCoverEntity(values)])
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
-        async_dispatcher_connect(
-            hass, f"{DOMAIN}_new_{COVER_DOMAIN}", async_add_cover
-        )
+        async_dispatcher_connect(hass, f"{DOMAIN}_new_{COVER_DOMAIN}", async_add_cover)
     )
 
 
