@@ -43,25 +43,18 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     platform = entity_platform.current_platform.get()
 
-    for service_name, method in [
-        (SERVICE_DISABLE_AP, "async_disable_ap"),
-        (SERVICE_ENABLE_AP, "async_enable_ap"),
-        (SERVICE_REBOOT, "async_reboot"),
-        (SERVICE_RESET_VALVE_DIAGNOSTICS, "async_reset_valve_diagnostics"),
+    for service_name, schema, method in [
+        (SERVICE_DISABLE_AP, None, "async_disable_ap"),
+        (SERVICE_ENABLE_AP, None, "async_enable_ap"),
+        (SERVICE_REBOOT, None, "async_reboot"),
+        (SERVICE_RESET_VALVE_DIAGNOSTICS, None, "async_reset_valve_diagnostics"),
+        (
+            SERVICE_UPGRADE_FIRMWARE,
+            SERVICE_UPGRADE_FIRMWARE_SCHEMA,
+            "async_upgrade_firmware",
+        ),
     ]:
-        platform.async_register_entity_service(service_name, None, method)
-
-    async def async_handle_firmware_update(entity, call):
-        """Handle a firmware upgrade entity platform service call."""
-        await entity.async_upgrade_firmware(
-            call.data[CONF_URL], call.data[CONF_PORT], call.data[CONF_FILENAME]
-        )
-
-    platform.async_register_entity_service(
-        SERVICE_UPGRADE_FIRMWARE,
-        SERVICE_UPGRADE_FIRMWARE_SCHEMA,
-        async_handle_firmware_update,
-    )
+        platform.async_register_entity_service(service_name, schema, method)
 
     async_add_entities([GuardianSwitch(guardian)], True)
 
@@ -139,7 +132,7 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
         except GuardianError as err:
             LOGGER.error("Error during service call: %s", err)
 
-    async def async_upgrade_firmware(self, url, port, filename):
+    async def async_upgrade_firmware(self, *, url, port, filename):
         """Upgrade the device firmware."""
         try:
             async with self._guardian.client:
