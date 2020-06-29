@@ -129,11 +129,10 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
             server_id = self.config_entry.options.get(CONF_SERVER_ID)
             self.api.closest.clear()
             self.api.get_servers(servers=[server_id])
-            self.api.get_best_server()
         _LOGGER.debug(
             "Executing speedtest.net speed test with server_id: %s", self.api.best["id"]
         )
-
+        self.api.get_best_server()
         self.api.download()
         self.api.upload()
         return self.api.results.dict()
