@@ -4,7 +4,7 @@ import ssl
 import time
 from urllib.parse import urlparse
 
-from plexapi.exceptions import NotFound, Unauthorized
+from plexapi.exceptions import BadRequest, NotFound, Unauthorized
 import plexapi.myplex
 import plexapi.playqueue
 import plexapi.server
@@ -98,19 +98,11 @@ class PlexServer:
         if not self._plex_account and self._use_plex_tv:
             try:
                 self._plex_account = plexapi.myplex.MyPlexAccount(token=self._token)
-            except Unauthorized:
+            except (BadRequest, Unauthorized):
                 self._use_plex_tv = False
                 _LOGGER.error("Not authorized to access plex.tv with provided token")
                 raise
         return self._plex_account
-
-    @property
-    def plextv_resources(self):
-        """Return all resources linked to Plex account."""
-        if self.account is None:
-            return []
-
-        return self.account.resources()
 
     def plextv_clients(self):
         """Return available clients linked to Plex account."""
@@ -122,7 +114,7 @@ class PlexServer:
             self._plextv_client_timestamp = now
             self._plextv_clients = [
                 x
-                for x in self.plextv_resources
+                for x in self.account.resources()
                 if "player" in x.provides and x.presence
             ]
             _LOGGER.debug(
@@ -137,7 +129,7 @@ class PlexServer:
         def _connect_with_token():
             available_servers = [
                 (x.name, x.clientIdentifier)
-                for x in self.plextv_resources
+                for x in self.account.resources()
                 if "server" in x.provides
             ]
 
@@ -165,7 +157,7 @@ class PlexServer:
         def _update_plexdirect_hostname():
             matching_servers = [
                 x.name
-                for x in self.plextv_resources
+                for x in self.account.resources()
                 if x.clientIdentifier == self._server_id
             ]
             if matching_servers:

@@ -94,7 +94,7 @@ class SpeedTestOptionsFlowHandler(config_entries.OptionsFlow):
                 for (key, value) in self._servers.items()
                 if value.get("id") == self.config_entry.options[CONF_SERVER_ID]
             ]
-            server_name = server[0]
+            server_name = server[0] if server else ""
 
         options = {
             vol.Optional(

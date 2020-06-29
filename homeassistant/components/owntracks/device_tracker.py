@@ -24,6 +24,19 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up OwnTracks based off an entry."""
+    # Restore previously loaded devices
+    dev_reg = await device_registry.async_get_registry(hass)
+    dev_ids = {
+        identifier[1]
+        for device in dev_reg.devices.values()
+        for identifier in device.identifiers
+        if identifier[0] == OT_DOMAIN
+    }
+
+    entities = []
+    for dev_id in dev_ids:
+        entity = hass.data[OT_DOMAIN]["devices"][dev_id] = OwnTracksEntity(dev_id)
+        entities.append(entity)
 
     @callback
     def _receive_data(dev_id, **data):
@@ -39,24 +52,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     hass.data[OT_DOMAIN]["context"].set_async_see(_receive_data)
 
-    # Restore previously loaded devices
-    dev_reg = await device_registry.async_get_registry(hass)
-    dev_ids = {
-        identifier[1]
-        for device in dev_reg.devices.values()
-        for identifier in device.identifiers
-        if identifier[0] == OT_DOMAIN
-    }
-
-    if not dev_ids:
-        return True
-
-    entities = []
-    for dev_id in dev_ids:
-        entity = hass.data[OT_DOMAIN]["devices"][dev_id] = OwnTracksEntity(dev_id)
-        entities.append(entity)
-
-    async_add_entities(entities)
+    if entities:
+        async_add_entities(entities)
 
     return True
 
