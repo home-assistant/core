@@ -29,7 +29,7 @@ async def _process_time_step(
 
 
 async def test_sensor_availability(
-    hass, caplog, pvpc_aioclient_mock: AiohttpClientMocker
+    hass, caplog, patchable_time, pvpc_aioclient_mock: AiohttpClientMocker
 ):
     """Test sensor availability and handling of cloud access."""
     hass.config.time_zone = timezone("Europe/Madrid")
@@ -39,7 +39,6 @@ async def test_sensor_availability(
     def mock_now():
         return mock_data["return_time"]
 
-    assert 0
     with patch("homeassistant.util.dt.utcnow", new=mock_now):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
