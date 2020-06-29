@@ -62,7 +62,8 @@ class FreeboxDevice(ScannerEntity):
         self._active = False
         self._attrs = {}
 
-    async def async_update(self) -> None:
+    @callback
+    def async_update_state(self) -> None:
         """Update the Freebox device."""
         device = self._router.devices[self._mac]
         self._active = device["active"]
@@ -123,12 +124,15 @@ class FreeboxDevice(ScannerEntity):
         """No polling needed."""
         return False
 
-    async def async_on_demand_update(self):
+    @callback
+    def async_on_demand_update(self):
         """Update state."""
-        self.async_schedule_update_ha_state(True)
+        self.async_update_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Register state update callback."""
+        self.async_update_state()
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
