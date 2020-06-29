@@ -35,7 +35,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-def byte_to_zwave_position(value):
+def percent_to_zwave_position(value):
     """Convert position in 0-100 scale to 0-99 scale.
 
     `value` -- (int) Position byte value from 0-100.
@@ -65,7 +65,7 @@ class ZWaveCoverEntity(ZWaveDeviceEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        self.values.primary.send_value(byte_to_zwave_position(kwargs[ATTR_POSITION]))
+        self.values.primary.send_value(percent_to_zwave_position(kwargs[ATTR_POSITION]))
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
