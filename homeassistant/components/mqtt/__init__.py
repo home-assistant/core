@@ -994,6 +994,9 @@ class MqttAvailability(Entity):
         await self._availability_subscribe_topics()
         async_dispatcher_connect(self.hass, MQTT_CONNECTED, self.async_mqtt_connect)
         async_dispatcher_connect(self.hass, MQTT_DISCONNECTED, self.async_mqtt_connect)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, MQTT_CONNECTED, self.async_mqtt_connect)
+        )
 
     async def availability_discovery_update(self, config: dict):
         """Handle updated discovery message."""
@@ -1029,7 +1032,8 @@ class MqttAvailability(Entity):
     @callback
     def async_mqtt_connect(self):
         """Update state on connection/disconnection to MQTT broker."""
-        self.async_write_ha_state()
+        if self.hass.is_running:
+            self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""

@@ -343,7 +343,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200626.1
+home-assistant-frontend==20200629.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -964,7 +964,7 @@ ya_ma==0.3.8
 zeroconf==0.27.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.40
+zha-quirks==0.0.41
 
 # homeassistant.components.zha
 zigpy-cc==0.4.4
