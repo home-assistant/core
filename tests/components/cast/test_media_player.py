@@ -200,7 +200,7 @@ async def test_stop_discovery_called_on_stop(hass):
         assert start_discovery.call_count == 1
 
     with patch(
-        "homeassistant.components.cast.discovery.pychromecast.stop_discovery"
+        "homeassistant.components.cast.discovery.pychromecast.discovery.stop_discovery"
     ) as stop_discovery:
         # stop discovery should be called on shutdown
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)

@@ -84,9 +84,7 @@ ENTITY_SCHEMA = vol.All(
         {
             vol.Exclusive(CONF_HOST, "device_identifier"): cv.string,
             vol.Exclusive(CONF_UUID, "device_identifier"): cv.string,
-            vol.Optional(CONF_IGNORE_CEC, default=[]): vol.All(
-                cv.ensure_list, [cv.string]
-            ),
+            vol.Optional(CONF_IGNORE_CEC): vol.All(cv.ensure_list, [cv.string]),
         }
     ),
 )
@@ -97,9 +95,7 @@ PLATFORM_SCHEMA = vol.All(
         {
             vol.Exclusive(CONF_HOST, "device_identifier"): cv.string,
             vol.Exclusive(CONF_UUID, "device_identifier"): cv.string,
-            vol.Optional(CONF_IGNORE_CEC, default=[]): vol.All(
-                cv.ensure_list, [cv.string]
-            ),
+            vol.Optional(CONF_IGNORE_CEC): vol.All(cv.ensure_list, [cv.string]),
         }
     ),
 )
