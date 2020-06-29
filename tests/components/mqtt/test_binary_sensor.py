@@ -52,7 +52,9 @@ DEFAULT_CONFIG = {
 }
 
 
-async def test_setting_sensor_value_expires_availability_topic(hass, mqtt_mock, caplog):
+async def test_setting_sensor_value_expires_availability_topic(
+    hass, mqtt_mock, legacy_patchable_time, caplog
+):
     """Test the expiration of the value."""
     assert await async_setup_component(
         hass,
@@ -82,7 +84,9 @@ async def test_setting_sensor_value_expires_availability_topic(hass, mqtt_mock, 
     await expires_helper(hass, mqtt_mock, caplog)
 
 
-async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
+async def test_setting_sensor_value_expires(
+    hass, mqtt_mock, legacy_patchable_time, caplog
+):
     """Test the expiration of the value."""
     assert await async_setup_component(
         hass,
@@ -520,7 +524,7 @@ async def test_discovery_update_binary_sensor(hass, mqtt_mock, caplog):
 
 
 async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
-    hass, mqtt_mock, caplog
+    hass, mqtt_mock, legacy_patchable_time, caplog
 ):
     """Test that binary_sensor with expire_after set behaves correctly on discovery and discovery update."""
     entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
