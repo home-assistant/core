@@ -40,7 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     entry.add_update_listener(update_listener)
     if not entry.options:
-        entry.options = {CONF_UNIT_OF_MEASUREMENT: MG_DL}
+        hass.config_entries.async_update_entry(
+            entry, options={CONF_UNIT_OF_MEASUREMENT: MG_DL}
+        )
 
     async def async_update_data():
         try:
@@ -83,5 +85,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def update_listener(hass, entry):
     """Handle options update."""
-    hass.data[DOMAIN][entry.entry_id] = entry.options
     await hass.config_entries.async_reload(entry.entry_id)
