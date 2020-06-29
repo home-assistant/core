@@ -1,4 +1,5 @@
 """Support for switching Arduino pins on and off."""
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -12,7 +13,6 @@ from . import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PINS = "pins"
-CONF_TYPE = "digital"
 CONF_NEGATE = "negate"
 CONF_INITIAL = "initial"
 
@@ -48,20 +48,12 @@ class ArduinoSwitch(SwitchEntity):
         """Initialize the Pin."""
         self._pin = pin
         self._name = options[CONF_NAME]
-        self.pin_type = CONF_TYPE
-        self.direction = "out"
-
+        self._negate = options[CONF_NEGATE]
         self._state = options[CONF_INITIAL]
+        self._board = board
 
-        if options[CONF_NEGATE]:
-            self.turn_on_handler = board.set_digital_out_low
-            self.turn_off_handler = board.set_digital_out_high
-        else:
-            self.turn_on_handler = board.set_digital_out_high
-            self.turn_off_handler = board.set_digital_out_low
-
-        board.set_mode(self._pin, self.direction, self.pin_type)
-        (self.turn_on_handler if self._state else self.turn_off_handler)(pin)
+        self._board.set_pin_mode_digital_output(self._pin)
+        self._update()
 
     @property
     def name(self):
@@ -73,12 +65,15 @@ class ArduinoSwitch(SwitchEntity):
         """Return true if pin is high/on."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    def _update(self):
+        self._board.digital_write(self._pin, self._state ^ self._negate)
+
+    def async_turn_on(self, **kwargs):
         """Turn the pin to high/on."""
         self._state = True
-        self.turn_on_handler(self._pin)
+        self._update()
 
-    def turn_off(self, **kwargs):
+    def async_turn_off(self, **kwargs):
         """Turn the pin to low/off."""
         self._state = False
-        self.turn_off_handler(self._pin)
+        self._update()

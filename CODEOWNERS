@@ -33,7 +33,7 @@ homeassistant/components/api/* @home-assistant/core
 homeassistant/components/apprise/* @caronc
 homeassistant/components/aprs/* @PhilRW
 homeassistant/components/arcam_fmj/* @elupus
-homeassistant/components/arduino/* @fabaff
+homeassistant/components/arduino/* @petapton @fabaff
 homeassistant/components/arest/* @fabaff
 homeassistant/components/arris_tg2492lg/* @vanbalken
 homeassistant/components/asuswrt/* @kennedyshead

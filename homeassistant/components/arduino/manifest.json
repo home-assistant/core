@@ -2,6 +2,6 @@
   "domain": "arduino",
   "name": "Arduino",
   "documentation": "https://www.home-assistant.io/integrations/arduino",
-  "requirements": ["PyMata==2.20"],
-  "codeowners": ["@fabaff"]
+  "requirements": ["pymata4==1.9"],
+  "codeowners": ["@petapton", "@fabaff"]
 }
