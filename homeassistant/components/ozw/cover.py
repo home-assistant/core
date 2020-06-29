@@ -1,8 +1,6 @@
 """Support for Z-Wave cover devices."""
 import logging
 
-from openzwavemqtt.const import CommandClass
-
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
@@ -30,10 +28,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def async_add_cover(values):
         """Add Z-Wave Cover."""
 
-        if values.primary.command_class != CommandClass.SWITCH_MULTILEVEL:
-            _LOGGER.warning("Cover not implemented for values %s", values.primary)
-            return
-
         async_add_entities([ZWaveCoverEntity(values)])
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
@@ -52,7 +46,7 @@ class ZWaveCoverEntity(ZWaveDeviceEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return true if cover is closed."""
-        return self.values.primary.value < 5
+        return self.values.primary.value == 0
 
     @property
     def current_cover_position(self):
