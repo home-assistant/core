@@ -7,16 +7,27 @@ from pyControl4.account import C4Account
 from pyControl4.director import C4Director
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_HOST,
+)
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 # TODO adjust the data schema to the data that you need
-DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
 
 
-class Control4:
+class Control4Validator:
     """Placeholder class to make tests pass.
 
     TODO Remove this placeholder class and replace with things from your PyPI package.
@@ -27,32 +38,35 @@ class Control4:
         self.host = host
         self.username = username
         self.password = password
+        self.account = C4Account(self.username, self.password)
 
     async def authenticate(self) -> bool:
         """Test if we can authenticate with the Control4 account API."""
         try:
             """Authenticate with Control4 account"""
-            self.account = C4Account(self.username, self.password)
+            await self.account.getAccountBearerToken()
 
             """Get controller name"""
-            account_controllers = await account.getAccountControllers()
+            account_controllers = await self.account.getAccountControllers()
             self.controller_name = account_controllers["controllerCommonName"]
 
             """Get bearer token to communicate with controller locally"""
-            self.director_bearer_token = account.getDirectorBearerToken(
+            self.director_bearer_token = await self.account.getDirectorBearerToken(
                 self.controller_name
             )
             return True
-        except:
+        except Exception as exception:
+            _LOGGER.error(exception)
             return False
 
-    async def connectToDirector(self) -> bool:
+    async def connect_to_director(self) -> bool:
         """Test if we can connect to the local Control4 Director."""
         try:
             self.director = C4Director(self.host, self.director_bearer_token)
-            self.director.getAllItemInfo()
+            await self.director.getAllItemInfo()
             return True
-        except:
+        except Exception as exception:
+            _LOGGER.error(exception)
             return False
 
 
@@ -69,12 +83,12 @@ async def validate_input(hass: core.HomeAssistant, data):
     #     your_validate_func, data["username"], data["password"]
     # )
 
-    hub = Control4(data["host"], data["username"], data["password"])
+    hub = Control4Validator(data["host"], data["username"], data["password"])
 
     if not await hub.authenticate():
         raise InvalidAuth
 
-    if not await hub.connectToDirector():
+    if not await hub.connect_to_director():
         raise CannotConnect
 
     # If you cannot connect:

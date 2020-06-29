@@ -28,12 +28,15 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Control4 from a config entry."""
-    # TODO Store an API object for your platforms to access
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN].setdefault(entry.title, {})
+
     config = entry.data
     account = C4Account(config["username"], config["password"])
+    await account.getAccountBearerToken()
     hass.data[DOMAIN][entry.title]["account"] = account
 
-    director_token_dict = account.getDirectorBearerToken(entry.title)
+    director_token_dict = await account.getDirectorBearerToken(entry.title)
     hass.data[DOMAIN][entry.title]["director"] = C4Director(
         config["host"], director_token_dict["token"]
     )
