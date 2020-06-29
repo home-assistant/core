@@ -472,7 +472,7 @@ async def test_track_time_interval(hass):
     assert len(specific_runs) == 2
 
 
-async def test_track_sunrise(hass, patchable_time):
+async def test_track_sunrise(hass, legacy_patchable_time):
     """Test track the sunrise."""
     latitude = 32.87336
     longitude = 117.22743
@@ -533,7 +533,7 @@ async def test_track_sunrise(hass, patchable_time):
     assert len(offset_runs) == 1
 
 
-async def test_track_sunrise_update_location(hass, patchable_time):
+async def test_track_sunrise_update_location(hass, legacy_patchable_time):
     """Test track the sunrise."""
     # Setup sun component
     hass.config.latitude = 32.87336
@@ -593,7 +593,7 @@ async def test_track_sunrise_update_location(hass, patchable_time):
     assert len(runs) == 2
 
 
-async def test_track_sunset(hass, patchable_time):
+async def test_track_sunset(hass, legacy_patchable_time):
     """Test track the sunset."""
     latitude = 32.87336
     longitude = 117.22743

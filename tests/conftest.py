@@ -320,7 +320,7 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
 
 
 @pytest.fixture
-async def patchable_time():
+async def legacy_patchable_time():
     """Allow time to be patchable by using event listeners instead of asyncio loop."""
 
     @ha.callback

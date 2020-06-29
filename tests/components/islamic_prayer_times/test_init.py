@@ -85,7 +85,7 @@ async def test_unload_entry(hass):
         assert islamic_prayer_times.DOMAIN not in hass.data
 
 
-async def test_islamic_prayer_times_timestamp_format(hass, patchable_time):
+async def test_islamic_prayer_times_timestamp_format(hass, legacy_patchable_time):
     """Test Islamic prayer times timestamp format."""
     entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={})
     entry.add_to_hass(hass)
@@ -102,7 +102,7 @@ async def test_islamic_prayer_times_timestamp_format(hass, patchable_time):
         )
 
 
-async def test_update(hass, patchable_time):
+async def test_update(hass, legacy_patchable_time):
     """Test sensors are updated with new prayer times."""
     entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={})
     entry.add_to_hass(hass)

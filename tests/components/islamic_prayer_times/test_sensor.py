@@ -8,7 +8,7 @@ from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
-async def test_islamic_prayer_times_sensors(hass, patchable_time):
+async def test_islamic_prayer_times_sensors(hass, legacy_patchable_time):
     """Test minimum Islamic prayer times configuration."""
     entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={})
     entry.add_to_hass(hass)

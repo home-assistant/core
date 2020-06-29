@@ -61,7 +61,7 @@ MELACHA_TEST_IDS = [
 )
 async def test_issur_melacha_sensor(
     hass,
-    patchable_time,
+    legacy_patchable_time,
     now,
     candle_lighting,
     havdalah,
