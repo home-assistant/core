@@ -85,7 +85,7 @@ async def test_unload_entry(hass):
         assert islamic_prayer_times.DOMAIN not in hass.data
 
 
-async def test_islamic_prayer_times_timestamp_format(hass):
+async def test_islamic_prayer_times_timestamp_format(hass, patchable_time):
     """Test Islamic prayer times timestamp format."""
     entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={})
     entry.add_to_hass(hass)
@@ -94,8 +94,6 @@ async def test_islamic_prayer_times_timestamp_format(hass):
         "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
         return_value=PRAYER_TIMES,
     ), patch("homeassistant.util.dt.now", return_value=NOW):
-        assert 0
-
         await hass.config_entries.async_setup(entry.entry_id)
 
         assert (
@@ -104,7 +102,7 @@ async def test_islamic_prayer_times_timestamp_format(hass):
         )
 
 
-async def test_update(hass):
+async def test_update(hass, patchable_time):
     """Test sensors are updated with new prayer times."""
     entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={})
     entry.add_to_hass(hass)
@@ -112,7 +110,6 @@ async def test_update(hass):
     with patch(
         "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times"
     ) as FetchPrayerTimes, patch("homeassistant.util.dt.now", return_value=NOW):
-        assert 0
         FetchPrayerTimes.side_effect = [
             PRAYER_TIMES,
             PRAYER_TIMES,
