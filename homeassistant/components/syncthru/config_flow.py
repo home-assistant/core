@@ -22,6 +22,9 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
+    url: str
+    name: str
+
     async def async_step_user(self, user_input=None):
         """Handle user initiated flow."""
         if user_input is None:
@@ -49,10 +52,12 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Remove trailing " (ip)" if present for consistency with user driven config
             name = re.sub(r"\s+\([\d.]+\)\s*$", "", name)
 
+        self.url = url
+        self.name = name
         # https://github.com/PyCQA/pylint/issues/3167
-        self.context.update(  # pylint: disable=no-member
-            {CONF_URL: url, CONF_NAME: name, "title_placeholders": {CONF_NAME: name}}
-        )
+        self.context["title_placeholders"] = {  # pylint: disable=no-member
+            CONF_NAME: name
+        }
         return await self.async_step_confirm()
 
     async def async_step_confirm(self, user_input=None):
@@ -61,12 +66,7 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._async_check_and_create("confirm", user_input)
 
         return await self._async_show_form(
-            step_id="confirm",
-            user_input={
-                # https://github.com/PyCQA/pylint/issues/3167
-                CONF_URL: self.context[CONF_URL],  # pylint: disable=no-member
-                CONF_NAME: self.context[CONF_NAME],  # pylint: disable=no-member
-            },
+            step_id="confirm", user_input={CONF_URL: self.url, CONF_NAME: self.name},
         )
 
     async def _async_show_form(self, step_id, user_input=None, errors=None):
