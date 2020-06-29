@@ -18,7 +18,6 @@ from .const import (
     ATTR_NEXT_RAIN_SUMMARY,
     ATTRIBUTION,
     COORDINATOR_ALERT,
-    COORDINATOR_ALERT_ADDED,
     COORDINATOR_FORECAST,
     COORDINATOR_RAIN,
     DOMAIN,
@@ -40,6 +39,7 @@ async def async_setup_entry(
     """Set up the Meteo-France sensor platform."""
     coordinator_forecast = hass.data[DOMAIN][entry.entry_id][COORDINATOR_FORECAST]
     coordinator_rain = hass.data[DOMAIN][entry.entry_id][COORDINATOR_RAIN]
+    coordinator_alert = hass.data[DOMAIN][entry.entry_id][COORDINATOR_ALERT]
 
     entities = []
     for sensor_type in SENSOR_TYPES:
@@ -51,27 +51,13 @@ async def async_setup_entry(
                     coordinator_forecast.data.position["name"],
                 )
 
-        elif sensor_type == "weather_alert":
-            coordinator_alert_data = hass.data[DOMAIN].get(
-                coordinator_forecast.data.position["dept"]
+        elif sensor_type == "weather_alert" and coordinator_alert:
+            entities.append(MeteoFranceAlertSensor(sensor_type, coordinator_alert))
+            _LOGGER.debug(
+                "Weather alert sensor for department n°%s added with %s.",
+                coordinator_forecast.data.position["dept"],
+                coordinator_forecast.data.position["name"],
             )
-            if coordinator_alert_data:
-                if coordinator_alert_data[COORDINATOR_ALERT_ADDED]:
-                    _LOGGER.info(
-                        "Weather alert sensor skipped for department n°%s: already added.",
-                        coordinator_forecast.data.position["dept"],
-                    )
-                    continue
-                coordinator_alert_data[COORDINATOR_ALERT_ADDED] = True
-                entities.append(
-                    MeteoFranceAlertSensor(
-                        sensor_type, coordinator_alert_data[COORDINATOR_ALERT]
-                    )
-                )
-                _LOGGER.debug(
-                    "Weather alert sensor added for %s.",
-                    coordinator_forecast.data.position["dept"],
-                )
 
         else:
             entities.append(MeteoFranceSensor(sensor_type, coordinator_forecast))

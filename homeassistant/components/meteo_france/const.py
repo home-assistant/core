@@ -12,7 +12,6 @@ PLATFORMS = ["sensor", "weather"]
 COORDINATOR_FORECAST = "coordinator_forecast"
 COORDINATOR_RAIN = "coordinator_rain"
 COORDINATOR_ALERT = "coordinator_alert"
-COORDINATOR_ALERT_ADDED = "coordinator_alert_edded"
 ATTRIBUTION = "Data provided by Météo-France"
 
 CONF_CITY = "city"
