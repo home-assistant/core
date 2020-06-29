@@ -375,7 +375,11 @@ def get_influx_connection(conf, test_write=False, test_read=False):
         """Write data to V1 influx."""
         try:
             influx.write_points(json)
-        except (requests.exceptions.RequestException, OSError) as exc:
+        except (
+            requests.exceptions.RequestException,
+            exceptions.InfluxDBServerError,
+            OSError,
+        ) as exc:
             raise ConnectionError(CONNECTION_ERROR % exc)
         except exceptions.InfluxDBClientError as exc:
             if exc.code == CODE_INVALID_INPUTS:
@@ -386,7 +390,11 @@ def get_influx_connection(conf, test_write=False, test_read=False):
         """Query V1 influx."""
         try:
             return list(influx.query(query, database=database).get_points())
-        except (requests.exceptions.RequestException, OSError) as exc:
+        except (
+            requests.exceptions.RequestException,
+            exceptions.InfluxDBServerError,
+            OSError,
+        ) as exc:
             raise ConnectionError(CONNECTION_ERROR % exc)
         except exceptions.InfluxDBClientError as exc:
             if exc.code == CODE_INVALID_INPUTS:
