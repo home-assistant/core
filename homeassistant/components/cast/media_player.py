@@ -126,13 +126,14 @@ def _async_create_cast_device(hass: HomeAssistantType, info: ChromecastInfo):
 async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ):
-    """Set up thet Cast platform.
+    """Set up the Cast platform.
 
     Deprecated.
     """
     _LOGGER.warning(
         "Setting configuration for Cast via platform is deprecated. "
         "Configure via Cast integration instead."
+        "This option will become invalid in version 0.116."
     )
     await _async_setup_platform(hass, config, async_add_entities, discovery_info)
 
