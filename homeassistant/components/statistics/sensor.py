@@ -17,12 +17,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, event
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import (
-    async_track_point_in_utc_time,
-    async_track_state_change,
-)
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -116,11 +112,11 @@ class StatisticsSensor(Entity):
             self.async_schedule_update_ha_state(True)
 
         @callback
-        def async_stats_sensor_startup(event):
+        def async_stats_sensor_startup(_):
             """Add listener and get recorded state."""
             _LOGGER.debug("Startup for %s", self.entity_id)
 
-            async_track_state_change(
+            event.async_track_state_change(
                 self.hass, self._entity_id, async_stats_sensor_state_listener
             )
 
@@ -296,7 +292,7 @@ class StatisticsSensor(Entity):
                 self.async_schedule_update_ha_state(True)
                 self._update_listener = None
 
-            self._update_listener = async_track_point_in_utc_time(
+            self._update_listener = event.async_track_point_in_utc_time(
                 self.hass, _scheduled_update, next_to_purge_timestamp
             )
 
