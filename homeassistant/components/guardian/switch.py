@@ -11,7 +11,6 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_FILENAME, CONF_PORT, CONF_URL
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.service import verify_domain_control
 
 from . import Guardian, GuardianEntity
 from .const import DATA_CLIENT, DATA_VALVE_STATUS, DOMAIN, LOGGER, SWITCH_KIND_VALVE
@@ -20,6 +19,12 @@ ATTR_AVG_CURRENT = "average_current"
 ATTR_INST_CURRENT = "instantaneous_current"
 ATTR_INST_CURRENT_DDT = "instantaneous_current_ddt"
 ATTR_TRAVEL_COUNT = "travel_count"
+
+SERVICE_DISABLE_AP = "disable_ap"
+SERVICE_ENABLE_AP = "enable_ap"
+SERVICE_REBOOT = "reboot"
+SERVICE_RESET_VALVE_DIAGNOSTICS = "reset_valve_diagnostics"
+SERVICE_UPGRADE_FIRMWARE = "upgrade_firmware"
 
 SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
     {
@@ -34,74 +39,29 @@ SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Guardian switches based on a config entry."""
-    _verify_domain_control = verify_domain_control(hass, DOMAIN)
-
     guardian = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
-
-    @_verify_domain_control
-    async def disable_ap(call):
-        """Disable the device's onboard access point."""
-        try:
-            async with guardian.client:
-                await guardian.client.wifi.disable_ap()
-        except GuardianError as err:
-            LOGGER.error("Error during service call: %s", err)
-            return
-
-    @_verify_domain_control
-    async def enable_ap(call):
-        """Enable the device's onboard access point."""
-        try:
-            async with guardian.client:
-                await guardian.client.wifi.enable_ap()
-        except GuardianError as err:
-            LOGGER.error("Error during service call: %s", err)
-            return
-
-    @_verify_domain_control
-    async def reboot(call):
-        """Reboot the device."""
-        try:
-            async with guardian.client:
-                await guardian.client.system.reboot()
-        except GuardianError as err:
-            LOGGER.error("Error during service call: %s", err)
-            return
-
-    @_verify_domain_control
-    async def reset_valve_diagnostics(call):
-        """Fully reset system motor diagnostics."""
-        try:
-            async with guardian.client:
-                await guardian.client.valve.reset()
-        except GuardianError as err:
-            LOGGER.error("Error during service call: %s", err)
-            return
-
-    @_verify_domain_control
-    async def upgrade_firmware(call):
-        """Upgrade the device firmware."""
-        try:
-            async with guardian.client:
-                await guardian.client.system.upgrade_firmware(
-                    url=call.data[CONF_URL],
-                    port=call.data[CONF_PORT],
-                    filename=call.data[CONF_FILENAME],
-                )
-        except GuardianError as err:
-            LOGGER.error("Error during service call: %s", err)
-            return
 
     platform = entity_platform.current_platform.get()
 
-    for service, method, schema in [
-        ("disable_ap", disable_ap, None),
-        ("enable_ap", enable_ap, None),
-        ("reboot", reboot, None),
-        ("reset_valve_diagnostics", reset_valve_diagnostics, None),
-        ("upgrade_firmware", upgrade_firmware, SERVICE_UPGRADE_FIRMWARE_SCHEMA),
+    for service_name, method in [
+        (SERVICE_DISABLE_AP, "async_disable_ap"),
+        (SERVICE_ENABLE_AP, "async_enable_ap"),
+        (SERVICE_REBOOT, "async_reboot"),
+        (SERVICE_RESET_VALVE_DIAGNOSTICS, "async_reset_valve_diagnostics"),
     ]:
-        platform.async_register_entity_service(service, schema, method)
+        platform.async_register_entity_service(service_name, None, method)
+
+    async def async_handle_firmware_update(entity, call):
+        """Handle a firmware upgrade entity platform service call."""
+        await entity.async_upgrade_firmware(
+            call.data[CONF_URL], call.data[CONF_PORT], call.data[CONF_FILENAME]
+        )
+
+    platform.async_register_entity_service(
+        SERVICE_UPGRADE_FIRMWARE,
+        SERVICE_UPGRADE_FIRMWARE_SCHEMA,
+        async_handle_firmware_update,
+    )
 
     async_add_entities([GuardianSwitch(guardian)], True)
 
@@ -146,6 +106,48 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
                 ],
             }
         )
+
+    async def async_disable_ap(self):
+        """Disable the device's onboard access point."""
+        try:
+            async with self._guardian.client:
+                await self._guardian.client.wifi.disable_ap()
+        except GuardianError as err:
+            LOGGER.error("Error during service call: %s", err)
+
+    async def async_enable_ap(self):
+        """Enable the device's onboard access point."""
+        try:
+            async with self._guardian.client:
+                await self._guardian.client.wifi.enable_ap()
+        except GuardianError as err:
+            LOGGER.error("Error during service call: %s", err)
+
+    async def async_reboot(self):
+        """Reboot the device."""
+        try:
+            async with self._guardian.client:
+                await self._guardian.client.system.reboot()
+        except GuardianError as err:
+            LOGGER.error("Error during service call: %s", err)
+
+    async def async_reset_valve_diagnostics(self):
+        """Fully reset system motor diagnostics."""
+        try:
+            async with self._guardian.client:
+                await self._guardian.client.valve.reset()
+        except GuardianError as err:
+            LOGGER.error("Error during service call: %s", err)
+
+    async def async_upgrade_firmware(self, url, port, filename):
+        """Upgrade the device firmware."""
+        try:
+            async with self._guardian.client:
+                await self._guardian.client.system.upgrade_firmware(
+                    url=url, port=port, filename=filename,
+                )
+        except GuardianError as err:
+            LOGGER.error("Error during service call: %s", err)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the valve off (closed)."""
