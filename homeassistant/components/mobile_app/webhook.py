@@ -31,7 +31,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import EventOrigin
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, TemplateError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    area_registry as ar,
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.template import attach
 from homeassistant.helpers.typing import HomeAssistantType
@@ -536,5 +541,37 @@ async def webhook_get_config(hass, config_entry, data):
         resp[CONF_REMOTE_UI_URL] = hass.components.cloud.async_remote_ui_url()
     except hass.components.cloud.CloudNotAvailable:
         pass
+
+    return webhook_response(resp, registration=config_entry.data)
+
+
+@WEBHOOK_COMMANDS.register("get_entities_by_area")
+async def webhook_get_entities_by_area(hass, config_entry, data):
+    """Handle a get entities grouped by area webhook."""
+    area_to_entity_map = {}
+    resp = []
+
+    area_registry = await ar.async_get_registry(hass)
+    device_registry = await dr.async_get_registry(hass)
+    entity_registry = await er.async_get_registry(hass)
+
+    entities = entity_registry.entities
+
+    for entity in entities.values():
+        if not entity.device_id:
+            continue
+        device = device_registry.async_get(entity.device_id)
+        if not device.area_id:
+            continue
+        if device.area_id not in area_to_entity_map:
+            area_to_entity_map[device.area_id] = list()
+        area_to_entity_map[device.area_id].append(entity.entity_id)
+
+    for area_id, entities in area_to_entity_map.items():
+        area = area_registry.async_get_area(area_id)
+
+        area_obj = {"id": area.id, "name": area.name, "entities": entities}
+
+        resp.append(area_obj)
 
     return webhook_response(resp, registration=config_entry.data)

@@ -142,6 +142,7 @@ class DeviceRegistry:
         self,
         *,
         config_entry_id,
+        area_id=_UNDEF,
         connections=None,
         identifiers=None,
         manufacturer=_UNDEF,
@@ -186,6 +187,7 @@ class DeviceRegistry:
         return self._async_update_device(
             device.id,
             add_config_entry_id=config_entry_id,
+            area_id=area_id,
             via_device_id=via_device_id,
             merge_connections=connections or _UNDEF,
             merge_identifiers=identifiers or _UNDEF,

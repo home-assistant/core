@@ -9,14 +9,32 @@ from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import area_registry, device_registry
 from homeassistant.setup import async_setup_component
 
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
 from tests.async_mock import patch
-from tests.common import async_mock_service
+from tests.common import (
+    MockConfigEntry,
+    async_mock_service,
+    mock_device_registry,
+    mock_registry,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@pytest.fixture
+def device_reg(hass):
+    """Return an empty, loaded, registry."""
+    return mock_device_registry(hass)
+
+
+@pytest.fixture
+def entity_reg(hass):
+    """Return an empty, loaded, registry."""
+    return mock_registry(hass)
 
 
 def encrypt_payload(secret_key, payload):
@@ -406,3 +424,39 @@ async def test_webhook_camera_stream_stream_available_but_errors(
     webhook_json = await resp.json()
     assert webhook_json["hls_path"] is None
     assert webhook_json["mjpeg_path"] == "/api/camera_proxy_stream/camera.stream_camera"
+
+
+async def test_webhook_handle_get_entities_by_area(
+    hass, create_registrations, webhook_client, hass_storage, device_reg, entity_reg
+):
+    """Test that we can get entities by area properly."""
+    hass_storage[area_registry.STORAGE_KEY] = {
+        "version": area_registry.STORAGE_VERSION,
+        "data": {"areas": [{"id": "12345A", "name": "mock"}]},
+    }
+
+    registry = await area_registry.async_get_registry(hass)
+
+    assert len(registry.areas) == 1
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        area_id="12345A",
+    )
+    entity_reg.async_get_or_create("test", "test", "5678", device_id=device_entry.id)
+
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        json={"type": "get_entities_by_area"},
+    )
+
+    assert resp.status == 200
+
+    json = await resp.json()
+    assert len(json) == 1
+    assert json[0]["id"] == "12345A"
+    assert json[0]["name"] == "mock"
+    assert json[0]["entities"][0] == "test.test_5678"
