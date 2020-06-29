@@ -160,7 +160,6 @@ def delay_fixture():
 @pytest.fixture
 def mock_now():
     """Fixture for dtutil.now."""
-    assert 0
     return dt_util.utcnow()
 
 
