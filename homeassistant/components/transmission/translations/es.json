@@ -12,7 +12,9 @@
             "user": {
                 "data": {
                     "host": "Host",
+                    "limit": "L\u00edmite",
                     "name": "Nombre",
+                    "order": "Pedido",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
                     "username": "Usuario"
