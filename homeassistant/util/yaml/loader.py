@@ -330,7 +330,7 @@ def _global_get(loader: SafeLineLoader, node: yaml.nodes.Node) -> str:
     """Set the value previously cached within the __global_tags__ attribute."""
     if node.value not in loader.__global_tags__:
         raise HomeAssistantError(
-            "Can not find any cached global value with key %s", node.value
+            f"Can not find any cached global value with key {node.value}"
         )
     return loader.__global_tags__[node.value]
 
