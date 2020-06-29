@@ -44,6 +44,8 @@ def clear_secret_cache() -> None:
 class SafeLineLoader(yaml.SafeLoader):
     """Loader class that keeps track of line numbers."""
 
+    __global_tags__ = {}
+
     def compose_node(self, parent: yaml.nodes.Node, index: int) -> yaml.nodes.Node:
         """Annotate a node with the first line it was seen."""
         last_line: int = self.line
@@ -310,6 +312,28 @@ def secret_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
     raise HomeAssistantError(f"Secret {node.value} not defined")
 
 
+def _global_set(loader: SafeLineLoader, node: yaml.nodes.Node):
+    """Cache the given node mapping, to be reused in future calls"""
+    if not isinstance(node, yaml.MappingNode):
+        raise HomeAssistantError("Tag '!global_set' can be used only in MappingNodes")
+
+    for node_key, node_value in node.value:
+        if node_key in loader.__global_tags__:
+            _LOGGER.warning(
+                f"Duplicated key {node_key}. It is going to override the previous value"
+            )
+        loader.__global_tags__.setdefault(node_key.value, node_key.value)
+
+
+def _global_get(loader: SafeLineLoader, node: yaml.nodes.Node) -> str:
+    """Set the value previously cached within the __global_tags__ attribute"""
+    if node.value not in loader.__global_tags__:
+        raise HomeAssistantError(
+            f"Can not find any cached global value with key {node.value}"
+        )
+    return loader.__global_tags__.get(node.value)
+
+
 yaml.SafeLoader.add_constructor("!include", _include_yaml)
 yaml.SafeLoader.add_constructor(
     yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _ordered_dict
@@ -325,3 +349,5 @@ yaml.SafeLoader.add_constructor("!include_dir_named", _include_dir_named_yaml)
 yaml.SafeLoader.add_constructor(
     "!include_dir_merge_named", _include_dir_merge_named_yaml
 )
+yaml.SafeLoader.add_constructor("!global_set", _global_set)
+yaml.SafeLoader.add_constructor("!global_get", _global_get)
