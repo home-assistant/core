@@ -320,7 +320,8 @@ def _global_set(loader: SafeLineLoader, node: yaml.nodes.Node) -> None:
     for node_key, node_value in node.value:
         if node_key in loader.__global_tags__:
             _LOGGER.warning(
-                "Duplicated key %s. It is going to override the previous value", node_key
+                "Duplicated key %s. It is going to override the previous value",
+                node_key,
             )
         loader.__global_tags__.setdefault(node_key.value, node_key.value)
 
