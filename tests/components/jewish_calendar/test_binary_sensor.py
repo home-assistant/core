@@ -60,7 +60,16 @@ MELACHA_TEST_IDS = [
     ids=MELACHA_TEST_IDS,
 )
 async def test_issur_melacha_sensor(
-    hass, now, candle_lighting, havdalah, diaspora, tzname, latitude, longitude, result
+    hass,
+    patchable_time,
+    now,
+    candle_lighting,
+    havdalah,
+    diaspora,
+    tzname,
+    latitude,
+    longitude,
+    result,
 ):
     """Test Issur Melacha sensor output."""
     time_zone = dt_util.get_time_zone(tzname)
@@ -70,7 +79,6 @@ async def test_issur_melacha_sensor(
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
-    assert 0
     with alter_time(test_time):
         assert await async_setup_component(
             hass,
