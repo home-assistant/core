@@ -320,7 +320,7 @@ def _global_set(loader: SafeLineLoader, node: yaml.nodes.Node) -> None:
     for node_key, node_value in node.value:
         if node_key in loader.__global_tags__:
             _LOGGER.warning(
-                f"Duplicated key %s. It is going to override the previous value", node_key
+                "Duplicated key %s. It is going to override the previous value", node_key
             )
         loader.__global_tags__.setdefault(node_key.value, node_key.value)
 
@@ -329,7 +329,7 @@ def _global_get(loader: SafeLineLoader, node: yaml.nodes.Node) -> str:
     """Set the value previously cached within the __global_tags__ attribute."""
     if node.value not in loader.__global_tags__:
         raise HomeAssistantError(
-            f"Can not find any cached global value with key %s", node.value
+            "Can not find any cached global value with key %s", node.value
         )
     return loader.__global_tags__[node.value]
 
