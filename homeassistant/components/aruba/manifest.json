@@ -2,6 +2,6 @@
   "domain": "aruba",
   "name": "Aruba",
   "documentation": "https://www.home-assistant.io/integrations/aruba",
-  "requirements": ["pexpect==4.6.0"],
+  "requirements": ["instantpy==0.0.1", "pexpect==4.6.0"],
   "codeowners": []
 }

@@ -794,6 +794,9 @@ influxdb-client==1.6.0
 # homeassistant.components.influxdb
 influxdb==5.2.3
 
+# homeassistant.components.aruba
+instantpy==0.0.1
+
 # homeassistant.components.iperf3
 iperf3==0.1.11
 
