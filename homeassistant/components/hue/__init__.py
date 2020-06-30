@@ -135,9 +135,16 @@ async def async_setup_entry(
     # Overwrite from YAML configuration
     if config is not None:
         options = {}
-        if CONF_ALLOW_HUE_GROUPS in config:
+        if CONF_ALLOW_HUE_GROUPS in config and (
+            CONF_ALLOW_HUE_GROUPS not in entry.options
+            or config[CONF_ALLOW_HUE_GROUPS] != entry.options[CONF_ALLOW_HUE_GROUPS]
+        ):
             options[CONF_ALLOW_HUE_GROUPS] = config[CONF_ALLOW_HUE_GROUPS]
-        if CONF_ALLOW_UNREACHABLE in config:
+
+        if CONF_ALLOW_UNREACHABLE in config and (
+            CONF_ALLOW_UNREACHABLE not in entry.options
+            or config[CONF_ALLOW_UNREACHABLE] != entry.options[CONF_ALLOW_UNREACHABLE]
+        ):
             options[CONF_ALLOW_UNREACHABLE] = config[CONF_ALLOW_UNREACHABLE]
 
         if options:
