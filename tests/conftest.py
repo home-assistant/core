@@ -2,6 +2,7 @@
 import asyncio
 import functools
 import logging
+import threading
 
 import pytest
 import requests_mock as _requests_mock
@@ -78,6 +79,8 @@ util.get_local_ip = lambda: "127.0.0.1"
 @pytest.fixture(autouse=True)
 def verify_cleanup():
     """Verify that the test has cleaned up resources correctly."""
+    threads_before = frozenset(threading.enumerate())
+
     yield
 
     if len(INSTANCES) >= 2:
@@ -85,6 +88,9 @@ def verify_cleanup():
         for inst in INSTANCES:
             inst.stop()
         pytest.exit(f"Detected non stopped instances ({count}), aborting test run")
+
+    threads = frozenset(threading.enumerate()) - threads_before
+    assert not threads
 
 
 @pytest.fixture
