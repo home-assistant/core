@@ -1,5 +1,6 @@
 """The tests for the InfluxDB sensor."""
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Dict, List, Type
 
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
@@ -14,17 +15,19 @@ from homeassistant.components.influxdb.const import (
     TEST_QUERY_V1,
     TEST_QUERY_V2,
 )
-from homeassistant.components.influxdb.sensor import PLATFORM_SCHEMA, setup_platform
+from homeassistant.components.influxdb.sensor import PLATFORM_SCHEMA
 import homeassistant.components.sensor as sensor
 from homeassistant.const import STATE_UNKNOWN
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from tests.async_mock import MagicMock, patch
+from tests.common import async_fire_time_changed
 
 INFLUXDB_PATH = "homeassistant.components.influxdb"
 INFLUXDB_CLIENT_PATH = f"{INFLUXDB_PATH}.InfluxDBClient"
 INFLUXDB_SENSOR_PATH = f"{INFLUXDB_PATH}.sensor"
+PLATFORM_NOT_READY_BASE_WAIT_TIME = 30
 
 BASE_V1_CONFIG = {}
 BASE_V2_CONFIG = {
@@ -138,6 +141,8 @@ def _set_query_mock_v1(mock_influx_client, return_value=None, side_effect=None):
 
         query_api.side_effect = get_return_value
 
+    return query_api
+
 
 def _set_query_mock_v2(mock_influx_client, return_value=None, side_effect=None):
     """Set return value or side effect for the V2 client."""
@@ -149,6 +154,8 @@ def _set_query_mock_v2(mock_influx_client, return_value=None, side_effect=None):
             return_value = []
 
         query_api.return_value = return_value
+
+    return query_api
 
 
 async def _setup(hass, config_ext, queries, expected_sensors):
@@ -455,7 +462,7 @@ async def test_error_rendering_template(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, queries, set_query_mock, test_exception",
+    "mock_client, config_ext, queries, set_query_mock, test_exception, make_resultset",
     [
         (
             DEFAULT_API_VERSION,
@@ -463,6 +470,7 @@ async def test_error_rendering_template(
             BASE_V1_QUERY,
             _set_query_mock_v1,
             OSError("fail"),
+            _make_v1_resultset,
         ),
         (
             DEFAULT_API_VERSION,
@@ -470,6 +478,7 @@ async def test_error_rendering_template(
             BASE_V1_QUERY,
             _set_query_mock_v1,
             InfluxDBClientError("fail"),
+            _make_v1_resultset,
         ),
         (
             DEFAULT_API_VERSION,
@@ -477,6 +486,7 @@ async def test_error_rendering_template(
             BASE_V1_QUERY,
             _set_query_mock_v1,
             InfluxDBServerError("fail"),
+            _make_v1_resultset,
         ),
         (
             API_VERSION_2,
@@ -484,6 +494,7 @@ async def test_error_rendering_template(
             BASE_V2_QUERY,
             _set_query_mock_v2,
             OSError("fail"),
+            _make_v2_resultset,
         ),
         (
             API_VERSION_2,
@@ -491,22 +502,36 @@ async def test_error_rendering_template(
             BASE_V2_QUERY,
             _set_query_mock_v2,
             ApiException(),
+            _make_v2_resultset,
         ),
     ],
     indirect=["mock_client"],
 )
 async def test_connection_error_at_startup(
-    hass, caplog, mock_client, config_ext, queries, set_query_mock, test_exception
+    hass,
+    caplog,
+    mock_client,
+    config_ext,
+    queries,
+    set_query_mock,
+    test_exception,
+    make_resultset,
 ):
     """Test behavior of sensor when influx returns error."""
-    set_query_mock(mock_client, side_effect=test_exception)
-    config = {"platform": DOMAIN}
-    config.update(config_ext)
-    config.update(queries)
+    query_api = set_query_mock(mock_client, side_effect=test_exception)
+    expected_sensor = "sensor.test"
 
-    with pytest.raises(PlatformNotReady):
-        setup_platform(hass, PLATFORM_SCHEMA(config), MagicMock(), None)
-
+    # Test sensor is not setup first time due to connection error
+    await _setup(hass, config_ext, queries, [])
+    assert hass.states.get(expected_sensor) is None
     assert (
         len([record for record in caplog.records if record.levelname == "ERROR"]) == 1
     )
+
+    # Stop throwing exception and advance time to test setup succeeds
+    query_api.reset_mock(side_effect=True)
+    set_query_mock(mock_client, return_value=make_resultset(42))
+    new_time = dt_util.utcnow() + timedelta(seconds=PLATFORM_NOT_READY_BASE_WAIT_TIME)
+    async_fire_time_changed(hass, new_time)
+    await hass.async_block_till_done()
+    assert hass.states.get(expected_sensor) is not None
