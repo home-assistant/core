@@ -20,6 +20,7 @@ from homeassistant.components import (
     vacuum,
 )
 from homeassistant.components.climate import const as climate
+from homeassistant.components.humidifier import const as humidifier
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_CODE,
@@ -123,6 +124,7 @@ COMMAND_MEDIA_SEEK_RELATIVE = f"{PREFIX_COMMANDS}mediaSeekRelative"
 COMMAND_MEDIA_SEEK_TO_POSITION = f"{PREFIX_COMMANDS}mediaSeekToPosition"
 COMMAND_MEDIA_SHUFFLE = f"{PREFIX_COMMANDS}mediaShuffle"
 COMMAND_MEDIA_STOP = f"{PREFIX_COMMANDS}mediaStop"
+COMMAND_SET_HUMIDITY = f"{PREFIX_COMMANDS}SetHumidity"
 
 
 TRAITS = []
@@ -287,6 +289,7 @@ class OnOffTrait(_Trait):
             fan.DOMAIN,
             light.DOMAIN,
             media_player.DOMAIN,
+            humidifier.DOMAIN,
         )
 
     def sync_attributes(self):
@@ -295,7 +298,7 @@ class OnOffTrait(_Trait):
 
     def query_attributes(self):
         """Return OnOff query attributes."""
-        return {"on": self.state.state != STATE_OFF}
+        return {"on": self.state.state not in (STATE_OFF, STATE_UNKNOWN)}
 
     async def execute(self, command, data, params, challenge):
         """Execute an OnOff command."""
@@ -883,11 +886,14 @@ class HumiditySettingTrait(_Trait):
     """
 
     name = TRAIT_HUMIDITY_SETTING
-    commands = []
+    commands = [COMMAND_SET_HUMIDITY]
 
     @staticmethod
     def supported(domain, features, device_class):
         """Test if state is supported."""
+        if domain == humidifier.DOMAIN:
+            return True
+
         return domain == sensor.DOMAIN and device_class == sensor.DEVICE_CLASS_HUMIDITY
 
     def sync_attributes(self):
@@ -895,10 +901,21 @@ class HumiditySettingTrait(_Trait):
         response = {}
         attrs = self.state.attributes
         domain = self.state.domain
+
         if domain == sensor.DOMAIN:
             device_class = attrs.get(ATTR_DEVICE_CLASS)
             if device_class == sensor.DEVICE_CLASS_HUMIDITY:
                 response["queryOnlyHumiditySetting"] = True
+
+        elif domain == humidifier.DOMAIN:
+            response["humiditySetpointRange"] = {
+                "minPercent": round(
+                    float(self.state.attributes[humidifier.ATTR_MIN_HUMIDITY])
+                ),
+                "maxPercent": round(
+                    float(self.state.attributes[humidifier.ATTR_MAX_HUMIDITY])
+                ),
+            }
 
         return response
 
@@ -907,6 +924,7 @@ class HumiditySettingTrait(_Trait):
         response = {}
         attrs = self.state.attributes
         domain = self.state.domain
+
         if domain == sensor.DOMAIN:
             device_class = attrs.get(ATTR_DEVICE_CLASS)
             if device_class == sensor.DEVICE_CLASS_HUMIDITY:
@@ -914,14 +932,32 @@ class HumiditySettingTrait(_Trait):
                 if current_humidity not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                     response["humidityAmbientPercent"] = round(float(current_humidity))
 
+        elif domain == humidifier.DOMAIN:
+            target_humidity = attrs.get(humidifier.ATTR_HUMIDITY)
+            if target_humidity is not None:
+                response["humiditySetpointPercent"] = round(float(target_humidity))
+
         return response
 
     async def execute(self, command, data, params, challenge):
         """Execute a humidity command."""
         domain = self.state.domain
+
         if domain == sensor.DOMAIN:
             raise SmartHomeError(
                 ERR_NOT_SUPPORTED, "Execute is not supported by sensor"
+            )
+
+        if command == COMMAND_SET_HUMIDITY:
+            await self.hass.services.async_call(
+                humidifier.DOMAIN,
+                humidifier.SERVICE_SET_HUMIDITY,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    humidifier.ATTR_HUMIDITY: params["humidity"],
+                },
+                blocking=True,
+                context=data.context,
             )
 
 
@@ -1151,7 +1187,6 @@ class FanSpeedTrait(_Trait):
         speed = attrs.get(fan.ATTR_SPEED)
         if speed is not None:
             response["on"] = speed != fan.SPEED_OFF
-            response["online"] = True
             response["currentFanSpeedSetting"] = speed
 
         return response
@@ -1187,6 +1222,9 @@ class ModesTrait(_Trait):
     def supported(domain, features, device_class):
         """Test if state is supported."""
         if domain == input_select.DOMAIN:
+            return True
+
+        if domain == humidifier.DOMAIN and features & humidifier.SUPPORT_MODES:
             return True
 
         if domain != media_player.DOMAIN:
@@ -1241,6 +1279,9 @@ class ModesTrait(_Trait):
                 )
         elif self.state.domain == input_select.DOMAIN:
             modes.append(_generate("option", attrs[input_select.ATTR_OPTIONS]))
+        elif self.state.domain == humidifier.DOMAIN:
+            if humidifier.ATTR_AVAILABLE_MODES in attrs:
+                modes.append(_generate("mode", attrs[humidifier.ATTR_AVAILABLE_MODES]))
 
         payload = {"availableModes": modes}
 
@@ -1262,16 +1303,18 @@ class ModesTrait(_Trait):
                 mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
         elif self.state.domain == input_select.DOMAIN:
             mode_settings["option"] = self.state.state
+        elif self.state.domain == humidifier.DOMAIN:
+            if humidifier.ATTR_MODE in attrs:
+                mode_settings["mode"] = attrs.get(humidifier.ATTR_MODE)
 
         if mode_settings:
-            response["on"] = self.state.state != STATE_OFF
-            response["online"] = True
+            response["on"] = self.state.state not in (STATE_OFF, STATE_UNKNOWN)
             response["currentModeSettings"] = mode_settings
 
         return response
 
     async def execute(self, command, data, params, challenge):
-        """Execute an SetModes command."""
+        """Execute a SetModes command."""
         settings = params.get("updateModeSettings")
 
         if self.state.domain == input_select.DOMAIN:
@@ -1286,8 +1329,22 @@ class ModesTrait(_Trait):
                 blocking=True,
                 context=data.context,
             )
-
             return
+
+        if self.state.domain == humidifier.DOMAIN:
+            requested_mode = settings["mode"]
+            await self.hass.services.async_call(
+                humidifier.DOMAIN,
+                humidifier.SERVICE_SET_MODE,
+                {
+                    humidifier.ATTR_MODE: requested_mode,
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                },
+                blocking=True,
+                context=data.context,
+            )
+            return
+
         if self.state.domain != media_player.DOMAIN:
             _LOGGER.info(
                 "Received an Options command for unrecognised domain %s",
