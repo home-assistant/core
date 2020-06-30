@@ -76,17 +76,11 @@ class MojioDeviceScanner:
             vehicles = self._api.get_vehicles()
 
             for vehicle in vehicles:
-                if not self._include or vehicle.license_plate in self._include:
-
-                    # if vehicle.active or vehicle.current_address is None:
-                    #     device.get_map_details()
-
-                    self._see(
-                        dev_id=vehicle.licence_plate.replace("-", "_"),
-                        gps=(vehicle.location.latitude, vehicle.location.longitude),
-                        # attributes=vehicle.state_attributes,
-                        icon="mdi:car",
-                    )
+                self._see(
+                    dev_id=vehicle.licence_plate.replace("-", "_"),
+                    gps=(vehicle.location.latitude, vehicle.location.longitude),
+                    icon="mdi:car",
+                )
 
         except requests.exceptions.ConnectionError:
             _LOGGER.error("ConnectionError: Could not connect to Mojio")
