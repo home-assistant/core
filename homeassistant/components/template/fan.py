@@ -367,9 +367,7 @@ class TemplateFan(FanEntity):
             # Validate speed
             if speed in self._speed_list:
                 self._speed = speed
-            elif speed == STATE_UNAVAILABLE:
-                self._speed = STATE_UNAVAILABLE
-            elif speed == STATE_UNKNOWN:
+            elif speed in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
                 self._speed = None
             else:
                 _LOGGER.error(
@@ -391,9 +389,7 @@ class TemplateFan(FanEntity):
                 self._oscillating = True
             elif oscillating == "False" or oscillating is False:
                 self._oscillating = False
-            elif oscillating == STATE_UNAVAILABLE:
-                self._oscillating = STATE_UNAVAILABLE
-            elif oscillating == STATE_UNKNOWN:
+            elif oscillating in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
                 self._oscillating = None
             else:
                 _LOGGER.error(
@@ -414,9 +410,7 @@ class TemplateFan(FanEntity):
             # Validate speed
             if direction in _VALID_DIRECTIONS:
                 self._direction = direction
-            elif direction == STATE_UNAVAILABLE:
-                self._direction = STATE_UNAVAILABLE
-            elif direction == STATE_UNKNOWN:
+            elif direction in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
                 self._direction = None
             else:
                 _LOGGER.error(
