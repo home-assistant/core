@@ -50,7 +50,7 @@ CONF_SET_SPEED_ACTION = "set_speed"
 CONF_SET_OSCILLATING_ACTION = "set_oscillating"
 CONF_SET_DIRECTION_ACTION = "set_direction"
 
-_VALID_STATES = [STATE_ON, STATE_OFF, STATE_UNAVAILABLE]
+_VALID_STATES = [STATE_ON, STATE_OFF]
 _VALID_OSC = [True, False]
 _VALID_DIRECTIONS = [DIRECTION_FORWARD, DIRECTION_REVERSE]
 
@@ -342,6 +342,9 @@ class TemplateFan(FanEntity):
         # Validate state
         if state in _VALID_STATES:
             self._state = state
+        elif state == STATE_UNAVAILABLE:
+            self._state = state
+            self._available = False
         elif state == STATE_UNKNOWN:
             self._state = None
         else:
