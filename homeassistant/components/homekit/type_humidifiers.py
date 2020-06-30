@@ -23,6 +23,7 @@ from homeassistant.const import (
     UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.event import async_track_state_change
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -32,6 +33,7 @@ from .const import (
     CHAR_DEHUMIDIFIER_THRESHOLD_HUMIDITY,
     CHAR_HUMIDIFIER_THRESHOLD_HUMIDITY,
     CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER,
+    CONF_LINKED_HUMIDITY_SENSOR,
     PROP_MAX_VALUE,
     PROP_MIN_STEP,
     PROP_MIN_VALUE,
@@ -114,12 +116,69 @@ class HumidifierDehumidifier(HomeAccessory):
 
         serv_humidifier_dehumidifier.setter_callback = self._set_chars
 
+        self.linked_humidity_sensor = self.config.get(CONF_LINKED_HUMIDITY_SENSOR)
+        if self.linked_humidity_sensor:
+            humidity_state = self.hass.states.get(self.linked_humidity_sensor)
+            if humidity_state:
+                self._async_update_current_humidity(None, None, humidity_state)
+
+    async def run_handler(self):
+        """Handle accessory driver started event.
+
+        Run inside the Home Assistant event loop.
+        """
+        if self.linked_humidity_sensor:
+            async_track_state_change(
+                self.hass,
+                self.linked_humidity_sensor,
+                self._async_update_current_humidity,
+            )
+
+        await super().run_handler()
+
+    @callback
+    def _async_update_current_humidity(
+        self, entity_id=None, old_state=None, new_state=None
+    ):
+        """Handle linked humidity sensor state change to update HomeKit value."""
+        if new_state is None:
+            return
+        try:
+            current_humidity = float(new_state.state)
+            if self.char_current_humidity.value != current_humidity:
+                self.char_current_humidity.set_value(current_humidity)
+                _LOGGER.debug(
+                    "%s: Linked humidity sensor %s changed to %d",
+                    self.entity_id,
+                    self.linked_humidity_sensor,
+                    current_humidity,
+                )
+        except ValueError as ex:
+            _LOGGER.error(
+                "%s: Unable to update from linked humidity sensor %s: %s",
+                self.entity_id,
+                self.linked_humidity_sensor,
+                ex,
+            )
+
     def _set_chars(self, char_values):
         _LOGGER.debug("HumidifierDehumidifier _set_chars: %s", char_values)
-        events = []
-        params = {}
-        service = None
 
+        if CHAR_ACTIVE in char_values:
+            self.call_service(
+                DOMAIN,
+                SERVICE_TURN_ON if char_values[CHAR_ACTIVE] else SERVICE_TURN_OFF,
+                {ATTR_ENTITY_ID: self.entity_id},
+                f"{CHAR_ACTIVE} to {char_values[CHAR_ACTIVE]}",
+            )
+        if self._target_humidity_char_name in char_values:
+            humidity = round(char_values[self._target_humidity_char_name])
+            self.call_service(
+                DOMAIN,
+                SERVICE_SET_HUMIDITY,
+                {ATTR_ENTITY_ID: self.entity_id, ATTR_HUMIDITY: humidity},
+                f"{self._target_humidity_char_name} to {char_values[self._target_humidity_char_name]}{UNIT_PERCENTAGE}",
+            )
         if CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER in char_values:
             # We support either humidifiers or dehumidifiers. If incompatible setting is requested
             # then we switch off the device to avoid humidifying when the user wants to dehumidify and vice versa
@@ -127,26 +186,12 @@ class HumidifierDehumidifier(HomeAccessory):
             if (self._hk_device_class == HC_HUMIDIFIER and hk_value == 0) or (
                 self._hk_device_class == HC_DEHUMIDIFIER and hk_value == 1
             ):
-                service = SERVICE_TURN_OFF
-                events.append(
-                    f"{CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER} to {char_values[CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER]}"
+                self.call_service(
+                    DOMAIN,
+                    SERVICE_TURN_OFF,
+                    {ATTR_ENTITY_ID: self.entity_id},
+                    f"{CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER} to {char_values[CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER]}",
                 )
-        elif self._target_humidity_char_name in char_values:
-            humidity = round(char_values[self._target_humidity_char_name])
-            service = SERVICE_SET_HUMIDITY
-            params = {ATTR_HUMIDITY: humidity}
-            events.append(
-                f"{self._target_humidity_char_name} to {char_values[self._target_humidity_char_name]}{UNIT_PERCENTAGE}"
-            )
-        elif CHAR_ACTIVE in char_values:
-            service = SERVICE_TURN_ON if char_values[CHAR_ACTIVE] else SERVICE_TURN_OFF
-            events.append(f"{CHAR_ACTIVE} to {char_values[CHAR_ACTIVE]}")
-
-        if service:
-            params[ATTR_ENTITY_ID] = self.entity_id
-            self.call_service(
-                DOMAIN, service, params, ", ".join(events),
-            )
 
     def get_humidity_range(self):
         """Return min and max humidity range."""

@@ -12,6 +12,7 @@ import pytest
 
 from homeassistant.components.homekit.const import (
     ATTR_VALUE,
+    CONF_LINKED_HUMIDITY_SENSOR,
     PROP_MAX_VALUE,
     PROP_MIN_STEP,
     PROP_MIN_VALUE,
@@ -30,6 +31,7 @@ from homeassistant.components.humidifier.const import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    DEVICE_CLASS_HUMIDITY,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -71,6 +73,7 @@ async def test_humidifier(hass, hk_driver, cls, events):
 
     assert acc.char_current_humidifier_dehumidifier.value == 0
     assert acc.char_target_humidifier_dehumidifier.value == 0
+    assert acc.char_current_humidity.value == 0
     assert acc.char_target_humidity.value == 45.0
     assert acc.char_active.value == 0
 
@@ -144,6 +147,7 @@ async def test_dehumidifier(hass, hk_driver, cls, events):
 
     assert acc.char_current_humidifier_dehumidifier.value == 0
     assert acc.char_target_humidifier_dehumidifier.value == 0
+    assert acc.char_current_humidity.value == 0
     assert acc.char_target_humidity.value == 45.0
     assert acc.char_active.value == 0
 
@@ -285,3 +289,61 @@ async def test_hygrostat_get_humidity_range(hass, hk_driver, cls):
     )
     await hass.async_block_till_done()
     assert acc.get_humidity_range() == (40, 45)
+
+
+async def test_humidifier_with_linked_humidity_sensor(hass, hk_driver, cls):
+    """Test a humidifier with a linked humidity sensor can update."""
+    humidity_sensor_entity_id = "sensor.bedroom_humidity"
+
+    hass.states.async_set(
+        humidity_sensor_entity_id, "42.0", {ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY}
+    )
+    await hass.async_block_till_done()
+    entity_id = "humidifier.test"
+
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    acc = cls.hygrostat(
+        hass,
+        hk_driver,
+        "HumidifierDehumidifier",
+        entity_id,
+        1,
+        {CONF_LINKED_HUMIDITY_SENSOR: humidity_sensor_entity_id},
+    )
+    hk_driver.add_accessory(acc)
+
+    await acc.run_handler()
+    await hass.async_block_till_done()
+
+    assert acc.char_current_humidity.value == 42.0
+
+    hass.states.async_set(
+        humidity_sensor_entity_id, "43.0", {ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY}
+    )
+    await hass.async_block_till_done()
+
+    assert acc.char_current_humidity.value == 43.0
+
+
+async def test_humidifier_with_a_missing_linked_humidity_sensor(hass, hk_driver, cls):
+    """Test a humidifier with a configured linked motion sensor that is missing."""
+    humidity_sensor_entity_id = "sensor.bedroom_humidity"
+    entity_id = "humidifier.test"
+
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    acc = cls.hygrostat(
+        hass,
+        hk_driver,
+        "HumidifierDehumidifier",
+        entity_id,
+        1,
+        {CONF_LINKED_HUMIDITY_SENSOR: humidity_sensor_entity_id},
+    )
+    hk_driver.add_accessory(acc)
+
+    await acc.run_handler()
+    await hass.async_block_till_done()
+
+    assert acc.char_current_humidity.value == 0
