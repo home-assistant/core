@@ -286,6 +286,17 @@ class Config:
             self._exposed_cache[entity_id] = self._is_entity_exposed(entity)
         return self._exposed_cache[entity_id]
 
+    def filter_exposed_entities(self, states):
+        """Filter a list of all states down to exposed entities."""
+        exposed = []
+        for entity in states:
+            entity_id = entity.entity_id
+            if entity_id not in self._exposed_cache:
+                self._exposed_cache[entity_id] = self._is_entity_exposed(entity)
+            if self._exposed_cache[entity_id]:
+                exposed.append(entity)
+        return exposed
+
     def _is_entity_exposed(self, entity):
         """Determine if an entity should be exposed on the emulated bridge.
 
