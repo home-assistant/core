@@ -41,7 +41,7 @@ async def async_setup_entry(hass, entry):
     if not becker:
         return False
 
-    for _ in range(0, 2):
+    for _ in range(2):
         _LOGGER.debug("Init call to cover channel 1")
         await becker.connection.stop("1")
 
