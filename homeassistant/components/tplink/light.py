@@ -105,38 +105,67 @@ class TPLinkSmartBulb(LightEntity):
         """Return the state attributes of the device."""
         return self._device_state_attributes
 
+    async def try_set(self, coro):
+        """Execute a bulb command and handle exceptions gracefully."""
+        try:
+            await coro
+        except SmartDeviceException as ex:
+            _LOGGER.error("Unable to change the state: %s", ex)
+            self._is_available = False
+        else:
+            self._is_available = True
+
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         brightness = None
+
+        transition = kwargs.get("transition")
+        if transition is not None:
+            transition = int(transition * 1_000)
+            _LOGGER.debug("Got transition: %s" % transition)
+
         if ATTR_BRIGHTNESS in kwargs:
-            brightness = int(kwargs[ATTR_BRIGHTNESS])
+            brightness = brightness_to_percentage(int(kwargs[ATTR_BRIGHTNESS]))
+            _LOGGER.debug("Got brightness: %s" % brightness)
 
-        try:
-            if brightness is not None and self.smartbulb.is_dimmable:
-                await self.smartbulb.set_brightness(
-                    brightness_to_percentage(brightness)
+        if ATTR_COLOR_TEMP in kwargs:
+            color_temp = int(mired_to_kelvin(int(kwargs[ATTR_COLOR_TEMP])))
+            _LOGGER.debug("Setting color temp to %s", color_temp)
+            return await self.try_set(
+                self.smartbulb.set_color_temp(
+                    color_temp, brightness=brightness, transition=transition
                 )
-            if ATTR_COLOR_TEMP in kwargs and self.smartbulb.is_variable_color_temp:
-                color_temp = int(mired_to_kelvin(int(kwargs[ATTR_COLOR_TEMP])))
-                await self.smartbulb.set_color_temp(color_temp)
-            if ATTR_HS_COLOR in kwargs and self.smartbulb.is_color:
-                hue, sat = kwargs[ATTR_HS_COLOR]
-                if brightness is None:
-                    brightness = self.brightness
-                # TODO: allow floats in upstream for hue&sat?
-                await self.smartbulb.set_hsv(
-                    int(hue), int(sat), brightness_to_percentage(brightness)
-                )
+            )
 
-            await self.smartbulb.turn_on()
-            self._is_available = True
-            return
-        except (SmartDeviceException, OSError) as ex:
-            _LOGGER.debug("Got error while setting the state: %s", ex)
+        elif ATTR_HS_COLOR in kwargs:
+            hue, sat = kwargs[ATTR_HS_COLOR]
+            # Use the existing brightness is no new one is defined
+            if brightness is None:
+                brightness = brightness_to_percentage(self.brightness)
+
+            _LOGGER.debug("Setting hsv to %s %s %s", int(hue), int(sat), brightness)
+
+            return await self.try_set(
+                self.smartbulb.set_hsv(
+                    int(hue), int(sat), brightness, transition=transition
+                )
+            )
+
+        elif brightness is not None and self.smartbulb.is_dimmable:
+            return await self.try_set(
+                self.smartbulb.set_brightness(brightness, transition=transition)
+            )
+
+        else:
+            return await self.try_set(self.smartbulb.turn_on(transition=transition))
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        await self.smartbulb.turn_off()
+        transition = kwargs.get("transition")
+        if transition is not None:
+            transition = int(transition * 1_000)
+
+        return await self.try_set(self.smartbulb.turn_off(transition=transition))
 
     @property
     def min_mireds(self):
