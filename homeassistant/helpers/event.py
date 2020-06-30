@@ -123,6 +123,7 @@ def async_track_state_change(
         # entity_id.
         return async_track_state_change_event(hass, entity_ids, state_change_listener)
 
+    _LOGGER.warning("Registered state changed listener for ALL")
     return hass.bus.async_listen(EVENT_STATE_CHANGED, state_change_listener)
 
 
