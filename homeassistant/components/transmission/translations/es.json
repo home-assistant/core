@@ -27,6 +27,8 @@
         "step": {
             "init": {
                 "data": {
+                    "limit": "L\u00edmite",
+                    "order": "Pedido",
                     "scan_interval": "Frecuencia de actualizaci\u00f3n"
                 },
                 "title": "Configurar opciones para la transmisi\u00f3n"
