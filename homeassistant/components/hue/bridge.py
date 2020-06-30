@@ -51,6 +51,7 @@ class HueBridge:
         # Jobs to be executed when API is reset.
         self.reset_jobs = []
         self.sensor_manager = None
+        self.unsub_config_entry_listner = None
 
     @property
     def host(self):
@@ -124,7 +125,9 @@ class HueBridge:
             3 if self.api.config.modelid == "BSB001" else 10
         )
 
-        self.config_entry.add_update_listener(_update_listener)
+        self.unsub_config_entry_listner = self.config_entry.add_update_listener(
+            _update_listener
+        )
 
         self.authorized = True
         return True
@@ -180,6 +183,9 @@ class HueBridge:
 
         while self.reset_jobs:
             self.reset_jobs.pop()()
+
+        if self.unsub_config_entry_listner is not None:
+            self.unsub_config_entry_listner()
 
         # If setup was successful, we set api variable, forwarded entry and
         # register service
