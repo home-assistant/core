@@ -37,7 +37,7 @@ class BroadlinkSensor(Entity):
 
     @property
     def unique_id(self):
-        """Return the unique ID of the sensor."""
+        """Return the unique id of the sensor."""
         return f"{self._device.unique_id}-{self._monitored_condition}"
 
     @property

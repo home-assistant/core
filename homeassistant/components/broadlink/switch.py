@@ -189,7 +189,7 @@ class BroadlinkSP1Switch(BroadlinkSwitch):
 
     @property
     def unique_id(self):
-        """Return the unique ID of the switch."""
+        """Return the unique id of the switch."""
         return self._device.unique_id
 
     async def _async_send_packet(self, packet):
@@ -239,7 +239,7 @@ class BroadlinkMP1Slot(BroadlinkSwitch):
 
     @property
     def unique_id(self):
-        """Return the unique ID of the slot."""
+        """Return the unique id of the slot."""
         return f"{self._device.unique_id}-slot-{self._slot}"
 
     @property

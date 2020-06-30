@@ -105,7 +105,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
 
     @property
     def unique_id(self):
-        """Return the unique ID of the remote."""
+        """Return the unique id of the remote."""
         return self._device.unique_id
 
     @property
@@ -140,13 +140,14 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
         }
 
     def get_code(self, command, device):
-        """Return a code and a boolean indicating whether it is a toggle command.
+        """Return a code and a boolean indicating a toggle command.
 
         If the command starts with `b64:`, extract the code from it.
-        Otherwise, extract the code from the dictionary, using device and command as keys.
+        Otherwise, extract the code from the dictionary, using the device
+        and command as keys.
 
-        You need to change the index whenever a toggle command is sent successfully.
-        Use `self._flags[device] ^= 1`.
+        You need to change the flag whenever a toggle command is sent
+        successfully. Use `self._flags[device] ^= 1`.
         """
         if command.startswith("b64:"):
             code, is_toggle_cmd = command[4:], False
@@ -176,7 +177,8 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
     def get_flags(self):
         """Return a dictionary of toggle flags.
 
-        A toggle flag indicates whether the remote should send an alternative code.
+        A toggle flag indicates whether the remote should send an
+        alternative code.
         """
         return self._flags
 
