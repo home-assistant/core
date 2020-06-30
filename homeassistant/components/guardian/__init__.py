@@ -3,34 +3,17 @@ import asyncio
 from datetime import timedelta
 
 from aioguardian import Client
-from aioguardian.commands.system import (
-    DEFAULT_FIRMWARE_UPGRADE_FILENAME,
-    DEFAULT_FIRMWARE_UPGRADE_PORT,
-    DEFAULT_FIRMWARE_UPGRADE_URL,
-)
 from aioguardian.errors import GuardianError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_FILENAME,
-    CONF_IP_ADDRESS,
-    CONF_PORT,
-    CONF_URL,
-)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.service import (
-    async_register_admin_service,
-    verify_domain_control,
-)
 
 from .const import (
     CONF_UID,
@@ -61,16 +44,6 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
-SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_URL, default=DEFAULT_FIRMWARE_UPGRADE_URL): cv.url,
-        vol.Optional(CONF_PORT, default=DEFAULT_FIRMWARE_UPGRADE_PORT): cv.port,
-        vol.Optional(
-            CONF_FILENAME, default=DEFAULT_FIRMWARE_UPGRADE_FILENAME
-        ): cv.string,
-    }
-)
-
 
 @callback
 def async_get_api_category(entity_kind: str):
@@ -86,8 +59,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Elexa Guardian from a config entry."""
-    _verify_domain_control = verify_domain_control(hass, DOMAIN)
-
     guardian = Guardian(hass, entry)
     await guardian.async_update()
     hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = guardian
@@ -96,69 +67,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
-
-    @_verify_domain_control
-    async def disable_ap(call):
-        """Disable the device's onboard access point."""
-        try:
-            async with guardian.client:
-                await guardian.client.wifi.disable_ap()
-        except GuardianError as err:
-            LOGGER.error("Error during service call: %s", err)
-            return
-
-    @_verify_domain_control
-    async def enable_ap(call):
-        """Enable the device's onboard access point."""
-        try:
-            async with guardian.client:
-                await guardian.client.wifi.enable_ap()
-        except GuardianError as err:
-            LOGGER.error("Error during service call: %s", err)
-            return
-
-    @_verify_domain_control
-    async def reboot(call):
-        """Reboot the device."""
-        try:
-            async with guardian.client:
-                await guardian.client.system.reboot()
-        except GuardianError as err:
-            LOGGER.error("Error during service call: %s", err)
-            return
-
-    @_verify_domain_control
-    async def reset_valve_diagnostics(call):
-        """Fully reset system motor diagnostics."""
-        try:
-            async with guardian.client:
-                await guardian.client.valve.reset()
-        except GuardianError as err:
-            LOGGER.error("Error during service call: %s", err)
-            return
-
-    @_verify_domain_control
-    async def upgrade_firmware(call):
-        """Upgrade the device firmware."""
-        try:
-            async with guardian.client:
-                await guardian.client.system.upgrade_firmware(
-                    url=call.data[CONF_URL],
-                    port=call.data[CONF_PORT],
-                    filename=call.data[CONF_FILENAME],
-                )
-        except GuardianError as err:
-            LOGGER.error("Error during service call: %s", err)
-            return
-
-    for service, method, schema in [
-        ("disable_ap", disable_ap, None),
-        ("enable_ap", enable_ap, None),
-        ("reboot", reboot, None),
-        ("reset_valve_diagnostics", reset_valve_diagnostics, None),
-        ("upgrade_firmware", upgrade_firmware, SERVICE_UPGRADE_FIRMWARE_SCHEMA),
-    ]:
-        async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
     return True
 
