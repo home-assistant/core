@@ -364,16 +364,17 @@ class ScriptEntity(ToggleEntity):
         coro = self.script.async_run(variables, context)
         if wait:
             await coro
-        else:
-            # Caller does not want to wait for called script to finish so let script run
-            # in separate Task. However, wait for first state change so we can guarantee
-            # that it is written to the State Machine before we return. Only do this for
-            # non-legacy scripts, since legacy scripts don't necessarily change state
-            # immediately.
-            self._changed.clear()
-            self.hass.async_create_task(coro)
-            if not self.script.is_legacy:
-                await self._changed.wait()
+            return
+
+        # Caller does not want to wait for called script to finish so let script run in
+        # separate Task. However, wait for first state change so we can guarantee that
+        # it is written to the State Machine before we return. Only do this for
+        # non-legacy scripts, since legacy scripts don't necessarily change state
+        # immediately.
+        self._changed.clear()
+        self.hass.async_create_task(coro)
+        if not self.script.is_legacy:
+            await self._changed.wait()
 
     async def async_turn_off(self, **kwargs):
         """Turn script off."""
