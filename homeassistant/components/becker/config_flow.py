@@ -5,7 +5,11 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 
-from .const import CONF_DEVICE, DEFAULT_CONF_USB_STICK_PATH, DOMAIN
+from .const import (  # pylint:disable=unused-import
+    CONF_DEVICE,
+    DEFAULT_CONF_USB_STICK_PATH,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
