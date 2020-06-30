@@ -67,3 +67,9 @@ async def rfxtrx_cleanup():
 async def rfxtrx_fixture(hass):
     """Stub out core rfxtrx to test platform."""
     mock_component(hass, "rfxtrx")
+
+    yield
+
+    # These test don't listen for stop to do cleanup.
+    if rfxtrx_core.DATA_RFXOBJECT in hass.data:
+        hass.data[rfxtrx_core.DATA_RFXOBJECT].close_connection()
