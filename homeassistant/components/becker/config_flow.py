@@ -10,8 +10,7 @@ from .const import CONF_DEVICE, DEFAULT_CONF_USB_STICK_PATH, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class BeckerConfigFlow(config_entries.ConfigFlow):
+class BeckerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Becker config flow."""
 
     VERSION = 1
