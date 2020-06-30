@@ -1302,7 +1302,6 @@ async def test_fan_speed(hass):
     assert trt.query_attributes() == {
         "currentFanSpeedSetting": "low",
         "on": True,
-        "online": True,
     }
 
     assert trt.can_execute(trait.COMMAND_FANSPEED, params={"fanSpeed": "medium"})
@@ -1377,7 +1376,6 @@ async def test_modes_media_player(hass):
     assert trt.query_attributes() == {
         "currentModeSettings": {"input source": "game"},
         "on": True,
-        "online": True,
     }
 
     assert trt.can_execute(
@@ -1446,7 +1444,6 @@ async def test_modes_input_select(hass):
     assert trt.query_attributes() == {
         "currentModeSettings": {"option": "abc"},
         "on": True,
-        "online": True,
     }
 
     assert trt.can_execute(
@@ -1520,7 +1517,6 @@ async def test_modes_humidifier(hass):
     assert trt.query_attributes() == {
         "currentModeSettings": {"mode": "auto"},
         "on": False,
-        "online": True,
     }
 
     assert trt.can_execute(
@@ -1536,34 +1532,6 @@ async def test_modes_humidifier(hass):
     assert calls[0].data == {
         "entity_id": "humidifier.humidifier",
         "mode": "away",
-    }
-
-
-async def test_modes_humidifier_unavailable(hass):
-    """Test Humidifier Mode trait for Unavailable state."""
-    trt = trait.ModesTrait(
-        hass,
-        State(
-            "humidifier.wireless",
-            STATE_UNAVAILABLE,
-            attributes={
-                humidifier.ATTR_AVAILABLE_MODES: [
-                    humidifier.MODE_NORMAL,
-                    humidifier.MODE_AUTO,
-                    humidifier.MODE_AWAY,
-                ],
-                ATTR_SUPPORTED_FEATURES: humidifier.SUPPORT_MODES,
-                humidifier.ATTR_MIN_HUMIDITY: 30,
-                humidifier.ATTR_MAX_HUMIDITY: 99,
-                humidifier.ATTR_HUMIDITY: 50,
-                humidifier.ATTR_MODE: humidifier.MODE_AUTO,
-            },
-        ),
-        BASIC_CONFIG,
-    )
-
-    assert trt.query_attributes() == {
-        "online": False,
     }
 
 
@@ -1617,7 +1585,6 @@ async def test_sound_modes(hass):
     assert trt.query_attributes() == {
         "currentModeSettings": {"sound mode": "stereo"},
         "on": True,
-        "online": True,
     }
 
     assert trt.can_execute(

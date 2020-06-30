@@ -298,7 +298,7 @@ class OnOffTrait(_Trait):
 
     def query_attributes(self):
         """Return OnOff query attributes."""
-        return {"on": self.state.state != STATE_OFF}
+        return {"on": self.state.state not in (STATE_OFF, STATE_UNKNOWN)}
 
     async def execute(self, command, data, params, challenge):
         """Execute an OnOff command."""
@@ -1187,7 +1187,6 @@ class FanSpeedTrait(_Trait):
         speed = attrs.get(fan.ATTR_SPEED)
         if speed is not None:
             response["on"] = speed != fan.SPEED_OFF
-            response["online"] = True
             response["currentFanSpeedSetting"] = speed
 
         return response
@@ -1290,9 +1289,6 @@ class ModesTrait(_Trait):
 
     def query_attributes(self):
         """Return current modes."""
-        if self.state.state == STATE_UNAVAILABLE:
-            return {"online": False}
-
         attrs = self.state.attributes
         response = {}
         mode_settings = {}
@@ -1313,7 +1309,6 @@ class ModesTrait(_Trait):
 
         if mode_settings:
             response["on"] = self.state.state not in (STATE_OFF, STATE_UNKNOWN)
-            response["online"] = True
             response["currentModeSettings"] = mode_settings
 
         return response
