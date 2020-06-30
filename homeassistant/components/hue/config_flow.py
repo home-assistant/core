@@ -26,7 +26,6 @@ from .errors import AuthenticationRequired, CannotConnect
 HUE_MANUFACTURERURL = "http://www.philips.com"
 HUE_IGNORED_BRIDGE_NAMES = ["Home Assistant Bridge", "Espalexa"]
 HUE_MANUAL_BRIDGE_ID = "manual"
-HUE_MANUAL_BRIDGE = {HUE_MANUAL_BRIDGE_ID: "Manually add a Hue Bridge"}
 
 
 class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -105,7 +104,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required("id"): vol.In(
                         {
                             **{bridge.id: bridge.host for bridge in bridges},
-                            **HUE_MANUAL_BRIDGE,
+                            HUE_MANUAL_BRIDGE_ID: "Manually add a Hue Bridge",
                         }
                     )
                 }
