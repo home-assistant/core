@@ -1,10 +1,11 @@
 """Support for sending data to an Influx database."""
+from dataclasses import dataclass
 import logging
 import math
 import queue
 import threading
 import time
-from typing import Dict
+from typing import Any, Callable, Dict, List
 
 from influxdb import InfluxDBClient, exceptions
 from influxdb_client import InfluxDBClient as InfluxDBClientV2
@@ -15,6 +16,10 @@ import urllib3.exceptions
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONF_DOMAIN,
+    CONF_ENTITY_ID,
+    CONF_TIMEOUT,
+    CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
@@ -33,8 +38,10 @@ from .const import (
     API_VERSION_2,
     BATCH_BUFFER_SIZE,
     BATCH_TIMEOUT,
-    CLIENT_ERROR_V1_WITH_RETRY,
-    CLIENT_ERROR_V2_WITH_RETRY,
+    CATCHING_UP_MESSAGE,
+    CLIENT_ERROR_V1,
+    CLIENT_ERROR_V2,
+    CODE_INVALID_INPUTS,
     COMPONENT_CONFIG_SCHEMA_CONNECTION,
     CONF_API_VERSION,
     CONF_BUCKET,
@@ -56,18 +63,32 @@ from .const import (
     CONF_TOKEN,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
-    CONNECTION_ERROR_WITH_RETRY,
+    CONNECTION_ERROR,
     DEFAULT_API_VERSION,
     DEFAULT_HOST_V2,
     DEFAULT_SSL_V2,
     DOMAIN,
+    EVENT_NEW_STATE,
+    INFLUX_CONF_FIELDS,
+    INFLUX_CONF_MEASUREMENT,
+    INFLUX_CONF_ORG,
+    INFLUX_CONF_STATE,
+    INFLUX_CONF_TAGS,
+    INFLUX_CONF_TIME,
+    INFLUX_CONF_VALUE,
+    QUERY_ERROR,
     QUEUE_BACKLOG_SECONDS,
     RE_DECIMAL,
     RE_DIGIT_TAIL,
+    RESUMED_MESSAGE,
     RETRY_DELAY,
     RETRY_INTERVAL,
+    RETRY_MESSAGE,
+    TEST_QUERY_V1,
+    TEST_QUERY_V2,
     TIMEOUT,
     WRITE_ERROR,
+    WROTE_MESSAGE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -120,9 +141,11 @@ def validate_version_specific_config(conf: Dict) -> Dict:
     return conf
 
 
-_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string})
+_CUSTOMIZE_ENTITY_SCHEMA = vol.Schema(
+    {vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string}
+)
 
-_CONFIG_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
+_INFLUX_BASE_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
     {
         vol.Optional(CONF_RETRY_COUNT, default=0): cv.positive_int,
         vol.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
@@ -132,89 +155,28 @@ _CONFIG_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
             cv.ensure_list, [cv.string]
         ),
         vol.Optional(CONF_COMPONENT_CONFIG, default={}): vol.Schema(
-            {cv.entity_id: _CONFIG_SCHEMA_ENTRY}
+            {cv.entity_id: _CUSTOMIZE_ENTITY_SCHEMA}
         ),
         vol.Optional(CONF_COMPONENT_CONFIG_GLOB, default={}): vol.Schema(
-            {cv.string: _CONFIG_SCHEMA_ENTRY}
+            {cv.string: _CUSTOMIZE_ENTITY_SCHEMA}
         ),
         vol.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}): vol.Schema(
-            {cv.string: _CONFIG_SCHEMA_ENTRY}
+            {cv.string: _CUSTOMIZE_ENTITY_SCHEMA}
         ),
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            _CONFIG_SCHEMA.extend(COMPONENT_CONFIG_SCHEMA_CONNECTION),
-            validate_version_specific_config,
-            create_influx_url,
-        ),
-    },
-    extra=vol.ALLOW_EXTRA,
+INFLUX_SCHEMA = vol.All(
+    _INFLUX_BASE_SCHEMA.extend(COMPONENT_CONFIG_SCHEMA_CONNECTION),
+    validate_version_specific_config,
+    create_influx_url,
 )
 
-
-def get_influx_connection(client_kwargs, bucket):
-    """Create and check the correct influx connection for the API version."""
-    if bucket is not None:
-        # Test connection by synchronously writing nothing.
-        # If config is valid this will generate a `Bad Request` exception but not make anything.
-        # If config is invalid we will output an error.
-        # Hopefully a better way to test connection is added in the future.
-        try:
-            influx = InfluxDBClientV2(**client_kwargs)
-            influx.write_api(write_options=SYNCHRONOUS).write(bucket=bucket)
-
-        except ApiException as exc:
-            # 400 is the success state since it means we can write we just gave a bad point.
-            if exc.status != 400:
-                raise exc
-
-    else:
-        influx = InfluxDBClient(**client_kwargs)
-        influx.write_points([])
-
-    return influx
+CONFIG_SCHEMA = vol.Schema({DOMAIN: INFLUX_SCHEMA}, extra=vol.ALLOW_EXTRA,)
 
 
-def setup(hass, config):
-    """Set up the InfluxDB component."""
-    conf = config[DOMAIN]
-    use_v2_api = conf[CONF_API_VERSION] == API_VERSION_2
-    bucket = None
-    kwargs = {
-        "timeout": TIMEOUT,
-    }
-
-    if use_v2_api:
-        kwargs["url"] = conf[CONF_URL]
-        kwargs["token"] = conf[CONF_TOKEN]
-        kwargs["org"] = conf[CONF_ORG]
-        bucket = conf[CONF_BUCKET]
-
-    else:
-        kwargs["database"] = conf[CONF_DB_NAME]
-        kwargs["verify_ssl"] = conf[CONF_VERIFY_SSL]
-
-        if CONF_USERNAME in conf:
-            kwargs["username"] = conf[CONF_USERNAME]
-
-        if CONF_PASSWORD in conf:
-            kwargs["password"] = conf[CONF_PASSWORD]
-
-        if CONF_HOST in conf:
-            kwargs["host"] = conf[CONF_HOST]
-
-        if CONF_PATH in conf:
-            kwargs["path"] = conf[CONF_PATH]
-
-        if CONF_PORT in conf:
-            kwargs["port"] = conf[CONF_PORT]
-
-        if CONF_SSL in conf:
-            kwargs["ssl"] = conf[CONF_SSL]
-
+def _generate_event_to_json(conf: Dict) -> Callable[[Dict], str]:
+    """Build event to json converter and add to config."""
     entity_filter = convert_include_exclude_filter(conf)
     tags = conf.get(CONF_TAGS)
     tags_attributes = conf.get(CONF_TAGS_ATTRIBUTES)
@@ -225,32 +187,10 @@ def setup(hass, config):
         conf[CONF_COMPONENT_CONFIG_DOMAIN],
         conf[CONF_COMPONENT_CONFIG_GLOB],
     )
-    max_tries = conf.get(CONF_RETRY_COUNT)
 
-    try:
-        influx = get_influx_connection(kwargs, bucket)
-        if use_v2_api:
-            write_api = influx.write_api(write_options=ASYNCHRONOUS)
-    except (
-        OSError,
-        requests.exceptions.ConnectionError,
-        urllib3.exceptions.HTTPError,
-    ) as exc:
-        _LOGGER.error(CONNECTION_ERROR_WITH_RETRY, exc)
-        event_helper.call_later(hass, RETRY_INTERVAL, lambda _: setup(hass, config))
-        return True
-    except exceptions.InfluxDBClientError as exc:
-        _LOGGER.error(CLIENT_ERROR_V1_WITH_RETRY, exc)
-        event_helper.call_later(hass, RETRY_INTERVAL, lambda _: setup(hass, config))
-        return True
-    except ApiException as exc:
-        _LOGGER.error(CLIENT_ERROR_V2_WITH_RETRY, exc)
-        event_helper.call_later(hass, RETRY_INTERVAL, lambda _: setup(hass, config))
-        return True
-
-    def event_to_json(event):
-        """Add an event to the outgoing Influx list."""
-        state = event.data.get("new_state")
+    def event_to_json(event: Dict) -> str:
+        """Convert event into json in format Influx expects."""
+        state = event.data.get(EVENT_NEW_STATE)
         if (
             state is None
             or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE)
@@ -278,7 +218,7 @@ def setup(hass, config):
             if override_measurement:
                 measurement = override_measurement
             else:
-                measurement = state.attributes.get("unit_of_measurement")
+                measurement = state.attributes.get(CONF_UNIT_OF_MEASUREMENT)
                 if measurement in (None, ""):
                     if default_measurement:
                         measurement = default_measurement
@@ -288,57 +228,206 @@ def setup(hass, config):
                     include_uom = False
 
         json = {
-            "measurement": measurement,
-            "tags": {"domain": state.domain, "entity_id": state.object_id},
-            "time": event.time_fired,
-            "fields": {},
+            INFLUX_CONF_MEASUREMENT: measurement,
+            INFLUX_CONF_TAGS: {
+                CONF_DOMAIN: state.domain,
+                CONF_ENTITY_ID: state.object_id,
+            },
+            INFLUX_CONF_TIME: event.time_fired,
+            INFLUX_CONF_FIELDS: {},
         }
         if _include_state:
-            json["fields"]["state"] = state.state
+            json[INFLUX_CONF_FIELDS][INFLUX_CONF_STATE] = state.state
         if _include_value:
-            json["fields"]["value"] = _state_as_value
+            json[INFLUX_CONF_FIELDS][INFLUX_CONF_VALUE] = _state_as_value
 
         for key, value in state.attributes.items():
             if key in tags_attributes:
-                json["tags"][key] = value
-            elif key != "unit_of_measurement" or include_uom:
+                json[INFLUX_CONF_TAGS][key] = value
+            elif key != CONF_UNIT_OF_MEASUREMENT or include_uom:
                 # If the key is already in fields
-                if key in json["fields"]:
+                if key in json[INFLUX_CONF_FIELDS]:
                     key = f"{key}_"
                 # Prevent column data errors in influxDB.
                 # For each value we try to cast it as float
                 # But if we can not do it we store the value
                 # as string add "_str" postfix to the field key
                 try:
-                    json["fields"][key] = float(value)
+                    json[INFLUX_CONF_FIELDS][key] = float(value)
                 except (ValueError, TypeError):
                     new_key = f"{key}_str"
                     new_value = str(value)
-                    json["fields"][new_key] = new_value
+                    json[INFLUX_CONF_FIELDS][new_key] = new_value
 
                     if RE_DIGIT_TAIL.match(new_value):
-                        json["fields"][key] = float(RE_DECIMAL.sub("", new_value))
+                        json[INFLUX_CONF_FIELDS][key] = float(
+                            RE_DECIMAL.sub("", new_value)
+                        )
 
                 # Infinity and NaN are not valid floats in InfluxDB
                 try:
-                    if not math.isfinite(json["fields"][key]):
-                        del json["fields"][key]
+                    if not math.isfinite(json[INFLUX_CONF_FIELDS][key]):
+                        del json[INFLUX_CONF_FIELDS][key]
                 except (KeyError, TypeError):
                     pass
 
-        json["tags"].update(tags)
+        json[INFLUX_CONF_TAGS].update(tags)
 
         return json
 
-    if use_v2_api:
-        instance = hass.data[DOMAIN] = InfluxThread(
-            hass, None, bucket, write_api, event_to_json, max_tries
-        )
-    else:
-        instance = hass.data[DOMAIN] = InfluxThread(
-            hass, influx, None, None, event_to_json, max_tries
-        )
+    return event_to_json
 
+
+@dataclass
+class InfluxClient:
+    """An InfluxDB client wrapper for V1 or V2."""
+
+    write: Callable[[str], None]
+    query: Callable[[str, str], List[Any]]
+    close: Callable[[], None]
+
+
+def get_influx_connection(conf, test_write=False, test_read=False):
+    """Create the correct influx connection for the API version."""
+    kwargs = {
+        CONF_TIMEOUT: TIMEOUT,
+    }
+
+    if conf[CONF_API_VERSION] == API_VERSION_2:
+        kwargs[CONF_URL] = conf[CONF_URL]
+        kwargs[CONF_TOKEN] = conf[CONF_TOKEN]
+        kwargs[INFLUX_CONF_ORG] = conf[CONF_ORG]
+        bucket = conf.get(CONF_BUCKET)
+
+        influx = InfluxDBClientV2(**kwargs)
+        query_api = influx.query_api()
+        initial_write_mode = SYNCHRONOUS if test_write else ASYNCHRONOUS
+        write_api = influx.write_api(write_options=initial_write_mode)
+
+        def write_v2(json):
+            """Write data to V2 influx."""
+            try:
+                write_api.write(bucket=bucket, record=json)
+            except (urllib3.exceptions.HTTPError, OSError) as exc:
+                raise ConnectionError(CONNECTION_ERROR % exc)
+            except ApiException as exc:
+                if exc.status == CODE_INVALID_INPUTS:
+                    raise ValueError(WRITE_ERROR % (json, exc))
+                raise ConnectionError(CLIENT_ERROR_V2 % exc)
+
+        def query_v2(query, _=None):
+            """Query V2 influx."""
+            try:
+                return query_api.query(query)
+            except (urllib3.exceptions.HTTPError, OSError) as exc:
+                raise ConnectionError(CONNECTION_ERROR % exc)
+            except ApiException as exc:
+                if exc.status == CODE_INVALID_INPUTS:
+                    raise ValueError(QUERY_ERROR % (query, exc))
+                raise ConnectionError(CLIENT_ERROR_V2 % exc)
+
+        def close_v2():
+            """Close V2 influx client."""
+            influx.close()
+
+        influx_client = InfluxClient(write_v2, query_v2, close_v2)
+        if test_write:
+            # Try to write [] to influx. If we can connect and creds are valid
+            # Then invalid inputs is returned. Anything else is a broken config
+            try:
+                influx_client.write([])
+            except ValueError:
+                pass
+            write_api = influx.write_api(write_options=ASYNCHRONOUS)
+
+        if test_read:
+            influx_client.query(TEST_QUERY_V2)
+
+        return influx_client
+
+    # Else it's a V1 client
+    kwargs[CONF_VERIFY_SSL] = conf[CONF_VERIFY_SSL]
+
+    if CONF_DB_NAME in conf:
+        kwargs[CONF_DB_NAME] = conf[CONF_DB_NAME]
+
+    if CONF_USERNAME in conf:
+        kwargs[CONF_USERNAME] = conf[CONF_USERNAME]
+
+    if CONF_PASSWORD in conf:
+        kwargs[CONF_PASSWORD] = conf[CONF_PASSWORD]
+
+    if CONF_HOST in conf:
+        kwargs[CONF_HOST] = conf[CONF_HOST]
+
+    if CONF_PATH in conf:
+        kwargs[CONF_PATH] = conf[CONF_PATH]
+
+    if CONF_PORT in conf:
+        kwargs[CONF_PORT] = conf[CONF_PORT]
+
+    if CONF_SSL in conf:
+        kwargs[CONF_SSL] = conf[CONF_SSL]
+
+    influx = InfluxDBClient(**kwargs)
+
+    def write_v1(json):
+        """Write data to V1 influx."""
+        try:
+            influx.write_points(json)
+        except (
+            requests.exceptions.RequestException,
+            exceptions.InfluxDBServerError,
+            OSError,
+        ) as exc:
+            raise ConnectionError(CONNECTION_ERROR % exc)
+        except exceptions.InfluxDBClientError as exc:
+            if exc.code == CODE_INVALID_INPUTS:
+                raise ValueError(WRITE_ERROR % (json, exc))
+            raise ConnectionError(CLIENT_ERROR_V1 % exc)
+
+    def query_v1(query, database=None):
+        """Query V1 influx."""
+        try:
+            return list(influx.query(query, database=database).get_points())
+        except (
+            requests.exceptions.RequestException,
+            exceptions.InfluxDBServerError,
+            OSError,
+        ) as exc:
+            raise ConnectionError(CONNECTION_ERROR % exc)
+        except exceptions.InfluxDBClientError as exc:
+            if exc.code == CODE_INVALID_INPUTS:
+                raise ValueError(QUERY_ERROR % (query, exc))
+            raise ConnectionError(CLIENT_ERROR_V1 % exc)
+
+    def close_v1():
+        """Close the V1 Influx client."""
+        influx.close()
+
+    influx_client = InfluxClient(write_v1, query_v1, close_v1)
+    if test_write:
+        influx_client.write([])
+
+    if test_read:
+        influx_client.query(TEST_QUERY_V1)
+
+    return influx_client
+
+
+def setup(hass, config):
+    """Set up the InfluxDB component."""
+    conf = config[DOMAIN]
+    try:
+        influx = get_influx_connection(conf, test_write=True)
+    except ConnectionError as exc:
+        _LOGGER.error(RETRY_MESSAGE, exc)
+        event_helper.call_later(hass, RETRY_INTERVAL, lambda _: setup(hass, config))
+        return True
+
+    event_to_json = _generate_event_to_json(conf)
+    max_tries = conf.get(CONF_RETRY_COUNT)
+    instance = hass.data[DOMAIN] = InfluxThread(hass, influx, event_to_json, max_tries)
     instance.start()
 
     def shutdown(event):
@@ -355,13 +444,11 @@ def setup(hass, config):
 class InfluxThread(threading.Thread):
     """A threaded event handler class."""
 
-    def __init__(self, hass, influx, bucket, write_api, event_to_json, max_tries):
+    def __init__(self, hass, influx, event_to_json, max_tries):
         """Initialize the listener."""
-        threading.Thread.__init__(self, name="InfluxDB")
+        threading.Thread.__init__(self, name=DOMAIN)
         self.queue = queue.Queue()
         self.influx = influx
-        self.bucket = bucket
-        self.write_api = write_api
         self.event_to_json = event_to_json
         self.max_tries = max_tries
         self.write_errors = 0
@@ -410,7 +497,7 @@ class InfluxThread(threading.Thread):
             pass
 
         if dropped:
-            _LOGGER.warning("Catching up, dropped %d old events", dropped)
+            _LOGGER.warning(CATCHING_UP_MESSAGE, dropped)
 
         return count, json
 
@@ -418,28 +505,23 @@ class InfluxThread(threading.Thread):
         """Write preprocessed events to influxdb, with retry."""
         for retry in range(self.max_tries + 1):
             try:
-                if self.write_api is not None:
-                    self.write_api.write(bucket=self.bucket, record=json)
-                else:
-                    self.influx.write_points(json)
+                self.influx.write(json)
 
                 if self.write_errors:
-                    _LOGGER.error("Resumed, lost %d events", self.write_errors)
+                    _LOGGER.error(RESUMED_MESSAGE, self.write_errors)
                     self.write_errors = 0
 
-                _LOGGER.debug("Wrote %d events", len(json))
+                _LOGGER.debug(WROTE_MESSAGE, len(json))
                 break
-            except (
-                exceptions.InfluxDBClientError,
-                exceptions.InfluxDBServerError,
-                OSError,
-                ApiException,
-            ) as err:
+            except ValueError as err:
+                _LOGGER.error(err)
+                break
+            except ConnectionError as err:
                 if retry < self.max_tries:
                     time.sleep(RETRY_DELAY)
                 else:
                     if not self.write_errors:
-                        _LOGGER.error(WRITE_ERROR, json, err)
+                        _LOGGER.error(err)
                     self.write_errors += len(json)
 
     def run(self):
