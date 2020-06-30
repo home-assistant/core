@@ -18,6 +18,7 @@ from homeassistant.components.influxdb.const import (
 from homeassistant.components.influxdb.sensor import PLATFORM_SCHEMA
 import homeassistant.components.sensor as sensor
 from homeassistant.const import STATE_UNKNOWN
+from homeassistant.helpers.entity_platform import PLATFORM_NOT_READY_BASE_WAIT_TIME
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -27,7 +28,6 @@ from tests.common import async_fire_time_changed
 INFLUXDB_PATH = "homeassistant.components.influxdb"
 INFLUXDB_CLIENT_PATH = f"{INFLUXDB_PATH}.InfluxDBClient"
 INFLUXDB_SENSOR_PATH = f"{INFLUXDB_PATH}.sensor"
-PLATFORM_NOT_READY_BASE_WAIT_TIME = 30
 
 BASE_V1_CONFIG = {}
 BASE_V2_CONFIG = {
