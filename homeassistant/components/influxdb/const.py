@@ -53,7 +53,18 @@ DEFAULT_GROUP_FUNCTION = "mean"
 DEFAULT_FIELD = "value"
 DEFAULT_RANGE_START = "-15m"
 DEFAULT_RANGE_STOP = "now()"
+DEFAULT_FUNCTION_FLUX = "|> limit(n: 1)"
 
+INFLUX_CONF_MEASUREMENT = "measurement"
+INFLUX_CONF_TAGS = "tags"
+INFLUX_CONF_TIME = "time"
+INFLUX_CONF_FIELDS = "fields"
+INFLUX_CONF_STATE = "state"
+INFLUX_CONF_VALUE = "value"
+INFLUX_CONF_VALUE_V2 = "_value"
+INFLUX_CONF_ORG = "org"
+
+EVENT_NEW_STATE = "new_state"
 DOMAIN = "influxdb"
 API_VERSION_2 = "2"
 TIMEOUT = 5
@@ -65,7 +76,8 @@ BATCH_BUFFER_SIZE = 100
 LANGUAGE_INFLUXQL = "influxQL"
 LANGUAGE_FLUX = "flux"
 TEST_QUERY_V1 = "SHOW SERIES LIMIT 1;"
-TEST_QUERY_V2 = "buckets() |> limit(n:1)"
+TEST_QUERY_V2 = f"buckets() {DEFAULT_FUNCTION_FLUX}"
+CODE_INVALID_INPUTS = 400
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
@@ -91,11 +103,19 @@ WRITE_ERROR = "Could not write '%s' to influx due to '%s'."
 QUERY_ERROR = (
     "Could not execute query '%s' due to '%s'. Check the syntax of your query."
 )
-RETRY_MESSAGE = f"Retrying again in {RETRY_INTERVAL} seconds."
-CONNECTION_ERROR_WITH_RETRY = f"{CONNECTION_ERROR} {RETRY_MESSAGE}"
-CLIENT_ERROR_V1_WITH_RETRY = f"{CLIENT_ERROR_V1} {RETRY_MESSAGE}"
-CLIENT_ERROR_V2_WITH_RETRY = f"{CLIENT_ERROR_V2} {RETRY_MESSAGE}"
-
+RETRY_MESSAGE = f"%s Retrying in {RETRY_INTERVAL} seconds."
+CATCHING_UP_MESSAGE = "Catching up, dropped %d old events."
+RESUMED_MESSAGE = "Resumed, lost %d events."
+WROTE_MESSAGE = "Wrote %d events."
+RUNNING_QUERY_MESSAGE = "Running query: %s."
+QUERY_NO_RESULTS_MESSAGE = "Query returned no results, sensor state set to UNKNOWN: %s."
+QUERY_MULTIPLE_RESULTS_MESSAGE = (
+    "Query returned multiple results, only value from first one is shown: %s."
+)
+RENDERING_QUERY_MESSAGE = "Rendering query: %s."
+RENDERING_QUERY_ERROR_MESSAGE = "Could not render query template: %s."
+RENDERING_WHERE_MESSAGE = "Rendering where: %s."
+RENDERING_WHERE_ERROR_MESSAGE = "Could not render where template: %s."
 
 COMPONENT_CONFIG_SCHEMA_CONNECTION = {
     # Connection config for V1 and V2 APIs.

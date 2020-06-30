@@ -1227,6 +1227,13 @@ async def test_event_listener_attribute_name_conflict(
             influxdb.exceptions.InfluxDBClientError("fail"),
         ),
         (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+            influxdb.exceptions.InfluxDBServerError("fail"),
+        ),
+        (
             influxdb.API_VERSION_2,
             BASE_V2_CONFIG,
             _get_write_api_mock_v2,
