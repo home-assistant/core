@@ -11,7 +11,13 @@ from homeassistant.core import Context
 from homeassistant.helpers import entity, entity_registry
 
 from tests.async_mock import MagicMock, PropertyMock, patch
-from tests.common import get_test_home_assistant, mock_registry
+from tests.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    get_test_home_assistant,
+    mock_registry,
+)
 
 
 def test_generate_entity_id_requires_hass_or_ids():
@@ -690,3 +696,31 @@ async def test_warn_slow_write_state_custom_component(hass, caplog):
         "(<class 'custom_components.bla.sensor.test_warn_slow_write_state_custom_component.<locals>.CustomComponentEntity'>) "
         "took 10.000 seconds. Please report it to the custom component author."
     ) in caplog.text
+
+
+async def test_setup_source(hass):
+    """Check that we register sources correctly."""
+    platform = MockEntityPlatform(hass)
+
+    entity_platform = MockEntity(name="Platform Config Source")
+    await platform.async_add_entities([entity_platform])
+
+    platform.config_entry = MockConfigEntry()
+    entity_entry = MockEntity(name="Config Entry Source")
+    await platform.async_add_entities([entity_entry])
+
+    assert entity.entity_sources(hass) == {
+        "test_domain.platform_config_source": {
+            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "domain": "test_platform",
+        },
+        "test_domain.config_entry_source": {
+            "source": entity.SOURCE_CONFIG_ENTRY,
+            "config_entry": platform.config_entry.entry_id,
+            "domain": "test_platform",
+        },
+    }
+
+    await platform.async_reset()
+
+    assert entity.entity_sources(hass) == {}

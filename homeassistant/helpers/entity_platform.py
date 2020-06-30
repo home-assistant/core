@@ -6,7 +6,7 @@ from logging import Logger
 from types import ModuleType
 from typing import TYPE_CHECKING, Callable, Coroutine, Dict, Iterable, List, Optional
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant import config_entries
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -60,7 +60,7 @@ class EntityPlatform:
         self.platform = platform
         self.scan_interval = scan_interval
         self.entity_namespace = entity_namespace
-        self.config_entry: Optional[ConfigEntry] = None
+        self.config_entry: Optional[config_entries.ConfigEntry] = None
         self.entities: Dict[str, Entity] = {}  # pylint: disable=used-before-assignment
         self._tasks: List[asyncio.Future] = []
         # Method to cancel the state change listener
@@ -149,7 +149,7 @@ class EntityPlatform:
 
         await self._async_setup_platform(async_create_setup_task)
 
-    async def async_setup_entry(self, config_entry: ConfigEntry) -> bool:
+    async def async_setup_entry(self, config_entry: config_entries.ConfigEntry) -> bool:
         """Set up the platform from a config entry."""
         # Store it so that we can save config entry ID in entity registry
         self.config_entry = config_entry
