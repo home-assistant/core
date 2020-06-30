@@ -5,6 +5,7 @@ from pybecker.becker import Becker
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
     CONF_CHANNEL,
@@ -24,37 +25,6 @@ PAIR_SCHEMA = vol.Schema(
         vol.Optional(CONF_UNIT): vol.All(int, vol.Range(min=1, max=5)),
     }
 )
-
-
-async def async_setup_entry(hass, entry):
-    """Establish connection with Becker Centronic."""
-    conf = entry.data
-
-    stick_path = conf[CONF_DEVICE]
-    # if stick_path is not set in integration try to get it from configuration
-    if not stick_path:
-        stick_path = hass.data[DOMAIN][CONF_DEVICE]
-
-    _LOGGER.debug("Setting Centronic stick on port {stick_path}")
-    becker = BeckerConnection(stick_path)
-
-    if not becker:
-        return False
-
-    for _ in range(2):
-        _LOGGER.debug("Init call to cover channel 1")
-        await becker.connection.stop("1")
-
-    hass.data[DOMAIN]["connector"] = becker.connection
-
-    hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: becker})
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "cover")
-    )
-
-    hass.services.async_register(DOMAIN, "pair", becker.handle_pair, PAIR_SCHEMA)
-    hass.services.async_register(DOMAIN, "log_units", becker.handle_log_units)
-    return True
 
 
 async def async_setup(hass, config):
@@ -82,6 +52,37 @@ async def async_setup(hass, config):
                 DOMAIN, context={"source": SOURCE_IMPORT}, data={"cover": cover_conf}
             )
         )
+    return True
+
+
+async def async_setup_entry(hass, entry):
+    """Establish connection with Becker Centronic."""
+    conf = entry.data
+
+    stick_path = conf[CONF_DEVICE]
+    # if stick_path is not set in integration try to get it from configuration
+    if not stick_path:
+        stick_path = hass.data[DOMAIN][CONF_DEVICE]
+
+    _LOGGER.debug("Setting Centronic stick on port {stick_path}")
+    becker = BeckerConnection(stick_path)
+
+    if not becker:
+        raise ConfigEntryNotReady
+
+    for _ in range(2):
+        _LOGGER.debug("Init call to cover channel 1")
+        await becker.connection.stop("1")
+
+    hass.data[DOMAIN]["connector"] = becker.connection
+
+    hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: becker})
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, "cover")
+    )
+
+    hass.services.async_register(DOMAIN, "pair", becker.handle_pair, PAIR_SCHEMA)
+    hass.services.async_register(DOMAIN, "log_units", becker.handle_log_units)
     return True
 
 
