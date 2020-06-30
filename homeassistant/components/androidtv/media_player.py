@@ -44,7 +44,7 @@ from homeassistant.const import (
     STATE_STANDBY,
 )
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.storage import STORAGE_DIR
 
 ANDROIDTV_DOMAIN = "androidtv"
@@ -103,6 +103,7 @@ DEVICE_CLASSES = [DEFAULT_DEVICE_CLASS, DEVICE_ANDROIDTV, DEVICE_FIRETV]
 
 SERVICE_ADB_COMMAND = "adb_command"
 SERVICE_DOWNLOAD = "download"
+SERVICE_LEARN_SENDEVENT = "learn_sendevent"
 SERVICE_UPLOAD = "upload"
 
 SERVICE_ADB_COMMAND_SCHEMA = vol.Schema(
@@ -115,6 +116,10 @@ SERVICE_DOWNLOAD_SCHEMA = vol.Schema(
         vol.Required(ATTR_DEVICE_PATH): cv.string,
         vol.Required(ATTR_LOCAL_PATH): cv.string,
     }
+)
+
+SERVICE_LEARN_SENDEVENT_SCHEMA = vol.Schema(
+    {vol.Required(ATTR_ENTITY_ID): cv.entity_ids}
 )
 
 SERVICE_UPLOAD_SCHEMA = vol.Schema(
@@ -161,7 +166,36 @@ ANDROIDTV_STATES = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_androidtv(hass, config):
+    """Generate an ADB key (if needed) and connect to the Android TV / Fire TV."""
+    adbkey = config.get(CONF_ADBKEY, hass.config.path(STORAGE_DIR, "androidtv_adbkey"))
+    if CONF_ADB_SERVER_IP not in config:
+        # Use "adb_shell" (Python ADB implementation)
+        if not os.path.isfile(adbkey):
+            # Generate ADB key files
+            keygen(adbkey)
+
+        adb_log = f"using Python ADB implementation with adbkey='{adbkey}'"
+
+    else:
+        # Use "pure-python-adb" (communicate with ADB server)
+        adb_log = f"using ADB server at {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
+
+    aftv = setup(
+        config[CONF_HOST],
+        config[CONF_PORT],
+        adbkey,
+        config.get(CONF_ADB_SERVER_IP, ""),
+        config[CONF_ADB_SERVER_PORT],
+        config[CONF_STATE_DETECTION_RULES],
+        config[CONF_DEVICE_CLASS],
+        10.0,
+    )
+
+    return aftv, adb_log
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Android TV / Fire TV platform."""
     hass.data.setdefault(ANDROIDTV_DOMAIN, {})
 
@@ -171,51 +205,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.warning("Platform already setup on %s, skipping", address)
         return
 
-    if CONF_ADB_SERVER_IP not in config:
-        # Use "adb_shell" (Python ADB implementation)
-        if CONF_ADBKEY not in config:
-            # Generate ADB key files (if they don't exist)
-            adbkey = hass.config.path(STORAGE_DIR, "androidtv_adbkey")
-            if not os.path.isfile(adbkey):
-                keygen(adbkey)
-
-            adb_log = f"using Python ADB implementation with adbkey='{adbkey}'"
-
-            aftv = setup(
-                config[CONF_HOST],
-                config[CONF_PORT],
-                adbkey,
-                device_class=config[CONF_DEVICE_CLASS],
-                state_detection_rules=config[CONF_STATE_DETECTION_RULES],
-                auth_timeout_s=10.0,
-            )
-
-        else:
-            adb_log = (
-                f"using Python ADB implementation with adbkey='{config[CONF_ADBKEY]}'"
-            )
-
-            aftv = setup(
-                config[CONF_HOST],
-                config[CONF_PORT],
-                config[CONF_ADBKEY],
-                device_class=config[CONF_DEVICE_CLASS],
-                state_detection_rules=config[CONF_STATE_DETECTION_RULES],
-                auth_timeout_s=10.0,
-            )
-
-    else:
-        # Use "pure-python-adb" (communicate with ADB server)
-        adb_log = f"using ADB server at {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
-
-        aftv = setup(
-            config[CONF_HOST],
-            config[CONF_PORT],
-            adb_server_ip=config[CONF_ADB_SERVER_IP],
-            adb_server_port=config[CONF_ADB_SERVER_PORT],
-            device_class=config[CONF_DEVICE_CLASS],
-            state_detection_rules=config[CONF_STATE_DETECTION_RULES],
-        )
+    aftv, adb_log = await hass.async_add_executor_job(setup_androidtv, hass, config)
 
     if not aftv.available:
         # Determine the name that will be used for the device in the log
@@ -251,12 +241,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         device = FireTVDevice(*device_args)
         device_name = config.get(CONF_NAME, "Fire TV")
 
-    add_entities([device])
+    async_add_entities([device])
     _LOGGER.debug("Setup %s at %s %s", device_name, address, adb_log)
     hass.data[ANDROIDTV_DOMAIN][address] = device
 
     if hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_ADB_COMMAND):
         return
+
+    platform = entity_platform.current_platform.get()
 
     def service_adb_command(service):
         """Dispatch service calls to target entities."""
@@ -280,11 +272,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     output,
                 )
 
-    hass.services.register(
+    hass.services.async_register(
         ANDROIDTV_DOMAIN,
         SERVICE_ADB_COMMAND,
         service_adb_command,
         schema=SERVICE_ADB_COMMAND_SCHEMA,
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_LEARN_SENDEVENT, SERVICE_LEARN_SENDEVENT_SCHEMA, "learn_sendevent",
     )
 
     def service_download(service):
@@ -304,7 +300,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         target_device.adb_pull(local_path, device_path)
 
-    hass.services.register(
+    hass.services.async_register(
         ANDROIDTV_DOMAIN,
         SERVICE_DOWNLOAD,
         service_download,
@@ -329,7 +325,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for target_device in target_devices:
             target_device.adb_push(local_path, device_path)
 
-    hass.services.register(
+    hass.services.async_register(
         ANDROIDTV_DOMAIN, SERVICE_UPLOAD, service_upload, schema=SERVICE_UPLOAD_SCHEMA
     )
 
@@ -586,6 +582,20 @@ class ADBDevice(MediaPlayerEntity):
 
         self.schedule_update_ha_state()
         return self._adb_response
+
+    @adb_decorator()
+    def learn_sendevent(self):
+        """Translate a key press on a remote to ADB 'sendevent' commands."""
+        output = self.aftv.learn_sendevent()
+        if output:
+            self._adb_response = output
+            self.schedule_update_ha_state()
+
+            msg = f"Output from service '{SERVICE_LEARN_SENDEVENT}' from {self.entity_id}: '{output}'"
+            self.hass.components.persistent_notification.async_create(
+                msg, title="Android TV"
+            )
+            _LOGGER.info("%s", msg)
 
     @adb_decorator()
     def adb_pull(self, local_path, device_path):
