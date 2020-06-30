@@ -196,11 +196,6 @@ class DeconzGateway:
         }
         return new_device[device_type]
 
-    @property
-    def signal_remove_entity(self) -> str:
-        """Gateway specific event to signal removal of entity."""
-        return f"deconz-remove-{self.bridgeid}"
-
     @callback
     def async_add_device_callback(self, device_type, device) -> None:
         """Handle event of new device creation in deCONZ."""
