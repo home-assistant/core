@@ -1,0 +1,96 @@
+{
+  "title": "Exta Life",
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "Czy chcesz skonfigurować teraz integrację Exta Life oraz wyszukać swoje urządzenia z tej serii?",
+        "title": "Połączenie z kontrolerem EFC-01"
+      },
+      "init": {
+        "title": "Wprowadź dane do podłączenia z kontrolerem EFC-01",
+        "description": "Twoje urządzenia Exta Life zostaną wyszukane po podłączeniu do kontrolera EFC-01\n\n {error_info} ",
+        "data": {
+          "user": "Użytkownik",
+          "password": "Hasło",
+          "controller_ip": "IP kontrolera EFC-01",
+          "poll_interval": "Interwał czasowy do odpytywania o aktualny stan urządzeń"
+        }
+      },
+      "title": {
+        "title": "Nazwij tą konfiguracje (opcjonalne)",
+        "description": "Opcjonalnie nadaj nazwę tej konfiguracji e.g. Dom, Mieszkanie, Domek letniskowy lub pozostaw nazwę pustą. Dymyślnie zostanie użyta nazwa odczytana z kontrolera. Nazwa pomoże rozróżnic konfiguracje zdefiniowane dla wielu kontrolerów.",
+        "data": {
+          "title": "Nazwa"
+        }
+      }
+    },
+    "error": {
+      "extalife_no_connection": "Nie można było połączyć z kontrolerem EFC-01. Sprawdź adres IP, nazwę użytkownika i hasło",
+      "extalife_invalid_cred": "Nieprawidłowa nazwa użytkownika lub hasło. Popraw dane i spróbuj ponownie"
+    }
+  },
+  "options": {
+    "step": {
+      "light": {
+        "description": "Ustawienia dla encji świateł (platforma: light)",
+        "data": {
+          "icons_list": "Lista numerów ikon urządzeń ROP/ROM, które będą oznaczać, że urządzenie z numerem ikony ma być odzwierciedlone jako światło (platforma light) w Home Assistant"
+        }
+      },
+      "cover": {
+        "description": "Ustawienia dla rolet",
+        "data": {
+          "inverted_control": "Odróć sterowanie roletami w GUI Home Assistant (suwak w pozycji 100 oznacza roletę zamkniętą), aby przypominało sterowanie z aplikacji Exta Life"
+        }
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "button_up": "{subtype} zwolniony",
+      "button_down": "{subtype} wciśnięty",
+      "button_single_click": "{subtype} kliknięty (wciśnięty i zwolniony)",
+      "button_double_click": "{subtype} podwójnie wciśnięty ('dwuklik')",
+      "button_triple_click": "{subtype} potrójnie wciśnięty ('trójklik')",
+      "button_long_press": "{subtype} długo przytrzymany"
+    },
+    "trigger_subtype": {
+      "button_1": "Przycisk 1",
+      "button_2": "Przycisk 2",
+      "button_3": "Przycisk 3",
+      "button_4": "Przycisk 4",
+      "button_5": "Przycisk 5",
+      "button_6": "Przycisk 6",
+      "button_7": "Przycisk 7",
+      "button_8": "Przycisk 8",
+      "button_9": "Przycisk 9",
+      "button_10": "Przycisk 10",
+      "button_11": "Przycisk 11",
+      "button_12": "Przycisk 12",
+      "button_13": "Przycisk 13",
+      "button_14": "Przycisk 14",
+      "button_15": "Przycisk 15",
+      "button_16": "Przycisk 16",
+      "button_17": "Przycisk 17",
+      "button_18": "Przycisk 18",
+      "button_19": "Przycisk 19",
+      "button_20": "Przycisk 20",
+      "button_21": "Przycisk 21",
+      "button_22": "Przycisk 22",
+      "button_23": "Przycisk 23",
+      "button_24": "Przycisk 24",
+      "button_25": "Przycisk 25",
+      "button_26": "Przycisk 26",
+      "button_27": "Przycisk 27",
+      "button_28": "Przycisk 28",
+      "button_29": "Przycisk 29",
+      "button_30": "Przycisk 30",
+      "button_31": "Przycisk 31",
+      "button_32": "Przycisk 32",
+      "button_33": "Przycisk 33",
+      "button_34": "Przycisk 34",
+      "button_35": "Przycisk 35",
+      "button_36": "Przycisk 36"
+    }
+  }
+}
