@@ -24,7 +24,6 @@ from .core.const import (
     SIGNAL_GROUP_ENTITY_REMOVED,
     SIGNAL_GROUP_MEMBERSHIP_CHANGE,
     SIGNAL_REMOVE,
-    SIGNAL_REMOVE_GROUP,
 )
 from .core.helpers import LogMixin
 from .core.typing import CALLABLE_T, ChannelType, ZhaDeviceType
@@ -232,12 +231,6 @@ class ZhaGroupEntity(BaseZhaEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
-        self.async_accept_signal(
-            None,
-            f"{SIGNAL_REMOVE_GROUP}_0x{self._group_id:04x}",
-            self.async_remove,
-            signal_override=True,
-        )
 
         self.async_accept_signal(
             None,
