@@ -50,10 +50,10 @@ def closest(
     )
 
 
-def coordinates(
+def find_coordinates(
     hass: HomeAssistantType, entity_id: str, recursion_history: Optional[list] = None
 ) -> Optional[str]:
-    """Get the location from the entity state or attributes."""
+    """Find the gps coordinates of the entity in the form of '90.000,180.000'."""
     entity = hass.states.get(entity_id)
 
     if entity is None:
@@ -86,7 +86,7 @@ def coordinates(
     nested_entity = hass.states.get(entity.state)
     if nested_entity is not None:
         _LOGGER.debug("Resolving nested entity_id: %s", entity.state)
-        return coordinates(hass, entity.state, recursion_history)
+        return find_coordinates(hass, entity.state, recursion_history)
 
     # Check if state is valid coordinate set
     try:
