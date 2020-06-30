@@ -1,6 +1,5 @@
-{
+{   "title": "AIS Google Home",
     "config": {
-        "title": "AIS Google Home",
         "step": {
             "confirm": {
                   "description": "![AIS logo](/static/icons/ais_google_home.png)\n\nTa integracja pozwala na wysyłanie poleceń do Asystenta Google oraz na wysyłanie powiadomień audio do urządzeń Google Home, bez przerywania muzyki.\n\n Czy chcesz skonfigurować integrację AIS Google Home?",

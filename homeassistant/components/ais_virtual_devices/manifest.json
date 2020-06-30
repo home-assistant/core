@@ -1,10 +1,10 @@
 {
-  "domain": "ais_ingress",
-  "name": "AIS Ingress Proxy",
+  "domain": "ais_virtual_devices",
+  "name": "AIS virtual devices",
   "config_flow": false,
   "documentation": "https://www.ai-speaker.com",
   "issue_tracker": "https://github.com/sviete/AIS-home-assistant",
   "requirements": [],
-  "dependencies": ["http"],
+  "dependencies": [],
   "codeowners": []
 }

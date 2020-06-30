@@ -1,6 +1,5 @@
-{
+{   "title": "AIS Service Drives",
     "config": {
-        "title": "AIS Service Drives",
         "step": {
             "confirm": {
                   "description": "![AIS logo](/static/icons/cloud_drive.png)\n\nDo you want to configure a new remote disk?",

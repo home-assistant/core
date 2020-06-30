@@ -1,6 +1,6 @@
 {
+    "title": "AIS TAURON",
     "config": {
-        "title": "AIS TAURON",
         "step": {
             "init": {
                 "title": "Wprowadź parametry połączenia do TAURON eLicznik.",

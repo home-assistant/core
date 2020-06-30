@@ -1,6 +1,5 @@
-{
+{   "title": "AIS Zmiana Nazwy Hosta",
     "config": {
-        "title": "AIS Zmiana Nazwy Hosta",
         "step": {
             "init": {
                 "title": "Podaj nową nazwę hosta",

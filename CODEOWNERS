@@ -19,6 +19,7 @@ homeassistant/components/adguard/* @frenck
 homeassistant/components/agent_dvr/* @ispysoftware
 homeassistant/components/airly/* @bieniu
 homeassistant/components/airvisual/* @bachya
+homeassistant/components/ais_cloud/* @ai-speaker
 homeassistant/components/ais_supla/* @araczkowski
 homeassistant/components/ais_tauron/* @araczkowski
 homeassistant/components/alarmdecoder/* @ajschmidt8
@@ -124,6 +125,7 @@ homeassistant/components/eq3btsmart/* @rytilahti
 homeassistant/components/esphome/* @OttoWinter
 homeassistant/components/essent/* @TheLastProject
 homeassistant/components/evohome/* @zxdavb
+homeassistant/components/extalife/* @dgtal1
 homeassistant/components/ezviz/* @baqs
 homeassistant/components/fastdotcom/* @rohankapoorcom
 homeassistant/components/file/* @fabaff

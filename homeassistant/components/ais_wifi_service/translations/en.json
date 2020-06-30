@@ -1,6 +1,6 @@
 {
+    "title": "AIS Konfiguracja połączenia WiFi",
     "config": {
-      "title": "AIS Konfiguracja połączenia WiFi",
       "step": {
         "confirm": {
           "title": "Konfiguracja połączenia WiFi",

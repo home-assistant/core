@@ -1,7 +1,7 @@
 {
   "domain": "ais_supla",
   "name": "AIS Supla",
-  "documentation": "https://www.home-assistant.io/components/supla",
+  "documentation": "https://www.home-assistant.io/integrations/supla",
   "issue_tracker": "https://github.com/sviete/AIS-home-assistant",
   "config_flow": true,
   "requirements": [

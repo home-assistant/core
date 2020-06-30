@@ -1,6 +1,5 @@
-{
+{   "title": "AIS custom host name",
     "config": {
-        "title": "AIS custom host name",
         "step": {
             "init": {
                 "title": "Define new AIS host name",

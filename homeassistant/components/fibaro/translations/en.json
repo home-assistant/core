@@ -1,6 +1,6 @@
 {
+    "title": "AIS Fibaro",
     "config": {
-        "title": "AIS Fibaro",
         "step": {
             "confirm": {
                   "description": "![AIS logo](/static/icons/ais_fibaro.png)\n\nTa integracja pozwala na połączenie Fibaro Hub do Asystenta domowego.\n\n Czy chcesz skonfigurować integrację AIS Fibaro?",

@@ -1,6 +1,6 @@
 {
+    "title": "AIS SUPLA",
     "config": {
-        "title": "AIS SUPLA",
         "step": {
             "init": {
                 "title": "Enter the connection parameters to the Supla server",
