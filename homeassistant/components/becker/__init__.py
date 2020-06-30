@@ -98,7 +98,7 @@ class BeckerConnection:
     async def handle_pair(self, call):
         """Service to pair with a cover receiver."""
 
-        channel = call.data.get(CONF_CHANNEL)
+        channel = call.data[CONF_CHANNEL]
         unit = call.data.get(CONF_UNIT, 1)
         await self.connection.pair(f"{unit}:{channel}")
 
