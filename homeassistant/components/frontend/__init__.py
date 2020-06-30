@@ -45,7 +45,7 @@ DEFAULT_THEME_COLOR = "#FF9800"
 
 MANIFEST_JSON = {
     "background_color": "#4c4c4c",
-    "description": "Home automation platform that puts local control and privacy first.",
+    "description": "Platforma automatyki domowej, która stawia lokalną kontrolę i prywatność na pierwszym miejscu.",
     "dir": "ltr",
     "display": "standalone",
     "icons": [
@@ -57,9 +57,9 @@ MANIFEST_JSON = {
         }
         for size in (192, 384, 512, 1024)
     ],
-    "lang": "en-US",
-    "name": "Home Assistant",
-    "short_name": "Assistant",
+    "lang": "pl-PL",
+    "name": "Asystent domowy",
+    "short_name": "AIS",
     "start_url": "/?homescreen=1",
     "theme_color": DEFAULT_THEME_COLOR,
     "prefer_related_applications": True,
