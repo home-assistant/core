@@ -1,5 +1,8 @@
 """Tests for the Broadlink integration."""
+from homeassistant.components.broadlink.const import DOMAIN
+
 from tests.async_mock import MagicMock
+from tests.common import MockConfigEntry
 
 
 class BroadlinkDevice:
@@ -24,6 +27,12 @@ class BroadlinkDevice:
         mock_device.cloud = False
         mock_device.auth.return_value = True
         return mock_device
+
+    def get_mock_entry(self):
+        """Return a mock config entry."""
+        return MockConfigEntry(
+            domain=DOMAIN, unique_id=self.mac, data=self.get_entry_data()
+        )
 
     def get_entry_data(self):
         """Return entry data."""

@@ -68,7 +68,7 @@ async def test_flow_user_works(hass):
 
 
 async def test_flow_user_already_in_progress(hass):
-    """Test we do not accept more than one config flow for the same host."""
+    """Test we do not accept more than one config flow per device."""
     device = pick_device(0)
 
     result = await hass.config_entries.flow.async_init(
@@ -91,6 +91,38 @@ async def test_flow_user_already_in_progress(hass):
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_in_progress"
+
+
+async def test_flow_user_device_is_unique(hass):
+    """Test we do not accept more than one config entry per device."""
+    device = pick_device(0)
+    mock_entry = device.get_mock_entry()
+    mock_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    device.host = "192.168.1.240"  # The IP address has changed.
+    mock_device = device.get_mock_api()
+
+    with patch("broadlink.discover", return_value=[mock_device]):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": device.host},
+        )
+
+    with patch(
+        "homeassistant.components.broadlink.async_unload_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"name": device.name},
+        )
+
+    configured_macs = [
+        entry.data.get("mac") for entry in hass.config_entries.async_entries(DOMAIN)
+    ]
+
+    assert len(configured_macs) == len(set(configured_macs))
 
 
 async def test_flow_user_invalid_ip_address(hass):
