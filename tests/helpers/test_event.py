@@ -91,12 +91,14 @@ async def test_track_state_change(hass):
     def specific_run_callback(entity_id, old_state, new_state):
         specific_runs.append(1)
 
+    # This is the rare use case
     async_track_state_change(hass, "light.Bowl", specific_run_callback, "on", "off")
 
     @ha.callback
     def wildcard_run_callback(entity_id, old_state, new_state):
         wildcard_runs.append((old_state, new_state))
 
+    # This is the most common use case
     async_track_state_change(hass, "light.Bowl", wildcard_run_callback)
 
     async def wildercard_run_callback(entity_id, old_state, new_state):
