@@ -1,5 +1,5 @@
 """The tests for the Prometheus exporter."""
-from collections import namedtuple
+from dataclasses import dataclass
 
 import pytest
 
@@ -20,6 +20,14 @@ from homeassistant.setup import async_setup_component
 import tests.async_mock as mock
 
 PROMETHEUS_PATH = "homeassistant.components.prometheus"
+
+
+@dataclass
+class FilterTest:
+    """Class for capturing a filter test."""
+
+    id: str
+    should_pass: bool
 
 
 @pytest.fixture
@@ -200,9 +208,6 @@ async def test_full_config(hass, mock_client):
     await hass.async_block_till_done()
     assert hass.bus.listen.called
     assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
-
-
-FilterTest = namedtuple("FilterTest", "id should_pass")
 
 
 def make_event(entity_id):
