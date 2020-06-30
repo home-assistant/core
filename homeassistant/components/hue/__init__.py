@@ -114,7 +114,8 @@ async def async_setup_entry(
             **entry.options,
             CONF_ALLOW_UNREACHABLE: entry.data[CONF_ALLOW_UNREACHABLE],
         }
-        data = entry.data.copy().pop(CONF_ALLOW_UNREACHABLE)
+        data = entry.data.copy()
+        data.pop(CONF_ALLOW_UNREACHABLE)
         hass.config_entries.async_update_entry(entry, data=data, options=options)
 
     # Migrate allow_hue_groups from config entry data to config entry options
@@ -127,7 +128,8 @@ async def async_setup_entry(
             **entry.options,
             CONF_ALLOW_HUE_GROUPS: entry.data[CONF_ALLOW_HUE_GROUPS],
         }
-        data = entry.data.copy().pop(CONF_ALLOW_HUE_GROUPS)
+        data = entry.data.copy()
+        data.pop(CONF_ALLOW_HUE_GROUPS)
         hass.config_entries.async_update_entry(entry, data=data, options=options)
 
     # Overwrite from YAML configuration
