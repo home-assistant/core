@@ -1,6 +1,4 @@
 """Offer geolocation automation rules."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.geo_location import DOMAIN
@@ -14,8 +12,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.config_validation import entity_domain
-
-_LOGGER = logging.getLogger(__name__)
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -87,5 +83,4 @@ async def async_attach_trigger(hass, config, action, automation_info):
                 )
             )
 
-    _LOGGER.warning("register EVENT_STATE_CHANGED: %s", config)
     return hass.bus.async_listen(EVENT_STATE_CHANGED, state_change_listener)
