@@ -78,7 +78,7 @@ def find_coordinates(
     recursion_history.append(entity_id)
     if entity.state in recursion_history:
         _LOGGER.error(
-            "Circular Reference detected. The state of %s has already been checked.",
+            "Circular reference detected while trying to find coordinates of an entity. The state of %s has already been checked.",
             entity.state,
         )
         return None
