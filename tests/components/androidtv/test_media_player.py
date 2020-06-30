@@ -16,6 +16,7 @@ from homeassistant.components.androidtv.media_player import (
     KEYS,
     SERVICE_ADB_COMMAND,
     SERVICE_DOWNLOAD,
+    SERVICE_LEARN_SENDEVENT,
     SERVICE_UPLOAD,
 )
 from homeassistant.components.media_player.const import (
@@ -848,6 +849,34 @@ async def test_adb_command_get_properties(hass):
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.attributes["adb_response"] == str(response)
+
+
+async def test_learn_sendevent(hass):
+    """Test the `androidtv.learn_sendevent` service."""
+    patch_key = "server"
+    entity_id = "media_player.android_tv"
+    response = "sendevent 1 2 3 4"
+
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell("")[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
+        await hass.async_block_till_done()
+
+        with patch(
+            "androidtv.basetv.BaseTV.learn_sendevent", return_value=response
+        ) as patch_learn_sendevent:
+            await hass.services.async_call(
+                ANDROIDTV_DOMAIN,
+                SERVICE_LEARN_SENDEVENT,
+                {ATTR_ENTITY_ID: entity_id},
+                blocking=True,
+            )
+
+            patch_learn_sendevent.assert_called()
+            state = hass.states.get(entity_id)
+            assert state is not None
+            assert state.attributes["adb_response"] == response
 
 
 async def test_update_lock_not_acquired(hass):
