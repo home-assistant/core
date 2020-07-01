@@ -8,6 +8,8 @@ from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
     STATE_OK,
     STATE_PROBLEM,
+    TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -25,19 +27,19 @@ SENSORS = {
     },
     "pH": {"unit": "", "icon": "mdi:pool", "name": "pH", "device_class": None},
     "Battery": {
-        "unit": "%",
+        "unit": UNIT_PERCENTAGE,
         "icon": "mdi:battery",
         "name": "Battery",
         "device_class": DEVICE_CLASS_BATTERY,
     },
     "Water Temp": {
-        "unit": "°C",
+        "unit": TEMP_CELSIUS,
         "icon": "mdi:coolant-temperature",
         "name": "Temperature",
         "device_class": DEVICE_CLASS_TEMPERATURE,
     },
     "Last Seen": {
-        "unit": "",
+        "unit": None,
         "icon": "mdi:clock",
         "name": "Last Seen",
         "device_class": DEVICE_CLASS_TIMESTAMP,
@@ -73,7 +75,7 @@ SENSORS = {
         "device_class": None,
     },
     "Chlorine Status": {
-        "unit": "",
+        "unit": None,
         "icon": "mdi:pool",
         "name": "Chlorine Status",
         "device_class": None,
@@ -142,7 +144,7 @@ class PoolSenseSensor(Entity):
         """Return the icon."""
         if self.info_type == "pH Status":
             if self.coordinator.data[self.info_type] == "red":
-                return "mdi: thumb-down"
+                return "mdi:thumb-down"
             return "mdi:thumb-up"
         if self.info_type == "Chlorine Status":
             if self.coordinator.data[self.info_type] == "red":

@@ -7,7 +7,6 @@
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "serial": "Serial"
         }
       }
     },

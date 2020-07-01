@@ -2,7 +2,7 @@
 from homeassistant import data_entry_flow
 from homeassistant.components.poolsense.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 from tests.async_mock import patch
 
@@ -28,7 +28,6 @@ async def test_invalid_credentials(hass):
             data={
                 CONF_EMAIL: "test-email",
                 CONF_PASSWORD: "test-password",
-                CONF_TOKEN: "",
             },
         )
 
@@ -51,7 +50,6 @@ async def test_valid_credentials(hass):
             data={
                 CONF_EMAIL: "test-email",
                 CONF_PASSWORD: "test-password",
-                CONF_TOKEN: "",
             },
         )
 

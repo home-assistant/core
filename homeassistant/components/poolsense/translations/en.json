@@ -5,10 +5,8 @@
                 "title": "PoolSense",
                 "description": "Set up PoolSense integration. Register on the dedicated app to get your username and password. Serial is optional.",
                 "data": {
-                    "host": "Host",
                     "email": "Email",
                     "password": "Password",
-                    "serial": "Serial"
                 }
             }
         },
