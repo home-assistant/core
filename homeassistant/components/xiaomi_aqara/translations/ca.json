@@ -25,6 +25,7 @@
                     "key": "Clau de la passarel\u00b7la",
                     "name": "Nom de la passarel\u00b7la"
                 },
+                "description": "La clau (contrasenya) es pot obtenir mitjan\u00e7ant aquest tutorial: https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz. Si no es proporciona la clau, nom\u00e9s seran accessibles els sensors",
                 "title": "Passarel\u00b7la Xiaomi Aqara, configuraci\u00f3 opcional"
             },
             "user": {
