@@ -17,6 +17,7 @@ from homeassistant.components.homekit.const import (
     PROP_MIN_STEP,
     PROP_MIN_VALUE,
 )
+from homeassistant.components.homekit.type_humidifiers import HumidifierDehumidifier
 from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
@@ -37,6 +38,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    UNIT_PERCENTAGE,
 )
 
 from tests.common import async_mock_service
@@ -48,7 +50,9 @@ async def test_humidifier(hass, hk_driver, events):
 
     hass.states.async_set(entity_id, STATE_OFF)
     await hass.async_block_till_done()
-    acc = cls.hygrostat(hass, hk_driver, "HumidifierDehumidifier", entity_id, 1, None)
+    acc = HumidifierDehumidifier(
+        hass, hk_driver, "HumidifierDehumidifier", entity_id, 1, None
+    )
     hk_driver.add_accessory(acc)
 
     await acc.run_handler()
@@ -58,7 +62,7 @@ async def test_humidifier(hass, hk_driver, events):
     assert acc.category == CATEGORY_HUMIDIFIER
 
     assert acc.char_current_humidifier_dehumidifier.value == 0
-    assert acc.char_target_humidifier_dehumidifier.value == 0
+    assert acc.char_target_humidifier_dehumidifier.value == 1
     assert acc.char_current_humidity.value == 0
     assert acc.char_target_humidity.value == 45.0
     assert acc.char_active.value == 0
@@ -122,7 +126,9 @@ async def test_dehumidifier(hass, hk_driver, events):
         entity_id, STATE_OFF, {ATTR_DEVICE_CLASS: DEVICE_CLASS_DEHUMIDIFIER}
     )
     await hass.async_block_till_done()
-    acc = cls.hygrostat(hass, hk_driver, "HumidifierDehumidifier", entity_id, 1, None)
+    acc = HumidifierDehumidifier(
+        hass, hk_driver, "HumidifierDehumidifier", entity_id, 1, None
+    )
     hk_driver.add_accessory(acc)
 
     await acc.run_handler()
@@ -132,7 +138,7 @@ async def test_dehumidifier(hass, hk_driver, events):
     assert acc.category == CATEGORY_HUMIDIFIER
 
     assert acc.char_current_humidifier_dehumidifier.value == 0
-    assert acc.char_target_humidifier_dehumidifier.value == 0
+    assert acc.char_target_humidifier_dehumidifier.value == 2
     assert acc.char_current_humidity.value == 0
     assert acc.char_target_humidity.value == 45.0
     assert acc.char_active.value == 0
@@ -196,7 +202,9 @@ async def test_hygrostat_power_state(hass, hk_driver, events):
         entity_id, STATE_ON, {ATTR_HUMIDITY: 43},
     )
     await hass.async_block_till_done()
-    acc = cls.hygrostat(hass, hk_driver, "HumidifierDehumidifier", entity_id, 1, None)
+    acc = HumidifierDehumidifier(
+        hass, hk_driver, "HumidifierDehumidifier", entity_id, 1, None
+    )
     hk_driver.add_accessory(acc)
 
     await acc.run_handler()
@@ -270,7 +278,9 @@ async def test_hygrostat_get_humidity_range(hass, hk_driver):
         entity_id, STATE_OFF, {ATTR_MIN_HUMIDITY: 40, ATTR_MAX_HUMIDITY: 45}
     )
     await hass.async_block_till_done()
-    acc = cls.hygrostat(hass, hk_driver, "HumidifierDehumidifier", entity_id, 1, None)
+    acc = HumidifierDehumidifier(
+        hass, hk_driver, "HumidifierDehumidifier", entity_id, 1, None
+    )
     hk_driver.add_accessory(acc)
 
     await acc.run_handler()
@@ -287,14 +297,17 @@ async def test_humidifier_with_linked_humidity_sensor(hass, hk_driver):
     hass.states.async_set(
         humidity_sensor_entity_id,
         "42.0",
-        {ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY, ATTR_UNIT_OF_MEASUREMENT: "%"},
+        {
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
+            ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+        },
     )
     await hass.async_block_till_done()
     entity_id = "humidifier.test"
 
     hass.states.async_set(entity_id, STATE_OFF)
     await hass.async_block_till_done()
-    acc = cls.hygrostat(
+    acc = HumidifierDehumidifier(
         hass,
         hk_driver,
         "HumidifierDehumidifier",
@@ -324,7 +337,7 @@ async def test_humidifier_with_a_missing_linked_humidity_sensor(hass, hk_driver)
 
     hass.states.async_set(entity_id, STATE_OFF)
     await hass.async_block_till_done()
-    acc = cls.hygrostat(
+    acc = HumidifierDehumidifier(
         hass,
         hk_driver,
         "HumidifierDehumidifier",

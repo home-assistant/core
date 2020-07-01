@@ -51,6 +51,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     STATE_ON,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import State
 from homeassistant.helpers import device_registry
@@ -1143,7 +1144,10 @@ async def test_homekit_finds_linked_humidity_sensors(
     hass.states.async_set(
         humidity_sensor.entity_id,
         "42",
-        {ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY, ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE},
+        {
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
+            ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+        },
     )
     hass.states.async_set(humidifier.entity_id, STATE_ON)
 
