@@ -34,9 +34,9 @@ ENTITY = "humidifier.test"
 ENT_SENSOR = "sensor.test"
 ENT_SWITCH = "switch.test"
 ATTR_SAVED_HUMIDITY = "saved_humidity"
-MIN_HUMIDITY = 20.0
-MAX_HUMIDITY = 65.0
-TARGET_HUMIDITY = 42.0
+MIN_HUMIDITY = 20
+MAX_HUMIDITY = 65
+TARGET_HUMIDITY = 42
 
 
 async def test_setup_missing_conf(hass):
@@ -635,7 +635,7 @@ async def test_set_target_humidity_dry_on(hass, setup_comp_3):
 async def test_humidity_change_dry_off_within_tolerance(hass, setup_comp_3):
     """Test if humidity change doesn't turn dry off within tolerance."""
     calls = await _setup_switch(hass, True)
-    _setup_sensor(hass, 39.8)
+    _setup_sensor(hass, 39)
     await hass.async_block_till_done()
     assert 0 == len(calls)
 
@@ -643,7 +643,7 @@ async def test_humidity_change_dry_off_within_tolerance(hass, setup_comp_3):
 async def test_set_humidity_change_dry_off_outside_tolerance(hass, setup_comp_3):
     """Test if humidity change turn dry off."""
     calls = await _setup_switch(hass, True)
-    _setup_sensor(hass, 37)
+    _setup_sensor(hass, 36)
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
@@ -655,7 +655,7 @@ async def test_set_humidity_change_dry_off_outside_tolerance(hass, setup_comp_3)
 async def test_humidity_change_dry_on_within_tolerance(hass, setup_comp_3):
     """Test if humidity change doesn't turn dry on within tolerance."""
     calls = await _setup_switch(hass, False)
-    _setup_sensor(hass, 40.2)
+    _setup_sensor(hass, 41)
     await hass.async_block_till_done()
     assert 0 == len(calls)
 
@@ -712,8 +712,8 @@ async def setup_comp_4(hass):
             "humidifier": {
                 "platform": "generic_hygrostat",
                 "name": "test",
-                "dry_tolerance": 0.3,
-                "wet_tolerance": 0.3,
+                "dry_tolerance": 3,
+                "wet_tolerance": 3,
                 "humidifier": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
                 "device_class": "dehumidifier",
@@ -844,8 +844,8 @@ async def setup_comp_6(hass):
             "humidifier": {
                 "platform": "generic_hygrostat",
                 "name": "test",
-                "dry_tolerance": 0.3,
-                "wet_tolerance": 0.3,
+                "dry_tolerance": 3,
+                "wet_tolerance": 3,
                 "humidifier": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
                 "min_cycle_duration": datetime.timedelta(minutes=10),
@@ -985,8 +985,8 @@ async def setup_comp_7(hass):
             "humidifier": {
                 "platform": "generic_hygrostat",
                 "name": "test",
-                "dry_tolerance": 0.3,
-                "wet_tolerance": 0.3,
+                "dry_tolerance": 3,
+                "wet_tolerance": 3,
                 "humidifier": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
                 "device_class": "dehumidifier",
@@ -1057,8 +1057,8 @@ async def setup_comp_8(hass):
             "humidifier": {
                 "platform": "generic_hygrostat",
                 "name": "test",
-                "dry_tolerance": 0.3,
-                "wet_tolerance": 0.3,
+                "dry_tolerance": 3,
+                "wet_tolerance": 3,
                 "humidifier": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
                 "min_cycle_duration": datetime.timedelta(minutes=15),

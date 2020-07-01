@@ -184,9 +184,9 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
                 self._saved_target_humidity = self._target_humidity
                 self._target_humidity = self._away_humidity or self._target_humidity
             if old_state.attributes.get(ATTR_HUMIDITY):
-                self._target_humidity = float(old_state.attributes[ATTR_HUMIDITY])
+                self._target_humidity = int(old_state.attributes[ATTR_HUMIDITY])
             if old_state.attributes.get(ATTR_SAVED_HUMIDITY):
-                self._saved_target_humidity = float(
+                self._saved_target_humidity = int(
                     old_state.attributes[ATTR_SAVED_HUMIDITY]
                 )
             if old_state.state:
@@ -346,7 +346,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
     async def _async_update_humidity(self, humidity):
         """Update hygrostat with latest state from sensor."""
         try:
-            self._cur_humidity = float(humidity)
+            self._cur_humidity = int(round(float(humidity)))
         except ValueError as ex:
             _LOGGER.error("Unable to update from sensor: %s", ex)
             self._cur_humidity = None
