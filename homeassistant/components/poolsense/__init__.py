@@ -77,6 +77,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def get_coordinator(hass, entry):
     """Get the data update coordinator."""
+
     async def async_get_data():
         _LOGGER.info("Run query to server")
         poolsense = PoolSense()
