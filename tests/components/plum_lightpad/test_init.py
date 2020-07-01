@@ -2,10 +2,13 @@
 from unittest import mock
 
 from aiohttp import ContentTypeError
+import pytest
+from requests.exceptions import HTTPError
 
 from homeassistant.components.plum_lightpad import async_setup_entry
 from homeassistant.components.plum_lightpad.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
@@ -84,4 +87,24 @@ async def test_async_setup_entry_handles_auth_error(hass: HomeAssistant):
         result = await async_setup_entry(hass, config_entry)
 
     assert result is False
+    assert len(mock_light_async_setup_entry.mock_calls) == 0
+
+
+async def test_async_setup_entry_handles_http_error(hass: HomeAssistant):
+    """Test that configuring entry handles HTTP error."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"username": "test-plum-username", "password": "test-plum-password"},
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData",
+        side_effect=HTTPError,
+    ), patch(
+        "homeassistant.components.plum_lightpad.light.async_setup_entry"
+    ) as mock_light_async_setup_entry:
+        with pytest.raises(ConfigEntryNotReady):
+            await async_setup_entry(hass, config_entry)
+
     assert len(mock_light_async_setup_entry.mock_calls) == 0
