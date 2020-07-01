@@ -239,10 +239,13 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
         attributes["is_wired"] = self.is_wired
 
-        for variable in CLIENT_STATIC_ATTRIBUTES + CLIENT_CONNECTED_ATTRIBUTES:
+        if self.is_connected:
+            for variable in CLIENT_CONNECTED_ATTRIBUTES:
+                if variable in self.client.raw:
+                    attributes[variable] = self.client.raw[variable]
+
+        for variable in CLIENT_STATIC_ATTRIBUTES:
             if variable in self.client.raw:
-                if not self.is_connected and variable in CLIENT_CONNECTED_ATTRIBUTES:
-                    continue
                 attributes[variable] = self.client.raw[variable]
 
         return attributes
