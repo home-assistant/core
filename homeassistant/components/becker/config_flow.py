@@ -29,15 +29,17 @@ class BeckerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="one_instance_only")
 
-        fields = {}
-        fields[vol.Required(CONF_DEVICE, default=DEFAULT_CONF_USB_STICK_PATH)] = str
-
         if user_input is not None:
             return self.async_create_entry(
                 title="Becker", data={CONF_DEVICE: user_input[CONF_DEVICE]}
             )
 
-        return self.async_show_form(step_id="user", data_schema=vol.Schema(fields))
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_DEVICE, default=DEFAULT_CONF_USB_STICK_PATH): str}
+            ),
+        )
 
     async def async_step_import(self, info):
         """Import existing configuration from Becker Cover."""
