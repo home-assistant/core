@@ -123,6 +123,11 @@ class PoolSenseSensor(Entity):
         return "PoolSense {}".format(SENSORS[self.info_type]["name"])
 
     @property
+    def should_poll(self):
+        """Return False, updates are controlled via coordinator."""
+        return False
+
+    @property
     def state(self):
         """State of the sensor."""
         if self.info_type == "pH Status":
@@ -162,6 +167,10 @@ class PoolSenseSensor(Entity):
     def device_state_attributes(self):
         """Return device attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
+
+    async def async_update(self):
+        """Update status of sensor."""
+        await self._coordinator.async_request_refresh()
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
