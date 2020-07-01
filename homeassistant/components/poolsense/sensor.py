@@ -90,7 +90,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_add_entities(
         PoolSenseSensor(coordinator, config_entry.data[CONF_EMAIL], info_type)
-        )
         for info_type in SENSORS
     )
 
