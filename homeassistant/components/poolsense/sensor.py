@@ -25,7 +25,7 @@ SENSORS = {
         "name": "Chlorine",
         "device_class": None,
     },
-    "pH": {"unit": "", "icon": "mdi:pool", "name": "pH", "device_class": None},
+    "pH": {"unit": None, "icon": "mdi:pool", "name": "pH", "device_class": None},
     "Battery": {
         "unit": UNIT_PERCENTAGE,
         "icon": "mdi:battery",
