@@ -48,7 +48,9 @@ class DexcomGlucoseValueSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return getattr(self._coordinator.data, self._attribute_unit_of_measurement)
+        if self._coordinator.data:
+            return getattr(self._coordinator.data, self._attribute_unit_of_measurement)
+        return None
 
     @property
     def available(self):
@@ -101,7 +103,9 @@ class DexcomGlucoseTrendSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._coordinator.data.trend_description
+        if self._coordinator.data:
+            return self._coordinator.data.trend_description
+        return None
 
     @property
     def available(self):

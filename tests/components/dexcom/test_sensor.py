@@ -3,7 +3,11 @@
 from pydexcom import SessionError
 
 from homeassistant.components.dexcom.const import MMOL_L
-from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, STATE_UNAVAILABLE
+from homeassistant.const import (
+    CONF_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 
 from tests.async_mock import patch
 from tests.components.dexcom import GLUCOSE_READING, init_integration
@@ -41,11 +45,11 @@ async def test_sensors_unavailable(hass):
     test_username_glucose_value = hass.states.get(
         "sensor.dexcom_test_username_glucose_value"
     )
-    assert test_username_glucose_value.state == STATE_UNAVAILABLE
+    assert test_username_glucose_value.state == STATE_UNKNOWN
     test_username_glucose_trend = hass.states.get(
         "sensor.dexcom_test_username_glucose_trend"
     )
-    assert test_username_glucose_trend.state == STATE_UNAVAILABLE
+    assert test_username_glucose_trend.state == STATE_UNKNOWN
 
 
 async def test_sensors_update_failed(hass):
@@ -59,6 +63,18 @@ async def test_sensors_update_failed(hass):
         await hass.helpers.entity_component.async_update_entity(
             "sensor.dexcom_test_username_glucose_value"
         )
+        await hass.helpers.entity_component.async_update_entity(
+            "sensor.dexcom_test_username_glucose_trend"
+        )
+
+    test_username_glucose_value = hass.states.get(
+        "sensor.dexcom_test_username_glucose_value"
+    )
+    assert test_username_glucose_value.state == STATE_UNAVAILABLE
+    test_username_glucose_trend = hass.states.get(
+        "sensor.dexcom_test_username_glucose_trend"
+    )
+    assert test_username_glucose_trend.state == STATE_UNAVAILABLE
 
 
 async def test_sensors_options_changed(hass):
