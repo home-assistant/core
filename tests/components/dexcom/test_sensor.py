@@ -27,8 +27,8 @@ async def test_sensors(hass):
     assert test_username_glucose_trend.state == GLUCOSE_READING.trend_description
 
 
-async def test_sensors_unavailable(hass):
-    """Test we handle sensor unavailable."""
+async def test_sensors_unknown(hass):
+    """Test we handle sensor state unknown."""
     await init_integration(hass)
 
     with patch(
