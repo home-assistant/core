@@ -508,10 +508,10 @@ class SpotifyData:
         )
         list_info = self.get_list_from_results(results, "playlist", list_info)
         # featured-playlists
-        results = self._spotify.search(
-            q="featured-playlists:" + search_text, type="featured-playlists", limit=6
-        )
-        list_info = self.get_list_from_results(results, "featured-playlists", list_info)
+        # results = self._spotify.search(
+        #     q="featured-playlists:" + search_text, type="featured-playlists", limit=6
+        # )
+        # list_info = self.get_list_from_results(results, "featured-playlists", list_info)
 
         # update lists
         self.hass.states.async_set("sensor.spotifysearchlist", -1, list_info)
