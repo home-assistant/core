@@ -5,7 +5,7 @@ from pysmappee import Smappee
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.util import Throttle
@@ -40,6 +40,15 @@ async def async_setup(hass: HomeAssistant, config: dict):
     if DOMAIN not in config:
         return True
 
+    # decide platform
+    platform = "PRODUCTION"
+    if config[DOMAIN][CONF_CLIENT_ID] == "homeassistant_f2":
+        platform = "ACCEPTANCE"
+    elif config[DOMAIN][CONF_CLIENT_ID] == "homeassistant_f3":
+        platform = "DEVELOPMENT"
+
+    hass.data[DOMAIN][CONF_PLATFORM] = platform
+
     config_flow.SmappeeFlowHandler.async_register_implementation(
         hass,
         config_entry_oauth2_flow.LocalOAuth2Implementation(
@@ -47,8 +56,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
             DOMAIN,
             config[DOMAIN][CONF_CLIENT_ID],
             config[DOMAIN][CONF_CLIENT_SECRET],
-            AUTHORIZE_URL,
-            TOKEN_URL,
+            AUTHORIZE_URL[platform],
+            TOKEN_URL[platform],
         ),
     )
 
@@ -89,6 +98,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     if unload_ok:
         hass.data[DOMAIN].pop(BASE, None)
+        hass.data[DOMAIN].pop(CONF_PLATFORM, None)
 
     return unload_ok
 

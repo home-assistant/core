@@ -15,8 +15,10 @@ from tests.components.logbook.test_init import MockLazyEventPartialState
 
 async def test_humanify_homekit_changed_event(hass, hk_driver):
     """Test humanifying HomeKit changed event."""
+    hass.config.components.add("recorder")
     with patch("homeassistant.components.homekit.HomeKit"):
         assert await async_setup_component(hass, "homekit", {"homekit": {}})
+    assert await async_setup_component(hass, "logbook", {})
     entity_attr_cache = logbook.EntityAttributeCache(hass)
 
     event1, event2 = list(

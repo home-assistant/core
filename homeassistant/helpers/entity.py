@@ -13,7 +13,6 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
-    ATTR_HIDDEN,
     ATTR_ICON,
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -199,11 +198,6 @@ class Entity(ABC):
         return None
 
     @property
-    def hidden(self) -> bool:
-        """Return True if the entity should be hidden from UIs."""
-        return False
-
-    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return True
@@ -339,10 +333,6 @@ class Entity(ABC):
         entity_picture = self.entity_picture
         if entity_picture is not None:
             attr[ATTR_ENTITY_PICTURE] = entity_picture
-
-        hidden = self.hidden
-        if hidden:
-            attr[ATTR_HIDDEN] = hidden
 
         assumed_state = self.assumed_state
         if assumed_state:

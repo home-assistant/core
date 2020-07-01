@@ -23,6 +23,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.const import STATE_OFF
+from homeassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -48,7 +49,7 @@ from .test_common import (
 )
 
 from tests.async_mock import call
-from tests.common import async_fire_mqtt_message, async_setup_component
+from tests.common import async_fire_mqtt_message
 from tests.components.climate import common
 
 ENTITY_CLIMATE = "climate.test"

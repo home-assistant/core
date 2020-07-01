@@ -37,7 +37,7 @@ def teardown():
     dt_util.set_default_time_zone(ORIG_TIME_ZONE)
 
 
-async def test_sunset_trigger(hass, calls):
+async def test_sunset_trigger(hass, calls, legacy_patchable_time):
     """Test the sunset trigger."""
     now = datetime(2015, 9, 15, 23, tzinfo=dt_util.UTC)
     trigger_time = datetime(2015, 9, 16, 2, tzinfo=dt_util.UTC)
@@ -70,7 +70,7 @@ async def test_sunset_trigger(hass, calls):
     assert len(calls) == 1
 
 
-async def test_sunrise_trigger(hass, calls):
+async def test_sunrise_trigger(hass, calls, legacy_patchable_time):
     """Test the sunrise trigger."""
     now = datetime(2015, 9, 13, 23, tzinfo=dt_util.UTC)
     trigger_time = datetime(2015, 9, 16, 14, tzinfo=dt_util.UTC)
@@ -92,7 +92,7 @@ async def test_sunrise_trigger(hass, calls):
     assert len(calls) == 1
 
 
-async def test_sunset_trigger_with_offset(hass, calls):
+async def test_sunset_trigger_with_offset(hass, calls, legacy_patchable_time):
     """Test the sunset trigger with offset."""
     now = datetime(2015, 9, 15, 23, tzinfo=dt_util.UTC)
     trigger_time = datetime(2015, 9, 16, 2, 30, tzinfo=dt_util.UTC)
@@ -125,7 +125,7 @@ async def test_sunset_trigger_with_offset(hass, calls):
     assert calls[0].data["some"] == "sun - sunset - 0:30:00"
 
 
-async def test_sunrise_trigger_with_offset(hass, calls):
+async def test_sunrise_trigger_with_offset(hass, calls, legacy_patchable_time):
     """Test the sunrise trigger with offset."""
     now = datetime(2015, 9, 13, 23, tzinfo=dt_util.UTC)
     trigger_time = datetime(2015, 9, 16, 13, 30, tzinfo=dt_util.UTC)

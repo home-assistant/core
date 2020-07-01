@@ -22,10 +22,10 @@ class TestSensorRfxtrx(unittest.TestCase):
 
     def tear_down_cleanup(self):
         """Stop everything that was started."""
-        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS = []
-        rfxtrx_core.RFX_DEVICES = {}
-        if rfxtrx_core.RFXOBJECT:
-            rfxtrx_core.RFXOBJECT.close_connection()
+        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS.clear()
+        rfxtrx_core.RFX_DEVICES.clear()
+        if rfxtrx_core.DATA_RFXOBJECT in self.hass.data:
+            self.hass.data[rfxtrx_core.DATA_RFXOBJECT].close_connection()
         self.hass.stop()
 
     def test_default_config(self):
@@ -34,31 +34,6 @@ class TestSensorRfxtrx(unittest.TestCase):
             self.hass, "sensor", {"sensor": {"platform": "rfxtrx", "devices": {}}}
         )
         assert 0 == len(rfxtrx_core.RFX_DEVICES)
-
-    def test_old_config_sensor(self):
-        """Test with 1 sensor."""
-        assert setup_component(
-            self.hass,
-            "sensor",
-            {
-                "sensor": {
-                    "platform": "rfxtrx",
-                    "devices": {
-                        "sensor_0502": {
-                            "name": "Test",
-                            "packetid": "0a52080705020095220269",
-                            "data_type": "Temperature",
-                        }
-                    },
-                }
-            },
-        )
-
-        assert 1 == len(rfxtrx_core.RFX_DEVICES)
-        entity = rfxtrx_core.RFX_DEVICES["sensor_0502"]["Temperature"]
-        assert "Test" == entity.name
-        assert TEMP_CELSIUS == entity.unit_of_measurement
-        assert entity.state is None
 
     def test_one_sensor(self):
         """Test with 1 sensor."""
@@ -79,8 +54,8 @@ class TestSensorRfxtrx(unittest.TestCase):
         )
 
         assert 1 == len(rfxtrx_core.RFX_DEVICES)
-        entity = rfxtrx_core.RFX_DEVICES["sensor_0502"]["Temperature"]
-        assert "Test" == entity.name
+        entity = rfxtrx_core.RFX_DEVICES["sensor_05_02"]["Temperature"]
+        assert "Test Temperature" == entity.name
         assert TEMP_CELSIUS == entity.unit_of_measurement
         assert entity.state is None
 
@@ -98,15 +73,10 @@ class TestSensorRfxtrx(unittest.TestCase):
         )
 
         assert 1 == len(rfxtrx_core.RFX_DEVICES)
-        entity = rfxtrx_core.RFX_DEVICES["sensor_0502"]["Temperature"]
-        assert "Test" == entity.name
+        entity = rfxtrx_core.RFX_DEVICES["sensor_05_02"]["Temperature"]
+        assert "Test Temperature" == entity.name
         assert TEMP_CELSIUS == entity.unit_of_measurement
         assert entity.state is None
-
-        entity_id = rfxtrx_core.RFX_DEVICES["sensor_0502"]["Temperature"].entity_id
-        entity = self.hass.states.get(entity_id)
-        assert "Test" == entity.name
-        assert "unknown" == entity.state
 
     def test_several_sensors(self):
         """Test with 3 sensors."""
@@ -133,7 +103,7 @@ class TestSensorRfxtrx(unittest.TestCase):
         assert 2 == len(rfxtrx_core.RFX_DEVICES)
         device_num = 0
         for id in rfxtrx_core.RFX_DEVICES:
-            if id == "sensor_0601":
+            if id == "sensor_06_01":
                 device_num = device_num + 1
                 assert len(rfxtrx_core.RFX_DEVICES[id]) == 2
                 _entity_temp = rfxtrx_core.RFX_DEVICES[id]["Temperature"]
@@ -143,7 +113,7 @@ class TestSensorRfxtrx(unittest.TestCase):
                 assert _entity_hum.state is None
                 assert TEMP_CELSIUS == _entity_temp.unit_of_measurement
                 assert "Bath" == _entity_temp.__str__()
-            elif id == "sensor_0502":
+            elif id == "sensor_05_02":
                 device_num = device_num + 1
                 entity = rfxtrx_core.RFX_DEVICES[id]["Temperature"]
                 assert entity.state is None
@@ -159,12 +129,13 @@ class TestSensorRfxtrx(unittest.TestCase):
             "sensor",
             {"sensor": {"platform": "rfxtrx", "automatic_add": True, "devices": {}}},
         )
+        self.hass.block_till_done()
 
         event = rfxtrx_core.get_rfx_object("0a520801070100b81b0279")
         event.data = bytearray(b"\nR\x08\x01\x07\x01\x00\xb8\x1b\x02y")
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
 
-        entity = rfxtrx_core.RFX_DEVICES["sensor_0701"]["Temperature"]
+        entity = rfxtrx_core.RFX_DEVICES["sensor_07_01"]["Temperature"]
         assert 1 == len(rfxtrx_core.RFX_DEVICES)
         assert {
             "Humidity status": "normal",
@@ -182,7 +153,7 @@ class TestSensorRfxtrx(unittest.TestCase):
         event = rfxtrx_core.get_rfx_object("0a52080405020095240279")
         event.data = bytearray(b"\nR\x08\x04\x05\x02\x00\x95$\x02y")
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
-        entity = rfxtrx_core.RFX_DEVICES["sensor_0502"]["Temperature"]
+        entity = rfxtrx_core.RFX_DEVICES["sensor_05_02"]["Temperature"]
         assert 2 == len(rfxtrx_core.RFX_DEVICES)
         assert {
             "Humidity status": "normal",
@@ -197,7 +168,7 @@ class TestSensorRfxtrx(unittest.TestCase):
         event = rfxtrx_core.get_rfx_object("0a52085e070100b31b0279")
         event.data = bytearray(b"\nR\x08^\x07\x01\x00\xb3\x1b\x02y")
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
-        entity = rfxtrx_core.RFX_DEVICES["sensor_0701"]["Temperature"]
+        entity = rfxtrx_core.RFX_DEVICES["sensor_07_01"]["Temperature"]
         assert 2 == len(rfxtrx_core.RFX_DEVICES)
         assert {
             "Humidity status": "normal",
@@ -267,7 +238,7 @@ class TestSensorRfxtrx(unittest.TestCase):
         assert 2 == len(rfxtrx_core.RFX_DEVICES)
         device_num = 0
         for id in rfxtrx_core.RFX_DEVICES:
-            if id == "sensor_0601":
+            if id == "sensor_06_01":
                 device_num = device_num + 1
                 assert len(rfxtrx_core.RFX_DEVICES[id]) == 2
                 _entity_temp = rfxtrx_core.RFX_DEVICES[id]["Temperature"]
@@ -277,7 +248,7 @@ class TestSensorRfxtrx(unittest.TestCase):
                 assert _entity_temp.state is None
                 assert TEMP_CELSIUS == _entity_temp.unit_of_measurement
                 assert "Bath" == _entity_temp.__str__()
-            elif id == "sensor_0502":
+            elif id == "sensor_05_02":
                 device_num = device_num + 1
                 entity = rfxtrx_core.RFX_DEVICES[id]["Temperature"]
                 assert entity.state is None
@@ -299,7 +270,7 @@ class TestSensorRfxtrx(unittest.TestCase):
 
         device_num = 0
         for id in rfxtrx_core.RFX_DEVICES:
-            if id == "sensor_0601":
+            if id == "sensor_06_01":
                 device_num = device_num + 1
                 assert len(rfxtrx_core.RFX_DEVICES[id]) == 2
                 _entity_temp = rfxtrx_core.RFX_DEVICES[id]["Temperature"]
@@ -327,7 +298,7 @@ class TestSensorRfxtrx(unittest.TestCase):
                     "Rssi numeric": 6,
                 } == _entity_temp.device_state_attributes
                 assert "Bath" == _entity_temp.__str__()
-            elif id == "sensor_0502":
+            elif id == "sensor_05_02":
                 device_num = device_num + 1
                 entity = rfxtrx_core.RFX_DEVICES[id]["Temperature"]
                 assert TEMP_CELSIUS == entity.unit_of_measurement
