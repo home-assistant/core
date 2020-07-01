@@ -102,14 +102,15 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id=step_id, user_input=user_input, errors={CONF_URL: "invalid_url"}
             )
 
-        await self.async_set_unique_id(user_input[CONF_URL])
-        self._abort_if_unique_id_configured()
-
-        if any(
-            x.data[CONF_URL] == user_input[CONF_URL]
-            for x in self._async_current_entries()
-        ):
-            return self.async_abort(reason="already_configured")
+        # If we don't have a unique id, copy one from existing entry with same URL
+        if not self.unique_id:
+            for existing_entry in (
+                x
+                for x in self._async_current_entries()
+                if x.data[CONF_URL] == user_input[CONF_URL] and x.unique_id
+            ):
+                await self.async_set_unique_id(existing_entry.unique_id)
+                break
 
         session = aiohttp_client.async_get_clientsession(self.hass)
         printer = SyncThru(user_input[CONF_URL], session)
