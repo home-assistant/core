@@ -118,10 +118,6 @@ SERVICE_DOWNLOAD_SCHEMA = vol.Schema(
     }
 )
 
-SERVICE_LEARN_SENDEVENT_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_ENTITY_ID): cv.entity_ids}
-)
-
 SERVICE_UPLOAD_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
@@ -280,7 +276,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
     platform.async_register_entity_service(
-        SERVICE_LEARN_SENDEVENT, SERVICE_LEARN_SENDEVENT_SCHEMA, "learn_sendevent",
+        SERVICE_LEARN_SENDEVENT, {}, "learn_sendevent",
     )
 
     def service_download(service):
@@ -592,9 +588,7 @@ class ADBDevice(MediaPlayerEntity):
             self.schedule_update_ha_state()
 
             msg = f"Output from service '{SERVICE_LEARN_SENDEVENT}' from {self.entity_id}: '{output}'"
-            self.hass.components.persistent_notification.async_create(
-                msg, title="Android TV"
-            )
+            self.hass.components.persistent_notification.create(msg, title="Android TV")
             _LOGGER.info("%s", msg)
 
     @adb_decorator()
