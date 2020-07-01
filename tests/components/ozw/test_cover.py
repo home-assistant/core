@@ -84,3 +84,47 @@ async def test_cover(hass, cover_data, sent_messages, cover_msg):
     msg = sent_messages[4]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {"Value": 0, "ValueIDKey": 625573905}
+
+
+async def test_barrier(hass, cover_gdo_data, sent_messages, cover_gdo_msg):
+    """Test setting up config entry."""
+    receive_message = await setup_ozw(hass, fixture=cover_gdo_data)
+    # Test loaded
+    state = hass.states.get("cover.gd00z_4_barrier_state")
+    assert state is not None
+    assert state.state == "open"
+
+    # Test opening
+    await hass.services.async_call(
+        "cover",
+        "open_cover",
+        {"entity_id": "cover.gd00z_4_barrier_state"},
+        blocking=True,
+    )
+    assert len(sent_messages) == 1
+    msg = sent_messages[0]
+    assert msg["topic"] == "OpenZWave/1/command/setvalue/"
+    assert msg["payload"] == {"Value": 4, "ValueIDKey": 281475083239444}
+
+    # Feedback on state
+    cover_gdo_msg.decode()
+    cover_gdo_msg.payload["Selected"] = "Opened"
+    cover_gdo_msg.encode()
+    receive_message(cover_gdo_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.cover.gd00z_4_barrier_state")
+    assert state is not None
+    assert state.state == "Opened"
+
+    # Test closing
+    await hass.services.async_call(
+        "cover",
+        "close_cover",
+        {"entity_id": "cover.cover.gd00z_4_barrier_state"},
+        blocking=True,
+    )
+    assert len(sent_messages) == 2
+    msg = sent_messages[1]
+    assert msg["topic"] == "OpenZWave/1/command/setvalue/"
+    assert msg["payload"] == {"Value": 0, "ValueIDKey": 281475083239444}
