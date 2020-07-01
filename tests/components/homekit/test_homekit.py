@@ -1100,7 +1100,7 @@ async def test_homekit_finds_linked_humidity_sensors(
     hass.states.async_set(
         humidity_sensor.entity_id,
         "42",
-        {ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY, ATTR_UNIT_OF_MEASUREMENT: "%"},
+        {ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY, ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE},
     )
     hass.states.async_set(humidifier.entity_id, STATE_ON)
 
