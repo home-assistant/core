@@ -281,16 +281,18 @@ async def test_hygrostat_get_humidity_range(hass, hk_driver, cls):
     """Test if humidity range is evaluated correctly."""
     entity_id = "humidifier.test"
 
-    hass.states.async_set(entity_id, STATE_OFF)
-    await hass.async_block_till_done()
-    acc = cls.hygrostat(hass, hk_driver, "HumidifierDehumidifier", entity_id, 1, None)
-
     hass.states.async_set(
         entity_id, STATE_OFF, {ATTR_MIN_HUMIDITY: 40, ATTR_MAX_HUMIDITY: 45}
     )
     await hass.async_block_till_done()
-    state = hass.states.get(entity_id)
-    assert acc.get_humidity_range_from_state(state) == (40, 45)
+    acc = cls.hygrostat(hass, hk_driver, "HumidifierDehumidifier", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    await acc.run_handler()
+    await hass.async_block_till_done()
+
+    assert acc.char_target_humidity.properties[PROP_MAX_VALUE] == 40
+    assert acc.char_target_humidity.properties[PROP_MIN_VALUE] == 45
 
 
 async def test_humidifier_with_linked_humidity_sensor(hass, hk_driver, cls):

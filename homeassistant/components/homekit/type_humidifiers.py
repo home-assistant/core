@@ -95,7 +95,14 @@ class HumidifierDehumidifier(HomeAccessory):
             CHAR_CURRENT_HUMIDITY, value=0
         )
 
-        min_humidity, max_humidity = self.get_humidity_range_from_state(state)
+        max_humidity = state.attributes.get(ATTR_MAX_HUMIDITY, DEFAULT_MAX_HUMIDITY)
+        max_humidity = round(max_humidity)
+        max_humidity = min(max_humidity, 100)
+
+        min_humidity = state.attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY)
+        min_humidity = round(min_humidity)
+        min_humidity = max(min_humidity, 0)
+
         self.char_target_humidity = serv_humidifier_dehumidifier.configure_char(
             self._target_humidity_char_name,
             value=45,
@@ -198,16 +205,6 @@ class HumidifierDehumidifier(HomeAccessory):
                 {ATTR_ENTITY_ID: self.entity_id, ATTR_HUMIDITY: humidity},
                 f"{self._target_humidity_char_name} to {char_values[self._target_humidity_char_name]}{UNIT_PERCENTAGE}",
             )
-
-    def get_humidity_range_from_state(self, state):
-        """Return min and max humidity range."""
-        max_humidity = state.attributes.get(ATTR_MAX_HUMIDITY, DEFAULT_MAX_HUMIDITY)
-        max_humidity = round(max_humidity)
-
-        min_humidity = state.attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY)
-        min_humidity = round(min_humidity)
-
-        return max(min_humidity, 0), min(max_humidity, 100)
 
     @callback
     def async_update_state(self, new_state):
