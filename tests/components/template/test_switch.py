@@ -1,14 +1,39 @@
 """The tests for the  Template switch platform."""
+
+import pytest
+
 from homeassistant import setup
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import State, callback
+from homeassistant.core import CoreState, State, callback
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     assert_setup_component,
     get_test_home_assistant,
+    mock_component,
     mock_restore_cache,
 )
 from tests.components.switch import common
+
+
+@pytest.fixture
+def storage_setup(hass, hass_storage):
+    """Storage setup."""
+
+    async def _storage(items=None, config=None):
+        if items is None:
+            hass_storage["switch"] = {
+                "key": "switch",
+                "version": 1,
+                "data": {"items": [{"id": "from_storage", "name": "from storage"}]},
+            }
+        else:
+            hass_storage["switch"] = items
+        if config is None:
+            config = {"switch": {}}
+        return await async_setup_component(hass, "switch", config)
+
+    return _storage
 
 
 class TestTemplateSwitch:
@@ -536,6 +561,45 @@ class TestTemplateSwitch:
         assert state.state == STATE_OFF
 
 
+async def test_restore_state(hass):
+    """Test state restoration."""
+    mock_restore_cache(
+        hass, (State("switch.s1", STATE_ON), State("switch.s2", STATE_OFF),),
+    )
+
+    hass.state = CoreState.starting
+    mock_component(hass, "recorder")
+
+    await async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "template",
+                "switches": {
+                    "s1": {
+                        "turn_on": {"service": "test.automation"},
+                        "turn_off": {"service": "test.automation"},
+                    },
+                    "s2": {
+                        "turn_on": {"service": "test.automation"},
+                        "turn_off": {"service": "test.automation"},
+                    },
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.s1")
+    assert state
+    assert state.state == STATE_ON
+
+    state = hass.states.get("switch.s2")
+    assert state
+    assert state.state == STATE_OFF
+
+
 async def test_available_template_with_entities(hass):
     """Test availability templates with values from other entities."""
     await setup.async_setup_component(
@@ -609,38 +673,3 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
 
     assert hass.states.get("switch.test_template_switch").state != STATE_UNAVAILABLE
     assert ("UndefinedError: 'x' is undefined") in caplog.text
-
-    def test_restore_state(self):
-        """Test state restoration."""
-        mock_restore_cache(
-            hass, (State("switch.s1", STATE_ON,), State("switch.s2", STATE_OFF,),)
-        )
-
-        assert setup.setup_component(
-            self.hass,
-            "switch",
-            {
-                "switch": {
-                    "platform": "template",
-                    "switches": {
-                        "s1": {
-                            "turn_on": {"service": "test.automation"},
-                            "turn_off": {"service": "test.automation"},
-                        },
-                        "s2": {
-                            "turn_on": {"service": "test.automation"},
-                            "turn_off": {"service": "test.automation"},
-                        },
-                    },
-                }
-            },
-        )
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-        state = hass.states.get("switch.s1")
-        assert state.state == STATE_ON
-
-        state = hass.states.get("switch.s2")
-        assert state.state == STATE_OFF
