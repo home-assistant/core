@@ -40,6 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not auth_valid:
         _LOGGER.error("Invalid authentication")
         return False
+
     coordinator = await get_coordinator(hass, entry)
 
     await hass.data[DOMAIN][entry.entry_id].async_refresh()
@@ -47,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
-     hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     for component in PLATFORMS:
         hass.async_create_task(

@@ -4,7 +4,7 @@ import logging
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_EMAIL,
-    CONF_PASSWORD
+    CONF_PASSWORD,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
@@ -92,7 +92,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         PoolSenseSensor(
             coordinator,
             config_entry.data[CONF_EMAIL],
-            config_entry.data[CONF_PASSWORD],
             info_type,
         )
         for info_type in SENSORS
@@ -104,10 +103,9 @@ class PoolSenseSensor(Entity):
 
     unique_id = None
 
-    def __init__(self, coordinator, email, password, info_type):
+    def __init__(self, coordinator, email, info_type):
         """Initialize poolsense sensor."""
         self._email = email
-        self._password = password
         self.unique_id = f"{email}-{info_type}"
         self.coordinator = coordinator
         self.info_type = info_type
