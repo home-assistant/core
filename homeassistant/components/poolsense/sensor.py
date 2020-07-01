@@ -3,6 +3,8 @@ import logging
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    CONF_EMAIL,
+    CONF_PASSWORD
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
@@ -13,7 +15,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity import Entity
 
-from . import get_coordinator
 from .const import ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,13 +86,13 @@ SENSORS = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer sensor setup to the shared sensor module."""
-    coordinator = await get_coordinator(hass, config_entry)
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
         PoolSenseSensor(
             coordinator,
-            config_entry.data["email"],
-            config_entry.data["password"],
+            config_entry.data[CONF_EMAIL],
+            config_entry.data[CONF_PASSWORD],
             info_type,
         )
         for info_type in SENSORS
