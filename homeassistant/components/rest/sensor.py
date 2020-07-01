@@ -113,6 +113,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             auth = HTTPBasicAuth(username, password)
     else:
         auth = None
+
     rest = RestData(
         method, resource, auth, headers, payload, verify_ssl, timeout, proxy_url
     )
