@@ -147,6 +147,7 @@ class HumidifierDehumidifier(HomeAccessory):
         """Handle state change event listener callback."""
         self._async_update_current_humidity(event.data.get("new_state"))
 
+    @callback
     def _async_update_current_humidity(self, new_state):
         """Handle linked humidity sensor state change to update HomeKit value."""
         if new_state is None:
