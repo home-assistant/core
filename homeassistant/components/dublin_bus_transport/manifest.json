@@ -1,6 +1,7 @@
 {
   "domain": "dublin_bus_transport",
   "name": "Dublin Bus",
+  "requirements": ["pydublinbus==0.0.4"],
   "documentation": "https://www.home-assistant.io/integrations/dublin_bus_transport",
-  "codeowners": []
+  "codeowners": ["@ialex87"]
 }

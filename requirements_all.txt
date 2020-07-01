@@ -1303,6 +1303,9 @@ pydoods==1.0.2
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==0.8
 
+# homeassistant.components.dublin_bus_transport
+pydublinbus==0.0.4
+
 # homeassistant.components.ebox
 pyebox==1.1.4
 

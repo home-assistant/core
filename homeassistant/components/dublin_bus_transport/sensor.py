@@ -1,31 +1,31 @@
 """
-Support for Dublin RTPI information from data.dublinked.ie.
+Support for Dublin RTPI information from data.smartdublin.ie.
 
 For more info on the API see :
 https://data.gov.ie/dataset/real-time-passenger-information-rtpi-for-dublin-bus-bus-eireann-luas-and-irish-rail/resource/4b9f2c4f-6bf5-4958-a43a-f12dab04cf61
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.dublin_public_transport/
 """
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
-import requests
+from pydublinbus import APIError, DublinBusRTPI
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, HTTP_OK, TIME_MINUTES
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
-_RESOURCE = "https://data.dublinked.ie/cgi-bin/rtpi/realtimebusinformation"
 
-ATTR_STOP_ID = "Stop ID"
-ATTR_ROUTE = "Route"
-ATTR_DUE_IN = "Due in"
-ATTR_DUE_AT = "Due at"
-ATTR_NEXT_UP = "Later Bus"
+ATTR_STOP_ID = "stop_id"
+ATTR_DUE_IN = "due_in"
+ATTR_ROUTE = "route"
+ATTR_TIMETABLE = "timetable"
 
-ATTRIBUTION = "Data provided by data.dublinked.ie"
+ATTRIBUTION = "Data provided by data.smartdublin.ie"
 
 CONF_STOP_ID = "stopid"
 CONF_ROUTE = "route"
@@ -45,37 +45,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def due_in_minutes(timestamp):
-    """Get the time in minutes from a timestamp.
-
-    The timestamp should be in the format day/month/year hour/minute/second
-    """
-    diff = datetime.strptime(timestamp, "%d/%m/%Y %H:%M:%S") - dt_util.now().replace(
-        tzinfo=None
-    )
-
-    return str(int(diff.total_seconds() / 60))
-
-
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dublin public transport sensor."""
     name = config[CONF_NAME]
     stop = config[CONF_STOP_ID]
     route = config[CONF_ROUTE]
 
-    data = PublicTransportData(stop, route)
-    add_entities([DublinPublicTransportSensor(data, stop, route, name)], True)
+    mybus = DublinBusRTPI(stop, route)
+    mybus_data = PublicTransportData(mybus)
+    add_entities([DublinPublicTransportSensor(mybus_data, mybus, name)], True)
 
 
 class DublinPublicTransportSensor(Entity):
     """Implementation of an Dublin public transport sensor."""
 
-    def __init__(self, data, stop, route, name):
+    def __init__(self, mybus_data, mybus, name):
         """Initialize the sensor."""
-        self.data = data
+        self.mybus_data = mybus_data
         self._name = name
-        self._stop = stop
-        self._route = route
+        self._stop = mybus.stopid
         self._times = self._state = None
 
     @property
@@ -92,18 +80,11 @@ class DublinPublicTransportSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         if self._times is not None:
-            next_up = "None"
-            if len(self._times) > 1:
-                next_up = f"{self._times[1][ATTR_ROUTE]} in "
-                next_up += self._times[1][ATTR_DUE_IN]
-
             return {
-                ATTR_DUE_IN: self._times[0][ATTR_DUE_IN],
-                ATTR_DUE_AT: self._times[0][ATTR_DUE_AT],
                 ATTR_STOP_ID: self._stop,
                 ATTR_ROUTE: self._times[0][ATTR_ROUTE],
+                ATTR_TIMETABLE: self._times,
                 ATTR_ATTRIBUTION: ATTRIBUTION,
-                ATTR_NEXT_UP: next_up,
             }
 
     @property
@@ -117,64 +98,38 @@ class DublinPublicTransportSensor(Entity):
         return ICON
 
     def update(self):
-        """Get the latest data from opendata.ch and update the states."""
-        self.data.update()
-        self._times = self.data.info
-        try:
-            self._state = self._times[0][ATTR_DUE_IN]
-        except TypeError:
-            pass
+        """Get the latest data and update the states."""
+        self.mybus_data.update()
+        self._times = self.mybus_data.info
+        self._state = self._times[0][ATTR_DUE_IN]
 
 
 class PublicTransportData:
     """The Class for handling the data retrieval."""
 
-    def __init__(self, stop, route):
+    def __init__(self, mybus):
         """Initialize the data object."""
-        self.stop = stop
-        self.route = route
-        self.info = [{ATTR_DUE_AT: "n/a", ATTR_ROUTE: self.route, ATTR_DUE_IN: "n/a"}]
+        self.mybus = mybus
+        self.info = [{ATTR_DUE_IN: "n/a", ATTR_ROUTE: self.mybus.route}]
 
     def update(self):
-        """Get the latest data from opendata.ch."""
-        params = {}
-        params["stopid"] = self.stop
-
-        if self.route:
-            params["routeid"] = self.route
-
-        params["maxresults"] = 2
-        params["format"] = "json"
-
-        response = requests.get(_RESOURCE, params, timeout=10)
-
-        if response.status_code != HTTP_OK:
-            self.info = [
-                {ATTR_DUE_AT: "n/a", ATTR_ROUTE: self.route, ATTR_DUE_IN: "n/a"}
-            ]
-            return
-
-        result = response.json()
-
-        if str(result["errorcode"]) != "0":
-            self.info = [
-                {ATTR_DUE_AT: "n/a", ATTR_ROUTE: self.route, ATTR_DUE_IN: "n/a"}
-            ]
+        """Get the latest data from the api."""
+        try:
+            timetable = self.mybus.bus_timetable()
+        except APIError:
+            _LOGGER.warning("Could not update the dublin bus data")
             return
 
         self.info = []
-        for item in result["results"]:
-            due_at = item.get("departuredatetime")
-            route = item.get("route")
-            if due_at is not None and route is not None:
+
+        if not timetable:
+            self.info = [{ATTR_DUE_IN: "n/a", ATTR_ROUTE: self.mybus.route}]
+        else:
+            for item in timetable:
+                due_in = item.get("due_in")
+                route = item.get("route")
                 bus_data = {
-                    ATTR_DUE_AT: due_at,
+                    ATTR_DUE_IN: due_in,
                     ATTR_ROUTE: route,
-                    ATTR_DUE_IN: due_in_minutes(due_at),
                 }
                 self.info.append(bus_data)
-
-        if not self.info:
-            self.info = [
-                {ATTR_DUE_AT: "n/a", ATTR_ROUTE: self.route, ATTR_DUE_IN: "n/a"}
-            ]
