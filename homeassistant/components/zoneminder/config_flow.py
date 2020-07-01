@@ -87,7 +87,7 @@ class ZoneminderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_finish(self, config: dict):
         """Finish config flow."""
         zm_client = create_client_from_config(config)
-        hostname = urlparse((zm_client.get_zms_url())).hostname
+        hostname = urlparse(zm_client.get_zms_url()).hostname
         result = await async_test_client_availability(self.hass, zm_client)
 
         if result != ClientAvailabilityResult.AVAILABLE:
