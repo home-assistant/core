@@ -39,18 +39,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor config entry."""
     zm_client = get_client_from_data(hass, config_entry.unique_id)
+    monitors = await hass.async_add_job(zm_client.get_monitors)
+
+    if not monitors:
+        _LOGGER.warning("Could not fetch monitors from ZoneMinder")
+        return
 
     switches = []
-    for config in get_platform_configs(hass, SWITCH_DOMAIN):
-        on_state = MONITOR_STATES[config[CONF_COMMAND_ON]]
-        off_state = MONITOR_STATES[config[CONF_COMMAND_OFF]]
+    for monitor in monitors:
+        for config in get_platform_configs(hass, SWITCH_DOMAIN):
+            on_state = MONITOR_STATES[config[CONF_COMMAND_ON]]
+            off_state = MONITOR_STATES[config[CONF_COMMAND_OFF]]
 
-        monitors = zm_client.get_monitors()
-        if not monitors:
-            _LOGGER.warning("Could not fetch monitors from ZoneMinder")
-            return
-
-        for monitor in monitors:
             switches.append(
                 ZMSwitchMonitors(monitor, on_state, off_state, config_entry)
             )

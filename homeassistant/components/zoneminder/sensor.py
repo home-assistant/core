@@ -48,7 +48,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor config entry."""
     zm_client = get_client_from_data(hass, config_entry.unique_id)
-    monitors = await hass.async_add_executor_job(zm_client.get_monitors)
+    monitors = await hass.async_add_job(zm_client.get_monitors)
 
     if not monitors:
         _LOGGER.warning("Did not fetch any monitors from ZoneMinder")
