@@ -13,13 +13,17 @@ def data_packet(value):
     return b64decode(value)
 
 
-def mac_address(value):
-    """Validate a MAC address."""
-    mac = str(value).lower()
+def mac_address(mac):
+    """Encode a MAC address."""
     if len(mac) == 17:
-        mac = mac[0:2] + mac[3:5] + mac[6:8] + mac[9:11] + mac[12:14] + mac[15:17]
+        mac = "".join(mac[i : i + 2] for i in range(0, 17, 3))
     elif len(mac) == 14:
-        mac = mac[0:2] + mac[2:4] + mac[5:7] + mac[7:9] + mac[10:12] + mac[12:14]
+        mac = "".join(mac[i : i + 4] for i in range(0, 14, 5))
     elif len(mac) != 12:
         raise ValueError
-    return mac
+    return bytes.fromhex(mac)
+
+
+def format_mac(mac):
+    """Format a MAC address."""
+    return ":".join([format(octet, "02x") for octet in mac])

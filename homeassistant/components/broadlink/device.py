@@ -66,16 +66,14 @@ class BroadlinkDevice:
     async def async_setup(self):
         """Set up the device and related entities."""
         config = self.config
-        name = config.title
-        host = config.data[CONF_HOST]
-        mac_addr = config.data[CONF_MAC]
-        dev_type = config.data[CONF_TYPE]
-        timeout = config.data[CONF_TIMEOUT]
 
         api = blk.gendevice(
-            dev_type, (host, DEFAULT_PORT), bytes.fromhex(mac_addr), name=name
+            config.data[CONF_TYPE],
+            (config.data[CONF_HOST], DEFAULT_PORT),
+            bytes.fromhex(config.data[CONF_MAC]),
+            name=config.title,
         )
-        api.timeout = timeout
+        api.timeout = config.data[CONF_TIMEOUT]
 
         try:
             await self.hass.async_add_executor_job(api.auth)

@@ -21,6 +21,7 @@ from .const import (  # pylint: disable=unused-import
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
+from .helpers import format_mac
 
 
 class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -83,13 +84,10 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     await self.async_set_device(device, raise_on_progress=False)
                     return await self.async_step_auth()
 
-                target_mac = ":".join([format(octet, "x") for octet in self.device.mac])
-                given_mac = ":".join([format(octet, "x") for octet in device.mac])
-
                 errors["base"] = "invalid_host"
                 err_msg = (
-                    "Invalid host for this configuration flow. The MAC address "
-                    f"should be {target_mac}, but {given_mac} was given"
+                    "Invalid host for this configuration flow. The MAC address should be "
+                    f"{format_mac(self.device.mac)}, but {format_mac(device.mac)} was given"
                 )
 
             LOGGER.error("Failed to discover the device at %s: %s", host, err_msg)

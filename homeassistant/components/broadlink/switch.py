@@ -44,10 +44,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Broadlink switches."""
-    mac_addr = config[CONF_MAC]
-    switches = config[CONF_SWITCHES]
     platform_data = hass.data[DOMAIN].platforms.setdefault(SWITCH_DOMAIN, {})
-    platform_data[mac_addr] = switches
+    platform_data[config[CONF_MAC]] = config[CONF_SWITCHES]
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -55,9 +53,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
 
     if device.api.type in {"RM2", "RM4"}:
-        mac_addr = config_entry.data[CONF_MAC]
         platform_data = hass.data[DOMAIN].platforms.get(SWITCH_DOMAIN, {})
-        user_defined_switches = platform_data.get(mac_addr, {})
+        user_defined_switches = platform_data.get(device.api.mac, {})
         switches = [
             BroadlinkRMSwitch(device, name, config)
             for name, config in user_defined_switches.items()
