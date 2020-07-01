@@ -11,7 +11,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_SERVER, DOMAIN, MG_DL, PLATFORMS, SERVER_OUS
+from .const import (
+    CONF_SERVER,
+    COORDINATOR,
+    DOMAIN,
+    MG_DL,
+    PLATFORMS,
+    SERVER_OUS,
+    UNDO_UPDATE_LISTENER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,8 +46,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except SessionError:
         raise ConfigEntryNotReady
 
-    entry.update_listeners = []
-    entry.add_update_listener(update_listener)
     if not entry.options:
         hass.config_entries.async_update_entry(
             entry, options={CONF_UNIT_OF_MEASUREMENT: MG_DL}
@@ -51,15 +57,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         except SessionError as error:
             raise UpdateFailed(error)
 
-    hass.data[DOMAIN][entry.entry_id] = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=DOMAIN,
-        update_method=async_update_data,
-        update_interval=SCAN_INTERVAL,
-    )
+    hass.data[DOMAIN][entry.entry_id] = {
+        COORDINATOR: DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_method=async_update_data,
+            update_interval=SCAN_INTERVAL,
+        ),
+        UNDO_UPDATE_LISTENER: entry.add_update_listener(update_listener),
+    }
 
-    await hass.data[DOMAIN][entry.entry_id].async_refresh()
+    await hass.data[DOMAIN][entry.entry_id][COORDINATOR].async_refresh()
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -79,6 +88,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
+    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
+
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
