@@ -326,7 +326,10 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
     async def _async_sensor_not_responding(self, now=None):
         """The sensor has not updated a value during the allowed stale period."""
 
-        _LOGGER.debug("Sensor has not been updated for %s", now - self.hass.states.get(self._sensor_entity_id).last_updated)
+        _LOGGER.debug(
+            "Sensor has not been updated for %s",
+            now - self.hass.states.get(self._sensor_entity_id).last_updated,
+        )
         _LOGGER.warning("Sensor is stalled, call the emergency stop")
         await self._async_update_humidity("Stalled")
 

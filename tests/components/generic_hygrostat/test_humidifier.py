@@ -27,9 +27,13 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.core import DOMAIN as HASS_DOMAIN, CoreState, State, callback
 from homeassistant.setup import async_setup_component
-
-from tests.common import assert_setup_component, mock_restore_cache, async_fire_time_changed
 import homeassistant.util.dt as dt_util
+
+from tests.common import (
+    assert_setup_component,
+    async_fire_time_changed,
+    mock_restore_cache,
+)
 
 ENTITY = "humidifier.test"
 ENT_SENSOR = "sensor.test"
