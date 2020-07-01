@@ -53,7 +53,7 @@ class DexcomGlucoseValueSensor(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return bool(self._coordinator.data)
+        return self._coordinator.last_update_success
 
     @property
     def should_poll(self):
@@ -106,7 +106,7 @@ class DexcomGlucoseTrendSensor(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return bool(self._coordinator.data)
+        return self._coordinator.last_update_success
 
     @property
     def should_poll(self):
