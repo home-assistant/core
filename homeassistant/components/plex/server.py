@@ -60,7 +60,7 @@ class PlexServer:
         """Initialize a Plex server instance."""
         self.hass = hass
         self._plex_account = None
-        self._plex_server = None
+        self.plex_server = None
         self._created_clients = set()
         self._known_clients = set()
         self._known_idle = set()
@@ -72,12 +72,12 @@ class PlexServer:
         self.options = options
         self.server_choice = None
         self._accounts = []
-        self._owner_username = None
+        self.owner = None
         self._plextv_clients = None
         self._plextv_client_timestamp = 0
         self._plextv_device_cache = {}
         self._use_plex_tv = self._token is not None
-        self._version = None
+        self.version = None
         self.async_update_platforms = Debouncer(
             hass,
             _LOGGER,
@@ -141,7 +141,7 @@ class PlexServer:
             self.server_choice = (
                 self._server_name if self._server_name else available_servers[0][0]
             )
-            self._plex_server = self.account.resource(self.server_choice).connect(
+            self.plex_server = self.account.resource(self.server_choice).connect(
                 timeout=10
             )
 
@@ -150,7 +150,7 @@ class PlexServer:
             if self._url.startswith("https") and not self._verify_ssl:
                 session = Session()
                 session.verify = False
-            self._plex_server = plexapi.server.PlexServer(
+            self.plex_server = plexapi.server.PlexServer(
                 self._url, self._token, session
             )
 
@@ -161,7 +161,7 @@ class PlexServer:
                 if x.clientIdentifier == self._server_id
             ]
             if matching_servers:
-                self._plex_server = self.account.resource(matching_servers[0]).connect(
+                self.plex_server = self.account.resource(matching_servers[0]).connect(
                     timeout=10
                 )
                 return True
@@ -196,7 +196,7 @@ class PlexServer:
             _connect_with_token()
 
         try:
-            system_accounts = self._plex_server.systemAccounts()
+            system_accounts = self.plex_server.systemAccounts()
         except Unauthorized:
             _LOGGER.warning(
                 "Plex account has limited permissions, shared account filtering will not be available."
@@ -211,10 +211,10 @@ class PlexServer:
                 account.name for account in system_accounts if account.accountID == 1
             ]
             if owner_account:
-                self._owner_username = owner_account[0]
-                _LOGGER.debug("Server owner found: '%s'", self._owner_username)
+                self.owner = owner_account[0]
+                _LOGGER.debug("Server owner found: '%s'", self.owner)
 
-        self._version = self._plex_server.version
+        self.version = self.plex_server.version
 
         if config_entry_update_needed:
             raise ShouldUpdateConfigEntry
@@ -234,8 +234,8 @@ class PlexServer:
     def _fetch_platform_data(self):
         """Fetch all data from the Plex server in a single method."""
         return (
-            self._plex_server.clients(),
-            self._plex_server.sessions(),
+            self.plex_server.clients(),
+            self.plex_server.sessions(),
             self.plextv_clients(),
         )
 
@@ -384,39 +384,24 @@ class PlexServer:
         )
 
     @property
-    def plex_server(self):
-        """Return the plexapi PlexServer instance."""
-        return self._plex_server
-
-    @property
     def accounts(self):
         """Return accounts associated with the Plex server."""
         return set(self._accounts)
 
     @property
-    def owner(self):
-        """Return the Plex server owner username."""
-        return self._owner_username
-
-    @property
-    def version(self):
-        """Return the version of the Plex server."""
-        return self._version
-
-    @property
     def friendly_name(self):
         """Return name of connected Plex server."""
-        return self._plex_server.friendlyName
+        return self.plex_server.friendlyName
 
     @property
     def machine_identifier(self):
         """Return unique identifier of connected Plex server."""
-        return self._plex_server.machineIdentifier
+        return self.plex_server.machineIdentifier
 
     @property
     def url_in_use(self):
         """Return URL used for connected Plex server."""
-        return self._plex_server._baseurl  # pylint: disable=protected-access
+        return self.plex_server._baseurl  # pylint: disable=protected-access
 
     @property
     def option_ignore_new_shared_users(self):
@@ -441,19 +426,19 @@ class PlexServer:
     @property
     def library(self):
         """Return library attribute from server object."""
-        return self._plex_server.library
+        return self.plex_server.library
 
     def playlist(self, title):
         """Return playlist from server object."""
-        return self._plex_server.playlist(title)
+        return self.plex_server.playlist(title)
 
     def create_playqueue(self, media, **kwargs):
         """Create playqueue on Plex server."""
-        return plexapi.playqueue.PlayQueue.create(self._plex_server, media, **kwargs)
+        return plexapi.playqueue.PlayQueue.create(self.plex_server, media, **kwargs)
 
     def fetch_item(self, item):
         """Fetch item from Plex server."""
-        return self._plex_server.fetchItem(item)
+        return self.plex_server.fetchItem(item)
 
     def lookup_media(self, media_type, **kwargs):
         """Lookup a piece of media."""
