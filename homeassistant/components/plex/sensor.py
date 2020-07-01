@@ -33,18 +33,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class PlexSensor(Entity):
     """Representation of a Plex now playing sensor."""
 
+    name = None
+    state = None
+    unique_id = None
+
     def __init__(self, plex_server):
         """Initialize the sensor."""
         self.sessions = []
-        self._state = None
-        self._now_playing = []
-        self._server = plex_server
-        self._name = NAME_FORMAT.format(plex_server.friendly_name)
-        self._unique_id = f"sensor-{plex_server.machine_identifier}"
+        self.now_playing = []
+        self.plex_server = plex_server
+        self.name = NAME_FORMAT.format(plex_server.friendly_name)
+        self.unique_id = f"sensor-{plex_server.machine_identifier}"
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
-        server_id = self._server.machine_identifier
+        server_id = self.plex_server.machine_identifier
         unsub = async_dispatcher_connect(
             self.hass,
             PLEX_UPDATE_SENSOR_SIGNAL.format(server_id),
@@ -63,7 +66,9 @@ class PlexSensor(Entity):
         def update_plex(_):
             async_dispatcher_send(
                 self.hass,
-                PLEX_UPDATE_PLATFORMS_SIGNAL.format(self._server.machine_identifier),
+                PLEX_UPDATE_PLATFORMS_SIGNAL.format(
+                    self.plex_server.machine_identifier
+                ),
             )
 
         now_playing = []
@@ -120,8 +125,8 @@ class PlexSensor(Entity):
                     now_playing_title += f" ({sess.year})"
 
             now_playing.append((now_playing_user, now_playing_title))
-        self._state = len(self.sessions)
-        self._now_playing = now_playing
+        self.state = len(self.sessions)
+        self.now_playing = now_playing
 
         self.async_write_ha_state()
 
@@ -129,24 +134,9 @@ class PlexSensor(Entity):
             async_call_later(self.hass, 5, update_plex)
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the id of this plex client."""
-        return self._unique_id
-
-    @property
     def should_poll(self):
         """Return True if entity has to be polled for state."""
         return False
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
 
     @property
     def unit_of_measurement(self):
@@ -161,7 +151,7 @@ class PlexSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {content[0]: content[1] for content in self._now_playing}
+        return {content[0]: content[1] for content in self.now_playing}
 
     @property
     def device_info(self):
@@ -170,9 +160,9 @@ class PlexSensor(Entity):
             return None
 
         return {
-            "identifiers": {(PLEX_DOMAIN, self._server.machine_identifier)},
+            "identifiers": {(PLEX_DOMAIN, self.plex_server.machine_identifier)},
             "manufacturer": "Plex",
             "model": "Plex Media Server",
             "name": "Activity Sensor",
-            "sw_version": self._server.version,
+            "sw_version": self.plex_server.version,
         }
