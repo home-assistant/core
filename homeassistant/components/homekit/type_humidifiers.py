@@ -68,7 +68,7 @@ class HumidifierDehumidifier(HomeAccessory):
     def __init__(self, *args):
         """Initialize a HumidifierDehumidifier accessory object."""
         super().__init__(*args, category=CATEGORY_HUMIDIFIER)
-        min_humidity, max_humidity = self.get_humidity_range()
+        min_humidity, max_humidity = self.get_humidity_range_from_state(state)
 
         self.chars = []
         state = self.hass.states.get(self.entity_id)
@@ -193,14 +193,14 @@ class HumidifierDehumidifier(HomeAccessory):
                     f"{CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER} to {char_values[CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER]}",
                 )
 
-    def get_humidity_range(self):
+    def get_humidity_range_from_state(self, state):
         """Return min and max humidity range."""
-        max_humidity = self.hass.states.get(self.entity_id).attributes.get(
+        max_humidity = state.attributes.get(
             ATTR_MAX_HUMIDITY, DEFAULT_MAX_HUMIDITY
         )
         max_humidity = round(max_humidity)
 
-        min_humidity = self.hass.states.get(self.entity_id).attributes.get(
+        min_humidity = state.attributes.get(
             ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY
         )
         min_humidity = round(min_humidity)
