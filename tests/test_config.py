@@ -14,7 +14,6 @@ import homeassistant.config as config_util
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
-    ATTR_HIDDEN,
     CONF_AUTH_MFA_MODULES,
     CONF_AUTH_PROVIDERS,
     CONF_CUSTOMIZE,
@@ -203,7 +202,7 @@ def test_core_config_schema():
 
 def test_customize_dict_schema():
     """Test basic customize config validation."""
-    values = ({ATTR_FRIENDLY_NAME: None}, {ATTR_HIDDEN: "2"}, {ATTR_ASSUMED_STATE: "2"})
+    values = ({ATTR_FRIENDLY_NAME: None}, {ATTR_ASSUMED_STATE: "2"})
 
     for val in values:
         print(val)
@@ -211,8 +210,8 @@ def test_customize_dict_schema():
             config_util.CUSTOMIZE_DICT_SCHEMA(val)
 
     assert config_util.CUSTOMIZE_DICT_SCHEMA(
-        {ATTR_FRIENDLY_NAME: 2, ATTR_HIDDEN: "1", ATTR_ASSUMED_STATE: "0"}
-    ) == {ATTR_FRIENDLY_NAME: "2", ATTR_HIDDEN: True, ATTR_ASSUMED_STATE: False}
+        {ATTR_FRIENDLY_NAME: 2, ATTR_ASSUMED_STATE: "0"}
+    ) == {ATTR_FRIENDLY_NAME: "2", ATTR_ASSUMED_STATE: False}
 
 
 def test_customize_glob_is_ordered():

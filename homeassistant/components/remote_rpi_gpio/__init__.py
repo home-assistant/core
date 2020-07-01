@@ -26,7 +26,9 @@ def setup_output(address, port, invert_logic):
     """Set up a GPIO as output."""
 
     try:
-        return LED(port, active_high=invert_logic, pin_factory=PiGPIOFactory(address))
+        return LED(
+            port, active_high=not invert_logic, pin_factory=PiGPIOFactory(address)
+        )
     except (ValueError, IndexError, KeyError):
         return None
 

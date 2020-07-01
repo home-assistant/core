@@ -80,7 +80,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=info[CONF_UID], data={CONF_UID: info["uid"], **user_input}
         )
 
-    async def async_step_zeroconf(self, discovery_info=None):
+    async def async_step_zeroconf(self, discovery_info):
         """Handle the configuration via zeroconf."""
         if discovery_info is None:
             return self.async_abort(reason="connection_error")

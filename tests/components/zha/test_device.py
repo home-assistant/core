@@ -7,6 +7,7 @@ import pytest
 import zigpy.zcl.clusters.general as general
 
 import homeassistant.components.zha.core.device as zha_core_device
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 import homeassistant.helpers.device_registry as ha_dev_reg
 import homeassistant.util.dt as dt_util
 
@@ -107,13 +108,13 @@ async def test_check_available_success(
     basic_ch.read_attributes.reset_mock()
     device_with_basic_channel.last_seen = None
     assert zha_device.available is True
-    _send_time_changed(hass, zha_core_device._CONSIDER_UNAVAILABLE_MAINS + 2)
+    _send_time_changed(hass, zha_core_device.CONSIDER_UNAVAILABLE_MAINS + 2)
     await hass.async_block_till_done()
     assert zha_device.available is False
     assert basic_ch.read_attributes.await_count == 0
 
     device_with_basic_channel.last_seen = (
-        time.time() - zha_core_device._CONSIDER_UNAVAILABLE_MAINS - 2
+        time.time() - zha_core_device.CONSIDER_UNAVAILABLE_MAINS - 2
     )
     _seens = [time.time(), device_with_basic_channel.last_seen]
 
@@ -162,7 +163,7 @@ async def test_check_available_unsuccessful(
     assert basic_ch.read_attributes.await_count == 0
 
     device_with_basic_channel.last_seen = (
-        time.time() - zha_core_device._CONSIDER_UNAVAILABLE_MAINS - 2
+        time.time() - zha_core_device.CONSIDER_UNAVAILABLE_MAINS - 2
     )
 
     # unsuccessfuly ping zigpy device, but zha_device is still available
@@ -203,7 +204,7 @@ async def test_check_available_no_basic_channel(
     assert zha_device.available is True
 
     device_without_basic_channel.last_seen = (
-        time.time() - zha_core_device._CONSIDER_UNAVAILABLE_BATTERY - 2
+        time.time() - zha_core_device.CONSIDER_UNAVAILABLE_BATTERY - 2
     )
 
     assert "does not have a mandatory basic cluster" not in caplog.text
@@ -228,3 +229,46 @@ async def test_ota_sw_version(hass, ota_zha_device):
     await hass.async_block_till_done()
     entry = dev_registry.async_get(ota_zha_device.device_id)
     assert int(entry.sw_version, base=16) == sw_version
+
+
+@pytest.mark.parametrize(
+    "device, last_seen_delta, is_available",
+    (
+        ("zigpy_device", 0, True),
+        ("zigpy_device", zha_core_device.CONSIDER_UNAVAILABLE_MAINS + 2, True,),
+        ("zigpy_device", zha_core_device.CONSIDER_UNAVAILABLE_BATTERY - 2, True,),
+        ("zigpy_device", zha_core_device.CONSIDER_UNAVAILABLE_BATTERY + 2, False,),
+        ("zigpy_device_mains", 0, True),
+        ("zigpy_device_mains", zha_core_device.CONSIDER_UNAVAILABLE_MAINS - 2, True,),
+        ("zigpy_device_mains", zha_core_device.CONSIDER_UNAVAILABLE_MAINS + 2, False,),
+        (
+            "zigpy_device_mains",
+            zha_core_device.CONSIDER_UNAVAILABLE_BATTERY - 2,
+            False,
+        ),
+        (
+            "zigpy_device_mains",
+            zha_core_device.CONSIDER_UNAVAILABLE_BATTERY + 2,
+            False,
+        ),
+    ),
+)
+async def test_device_restore_availability(
+    hass, request, device, last_seen_delta, is_available, zha_device_restored
+):
+    """Test initial availability for restored devices."""
+
+    zigpy_device = request.getfixturevalue(device)()
+    zha_device = await zha_device_restored(
+        zigpy_device, last_seen=time.time() - last_seen_delta
+    )
+    entity_id = "switch.fakemanufacturer_fakemodel_e769900a_on_off"
+
+    await hass.async_block_till_done()
+    # ensure the switch entity was created
+    assert hass.states.get(entity_id).state is not None
+    assert zha_device.available is is_available
+    if is_available:
+        assert hass.states.get(entity_id).state == STATE_OFF
+    else:
+        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE

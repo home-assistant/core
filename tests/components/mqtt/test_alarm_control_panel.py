@@ -17,8 +17,10 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
 )
+from homeassistant.setup import async_setup_component
 
 from .test_common import (
+    help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_payload,
@@ -40,11 +42,7 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import (
-    assert_setup_component,
-    async_fire_mqtt_message,
-    async_setup_component,
-)
+from tests.common import assert_setup_component, async_fire_mqtt_message
 from tests.components.alarm_control_panel import common
 
 CODE_NUMBER = "1234"
@@ -469,6 +467,13 @@ async def test_attributes_code_text(hass, mqtt_mock):
     )
 
 
+async def test_availability_when_connection_lost(hass, mqtt_mock):
+    """Test availability after MQTT disconnection."""
+    await help_test_availability_when_connection_lost(
+        hass, mqtt_mock, alarm_control_panel.DOMAIN, DEFAULT_CONFIG_CODE
+    )
+
+
 async def test_availability_without_topic(hass, mqtt_mock):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
@@ -525,7 +530,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     )
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass, mqtt_mock):
     """Test unique id option only creates one alarm per unique_id."""
     config = {
         alarm_control_panel.DOMAIN: [
@@ -545,7 +550,7 @@ async def test_unique_id(hass):
             },
         ]
     }
-    await help_test_unique_id(hass, alarm_control_panel.DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, alarm_control_panel.DOMAIN, config)
 
 
 async def test_discovery_removal_alarm(hass, mqtt_mock, caplog):

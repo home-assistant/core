@@ -859,8 +859,9 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         self.entity_id = "mock_component.mock_node_mock_value"
         self.zwave_config = {"zwave": {}}
         self.device_config = {self.entity_id: {}}
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -1204,8 +1205,9 @@ class TestZWaveServices(unittest.TestCase):
         self.zwave_network.state = MockNetwork.STATE_READY
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         self.hass.block_till_done()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.services.call("zwave", "stop_network", {})
         self.hass.block_till_done()

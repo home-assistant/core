@@ -873,7 +873,11 @@ async def test_arm_disarm_arm_away(hass):
         State(
             "alarm_control_panel.alarm",
             STATE_ALARM_ARMED_AWAY,
-            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+            {
+                alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True,
+                ATTR_SUPPORTED_FEATURES: alarm_control_panel.const.SUPPORT_ALARM_ARM_HOME
+                | alarm_control_panel.const.SUPPORT_ALARM_ARM_AWAY,
+            },
         ),
         PIN_CONFIG,
     )
@@ -891,25 +895,6 @@ async def test_arm_disarm_arm_away(hass):
                     "level_values": [
                         {"level_synonym": ["armed away", "away"], "lang": "en"}
                     ],
-                },
-                {
-                    "level_name": "armed_night",
-                    "level_values": [
-                        {"level_synonym": ["armed night", "night"], "lang": "en"}
-                    ],
-                },
-                {
-                    "level_name": "armed_custom_bypass",
-                    "level_values": [
-                        {
-                            "level_synonym": ["armed custom bypass", "custom"],
-                            "lang": "en",
-                        }
-                    ],
-                },
-                {
-                    "level_name": "triggered",
-                    "level_values": [{"level_synonym": ["triggered"], "lang": "en"}],
                 },
             ],
             "ordered": False,
@@ -1031,6 +1016,11 @@ async def test_arm_disarm_arm_away(hass):
     )
     assert len(calls) == 2
 
+    with pytest.raises(error.SmartHomeError) as err:
+        await trt.execute(
+            trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": True}, {},
+        )
+
 
 async def test_arm_disarm_disarm(hass):
     """Test ArmDisarm trait Disarming support for alarm_control_panel domain."""
@@ -1043,31 +1033,17 @@ async def test_arm_disarm_disarm(hass):
         State(
             "alarm_control_panel.alarm",
             STATE_ALARM_DISARMED,
-            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+            {
+                alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True,
+                ATTR_SUPPORTED_FEATURES: alarm_control_panel.const.SUPPORT_ALARM_TRIGGER
+                | alarm_control_panel.const.SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
+            },
         ),
         PIN_CONFIG,
     )
     assert trt.sync_attributes() == {
         "availableArmLevels": {
             "levels": [
-                {
-                    "level_name": "armed_home",
-                    "level_values": [
-                        {"level_synonym": ["armed home", "home"], "lang": "en"}
-                    ],
-                },
-                {
-                    "level_name": "armed_away",
-                    "level_values": [
-                        {"level_synonym": ["armed away", "away"], "lang": "en"}
-                    ],
-                },
-                {
-                    "level_name": "armed_night",
-                    "level_values": [
-                        {"level_synonym": ["armed night", "night"], "lang": "en"}
-                    ],
-                },
                 {
                     "level_name": "armed_custom_bypass",
                     "level_values": [

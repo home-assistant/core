@@ -3,6 +3,8 @@ import asyncio
 import logging
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import zigpy.zcl.clusters.closures
+
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -280,9 +282,10 @@ class ChannelPool:
             # incorrectly.
             if (
                 hasattr(cluster, "ep_attribute")
+                and cluster_id == zigpy.zcl.clusters.closures.DoorLock.cluster_id
                 and cluster.ep_attribute == "multistate_input"
             ):
-                channel_class = base.ZigbeeChannel
+                channel_class = general.MultistateInput
             # end of ugly hack
             channel = channel_class(cluster, self)
             if channel.name == const.CHANNEL_POWER_CONFIGURATION:

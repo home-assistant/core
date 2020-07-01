@@ -4,7 +4,7 @@ import os
 
 from sqlalchemy import Table, text
 from sqlalchemy.engine import reflection
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.exc import InternalError, OperationalError, SQLAlchemyError
 
 from .models import SCHEMA_VERSION, Base, SchemaChanges
 from .util import session_scope
@@ -64,11 +64,15 @@ def _create_index(engine, table_name, index_name):
     within the table definition described in the models
     """
     table = Table(table_name, Base.metadata)
-    _LOGGER.debug("Looking up index for table %s", table_name)
+    _LOGGER.debug("Looking up index %s for table %s", index_name, table_name)
     # Look up the index object by name from the table is the models
-    index = next(idx for idx in table.indexes if idx.name == index_name)
+    index_list = [idx for idx in table.indexes if idx.name == index_name]
+    if not index_list:
+        _LOGGER.debug("The index %s no longer exists", index_name)
+        return
+    index = index_list[0]
     _LOGGER.debug("Creating %s index", index_name)
-    _LOGGER.info(
+    _LOGGER.warning(
         "Adding index `%s` to database. Note: this can take several "
         "minutes on large databases and slow computers. Please "
         "be patient!",
@@ -78,6 +82,13 @@ def _create_index(engine, table_name, index_name):
         index.create(engine)
     except OperationalError as err:
         if "already exists" not in str(err).lower():
+            raise
+
+        _LOGGER.warning(
+            "Index %s already exists on %s, continuing", index_name, table_name
+        )
+    except InternalError as err:
+        if "duplicate" not in str(err).lower():
             raise
 
         _LOGGER.warning(
@@ -144,6 +155,11 @@ def _drop_index(engine, table_name, index_name):
             "Finished dropping index %s from table %s", index_name, table_name
         )
     else:
+        if index_name == "ix_states_context_parent_id":
+            # Was only there on nightly so we do not want
+            # to generate log noise or issues about it.
+            return
+
         _LOGGER.warning(
             "Failed to drop index %s from table %s. Schema "
             "Migration will continue; this is not a "
@@ -155,7 +171,7 @@ def _drop_index(engine, table_name, index_name):
 
 def _add_columns(engine, table_name, columns_def):
     """Add columns to a table."""
-    _LOGGER.info(
+    _LOGGER.warning(
         "Adding columns %s to table %s. Note: this can take several "
         "minutes on large databases and slow computers. Please "
         "be patient!",
@@ -174,7 +190,7 @@ def _add_columns(engine, table_name, columns_def):
             )
         )
         return
-    except OperationalError:
+    except (InternalError, OperationalError):
         # Some engines support adding all columns at once,
         # this error is when they don't
         _LOGGER.info("Unable to use quick column add. Adding 1 by 1.")
@@ -188,7 +204,7 @@ def _add_columns(engine, table_name, columns_def):
                     )
                 )
             )
-        except OperationalError as err:
+        except (InternalError, OperationalError) as err:
             if "duplicate" not in str(err).lower():
                 raise
 
@@ -249,14 +265,28 @@ def _apply_update(engine, new_version, old_version):
     elif new_version == 7:
         _create_index(engine, "states", "ix_states_entity_id")
     elif new_version == 8:
-        # Pending migration, want to group a few.
-        pass
-        # _add_columns(engine, "events", [
-        #     'context_parent_id CHARACTER(36)',
-        # ])
-        # _add_columns(engine, "states", [
-        #     'context_parent_id CHARACTER(36)',
-        # ])
+        _add_columns(engine, "events", ["context_parent_id CHARACTER(36)"])
+        _add_columns(engine, "states", ["old_state_id INTEGER"])
+        _create_index(engine, "events", "ix_events_context_parent_id")
+    elif new_version == 9:
+        # We now get the context from events with a join
+        # since its always there on state_changed events
+        #
+        # Ideally we would drop the columns from the states
+        # table as well but sqlite doesn't support that
+        # and we would have to move to something like
+        # sqlalchemy alembic to make that work
+        #
+        _drop_index(engine, "states", "ix_states_context_id")
+        _drop_index(engine, "states", "ix_states_context_user_id")
+        # This index won't be there if they were not running
+        # nightly but we don't treat that as a critical issue
+        _drop_index(engine, "states", "ix_states_context_parent_id")
+        # Redundant keys on composite index:
+        # We already have ix_states_entity_id_last_updated
+        _drop_index(engine, "states", "ix_states_entity_id")
+        _create_index(engine, "events", "ix_events_event_type_time_fired")
+        _drop_index(engine, "events", "ix_events_event_type")
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
