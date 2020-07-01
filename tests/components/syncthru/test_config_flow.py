@@ -105,4 +105,7 @@ async def test_ssdp(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "confirm"
-    assert context[CONF_URL] == url
+    assert CONF_URL in result["data_schema"].schema
+    for k in result["data_schema"].schema:
+        if k == CONF_URL:
+            assert k.default() == url
