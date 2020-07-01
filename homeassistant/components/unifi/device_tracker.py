@@ -167,13 +167,6 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
     def async_update_callback(self) -> None:
         """Update the clients state."""
 
-        @callback
-        def _make_disconnected(now):
-            """Mark client as disconnected."""
-            self._is_connected = False
-            self.cancel_scheduled_update = None
-            self.async_write_ha_state()
-
         if self.client.last_updated == SOURCE_EVENT:
 
             if (self.is_wired and self.client.event.event in WIRED_CONNECTION) or (
@@ -196,6 +189,14 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
                 self.schedule_update = True
 
         if self.schedule_update:
+
+            @callback
+            def _make_disconnected(_):
+                """Mark client as disconnected."""
+                self._is_connected = False
+                self.cancel_scheduled_update = None
+                self.async_write_ha_state()
+
             self.schedule_update = False
 
             if self.cancel_scheduled_update:
@@ -294,14 +295,15 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
     def async_update_callback(self):
         """Update the devices' state."""
 
-        @callback
-        def _no_heartbeat(now):
-            """No heart beat by device."""
-            self._is_connected = False
-            self.cancel_scheduled_update = None
-            self.async_write_ha_state()
-
         if self.device.last_updated == SOURCE_DATA:
+
+            @callback
+            def _no_heartbeat(_):
+                """No heart beat by device."""
+                self._is_connected = False
+                self.cancel_scheduled_update = None
+                self.async_write_ha_state()
+
             self._is_connected = True
 
             if self.cancel_scheduled_update:
