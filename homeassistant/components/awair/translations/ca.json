@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja ha estat configurat",
+            "no_devices": "No s'han trobat dispositius a la xarxa",
+            "reauth_successful": "Token d'acc\u00e9s actualitzat correctament"
+        },
+        "error": {
+            "auth": "Token d'acc\u00e9s no v\u00e0lid",
+            "unknown": "Error desconegut de l'API Awair."
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "access_token": "Token d'acc\u00e9s",
+                    "email": "Correu electr\u00f2nic"
+                },
+                "description": "Torna a introduir el token d'acc\u00e9s de desenvolupador d'Awair."
+            },
+            "user": {
+                "data": {
+                    "access_token": "Token d'acc\u00e9s",
+                    "email": "Correu electr\u00f2nic"
+                }
+            }
+        }
+    }
+}

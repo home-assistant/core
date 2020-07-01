@@ -1,0 +1,16 @@
+{
+    "host": "api-test.geofox.de",
+    "username": "test-username",
+    "password": "test-password",
+    "station": {
+        "city": "Schmalfeld",
+        "combinedName": "Schmalfeld, Holstenstra\u00dfe",
+        "coordinate": {"x": 9.986115, "y": 53.874122},
+        "hasStationInformation": false,
+        "id": "Master:75279",
+        "name": "Holstenstra\u00dfe",
+        "serviceTypes": ["bus"],
+        "type": "STATION"
+    },
+    "stationInformation": {"returnCode": "OK"}
+}

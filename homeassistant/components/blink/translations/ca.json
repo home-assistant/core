@@ -29,7 +29,9 @@
             "simple_options": {
                 "data": {
                     "scan_interval": "Interval d'escaneig (segons)"
-                }
+                },
+                "description": "Configura la integraci\u00f3 Blink",
+                "title": "Opcions de Blink"
             }
         }
     }

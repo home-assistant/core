@@ -128,6 +128,36 @@ async def test_hmip_shutter_contact(hass, default_mock_hap_factory):
     assert ha_state.attributes[ATTR_SABOTAGE]
 
 
+async def test_hmip_shutter_contact_optical(hass, default_mock_hap_factory):
+    """Test HomematicipShutterContact."""
+    entity_id = "binary_sensor.sitzplatzture"
+    entity_name = "Sitzplatzt\u00fcre"
+    device_model = "HmIP-SWDO-PL"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=[entity_name]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == STATE_OFF
+    await async_manipulate_test_data(hass, hmip_device, "windowState", WindowState.OPEN)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_ON
+
+    await async_manipulate_test_data(hass, hmip_device, "windowState", None)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_OFF
+
+    # test common attributes
+    assert ha_state.attributes[ATTR_RSSI_DEVICE] == -72
+    assert not ha_state.attributes.get(ATTR_SABOTAGE)
+    await async_manipulate_test_data(hass, hmip_device, "sabotage", True)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.attributes[ATTR_SABOTAGE]
+
+
 async def test_hmip_motion_detector(hass, default_mock_hap_factory):
     """Test HomematicipMotionDetector."""
     entity_id = "binary_sensor.bewegungsmelder_fur_55er_rahmen_innen"

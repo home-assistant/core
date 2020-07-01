@@ -29,7 +29,6 @@ from homeassistant.setup import async_when_setup
 
 from .const import (
     ATTR_MANUFACTURER,
-    CONF_CAMERA,
     CONF_EVENTS,
     CONF_MODEL,
     CONF_STREAM_PROFILE,
@@ -77,12 +76,6 @@ class AxisNetworkDevice:
     def serial(self):
         """Return the serial number of this device."""
         return self.config_entry.unique_id
-
-    @property
-    def option_camera(self):
-        """Config entry option defining if camera should be used."""
-        supported_formats = self.api.vapix.params.image_format
-        return self.config_entry.options.get(CONF_CAMERA, bool(supported_formats))
 
     @property
     def option_events(self):

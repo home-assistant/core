@@ -93,7 +93,7 @@ async def _async_handle_api_changed_error(hass: HomeAssistant, error: APIChanged
     _LOGGER.error(str(error))
     hass.components.persistent_notification.async_create(
         "It seems like your powerwall uses an unsupported version. "
-        "Please update the software of your powerwall or if it is"
+        "Please update the software of your powerwall or if it is "
         "already the newest consider reporting this issue.\nSee logs for more information",
         title="Unknown powerwall software version",
     )

@@ -2,7 +2,6 @@
 
 import asyncio
 import logging
-import time
 from typing import Any, Awaitable, Dict, List, Optional
 
 from homeassistant.core import CALLBACK_TYPE, State, callback
@@ -33,7 +32,6 @@ from .core.typing import CALLABLE_T, ChannelType, ZhaDeviceType
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_SUFFIX = "entity_suffix"
-RESTART_GRACE_PERIOD = 7200  # 2 hours
 
 
 class BaseZhaEntity(LogMixin, entity.Entity):
@@ -48,7 +46,6 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         self._state: Any = None
         self._device_state_attributes: Dict[str, Any] = {}
         self._zha_device: ZhaDeviceType = zha_device
-        self._available: bool = False
         self._unsubs: List[CALLABLE_T] = []
         self.remove_future: Awaitable[None] = None
 
@@ -96,15 +93,9 @@ class BaseZhaEntity(LogMixin, entity.Entity):
             "via_device": (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
         }
 
-    @property
-    def available(self) -> bool:
-        """Return entity availability."""
-        return self._available
-
     @callback
-    def async_set_available(self, available: bool) -> None:
-        """Set entity availability."""
-        self._available = available
+    def async_state_changed(self) -> None:
+        """Entity state changed."""
         self.async_write_ha_state()
 
     @callback
@@ -163,9 +154,13 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
         for channel in channels:
             self.cluster_channels[channel.name] = channel
 
+    @property
+    def available(self) -> bool:
+        """Return entity availability."""
+        return self._zha_device.available
+
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
-        await super().async_added_to_hass()
         self.remove_future = asyncio.Future()
         await self.async_accept_signal(
             None,
@@ -173,11 +168,17 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
             self.async_remove,
             signal_override=True,
         )
-        await self.async_check_recently_seen()
+
+        if not self.zha_device.is_mains_powered:
+            # mains powered devices will get real time state
+            last_state = await self.async_get_last_state()
+            if last_state:
+                self.async_restore_last_state(last_state)
+
         await self.async_accept_signal(
             None,
             f"{self.zha_device.available_signal}_entity",
-            self.async_set_available,
+            self.async_state_changed,
             signal_override=True,
         )
         self._zha_device.gateway.register_entity_reference(
@@ -199,20 +200,6 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
     def async_restore_last_state(self, last_state) -> None:
         """Restore previous state."""
 
-    async def async_check_recently_seen(self) -> None:
-        """Check if the device was seen within the last 2 hours."""
-        last_state = await self.async_get_last_state()
-        if (
-            last_state
-            and self._zha_device.last_seen
-            and (time.time() - self._zha_device.last_seen < RESTART_GRACE_PERIOD)
-        ):
-            self.async_set_available(True)
-            if not self.zha_device.is_mains_powered:
-                # mains powered devices will get real time state
-                self.async_restore_last_state(last_state)
-            self._zha_device.set_available(True)
-
     async def async_update(self) -> None:
         """Retrieve latest state."""
         for channel in self.cluster_channels.values():
@@ -228,12 +215,18 @@ class ZhaGroupEntity(BaseZhaEntity):
     ) -> None:
         """Initialize a light group."""
         super().__init__(unique_id, zha_device, **kwargs)
+        self._available = False
         self._name = (
             f"{zha_device.gateway.groups.get(group_id).name}_zha_group_0x{group_id:04x}"
         )
         self._group_id: int = group_id
         self._entity_ids: List[str] = entity_ids
         self._async_unsub_state_changed: Optional[CALLBACK_TYPE] = None
+
+    @property
+    def available(self) -> bool:
+        """Return entity availability."""
+        return self._available
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

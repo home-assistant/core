@@ -614,6 +614,29 @@ async def test_play_media_url(hass, config_entry, config, controller, caplog):
     assert "Unable to play media: Failure (1)" in caplog.text
 
 
+async def test_play_media_music(hass, config_entry, config, controller, caplog):
+    """Test the play media service with type music."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    url = "http://news/podcast.mp3"
+    # First pass completes successfully, second pass raises command error
+    for _ in range(2):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player",
+                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+                ATTR_MEDIA_CONTENT_ID: url,
+            },
+            blocking=True,
+        )
+        player.play_url.assert_called_once_with(url)
+        player.play_url.reset_mock()
+        player.play_url.side_effect = CommandFailedError(None, "Failure", 1)
+    assert "Unable to play media: Failure (1)" in caplog.text
+
+
 async def test_play_media_quick_select(
     hass, config_entry, config, controller, caplog, quick_selects
 ):
