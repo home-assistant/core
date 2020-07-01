@@ -34,6 +34,7 @@ from homeassistant.components.stream.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_FILENAME,
+    EVENT_HOMEASSISTANT_START,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
@@ -48,7 +49,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
 from homeassistant.loader import bind_hass
-from homeassistant.setup import async_when_setup
 
 from .const import DATA_CAMERA_PREFS, DOMAIN
 from .prefs import CameraPreferences
@@ -162,6 +162,14 @@ async def async_get_image(hass, entity_id, timeout=10):
 
 
 @bind_hass
+async def async_get_stream_source(hass, entity_id):
+    """Fetch the stream source for a camera entity."""
+    camera = _get_camera_from_entity_id(hass, entity_id)
+
+    return await camera.stream_source()
+
+
+@bind_hass
 async def async_get_mjpeg_stream(hass, request, entity_id):
     """Fetch an mjpeg stream from a camera entity."""
     camera = _get_camera_from_entity_id(hass, entity_id)
@@ -251,7 +259,7 @@ async def async_setup(hass, config):
 
     await component.async_setup(config)
 
-    async def preload_stream(hass, _):
+    async def preload_stream(_):
         for camera in component.entities:
             camera_prefs = prefs.get(camera.entity_id)
             if not camera_prefs.preload_stream:
@@ -265,7 +273,7 @@ async def async_setup(hass, config):
 
             request_stream(hass, source, keepalive=True, options=camera.stream_options)
 
-    async_when_setup(hass, DOMAIN_STREAM, preload_stream)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, preload_stream)
 
     @callback
     def update_tokens(time):
@@ -465,11 +473,11 @@ class CameraView(HomeAssistantView):
 
     requires_auth = False
 
-    def __init__(self, component):
+    def __init__(self, component: EntityComponent) -> None:
         """Initialize a basic camera view."""
         self.component = component
 
-    async def get(self, request, entity_id):
+    async def get(self, request: web.Request, entity_id: str) -> web.Response:
         """Start a GET request."""
         camera = self.component.get_entity(entity_id)
 
@@ -501,7 +509,7 @@ class CameraImageView(CameraView):
     url = "/api/camera_proxy/{entity_id}"
     name = "api:camera:image"
 
-    async def handle(self, request, camera):
+    async def handle(self, request: web.Request, camera: Camera) -> web.Response:
         """Serve camera image."""
         with suppress(asyncio.CancelledError, asyncio.TimeoutError):
             async with async_timeout.timeout(10):
@@ -519,7 +527,7 @@ class CameraMjpegStream(CameraView):
     url = "/api/camera_proxy_stream/{entity_id}"
     name = "api:camera:stream"
 
-    async def handle(self, request, camera):
+    async def handle(self, request: web.Request, camera: Camera) -> web.Response:
         """Serve camera stream, possibly with interval."""
         interval = request.query.get("interval")
         if interval is None:

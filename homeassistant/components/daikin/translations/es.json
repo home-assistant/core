@@ -1,21 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositivo ya est\u00e1 configurado",
-            "device_fail": "Error inesperado al crear el dispositivo.",
-            "device_timeout": "Tiempo de espera agotado al conectar con el dispositivo."
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
         "error": {
             "device_fail": "Error inesperado",
-            "device_timeout": "Error al conectar",
+            "device_timeout": "No se pudo conectar",
             "forbidden": "Autenticaci\u00f3n no v\u00e1lida"
         },
         "step": {
             "user": {
                 "data": {
                     "host": "Host",
-                    "key": "Clave de autenticaci\u00f3n (s\u00f3lo utilizada por dispositivos BRP072C/Zena)",
-                    "password": "Contrase\u00f1a del dispositivo (s\u00f3lo utilizada por dispositivos SKYFi)"
+                    "key": "Clave API",
+                    "password": "Contrase\u00f1a"
                 },
                 "description": "Introduce la IP de tu aire acondicionado Daikin",
                 "title": "Configurar aire acondicionado Daikin"

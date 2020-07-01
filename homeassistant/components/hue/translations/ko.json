@@ -44,8 +44,8 @@
             "remote_button_long_release": "\"{subtype}\" \ubc84\ud2bc\uc774 \uae38\uac8c \ub20c\ub838\ub2e4\uac00 \uc190\uc744 \ub5c4 \ub54c",
             "remote_button_short_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub20c\ub9b4 \ub54c",
             "remote_button_short_release": "\"{subtype}\" \ubc84\ud2bc\uc5d0\uc11c \uc190\uc744 \ub5c4 \ub54c",
-            "remote_double_button_long_press": "\"{subtype}\" \ubaa8\ub450 \uae38\uac8c \ub20c\ub838\ub2e4\uac00 \uc190\uc744 \ub5c4 \ub54c",
-            "remote_double_button_short_press": "\"{subtype}\" \ubaa8\ub450 \uc190\uc744 \ub5c4 \ub54c"
+            "remote_double_button_long_press": "\"{subtype}\"\uc5d0\uc11c \ubaa8\ub450 \uae38\uac8c \ub20c\ub838\ub2e4\uac00 \uc190\uc744 \ub5c4 \ub54c",
+            "remote_double_button_short_press": "\"{subtype}\"\uc5d0\uc11c \ubaa8\ub450 \uc190\uc744 \ub5c4 \ub54c"
         }
     }
 }

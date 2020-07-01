@@ -1,6 +1,6 @@
 {
+    "title": "AIS Serwis Spotify",
     "config": {
-        "title": "AIS Serwis Spotify",
         "step": {
             "init": {
                 "description": "Aby po\u0142\u0105czy\u0107 konto Spotify wymagana jest autoryzacja **Asystenta domowego** na stronie Spotify \n\n ![AIS logo](/static/icons/favicon-100x100.png) \n\nkliknij **ZATWIERDŹ** by przejść do autoryzacji.",

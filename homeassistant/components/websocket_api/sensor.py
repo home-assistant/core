@@ -24,7 +24,7 @@ class APICount(Entity):
 
     def __init__(self):
         """Initialize the API count."""
-        self.count = None
+        self.count = 0
 
     async def async_added_to_hass(self):
         """Added to hass."""
@@ -38,7 +38,6 @@ class APICount(Entity):
                 SIGNAL_WEBSOCKET_DISCONNECTED, self._update_count
             )
         )
-        self._update_count()
 
     @property
     def name(self):

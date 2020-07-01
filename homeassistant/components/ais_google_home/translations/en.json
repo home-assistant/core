@@ -1,6 +1,5 @@
-{
+{   "title": "AIS Google Home",
     "config": {
-        "title": "AIS Google Home",
         "step": {
             "confirm": {
                   "description": "![AIS logo](/static/icons/ais_google_home.png)\n\nThis integration allows you to send commands to the Google Assistant and to send audio notifications to Google Home devices without interrupting the music.\n\n Do you want to set up AIS Google Home integration?",

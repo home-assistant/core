@@ -25,6 +25,7 @@ from homeassistant.const import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
     STATE_ON,
+    STATE_UNAVAILABLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     UNIT_PERCENTAGE,
@@ -321,6 +322,12 @@ class HomeAccessory(Accessory):
         self._char_low_battery = serv_battery.configure_char(
             CHAR_STATUS_LOW_BATTERY, value=0
         )
+
+    @property
+    def available(self):
+        """Return if accessory is available."""
+        state = self.hass.states.get(self.entity_id)
+        return state is not None and state.state != STATE_UNAVAILABLE
 
     async def run(self):
         """Handle accessory driver started event.

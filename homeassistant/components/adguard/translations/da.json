@@ -21,8 +21,7 @@
                     "username": "Brugernavn",
                     "verify_ssl": "AdGuard Home bruger et korrekt certifikat"
                 },
-                "description": "Konfigurer din AdGuard Home-instans for at tillade overv\u00e5gning og kontrol.",
-                "title": "Forbind din AdGuard Home."
+                "description": "Konfigurer din AdGuard Home-instans for at tillade overv\u00e5gning og kontrol."
             }
         }
     }

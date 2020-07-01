@@ -2,9 +2,6 @@
 from datetime import timedelta
 
 DOMAIN = "point"
-CLIENT_ID = "client_id"
-CLIENT_SECRET = "client_secret"
-
 
 SCAN_INTERVAL = timedelta(minutes=1)
 

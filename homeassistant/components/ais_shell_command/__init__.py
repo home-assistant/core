@@ -568,7 +568,7 @@ async def _scan_ais_player(hass, call):
             _LOGGER.error("Exception " + str(e2))
 
     try:
-        future = session.get(url, hooks={"response": bg_cb}, timeout=2, verify=False)
+        session.get(url, hooks={"response": bg_cb}, timeout=2, verify=False)
     except Exception:
         pass
     await hass.services.async_call("ais_shell_command", "scan_network_for_ais_players")
@@ -579,7 +579,6 @@ async def _scan_network_for_ais_players(hass, call):
 
     global GLOBAL_X
     my_ip = ais_global.get_my_global_ip()
-    info = ""
     if GLOBAL_X == 0:
         GLOBAL_X += 1
         # clear the value
@@ -686,7 +685,7 @@ async def _flush_logs(hass, call):
             # allow to store only 1 day in memory
             if "dbUrl" in ais_global.G_DB_SETTINGS_INFO:
                 if ais_global.G_DB_SETTINGS_INFO["dbUrl"].startswith(
-                    "sqlite://///data"
+                    "sqlite:///:memory:"
                 ):
                     keep_days = 1
 

@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "missing_configuration": "[%key_id:common::config_flow::abort::oauth2_missing_configuration%]"
+            "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105."
         },
         "create_entry": {
             "default": "Pomy\u015blnie uwierzytelniono z Home Connect."
         },
         "step": {
             "pick_implementation": {
-                "title": "[%key_id:common::config_flow::title::oauth2_pick_implementation%]"
+                "title": "Wybierz metod\u0119 uwierzytelniania"
             }
         }
     }

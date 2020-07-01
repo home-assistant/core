@@ -9,6 +9,7 @@
             "invalid_host": "\ud638\uc2a4\ud2b8 \ud56d\ubaa9\uc774 \uc644\uc804\ud55c URL \ud615\uc2dd\uc774 \uc544\ub2d9\ub2c8\ub2e4. \uc608: http://192.168.10.100:80",
             "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
         },
+        "flow_title": "ISY994 \ubc94\uc6a9 \uae30\uae30: {name} ({host})",
         "step": {
             "user": {
                 "data": {

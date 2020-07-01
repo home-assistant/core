@@ -39,6 +39,7 @@ async def help_test_availability_without_topic(hass, mqtt_mock, domain, config):
     """Test availability without defined availability topic."""
     assert "availability_topic" not in config[domain]
     assert await async_setup_component(hass, domain, config)
+    await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")
     assert state.state != STATE_UNAVAILABLE
@@ -61,6 +62,7 @@ async def help_test_default_availability_payload(
     config = copy.deepcopy(config)
     config[domain]["availability_topic"] = "availability-topic"
     assert await async_setup_component(hass, domain, config,)
+    await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")
     assert state.state == STATE_UNAVAILABLE
@@ -108,6 +110,7 @@ async def help_test_custom_availability_payload(
     config[domain]["payload_available"] = "good"
     config[domain]["payload_not_available"] = "nogood"
     assert await async_setup_component(hass, domain, config,)
+    await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")
     assert state.state == STATE_UNAVAILABLE
@@ -147,6 +150,7 @@ async def help_test_setting_attribute_via_mqtt_json_message(
     config = copy.deepcopy(config)
     config[domain]["json_attributes_topic"] = "attr-topic"
     assert await async_setup_component(hass, domain, config,)
+    await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "attr-topic", '{ "val": "100" }')
     state = hass.states.get(f"{domain}.test")
@@ -164,6 +168,7 @@ async def help_test_setting_attribute_with_template(hass, mqtt_mock, domain, con
     config[domain]["json_attributes_topic"] = "attr-topic"
     config[domain]["json_attributes_template"] = "{{ value_json['Timer1'] | tojson }}"
     assert await async_setup_component(hass, domain, config,)
+    await hass.async_block_till_done()
 
     async_fire_mqtt_message(
         hass, "attr-topic", json.dumps({"Timer1": {"Arm": 0, "Time": "22:18"}})
@@ -185,6 +190,7 @@ async def help_test_update_with_json_attrs_not_dict(
     config = copy.deepcopy(config)
     config[domain]["json_attributes_topic"] = "attr-topic"
     assert await async_setup_component(hass, domain, config,)
+    await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "attr-topic", '[ "list", "of", "things"]')
     state = hass.states.get(f"{domain}.test")
@@ -204,6 +210,7 @@ async def help_test_update_with_json_attrs_bad_JSON(
     config = copy.deepcopy(config)
     config[domain]["json_attributes_topic"] = "attr-topic"
     assert await async_setup_component(hass, domain, config,)
+    await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "attr-topic", "This is not JSON")
 
@@ -251,7 +258,8 @@ async def help_test_discovery_update_attr(hass, mqtt_mock, caplog, domain, confi
 async def help_test_unique_id(hass, domain, config):
     """Test unique id option only creates one entity per unique_id."""
     await async_mock_mqtt_component(hass)
-    assert await async_setup_component(hass, domain, config,)
+    assert await async_setup_component(hass, domain, config)
+    await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(domain)) == 1
 
 
@@ -459,6 +467,7 @@ async def help_test_entity_id_update_subscriptions(
     registry = mock_registry(hass, {})
     mock_mqtt = await async_mock_mqtt_component(hass)
     assert await async_setup_component(hass, domain, config,)
+    await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")
     assert state is not None

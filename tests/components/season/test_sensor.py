@@ -207,6 +207,7 @@ class TestSeason(unittest.TestCase):
         """Test platform setup of northern hemisphere."""
         self.hass.config.latitude = HEMISPHERE_NORTHERN["homeassistant"]["latitude"]
         assert setup_component(self.hass, "sensor", HEMISPHERE_NORTHERN)
+        self.hass.block_till_done()
         assert (
             self.hass.config.as_dict()["latitude"]
             == HEMISPHERE_NORTHERN["homeassistant"]["latitude"]
@@ -218,6 +219,7 @@ class TestSeason(unittest.TestCase):
         """Test platform setup of southern hemisphere."""
         self.hass.config.latitude = HEMISPHERE_SOUTHERN["homeassistant"]["latitude"]
         assert setup_component(self.hass, "sensor", HEMISPHERE_SOUTHERN)
+        self.hass.block_till_done()
         assert (
             self.hass.config.as_dict()["latitude"]
             == HEMISPHERE_SOUTHERN["homeassistant"]["latitude"]
@@ -229,6 +231,7 @@ class TestSeason(unittest.TestCase):
         """Test platform setup of equator."""
         self.hass.config.latitude = HEMISPHERE_EQUATOR["homeassistant"]["latitude"]
         assert setup_component(self.hass, "sensor", HEMISPHERE_EQUATOR)
+        self.hass.block_till_done()
         assert (
             self.hass.config.as_dict()["latitude"]
             == HEMISPHERE_EQUATOR["homeassistant"]["latitude"]
@@ -240,4 +243,5 @@ class TestSeason(unittest.TestCase):
         """Test platform setup of missing latlong."""
         self.hass.config.latitude = None
         assert setup_component(self.hass, "sensor", HEMISPHERE_EMPTY)
+        self.hass.block_till_done()
         assert self.hass.config.as_dict()["latitude"] is None

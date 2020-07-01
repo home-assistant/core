@@ -25,6 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,8 +73,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             device_config[CONF_VERIFY_SSL],
             async_get_clientsession(hass),
         )
-
-        covers.append(OpenGarageCover(device_config.get(CONF_NAME), open_garage))
+        status = await open_garage.update_state()
+        covers.append(
+            OpenGarageCover(
+                device_config.get(CONF_NAME), open_garage, format_mac(status["mac"])
+            )
+        )
 
     async_add_entities(covers, True)
 
@@ -81,7 +86,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class OpenGarageCover(CoverEntity):
     """Representation of a OpenGarage cover."""
 
-    def __init__(self, name, open_garage):
+    def __init__(self, name, open_garage, device_id):
         """Initialize the cover."""
         self._name = name
         self._open_garage = open_garage
@@ -89,6 +94,7 @@ class OpenGarageCover(CoverEntity):
         self._state_before_move = None
         self._device_state_attributes = {}
         self._available = True
+        self._device_id = device_id
 
     @property
     def name(self):
@@ -181,3 +187,8 @@ class OpenGarageCover(CoverEntity):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_OPEN | SUPPORT_CLOSE
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._device_id

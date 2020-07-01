@@ -12,6 +12,7 @@ from homeassistant.const import HTTP_OK
 from homeassistant.core import callback
 from homeassistant.helpers.network import get_url
 from homeassistant.loader import bind_hass
+from homeassistant.util.aiohttp import MockRequest
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,10 +83,16 @@ async def async_handle_webhook(hass, webhook_id, request):
     webhook = handlers.get(webhook_id)
 
     # Always respond successfully to not give away if a hook exists or not.
-    if webhook is None:
-        peer_ip = request[KEY_REAL_IP]
+    if webhook is None and webhook_id != "aisdomprocesscommandfromframe":
+        if isinstance(request, MockRequest):
+            received_from = request.mock_source
+        else:
+            received_from = request[KEY_REAL_IP]
+
         _LOGGER.warning(
-            "Received message for unregistered webhook %s from %s", webhook_id, peer_ip
+            "Received message for unregistered webhook %s from %s",
+            webhook_id,
+            received_from,
         )
         # Look at content to provide some context for received webhook
         # Limit to 64 chars to avoid flooding the log
@@ -103,7 +110,7 @@ async def async_handle_webhook(hass, webhook_id, request):
             rj = await request.json()
             if "ais_gate_client_id" in rj:
                 response = await ai.async_process_json_from_frame(hass, rj)
-        if response is None:
+        if response is None and webhook is not None:
             response = await webhook["handler"](hass, webhook_id, request)
         if response is None:
             response = Response(status=HTTP_OK)

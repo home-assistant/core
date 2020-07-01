@@ -6,7 +6,6 @@ import ssl
 import plexapi
 import requests
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 import homeassistant.components.plex.const as const
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
@@ -14,59 +13,15 @@ from homeassistant.config_entries import (
     ENTRY_STATE_SETUP_ERROR,
     ENTRY_STATE_SETUP_RETRY,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_TOKEN,
-    CONF_URL,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .const import DEFAULT_DATA, DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN
+from .const import DEFAULT_DATA, DEFAULT_OPTIONS
 from .mock_classes import MockPlexAccount, MockPlexServer
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
-
-
-async def test_setup_with_config(hass):
-    """Test setup component with config."""
-    config = {
-        const.DOMAIN: {
-            CONF_HOST: MOCK_SERVERS[0][CONF_HOST],
-            CONF_PORT: MOCK_SERVERS[0][CONF_PORT],
-            CONF_TOKEN: MOCK_TOKEN,
-            CONF_SSL: True,
-            CONF_VERIFY_SSL: True,
-            MP_DOMAIN: {
-                const.CONF_IGNORE_NEW_SHARED_USERS: False,
-                const.CONF_USE_EPISODE_ART: False,
-            },
-        },
-    }
-
-    mock_plex_server = MockPlexServer()
-
-    with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "homeassistant.components.plex.PlexWebsocket.listen"
-    ) as mock_listen:
-        assert await async_setup_component(hass, const.DOMAIN, config) is True
-        await hass.async_block_till_done()
-
-    assert mock_listen.called
-    assert len(hass.config_entries.async_entries(const.DOMAIN)) == 1
-    entry = hass.config_entries.async_entries(const.DOMAIN)[0]
-    assert entry.state == ENTRY_STATE_LOADED
-
-    server_id = mock_plex_server.machineIdentifier
-    loaded_server = hass.data[const.DOMAIN][const.SERVERS][server_id]
-
-    assert loaded_server.plex_server == mock_plex_server
-
 
 # class TestClockedPlex(ClockedTestCase):
 #     """Create clock-controlled tests.async_mock class."""

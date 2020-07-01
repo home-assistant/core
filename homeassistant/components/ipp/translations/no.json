@@ -6,7 +6,8 @@
             "connection_upgrade": "Kunne ikke koble til skriveren fordi tilkoblingsoppgradering var n\u00f8dvendig.",
             "ipp_error": "Oppdaget IPP-feil.",
             "ipp_version_error": "IPP-versjon st\u00f8ttes ikke av skriveren.",
-            "parse_error": "Kan ikke analysere svar fra skriveren."
+            "parse_error": "Kan ikke analysere svar fra skriveren.",
+            "unique_id_required": "Enheten mangler unik identifikasjon som kreves for oppdagelse."
         },
         "error": {
             "connection_error": "Klarte ikke \u00e5 koble til skriveren.",
@@ -26,7 +27,7 @@
                 "title": "Koble til skriveren din"
             },
             "zeroconf_confirm": {
-                "description": "\u00d8nsker du \u00e5 legge skriveren med navnet {name} til Home Assistant?",
+                "description": "Vil du konfigurere {name}?",
                 "title": "Oppdaget skriver"
             }
         }

@@ -16,11 +16,10 @@
             "not_found": "Plex-server ikke funnet",
             "ssl_error": "Problem med SSL-sertifikat"
         },
+        "flow_title": "{name}({host})",
         "step": {
             "manual_setup": {
                 "data": {
-                    "host": "Host (valgfritt hvis token f\u00f8lger med)",
-                    "port": "Port",
                     "ssl": "Bruk SSL",
                     "token": "Token (valgfritt)",
                     "verify_ssl": "Verifisere SSL-sertifikat"
@@ -33,10 +32,6 @@
                 },
                 "description": "Flere servere tilgjengelig, velg en:",
                 "title": "Velg Plex-server"
-            },
-            "start_website_auth": {
-                "description": "Fortsett \u00e5 godkjenne p\u00e5 plex.tv",
-                "title": "Koble til Plex-server"
             },
             "user": {
                 "description": "Fortsett til [plex.tv] (https://plex.tv) for \u00e5 koble en Plex-server.",

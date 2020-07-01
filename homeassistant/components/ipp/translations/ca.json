@@ -6,7 +6,8 @@
             "connection_upgrade": "No s'ha pogut connectar amb la impressora, es necessita actualitzar la connexi\u00f3.",
             "ipp_error": "S'ha produ\u00eft un error IPP.",
             "ipp_version_error": "La versi\u00f3 IPP no \u00e9s compatible amb la impressora.",
-            "parse_error": "No s'ha pogut analitzar la resposta de la impressora."
+            "parse_error": "No s'ha pogut analitzar la resposta de la impressora.",
+            "unique_id_required": "Falta la identificaci\u00f3 \u00fanica al dispositiu, necess\u00e0ria per al descobriment."
         },
         "error": {
             "connection_error": "No s'ha pogut connectar",
@@ -26,7 +27,7 @@
                 "title": "Enlla\u00e7 d'impressora"
             },
             "zeroconf_confirm": {
-                "description": "Vols afegir la impressora {name} a Home Assistant?",
+                "description": "Vols configurar {name}?",
                 "title": "Impressora descoberta"
             }
         }

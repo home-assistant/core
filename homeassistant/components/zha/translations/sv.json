@@ -25,8 +25,7 @@
             },
             "user": {
                 "data": {
-                    "path": "Seriell enhetsv\u00e4g",
-                    "radio_type": "Typ av radio"
+                    "path": "Seriell enhetsv\u00e4g"
                 },
                 "title": "ZHA"
             }

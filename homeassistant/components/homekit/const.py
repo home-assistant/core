@@ -27,6 +27,7 @@ ATTR_INTERGRATION = "platform"
 ATTR_MANUFACTURER = "manufacturer"
 ATTR_MODEL = "model"
 ATTR_SOFTWARE_VERSION = "sw_version"
+ATTR_KEY_NAME = "key_name"
 
 # #### Config ####
 CONF_ADVERTISE_IP = "advertise_ip"
@@ -40,6 +41,7 @@ CONF_FEATURE_LIST = "feature_list"
 CONF_FILTER = "filter"
 CONF_LINKED_BATTERY_SENSOR = "linked_battery_sensor"
 CONF_LINKED_BATTERY_CHARGING_SENSOR = "linked_battery_charging_sensor"
+CONF_LINKED_MOTION_SENSOR = "linked_motion_sensor"
 CONF_LOW_BATTERY_THRESHOLD = "low_battery_threshold"
 CONF_MAX_FPS = "max_fps"
 CONF_MAX_HEIGHT = "max_height"
@@ -66,7 +68,6 @@ DEFAULT_MAX_WIDTH = 1920
 DEFAULT_PORT = 51827
 DEFAULT_CONFIG_FLOW_PORT = 51828
 DEFAULT_SAFE_MODE = False
-DEFAULT_ZEROCONF_DEFAULT_INTERFACE = False
 DEFAULT_VIDEO_CODEC = VIDEO_CODEC_LIBX264
 DEFAULT_VIDEO_MAP = "0:v:0"
 DEFAULT_VIDEO_PACKET_SIZE = 1316
@@ -79,6 +80,7 @@ FEATURE_TOGGLE_MUTE = "toggle_mute"
 
 # #### HomeKit Component Event ####
 EVENT_HOMEKIT_CHANGED = "homekit_state_change"
+EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED = "homekit_tv_remote_key_pressed"
 
 # #### HomeKit Component Services ####
 SERVICE_HOMEKIT_START = "start"
@@ -228,6 +230,21 @@ THRESHOLD_CO2 = 1000
 DEFAULT_MIN_TEMP_WATER_HEATER = 40  # °C
 DEFAULT_MAX_TEMP_WATER_HEATER = 60  # °C
 
+# #### Media Player Key Names ####
+KEY_ARROW_DOWN = "arrow_down"
+KEY_ARROW_LEFT = "arrow_left"
+KEY_ARROW_RIGHT = "arrow_right"
+KEY_ARROW_UP = "arrow_up"
+KEY_BACK = "back"
+KEY_EXIT = "exit"
+KEY_FAST_FORWARD = "fast_forward"
+KEY_INFORMATION = "information"
+KEY_NEXT_TRACK = "next_track"
+KEY_PREVIOUS_TRACK = "previous_track"
+KEY_REWIND = "rewind"
+KEY_SELECT = "select"
+KEY_PLAY_PAUSE = "play_pause"
+
 # #### Door states ####
 HK_DOOR_OPEN = 0
 HK_DOOR_CLOSED = 1
@@ -249,7 +266,6 @@ HK_NOT_CHARGABLE = 2
 CONFIG_OPTIONS = [
     CONF_FILTER,
     CONF_AUTO_START,
-    CONF_ZEROCONF_DEFAULT_INTERFACE,
     CONF_SAFE_MODE,
     CONF_ENTITY_CONFIG,
 ]

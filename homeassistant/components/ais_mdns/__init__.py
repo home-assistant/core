@@ -7,15 +7,16 @@ https://www.ai-speaker.com
 import logging
 import socket
 import subprocess
+
 import voluptuous as vol
 from zeroconf import NonUniqueNameException
 
-from homeassistant.components.ais_dom import ais_global
 from homeassistant import util
+from homeassistant.components.ais_dom import ais_global
 from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     __version__,
-    EVENT_HOMEASSISTANT_START,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +36,7 @@ def setup(hass, config):
 
     try:
         return_value = subprocess.check_output(
-            "getprop net.hostname", shell=True, timeout=15
+            "getprop net.hostname", timeout=15, shell=True,  # nosec
         )
         host_name = return_value.strip().decode("utf-8")
     except subprocess.CalledProcessError:
@@ -58,15 +59,16 @@ def setup(hass, config):
         {"friendly_name": "Lokalna nazwa hosta", "icon": "mdi:dns"},
     )
     try:
-        ip = socket.inet_pton(socket.AF_INET, host_ip)
-    except socket.error:
-        ip = socket.inet_pton(socket.AF_INET6, host_ip)
+        host_ip_pton = socket.inet_pton(socket.AF_INET, host_ip)
+    except OSError:
+        host_ip_pton = socket.inet_pton(socket.AF_INET6, host_ip)
     try:
         gate_id = ais_global.get_sercure_android_id_dom()
-    except:
+    except Exception:
         gate_id = "xxx"
 
     params = {
+        "location_name": hass.config.location_name,
         "version": __version__,
         "company_url": "https://www.ai-speaker.com",
         "gate_id": gate_id,
@@ -75,25 +77,21 @@ def setup(hass, config):
     # HTTP
     http_info = ServiceInfo(
         "_http._tcp.local.",
-        host_name + "._http._tcp.local.",
-        ip,
-        80,
-        0,
-        0,
-        params,
-        host_name + ".local.",
+        name=host_name + "._http._tcp.local.",
+        server=f"{host_name}.local.",
+        addresses=[host_ip_pton],
+        port=80,
+        properties=params,
     )
 
     # FTP
     ftp_info = ServiceInfo(
         "_ftp._tcp.local.",
-        host_name + "._ftp._tcp.local.",
-        ip,
-        21,
-        0,
-        0,
-        params,
-        host_name + ".local.",
+        name=host_name + "._ftp._tcp.local.",
+        server=f"{host_name}.local.",
+        addresses=[host_ip_pton],
+        port=21,
+        properties=params,
     )
 
     def zeroconf_hass_start(_event):

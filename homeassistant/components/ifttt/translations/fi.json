@@ -2,6 +2,11 @@
     "config": {
         "abort": {
             "one_instance_allowed": "Vain yksi instanssi on tarpeen."
+        },
+        "step": {
+            "user": {
+                "description": "Haluatko varmasti m\u00e4\u00e4ritt\u00e4\u00e4 IFTTT:n?"
+            }
         }
     }
 }

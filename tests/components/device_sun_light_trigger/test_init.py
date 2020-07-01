@@ -14,11 +14,13 @@ from homeassistant.components.device_tracker.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
+    EVENT_HOMEASSISTANT_START,
     STATE_HOME,
     STATE_NOT_HOME,
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import CoreState
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -214,3 +216,19 @@ async def test_lights_turn_on_when_coming_home_after_sun_set_person(hass, scanne
         assert hass.states.get(device_1).state == "home"
         assert hass.states.get(device_2).state == "home"
         assert hass.states.get("person.me").state == "home"
+
+
+async def test_initialize_start(hass):
+    """Test we initialize when HA starts."""
+    hass.state = CoreState.not_running
+    assert await async_setup_component(
+        hass, device_sun_light_trigger.DOMAIN, {device_sun_light_trigger.DOMAIN: {}},
+    )
+
+    with patch(
+        "homeassistant.components.device_sun_light_trigger.activate_automation"
+    ) as mock_activate:
+        hass.bus.fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+
+    assert len(mock_activate.mock_calls) == 1

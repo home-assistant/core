@@ -1,0 +1,97 @@
+{
+  "title": "Exta Life",
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "![Supla logo](/static/icons/supla_zamel_logo.png)\n\nDo you want to set up integration with Exta Life controller (EFC-01) and discover your devices?",
+        "title": "Connection to EFC-01 controller "
+      },
+      "init": {
+        "title": "Enter the connection parameters to EFC-01 controller",
+        "description": "Your Exta Life devices will be autodetected after we connect to EFC-01\n\n {error_info} ",
+        "data": {
+          "user": "User",
+          "password": "Password",
+          "controller_ip": "EFC-01 IP",
+          "poll_interval": "Status polling interval"
+        }
+      },
+      "title": {
+        "title": "Name your EFC-01 controller",
+        "description": "Optionally give a title to this EFC-01 e.g. Home, Apartment, Vacation house or leave it blank. A title will help to distinguish config entries for multiple controllers.",
+        "data": {
+          "title": "Title"
+        }
+      }
+    },
+    "error": {
+      "extalife_no_connection": "Cannot connect to EFC-01 controller. Check IP address, user and password",
+      "extalife_invalid_cred": "Invalid user or password. Correct and try again"
+    }
+  },
+  "options": {
+    "step": {
+      "light": {
+        "description": "Settings for lights",
+        "data": {
+          "icons_list": "List of ROP/ROM icons to be mapped as light entity in Home Assistant",
+          "test": "Test"
+        }
+      },
+      "cover": {
+        "description": "Settings for covers",
+        "data": {
+          "inverted_control": "Invert control of roller shutters as in Exta Life app"
+        }
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "button_up": "\"{subtype}\" button pressed",
+      "button_down": "\"{subtype}\" button released",
+      "button_single_click": "\"{subtype}\" button single clicked (pushed and released)",
+      "button_double_click": "\"{subtype}\" button double clicked",
+      "button_triple_click": "\"{subtype}\" button doubltriple clicked",
+      "button_long_press": "\"{subtype}\" button released after long press"
+    },
+    "trigger_subtype": {
+      "button_1": "Button 1",
+      "button_2": "Button 2",
+      "button_3": "Button 3",
+      "button_4": "Button 4",
+      "button_5": "Button 5",
+      "button_6": "Button 6",
+      "button_7": "Button 7",
+      "button_8": "Button 8",
+      "button_9": "Button 9",
+      "button_10": "Button 10",
+      "button_11": "Button 11",
+      "button_12": "Button 12",
+      "button_13": "Button 13",
+      "button_14": "Button 14",
+      "button_15": "Button 15",
+      "button_16": "Button 16",
+      "button_17": "Button 17",
+      "button_18": "Button 18",
+      "button_19": "Button 19",
+      "button_20": "Button 20",
+      "button_21": "Button 21",
+      "button_22": "Button 22",
+      "button_23": "Button 23",
+      "button_24": "Button 24",
+      "button_25": "Button 25",
+      "button_26": "Button 26",
+      "button_27": "Button 27",
+      "button_28": "Button 28",
+      "button_29": "Button 29",
+      "button_30": "Button 30",
+      "button_31": "Button 31",
+      "button_32": "Button 32",
+      "button_33": "Button 33",
+      "button_34": "Button 34",
+      "button_35": "Button 35",
+      "button_36": "Button 36"
+    }
+  }
+}

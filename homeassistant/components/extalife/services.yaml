@@ -1,0 +1,19 @@
+restart:
+    description: Restart controller by sending API command 150.
+    fields:
+        entity_id:
+            description: Entity ID representing controller, which should be restarted
+            example: extalife.efc_01
+
+test_button:
+    description: Simulate Exta Life transmitter event like a button up, down, click etc
+    fields:
+        button:
+            description: Button
+            example: button_1
+        channel_id:
+            description: Channel
+            example: 12-#
+        event:
+            description: "Event: triple, double, single, down"
+            example: triple

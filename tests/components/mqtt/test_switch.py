@@ -59,6 +59,7 @@ async def test_controlling_state_via_topic(hass, mock_publish):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_OFF
@@ -97,6 +98,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mock_publish):
                 }
             },
         )
+        await hass.async_block_till_done()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_ON
@@ -137,6 +139,7 @@ async def test_controlling_state_via_topic_and_json_message(hass, mock_publish):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_OFF
@@ -213,6 +216,7 @@ async def test_custom_state_payload(hass, mock_publish):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_OFF

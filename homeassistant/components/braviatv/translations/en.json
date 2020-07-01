@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This TV is already configured."
+            "already_configured": "This TV is already configured.",
+            "no_ip_control": "IP Control is disabled on your TV or the TV is not supported."
         },
         "error": {
             "cannot_connect": "Failed to connect, invalid host or PIN code.",

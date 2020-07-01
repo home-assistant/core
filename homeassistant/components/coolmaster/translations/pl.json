@@ -12,7 +12,7 @@
                     "fan_only": "Obs\u0142uga trybu \"tylko wentylator\"",
                     "heat": "Obs\u0142uga trybu grzania",
                     "heat_cool": "Obs\u0142uga automatycznego trybu grzanie/ch\u0142odzenie",
-                    "host": "[%key_id:common::config_flow::data::host%]",
+                    "host": "Nazwa hosta lub adres IP",
                     "off": "Mo\u017ce by\u0107 wy\u0142\u0105czone"
                 },
                 "title": "Skonfiguruj szczeg\u00f3\u0142y po\u0142\u0105czenia CoolMasterNet."

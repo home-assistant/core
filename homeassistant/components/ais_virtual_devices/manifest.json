@@ -1,0 +1,10 @@
+{
+  "domain": "ais_virtual_devices",
+  "name": "AIS virtual devices",
+  "config_flow": false,
+  "documentation": "https://www.ai-speaker.com",
+  "issue_tracker": "https://github.com/sviete/AIS-home-assistant",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

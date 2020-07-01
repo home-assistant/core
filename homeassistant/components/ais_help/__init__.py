@@ -24,12 +24,12 @@ async def async_setup(hass, config):
     )
     """Register the built-in galery panel."""
     hass.components.frontend.async_register_built_in_panel(
-        "lovelace/ais_audio", "Audio", "mdi:library-music"
+        "aisaudio", "Audio", "mdi:library-music"
     )
 
     # TEST
     # hass.components.frontend.async_register_built_in_panel(
-    #     "lovelace/ais_zigbee",
+    #     "aiszigbee",
     #     require_admin=True,
     #     sidebar_title="Zigbee",
     #     sidebar_icon="mdi:zigbee",

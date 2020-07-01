@@ -75,7 +75,9 @@ def patch_cluster(cluster):
     cluster.read_attributes = AsyncMock(return_value=[{}, {}])
     cluster.read_attributes_raw = Mock()
     cluster.unbind = AsyncMock(return_value=[0])
-    cluster.write_attributes = AsyncMock(return_value=[0])
+    cluster.write_attributes = AsyncMock(
+        return_value=[zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]]
+    )
     if cluster.cluster_id == 4:
         cluster.add = AsyncMock(return_value=[0])
 

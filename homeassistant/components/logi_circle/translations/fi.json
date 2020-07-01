@@ -1,10 +1,14 @@
 {
     "config": {
+        "error": {
+            "auth_error": "API-todennus ep\u00e4onnistui."
+        },
         "step": {
             "user": {
                 "data": {
                     "flow_impl": "Tarjoaja"
-                }
+                },
+                "title": "Todentamisen tarjoaja"
             }
         }
     }

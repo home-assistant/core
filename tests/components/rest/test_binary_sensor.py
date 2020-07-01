@@ -88,6 +88,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                 "binary_sensor",
                 {"binary_sensor": {"platform": "rest", "resource": "http://localhost"}},
             )
+            self.hass.block_till_done()
         assert 1 == mock_req.call_count
 
     @requests_mock.Mocker()
@@ -113,6 +114,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
         assert 1 == mock_req.call_count
 
     @requests_mock.Mocker()
@@ -139,6 +141,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
         assert 1 == mock_req.call_count
 
 

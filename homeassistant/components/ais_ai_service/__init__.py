@@ -2353,8 +2353,10 @@ async def async_setup(hass, config):
         """Welcome message."""
 
         # display favorites from Spotify only if Spotify is available
-        if hass.services.has_service("ais_spotify_service", "search"):
-            hass.services.call("ais_spotify_service", "search")
+        if hass.services.has_service("ais_spotify_service", "get_favorites"):
+            hass.services.call(
+                "ais_spotify_service", "get_favorites", {"type": "featured-playlists"}
+            )
 
         text = "Witaj w Domu. Powiedz proszę w czym mogę Ci pomóc?"
         if ais_global.G_OFFLINE_MODE:

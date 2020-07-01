@@ -33,6 +33,7 @@ class TestSwitch(unittest.TestCase):
         assert setup_component(
             self.hass, switch.DOMAIN, {switch.DOMAIN: {CONF_PLATFORM: "test"}}
         )
+        self.hass.block_till_done()
         assert switch.is_on(self.hass, self.switch_1.entity_id)
         assert not switch.is_on(self.hass, self.switch_2.entity_id)
         assert not switch.is_on(self.hass, self.switch_3.entity_id)

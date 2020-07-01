@@ -8,8 +8,7 @@
                     "password": "Salasana",
                     "port": "Portti",
                     "username": "K\u00e4ytt\u00e4j\u00e4tunnus"
-                },
-                "title": "MQTT"
+                }
             },
             "hassio_confirm": {
                 "data": {

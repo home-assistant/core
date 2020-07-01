@@ -76,6 +76,7 @@ class TestRestSensorSetup(unittest.TestCase):
                 "sensor",
                 {"sensor": {"platform": "rest", "resource": "http://localhost"}},
             )
+            self.hass.block_till_done()
         assert 2 == mock_req.call_count
 
     @requests_mock.Mocker()
@@ -93,6 +94,7 @@ class TestRestSensorSetup(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
         assert mock_req.call_count == 2
 
     @requests_mock.Mocker()
@@ -111,6 +113,7 @@ class TestRestSensorSetup(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
 
     @requests_mock.Mocker()
     def test_setup_get(self, mock_req):
@@ -137,6 +140,7 @@ class TestRestSensorSetup(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
         assert 2 == mock_req.call_count
 
     @requests_mock.Mocker()
@@ -165,6 +169,7 @@ class TestRestSensorSetup(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
         assert 2 == mock_req.call_count
 
     @requests_mock.Mocker()
@@ -192,6 +197,7 @@ class TestRestSensorSetup(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
         assert 2 == mock_req.call_count
 
 

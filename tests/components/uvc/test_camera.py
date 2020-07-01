@@ -54,6 +54,7 @@ class TestUVCSetup(unittest.TestCase):
         mock_remote.return_value.server_version = (3, 2, 0)
 
         assert setup_component(self.hass, "camera", {"camera": config})
+        self.hass.block_till_done()
 
         assert mock_remote.call_count == 1
         assert mock_remote.call_args == mock.call("foo", 123, "secret", ssl=False)
@@ -78,6 +79,7 @@ class TestUVCSetup(unittest.TestCase):
         mock_remote.return_value.server_version = (3, 2, 0)
 
         assert setup_component(self.hass, "camera", {"camera": config})
+        self.hass.block_till_done()
 
         assert mock_remote.call_count == 1
         assert mock_remote.call_args == mock.call("foo", 7080, "secret", ssl=False)
@@ -102,6 +104,7 @@ class TestUVCSetup(unittest.TestCase):
         mock_remote.return_value.server_version = (3, 1, 3)
 
         assert setup_component(self.hass, "camera", {"camera": config})
+        self.hass.block_till_done()
 
         assert mock_remote.call_count == 1
         assert mock_remote.call_args == mock.call("foo", 7080, "secret", ssl=False)
@@ -116,14 +119,20 @@ class TestUVCSetup(unittest.TestCase):
     def test_setup_incomplete_config(self, mock_uvc):
         """Test the setup with incomplete configuration."""
         assert setup_component(self.hass, "camera", {"platform": "uvc", "nvr": "foo"})
+        self.hass.block_till_done()
+
         assert not mock_uvc.called
         assert setup_component(
             self.hass, "camera", {"platform": "uvc", "key": "secret"}
         )
+        self.hass.block_till_done()
+
         assert not mock_uvc.called
         assert setup_component(
             self.hass, "camera", {"platform": "uvc", "port": "invalid"}
         )
+        self.hass.block_till_done()
+
         assert not mock_uvc.called
 
     @mock.patch.object(uvc, "UnifiVideoCamera")
@@ -133,6 +142,8 @@ class TestUVCSetup(unittest.TestCase):
         config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
         mock_remote.return_value.index.side_effect = error
         assert setup_component(self.hass, "camera", {"camera": config})
+        self.hass.block_till_done()
+
         assert not mock_uvc.called
 
     def test_setup_nvr_error_during_indexing_notauthorized(self):
@@ -157,6 +168,8 @@ class TestUVCSetup(unittest.TestCase):
         mock_remote.return_value = None
         mock_remote.side_effect = error
         assert setup_component(self.hass, "camera", {"camera": config})
+        self.hass.block_till_done()
+
         assert not mock_remote.index.called
         assert not mock_uvc.called
 

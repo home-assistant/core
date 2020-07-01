@@ -57,6 +57,7 @@ class TestWolSwitch(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         state = self.hass.states.get("switch.wake_on_lan")
         assert STATE_OFF == state.state
@@ -93,6 +94,7 @@ class TestWolSwitch(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         state = self.hass.states.get("switch.wake_on_lan")
         assert STATE_OFF == state.state
@@ -130,6 +132,7 @@ class TestWolSwitch(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         state = self.hass.states.get("switch.wake_on_lan")
         assert STATE_OFF == state.state
@@ -155,6 +158,7 @@ class TestWolSwitch(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
         calls = mock_service(self.hass, "shell_command", "turn_off_target")
 
         state = self.hass.states.get("switch.wake_on_lan")
@@ -196,6 +200,7 @@ class TestWolSwitch(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         state = self.hass.states.get("switch.wake_on_lan")
         assert STATE_OFF == state.state

@@ -54,7 +54,7 @@ def commit(session, work):
     return False
 
 
-def execute(qry):
+def execute(qry, to_native=True):
     """Query the database and convert the objects to HA native form.
 
     This method also retries a few times in the case of stale connections.
@@ -62,17 +62,25 @@ def execute(qry):
     for tryno in range(0, RETRIES):
         try:
             timer_start = time.perf_counter()
-            result = [
-                row for row in (row.to_native() for row in qry) if row is not None
-            ]
+            if to_native:
+                result = [
+                    row for row in (row.to_native() for row in qry) if row is not None
+                ]
+            else:
+                result = list(qry)
 
             if _LOGGER.isEnabledFor(logging.DEBUG):
                 elapsed = time.perf_counter() - timer_start
-                _LOGGER.debug(
-                    "converting %d rows to native objects took %fs",
-                    len(result),
-                    elapsed,
-                )
+                if to_native:
+                    _LOGGER.debug(
+                        "converting %d rows to native objects took %fs",
+                        len(result),
+                        elapsed,
+                    )
+                else:
+                    _LOGGER.debug(
+                        "querying %d rows took %fs", len(result), elapsed,
+                    )
 
             return result
         except SQLAlchemyError as err:

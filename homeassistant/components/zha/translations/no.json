@@ -25,9 +25,7 @@
             },
             "user": {
                 "data": {
-                    "path": "Seriell enhetsbane",
-                    "radio_type": "Radio type",
-                    "usb_path": "USB enhetsbane"
+                    "path": "Seriell enhetsbane"
                 },
                 "description": "Velg seriell port for Zigbee radio",
                 "title": ""

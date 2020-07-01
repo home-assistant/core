@@ -1,5 +1,4 @@
 """Component to manage the AIS Cloud."""
-import asyncio
 import json
 import logging
 import os
@@ -8,6 +7,7 @@ import async_timeout
 import requests
 
 from homeassistant.components.ais_dom import ais_global
+from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
@@ -42,6 +42,10 @@ def get_player_data(player_name):
 
 
 async def async_setup(hass, config):
+    """Set up the get backup view."""
+    hass.http.register_view(GetAisBackupsView())
+    hass.http.register_view(RestoreAisBackupView())
+
     """Initialize the radio station list."""
     data = hass.data[DOMAIN] = AisColudData(hass)
     await data.async_get_types()
@@ -1877,4 +1881,216 @@ class AisColudData:
             "ais_ai_service",
             "say_it",
             {"text": "Parowanie z bramką za pomocą PIN włączone"},
+        )
+
+
+async def async_handle_get_gates_info(hass, message):
+    """Handle a AIS get gates info message."""
+    login = message.get("username", "")
+    password = message.get("password", "")
+    web_session = aiohttp_client.async_get_clientsession(hass)
+    rest_url = "https://powiedz.co/ords/dom/dom/gates_info"
+    try:
+        # during the system start lot of things is done 300 sec should be enough
+        cloud_ws_token = ais_global.get_sercure_android_id_dom()
+        cloud_ws_header = {"Authorization": f"{cloud_ws_token}"}
+        payload = {"login": login, "password": password}
+        with async_timeout.timeout(300):
+            ws_resp = await web_session.post(
+                rest_url, json=payload, headers=cloud_ws_header
+            )
+            return await ws_resp.json()
+    except Exception as e:
+        _LOGGER.error("Couldn't fetch data about gates: " + str(e))
+        return {"error": str(e)}
+
+
+class GetAisBackupsView(HomeAssistantView):
+    """Return the ais gates info."""
+
+    requires_auth = False
+    url = "/api/onboarding/ais_gates_info"
+    name = "api:onboarding:ais_gates_info"
+
+    def __init__(self):
+        """Initialize the onboarding view."""
+        pass
+
+    async def post(self, request):
+        """Handle user login to get gates info."""
+        hass = request.app["hass"]
+        message = await request.json()
+
+        _LOGGER.debug("Received AIS get gates info request: %s", message)
+
+        response = await async_handle_get_gates_info(hass, message)
+        state = "invalid" if "error" in response else "valid"
+
+        return self.json(
+            {
+                "result": state,
+                "error": response.get("error", ""),
+                "gates": response.get("gates", []),
+            }
+        )
+
+
+async def async_handle_restore_from_backup(hass, message):
+    """Handle a AIS get gates info message."""
+    gate_id = message.get("gate_id", "")
+    backup_password = message.get("backup_password", "")
+    home_dir = "/data/data/pl.sviete.dom/files/home/"
+    ws_url = "https://powiedz.co/ords/dom/dom/"
+    cloud_ws_token = gate_id
+    cloud_ws_header = {"Authorization": f"{cloud_ws_token}"}
+    web_session = aiohttp_client.async_get_clientsession(hass)
+    try:
+        import subprocess
+
+        # HA backup - we need to use password even if it's empty - to prevent the prompt
+        backup_password = "-p" + backup_password
+        # 1. download
+        try:
+            rest_url = ws_url + "backup"
+            ws_resp = requests.get(rest_url, headers=cloud_ws_header, timeout=60)
+            with open(home_dir + "backup.zip", "wb") as f:
+                for chunk in ws_resp.iter_content(1024):
+                    f.write(chunk)
+        except Exception as e:
+            _LOGGER.error("Couldn't fetch gate backup: " + str(e))
+            return {"error": str(e)}
+        # 2. extract
+        try:
+            subprocess.check_output(
+                "7z x -mmt=2 "
+                + backup_password
+                + " -o"
+                + home_dir
+                + "AIS_BACKUP "
+                + home_dir
+                + "backup.zip "
+                + "-y",
+                shell=True,  # nosec
+            )
+        except Exception as e:
+            _LOGGER.error("Couldn't unzip gate backup: " + str(e))
+            return {"error": str(e)}
+
+        # 3. copy files to AIS
+        try:
+            subprocess.check_output(
+                "cp -fa " + home_dir + "AIS_BACKUP/. " + home_dir + "AIS",
+                shell=True,  # nosec
+            )
+            subprocess.check_output(
+                "rm " + home_dir + "backup.zip", shell=True  # nosec
+            )
+            subprocess.check_output(
+                "rm -rf " + home_dir + "AIS_BACKUP", shell=True  # nosec
+            )
+
+        except Exception as e:
+            _LOGGER.error("Couldn't replace files from gate backup: " + str(e))
+            return {"error": str(e)}
+
+        # Zigbee backup we need to use password even if it's empty - to prevent the prompt
+        backup_password = "-p" + backup_password
+        # 1. download
+        try:
+            rest_url = ws_url + "backup_zigbee"
+            ws_resp = requests.get(rest_url, headers=cloud_ws_header, timeout=60)
+            with open(home_dir + "zigbee_backup.zip", "wb") as f:
+                for chunk in ws_resp.iter_content(1024):
+                    f.write(chunk)
+        except Exception as e:
+            _LOGGER.error("Couldn't fetch zigbee gate backup: " + str(e))
+            return {"error": str(e)}
+
+        # 2. extract
+        try:
+            subprocess.check_output(
+                "7z x -mmt=2 "
+                + backup_password
+                + " -o"
+                + home_dir
+                + "AIS_ZIGBEE_BACKUP "
+                + home_dir
+                + "zigbee_backup.zip "
+                + "-y",
+                shell=True,  # nosec
+            )
+        except Exception as e:
+            _LOGGER.error("Couldn't unzip zigbee backup: " + str(e))
+            return {"error": str(e)}
+        # 3. copy files to AIS
+        try:
+            subprocess.check_output(
+                "cp -fa "
+                + home_dir
+                + "AIS_ZIGBEE_BACKUP/. "
+                + home_dir
+                + "zigbee2mqtt/data",
+                shell=True,  # nosec
+            )
+            subprocess.check_output(
+                "rm " + home_dir + "zigbee_backup.zip", shell=True  # nosec
+            )
+            subprocess.check_output(
+                "rm -rf " + home_dir + "AIS_ZIGBEE_BACKUP", shell=True  # nosec
+            )
+
+        except Exception as e:
+            _LOGGER.error("Couldn't replace files from zigbee backup: " + str(e))
+            return {"error": str(e)}
+
+        # 4. rm gate id
+        try:
+            subprocess.check_output(
+                "rm " + home_dir + "AIS/.dom/.ais_secure_android_id_dom",
+                shell=True,  # nosec
+            )
+        except Exception as e:
+            _LOGGER.error("Couldn't delete ais_secure_android_id_dom: " + str(e))
+            return {"error": str(e)}
+
+    except Exception as e:
+        _LOGGER.error("Couldn't restore from backup: " + str(e))
+        return {"error": str(e)}
+    # ok
+    return {}
+
+
+class RestoreAisBackupView(HomeAssistantView):
+    """Restore the gate from backup during the bootstrap."""
+
+    requires_auth = False
+    url = "/api/onboarding/ais_restore_backup"
+    name = "api:onboarding:ais_restore_backup"
+
+    def __init__(self):
+        """Initialize the onboarding view."""
+        pass
+
+    async def post(self, request):
+        """Handle user login to get gates info."""
+        hass = request.app["hass"]
+        message = await request.json()
+
+        _LOGGER.debug("Received AIS restore from backup request: %s", message)
+
+        response = await async_handle_restore_from_backup(hass, message)
+        state = "invalid" if "error" in response else "valid"
+
+        if state == "valid":
+            hass.async_add_job(hass.services.async_call("script", "ais_restart_system"))
+
+        return self.json(
+            {
+                "result": state,
+                "message": response.get(
+                    "error",
+                    "OK. Przywrócono konfiguracje z kopii, poczekaj na restart Asystenta "
+                    "domowego i zaloguj się na konto z poprzedniej konfiguracji.",
+                ),
+            }
         )

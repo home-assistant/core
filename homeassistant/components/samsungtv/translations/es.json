@@ -18,8 +18,7 @@
                     "host": "Host o direcci\u00f3n IP",
                     "name": "Nombre"
                 },
-                "description": "Introduce la informaci\u00f3n de tu televisi\u00f3n Samsung. Si nunca antes te conectaste con Home Assistant, deber\u00edas ver un mensaje en tu televisi\u00f3n pidiendo autorizaci\u00f3n.",
-                "title": "Samsung TV"
+                "description": "Introduce la informaci\u00f3n de tu televisi\u00f3n Samsung. Si nunca antes te conectaste con Home Assistant, deber\u00edas ver un mensaje en tu televisi\u00f3n pidiendo autorizaci\u00f3n."
             }
         }
     }

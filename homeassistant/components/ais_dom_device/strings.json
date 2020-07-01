@@ -1,6 +1,5 @@
-{
+{   "title": "AIS Dodanie Nowego Urządzenia",
     "config": {
-      "title": "AIS Dodanie Nowego Urządzenia",
       "step": {
         "confirm": {
           "description": "Czy chcesz dodać nowe urządzenie?\n\n![AIS logo](/static/icons/ais_logo_works_with_dom-100-black.png)\n\nTen kreator działa z urządzeniami posiadającymi **otwarto-źródłowe i darmowe** oprogramowanie rozwijane w ramach projektu [Tasmota](https://github.com/arendst/Tasmota). Oprogramowanie to jest instalowane na urządzeniach **AI-Speaker**, może być też alternatywnym oprogramowaniem dla urządzeń produkowanych przez wielu producentów.\n\nSzczegóły w dokumentacji [Działa z Asystentem domowym\n](https://www.ai-speaker.com/docs/ais_iot_works_with)",

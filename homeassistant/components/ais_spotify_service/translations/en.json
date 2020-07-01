@@ -1,6 +1,6 @@
 {
+    "title": "AIS Service Spotify",
     "config": {
-        "title": "AIS Service Spotify",
         "step": {
             "init": {
                 "description": "To connect the Spotify account you need to Authorize **Asystent domowy**  \n\n ![AIS logo](/static/icons/favicon-100x100.png) \n\n click **SUBMIT** to continue. ",

@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kontroller nettstedet er allerede konfigurert",
-            "no_local_user": "Ingen lokale brukere funnet. Konfigurer en lokal konto p\u00e5 kontrolleren og pr\u00f8v igjen",
-            "user_privilege": "Bruker m\u00e5 v\u00e6re administrator"
+            "already_configured": "Kontroller nettstedet er allerede konfigurert"
         },
         "error": {
             "faulty_credentials": "Ugyldig brukerlegitimasjon",
@@ -29,7 +27,6 @@
             "client_control": {
                 "data": {
                     "block_client": "Nettverkskontrollerte klienter",
-                    "new_client": "Legg til ny klient for nettverkstilgangskontroll",
                     "poe_clients": "Tillat POE-kontroll av klienter"
                 },
                 "description": "Konfigurere klient-kontroller\n\nOpprette brytere for serienumre du \u00f8nsker \u00e5 kontrollere tilgang til nettverk for.",

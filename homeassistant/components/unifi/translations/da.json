@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Controller site er allerede konfigureret",
-            "user_privilege": "Bruger skal v\u00e6re administrator"
+            "already_configured": "Controller site er allerede konfigureret"
         },
         "error": {
             "faulty_credentials": "Ugyldige legitimationsoplysninger",

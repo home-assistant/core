@@ -5,19 +5,17 @@
             "not_songpal_device": "Kein Songpal-Ger\u00e4t"
         },
         "error": {
-            "connection": "Verbindungsfehler: Bitte \u00fcberpr\u00fcfen Sie Ihren Endpunkt"
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "flow_title": "Sony Songpal {name} ({host})",
         "step": {
             "init": {
-                "description": "M\u00f6chten Sie {name} ({host}) einrichten?",
-                "title": "Sony Songpal"
+                "description": "M\u00f6chten Sie {name} ({host}) einrichten?"
             },
             "user": {
                 "data": {
                     "endpoint": "Endpunkt"
-                },
-                "title": "Sony Songpal"
+                }
             }
         }
     }

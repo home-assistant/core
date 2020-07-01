@@ -128,7 +128,7 @@
         },
         "moisture": {
             "off": "Asciutto",
-            "on": "Bagnato"
+            "on": "Umido"
         },
         "motion": {
             "off": "Assenza",

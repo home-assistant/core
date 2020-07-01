@@ -22,7 +22,6 @@ from homeassistant.const import (
     ATTR_NAME,
     CONF_EXCLUDE,
     CONF_INCLUDE,
-    EVENT_AUTOMATION_TRIGGERED,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_LOGBOOK_ENTRY,
@@ -82,7 +81,6 @@ ALL_EVENT_TYPES = [
     EVENT_LOGBOOK_ENTRY,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    EVENT_AUTOMATION_TRIGGERED,
     EVENT_SCRIPT_STARTED,
 ]
 
@@ -316,17 +314,6 @@ def humanify(hass, events):
                     "context_user_id": event.context.user_id,
                 }
 
-            elif event.event_type == EVENT_AUTOMATION_TRIGGERED:
-                yield {
-                    "when": event.time_fired,
-                    "name": event.data.get(ATTR_NAME),
-                    "message": "has been triggered",
-                    "domain": "automation",
-                    "entity_id": event.data.get(ATTR_ENTITY_ID),
-                    "context_id": event.context.id,
-                    "context_user_id": event.context.user_id,
-                }
-
             elif event.event_type == EVENT_SCRIPT_STARTED:
                 yield {
                     "when": event.time_fired,
@@ -344,7 +331,7 @@ def _get_related_entity_ids(session, entity_filter):
 
     query = session.query(States).with_entities(States.entity_id).distinct()
 
-    for tryno in range(0, RETRIES):
+    for tryno in range(RETRIES):
         try:
             result = [row.entity_id for row in query if entity_filter(row.entity_id)]
 
@@ -423,11 +410,12 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
 
 
 def _keep_event(hass, event, entities_filter):
-    domain, entity_id = None, None
+    domain = event.data.get(ATTR_DOMAIN)
+    entity_id = event.data.get("entity_id")
+    if entity_id:
+        domain = split_entity_id(entity_id)[0]
 
     if event.event_type == EVENT_STATE_CHANGED:
-        entity_id = event.data.get("entity_id")
-
         if entity_id is None:
             return False
 
@@ -445,7 +433,6 @@ def _keep_event(hass, event, entities_filter):
         if new_state.get("state") == old_state.get("state"):
             return False
 
-        domain = split_entity_id(entity_id)[0]
         attributes = new_state.get("attributes", {})
 
         # Also filter auto groups.
@@ -459,17 +446,13 @@ def _keep_event(hass, event, entities_filter):
 
     elif event.event_type == EVENT_LOGBOOK_ENTRY:
         domain = event.data.get(ATTR_DOMAIN)
-        entity_id = event.data.get(ATTR_ENTITY_ID)
-
-    elif event.event_type == EVENT_AUTOMATION_TRIGGERED:
-        domain = "automation"
-        entity_id = event.data.get(ATTR_ENTITY_ID)
 
     elif event.event_type == EVENT_SCRIPT_STARTED:
         domain = "script"
-        entity_id = event.data.get(ATTR_ENTITY_ID)
 
-    elif event.event_type in hass.data.get(DOMAIN, {}):
+    elif not entity_id and event.event_type in hass.data.get(DOMAIN, {}):
+        # If the entity_id isn't described, use the domain that describes
+        # the event for filtering.
         domain = hass.data[DOMAIN][event.event_type][0]
 
     if not entity_id and domain:

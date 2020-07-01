@@ -17,31 +17,20 @@
                 "description": "Hass.io {addon} \uc560\ub4dc\uc628\uc5d0\uc11c \uc81c\uacf5\ub41c deCONZ \uac8c\uc774\ud2b8\uc6e8\uc774\uc5d0 \uc5f0\uacb0\ud558\ub3c4\ub85d Home Assistant \ub97c \uad6c\uc131\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
                 "title": "Hass.io \uc560\ub4dc\uc628\uc758 deCONZ Zigbee \uac8c\uc774\ud2b8\uc6e8\uc774"
             },
-            "init": {
-                "title": "deCONZ \uac8c\uc774\ud2b8\uc6e8\uc774 \uc815\uc758\ud558\uae30"
-            },
             "link": {
                 "description": "deCONZ \uac8c\uc774\ud2b8\uc6e8\uc774\ub97c \uc5b8\ub77d\ud558\uc5ec Home Assistant \uc5d0 \uc5f0\uacb0\ud558\uae30.\n\n1. deCONZ \uc2dc\uc2a4\ud15c \uc124\uc815\uc73c\ub85c \uc774\ub3d9\ud558\uc138\uc694\n2. \"Authenticate app\" \ubc84\ud2bc\uc744 \ub20c\ub7ec\uc8fc\uc138\uc694",
                 "title": "deCONZ \uc5f0\uacb0\ud558\uae30"
-            },
-            "manual_confirm": {
-                "data": {
-                    "host": "\ud638\uc2a4\ud2b8",
-                    "port": "\ud3ec\ud2b8"
-                }
             },
             "manual_input": {
                 "data": {
                     "host": "\ud638\uc2a4\ud2b8",
                     "port": "\ud3ec\ud2b8"
-                },
-                "title": "deCONZ \uac8c\uc774\ud2b8\uc6e8\uc774 \uad6c\uc131\ud558\uae30"
+                }
             },
             "user": {
                 "data": {
                     "host": "\ubc1c\uacac\ub41c deCONZ \uac8c\uc774\ud2b8\uc6e8\uc774 \uc120\ud0dd"
-                },
-                "title": "deCONZ \uac8c\uc774\ud2b8\uc6e8\uc774 \uc120\ud0dd\ud558\uae30"
+                }
             }
         }
     },
@@ -82,7 +71,7 @@
             "remote_button_short_release": "\"{subtype}\" \ubc84\ud2bc\uc5d0\uc11c \uc190\uc744 \ub5c4 \ub54c",
             "remote_button_triple_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \uc138 \ubc88 \ub20c\ub9b4 \ub54c",
             "remote_double_tap": "\uae30\uae30\uc758 \"{subtype}\" \uac00 \ub354\ube14 \ud0ed \ub420 \ub54c",
-            "remote_double_tap_any_side": "\uae30\uae30\uc758 \uc544\ubb34 \uba74\uc774 \ub354\ube14 \ud0ed \ub420 \ub54c",
+            "remote_double_tap_any_side": "\uae30\uae30\uc758 \uc544\ubb34 \uba74\uc774\ub098 \ub354\ube14 \ud0ed \ub420 \ub54c",
             "remote_falling": "\uae30\uae30\uac00 \ub5a8\uc5b4\uc9c8 \ub54c",
             "remote_flip_180_degrees": "\uae30\uae30\uac00 180\ub3c4\ub85c \ub4a4\uc9d1\uc5b4\uc9c8 \ub54c",
             "remote_flip_90_degrees": "\uae30\uae30\uac00 90\ub3c4\ub85c \ub4a4\uc9d1\uc5b4\uc9c8 \ub54c",

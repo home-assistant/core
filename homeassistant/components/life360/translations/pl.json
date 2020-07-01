@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "invalid_credentials": "Nieprawid\u0142owe dane uwierzytelniaj\u0105ce",
-            "user_already_configured": "[%key_id:common::config_flow::abort::already_configured_account%]"
+            "user_already_configured": "Konto jest ju\u017c skonfigurowane."
         },
         "create_entry": {
             "default": "Aby skonfigurowa\u0107 zaawansowane ustawienia, zapoznaj si\u0119 z [dokumentacj\u0105 Life360]({docs_url})."
@@ -16,8 +16,8 @@
         "step": {
             "user": {
                 "data": {
-                    "password": "[%key_id:common::config_flow::data::password%]",
-                    "username": "[%key_id:common::config_flow::data::username%]"
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "description": "Aby skonfigurowa\u0107 zaawansowane ustawienia, zapoznaj si\u0119 z [dokumentacj\u0105 Life360]({docs_url}). Mo\u017cesz to zrobi\u0107 przed dodaniem kont.",
                 "title": "Informacje o koncie Life360"

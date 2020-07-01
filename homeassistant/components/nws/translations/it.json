@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Chiave API (email)",
+                    "api_key": "Chiave API",
                     "latitude": "Latitudine",
                     "longitude": "Logitudine",
                     "station": "Codice stazione METAR"

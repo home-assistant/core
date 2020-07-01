@@ -3,6 +3,7 @@
         "step": {
             "user": {
                 "data": {
+                    "host": "Servidor",
                     "type": "Tipo de impressora"
                 }
             }

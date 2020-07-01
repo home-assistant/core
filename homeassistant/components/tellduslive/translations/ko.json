@@ -11,7 +11,7 @@
         },
         "step": {
             "auth": {
-                "description": "TelldusLive \uacc4\uc815\uc744 \uc5f0\uacb0\ud558\ub824\uba74:\n 1. \ud558\ub2e8\uc758 \ub9c1\ud06c\ub97c \ud074\ub9ad\ud574\uc8fc\uc138\uc694\n 2. Telldus Live \uc5d0 \ub85c\uadf8\uc778 \ud558\uc138\uc694\n 3. Authorize **{app_name}** (**Yes** \ub97c \ud074\ub9ad\ud558\uc138\uc694).\n 4. \ub2e4\uc2dc \uc5ec\uae30\ub85c \ub3cc\uc544\uc640\uc11c **SUBMIT** \uc744 \ud074\ub9ad\ud558\uc138\uc694.\n\n [TelldusLive \uacc4\uc815 \uc5f0\uacb0\ud558\uae30]({auth_url})",
+                "description": "TelldusLive \uacc4\uc815\uc744 \uc5f0\uacb0\ud558\ub824\uba74:\n 1. \ud558\ub2e8\uc758 \ub9c1\ud06c\ub97c \ud074\ub9ad\ud574\uc8fc\uc138\uc694\n 2. Telldus Live \uc5d0 \ub85c\uadf8\uc778 \ud558\uc138\uc694\n 3. Authorize **{app_name}** (**Yes** \ub97c \ud074\ub9ad\ud558\uc138\uc694).\n 4. \ub2e4\uc2dc \uc5ec\uae30\ub85c \ub3cc\uc544\uc640\uc11c **\ud655\uc778**\uc744 \ud074\ub9ad\ud558\uc138\uc694.\n\n [TelldusLive \uacc4\uc815 \uc5f0\uacb0\ud558\uae30]({auth_url})",
                 "title": "TelldusLive \uc778\uc99d\ud558\uae30"
             },
             "user": {

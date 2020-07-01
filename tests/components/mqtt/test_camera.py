@@ -49,6 +49,7 @@ async def test_run_camera_setup(hass, aiohttp_client):
         "camera",
         {"camera": {"platform": "mqtt", "topic": topic, "name": "Test Camera"}},
     )
+    await hass.async_block_till_done()
 
     url = hass.states.get("camera.test_camera").attributes["entity_picture"]
 

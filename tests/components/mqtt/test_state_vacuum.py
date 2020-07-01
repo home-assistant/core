@@ -82,6 +82,7 @@ async def test_default_supported_features(hass, mqtt_mock):
     assert await async_setup_component(
         hass, vacuum.DOMAIN, {vacuum.DOMAIN: DEFAULT_CONFIG}
     )
+    await hass.async_block_till_done()
     entity = hass.states.get("vacuum.mqtttest")
     entity_features = entity.attributes.get(mqttvacuum.CONF_SUPPORTED_FEATURES, 0)
     assert sorted(services_to_strings(entity_features, SERVICE_TO_STRING)) == sorted(
@@ -97,6 +98,7 @@ async def test_all_commands(hass, mqtt_mock):
     )
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         DOMAIN, SERVICE_START, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
@@ -168,6 +170,7 @@ async def test_commands_without_supported_features(hass, mqtt_mock):
     )
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         DOMAIN, SERVICE_START, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
@@ -223,6 +226,7 @@ async def test_status(hass, mqtt_mock):
     )
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     message = """{
         "battery_level": 54,
@@ -260,6 +264,7 @@ async def test_no_fan_vacuum(hass, mqtt_mock):
     )
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     message = """{
         "battery_level": 54,
@@ -309,6 +314,7 @@ async def test_status_invalid_json(hass, mqtt_mock):
     )
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "vacuum/state", '{"asdfasas false}')
     state = hass.states.get("vacuum.mqtttest")

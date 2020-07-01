@@ -9,14 +9,11 @@
         "step": {
             "user": {
                 "data": {
-                    "Home_Control_URL": "Home Control URL",
-                    "Mydevolo_URL": "mydevolo URL",
                     "home_control_url": "Home Control URL",
                     "mydevolo_url": "mydevolo URL",
                     "password": "\u041f\u0430\u0440\u043e\u043b\u044c",
                     "username": "\u0410\u0434\u0440\u0435\u0441 \u044d\u043b\u0435\u043a\u0442\u0440\u043e\u043d\u043d\u043e\u0439 \u043f\u043e\u0447\u0442\u044b / devolo ID"
                 },
-                "description": "\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u0442\u0435 Home Assistant \u0434\u043b\u044f \u0438\u043d\u0442\u0435\u0433\u0440\u0430\u0446\u0438\u0438 \u0441 devolo Home Control.",
                 "title": "devolo Home Control"
             }
         }

@@ -68,10 +68,10 @@ class IRobotEntity(Entity):
         """Initialize the iRobot handler."""
         self.vacuum = roomba
         self._blid = blid
-        vacuum_state = roomba_reported_state(roomba)
-        self._name = vacuum_state.get("name")
-        self._version = vacuum_state.get("softwareVer")
-        self._sku = vacuum_state.get("sku")
+        self.vacuum_state = roomba_reported_state(roomba)
+        self._name = self.vacuum_state.get("name")
+        self._version = self.vacuum_state.get("softwareVer")
+        self._sku = self.vacuum_state.get("sku")
 
     @property
     def should_poll(self):
@@ -99,13 +99,32 @@ class IRobotEntity(Entity):
             "model": self._sku,
         }
 
+    @property
+    def _battery_level(self):
+        """Return the battery level of the vacuum cleaner."""
+        return self.vacuum_state.get("batPct")
+
+    @property
+    def _robot_state(self):
+        """Return the state of the vacuum cleaner."""
+        clean_mission_status = self.vacuum_state.get("cleanMissionStatus", {})
+        cycle = clean_mission_status.get("cycle")
+        phase = clean_mission_status.get("phase")
+        try:
+            state = STATE_MAP[phase]
+        except KeyError:
+            return STATE_ERROR
+        if cycle != "none" and state in (STATE_IDLE, STATE_DOCKED):
+            state = STATE_PAUSED
+        return state
+
     async def async_added_to_hass(self):
         """Register callback function."""
         self.vacuum.register_on_message_callback(self.on_message)
 
-    def new_state_filter(self, new_state):
-        """Filter the new state."""
-        raise NotImplementedError
+    def new_state_filter(self, new_state):  # pylint: disable=no-self-use
+        """Filter out wifi state messages."""
+        return len(new_state) > 1 or "signal" not in new_state
 
     def on_message(self, json_data):
         """Update state on message change."""
@@ -120,7 +139,6 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
     def __init__(self, roomba, blid):
         """Initialize the iRobot handler."""
         super().__init__(roomba, blid)
-        self.vacuum_state = roomba_reported_state(roomba)
         self._cap_position = self.vacuum_state.get("cap", {}).get("pose") == 1
 
     @property
@@ -129,33 +147,14 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         return SUPPORT_IROBOT
 
     @property
-    def fan_speed(self):
-        """Return the fan speed of the vacuum cleaner."""
-        return None
-
-    @property
-    def fan_speed_list(self):
-        """Get the list of available fan speed steps of the vacuum cleaner."""
-        return []
-
-    @property
     def battery_level(self):
         """Return the battery level of the vacuum cleaner."""
-        return self.vacuum_state.get("batPct")
+        return self._battery_level
 
     @property
     def state(self):
         """Return the state of the vacuum cleaner."""
-        clean_mission_status = self.vacuum_state.get("cleanMissionStatus", {})
-        cycle = clean_mission_status.get("cycle")
-        phase = clean_mission_status.get("phase")
-        try:
-            state = STATE_MAP[phase]
-        except KeyError:
-            return STATE_ERROR
-        if cycle != "none" and state in (STATE_IDLE, STATE_DOCKED):
-            state = STATE_PAUSED
-        return state
+        return self._robot_state
 
     @property
     def available(self) -> bool:
@@ -215,14 +214,10 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
 
     def on_message(self, json_data):
         """Update state on message change."""
-        new_state = json_data.get("state", {}).get("reported", {})
-        if (
-            len(new_state) == 1 and "signal" in new_state
-        ):  # filter out wifi stat messages
-            return
-        _LOGGER.debug("Got new state from the vacuum: %s", json_data)
-        self.vacuum_state = roomba_reported_state(self.vacuum)
-        self.schedule_update_ha_state()
+        state = json_data.get("state", {}).get("reported", {})
+        if self.new_state_filter(state):
+            _LOGGER.debug("Got new state from the vacuum: %s", json_data)
+            self.schedule_update_ha_state()
 
     async def async_start(self):
         """Start or resume the cleaning task."""

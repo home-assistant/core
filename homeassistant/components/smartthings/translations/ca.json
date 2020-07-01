@@ -9,7 +9,7 @@
             "token_forbidden": "El token d'autenticaci\u00f3 no t\u00e9 cont\u00e9 els apartats OAuth obligatoris.",
             "token_invalid_format": "El token d'autenticaci\u00f3 ha d'estar en format UID/GUID",
             "token_unauthorized": "El token d'autenticaci\u00f3 no \u00e9s v\u00e0lid o ja no est\u00e0 autoritzat.",
-            "webhook_error": "SmartThings no ha pogut validar l'adre\u00e7a final configurada a `base_url`. Revisa els requisits del component."
+            "webhook_error": "SmartThings no ha pogut validar l'URL webhook. Comprova que l'URL pot ser accedit des d'Internet i torna-ho a provar."
         },
         "step": {
             "authorize": {

@@ -9,6 +9,7 @@
             "invalid_host": "\u4e3b\u6a5f\u7aef\u4e26\u672a\u4ee5\u5b8c\u6574\u7db2\u5740\u683c\u5f0f\u8f38\u5165\uff0c\u4f8b\u5982\uff1ahttp://192.168.10.100:80",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
+        "flow_title": "Universal Devices ISY994 {name} ({host})",
         "step": {
             "user": {
                 "data": {

@@ -16,10 +16,11 @@
             "not_found": "No se ha encontrado el servidor Plex",
             "ssl_error": "Problema con el certificado SSL"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "manual_setup": {
                 "data": {
-                    "host": "Host (Opcional si se proporciona Token)",
+                    "host": "Host",
                     "port": "Puerto",
                     "ssl": "Usar SSL",
                     "token": "Token (Opcional)",
@@ -33,10 +34,6 @@
                 },
                 "description": "Varios servidores disponibles, seleccione uno:",
                 "title": "Seleccione el servidor Plex"
-            },
-            "start_website_auth": {
-                "description": "Contin\u00fae en plex.tv para autorizar",
-                "title": "Conectar servidor Plex"
             },
             "user": {
                 "description": "Continuar hacia [plex.tv](https://plex.tv) para vincular un servidor Plex.",

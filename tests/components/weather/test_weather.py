@@ -32,6 +32,7 @@ class TestWeather(unittest.TestCase):
         assert setup_component(
             self.hass, weather.DOMAIN, {"weather": {"platform": "demo"}}
         )
+        self.hass.block_till_done()
 
     def tearDown(self):
         """Stop down everything that was started."""

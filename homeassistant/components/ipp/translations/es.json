@@ -6,7 +6,8 @@
             "connection_upgrade": "No se pudo conectar con la impresora debido a que se requiere una actualizaci\u00f3n de la conexi\u00f3n.",
             "ipp_error": "Error IPP encontrado.",
             "ipp_version_error": "Versi\u00f3n de IPP no compatible con la impresora.",
-            "parse_error": "Error al analizar la respuesta de la impresora."
+            "parse_error": "Error al analizar la respuesta de la impresora.",
+            "unique_id_required": "El dispositivo no tiene identificaci\u00f3n \u00fanica necesaria para el descubrimiento."
         },
         "error": {
             "connection_error": "Error al conectar",

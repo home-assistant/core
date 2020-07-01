@@ -133,7 +133,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         # Which state values used depends on the mode property's UOM:
         uom = hvac_mode.uom
         # Handle special case for ISYv4 Firmware:
-        if uom == UOM_ISYV4_NONE:
+        if uom in (UOM_ISYV4_NONE, ""):
             uom = (
                 UOM_HVAC_MODE_INSTEON
                 if self._node.protocol == PROTO_INSTEON

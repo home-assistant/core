@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Aquest dispositiu ja est\u00e0 configurat",
+            "already_configured": "Aquest dispositiu ja ha estat configurat",
             "already_in_progress": "Aquest dispositiu ja s'est\u00e0 configurant",
             "not_huawei_lte": "No \u00e9s un dispositiu Huawei LTE"
         },

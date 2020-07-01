@@ -16,14 +16,18 @@
             },
             "port_config": {
                 "data": {
-                    "baudrate": "vitesse du port"
+                    "baudrate": "vitesse du port",
+                    "flow_control": "contr\u00f4le du flux de donn\u00e9es",
+                    "path": "Chemin du p\u00e9riph\u00e9rique s\u00e9rie"
                 },
+                "description": "Saisir les param\u00e8tres sp\u00e9cifiques au port",
                 "title": "R\u00e9glages"
             },
             "user": {
                 "data": {
-                    "radio_type": "Type de radio"
+                    "path": "Chemin du p\u00e9riph\u00e9rique s\u00e9rie"
                 },
+                "description": "S\u00e9lectionnez le port s\u00e9rie de la radio Zigbee",
                 "title": "ZHA"
             }
         }
@@ -65,6 +69,7 @@
             "device_shaken": "Appareil secou\u00e9",
             "device_slid": "Appareil gliss\u00e9 \"{subtype}\"",
             "device_tilted": "Dispositif inclin\u00e9",
+            "remote_button_alt_triple_press": "\"{subtype}\" bouton triple-cliqu\u00e9 (mode alternatif)",
             "remote_button_double_press": "Double clic sur le bouton \" {subtype} \"",
             "remote_button_long_press": "Bouton \"{subtype}\" appuy\u00e9 continuellement",
             "remote_button_long_release": "Bouton \" {subtype} \" rel\u00e2ch\u00e9 apr\u00e8s un appui long",

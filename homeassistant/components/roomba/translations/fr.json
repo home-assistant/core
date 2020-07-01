@@ -1,12 +1,8 @@
 {
     "config": {
-        "error": {
-            "unknown": "Erreur inattendue"
-        },
         "step": {
             "user": {
                 "data": {
-                    "certificate": "Certificat",
                     "continuous": "En continu",
                     "delay": "D\u00e9lai",
                     "host": "Nom d'h\u00f4te ou adresse IP",

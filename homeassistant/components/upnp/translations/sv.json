@@ -2,29 +2,18 @@
     "config": {
         "abort": {
             "already_configured": "UPnP/IGD \u00e4r redan konfigurerad",
-            "incomplete_device": "Ignorera ofullst\u00e4ndig UPnP-enhet",
             "no_devices_discovered": "Inga UPnP/IGDs uppt\u00e4cktes",
-            "no_devices_found": "Inga UPnP/IGD-enheter hittades p\u00e5 n\u00e4tverket.",
-            "no_sensors_or_port_mapping": "Aktivera minst sensorer eller portmappning",
-            "single_instance_allowed": "Endast en enda konfiguration av UPnP/IGD \u00e4r n\u00f6dv\u00e4ndig."
+            "no_devices_found": "Inga UPnP/IGD-enheter hittades p\u00e5 n\u00e4tverket."
         },
         "error": {
             "one": "En",
             "other": "Andra"
         },
         "step": {
-            "confirm": {
-                "description": "Vill du konfigurera UPnP/IGD?",
-                "title": "UPnP/IGD"
-            },
             "user": {
                 "data": {
-                    "enable_port_mapping": "Aktivera portmappning f\u00f6r Home Assistant",
-                    "enable_sensors": "L\u00e4gg till trafiksensorer",
-                    "igd": "UPnP/IGD",
                     "usn": "Enheten"
-                },
-                "title": "Konfigurationsalternativ f\u00f6r UPnP/IGD"
+                }
             }
         }
     }

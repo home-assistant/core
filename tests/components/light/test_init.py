@@ -123,6 +123,7 @@ class TestLight(unittest.TestCase):
         assert setup_component(
             self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
         )
+        self.hass.block_till_done()
 
         ent1, ent2, ent3 = platform.ENTITIES
 
@@ -335,6 +336,7 @@ class TestLight(unittest.TestCase):
         assert setup_component(
             self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
         )
+        self.hass.block_till_done()
 
         ent1, _, _ = platform.ENTITIES
 
@@ -376,12 +378,13 @@ class TestLight(unittest.TestCase):
             return real_open(path, *args, **kwargs)
 
         profile_data = "id,x,y,brightness\ngroup.all_lights.default,.4,.6,99\n"
-        with mock.patch("os.path.isfile", side_effect=_mock_isfile):
-            with mock.patch("builtins.open", side_effect=_mock_open):
-                with mock_storage():
-                    assert setup_component(
-                        self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
-                    )
+        with mock.patch("os.path.isfile", side_effect=_mock_isfile), mock.patch(
+            "builtins.open", side_effect=_mock_open
+        ), mock_storage():
+            assert setup_component(
+                self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
+            )
+            self.hass.block_till_done()
 
         ent, _, _ = platform.ENTITIES
         common.turn_on(self.hass, ent.entity_id)
@@ -413,12 +416,13 @@ class TestLight(unittest.TestCase):
             + "group.all_lights.default,.3,.5,200\n"
             + "light.ceiling_2.default,.6,.6,100\n"
         )
-        with mock.patch("os.path.isfile", side_effect=_mock_isfile):
-            with mock.patch("builtins.open", side_effect=_mock_open):
-                with mock_storage():
-                    assert setup_component(
-                        self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
-                    )
+        with mock.patch("os.path.isfile", side_effect=_mock_isfile), mock.patch(
+            "builtins.open", side_effect=_mock_open
+        ), mock_storage():
+            assert setup_component(
+                self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
+            )
+            self.hass.block_till_done()
 
         dev = next(
             filter(lambda x: x.entity_id == "light.ceiling_2", platform.ENTITIES)
@@ -434,6 +438,7 @@ async def test_light_context(hass, hass_admin_user):
     platform = getattr(hass.components, "test.light")
     platform.init()
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    await hass.async_block_till_done()
 
     state = hass.states.get("light.ceiling")
     assert state is not None
@@ -457,6 +462,7 @@ async def test_light_turn_on_auth(hass, hass_admin_user):
     platform = getattr(hass.components, "test.light")
     platform.init()
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    await hass.async_block_till_done()
 
     state = hass.states.get("light.ceiling")
     assert state is not None
@@ -481,6 +487,7 @@ async def test_light_brightness_step(hass):
     entity.supported_features = light.SUPPORT_BRIGHTNESS
     entity.brightness = 100
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
@@ -515,6 +522,7 @@ async def test_light_brightness_pct_conversion(hass):
     entity.supported_features = light.SUPPORT_BRIGHTNESS
     entity.brightness = 100
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
     assert state is not None

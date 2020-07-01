@@ -63,7 +63,11 @@ async def async_setup(hass, config):
         spotify_redirect_url = json_ws_resp["SPOTIFY_REDIRECT_URL"]
         spotify_client_id = json_ws_resp["SPOTIFY_CLIENT_ID"]
         spotify_client_secret = json_ws_resp["SPOTIFY_CLIENT_SECRET"]
-        spotify_scope = json_ws_resp["SPOTIFY_SCOPE"]
+        if "SPOTIFY_SCOPE_FULL" in json_ws_resp:
+            spotify_scope = json_ws_resp["SPOTIFY_SCOPE_FULL"]
+        else:
+            spotify_scope = json_ws_resp["SPOTIFY_SCOPE"]
+
         try:
             json_ws_resp = await aisCloud.async_key("spotify_token")
             key = json_ws_resp["key"]
@@ -213,10 +217,28 @@ class SpotifyData:
         elif audio_type == "playlist":
             items = results["playlists"]["items"]
             title_prefix = "Playlista: "
+            icon = "mdi:folder-music"
+        elif audio_type == "user_playlists":
+            items = results["items"]
+            title_prefix = "Playlista: "
             icon = "mdi:playlist-music"
+        elif audio_type == "user_artists":
+            items = results["artists"]["items"]
+            title_prefix = "Wykonawca: "
+            icon = "mdi:artist"
+        elif audio_type == "user_albums":
+            items = results["items"]
+            title_prefix = "Album: "
+            icon = "mdi:album"
+        elif audio_type == "user_tracks":
+            items = results["items"]
+            title_prefix = "Utwór: "
+            icon = "mdi:play"
+
         list_idx = len(list_info)
         for item in items:
             try:
+                i_total = 0
                 if audio_type == "playlist":
                     item_owner_id = item["owner"]["id"]
                     i_total = item["tracks"]["total"]
@@ -224,15 +246,39 @@ class SpotifyData:
                     i_total = item["popularity"]
                 elif audio_type == "album":
                     i_total = item["total_tracks"]
+                elif audio_type == "user_playlists":
+                    i_total = item["tracks"]["total"]
+                elif audio_type == "user_artists":
+                    i_total = item["popularity"]
+                elif audio_type == "user_albums":
+                    i_total = item["album"]["total_tracks"]
+                elif audio_type == "user_tracks":
+                    i_total = 1
                 if i_total > 0:
-                    if len(item["images"]) > 0:
-                        thumbnail = item["images"][0]["url"]
+                    thumbnail = "/static/icons/favicon-100x100.png"
+                    uri = ""
+                    name = ""
+                    if audio_type == "user_albums":
+                        if len(item["album"]["images"]) > 0:
+                            thumbnail = item["album"]["images"][0]["url"]
+                            uri = item["album"]["uri"]
+                            name = item["album"]["name"]
+                    elif audio_type == "user_tracks":
+                        name = item["track"]["name"]
+                        uri = item["track"]["uri"]
+                        if "album" in item["track"]:
+                            if len(item["track"]["album"]["images"]) > 0:
+                                thumbnail = item["track"]["album"]["images"][0]["url"]
                     else:
-                        thumbnail = "/static/icons/favicon-100x100.png"
+                        if len(item["images"]) > 0:
+                            thumbnail = item["images"][0]["url"]
+                            uri = item["uri"]
+                            name = item["name"]
+
                     list_info[list_idx] = {
-                        "uri": item["uri"],
-                        "title": title_prefix + item["name"],
-                        "name": title_prefix + item["name"],
+                        "uri": uri,
+                        "title": title_prefix + name,
+                        "name": title_prefix + name,
                         "type": audio_type,
                         "item_owner_id": item_owner_id,
                         "thumbnail": thumbnail,
@@ -316,6 +362,11 @@ class SpotifyData:
 
     async def async_process_get_favorites(self, call):
         """Get favorites from Spotify."""
+        search_type = "featured-playlists"
+        if "type" in call.data:
+            # featured-playlists, playlists, artists, albums, tracks
+            search_type = call.data["type"]
+
         self.refresh_spotify_instance()
 
         # Don't true search when token is expired
@@ -323,32 +374,99 @@ class SpotifyData:
             _LOGGER.warning("Spotify failed to update, token expired.")
             return
 
+        data = {}
+
         list_info = {}
+        list_idx = 0
+        page = 0
+        direction = "page-next"
+        table_after = [0]
 
-        # TODO change the scope playlist-read-private user-library-read
+        if "Page" in call.data:
+            page = int(call.data["Page"])
+        if "PageArtists" in call.data:
+            page = int(call.data["PageArtists"])
+            direction = call.data["Direction"].split(":", 1)[1]
+            table_after = call.data["Table"]
+
+        if page > 0:
+            list_info[list_idx] = {}
+            list_info[list_idx]["title"] = "pobierz poprzednie"
+            list_info[list_idx]["name"] = "pobierz poprzednie"
+            list_info[list_idx]["thumbnail"] = "/static/icons/favicon-100x100.png"
+            if "PageArtists" in call.data:
+                list_info[list_idx]["uri"] = "PageArtists_" + str(page - 1)
+            else:
+                list_info[list_idx]["uri"] = "Page_" + str(page - 1)
+            list_info[list_idx]["media_source"] = table_after
+            list_info[list_idx]["audio_type"] = ais_global.G_AN_MUSIC
+            list_info[list_idx]["icon"] = "mdi:page-previous"
+            list_info[list_idx]["type"] = search_type
+
+        # The scope playlist-read-private user-library-read etc
         # user_playlists
-        # results = self._spotify.current_user_playlists(limit=10)
-        # if results["total"] > 0:
-        #     list_info = self.get_list_from_results(results, "playlist", list_info)
+        if search_type == "featured-playlists":
+            # featured_playlists
+            results = self._spotify.featured_playlists(
+                limit=10, offset=page * 10, country="PL"
+            )
+            results["total"] = results["playlists"]["total"]
+            list_info = self.get_list_from_results(results, "playlist", list_info)
+        elif search_type == "playlists":
+            # current_user_playlists
+            results = self._spotify.current_user_playlists(limit=10, offset=page * 10)
+            if results["total"] > 0:
+                list_info = self.get_list_from_results(
+                    results, "user_playlists", list_info
+                )
+        elif search_type == "artists":
+            # current_user_followed_artists
+            results = self._spotify.current_user_followed_artists(
+                limit=10, after=table_after[page]
+            )
+            if "artists" in results:
+                if results["artists"]["total"] > 0:
+                    results["total"] = results["artists"]["total"]
+                    list_info = self.get_list_from_results(
+                        results, "user_artists", list_info
+                    )
+        elif search_type == "albums":
+            # current_user_saved_albums
+            results = self._spotify.current_user_saved_albums(
+                limit=10, offset=page * 10
+            )
+            if results["total"] > 0:
+                list_info = self.get_list_from_results(
+                    results, "user_albums", list_info
+                )
+        elif search_type == "tracks":
+            # current_user_saved_tracks
+            results = self._spotify.current_user_saved_tracks(
+                limit=10, offset=page * 10
+            )
+            if results["total"] > 0:
+                list_info = self.get_list_from_results(
+                    results, "user_tracks", list_info
+                )
 
-        # current_user_followed_artists
-        # results = self._spotify.current_user_followed_artists(limit=10)
-        # if results["total"] > 0:
-        #     list_info = self.get_list_from_results(results, "artist", list_info)
-
-        # current_user_saved_albums
-        # results = self._spotify.current_user_saved_albums(limit=10)
-        # if results["total"] > 0:
-        #     list_info = self.get_list_from_results(results, "album", list_info)
-        #
-        # # current_user_saved_tracks
-        # results = self._spotify.current_user_saved_tracks(limit=10)
-        # if results["total"] > 0:
-        #     list_info = self.get_list_from_results(results, "track", list_info)
-
-        # featured_playlists
-        results = self._spotify.featured_playlists(limit=10, country="PL")
-        list_info = self.get_list_from_results(results, "playlist", list_info)
+        if results["total"] > (page + 1) * 10:
+            list_idx = list_idx + 10
+            list_info[list_idx] = {}
+            list_info[list_idx]["title"] = "pobierz następne"
+            list_info[list_idx]["name"] = "pobierz następne"
+            list_info[list_idx]["thumbnail"] = "/static/icons/favicon-100x100.png"
+            if "artists" in results:
+                list_info[list_idx]["uri"] = "PageArtists_" + str(page + 1)
+                if direction == "page-next":
+                    table_after.append(results["artists"]["cursors"]["after"])
+                elif direction == "page-previous":
+                    del table_after[-1]
+            else:
+                list_info[list_idx]["uri"] = "Page_" + str(page + 1)
+            list_info[list_idx]["media_source"] = table_after
+            list_info[list_idx]["audio_type"] = ais_global.G_AN_MUSIC
+            list_info[list_idx]["icon"] = "mdi:page-next"
+            list_info[list_idx]["type"] = search_type
 
         # update lists
         self.hass.states.async_set("sensor.spotifysearchlist", -1, list_info)
@@ -389,6 +507,11 @@ class SpotifyData:
             q="playlist:" + search_text, type="playlist", limit=6
         )
         list_info = self.get_list_from_results(results, "playlist", list_info)
+        # featured-playlists
+        # results = self._spotify.search(
+        #     q="featured-playlists:" + search_text, type="featured-playlists", limit=6
+        # )
+        # list_info = self.get_list_from_results(results, "featured-playlists", list_info)
 
         # update lists
         self.hass.states.async_set("sensor.spotifysearchlist", -1, list_info)
@@ -412,6 +535,28 @@ class SpotifyData:
         state = self.hass.states.get("sensor.spotifysearchlist")
         attr = state.attributes
         track = attr.get(int(call_id))
+        if "Page_" in track["uri"]:
+            page = track["uri"].split("_", 1)
+            self.hass.services.call(
+                "ais_spotify_service",
+                "get_favorites",
+                {"type": track["type"], "Page": page[1]},
+            )
+            return
+        if "PageArtists" in track["uri"]:
+            page = track["uri"].split("_", 1)
+            self.hass.services.call(
+                "ais_spotify_service",
+                "get_favorites",
+                {
+                    "type": track["type"],
+                    "Table": track["media_source"],
+                    "Direction": track["icon"],
+                    "PageArtists": page[1],
+                },
+            )
+            return
+
         # update search list
         self.hass.states.async_set("sensor.spotifysearchlist", call_id, attr)
 

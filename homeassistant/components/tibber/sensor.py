@@ -18,6 +18,7 @@ ICON = "mdi:currency-usd"
 ICON_RT = "mdi:power-plug"
 SCAN_INTERVAL = timedelta(minutes=1)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

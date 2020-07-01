@@ -7,7 +7,13 @@ from requests.exceptions import RequestException
 import smappy
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import Throttle
@@ -17,8 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Smappee"
 DEFAULT_HOST_PASSWORD = "admin"
 
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 CONF_HOST_PASSWORD = "host_password"
 
 DOMAIN = "smappee"

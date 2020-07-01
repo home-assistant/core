@@ -10,9 +10,9 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host o indirizzo IP",
+                    "host": "Host",
                     "passkey": "Stringa passkey",
-                    "port": "Numero porta"
+                    "port": "Porta"
                 },
                 "description": "Configura il tuo dispositivo BSB-Lan per l'integrazione con Home Assistant.",
                 "title": "Collegamento al dispositivo BSB-Lan"

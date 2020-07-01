@@ -1,8 +1,8 @@
 """Constants used by Home Assistant components."""
 
 MAJOR_VERSION = 0
-MINOR_VERSION = 110
-PATCH_VERSION = "7"
+MINOR_VERSION = 111
+PATCH_VERSION = "6"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER = (3, 7, 0)
@@ -181,7 +181,6 @@ CONF_XY = "xy"
 CONF_ZONE = "zone"
 
 # #### EVENTS ####
-EVENT_AUTOMATION_TRIGGERED = "automation_triggered"
 EVENT_CALL_SERVICE = "call_service"
 EVENT_COMPONENT_LOADED = "component_loaded"
 EVENT_CORE_CONFIG_UPDATE = "core_config_updated"
@@ -357,6 +356,10 @@ VOLT = "V"
 # Energy units
 ENERGY_WATT_HOUR = f"{POWER_WATT}h"
 ENERGY_KILO_WATT_HOUR = f"k{ENERGY_WATT_HOUR}"
+
+# Electrical units
+ELECTRICAL_CURRENT_AMPERE = "A"
+ELECTRICAL_VOLT_AMPERE = f"{VOLT}{ELECTRICAL_CURRENT_AMPERE}"
 
 # Degree units
 DEGREE = "°"

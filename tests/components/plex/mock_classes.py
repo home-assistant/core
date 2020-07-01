@@ -69,6 +69,10 @@ class MockPlexAccount:
         """Mock the PlexAccount resources listing method."""
         return self._resources
 
+    def sonos_speaker_by_id(self, machine_identifier):
+        """Mock the PlexAccount Sonos lookup method."""
+        return MockPlexSonosClient(machine_identifier)
+
 
 class MockPlexSystemAccount:
     """Mock a PlexSystemAccount instance."""
@@ -152,6 +156,19 @@ class MockPlexServer:
         """Mock version of PlexServer."""
         return "1.0"
 
+    @property
+    def library(self):
+        """Mock library object of PlexServer."""
+        return MockPlexLibrary()
+
+    def playlist(self, playlist):
+        """Mock the playlist lookup method."""
+        return MockPlexMediaItem(playlist, mediatype="playlist")
+
+    def fetchItem(self, item):
+        """Mock the fetchItem method."""
+        return MockPlexMediaItem("Item Name")
+
 
 class MockPlexClient:
     """Mock a PlexClient instance."""
@@ -186,7 +203,7 @@ class MockPlexClient:
     @property
     def protocolCapabilities(self):
         """Mock the protocolCapabilities attribute."""
-        return ["player"]
+        return ["playback"]
 
     @property
     def state(self):
@@ -202,6 +219,10 @@ class MockPlexClient:
     def version(self):
         """Mock the version attribute."""
         return "1.0"
+
+    def playMedia(self, item):
+        """Mock the playMedia method."""
+        pass
 
 
 class MockPlexSession:
@@ -259,9 +280,90 @@ class MockPlexSession:
         return 2020
 
 
+class MockPlexLibrary:
+    """Mock a Plex Library instance."""
+
+    def __init__(self):
+        """Initialize the object."""
+
+    def section(self, library_name):
+        """Mock the LibrarySection lookup."""
+        return MockPlexLibrarySection(library_name)
+
+
 class MockPlexLibrarySection:
     """Mock a Plex LibrarySection instance."""
 
     def __init__(self, library="Movies"):
         """Initialize the object."""
         self.title = library
+
+    def get(self, query):
+        """Mock the get lookup method."""
+        if self.title == "Music":
+            return MockPlexArtist(query)
+        return MockPlexMediaItem(query)
+
+
+class MockPlexMediaItem:
+    """Mock a Plex Media instance."""
+
+    def __init__(self, title, mediatype="video"):
+        """Initialize the object."""
+        self.title = str(title)
+        self.type = mediatype
+
+    def album(self, album):
+        """Mock the album lookup method."""
+        return MockPlexMediaItem(album, mediatype="album")
+
+    def track(self, track):
+        """Mock the track lookup method."""
+        return MockPlexMediaTrack()
+
+    def tracks(self):
+        """Mock the tracks lookup method."""
+        for index in range(1, 10):
+            yield MockPlexMediaTrack(index)
+
+    def episode(self, episode):
+        """Mock the episode lookup method."""
+        return MockPlexMediaItem(episode, mediatype="episode")
+
+    def season(self, season):
+        """Mock the season lookup method."""
+        return MockPlexMediaItem(season, mediatype="season")
+
+
+class MockPlexArtist(MockPlexMediaItem):
+    """Mock a Plex Artist instance."""
+
+    def __init__(self, artist):
+        """Initialize the object."""
+        super().__init__(artist)
+        self.type = "artist"
+
+    def get(self, track):
+        """Mock the track lookup method."""
+        return MockPlexMediaTrack()
+
+
+class MockPlexMediaTrack(MockPlexMediaItem):
+    """Mock a Plex Track instance."""
+
+    def __init__(self, index=1):
+        """Initialize the object."""
+        super().__init__(f"Track {index}", "track")
+        self.index = index
+
+
+class MockPlexSonosClient:
+    """Mock a PlexSonosClient instance."""
+
+    def __init__(self, machine_identifier):
+        """Initialize the object."""
+        self.machineIdentifier = machine_identifier
+
+    def playMedia(self, item):
+        """Mock the playMedia method."""
+        pass

@@ -2,6 +2,10 @@
     "config": {
         "step": {
             "user": {
+                "data": {
+                    "host": "Hoszt",
+                    "port": "Port"
+                },
                 "title": "Freebox"
             }
         }

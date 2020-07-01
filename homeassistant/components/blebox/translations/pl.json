@@ -13,8 +13,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "[%key_id:common::config_flow::data::ip%]",
-                    "port": "[%key_id:common::config_flow::data::port%]"
+                    "host": "Adres IP",
+                    "port": "Port"
                 },
                 "description": "Skonfiguruj BleBox, aby zintegrowa\u0107 si\u0119 z Home Assistant.",
                 "title": "Skonfiguruj urz\u0105dzenie BleBox"

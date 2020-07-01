@@ -9,7 +9,6 @@ from homeassistant.components.mjpeg.camera import (
 )
 from homeassistant.const import (
     CONF_AUTHENTICATION,
-    CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
@@ -19,11 +18,7 @@ from homeassistant.const import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .axis_base import AxisEntityBase
-from .const import DOMAIN as AXIS_DOMAIN
-
-AXIS_IMAGE = "http://{host}:{port}/axis-cgi/jpg/image.cgi"
-AXIS_VIDEO = "http://{host}:{port}/axis-cgi/mjpg/video.cgi"
-AXIS_STREAM = "rtsp://{user}:{password}@{host}/axis-media/media.amp?videocodec=h264"
+from .const import DEFAULT_STREAM_PROFILE, DOMAIN as AXIS_DOMAIN
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -32,34 +27,34 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
-    config = {
-        CONF_NAME: config_entry.data[CONF_NAME],
-        CONF_USERNAME: config_entry.data[CONF_USERNAME],
-        CONF_PASSWORD: config_entry.data[CONF_PASSWORD],
-        CONF_MJPEG_URL: AXIS_VIDEO.format(
-            host=config_entry.data[CONF_HOST], port=config_entry.data[CONF_PORT],
-        ),
-        CONF_STILL_IMAGE_URL: AXIS_IMAGE.format(
-            host=config_entry.data[CONF_HOST], port=config_entry.data[CONF_PORT],
-        ),
-        CONF_AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
-    }
-    async_add_entities([AxisCamera(config, device)])
+    if not device.option_camera:
+        return
+
+    async_add_entities([AxisCamera(device)])
 
 
 class AxisCamera(AxisEntityBase, MjpegCamera):
     """Representation of a Axis camera."""
 
-    def __init__(self, config, device):
+    def __init__(self, device):
         """Initialize Axis Communications camera component."""
         AxisEntityBase.__init__(self, device)
+
+        config = {
+            CONF_NAME: device.config_entry.data[CONF_NAME],
+            CONF_USERNAME: device.config_entry.data[CONF_USERNAME],
+            CONF_PASSWORD: device.config_entry.data[CONF_PASSWORD],
+            CONF_MJPEG_URL: self.mjpeg_source,
+            CONF_STILL_IMAGE_URL: self.image_source,
+            CONF_AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
+        }
         MjpegCamera.__init__(self, config)
 
     async def async_added_to_hass(self):
         """Subscribe camera events."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, self.device.event_new_address, self._new_address
+                self.hass, self.device.signal_new_address, self._new_address
             )
         )
 
@@ -70,21 +65,34 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
         """Return supported features."""
         return SUPPORT_STREAM
 
-    async def stream_source(self):
-        """Return the stream source."""
-        return AXIS_STREAM.format(
-            user=self.device.config_entry.data[CONF_USERNAME],
-            password=self.device.config_entry.data[CONF_PASSWORD],
-            host=self.device.host,
-        )
-
     def _new_address(self):
         """Set new device address for video stream."""
-        port = self.device.config_entry.data[CONF_PORT]
-        self._mjpeg_url = AXIS_VIDEO.format(host=self.device.host, port=port)
-        self._still_image_url = AXIS_IMAGE.format(host=self.device.host, port=port)
+        self._mjpeg_url = self.mjpeg_source
+        self._still_image_url = self.image_source
 
     @property
     def unique_id(self):
         """Return a unique identifier for this device."""
         return f"{self.device.serial}-camera"
+
+    @property
+    def image_source(self):
+        """Return still image URL for device."""
+        return f"http://{self.device.host}:{self.device.config_entry.data[CONF_PORT]}/axis-cgi/jpg/image.cgi"
+
+    @property
+    def mjpeg_source(self):
+        """Return mjpeg URL for device."""
+        options = ""
+        if self.device.option_stream_profile != DEFAULT_STREAM_PROFILE:
+            options = f"?&streamprofile={self.device.option_stream_profile}"
+
+        return f"http://{self.device.host}:{self.device.config_entry.data[CONF_PORT]}/axis-cgi/mjpg/video.cgi{options}"
+
+    async def stream_source(self):
+        """Return the stream source."""
+        options = ""
+        if self.device.option_stream_profile != DEFAULT_STREAM_PROFILE:
+            options = f"&streamprofile={self.device.option_stream_profile}"
+
+        return f"rtsp://{self.device.config_entry.data[CONF_USERNAME]}:{self.device.config_entry.data[CONF_PASSWORD]}@{self.device.host}/axis-media/media.amp?videocodec=h264{options}"

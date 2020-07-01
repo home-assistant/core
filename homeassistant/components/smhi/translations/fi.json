@@ -1,5 +1,9 @@
 {
     "config": {
+        "error": {
+            "name_exists": "Nimi on jo olemassa",
+            "wrong_location": "Sijainti vain Ruotsi"
+        },
         "step": {
             "user": {
                 "data": {

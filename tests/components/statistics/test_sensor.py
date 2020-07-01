@@ -57,6 +57,7 @@ class TestStatisticsSensor(unittest.TestCase):
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -82,6 +83,7 @@ class TestStatisticsSensor(unittest.TestCase):
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -121,6 +123,7 @@ class TestStatisticsSensor(unittest.TestCase):
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -150,6 +153,7 @@ class TestStatisticsSensor(unittest.TestCase):
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -197,6 +201,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 },
             )
 
+            self.hass.block_till_done()
             self.hass.start()
             self.hass.block_till_done()
 
@@ -238,6 +243,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 },
             )
 
+            self.hass.block_till_done()
             self.hass.start()
             self.hass.block_till_done()
 
@@ -291,6 +297,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 },
             )
 
+            self.hass.block_till_done()
             self.hass.start()
             self.hass.block_till_done()
 
@@ -342,6 +349,7 @@ class TestStatisticsSensor(unittest.TestCase):
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -407,6 +415,7 @@ class TestStatisticsSensor(unittest.TestCase):
             )
             self.hass.block_till_done()
 
+            self.hass.block_till_done()
             self.hass.start()
             self.hass.block_till_done()
 

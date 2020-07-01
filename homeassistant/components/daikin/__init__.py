@@ -12,6 +12,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_HOSTS, CONF_PASSWORD
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
@@ -28,11 +29,18 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 COMPONENT_TYPES = ["climate", "sensor", "switch"]
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {vol.Optional(CONF_HOSTS, default=[]): vol.All(cv.ensure_list, [cv.string])}
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN, invalidation_version="0.113.0"),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Optional(CONF_HOSTS, default=[]): vol.All(
+                        cv.ensure_list, [cv.string]
+                    )
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -63,6 +71,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     conf = entry.data
     # For backwards compat, set unique ID
     if entry.unique_id is None:
+        hass.config_entries.async_update_entry(entry, unique_id=conf[KEY_MAC])
+    elif ".local" in entry.unique_id:
         hass.config_entries.async_update_entry(entry, unique_id=conf[KEY_MAC])
     daikin_api = await daikin_api_setup(
         hass,
@@ -149,7 +159,7 @@ class DaikinApi:
         """Return a device description for device registry."""
         info = self.device.values
         return {
-            "identifieres": self.device.mac,
+            "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
             "manufacturer": "Daikin",
             "model": info.get("model"),
             "name": info.get("name"),

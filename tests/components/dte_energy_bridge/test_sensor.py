@@ -38,6 +38,7 @@ class TestDteEnergyBridgeSetup(unittest.TestCase):
         assert setup_component(
             self.hass, "sensor", {"sensor": DTE_ENERGY_BRIDGE_CONFIG}
         )
+        self.hass.block_till_done()
         assert "0.411" == self.hass.states.get("sensor.current_energy_usage").state
 
     @requests_mock.Mocker()
@@ -50,6 +51,7 @@ class TestDteEnergyBridgeSetup(unittest.TestCase):
         assert setup_component(
             self.hass, "sensor", {"sensor": DTE_ENERGY_BRIDGE_CONFIG}
         )
+        self.hass.block_till_done()
         assert "0.411" == self.hass.states.get("sensor.current_energy_usage").state
 
     @requests_mock.Mocker()
@@ -62,4 +64,5 @@ class TestDteEnergyBridgeSetup(unittest.TestCase):
         assert setup_component(
             self.hass, "sensor", {"sensor": DTE_ENERGY_BRIDGE_CONFIG}
         )
+        self.hass.block_till_done()
         assert "unknown" == self.hass.states.get("sensor.current_energy_usage").state

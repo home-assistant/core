@@ -84,6 +84,7 @@ async def test_setup_fails(hass, mqtt_mock):
             light.DOMAIN,
             {light.DOMAIN: {"platform": "mqtt", "schema": "template", "name": "test"}},
         )
+        await hass.async_block_till_done()
     assert hass.states.get("light.test") is None
 
     with assert_setup_component(0, light.DOMAIN):
@@ -99,6 +100,7 @@ async def test_setup_fails(hass, mqtt_mock):
                 }
             },
         )
+        await hass.async_block_till_done()
     assert hass.states.get("light.test") is None
 
     with assert_setup_component(0, light.DOMAIN):
@@ -115,6 +117,7 @@ async def test_setup_fails(hass, mqtt_mock):
                 }
             },
         )
+        await hass.async_block_till_done()
     assert hass.states.get("light.test") is None
 
     with assert_setup_component(0, light.DOMAIN):
@@ -131,6 +134,7 @@ async def test_setup_fails(hass, mqtt_mock):
                 }
             },
         )
+        await hass.async_block_till_done()
     assert hass.states.get("light.test") is None
 
 
@@ -159,6 +163,7 @@ async def test_state_change_via_topic(hass, mqtt_mock):
                 }
             },
         )
+        await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
@@ -214,6 +219,7 @@ async def test_state_brightness_color_effect_temp_white_change_via_topic(
                 }
             },
         )
+        await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
@@ -313,6 +319,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
                     }
                 },
             )
+            await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
@@ -454,6 +461,7 @@ async def test_sending_mqtt_commands_non_optimistic_brightness_template(
                 }
             },
         )
+        await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
@@ -567,6 +575,7 @@ async def test_effect(hass, mqtt_mock):
                 }
             },
         )
+        await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
@@ -617,6 +626,7 @@ async def test_flash(hass, mqtt_mock):
                 }
             },
         )
+        await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
@@ -664,6 +674,7 @@ async def test_transition(hass, mqtt_mock):
                 }
             },
         )
+        await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
@@ -719,6 +730,7 @@ async def test_invalid_values(hass, mqtt_mock):
                 }
             },
         )
+        await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
@@ -994,6 +1006,7 @@ async def test_max_mireds(hass, mqtt_mock):
     }
 
     assert await async_setup_component(hass, light.DOMAIN, config)
+    await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.attributes.get("min_mireds") == 153

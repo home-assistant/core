@@ -16,8 +16,7 @@
                     "password": "Passord",
                     "username": "Brukernavn"
                 },
-                "description": "Vil du sette opp {name} ?",
-                "title": ""
+                "description": "Vil du sette opp {name} ?"
             },
             "user": {
                 "data": {
@@ -25,8 +24,7 @@
                     "password": "Passord",
                     "username": "Brukernavn"
                 },
-                "description": "Fyll inn AVM FRITZ!Box informasjonen.",
-                "title": ""
+                "description": "Fyll inn AVM FRITZ!Box informasjonen."
             }
         }
     }

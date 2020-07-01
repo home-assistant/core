@@ -15,8 +15,7 @@
                 "data": {
                     "password": "Contrase\u00f1a"
                 },
-                "description": "Por favor ingrese la contrase\u00f1a que estableci\u00f3 en su configuraci\u00f3n para {name} .",
-                "title": "Escriba la contrase\u00f1a"
+                "description": "Por favor ingrese la contrase\u00f1a que estableci\u00f3 en su configuraci\u00f3n para {name} ."
             },
             "discovery_confirm": {
                 "description": "\u00bfDesea agregar el nodo ESPHome `{name}` a Home Assistant?",
@@ -27,8 +26,7 @@
                     "host": "Host",
                     "port": "Puerto"
                 },
-                "description": "Por favor Ingrese la configuraci\u00f3n de conexi\u00f3n de su nodo [ESPHome] (https://esphomelib.com/).",
-                "title": "[%key:component::esphome::title%]"
+                "description": "Por favor Ingrese la configuraci\u00f3n de conexi\u00f3n de su nodo [ESPHome] (https://esphomelib.com/)."
             }
         }
     }

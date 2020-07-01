@@ -1,5 +1,6 @@
 """Test the bootstrapping."""
 # pylint: disable=protected-access
+import asyncio
 import logging
 import os
 from unittest.mock import Mock
@@ -35,6 +36,15 @@ async def test_home_assistant_core_config_validation(hass):
         {"homeassistant": {"latitude": "some string"}}, hass
     )
     assert result is None
+
+
+async def test_async_enable_logging(hass):
+    """Test to ensure logging is migrated to the queue handlers."""
+    with patch("logging.getLogger"), patch(
+        "homeassistant.bootstrap.async_activate_log_queue_handler"
+    ) as mock_async_activate_log_queue_handler:
+        bootstrap.async_enable_logging(hass)
+        mock_async_activate_log_queue_handler.assert_called_once()
 
 
 async def test_load_hassio(hass):
@@ -240,6 +250,7 @@ async def test_setup_hass(
     mock_mount_local_lib_path,
     mock_ensure_config_exists,
     mock_process_ha_config_upgrade,
+    caplog,
 ):
     """Test it works."""
     verbose = Mock()
@@ -250,6 +261,8 @@ async def test_setup_hass(
     with patch(
         "homeassistant.config.async_hass_config_yaml",
         return_value={"browser": {}, "frontend": {}},
+    ), patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 5000), patch(
+        "homeassistant.components.http.start_http_server_and_save_config"
     ):
         hass = await bootstrap.async_setup_hass(
             config_dir=get_test_config_dir(),
@@ -260,6 +273,8 @@ async def test_setup_hass(
             skip_pip=True,
             safe_mode=False,
         )
+
+    assert "Waiting on integrations to complete setup" not in caplog.text
 
     assert "browser" in hass.config.components
     assert "safe_mode" not in hass.config.components
@@ -277,6 +292,46 @@ async def test_setup_hass(
     assert len(mock_process_ha_config_upgrade.mock_calls) == 1
 
 
+async def test_setup_hass_takes_longer_than_log_slow_startup(
+    mock_enable_logging,
+    mock_is_virtual_env,
+    mock_mount_local_lib_path,
+    mock_ensure_config_exists,
+    mock_process_ha_config_upgrade,
+    caplog,
+):
+    """Test it works."""
+    verbose = Mock()
+    log_rotate_days = Mock()
+    log_file = Mock()
+    log_no_color = Mock()
+
+    async def _async_setup_that_blocks_startup(*args, **kwargs):
+        await asyncio.sleep(0.6)
+        return True
+
+    with patch(
+        "homeassistant.config.async_hass_config_yaml",
+        return_value={"browser": {}, "frontend": {}},
+    ), patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.3), patch(
+        "homeassistant.components.frontend.async_setup",
+        side_effect=_async_setup_that_blocks_startup,
+    ), patch(
+        "homeassistant.components.http.start_http_server_and_save_config"
+    ):
+        await bootstrap.async_setup_hass(
+            config_dir=get_test_config_dir(),
+            verbose=verbose,
+            log_rotate_days=log_rotate_days,
+            log_file=log_file,
+            log_no_color=log_no_color,
+            skip_pip=True,
+            safe_mode=False,
+        )
+
+    assert "Waiting on integrations to complete setup" in caplog.text
+
+
 async def test_setup_hass_invalid_yaml(
     mock_enable_logging,
     mock_is_virtual_env,
@@ -287,7 +342,7 @@ async def test_setup_hass_invalid_yaml(
     """Test it works."""
     with patch(
         "homeassistant.config.async_hass_config_yaml", side_effect=HomeAssistantError
-    ):
+    ), patch("homeassistant.components.http.start_http_server_and_save_config"):
         hass = await bootstrap.async_setup_hass(
             config_dir=get_test_config_dir(),
             verbose=False,
@@ -340,7 +395,9 @@ async def test_setup_hass_safe_mode(
     hass.config_entries._async_schedule_save()
     await flush_store(hass.config_entries._store)
 
-    with patch("homeassistant.components.browser.setup") as browser_setup:
+    with patch("homeassistant.components.browser.setup") as browser_setup, patch(
+        "homeassistant.components.http.start_http_server_and_save_config"
+    ):
         hass = await bootstrap.async_setup_hass(
             config_dir=get_test_config_dir(),
             verbose=False,
@@ -370,7 +427,7 @@ async def test_setup_hass_invalid_core_config(
     with patch(
         "homeassistant.config.async_hass_config_yaml",
         return_value={"homeassistant": {"non-existing": 1}},
-    ):
+    ), patch("homeassistant.components.http.start_http_server_and_save_config"):
         hass = await bootstrap.async_setup_hass(
             config_dir=get_test_config_dir(),
             verbose=False,
@@ -400,7 +457,7 @@ async def test_setup_safe_mode_if_no_frontend(
     with patch(
         "homeassistant.config.async_hass_config_yaml",
         return_value={"map": {}, "person": {"invalid": True}},
-    ):
+    ), patch("homeassistant.components.http.start_http_server_and_save_config"):
         hass = await bootstrap.async_setup_hass(
             config_dir=get_test_config_dir(),
             verbose=verbose,

@@ -43,6 +43,7 @@ class TestCommandSwitch(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
 
             state = self.hass.states.get("switch.test")
             assert STATE_OFF == state.state
@@ -79,6 +80,7 @@ class TestCommandSwitch(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
 
             state = self.hass.states.get("switch.test")
             assert STATE_OFF == state.state
@@ -117,6 +119,7 @@ class TestCommandSwitch(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
 
             state = self.hass.states.get("switch.test")
             assert STATE_OFF == state.state
@@ -152,7 +155,7 @@ class TestCommandSwitch(unittest.TestCase):
                     }
                 },
             )
-
+            self.hass.block_till_done()
             state = self.hass.states.get("switch.test")
             assert STATE_OFF == state.state
 

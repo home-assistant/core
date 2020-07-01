@@ -7,7 +7,7 @@ import pytest
 from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_ENTITY_ID, MOCK_HOST, MOCK_NAME, MOCK_PORT
+from .conftest import MOCK_ENTITY_ID, MOCK_HOST, MOCK_NAME, MOCK_PORT, MOCK_UUID
 
 from tests.async_mock import ANY, MagicMock, Mock, PropertyMock, patch
 
@@ -25,7 +25,7 @@ async def update(player, force_refresh=False):
 
 async def test_properties(player, state):
     """Test standard properties."""
-    assert player.unique_id is None
+    assert player.unique_id == f"{MOCK_UUID}-1"
     assert player.device_info == {
         "identifiers": {("arcam_fmj", MOCK_HOST, MOCK_PORT)},
         "model": "FMJ",
@@ -54,30 +54,8 @@ async def test_powered_on(player, state):
     assert data.state == "on"
 
 
-async def test_supported_features_no_service(player, state):
+async def test_supported_features(player, state):
     """Test support when turn on service exist."""
-    state.get_power.return_value = None
-    data = await update(player)
-    assert data.attributes["supported_features"] == 68876
-
-    state.get_power.return_value = False
-    data = await update(player)
-    assert data.attributes["supported_features"] == 69004
-
-
-async def test_supported_features_service(hass, state):
-    """Test support when turn on service exist."""
-    from homeassistant.components.arcam_fmj.media_player import ArcamFmj
-
-    player = ArcamFmj(state, "dummy", MOCK_TURN_ON)
-    player.hass = hass
-    player.entity_id = MOCK_ENTITY_ID
-
-    state.get_power.return_value = None
-    data = await update(player)
-    assert data.attributes["supported_features"] == 69004
-
-    state.get_power.return_value = False
     data = await update(player)
     assert data.attributes["supported_features"] == 69004
 
@@ -97,7 +75,7 @@ async def test_turn_on_with_service(hass, state):
     """Test support when turn on service exist."""
     from homeassistant.components.arcam_fmj.media_player import ArcamFmj
 
-    player = ArcamFmj(state, "dummy", MOCK_TURN_ON)
+    player = ArcamFmj(state, MOCK_UUID, "dummy", MOCK_TURN_ON)
     player.hass = Mock(HomeAssistant)
     player.entity_id = MOCK_ENTITY_ID
     with patch(

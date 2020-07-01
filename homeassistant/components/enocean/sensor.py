@@ -19,6 +19,7 @@ from homeassistant.const import (
     UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,7 +105,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities([EnOceanWindowHandle(dev_id, dev_name)])
 
 
-class EnOceanSensor(enocean.EnOceanDevice):
+class EnOceanSensor(enocean.EnOceanDevice, RestoreEntity):
     """Representation of an  EnOcean sensor device such as a power meter."""
 
     def __init__(self, dev_id, dev_name, sensor_type):
@@ -141,6 +142,17 @@ class EnOceanSensor(enocean.EnOceanDevice):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
+
+    async def async_added_to_hass(self):
+        """Call when entity about to be added to hass."""
+        # If not None, we got an initial value.
+        await super().async_added_to_hass()
+        if self._state is not None:
+            return
+
+        state = await self.async_get_last_state()
+        if state is not None:
+            self._state = state.state
 
     def value_changed(self, packet):
         """Update the internal state of the sensor."""

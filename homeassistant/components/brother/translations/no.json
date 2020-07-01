@@ -16,8 +16,7 @@
                     "host": "Vertsnavn eller IP-adresse til skriveren",
                     "type": "Skriver type"
                 },
-                "description": "Sett opp Brother skriver integrasjonen. Hvis du har problemer med konfigurasjonen, bes\u00f8k dokumentasjonen her: [https://www.home-assistant.io/integrations/brother](https://www.home-assistant.io/integrations/brother)",
-                "title": "Brother skriver"
+                "description": "Sett opp Brother skriver integrasjonen. Hvis du har problemer med konfigurasjonen, bes\u00f8k dokumentasjonen her: [https://www.home-assistant.io/integrations/brother](https://www.home-assistant.io/integrations/brother)"
             },
             "zeroconf_confirm": {
                 "data": {

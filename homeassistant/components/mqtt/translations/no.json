@@ -15,8 +15,7 @@
                     "port": "Port",
                     "username": "Brukernavn"
                 },
-                "description": "Vennligst fyll ut tilkoblingsinformasjonen for din MQTT megler.",
-                "title": ""
+                "description": "Vennligst fyll ut tilkoblingsinformasjonen for din MQTT megler."
             },
             "hassio_confirm": {
                 "data": {

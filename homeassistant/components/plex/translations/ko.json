@@ -16,6 +16,7 @@
             "not_found": "Plex \uc11c\ubc84\ub97c \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4",
             "ssl_error": "SSL \uc778\uc99d\uc11c \uac80\uc99d"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "manual_setup": {
                 "data": {
@@ -33,10 +34,6 @@
                 },
                 "description": "\uc5ec\ub7ec \uc11c\ubc84\uac00 \uc0ac\uc6a9 \uac00\ub2a5\ud569\ub2c8\ub2e4. \ud558\ub098\ub97c \uc120\ud0dd\ud574\uc8fc\uc138\uc694:",
                 "title": "Plex \uc11c\ubc84 \uc120\ud0dd\ud558\uae30"
-            },
-            "start_website_auth": {
-                "description": "plex.tv \uc5d0\uc11c \uc778\uc99d\uc744 \uc9c4\ud589\ud574\uc8fc\uc138\uc694.",
-                "title": "Plex \uc11c\ubc84 \uc5f0\uacb0\ud558\uae30"
             },
             "user": {
                 "description": "Plex \uc11c\ubc84\ub97c \uc5f0\uacb0\ud558\ub824\uba74 [plex.tv](https://plex.tv) \ub85c \uacc4\uc18d \uc9c4\ud589\ud574\uc8fc\uc138\uc694.",

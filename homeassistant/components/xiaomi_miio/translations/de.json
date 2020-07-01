@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf f\u00fcr dieses Xiaomi Miio-Ger\u00e4t wird bereits ausgef\u00fchrt."
         },
         "error": {
             "connect_error": "Verbindung fehlgeschlagen",

@@ -16,7 +16,7 @@
         },
         "step": {
             "auth": {
-                "description": "V\u00e9s a l'enlla\u00e7 seg\u00fcent i <b>Accepta</b> l'acc\u00e9s al teu compte de Minut, despr\u00e9s torna i prem <b>Envia</b> (a sota). \n\n[Enlla\u00e7]({authorization_url})",
+                "description": "V\u00e9s a l'enlla\u00e7 seg\u00fcent i **Accepta** l'acc\u00e9s al teu compte de Minut, despr\u00e9s torna i prem **Envia** (a sota). \n\n[Enlla\u00e7]({authorization_url})",
                 "title": "Autenticar Point"
             },
             "user": {

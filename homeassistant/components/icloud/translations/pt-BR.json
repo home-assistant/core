@@ -18,7 +18,8 @@
             },
             "user": {
                 "data": {
-                    "password": "Senha"
+                    "password": "Senha",
+                    "username": "E-mail"
                 },
                 "description": "Insira suas credenciais",
                 "title": "credenciais do iCloud"

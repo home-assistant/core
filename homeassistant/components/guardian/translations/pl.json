@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z urz\u0105dzeniem Guardian, spr\u00f3buj ponownie."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

@@ -21,9 +21,6 @@
                 "title": "Asetukset"
             },
             "user": {
-                "data": {
-                    "radio_type": "Radiotyyppi"
-                },
                 "title": "ZHA"
             }
         }

@@ -28,7 +28,7 @@ from .core.const import (
     SIGNAL_REMOVE_GROUP,
 )
 from .core.helpers import LogMixin
-from .core.typing import CALLABLE_T, ChannelsType, ChannelType, ZhaDeviceType
+from .core.typing import CALLABLE_T, ChannelType, ZhaDeviceType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -150,7 +150,7 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
         self,
         unique_id: str,
         zha_device: ZhaDeviceType,
-        channels: ChannelsType,
+        channels: List[ChannelType],
         **kwargs,
     ):
         """Init ZHA entity."""

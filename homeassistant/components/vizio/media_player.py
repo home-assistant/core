@@ -44,6 +44,7 @@ from .const import (
     SUPPORTED_COMMANDS,
     VIZIO_AUDIO_SETTINGS,
     VIZIO_DEVICE_CLASSES,
+    VIZIO_MUTE_ON,
     VIZIO_SOUND_MODE,
 )
 
@@ -137,7 +138,7 @@ class VizioDevice(MediaPlayerEntity):
         self._current_app = None
         self._current_app_config = None
         self._current_sound_mode = None
-        self._available_sound_modes = None
+        self._available_sound_modes = []
         self._available_inputs = []
         self._available_apps = []
         self._conf_apps = config_entry.options.get(CONF_APPS, {})
@@ -192,12 +193,9 @@ class VizioDevice(MediaPlayerEntity):
             self._volume_level = None
             self._is_volume_muted = None
             self._current_input = None
-            self._available_inputs = None
             self._current_app = None
             self._current_app_config = None
-            self._available_apps = None
             self._current_sound_mode = None
-            self._available_sound_modes = None
             return
 
         self._state = STATE_ON
@@ -205,25 +203,26 @@ class VizioDevice(MediaPlayerEntity):
         audio_settings = await self._device.get_all_settings(
             VIZIO_AUDIO_SETTINGS, log_api_exception=False
         )
-        if audio_settings is not None:
+        if audio_settings:
             self._volume_level = float(audio_settings["volume"]) / self._max_volume
             if "mute" in audio_settings:
-                self._is_volume_muted = audio_settings["mute"].lower() == "on"
+                self._is_volume_muted = audio_settings["mute"].lower() == VIZIO_MUTE_ON
             else:
                 self._is_volume_muted = None
 
             if VIZIO_SOUND_MODE in audio_settings:
                 self._supported_commands |= SUPPORT_SELECT_SOUND_MODE
                 self._current_sound_mode = audio_settings[VIZIO_SOUND_MODE]
-                if self._available_sound_modes is None:
+                if not self._available_sound_modes:
                     self._available_sound_modes = await self._device.get_setting_options(
                         VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE
                     )
             else:
-                self._supported_commands ^= SUPPORT_SELECT_SOUND_MODE
+                # Explicitly remove SUPPORT_SELECT_SOUND_MODE from supported features
+                self._supported_commands &= ~SUPPORT_SELECT_SOUND_MODE
 
         input_ = await self._device.get_current_input(log_api_exception=False)
-        if input_ is not None:
+        if input_:
             self._current_input = input_
 
         inputs = await self._device.get_inputs_list(log_api_exception=False)
@@ -242,8 +241,7 @@ class VizioDevice(MediaPlayerEntity):
 
         # Create list of available known apps from known app list after
         # filtering by CONF_INCLUDE/CONF_EXCLUDE
-        if not self._available_apps:
-            self._available_apps = self._apps_list(self._device.get_apps_list())
+        self._available_apps = self._apps_list(self._device.get_apps_list())
 
         self._current_app_config = await self._device.get_current_app_config(
             log_api_exception=False

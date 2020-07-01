@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Aquesta clau API ja est\u00e0 sent utilitzada."
+            "already_configured": "Aquestes coordenades o Node/Pro ID ja estan registrades."
         },
         "error": {
             "general_error": "S'ha produ\u00eft un error desconegut.",
@@ -21,21 +21,18 @@
             "node_pro": {
                 "data": {
                     "ip_address": "Adre\u00e7a IP o amfitri\u00f3 de la unitat",
-                    "password": "Contrasenya de la unitat"
+                    "password": "Contrasenya"
                 },
                 "description": "Monitoritza una unitat personal d'AirVisual. Pots obtenir la contrasenya des de la interf\u00edcie d'usuari (UI) de la unitat.",
                 "title": "Configuraci\u00f3 d'AirVisual Node/Pro"
             },
             "user": {
                 "data": {
-                    "api_key": "Clau API",
                     "cloud_api": "Ubicaci\u00f3 geogr\u00e0fica",
-                    "latitude": "Latitud",
-                    "longitude": "Longitud",
                     "node_pro": "AirVisual Node Pro",
                     "type": "Tipus d'integraci\u00f3"
                 },
-                "description": "Monitoritzaci\u00f3 de la qualitat de l'aire per ubicaci\u00f3 geogr\u00e0fica.",
+                "description": "Tria quin tipus de dades d'AirVisual vols monitoritzar.",
                 "title": "Configura AirVisual"
             }
         }
@@ -46,7 +43,6 @@
                 "data": {
                     "show_on_map": "Mostra al mapa l'\u00e0rea geogr\u00e0fica monitoritzada"
                 },
-                "description": "Estableix les diferents opcions de la integraci\u00f3 AirVisual.",
                 "title": "Configuraci\u00f3 d'AirVisual"
             }
         }

@@ -16,7 +16,7 @@
         },
         "step": {
             "auth": {
-                "description": "Vennligst f\u00f8lg lenken nedenfor og <b>Godta</b> tilgang til Minut-kontoen din, kom tilbake og trykk <b>Send inn</b> nedenfor. \n\n [Link]({authorization_url})",
+                "description": "Vennligst f\u00f8lg lenken nedenfor og **Godta** tilgang til Minut-kontoen din, kom tilbake og trykk **Send inn** nedenfor. \n\n [Link]({authorization_url})",
                 "title": "Godkjenn Point"
             },
             "user": {

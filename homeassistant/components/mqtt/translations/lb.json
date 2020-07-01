@@ -15,8 +15,7 @@
                     "port": "Port",
                     "username": "Benotzernumm"
                 },
-                "description": "Gitt Verbindungs Informatioune vun \u00e4rem MQTT Broker an.",
-                "title": "MQTT"
+                "description": "Gitt Verbindungs Informatioune vun \u00e4rem MQTT Broker an."
             },
             "hassio_confirm": {
                 "data": {

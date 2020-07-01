@@ -22,10 +22,6 @@
                 "description": "V\u00e4lj flera servrar tillg\u00e4ngliga, v\u00e4lj en:",
                 "title": "V\u00e4lj Plex-server"
             },
-            "start_website_auth": {
-                "description": "Forts\u00e4tt att auktorisera p\u00e5 plex.tv.",
-                "title": "Anslut Plex-servern"
-            },
             "user": {
                 "title": "Plex Media Server"
             },

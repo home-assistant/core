@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "\u00c8 necessaria solo una singola istanza.",
+            "wrong_server_id": "L'ID del server non \u00e8 valido"
+        },
+        "step": {
+            "user": {
+                "description": "Sei sicuro di voler configurare SpeedTest?",
+                "title": "Configurare SpeedTest"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "retrive_error": "Errore nel recuperare l'elenco dei server"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "manual": "Disabilitare l'aggiornamento automatico",
+                    "scan_interval": "Frequenza di aggiornamento (minuti)",
+                    "server_name": "Selezionare il server di prova"
+                }
+            }
+        }
+    }
+}

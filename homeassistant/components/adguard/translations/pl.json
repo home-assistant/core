@@ -7,7 +7,7 @@
             "single_instance_allowed": "Dozwolona jest tylko jedna konfiguracja AdGuard Home."
         },
         "error": {
-            "connection_error": "[%key_id:common::config_flow::error::cannot_connect%]"
+            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia."
         },
         "step": {
             "hassio_confirm": {
@@ -16,15 +16,14 @@
             },
             "user": {
                 "data": {
-                    "host": "[%key_id:common::config_flow::data::host%]",
-                    "password": "[%key_id:common::config_flow::data::password%]",
-                    "port": "[%key_id:common::config_flow::data::port%]",
+                    "host": "Nazwa hosta lub adres IP",
+                    "password": "Has\u0142o",
+                    "port": "Port",
                     "ssl": "AdGuard Home u\u017cywa certyfikatu SSL",
-                    "username": "[%key_id:common::config_flow::data::username%]",
+                    "username": "Nazwa u\u017cytkownika",
                     "verify_ssl": "AdGuard Home u\u017cywa odpowiedniego certyfikatu."
                 },
-                "description": "Skonfiguruj instancj\u0119 AdGuard Home, aby umo\u017cliwi\u0107 monitorowanie i kontrol\u0119.",
-                "title": "Po\u0142\u0105cz AdGuard Home"
+                "description": "Skonfiguruj instancj\u0119 AdGuard Home, aby umo\u017cliwi\u0107 monitorowanie i kontrol\u0119."
             }
         }
     }

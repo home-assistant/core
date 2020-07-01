@@ -26,10 +26,7 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API-sleutel",
                     "cloud_api": "Geografische ligging",
-                    "latitude": "Breedtegraad",
-                    "longitude": "Lengtegraad",
                     "node_pro": "AirVisual Node Pro",
                     "type": "Integratietype"
                 },
@@ -44,7 +41,6 @@
                 "data": {
                     "show_on_map": "Toon gecontroleerde geografie op de kaart"
                 },
-                "description": "Stel verschillende opties in voor de AirVisual-integratie.",
                 "title": "Configureer AirVisual"
             }
         }

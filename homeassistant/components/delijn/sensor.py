@@ -81,8 +81,6 @@ class DeLijnPublicTransportSensor(Entity):
             return
 
         self._attributes["stopname"] = self._name
-        for passage in self.line.passages:
-            passage["stopname"] = self._name
 
         try:
             first = self.line.passages[0]
@@ -96,6 +94,7 @@ class DeLijnPublicTransportSensor(Entity):
             self._attributes["final_destination"] = first["final_destination"]
             self._attributes["due_at_schedule"] = first["due_at_schedule"]
             self._attributes["due_at_realtime"] = first["due_at_realtime"]
+            self._attributes["is_realtime"] = first["is_realtime"]
             self._attributes["next_passages"] = self.line.passages
             self._available = True
         except (KeyError, IndexError):

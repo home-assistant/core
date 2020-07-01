@@ -10,16 +10,17 @@
             "unknown": "Ha fallat per motiu desconegut"
         },
         "error": {
-            "faulty_credentials": "Ha fallat l'autoritzaci\u00f3",
+            "faulty_credentials": "Ha fallat l'autoritzaci\u00f3, comprova el Token",
             "host_or_token": "Has de proporcionar almenys o un amfitri\u00f3 (host) o un token",
-            "no_servers": "No hi ha servidors enlla\u00e7ats amb el compte",
+            "no_servers": "No hi ha servidors vinculats amb el compte de Plex",
             "not_found": "No s'ha trobat el servidor Plex",
             "ssl_error": "Problema amb el certificat SSL"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "manual_setup": {
                 "data": {
-                    "host": "Amfitri\u00f3 (opcional si es proporciona un token)",
+                    "host": "Amfitri\u00f3",
                     "port": "Port",
                     "ssl": "Utilitza SSL",
                     "token": "Token (opcional)",
@@ -33,10 +34,6 @@
                 },
                 "description": "Hi ha diversos servidors disponibles, selecciona'n un:",
                 "title": "Selecciona servidor Plex"
-            },
-            "start_website_auth": {
-                "description": "Continua l'autoritzaci\u00f3 a plex.tv.",
-                "title": "Connexi\u00f3 amb el servidor Plex"
             },
             "user": {
                 "description": "V\u00e9s a [plex.tv](https://plex.tv) per enlla\u00e7ar un servidor Plex.",

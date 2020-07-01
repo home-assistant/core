@@ -1,6 +1,5 @@
-{
+{   "title": "AIS Serwis Dyski",
     "config": {
-        "title": "AIS Serwis Dyski",
         "step": {
             "confirm": {
                   "description": "![AIS logo](/static/icons/cloud_drive.png)\n\nCzy chcesz skonfigurować nowy dysk zdalny?",

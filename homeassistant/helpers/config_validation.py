@@ -657,30 +657,30 @@ def deprecated(
 
     if replacement_key and invalidation_version:
         warning = (
-            "The '{key}' option (with value '{value}') is"
-            " deprecated, please replace it with '{replacement_key}'."
+            "The '{key}' option is deprecated,"
+            " please replace it with '{replacement_key}'."
             " This option will become invalid in version"
             " {invalidation_version}"
         )
     elif replacement_key:
         warning = (
-            "The '{key}' option (with value '{value}') is"
-            " deprecated, please replace it with '{replacement_key}'"
+            "The '{key}' option is deprecated,"
+            " please replace it with '{replacement_key}'"
         )
     elif invalidation_version:
         warning = (
-            "The '{key}' option (with value '{value}') is"
-            " deprecated, please remove it from your configuration."
+            "The '{key}' option is deprecated,"
+            " please remove it from your configuration."
             " This option will become invalid in version"
             " {invalidation_version}"
         )
     else:
         warning = (
-            "The '{key}' option (with value '{value}') is"
-            " deprecated, please remove it from your configuration"
+            "The '{key}' option is deprecated,"
+            " please remove it from your configuration"
         )
 
-    def check_for_invalid_version(value: Optional[Any]) -> None:
+    def check_for_invalid_version() -> None:
         """Raise error if current version has reached invalidation."""
         if not invalidation_version:
             return
@@ -689,7 +689,6 @@ def deprecated(
             raise vol.Invalid(
                 warning.format(
                     key=key,
-                    value=value,
                     replacement_key=replacement_key,
                     invalidation_version=invalidation_version,
                 )
@@ -698,19 +697,20 @@ def deprecated(
     def validator(config: Dict) -> Dict:
         """Check if key is in config and log warning."""
         if key in config:
-            value = config[key]
-            check_for_invalid_version(value)
+            check_for_invalid_version()
             KeywordStyleAdapter(logging.getLogger(module_name)).warning(
                 warning,
                 key=key,
-                value=value,
                 replacement_key=replacement_key,
                 invalidation_version=invalidation_version,
             )
+
+            value = config[key]
             if replacement_key:
                 config.pop(key)
         else:
             value = default
+
         keys = [key]
         if replacement_key:
             keys.append(replacement_key)
