@@ -8,3 +8,7 @@ DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 DOMAIN = "zoneminder"
 SERVICE_SET_RUN_STATE = "set_run_state"
+
+PLATFORM_CONFIGS = "platform_configs"
+CONFIG_DATA = "config_data"
+API_CLIENT = "api_client"

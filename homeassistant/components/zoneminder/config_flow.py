@@ -91,7 +91,7 @@ class ZoneminderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         result = await async_test_client_availability(self.hass, zm_client)
 
         if result != ClientAvailabilityResult.AVAILABLE:
-            return self.async_abort(reason=result.value)
+            return self.async_abort(reason=str(result.value))
 
         await self.async_set_unique_id(hostname)
         self._abort_if_unique_id_configured(config)

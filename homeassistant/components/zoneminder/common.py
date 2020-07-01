@@ -1,10 +1,10 @@
 """Common code for the ZoneMinder component."""
 from enum import Enum
+from typing import List
 
 import requests
 from zoneminder.zm import ZoneMinder
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -15,33 +15,62 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_PATH_ZMS, DOMAIN
+from . import const
 
 
-def set_client_to_data(
-    hass: HomeAssistant, config_entry: ConfigEntry, client: ZoneMinder
-) -> None:
+def prime_domain_data(hass: HomeAssistant) -> None:
+    """Prime the data structures."""
+    hass.data.setdefault(const.DOMAIN, {})
+
+
+def prime_platform_configs(hass: HomeAssistant, domain: str) -> None:
+    """Prime the data structures."""
+    prime_domain_data(hass)
+    hass.data[const.DOMAIN].setdefault(const.PLATFORM_CONFIGS, {})
+    hass.data[const.DOMAIN][const.PLATFORM_CONFIGS].setdefault(domain, [])
+
+
+def set_platform_configs(hass: HomeAssistant, domain: str, configs: List[dict]) -> None:
+    """Set platform configs."""
+    prime_platform_configs(hass, domain)
+    hass.data[const.DOMAIN][const.PLATFORM_CONFIGS][domain] = configs
+
+
+def get_platform_configs(hass: HomeAssistant, domain: str) -> List[dict]:
+    """Get platform configs."""
+    prime_platform_configs(hass, domain)
+    return hass.data[const.DOMAIN][const.PLATFORM_CONFIGS][domain]
+
+
+def prime_config_data(hass: HomeAssistant, unique_id: str) -> None:
+    """Prime the data structures."""
+    prime_domain_data(hass)
+    hass.data[const.DOMAIN].setdefault(const.CONFIG_DATA, {})
+    hass.data[const.DOMAIN][const.CONFIG_DATA].setdefault(unique_id, {})
+
+
+def set_client_to_data(hass: HomeAssistant, unique_id: str, client: ZoneMinder) -> None:
     """Put a ZoneMinder client in the Home Assistant data."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.unique_id] = client
+    prime_config_data(hass, unique_id)
+    hass.data[const.DOMAIN][const.CONFIG_DATA][unique_id][const.API_CLIENT] = client
 
 
 def is_client_in_data(hass: HomeAssistant, unique_id: str) -> bool:
     """Check if ZoneMinder client is in the Home Assistant data."""
-    hass.data.setdefault(DOMAIN, {})
-    return unique_id in hass.data[DOMAIN]
+    prime_config_data(hass, unique_id)
+    return const.API_CLIENT in hass.data[const.DOMAIN][const.CONFIG_DATA][unique_id]
 
 
 def get_client_from_data(hass: HomeAssistant, unique_id: str) -> ZoneMinder:
     """Get a ZoneMinder client from the Home Assistant data."""
-    hass.data.setdefault(DOMAIN, {})
-    return hass.data[DOMAIN][unique_id]
+    prime_config_data(hass, unique_id)
+    return hass.data[const.DOMAIN][const.CONFIG_DATA][unique_id][const.API_CLIENT]
 
 
 def del_client_from_data(hass: HomeAssistant, unique_id: str) -> None:
     """Delete a ZoneMinder client from the Home Assistant data."""
-    hass.data.setdefault(DOMAIN, {})
-    del hass.data[DOMAIN][unique_id]
+    prime_config_data(hass, unique_id)
+    del hass.data[const.DOMAIN][const.CONFIG_DATA][unique_id][const.API_CLIENT]
 
 
 def create_client_from_config(conf: dict) -> ZoneMinder:
@@ -56,7 +85,7 @@ def create_client_from_config(conf: dict) -> ZoneMinder:
         conf.get(CONF_USERNAME),
         conf.get(CONF_PASSWORD),
         conf.get(CONF_PATH),
-        conf.get(CONF_PATH_ZMS),
+        conf.get(const.CONF_PATH_ZMS),
         conf.get(CONF_VERIFY_SSL),
     )
 

@@ -6,14 +6,14 @@ import voluptuous as vol
 from zoneminder.monitor import Monitor, TimePeriod
 from zoneminder.zm import ZoneMinder
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, PLATFORM_SCHEMA
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-from .common import get_client_from_data
+from .common import get_client_from_data, get_platform_configs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,13 +41,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the ZoneMinder sensor platform."""
-    _LOGGER.warning(
-        "ZoneMinder sensor platform configuration through yaml configuration is no longer supported. Previousally available entities are automatically created for you and disabled by default."
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -55,19 +48,26 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor config entry."""
     zm_client = get_client_from_data(hass, config_entry.unique_id)
-    monitors = await hass.async_add_job(zm_client.get_monitors)
+    monitors = await hass.async_add_executor_job(zm_client.get_monitors)
+
     if not monitors:
-        _LOGGER.warning("Could not fetch any monitors from ZoneMinder")
+        _LOGGER.warning("Did not fetch any monitors from ZoneMinder")
 
-    entities: List[Entity] = [ZMSensorRunState(zm_client, config_entry)]
+    sensors = []
     for monitor in monitors:
-        entities.append(ZMSensorMonitors(monitor, config_entry))
+        sensors.append(ZMSensorMonitors(monitor, config_entry))
 
-        for time_period in TimePeriod:
-            entities.append(ZMSensorEvents(monitor, False, time_period, config_entry))
-            entities.append(ZMSensorEvents(monitor, True, time_period, config_entry))
+        for config in get_platform_configs(hass, SENSOR_DOMAIN):
+            include_archived = config.get(CONF_INCLUDE_ARCHIVED)
 
-    async_add_entities(entities, True)
+            for sensor in config[CONF_MONITORED_CONDITIONS]:
+                sensors.append(
+                    ZMSensorEvents(monitor, include_archived, sensor, config_entry)
+                )
+
+    sensors.append(ZMSensorRunState(zm_client, config_entry))
+
+    async_add_entities(sensors, True)
 
 
 class ZMSensorMonitors(Entity):
@@ -117,14 +117,14 @@ class ZMSensorEvents(Entity):
         self,
         monitor: Monitor,
         include_archived: bool,
-        time_period: TimePeriod,
+        sensor_type: str,
         config_entry: ConfigEntry,
     ):
         """Initialize event sensor."""
 
         self._monitor = monitor
         self._include_archived = include_archived
-        self.time_period = time_period
+        self.time_period = TimePeriod.get_time_period(sensor_type)
         self._config_entry = config_entry
         self._state = None
 
@@ -136,13 +136,7 @@ class ZMSensorEvents(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        with_archived = " with archived" if self._include_archived else ""
-        return f"{self._monitor.name} {self.time_period.title}{with_archived}"
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return False
+        return f"{self._monitor.name} {self.time_period.title}"
 
     @property
     def unit_of_measurement(self):

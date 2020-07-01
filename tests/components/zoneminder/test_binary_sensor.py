@@ -1,22 +1,22 @@
 """Binary sensor tests."""
 from zoneminder.zm import ZoneMinder
 
-from homeassistant import config_entries
 from homeassistant.components.zoneminder import const
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PATH,
-    CONF_SOURCE,
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HASS_DOMAIN, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import MagicMock, patch
+from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry(hass: HomeAssistant) -> None:
@@ -31,11 +31,9 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
 
         zoneminder_mock.return_value = zm_client
 
-        await async_process_ha_core_config(hass, {})
-        await async_setup_component(hass, "homeassistant", {})
-        await hass.config_entries.flow.async_init(
-            const.DOMAIN,
-            context={CONF_SOURCE: config_entries.SOURCE_USER},
+        config_entry = MockConfigEntry(
+            domain=const.DOMAIN,
+            unique_id="host1",
             data={
                 CONF_HOST: "host1",
                 CONF_USERNAME: "username1",
@@ -46,17 +44,22 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
                 CONF_VERIFY_SSL: True,
             },
         )
+        config_entry.add_to_hass(hass)
+
+        await async_process_ha_core_config(hass, {})
+        await async_setup_component(hass, HASS_DOMAIN, {})
+        await async_setup_component(hass, const.DOMAIN, {})
         await hass.async_block_till_done()
 
         await hass.services.async_call(
-            "homeassistant", "update_entity", {"entity_id": "binary_sensor.host1"}
+            HASS_DOMAIN, "update_entity", {ATTR_ENTITY_ID: "binary_sensor.host1"}
         )
         await hass.async_block_till_done()
         assert hass.states.get("binary_sensor.host1").state == "on"
 
         zm_client.is_available = False
         await hass.services.async_call(
-            "homeassistant", "update_entity", {"entity_id": "binary_sensor.host1"}
+            HASS_DOMAIN, "update_entity", {ATTR_ENTITY_ID: "binary_sensor.host1"}
         )
         await hass.async_block_till_done()
         assert hass.states.get("binary_sensor.host1").state == "off"
