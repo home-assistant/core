@@ -40,24 +40,9 @@ from homeassistant.const import (
 )
 
 from tests.common import async_mock_service
-from tests.components.homekit.common import patch_debounce
 
 
-@pytest.fixture(scope="module")
-def cls():
-    """Patch debounce decorator during import of type_humidifiers."""
-    patcher = patch_debounce()
-    patcher.start()
-    _import = __import__(
-        "homeassistant.components.homekit.type_humidifiers",
-        fromlist=["HumidifierDehumidifier"],
-    )
-    patcher_tuple = namedtuple("Cls", ["hygrostat"])
-    yield patcher_tuple(hygrostat=_import.HumidifierDehumidifier)
-    patcher.stop()
-
-
-async def test_humidifier(hass, hk_driver, cls, events):
+async def test_humidifier(hass, hk_driver, events):
     """Test if humidifier accessory and HA are updated accordingly."""
     entity_id = "humidifier.test"
 
@@ -129,7 +114,7 @@ async def test_humidifier(hass, hk_driver, cls, events):
     assert events[-1].data[ATTR_VALUE] == "RelativeHumidityHumidifierThreshold to 39.0%"
 
 
-async def test_dehumidifier(hass, hk_driver, cls, events):
+async def test_dehumidifier(hass, hk_driver, events):
     """Test if dehumidifier accessory and HA are updated accordingly."""
     entity_id = "humidifier.test"
 
@@ -203,7 +188,7 @@ async def test_dehumidifier(hass, hk_driver, cls, events):
     )
 
 
-async def test_hygrostat_power_state(hass, hk_driver, cls, events):
+async def test_hygrostat_power_state(hass, hk_driver, events):
     """Test if accessory and HA are updated accordingly."""
     entity_id = "humidifier.test"
 
@@ -277,7 +262,7 @@ async def test_hygrostat_power_state(hass, hk_driver, cls, events):
     assert events[-1].data[ATTR_VALUE] == "Active to 0"
 
 
-async def test_hygrostat_get_humidity_range(hass, hk_driver, cls):
+async def test_hygrostat_get_humidity_range(hass, hk_driver):
     """Test if humidity range is evaluated correctly."""
     entity_id = "humidifier.test"
 
@@ -295,7 +280,7 @@ async def test_hygrostat_get_humidity_range(hass, hk_driver, cls):
     assert acc.char_target_humidity.properties[PROP_MIN_VALUE] == 40
 
 
-async def test_humidifier_with_linked_humidity_sensor(hass, hk_driver, cls):
+async def test_humidifier_with_linked_humidity_sensor(hass, hk_driver):
     """Test a humidifier with a linked humidity sensor can update."""
     humidity_sensor_entity_id = "sensor.bedroom_humidity"
 
@@ -332,7 +317,7 @@ async def test_humidifier_with_linked_humidity_sensor(hass, hk_driver, cls):
     assert acc.char_current_humidity.value == 43.0
 
 
-async def test_humidifier_with_a_missing_linked_humidity_sensor(hass, hk_driver, cls):
+async def test_humidifier_with_a_missing_linked_humidity_sensor(hass, hk_driver):
     """Test a humidifier with a configured linked motion sensor that is missing."""
     humidity_sensor_entity_id = "sensor.bedroom_humidity"
     entity_id = "humidifier.test"
