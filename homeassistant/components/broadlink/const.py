@@ -1,13 +1,16 @@
 """Constants for broadlink platform."""
+from datetime import timedelta
+
 CONF_PACKET = "packet"
 
-DEFAULT_LEARNING_TIMEOUT = 20
 DEFAULT_NAME = "Broadlink"
 DEFAULT_PORT = 80
 DEFAULT_RETRY = 3
 DEFAULT_TIMEOUT = 5
 
 DOMAIN = "broadlink"
+
+LEARNING_TIMEOUT = timedelta(seconds=30)
 
 SERVICE_LEARN = "learn"
 SERVICE_SEND = "send"

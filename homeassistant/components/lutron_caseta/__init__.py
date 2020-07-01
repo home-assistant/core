@@ -128,6 +128,16 @@ class LutronCasetaDevice(Entity):
         return str(self.serial)
 
     @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self.serial)},
+            "name": self.name,
+            "manufacturer": "Lutron",
+            "model": self._device["model"],
+        }
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         attr = {"device_id": self.device_id, "zone_id": self._device["zone"]}

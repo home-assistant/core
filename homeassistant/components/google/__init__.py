@@ -15,6 +15,7 @@ import voluptuous as vol
 from voluptuous.error import Error as VoluptuousError
 import yaml
 
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
@@ -26,8 +27,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "google"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 CONF_TRACK_NEW = "track_new_calendar"
 
 CONF_CAL_ID = "cal_id"

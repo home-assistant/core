@@ -316,7 +316,7 @@ async def test_user_error_on_could_not_connect(
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "cant_connect"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_user_tv_pairing_no_apps(
@@ -363,7 +363,7 @@ async def test_user_start_pairing_failure(
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cant_connect"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_user_invalid_pin(
@@ -471,7 +471,7 @@ async def test_import_entity_already_configured(
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "already_configured_device"
 
 
 async def test_import_flow_update_options(
@@ -778,7 +778,7 @@ async def test_zeroconf_flow_already_configured(
 
     # Flow should abort because device is already setup
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "already_configured_device"
 
 
 async def test_zeroconf_dupe_fail(

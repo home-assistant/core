@@ -12,6 +12,7 @@
             "user": {
                 "data": {
                     "address": "Adress (Kuck Beschr\u00e9iwung uewen)",
+                    "file_path": "Pad a Numm vum UPStart UPB Export Fichier.",
                     "protocol": "Protokoll"
                 },
                 "description": "Verbann een Universal Bus Powerline Interface Module (UPB PIM). D'Adresse muss an der der From 'adress[:port]' fir 'tcp' sinn. De Port ass optionell an als standard op 2101 gesat. Beispill: '192.168.1.42'. Fir de serielle Protokoll muss d'Adress an der form 'tty[:baud]' sinn. Baudrate ass optionell an standardm\u00e9isseg o p 4800. Beispill: '/dev/ttyS1'.",

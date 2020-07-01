@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Controller site is al geconfigureerd",
-            "no_local_user": "Geen lokale gebruiker gevonden, configureer een lokaal account op de controller en probeer het opnieuw",
-            "user_privilege": "Gebruiker moet beheerder zijn"
+            "already_configured": "Controller site is al geconfigureerd"
         },
         "error": {
             "faulty_credentials": "Foutieve gebruikersgegevens",
@@ -29,7 +27,6 @@
             "client_control": {
                 "data": {
                     "block_client": "Cli\u00ebnten met netwerktoegang",
-                    "new_client": "Voeg een nieuwe client toe voor netwerktoegangsbeheer",
                     "poe_clients": "Sta POE-controle van gebruikers toe"
                 },
                 "description": "Configureer clientbesturingen \n\n Maak schakelaars voor serienummers waarvoor u de netwerktoegang wilt beheren.",

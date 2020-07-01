@@ -77,9 +77,7 @@ def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
         logging.root.removeHandler(handler)
         migrated_handlers.append(handler)
 
-    listener = logging.handlers.QueueListener(
-        simple_queue, *migrated_handlers, respect_handler_level=False
-    )
+    listener = logging.handlers.QueueListener(simple_queue, *migrated_handlers)
 
     listener.start()
 

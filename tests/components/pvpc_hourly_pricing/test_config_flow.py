@@ -15,7 +15,9 @@ from tests.common import date_util
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_config_flow(hass, pvpc_aioclient_mock: AiohttpClientMocker):
+async def test_config_flow(
+    hass, legacy_patchable_time, pvpc_aioclient_mock: AiohttpClientMocker
+):
     """
     Test config flow for pvpc_hourly_pricing.
 

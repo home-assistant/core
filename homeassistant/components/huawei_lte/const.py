@@ -32,6 +32,7 @@ KEY_MONITORING_STATUS = "monitoring_status"
 KEY_MONITORING_TRAFFIC_STATISTICS = "monitoring_traffic_statistics"
 KEY_NET_CURRENT_PLMN = "net_current_plmn"
 KEY_NET_NET_MODE = "net_net_mode"
+KEY_SMS_SMS_COUNT = "sms_sms_count"
 KEY_WLAN_HOST_LIST = "wlan_host_list"
 KEY_WLAN_WIFI_FEATURE_SWITCH = "wlan_wifi_feature_switch"
 
@@ -47,6 +48,7 @@ SENSOR_KEYS = {
     KEY_MONITORING_TRAFFIC_STATISTICS,
     KEY_NET_CURRENT_PLMN,
     KEY_NET_NET_MODE,
+    KEY_SMS_SMS_COUNT,
 }
 
 SWITCH_KEYS = {KEY_DIALUP_MOBILE_DATASWITCH}

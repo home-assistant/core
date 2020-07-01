@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_in_progress": "Tuya-m\u00e4\u00e4ritykset ovat jo k\u00e4ynniss\u00e4.",
             "conn_error": "Yhdist\u00e4minen ep\u00e4onnistui"
         },
         "error": {

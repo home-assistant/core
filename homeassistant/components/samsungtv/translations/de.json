@@ -15,11 +15,10 @@
             },
             "user": {
                 "data": {
-                    "host": "Host oder IP-Adresse",
+                    "host": "Host",
                     "name": "Name"
                 },
-                "description": "Gib deine Samsung TV-Informationen ein. Wenn du noch nie eine Verbindung zum Home Assistant hergestellt hast, solltest du ein Popup-Fenster auf deinem Fernseher sehen, das nach einer Authentifizierung fragt.",
-                "title": "Samsung TV"
+                "description": "Gib deine Samsung TV-Informationen ein. Wenn du noch nie eine Verbindung zum Home Assistant hergestellt hast, solltest du ein Popup-Fenster auf deinem Fernseher sehen, das nach einer Authentifizierung fragt."
             }
         }
     }

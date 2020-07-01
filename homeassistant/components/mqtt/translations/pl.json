@@ -15,8 +15,7 @@
                     "port": "Port",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "description": "Wprowad\u017a informacje o po\u0142\u0105czeniu po\u015brednika MQTT.",
-                "title": "MQTT"
+                "description": "Wprowad\u017a informacje o po\u0142\u0105czeniu po\u015brednika MQTT."
             },
             "hassio_confirm": {
                 "data": {
@@ -47,6 +46,20 @@
             "button_short_press": "\"{subtype}\" zostanie naci\u015bni\u0119ty",
             "button_short_release": "\"{subtype}\" zostanie zwolniony",
             "button_triple_press": "\"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty"
+        }
+    },
+    "options": {
+        "step": {
+            "broker": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "username": "U\u017cytkownik"
+                }
+            },
+            "options": {
+                "description": "Wybierz opcje MQTT."
+            }
         }
     }
 }

@@ -131,6 +131,47 @@ DISCOVERY_SCHEMAS = (
             },
         },
     },
+    {  # Rollershutter
+        const.DISC_COMPONENT: "cover",
+        const.DISC_GENERIC_DEVICE_CLASS: (const_ozw.GENERIC_TYPE_SWITCH_MULTILEVEL,),
+        const.DISC_SPECIFIC_DEVICE_CLASS: (
+            const_ozw.SPECIFIC_TYPE_CLASS_A_MOTOR_CONTROL,
+            const_ozw.SPECIFIC_TYPE_CLASS_B_MOTOR_CONTROL,
+            const_ozw.SPECIFIC_TYPE_CLASS_C_MOTOR_CONTROL,
+            const_ozw.SPECIFIC_TYPE_MOTOR_MULTIPOSITION,
+            const_ozw.SPECIFIC_TYPE_SECURE_BARRIER_ADDON,
+            const_ozw.SPECIFIC_TYPE_SECURE_DOOR,
+        ),
+        const.DISC_VALUES: {
+            const.DISC_PRIMARY: {
+                const.DISC_COMMAND_CLASS: CommandClass.SWITCH_MULTILEVEL,
+                const.DISC_INDEX: ValueIndex.SWITCH_MULTILEVEL_LEVEL,
+                const.DISC_GENRE: ValueGenre.USER,
+            },
+            "open": {
+                const.DISC_COMMAND_CLASS: CommandClass.SWITCH_MULTILEVEL,
+                const.DISC_INDEX: ValueIndex.SWITCH_MULTILEVEL_BRIGHT,
+                const.DISC_OPTIONAL: True,
+            },
+            "close": {
+                const.DISC_COMMAND_CLASS: CommandClass.SWITCH_MULTILEVEL,
+                const.DISC_INDEX: ValueIndex.SWITCH_MULTILEVEL_DIM,
+                const.DISC_OPTIONAL: True,
+            },
+        },
+    },
+    {  # Fan
+        const.DISC_COMPONENT: "fan",
+        const.DISC_GENERIC_DEVICE_CLASS: const_ozw.GENERIC_TYPE_SWITCH_MULTILEVEL,
+        const.DISC_SPECIFIC_DEVICE_CLASS: const_ozw.SPECIFIC_TYPE_FAN_SWITCH,
+        const.DISC_VALUES: {
+            const.DISC_PRIMARY: {
+                const.DISC_COMMAND_CLASS: CommandClass.SWITCH_MULTILEVEL,
+                const.DISC_INDEX: ValueIndex.SWITCH_MULTILEVEL_LEVEL,
+                const.DISC_TYPE: ValueType.BYTE,
+            },
+        },
+    },
     {  # Light
         const.DISC_COMPONENT: "light",
         const.DISC_GENERIC_DEVICE_CLASS: (
@@ -194,6 +235,16 @@ DISCOVERY_SCHEMAS = (
         const.DISC_VALUES: {
             const.DISC_PRIMARY: {
                 const.DISC_COMMAND_CLASS: (CommandClass.SWITCH_BINARY,),
+                const.DISC_TYPE: ValueType.BOOL,
+                const.DISC_GENRE: ValueGenre.USER,
+            }
+        },
+    },
+    {  # Lock platform
+        const.DISC_COMPONENT: "lock",
+        const.DISC_VALUES: {
+            const.DISC_PRIMARY: {
+                const.DISC_COMMAND_CLASS: (CommandClass.DOOR_LOCK,),
                 const.DISC_TYPE: ValueType.BOOL,
                 const.DISC_GENRE: ValueGenre.USER,
             }

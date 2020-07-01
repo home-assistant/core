@@ -7,11 +7,7 @@
         "flow_title": "Sony Songpal {name} ({host})",
         "step": {
             "init": {
-                "description": "Voulez-vous configurer {name} ({host})?",
-                "title": "Sony Songpal"
-            },
-            "user": {
-                "title": "Sony Songpal"
+                "description": "Voulez-vous configurer {name} ({host})?"
             }
         }
     }

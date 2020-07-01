@@ -28,6 +28,7 @@ from .const import (
     DEVICE_INFO,
     DEVICE_MODEL,
     DOMAIN,
+    LEGACY_DEVICE_MODEL,
     PV_API,
     PV_ROOM_DATA,
     PV_SHADE_DATA,
@@ -43,6 +44,8 @@ _LOGGER = logging.getLogger(__name__)
 # Estimated time it takes to complete a transition
 # from one state to another
 TRANSITION_COMPLETE_DURATION = 30
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -118,7 +121,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
     def supported_features(self):
         """Flag supported features."""
         supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
-        if self._device_info[DEVICE_MODEL] != "1":
+        if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
             supported_features |= SUPPORT_STOP
         return supported_features
 

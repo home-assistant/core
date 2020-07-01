@@ -18,8 +18,7 @@
                     "host": "V\u00e6rt eller IP-adresse",
                     "name": "Navn"
                 },
-                "description": "Indtast dine Samsung-tv-oplysninger. Hvis du aldrig har oprettet forbindelse til Home Assistant f\u00f8r, b\u00f8r du se en popup p\u00e5 dit tv, der beder om godkendelse.",
-                "title": "Samsung-tv"
+                "description": "Indtast dine Samsung-tv-oplysninger. Hvis du aldrig har oprettet forbindelse til Home Assistant f\u00f8r, b\u00f8r du se en popup p\u00e5 dit tv, der beder om godkendelse."
             }
         }
     }

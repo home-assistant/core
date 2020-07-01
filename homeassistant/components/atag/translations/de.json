@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Nur ein Atag-Ger\u00e4t kann mit Home Assistant verbunden werden."
+            "already_configured": "Dieses Ger\u00e4t wurde bereits zu HomeAssistant hinzugef\u00fcgt"
         },
         "error": {
             "connection_error": "Verbindung fehlgeschlagen, versuchen Sie es erneut"
@@ -11,7 +11,7 @@
                 "data": {
                     "email": "Email (Optional)",
                     "host": "Host",
-                    "port": "Port (10000)"
+                    "port": "Port"
                 },
                 "title": "Stellen Sie eine Verbindung zum Ger\u00e4t her"
             }

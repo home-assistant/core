@@ -2,7 +2,7 @@
 
 This includes tests for all mock object types.
 """
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import pytest
 
@@ -37,17 +37,17 @@ from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
-    ATTR_NOW,
     ATTR_SERVICE,
-    EVENT_TIME_CHANGED,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     __version__,
 )
+from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
 import homeassistant.util.dt as dt_util
 
 from tests.async_mock import Mock, patch
-from tests.common import async_mock_service
+from tests.common import async_fire_time_changed, async_mock_service
 
 
 async def test_debounce(hass):
@@ -64,11 +64,11 @@ async def test_debounce(hass):
 
     debounce_demo = debounce(demo_func)
     assert debounce_demo.__name__ == "demo_func"
-    now = datetime(2018, 1, 1, 20, 0, 0, tzinfo=dt_util.UTC)
+    now = dt_util.utcnow()
 
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         await hass.async_add_executor_job(debounce_demo, mock, "value")
-    hass.bus.async_fire(EVENT_TIME_CHANGED, {ATTR_NOW: now + timedelta(seconds=3)})
+    async_fire_time_changed(hass, now + timedelta(seconds=3))
     await hass.async_block_till_done()
     assert counter == 1
     assert len(arguments) == 2
@@ -77,9 +77,25 @@ async def test_debounce(hass):
         await hass.async_add_executor_job(debounce_demo, mock, "value")
         await hass.async_add_executor_job(debounce_demo, mock, "value")
 
-    hass.bus.async_fire(EVENT_TIME_CHANGED, {ATTR_NOW: now + timedelta(seconds=3)})
+    async_fire_time_changed(hass, now + timedelta(seconds=3))
     await hass.async_block_till_done()
     assert counter == 2
+
+
+async def test_accessory_cancels_track_state_change_on_stop(hass, hk_driver):
+    """Ensure homekit state changed listeners are unsubscribed on reload."""
+    entity_id = "sensor.accessory"
+    hass.states.async_set(entity_id, None)
+    acc = HomeAccessory(
+        hass, hk_driver, "Home Accessory", entity_id, 2, {"platform": "isy994"}
+    )
+    with patch(
+        "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
+    ):
+        await acc.run_handler()
+    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS][entity_id]) == 1
+    acc.async_stop()
+    assert entity_id not in hass.data[TRACK_STATE_CHANGE_CALLBACKS]
 
 
 async def test_home_accessory(hass, hk_driver):
@@ -88,7 +104,7 @@ async def test_home_accessory(hass, hk_driver):
     entity_id2 = "light.accessory"
 
     hass.states.async_set(entity_id, None)
-    hass.states.async_set(entity_id2, None)
+    hass.states.async_set(entity_id2, STATE_UNAVAILABLE)
 
     await hass.async_block_till_done()
 
@@ -98,6 +114,7 @@ async def test_home_accessory(hass, hk_driver):
     assert acc.hass == hass
     assert acc.display_name == "Home Accessory"
     assert acc.aid == 2
+    assert acc.available is True
     assert acc.category == 1  # Category.OTHER
     assert len(acc.services) == 1
     serv = acc.services[0]  # SERV_ACCESSORY_INFO
@@ -127,6 +144,7 @@ async def test_home_accessory(hass, hk_driver):
             ATTR_INTERGRATION: "luxe",
         },
     )
+    assert acc3.available is False
     serv = acc3.services[0]  # SERV_ACCESSORY_INFO
     assert serv.get_characteristic(CHAR_NAME).value == "Home Accessory"
     assert serv.get_characteristic(CHAR_MANUFACTURER).value == "Lux Brands"

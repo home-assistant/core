@@ -200,6 +200,10 @@ class Thermostat(ZhaEntity, ClimateEntity):
             data[ATTR_OCCP_COOL_SETPT] = self._thrm.occupied_cooling_setpoint
         if self._thrm.occupied_heating_setpoint is not None:
             data[ATTR_OCCP_HEAT_SETPT] = self._thrm.occupied_heating_setpoint
+        if self._thrm.pi_heating_demand is not None:
+            data[ATTR_PI_HEATING_DEMAND] = self._thrm.pi_heating_demand
+        if self._thrm.pi_cooling_demand is not None:
+            data[ATTR_PI_COOLING_DEMAND] = self._thrm.pi_cooling_demand
 
         unoccupied_cooling_setpoint = self._thrm.unoccupied_cooling_setpoint
         if unoccupied_cooling_setpoint is not None:
@@ -583,3 +587,13 @@ class ZenWithinThermostat(Thermostat):
         if self.hvac_mode != HVAC_MODE_OFF:
             return CURRENT_HVAC_IDLE
         return CURRENT_HVAC_OFF
+
+
+@STRICT_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    aux_channels=CHANNEL_FAN,
+    manufacturers="Centralite",
+    models="3157100",
+)
+class CentralitePearl(ZenWithinThermostat):
+    """Centralite Pearl Thermostat implementation."""

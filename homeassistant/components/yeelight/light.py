@@ -127,25 +127,6 @@ YEELIGHT_COLOR_EFFECT_LIST = [
     *YEELIGHT_MONO_EFFECT_LIST,
 ]
 
-MODEL_TO_DEVICE_TYPE = {
-    "mono": BulbType.White,
-    "mono1": BulbType.White,
-    "color": BulbType.Color,
-    "color1": BulbType.Color,
-    "color2": BulbType.Color,
-    "strip1": BulbType.Color,
-    "bslamp1": BulbType.Color,
-    "bslamp2": BulbType.Color,
-    "RGBW": BulbType.Color,
-    "lamp1": BulbType.WhiteTemp,
-    "ceiling1": BulbType.WhiteTemp,
-    "ceiling2": BulbType.WhiteTemp,
-    "ceiling3": BulbType.WhiteTemp,
-    "ceiling4": BulbType.WhiteTempMood,
-    "ceiling10": BulbType.WhiteTempMood,
-    "ceiling13": BulbType.WhiteTemp,
-}
-
 EFFECTS_MAP = {
     EFFECT_DISCO: yee_transitions.disco,
     EFFECT_TEMP: yee_transitions.temp,
@@ -274,10 +255,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     lights = []
 
-    if device.model:
-        device_type = MODEL_TO_DEVICE_TYPE.get(device.model, None)
-    else:
-        device_type = device.type
+    device_type = device.type
 
     def _lights_setup_helper(klass):
         lights.append(klass(device, custom_effects=custom_effects))

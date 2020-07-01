@@ -3,5 +3,6 @@
   "name": "Bose Soundtouch",
   "documentation": "https://www.home-assistant.io/integrations/soundtouch",
   "requirements": ["libsoundtouch==0.8"],
+  "after_dependencies": ["zeroconf"],
   "codeowners": []
 }

@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Soll iZone konfigur\u00e9iert ginn?",
-                "title": "iZone"
+                "description": "Soll iZone konfigur\u00e9iert ginn?"
             }
         }
     }

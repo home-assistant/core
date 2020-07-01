@@ -1,6 +1,8 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Den valgte avtalen er allerede konfigurert.",
+            "authorize_url_fail": "Ukjent feil ved generering av autoriseringsadresse.",
             "client_id": "Klient ID fra konfigurasjonen er ugyldig.",
             "client_secret": "Klient hemmeligheten fra konfigurasjonen er ugyldig.",
             "no_agreements": "Denne kontoen har ingen Toon skjermer.",
@@ -12,6 +14,13 @@
             "display_exists": "Den valgte skjermen er allerede konfigurert."
         },
         "step": {
+            "agreement": {
+                "data": {
+                    "agreement": "Avtale"
+                },
+                "description": "Velg avtalsadressen du vil legge til.",
+                "title": "Velg din avtale"
+            },
             "authenticate": {
                 "data": {
                     "password": "Passord",
@@ -27,6 +36,9 @@
                 },
                 "description": "Velg Toon skjerm \u00e5 koble til.",
                 "title": "Velg skjerm"
+            },
+            "pick_implementation": {
+                "title": "Velg din leietaker til \u00e5 autentisere med"
             }
         }
     }

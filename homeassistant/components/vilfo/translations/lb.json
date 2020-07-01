@@ -11,8 +11,8 @@
         "step": {
             "user": {
                 "data": {
-                    "access_token": "Acc\u00e8s Jeton fir Vilfo Router API",
-                    "host": "Router Numm oder IP"
+                    "access_token": "Acc\u00e8s Jeton",
+                    "host": "Host"
                 },
                 "description": "Vilfo Router Integratioun ariichten. Dir braucht \u00e4re Vilfo Router Numm/IP an een API Acc\u00e8s Jeton. Fir weider Informatiounen zu d\u00ebser Integratioun a w\u00e9i een zu d\u00ebsen n\u00e9idegen Informatioune k\u00ebnnt, gitt op: https://www.home-assistant.io/integrations/vilfo",
                 "title": "Mam Vilfo Router verbannen"

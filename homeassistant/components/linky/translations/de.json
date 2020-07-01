@@ -13,7 +13,7 @@
             "user": {
                 "data": {
                     "password": "Passwort",
-                    "username": "E-Mail"
+                    "username": "E-Mail-Adresse"
                 },
                 "description": "Gib deine Zugangsdaten ein",
                 "title": "Linky"

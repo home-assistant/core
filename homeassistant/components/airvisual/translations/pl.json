@@ -28,10 +28,7 @@
             },
             "user": {
                 "data": {
-                    "api_key": "Klucz API",
                     "cloud_api": "Lokalizacja geograficzna",
-                    "latitude": "Szeroko\u015b\u0107 geograficzna",
-                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna",
                     "node_pro": "AirVisual Node Pro",
                     "type": "Typ integracji"
                 },
@@ -46,7 +43,6 @@
                 "data": {
                     "show_on_map": "Wy\u015bwietlaj encje na mapie"
                 },
-                "description": "Konfiguracja opcji integracji AirVisual.",
                 "title": "Konfiguracja AirVisual"
             }
         }

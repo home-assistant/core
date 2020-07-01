@@ -1,7 +1,7 @@
-"""Platform for light integration."""
+"""Platform for switch integration."""
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -29,8 +29,8 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class DevoloSwitch(SwitchDevice):
-    """Representation of an Awesome Light."""
+class DevoloSwitch(SwitchEntity):
+    """Representation of a switch."""
 
     def __init__(self, homecontrol, device_instance, element_uid):
         """Initialize an devolo Switch."""

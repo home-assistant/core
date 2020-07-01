@@ -19,11 +19,12 @@ from tests.components.camera import common
 
 
 @pytest.fixture(name="mock_camera")
-def mock_camera_fixture(hass):
+async def mock_camera_fixture(hass):
     """Initialize a demo camera platform."""
-    assert hass.loop.run_until_complete(
-        async_setup_component(hass, "camera", {camera.DOMAIN: {"platform": "demo"}})
+    assert await async_setup_component(
+        hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.demo.camera.Path.read_bytes", return_value=b"Test",
@@ -51,6 +52,7 @@ async def image_mock_url_fixture(hass):
     await async_setup_component(
         hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
 
 async def test_get_image_from_camera(hass, image_mock_url):
@@ -65,6 +67,19 @@ async def test_get_image_from_camera(hass, image_mock_url):
 
     assert mock_camera.called
     assert image.content == b"Test"
+
+
+async def test_get_stream_source_from_camera(hass, mock_camera):
+    """Fetch stream source from camera entity."""
+
+    with patch(
+        "homeassistant.components.camera.Camera.stream_source",
+        return_value="rtsp://127.0.0.1/stream",
+    ) as mock_camera_stream_source:
+        stream_source = await camera.async_get_stream_source(hass, "camera.demo_camera")
+
+    assert mock_camera_stream_source.called
+    assert stream_source == "rtsp://127.0.0.1/stream"
 
 
 async def test_get_image_without_exists_camera(hass, image_mock_url):
@@ -298,7 +313,10 @@ async def test_preload_stream(hass, mock_stream):
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
         return_value="http://example.com",
     ):
-        await async_setup_component(hass, "camera", {DOMAIN: {"platform": "demo"}})
+        assert await async_setup_component(
+            hass, "camera", {DOMAIN: {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
         assert mock_request_stream.called

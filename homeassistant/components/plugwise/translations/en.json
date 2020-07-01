@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "This Smile is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect, please try again",
+            "invalid_auth": "Invalid authentication, check the 8 characters of your Smile ID",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Smile IP address",
+                    "password": "Smile ID"
+                },
+                "description": "Details",
+                "title": "Connect to the Smile"
+            }
+        }
+    }
+}

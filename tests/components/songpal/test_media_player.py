@@ -156,9 +156,7 @@ async def test_services(hass):
     await _call(media_player.SERVICE_VOLUME_UP)
     await _call(media_player.SERVICE_VOLUME_DOWN)
     assert mocked_device.volume1.set_volume.call_count == 3
-    mocked_device.volume1.set_volume.assert_has_calls(
-        [call(60), call("+1"), call("-1")]
-    )
+    mocked_device.volume1.set_volume.assert_has_calls([call(60), call(51), call(49)])
 
     await _call(media_player.SERVICE_VOLUME_MUTE, is_volume_muted=True)
     mocked_device.volume1.set_mute.assert_called_once_with(True)

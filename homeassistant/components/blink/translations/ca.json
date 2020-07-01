@@ -23,5 +23,16 @@
                 "title": "Inici de sessi\u00f3 amb Blink"
             }
         }
+    },
+    "options": {
+        "step": {
+            "simple_options": {
+                "data": {
+                    "scan_interval": "Interval d'escaneig (segons)"
+                },
+                "description": "Configura la integraci\u00f3 Blink",
+                "title": "Opcions de Blink"
+            }
+        }
     }
 }

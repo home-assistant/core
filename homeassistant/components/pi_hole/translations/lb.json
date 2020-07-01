@@ -1,13 +1,19 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Service ass scho konfigur\u00e9iert",
             "duplicated_name": "Numm g\u00ebtt et schonn"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen"
         },
         "step": {
             "user": {
                 "data": {
                     "api_key": "API Schl\u00ebssel (Optionell)",
+                    "host": "Host",
                     "name": "Numm",
+                    "port": "Port",
                     "ssl": "SSL benotzen",
                     "verify_ssl": "SSL Zertifikat iwwerpr\u00e9iwen"
                 }

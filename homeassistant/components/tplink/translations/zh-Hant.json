@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "\u662f\u5426\u8981\u8a2d\u5b9a TP-Link \u667a\u80fd\u8a2d\u5099\uff1f",
-                "title": "TP-Link Smart Home"
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a TP-Link \u667a\u80fd\u8a2d\u5099\uff1f"
             }
         }
     }

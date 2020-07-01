@@ -42,7 +42,7 @@ class WebsocketAPIView(HomeAssistantView):
     url = URL
     requires_auth = False
 
-    async def get(self, request):
+    async def get(self, request: web.Request) -> web.WebSocketResponse:
         """Handle an incoming websocket connection."""
         return await WebSocketHandler(request.app["hass"], request).async_handle()
 
@@ -148,7 +148,7 @@ class WebSocketHandler:
         self._handle_task.cancel()
         self._writer_task.cancel()
 
-    async def async_handle(self):
+    async def async_handle(self) -> web.WebSocketResponse:
         """Handle a websocket response."""
         request = self.request
         wsock = self.wsock = web.WebSocketResponse(heartbeat=55)
@@ -165,7 +165,9 @@ class WebSocketHandler:
             EVENT_HOMEASSISTANT_STOP, handle_hass_stop
         )
 
-        self._writer_task = self.hass.async_create_task(self._writer())
+        # As the webserver is now started before the start
+        # event we do not want to block for websocket responses
+        self._writer_task = asyncio.create_task(self._writer())
 
         auth = AuthPhase(self._logger, self.hass, self._send_message, request)
         connection = None

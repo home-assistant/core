@@ -35,10 +35,6 @@
                 "description": "\u627e\u5230\u591a\u500b\u4f3a\u670d\u5668\uff0c\u8acb\u9078\u64c7\u4e00\u7d44\uff1a",
                 "title": "\u9078\u64c7 Plex \u4f3a\u670d\u5668"
             },
-            "start_website_auth": {
-                "description": "\u7e7c\u7e8c\u65bc Plex.tv \u9032\u884c\u8a8d\u8b49\u3002",
-                "title": "\u9023\u7dda\u81f3 Plex \u4f3a\u670d\u5668"
-            },
             "user": {
                 "description": "\u7e7c\u7e8c\u81f3 [plex.tv](https://plex.tv) \u4ee5\u9023\u7d50\u4e00\u7d44 Plex \u4f3a\u670d\u5668\u3002",
                 "title": "Plex \u5a92\u9ad4\u4f3a\u670d\u5668"

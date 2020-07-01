@@ -64,70 +64,52 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NAD platform."""
-    if config.get(CONF_TYPE) == "RS232":
+    if config.get(CONF_TYPE) in ("RS232", "Telnet"):
         add_entities(
-            [
-                NAD(
-                    config.get(CONF_NAME),
-                    NADReceiver(config.get(CONF_SERIAL_PORT)),
-                    config.get(CONF_MIN_VOLUME),
-                    config.get(CONF_MAX_VOLUME),
-                    config.get(CONF_SOURCE_DICT),
-                )
-            ],
-            True,
-        )
-    elif config.get(CONF_TYPE) == "Telnet":
-        add_entities(
-            [
-                NAD(
-                    config.get(CONF_NAME),
-                    NADReceiverTelnet(config.get(CONF_HOST), config.get(CONF_PORT)),
-                    config.get(CONF_MIN_VOLUME),
-                    config.get(CONF_MAX_VOLUME),
-                    config.get(CONF_SOURCE_DICT),
-                )
-            ],
-            True,
+            [NAD(config)], True,
         )
     else:
         add_entities(
-            [
-                NADtcp(
-                    config.get(CONF_NAME),
-                    NADReceiverTCP(config.get(CONF_HOST)),
-                    config.get(CONF_MIN_VOLUME),
-                    config.get(CONF_MAX_VOLUME),
-                    config.get(CONF_VOLUME_STEP),
-                )
-            ],
-            True,
+            [NADtcp(config)], True,
         )
 
 
 class NAD(MediaPlayerEntity):
     """Representation of a NAD Receiver."""
 
-    def __init__(self, name, nad_receiver, min_volume, max_volume, source_dict):
+    def __init__(self, config):
         """Initialize the NAD Receiver device."""
-        self._name = name
-        self._nad_receiver = nad_receiver
-        self._min_volume = min_volume
-        self._max_volume = max_volume
-        self._source_dict = source_dict
+        self.config = config
+        self._instantiate_nad_receiver()
+        self._min_volume = config[CONF_MIN_VOLUME]
+        self._max_volume = config[CONF_MAX_VOLUME]
+        self._source_dict = config[CONF_SOURCE_DICT]
         self._reverse_mapping = {value: key for key, value in self._source_dict.items()}
 
         self._volume = self._state = self._mute = self._source = None
 
+    def _instantiate_nad_receiver(self) -> NADReceiver:
+        if self.config[CONF_TYPE] == "RS232":
+            self._nad_receiver = NADReceiver(self.config[CONF_SERIAL_PORT])
+        else:
+            host = self.config.get(CONF_HOST)
+            port = self.config[CONF_PORT]
+            self._nad_receiver = NADReceiverTelnet(host, port)
+
     @property
     def name(self):
         """Return the name of the device."""
-        return self._name
+        return self.config[CONF_NAME]
 
     @property
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def icon(self):
+        """Return the icon for the device."""
+        return "mdi:speaker-multiple"
 
     @property
     def volume_level(self):
@@ -185,23 +167,28 @@ class NAD(MediaPlayerEntity):
         """List of available input sources."""
         return sorted(list(self._reverse_mapping.keys()))
 
-    def update(self):
+    @property
+    def available(self):
+        """Return if device is available."""
+        return self._state is not None
+
+    def update(self) -> None:
         """Retrieve latest state."""
-        if self._nad_receiver.main_power("?") == "Off":
-            self._state = STATE_OFF
-        else:
-            self._state = STATE_ON
+        power_state = self._nad_receiver.main_power("?")
+        if not power_state:
+            self._state = None
+            return
+        self._state = (
+            STATE_ON if self._nad_receiver.main_power("?") == "On" else STATE_OFF
+        )
 
-        if self._nad_receiver.main_mute("?") == "Off":
-            self._mute = False
-        else:
-            self._mute = True
-
-        volume = self._nad_receiver.main_volume("?")
-        # Some receivers cannot report the volume, e.g. C 356BEE,
-        # instead they only support stepping the volume up or down
-        self._volume = self.calc_volume(volume) if volume is not None else None
-        self._source = self._source_dict.get(self._nad_receiver.main_source("?"))
+        if self._state == STATE_ON:
+            self._mute = self._nad_receiver.main_mute("?") == "On"
+            volume = self._nad_receiver.main_volume("?")
+            # Some receivers cannot report the volume, e.g. C 356BEE,
+            # instead they only support stepping the volume up or down
+            self._volume = self.calc_volume(volume) if volume is not None else None
+            self._source = self._source_dict.get(self._nad_receiver.main_source("?"))
 
     def calc_volume(self, decibel):
         """
@@ -227,13 +214,13 @@ class NAD(MediaPlayerEntity):
 class NADtcp(MediaPlayerEntity):
     """Representation of a NAD Digital amplifier."""
 
-    def __init__(self, name, nad_device, min_volume, max_volume, volume_step):
+    def __init__(self, config):
         """Initialize the amplifier."""
-        self._name = name
-        self._nad_receiver = nad_device
-        self._min_vol = (min_volume + 90) * 2  # from dB to nad vol (0-200)
-        self._max_vol = (max_volume + 90) * 2  # from dB to nad vol (0-200)
-        self._volume_step = volume_step
+        self._name = config[CONF_NAME]
+        self._nad_receiver = NADReceiverTCP(config.get(CONF_HOST))
+        self._min_vol = (config[CONF_MIN_VOLUME] + 90) * 2  # from dB to nad vol (0-200)
+        self._max_vol = (config[CONF_MAX_VOLUME] + 90) * 2  # from dB to nad vol (0-200)
+        self._volume_step = config[CONF_VOLUME_STEP]
         self._state = None
         self._mute = None
         self._nad_volume = None
