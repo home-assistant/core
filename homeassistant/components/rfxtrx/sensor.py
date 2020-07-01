@@ -64,7 +64,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     break
         for _data_type in data_types:
             new_sensor = RfxtrxSensor(
-                None, entity_info[ATTR_NAME], _data_type, entity_info[ATTR_FIRE_EVENT]
+                None,
+                event.device,
+                entity_info[ATTR_NAME],
+                _data_type,
+                entity_info[ATTR_FIRE_EVENT],
             )
             sensors.append(new_sensor)
             sub_sensors[_data_type] = new_sensor
@@ -107,7 +111,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if _data_type in event.values:
                 data_type = _data_type
                 break
-        new_sensor = RfxtrxSensor(event, pkt_id, data_type)
+        new_sensor = RfxtrxSensor(event, event.device, pkt_id, data_type)
         sub_sensors = {}
         sub_sensors[new_sensor.data_type] = new_sensor
         RFX_DEVICES[device_id] = sub_sensors
@@ -120,13 +124,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class RfxtrxSensor(Entity):
     """Representation of a RFXtrx sensor."""
 
-    def __init__(self, event, name, data_type, should_fire_event=False):
+    def __init__(self, event, device, name, data_type, should_fire_event=False):
         """Initialize the sensor."""
         self.event = event
         self._name = name
         self.should_fire_event = should_fire_event
         self.data_type = data_type
         self._unit_of_measurement = DATA_TYPES.get(data_type, "")
+        self._unique_id = f"{slugify(device.type_string.lower())}_{slugify(device.id_string.lower())}_{slugify(data_type)}"
 
     def __str__(self):
         """Return the name of the sensor."""
@@ -155,3 +160,8 @@ class RfxtrxSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
+
+    @property
+    def unique_id(self):
+        """Return unique identifier of remote device."""
+        return self._unique_id

@@ -63,6 +63,7 @@
             },
             "options": {
                 "data": {
+                    "birth_payload": "Birth message payload",
                     "birth_qos": "F\u00f8dselsmelding QoS",
                     "birth_retain": "F\u00f8dselsmelding beholder",
                     "birth_topic": "F\u00f8dselsmeldingsemne",

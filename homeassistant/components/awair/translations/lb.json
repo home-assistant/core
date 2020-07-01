@@ -1,6 +1,12 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Kont ass",
+            "no_devices": "Keng Apparater am Netzwierk fonnt",
+            "reauth_successful": "Acc\u00e8s Jeton erfollegr\u00e4ich aktualis\u00e9iert"
+        },
         "error": {
+            "auth": "Ong\u00ebltege Acc\u00e8s Jeton",
             "unknown": "Onbekannten Awair API Feeler"
         },
         "step": {
@@ -15,7 +21,8 @@
                 "data": {
                     "access_token": "Acc\u00e8s Jeton",
                     "email": "E-Mail"
-                }
+                },
+                "description": "Du muss dech fir een Awair Developpeur Acc\u00e8s Jeton registr\u00e9ien op:\nhttps://developer.getawair.com/onboard/login"
             }
         }
     }

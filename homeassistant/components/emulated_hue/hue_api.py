@@ -759,10 +759,9 @@ def create_list_of_entities(config, request):
     hass = request.app["hass"]
     json_response = {}
 
-    for entity in hass.states.async_all():
-        if config.is_entity_exposed(entity):
-            number = config.entity_id_to_number(entity.entity_id)
-            json_response[number] = entity_to_json(config, entity)
+    for entity in config.filter_exposed_entities(hass.states.async_all()):
+        number = config.entity_id_to_number(entity.entity_id)
+        json_response[number] = entity_to_json(config, entity)
 
     return json_response
 
