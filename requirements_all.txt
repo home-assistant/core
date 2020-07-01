@@ -610,7 +610,7 @@ freesms==0.1.2
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
 # homeassistant.components.fritzbox_netmonitor
-fritzconnection==1.3.0
+fritzconnection==1.2.0
 
 # homeassistant.components.google_translate
 gTTS-token==1.1.3
