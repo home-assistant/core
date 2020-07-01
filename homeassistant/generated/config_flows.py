@@ -124,6 +124,7 @@ FLOWS = [
     "plugwise",
     "plum_lightpad",
     "point",
+    "poolsense",
     "powerwall",
     "ps4",
     "pvpc_hourly_pricing",
