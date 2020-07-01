@@ -169,6 +169,9 @@ class BroadlinkRMSwitch(BroadlinkSwitch):
 
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
+        if packet is None:
+            return True
+
         try:
             await self._device.async_request(self._device.api.send_data, packet)
         except BroadlinkException as err:
