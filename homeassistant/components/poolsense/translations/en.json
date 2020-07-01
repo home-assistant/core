@@ -6,7 +6,7 @@
                 "description": "Set up PoolSense integration. Register on the dedicated app to get your username and password. Serial is optional.",
                 "data": {
                     "email": "Email",
-                    "password": "Password",
+                    "password": "Password"
                 }
             }
         },

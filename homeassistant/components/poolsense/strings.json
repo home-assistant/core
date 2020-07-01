@@ -6,7 +6,7 @@
         "description": "[%key:common::config_flow::description%]",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
