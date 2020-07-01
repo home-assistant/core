@@ -60,17 +60,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the generic hygrostat platform."""
     if discovery_info:
         config = discovery_info
-    name = config.get(CONF_NAME)
-    switch_entity_id = config.get(CONF_HUMIDIFIER)
-    sensor_entity_id = config.get(CONF_SENSOR)
+    name = config[CONF_NAME]
+    switch_entity_id = config[CONF_HUMIDIFIER]
+    sensor_entity_id = config[CONF_SENSOR]
     min_humidity = config.get(CONF_MIN_HUMIDITY)
     max_humidity = config.get(CONF_MAX_HUMIDITY)
     target_humidity = config.get(CONF_TARGET_HUMIDITY)
     device_class = config.get(CONF_DEVICE_CLASS)
     min_cycle_duration = config.get(CONF_MIN_DUR)
     sensor_stale_duration = config.get(CONF_STALE_DURATION)
-    dry_tolerance = config.get(CONF_DRY_TOLERANCE)
-    wet_tolerance = config.get(CONF_WET_TOLERANCE)
+    dry_tolerance = config[CONF_DRY_TOLERANCE]
+    wet_tolerance = config[CONF_WET_TOLERANCE]
     keep_alive = config.get(CONF_KEEP_ALIVE)
     initial_state = config.get(CONF_INITIAL_STATE)
     away_humidity = config.get(CONF_AWAY_HUMIDITY)
