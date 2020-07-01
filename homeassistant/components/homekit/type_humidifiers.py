@@ -179,7 +179,7 @@ class HumidifierDehumidifier(HomeAccessory):
         if CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER in char_values:
             hk_value = char_values[CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER]
             if self._hk_device_class != hk_value:
-                _LOGGER.error(f"{CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER} is not supported")
+                _LOGGER.error("%s is not supported", CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER)
 
         if CHAR_ACTIVE in char_values:
             self.call_service(
