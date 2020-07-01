@@ -168,9 +168,11 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         """Update the clients state."""
 
         if self.client.last_updated == SOURCE_EVENT:
+            is_wired = self.is_wired
+            event = self.client.event.event
 
-            if (self.is_wired and self.client.event.event in WIRED_CONNECTION) or (
-                not self.is_wired and self.client.event.event in WIRELESS_CONNECTION
+            if (is_wired and event in WIRED_CONNECTION) or (
+                not is_wired and event in WIRELESS_CONNECTION
             ):
                 self._is_connected = True
                 self.schedule_update = False
