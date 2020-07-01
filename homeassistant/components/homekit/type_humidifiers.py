@@ -23,7 +23,7 @@ from homeassistant.const import (
     UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -68,8 +68,6 @@ class HumidifierDehumidifier(HomeAccessory):
     def __init__(self, *args):
         """Initialize a HumidifierDehumidifier accessory object."""
         super().__init__(*args, category=CATEGORY_HUMIDIFIER)
-        min_humidity, max_humidity = self.get_humidity_range_from_state(state)
-
         self.chars = []
         state = self.hass.states.get(self.entity_id)
         device_class = state.attributes.get(ATTR_DEVICE_CLASS, DEVICE_CLASS_HUMIDIFIER)
@@ -97,6 +95,7 @@ class HumidifierDehumidifier(HomeAccessory):
             CHAR_CURRENT_HUMIDITY, value=0
         )
 
+        min_humidity, max_humidity = self.get_humidity_range_from_state(state)
         self.char_target_humidity = serv_humidifier_dehumidifier.configure_char(
             self._target_humidity_char_name,
             value=45,
@@ -120,7 +119,7 @@ class HumidifierDehumidifier(HomeAccessory):
         if self.linked_humidity_sensor:
             humidity_state = self.hass.states.get(self.linked_humidity_sensor)
             if humidity_state:
-                self._async_update_current_humidity(None, None, humidity_state)
+                self._async_update_current_humidity(humidity_state)
 
     async def run_handler(self):
         """Handle accessory driver started event.
@@ -128,18 +127,20 @@ class HumidifierDehumidifier(HomeAccessory):
         Run inside the Home Assistant event loop.
         """
         if self.linked_humidity_sensor:
-            async_track_state_change(
+            async_track_state_change_event(
                 self.hass,
-                self.linked_humidity_sensor,
-                self._async_update_current_humidity,
+                [self.linked_humidity_sensor],
+                self.async_update_current_humidity_event,
             )
 
         await super().run_handler()
 
     @callback
-    def _async_update_current_humidity(
-        self, entity_id=None, old_state=None, new_state=None
-    ):
+    def async_update_current_humidity_event(self, event):
+        """Handle state change event listener callback."""
+        self._async_update_current_humidity(event.data.get("new_state"))
+
+    def _async_update_current_humidity(self, new_state):
         """Handle linked humidity sensor state change to update HomeKit value."""
         if new_state is None:
             return
@@ -163,14 +164,32 @@ class HumidifierDehumidifier(HomeAccessory):
 
     def _set_chars(self, char_values):
         _LOGGER.debug("HumidifierDehumidifier _set_chars: %s", char_values)
+        events = []
+        params = {}
+        service = None
 
         if CHAR_ACTIVE in char_values:
+            service = SERVICE_TURN_ON if char_values[CHAR_ACTIVE] else SERVICE_TURN_OFF
+            events.append(f"{CHAR_ACTIVE} to {char_values[CHAR_ACTIVE]}")
+
+        if CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER in char_values:
+            # We support either humidifiers or dehumidifiers. If incompatible setting is requested
+            # then we switch off the device to avoid humidifying when the user wants to dehumidify and vice versa
+            hk_value = char_values[CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER]
+            if (self._hk_device_class == HC_HUMIDIFIER and hk_value == 0) or (
+                self._hk_device_class == HC_DEHUMIDIFIER and hk_value == 1
+            ):
+                service = SERVICE_TURN_OFF
+                events.append(
+                    f"{CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER} to {char_values[CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER]}"
+                )
+
+        if service:
+            params[ATTR_ENTITY_ID] = self.entity_id
             self.call_service(
-                DOMAIN,
-                SERVICE_TURN_ON if char_values[CHAR_ACTIVE] else SERVICE_TURN_OFF,
-                {ATTR_ENTITY_ID: self.entity_id},
-                f"{CHAR_ACTIVE} to {char_values[CHAR_ACTIVE]}",
+                DOMAIN, service, params, ", ".join(events),
             )
+
         if self._target_humidity_char_name in char_values:
             humidity = round(char_values[self._target_humidity_char_name])
             self.call_service(
@@ -179,30 +198,13 @@ class HumidifierDehumidifier(HomeAccessory):
                 {ATTR_ENTITY_ID: self.entity_id, ATTR_HUMIDITY: humidity},
                 f"{self._target_humidity_char_name} to {char_values[self._target_humidity_char_name]}{UNIT_PERCENTAGE}",
             )
-        if CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER in char_values:
-            # We support either humidifiers or dehumidifiers. If incompatible setting is requested
-            # then we switch off the device to avoid humidifying when the user wants to dehumidify and vice versa
-            hk_value = char_values[CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER]
-            if (self._hk_device_class == HC_HUMIDIFIER and hk_value == 0) or (
-                self._hk_device_class == HC_DEHUMIDIFIER and hk_value == 1
-            ):
-                self.call_service(
-                    DOMAIN,
-                    SERVICE_TURN_OFF,
-                    {ATTR_ENTITY_ID: self.entity_id},
-                    f"{CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER} to {char_values[CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER]}",
-                )
 
     def get_humidity_range_from_state(self, state):
         """Return min and max humidity range."""
-        max_humidity = state.attributes.get(
-            ATTR_MAX_HUMIDITY, DEFAULT_MAX_HUMIDITY
-        )
+        max_humidity = state.attributes.get(ATTR_MAX_HUMIDITY, DEFAULT_MAX_HUMIDITY)
         max_humidity = round(max_humidity)
 
-        min_humidity = state.attributes.get(
-            ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY
-        )
+        min_humidity = state.attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY)
         min_humidity = round(min_humidity)
 
         return max(min_humidity, 0), min(max_humidity, 100)

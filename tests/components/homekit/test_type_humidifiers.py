@@ -31,6 +31,7 @@ from homeassistant.components.humidifier.const import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_HUMIDITY,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -288,7 +289,8 @@ async def test_hygrostat_get_humidity_range(hass, hk_driver, cls):
         entity_id, STATE_OFF, {ATTR_MIN_HUMIDITY: 40, ATTR_MAX_HUMIDITY: 45}
     )
     await hass.async_block_till_done()
-    assert acc.get_humidity_range() == (40, 45)
+    state = hass.states.get(entity_id)
+    assert acc.get_humidity_range_from_state(state) == (40, 45)
 
 
 async def test_humidifier_with_linked_humidity_sensor(hass, hk_driver, cls):
@@ -296,7 +298,9 @@ async def test_humidifier_with_linked_humidity_sensor(hass, hk_driver, cls):
     humidity_sensor_entity_id = "sensor.bedroom_humidity"
 
     hass.states.async_set(
-        humidity_sensor_entity_id, "42.0", {ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY}
+        humidity_sensor_entity_id,
+        "42.0",
+        {ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY, ATTR_UNIT_OF_MEASUREMENT: "%"},
     )
     await hass.async_block_till_done()
     entity_id = "humidifier.test"

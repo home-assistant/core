@@ -42,6 +42,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PORT,
@@ -1097,7 +1098,9 @@ async def test_homekit_finds_linked_humidity_sensors(
     )
 
     hass.states.async_set(
-        humidity_sensor.entity_id, "42%", {ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY},
+        humidity_sensor.entity_id,
+        "42",
+        {ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY, ATTR_UNIT_OF_MEASUREMENT: "%"},
     )
     hass.states.async_set(humidifier.entity_id, STATE_ON)
 
