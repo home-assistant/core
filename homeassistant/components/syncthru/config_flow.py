@@ -40,23 +40,31 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_UDN])
         self._abort_if_unique_id_configured()
 
-        url = discovery_info.get(
-            ssdp.ATTR_UPNP_PRESENTATION_URL,
-            f"http://{urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname}/",
+        self.url = url_normalize(
+            discovery_info.get(
+                ssdp.ATTR_UPNP_PRESENTATION_URL,
+                f"http://{urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname}/",
+            )
         )
-        if any(x.data[CONF_URL] == url for x in self._async_current_entries()):
+
+        for existing_entry in (
+            x for x in self._async_current_entries() if x.data[CONF_URL] == self.url
+        ):
+            # Update unique id of entry with the same URL
+            if not existing_entry.unique_id:
+                await self.hass.config_entries.async_update_entry(
+                    existing_entry, unique_id=discovery_info[ssdp.ATTR_UPNP_UDN]
+                )
             return self.async_abort(reason="already_configured")
 
-        name = discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
-        if name:
+        self.name = discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
+        if self.name:
             # Remove trailing " (ip)" if present for consistency with user driven config
-            name = re.sub(r"\s+\([\d.]+\)\s*$", "", name)
+            self.name = re.sub(r"\s+\([\d.]+\)\s*$", "", self.name)
 
-        self.url = url
-        self.name = name
         # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {  # pylint: disable=no-member
-            CONF_NAME: name
+            CONF_NAME: self.name
         }
         return await self.async_step_confirm()
 
