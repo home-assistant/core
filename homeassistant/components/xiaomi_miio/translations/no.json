@@ -7,6 +7,7 @@
         "error": {
             "no_device_selected": "Ingen enhet valgt, vennligst velg en enhet."
         },
+        "flow_title": "Xiaomi Miio: {navn}",
         "step": {
             "gateway": {
                 "data": {
@@ -14,7 +15,7 @@
                     "name": "Navnet p\u00e5 gatewayen",
                     "token": "API-token"
                 },
-                "description": "Du trenger API-tilgangstoken, se [https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token](https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token) for instruksjoner.",
+                "description": "Du trenger API-tokenet p\u00e5 32 tegn, se https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token for instruksjoner. V\u00e6r oppmerksom p\u00e5 at dette tokenet er forskjellig fra n\u00f8kkelen som brukes av Xiaomi Aqara-integreringen.",
                 "title": "Koble til en Xiaomi Gateway"
             },
             "user": {

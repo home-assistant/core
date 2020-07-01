@@ -94,12 +94,12 @@ class AlmondFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
             data={"type": TYPE_LOCAL, "host": user_input["host"]},
         )
 
-    async def async_step_hassio(self, user_input=None):
+    async def async_step_hassio(self, discovery_info):
         """Receive a Hass.io discovery."""
         if self._async_current_entries():
             return self.async_abort(reason="already_setup")
 
-        self.hassio_discovery = user_input
+        self.hassio_discovery = discovery_info
 
         return await self.async_step_hassio_confirm()
 

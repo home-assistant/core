@@ -58,10 +58,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Timeout while connecting to Smile")
         raise ConfigEntryNotReady
 
+    update_interval = timedelta(seconds=60)
     if api.smile_type == "power":
         update_interval = timedelta(seconds=10)
-    else:
-        update_interval = timedelta(seconds=60)
 
     async def async_update_data():
         """Update data via API endpoint."""
@@ -102,9 +101,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sw_version=api.smile_version[0],
     )
 
-    platforms = ALL_PLATFORMS
-
     single_master_thermostat = api.single_master_thermostat()
+
+    platforms = ALL_PLATFORMS
     if single_master_thermostat is None:
         platforms = SENSOR_PLATFORMS
 
@@ -165,8 +164,6 @@ class SmileGateway(Entity):
     @property
     def name(self):
         """Return the name of the entity, if any."""
-        if not self._name:
-            return None
         return self._name
 
     @property

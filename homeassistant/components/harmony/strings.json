@@ -28,7 +28,8 @@
         "description": "Adjust Harmony Hub Options",
         "data": {
           "activity": "The default activity to execute when none is specified.",
-          "delay_secs": "The delay between sending commands."
+          "delay_secs": "The delay between sending commands.",
+          "activity_notify": "Update current activity on start of activity switch."
         }
       }
     }

@@ -86,6 +86,12 @@ async def test_attributes(hass, setup_comp):
     state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_CLOSED
     assert state.attributes[ATTR_FRIENDLY_NAME] == DEFAULT_NAME
+    assert state.attributes[ATTR_ENTITY_ID] == [
+        DEMO_COVER,
+        DEMO_COVER_POS,
+        DEMO_COVER_TILT,
+        DEMO_TILT,
+    ]
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
     assert ATTR_CURRENT_POSITION not in state.attributes

@@ -156,14 +156,18 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info):
         """Prepare configuration for a discovered forked-daapd device."""
-        if not (
-            discovery_info.get("properties")
-            and int(discovery_info["properties"].get("mtd-version", "0").split(".")[0])
-            >= 27
-            and discovery_info["properties"].get("Machine Name")
+        version_num = 0
+        if discovery_info.get("properties") and discovery_info["properties"].get(
+            "Machine Name"
         ):
+            try:
+                version_num = int(
+                    discovery_info["properties"].get("mtd-version", "0").split(".")[0]
+                )
+            except ValueError:
+                pass
+        if version_num < 27:
             return self.async_abort(reason="not_forked_daapd")
-
         await self.async_set_unique_id(discovery_info["properties"]["Machine Name"])
         self._abort_if_unique_id_configured()
 
