@@ -162,6 +162,9 @@ def get_accessory(hass, driver, state, aid, config):
     elif state.domain == "fan":
         a_type = "Fan"
 
+    elif state.domain == "humidifier":
+        a_type = "HumidifierDehumidifier"
+
     elif state.domain == "light":
         a_type = "Light"
 
