@@ -5,9 +5,10 @@ import unittest
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder.const import DATA_INSTANCE
-from homeassistant.components.recorder.models import Events, States
+from homeassistant.components.recorder.models import Events, RecorderRuns, States
 from homeassistant.components.recorder.purge import purge_old_data
 from homeassistant.components.recorder.util import session_scope
+from homeassistant.util import dt as dt_util
 
 from tests.async_mock import patch
 from tests.common import get_test_home_assistant, init_recorder_component
@@ -21,8 +22,9 @@ class TestRecorderPurge(unittest.TestCase):
         self.hass = get_test_home_assistant()
         init_recorder_component(self.hass)
         self.hass.start()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -93,6 +95,32 @@ class TestRecorderPurge(unittest.TestCase):
                     )
                 )
 
+    def _add_test_recorder_runs(self):
+        """Add a few recorder_runs for testing."""
+        now = datetime.now()
+        five_days_ago = now - timedelta(days=5)
+        eleven_days_ago = now - timedelta(days=11)
+
+        self.hass.block_till_done()
+        self.hass.data[DATA_INSTANCE].block_till_done()
+
+        with recorder.session_scope(hass=self.hass) as session:
+            for rec_id in range(6):
+                if rec_id < 2:
+                    timestamp = eleven_days_ago
+                elif rec_id < 4:
+                    timestamp = five_days_ago
+                else:
+                    timestamp = now
+
+                session.add(
+                    RecorderRuns(
+                        start=timestamp,
+                        created=dt_util.utcnow(),
+                        end=timestamp + timedelta(days=1),
+                    )
+                )
+
     def test_purge_old_states(self):
         """Test deleting old states."""
         self._add_test_states()
@@ -102,9 +130,16 @@ class TestRecorderPurge(unittest.TestCase):
             assert states.count() == 6
 
             # run purge_old_data()
-            purge_old_data(self.hass.data[DATA_INSTANCE], 4, repack=False)
+            finished = purge_old_data(self.hass.data[DATA_INSTANCE], 4, repack=False)
+            assert not finished
+            assert states.count() == 4
 
-            # we should only have 2 states left after purging
+            finished = purge_old_data(self.hass.data[DATA_INSTANCE], 4, repack=False)
+            assert not finished
+            assert states.count() == 2
+
+            finished = purge_old_data(self.hass.data[DATA_INSTANCE], 4, repack=False)
+            assert finished
             assert states.count() == 2
 
     def test_purge_old_events(self):
@@ -116,9 +151,17 @@ class TestRecorderPurge(unittest.TestCase):
             assert events.count() == 6
 
             # run purge_old_data()
-            purge_old_data(self.hass.data[DATA_INSTANCE], 4, repack=False)
+            finished = purge_old_data(self.hass.data[DATA_INSTANCE], 4, repack=False)
+            assert not finished
+            assert events.count() == 4
+
+            finished = purge_old_data(self.hass.data[DATA_INSTANCE], 4, repack=False)
+            assert not finished
+            assert events.count() == 2
 
             # we should only have 2 events left
+            finished = purge_old_data(self.hass.data[DATA_INSTANCE], 4, repack=False)
+            assert finished
             assert events.count() == 2
 
     def test_purge_method(self):
@@ -126,6 +169,7 @@ class TestRecorderPurge(unittest.TestCase):
         service_data = {"keep_days": 4}
         self._add_test_events()
         self._add_test_states()
+        self._add_test_recorder_runs()
 
         # make sure we start with 6 states
         with session_scope(hass=self.hass) as session:
@@ -134,6 +178,9 @@ class TestRecorderPurge(unittest.TestCase):
 
             events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
             assert events.count() == 6
+
+            recorder_runs = session.query(RecorderRuns)
+            assert recorder_runs.count() == 7
 
             self.hass.data[DATA_INSTANCE].block_till_done()
 
@@ -161,6 +208,9 @@ class TestRecorderPurge(unittest.TestCase):
             # now we should only have 2 events left
             assert events.count() == 2
 
+            # now we should only have 3 recorder runs left
+            assert recorder_runs.count() == 3
+
             assert not (
                 "EVENT_TEST_PURGE" in (event.event_type for event in events.all())
             )
@@ -174,6 +224,6 @@ class TestRecorderPurge(unittest.TestCase):
                 self.hass.block_till_done()
                 self.hass.data[DATA_INSTANCE].block_till_done()
                 assert (
-                    mock_logger.debug.mock_calls[3][1][0]
+                    mock_logger.debug.mock_calls[5][1][0]
                     == "Vacuuming SQL DB to free space"
                 )

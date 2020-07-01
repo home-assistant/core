@@ -119,6 +119,7 @@ async def test_cover(m1, hass, zha_device_joined_restored, zigpy_cover_device):
     entity_id = await find_entity_id(DOMAIN, zha_device, hass)
     assert entity_id is not None
 
+    await async_enable_traffic(hass, [zha_device], enabled=False)
     # test that the cover was created and that it is unavailable
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
@@ -207,6 +208,7 @@ async def test_shade(hass, zha_device_joined_restored, zigpy_shade_device):
     entity_id = await find_entity_id(DOMAIN, zha_device, hass)
     assert entity_id is not None
 
+    await async_enable_traffic(hass, [zha_device], enabled=False)
     # test that the cover was created and that it is unavailable
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
@@ -355,6 +357,7 @@ async def test_keen_vent(hass, zha_device_joined_restored, zigpy_keen_vent):
     entity_id = await find_entity_id(DOMAIN, zha_device, hass)
     assert entity_id is not None
 
+    await async_enable_traffic(hass, [zha_device], enabled=False)
     # test that the cover was created and that it is unavailable
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 

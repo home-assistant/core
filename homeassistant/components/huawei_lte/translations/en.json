@@ -16,6 +16,7 @@
             "response_error": "Unknown error from device",
             "unknown_connection_error": "Unknown error connecting to device"
         },
+        "flow_title": "Huawei LTE: {name}",
         "step": {
             "user": {
                 "data": {

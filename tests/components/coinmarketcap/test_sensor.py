@@ -23,10 +23,7 @@ class TestCoinMarketCapSensor(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.config = VALID_CONFIG
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     @patch(
         "coinmarketcap.Market.ticker",

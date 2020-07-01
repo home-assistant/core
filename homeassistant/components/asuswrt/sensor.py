@@ -49,6 +49,7 @@ class AsuswrtSensor(Entity):
         self._devices = None
         self._rates = None
         self._speed = None
+        self._connect_error = False
 
     @property
     def name(self):
@@ -62,9 +63,23 @@ class AsuswrtSensor(Entity):
 
     async def async_update(self):
         """Fetch status from asuswrt."""
-        self._devices = await self._api.async_get_connected_devices()
-        self._rates = await self._api.async_get_bytes_total()
-        self._speed = await self._api.async_get_current_transfer_rates()
+        try:
+            self._devices = await self._api.async_get_connected_devices()
+            self._rates = await self._api.async_get_bytes_total()
+            self._speed = await self._api.async_get_current_transfer_rates()
+            if self._connect_error:
+                self._connect_error = False
+                _LOGGER.error(
+                    "Reconnected to ASUS router for %s update", self.entity_id
+                )
+        except OSError as err:
+            if not self._connect_error:
+                self._connect_error = True
+                _LOGGER.error(
+                    "Error connecting to ASUS router for %s update: %s",
+                    self.entity_id,
+                    err,
+                )
 
 
 class AsuswrtDevicesSensor(AsuswrtSensor):

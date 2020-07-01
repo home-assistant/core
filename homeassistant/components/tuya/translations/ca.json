@@ -14,7 +14,7 @@
                 "data": {
                     "country_code": "El teu codi de pa\u00eds (per exemple, 1 per l'EUA o 86 per la Xina)",
                     "password": "Contrasenya",
-                    "platform": "L\u2019aplicaci\u00f3 on es registra el vostre compte",
+                    "platform": "L'aplicaci\u00f3 on es registra el teu compte",
                     "username": "Nom d'usuari"
                 },
                 "description": "Introdueix la teva credencial de Tuya.",

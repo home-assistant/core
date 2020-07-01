@@ -4,12 +4,11 @@ import unittest
 
 import pytest
 
-from homeassistant.components import script
-from homeassistant.components.script import DOMAIN
+from homeassistant.components import logbook, script
+from homeassistant.components.script import DOMAIN, EVENT_SCRIPT_STARTED
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
-    EVENT_SCRIPT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -23,6 +22,7 @@ from homeassistant.setup import async_setup_component, setup_component
 
 from tests.async_mock import Mock, patch
 from tests.common import get_test_home_assistant
+from tests.components.logbook.test_init import MockLazyEventPartialState
 
 ENTITY_ID = "script.test"
 
@@ -73,8 +73,9 @@ class TestScriptComponent(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    # pylint: disable=invalid-name
-    def tearDown(self):
+        self.addCleanup(self.tear_down_cleanup)
+
+    def tear_down_cleanup(self):
         """Stop down everything that was started."""
         self.hass.stop()
 
@@ -467,3 +468,38 @@ async def test_config(hass):
     test_script = hass.states.get("script.test_script")
     assert test_script.name == "Script Name"
     assert test_script.attributes["icon"] == "mdi:party"
+
+
+async def test_logbook_humanify_script_started_event(hass):
+    """Test humanifying script started event."""
+    hass.config.components.add("recorder")
+    await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "logbook", {})
+    entity_attr_cache = logbook.EntityAttributeCache(hass)
+
+    event1, event2 = list(
+        logbook.humanify(
+            hass,
+            [
+                MockLazyEventPartialState(
+                    EVENT_SCRIPT_STARTED,
+                    {ATTR_ENTITY_ID: "script.hello", ATTR_NAME: "Hello Script"},
+                ),
+                MockLazyEventPartialState(
+                    EVENT_SCRIPT_STARTED,
+                    {ATTR_ENTITY_ID: "script.bye", ATTR_NAME: "Bye Script"},
+                ),
+            ],
+            entity_attr_cache,
+        )
+    )
+
+    assert event1["name"] == "Hello Script"
+    assert event1["domain"] == "script"
+    assert event1["message"] == "started"
+    assert event1["entity_id"] == "script.hello"
+
+    assert event2["name"] == "Bye Script"
+    assert event2["domain"] == "script"
+    assert event2["message"] == "started"
+    assert event2["entity_id"] == "script.bye"

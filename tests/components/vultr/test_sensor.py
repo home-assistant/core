@@ -51,10 +51,7 @@ class TestVultrSensorSetup(unittest.TestCase):
                 CONF_MONITORED_CONDITIONS: ["pending_charges"],
             },
         ]
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     @requests_mock.Mocker()
     def test_sensor(self, mock):

@@ -12,6 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_LANGUAGES = ["zh"]
 DEFAULT_LANG = "zh"
+SUPPORTED_PERSON = [0, 1, 3, 4, 5, 103, 106, 110, 111]
 
 CONF_APP_ID = "app_id"
 CONF_SECRET_KEY = "secret_key"
@@ -35,9 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_VOLUME, default=5): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=15)
         ),
-        vol.Optional(CONF_PERSON, default=0): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=4)
-        ),
+        vol.Optional(CONF_PERSON, default=0): vol.In(SUPPORTED_PERSON),
     }
 )
 

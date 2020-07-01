@@ -33,6 +33,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
+    help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_payload,
@@ -321,6 +322,13 @@ async def test_status_invalid_json(hass, mqtt_mock):
     assert state.state == STATE_UNKNOWN
 
 
+async def test_availability_when_connection_lost(hass, mqtt_mock):
+    """Test availability after MQTT disconnection."""
+    await help_test_availability_when_connection_lost(
+        hass, mqtt_mock, vacuum.DOMAIN, DEFAULT_CONFIG_2
+    )
+
+
 async def test_availability_without_topic(hass, mqtt_mock):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
@@ -397,7 +405,7 @@ async def test_unique_id(hass, mqtt_mock):
             },
         ]
     }
-    await help_test_unique_id(hass, vacuum.DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, vacuum.DOMAIN, config)
 
 
 async def test_discovery_removal_vacuum(hass, mqtt_mock, caplog):
