@@ -1,6 +1,4 @@
 """Test different accessory types: HumidifierDehumidifier."""
-from collections import namedtuple
-
 from pyhap.const import (
     CATEGORY_HUMIDIFIER,
     HAP_REPR_AID,
@@ -8,7 +6,6 @@ from pyhap.const import (
     HAP_REPR_IID,
     HAP_REPR_VALUE,
 )
-import pytest
 
 from homeassistant.components.homekit.const import (
     ATTR_VALUE,
