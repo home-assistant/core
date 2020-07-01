@@ -5,7 +5,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
@@ -15,7 +14,6 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import (
     CONF_COVERS,
-    CONF_DEVICE,
     CONF_NAME,
     CONF_VALUE_TEMPLATE,
     STATE_CLOSED,
@@ -50,13 +48,6 @@ COVER_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_CHANNEL): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    }
-)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA),
-        vol.Optional(CONF_DEVICE): cv.string,
     }
 )
 
@@ -181,21 +172,22 @@ class BeckerEntity(CoverEntity, RestoreEntity):
 
     async def async_update(self):
         """Update the position of the cover."""
-        if self._template is not None:
-            try:
-                state = self._template.async_render().lower()
-                if state in _VALID_STATES:
-                    if state in ("true", STATE_OPEN):
-                        self._position = 100
-                    else:
-                        self._position = 0
+        if self._template is None:
+            return
+        try:
+            state = self._template.async_render().lower()
+            if state in _VALID_STATES:
+                if state in ("true", STATE_OPEN):
+                    self._position = 100
                 else:
-                    _LOGGER.error(
-                        "Received invalid cover is_on state: %s. Expected: %s",
-                        state,
-                        ", ".join(_VALID_STATES),
-                    )
-                    self._position = None
-            except TemplateError as ex:
-                _LOGGER.error(ex)
+                    self._position = 0
+            else:
+                _LOGGER.error(
+                    "Received invalid cover is_on state: %s. Expected: %s",
+                    state,
+                    ", ".join(_VALID_STATES),
+                )
                 self._position = None
+        except TemplateError as ex:
+            _LOGGER.error(ex)
+            self._position = None
