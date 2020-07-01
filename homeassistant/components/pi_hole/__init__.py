@@ -76,8 +76,7 @@ async def async_setup_entry(hass, entry):
     # Move API key to options
     if CONF_API_KEY in entry.data:
         data = {**entry.data}
-        api_key = entry.data[CONF_API_KEY]
-        data.pop(CONF_API_KEY)
+        api_key = data.pop(CONF_API_KEY)
         hass.config_entries.async_update_entry(
             entry, data=data, options={CONF_API_KEY: api_key}
         )
