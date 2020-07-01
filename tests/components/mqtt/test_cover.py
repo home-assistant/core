@@ -30,6 +30,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
+    help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_payload,
@@ -1735,6 +1736,13 @@ async def test_find_in_range_altered_inverted(hass, mqtt_mock):
     assert mqtt_cover.find_in_range_from_percent(60, "cover") == 120
 
 
+async def test_availability_when_connection_lost(hass, mqtt_mock):
+    """Test availability after MQTT disconnection."""
+    await help_test_availability_when_connection_lost(
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
+    )
+
+
 async def test_availability_without_topic(hass, mqtt_mock):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
@@ -1831,7 +1839,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     )
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass, mqtt_mock):
     """Test unique_id option only creates one cover per id."""
     config = {
         cover.DOMAIN: [
@@ -1849,7 +1857,7 @@ async def test_unique_id(hass):
             },
         ]
     }
-    await help_test_unique_id(hass, cover.DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, cover.DOMAIN, config)
 
 
 async def test_discovery_removal_cover(hass, mqtt_mock, caplog):

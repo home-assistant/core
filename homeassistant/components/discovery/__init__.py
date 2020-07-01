@@ -47,6 +47,7 @@ SERVICE_XIAOMI_GW = "xiaomi_gw"
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_DAIKIN: "daikin",
     SERVICE_TELLDUSLIVE: "tellduslive",
+    "logitech_mediaserver": "squeezebox",
 }
 
 SERVICE_HANDLERS = {
@@ -57,7 +58,6 @@ SERVICE_HANDLERS = {
     SERVICE_APPLE_TV: ("apple_tv", None),
     SERVICE_ENIGMA2: ("media_player", "enigma2"),
     SERVICE_WINK: ("wink", None),
-    SERVICE_XIAOMI_GW: ("xiaomi_aqara", None),
     SERVICE_SABNZBD: ("sabnzbd", None),
     SERVICE_SAMSUNG_PRINTER: ("sensor", "syncthru"),
     SERVICE_KONNECTED: ("konnected", None),
@@ -65,8 +65,6 @@ SERVICE_HANDLERS = {
     SERVICE_FREEBOX: ("freebox", None),
     SERVICE_YEELIGHT: ("yeelight", None),
     "yamaha": ("media_player", "yamaha"),
-    "logitech_mediaserver": ("media_player", "squeezebox"),
-    "denonavr": ("media_player", "denonavr"),
     "frontier_silicon": ("media_player", "frontier_silicon"),
     "openhome": ("media_player", "openhome"),
     "bose_soundtouch": ("media_player", "soundtouch"),
@@ -82,6 +80,7 @@ OPTIONAL_SERVICE_HANDLERS = {SERVICE_DLNA_DMR: ("media_player", "dlna_dmr")}
 MIGRATED_SERVICE_HANDLERS = [
     "axis",
     "deconz",
+    "denonavr",
     "esphome",
     "google_cast",
     SERVICE_HEOS,
@@ -92,6 +91,7 @@ MIGRATED_SERVICE_HANDLERS = [
     "sonos",
     "songpal",
     SERVICE_WEMO,
+    SERVICE_XIAOMI_GW,
 ]
 
 DEFAULT_ENABLED = (

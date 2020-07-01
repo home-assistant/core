@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "no_results": "Keng Resultater. Prob\u00e9ier mat enger aanerer Statioun/Adress"
+        },
+        "step": {
+            "station": {
+                "data": {
+                    "station": "Statioun/Adress"
+                },
+                "title": "Statioun/Adress aginn"
+            },
+            "station_select": {
+                "data": {
+                    "station": "Statioun/Adress"
+                },
+                "title": "Statioun/Adress auswielen"
+            },
+            "user": {
+                "data": {
+                    "host": "Apparat",
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                },
+                "title": "Mat der HVV API verbannen"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "filter": "Zeilen auswielen",
+                    "offset": "Offset (Minutten)"
+                },
+                "title": "Optiounen"
+            }
+        }
+    }
+}

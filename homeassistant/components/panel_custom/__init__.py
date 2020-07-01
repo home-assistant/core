@@ -23,8 +23,6 @@ CONF_TRUST_EXTERNAL_SCRIPT = "trust_external_script"
 CONF_URL_EXCLUSIVE_GROUP = "url_exclusive_group"
 CONF_REQUIRE_ADMIN = "require_admin"
 
-MSG_URL_CONFLICT = "Pass in only one of webcomponent_path, module_url or js_url"
-
 DEFAULT_EMBED_IFRAME = False
 DEFAULT_TRUST_EXTERNAL = False
 
@@ -33,39 +31,48 @@ LEGACY_URL = "/api/panel_custom/{}"
 
 PANEL_DIR = "panels"
 
+
+def url_validator(value):
+    """Validate required urls are specified."""
+    has_js_url = CONF_JS_URL in value
+    has_html_url = CONF_WEBCOMPONENT_PATH in value
+    has_module_url = CONF_MODULE_URL in value
+
+    if has_html_url and (has_js_url or has_module_url):
+        raise vol.Invalid("You cannot specify other urls besides a webcomponent path")
+
+    return value
+
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             cv.ensure_list,
             [
-                vol.Schema(
-                    {
-                        vol.Required(CONF_COMPONENT_NAME): cv.string,
-                        vol.Optional(CONF_SIDEBAR_TITLE): cv.string,
-                        vol.Optional(CONF_SIDEBAR_ICON, default=DEFAULT_ICON): cv.icon,
-                        vol.Optional(CONF_URL_PATH): cv.string,
-                        vol.Optional(CONF_CONFIG): dict,
-                        vol.Exclusive(
-                            CONF_WEBCOMPONENT_PATH,
-                            CONF_URL_EXCLUSIVE_GROUP,
-                            msg=MSG_URL_CONFLICT,
-                        ): cv.string,
-                        vol.Exclusive(
-                            CONF_JS_URL, CONF_URL_EXCLUSIVE_GROUP, msg=MSG_URL_CONFLICT
-                        ): cv.string,
-                        vol.Exclusive(
-                            CONF_MODULE_URL,
-                            CONF_URL_EXCLUSIVE_GROUP,
-                            msg=MSG_URL_CONFLICT,
-                        ): cv.string,
-                        vol.Optional(
-                            CONF_EMBED_IFRAME, default=DEFAULT_EMBED_IFRAME
-                        ): cv.boolean,
-                        vol.Optional(
-                            CONF_TRUST_EXTERNAL_SCRIPT, default=DEFAULT_TRUST_EXTERNAL
-                        ): cv.boolean,
-                        vol.Optional(CONF_REQUIRE_ADMIN, default=False): cv.boolean,
-                    }
+                vol.All(
+                    vol.Schema(
+                        {
+                            vol.Required(CONF_COMPONENT_NAME): cv.string,
+                            vol.Optional(CONF_SIDEBAR_TITLE): cv.string,
+                            vol.Optional(
+                                CONF_SIDEBAR_ICON, default=DEFAULT_ICON
+                            ): cv.icon,
+                            vol.Optional(CONF_URL_PATH): cv.string,
+                            vol.Optional(CONF_CONFIG): dict,
+                            vol.Optional(CONF_WEBCOMPONENT_PATH,): cv.string,
+                            vol.Optional(CONF_JS_URL,): cv.string,
+                            vol.Optional(CONF_MODULE_URL,): cv.string,
+                            vol.Optional(
+                                CONF_EMBED_IFRAME, default=DEFAULT_EMBED_IFRAME
+                            ): cv.boolean,
+                            vol.Optional(
+                                CONF_TRUST_EXTERNAL_SCRIPT,
+                                default=DEFAULT_TRUST_EXTERNAL,
+                            ): cv.boolean,
+                            vol.Optional(CONF_REQUIRE_ADMIN, default=False): cv.boolean,
+                        }
+                    ),
+                    url_validator,
                 )
             ],
         )
@@ -102,11 +109,13 @@ async def async_register_panel(
     """Register a new custom panel."""
     if js_url is None and html_url is None and module_url is None:
         raise ValueError("Either js_url, module_url or html_url is required.")
-    if (js_url and html_url) or (module_url and html_url):
-        raise ValueError("Pass in only one of JS url, Module url or HTML url.")
-
+    if html_url and (js_url or module_url):
+        raise ValueError("You cannot specify other paths with an HTML url")
     if config is not None and not isinstance(config, dict):
         raise ValueError("Config needs to be a dictionary.")
+
+    if html_url:
+        _LOGGER.warning("HTML custom panels have been deprecated")
 
     custom_panel_config = {
         "name": webcomponent_name,
@@ -146,6 +155,8 @@ async def async_setup(hass, config):
     if DOMAIN not in config:
         return True
 
+    seen = set()
+
     for panel in config[DOMAIN]:
         name = panel[CONF_COMPONENT_NAME]
 
@@ -160,22 +171,31 @@ async def async_setup(hass, config):
             "require_admin": panel[CONF_REQUIRE_ADMIN],
         }
 
-        panel_path = panel.get(CONF_WEBCOMPONENT_PATH)
-
-        if panel_path is None:
-            panel_path = hass.config.path(PANEL_DIR, f"{name}.html")
-
         if CONF_JS_URL in panel:
             kwargs["js_url"] = panel[CONF_JS_URL]
 
-        elif CONF_MODULE_URL in panel:
+        if CONF_MODULE_URL in panel:
             kwargs["module_url"] = panel[CONF_MODULE_URL]
 
-        elif not await hass.async_add_job(os.path.isfile, panel_path):
-            _LOGGER.error("Unable to find webcomponent for %s: %s", name, panel_path)
-            continue
+        if CONF_MODULE_URL not in panel and CONF_JS_URL not in panel:
+            if name in seen:
+                _LOGGER.warning(
+                    "Got HTML panel with duplicate name %s. Not registering", name
+                )
+                continue
 
-        else:
+            seen.add(name)
+            panel_path = panel.get(CONF_WEBCOMPONENT_PATH)
+
+            if panel_path is None:
+                panel_path = hass.config.path(PANEL_DIR, f"{name}.html")
+
+            if not await hass.async_add_executor_job(os.path.isfile, panel_path):
+                _LOGGER.error(
+                    "Unable to find webcomponent for %s: %s", name, panel_path
+                )
+                continue
+
             url = LEGACY_URL.format(name)
             hass.http.register_static_path(url, panel_path)
             kwargs["html_url"] = url

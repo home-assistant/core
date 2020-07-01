@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -58,7 +59,7 @@ def _blink_startup_wrapper(entry):
         no_prompt=True,
         device_id=DEVICE_ID,
     )
-    blink.refresh_rate = entry.data[CONF_SCAN_INTERVAL]
+    blink.refresh_rate = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     try:
         blink.login_response = entry.data["login_response"]
@@ -91,6 +92,8 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up Blink via config entry."""
+    _async_import_options_from_data_if_missing(hass, entry)
+
     hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(
         _blink_startup_wrapper, entry
     )
@@ -128,6 +131,16 @@ async def async_setup_entry(hass, entry):
     )
 
     return True
+
+
+@callback
+def _async_import_options_from_data_if_missing(hass, entry):
+    options = dict(entry.options)
+    if CONF_SCAN_INTERVAL not in entry.options:
+        options[CONF_SCAN_INTERVAL] = entry.data.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+        )
+        hass.config_entries.async_update_entry(entry, options=options)
 
 
 async def async_unload_entry(hass, entry):

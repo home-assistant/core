@@ -4,6 +4,7 @@
             "already_configured": "Le p\u00e9riph\u00e9rique ONVIF est d\u00e9j\u00e0 configur\u00e9.",
             "already_in_progress": "Le flux de configuration pour le p\u00e9riph\u00e9rique ONVIF est d\u00e9j\u00e0 en cours.",
             "no_h264": "Aucun flux H264 n'\u00e9tait disponible. V\u00e9rifiez la configuration du profil sur votre appareil.",
+            "no_mac": "Impossible de configurer l'ID unique pour le p\u00e9riph\u00e9rique ONVIF.",
             "onvif_error": "Erreur lors de la configuration du p\u00e9riph\u00e9rique ONVIF. Consultez les journaux pour plus d'informations."
         },
         "error": {

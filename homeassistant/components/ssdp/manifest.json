@@ -2,7 +2,7 @@
   "domain": "ssdp",
   "name": "Simple Service Discovery Protocol (SSDP)",
   "documentation": "https://www.home-assistant.io/integrations/ssdp",
-  "requirements": ["defusedxml==0.6.0", "netdisco==2.7.0"],
+  "requirements": ["defusedxml==0.6.0", "netdisco==2.7.1"],
   "after_dependencies": ["zeroconf"],
   "codeowners": []
 }

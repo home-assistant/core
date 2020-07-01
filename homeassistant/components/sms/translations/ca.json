@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device": "Dispositiu"
+                },
+                "title": "Connexi\u00f3 al m\u00f2dem"
+            }
+        }
+    }
+}

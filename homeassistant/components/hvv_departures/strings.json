@@ -1,0 +1,48 @@
+{
+  "title": "HVV Departures",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to the HVV API",
+        "data": {
+          "host": "Host",
+          "username": "Username",
+          "password": "Password"
+        }
+      },
+      "station": {
+        "title": "Enter Station/Address",
+        "data": {
+          "station": "Station/Address"
+        }
+      },
+      "station_select": {
+        "title": "Select Station/Address",
+        "data": {
+          "station": "Station/Address"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "invalid_auth": "Invalid authentication",
+      "no_results": "No results. Try with a different station/address"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options",
+        "description": "Change options for this departure sensor",
+        "data": {
+          "filter": "Select lines",
+          "offset": "Offset (minutes)",
+          "real_time": "Use real time data"
+        }
+      }
+    }
+  }
+}

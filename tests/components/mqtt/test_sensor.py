@@ -13,6 +13,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from .test_common import (
+    help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_payload,
@@ -39,11 +40,7 @@ from .test_common import (
 )
 
 from tests.async_mock import patch
-from tests.common import (
-    MockConfigEntry,
-    async_fire_mqtt_message,
-    async_fire_time_changed,
-)
+from tests.common import async_fire_mqtt_message, async_fire_time_changed
 
 DEFAULT_CONFIG = {
     sensor.DOMAIN: {"platform": "mqtt", "name": "test", "state_topic": "test-topic"}
@@ -232,6 +229,13 @@ async def test_force_update_enabled(hass, mqtt_mock):
     assert len(events) == 2
 
 
+async def test_availability_when_connection_lost(hass, mqtt_mock):
+    """Test availability after MQTT disconnection."""
+    await help_test_availability_when_connection_lost(
+        hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
+    )
+
+
 async def test_availability_without_topic(hass, mqtt_mock):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
@@ -333,7 +337,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     )
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass, mqtt_mock):
     """Test unique id option only creates one sensor per unique_id."""
     config = {
         sensor.DOMAIN: [
@@ -351,7 +355,7 @@ async def test_unique_id(hass):
             },
         ]
     }
-    await help_test_unique_id(hass, sensor.DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, sensor.DOMAIN, config)
 
 
 async def test_discovery_removal_sensor(hass, mqtt_mock, caplog):
@@ -423,9 +427,8 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 
 async def test_entity_device_info_with_hub(hass, mqtt_mock):
     """Test MQTT sensor device registry integration."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    entry.add_to_hass(hass)
-    await async_start(hass, "homeassistant", {}, entry)
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    await async_start(hass, "homeassistant", entry)
 
     registry = await hass.helpers.device_registry.async_get_registry()
     hub = registry.async_get_or_create(
