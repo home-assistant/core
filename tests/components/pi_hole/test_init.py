@@ -205,6 +205,6 @@ async def test_unload(hass):
         await hass.async_block_till_done()
     assert entry.entry_id in hass.data[pi_hole.DOMAIN]
 
-    assert await pi_hole.async_unload_entry(hass, entry)
+    assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.entry_id not in hass.data[pi_hole.DOMAIN]
