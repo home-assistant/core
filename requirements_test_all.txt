@@ -343,7 +343,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200626.1
+home-assistant-frontend==20200629.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -424,7 +424,7 @@ nessclient==0.9.15
 
 # homeassistant.components.discovery
 # homeassistant.components.ssdp
-netdisco==2.7.1
+netdisco==2.8.0
 
 # homeassistant.components.nexia
 nexia==0.9.3
@@ -489,9 +489,15 @@ plexauth==0.0.5
 # homeassistant.components.plex
 plexwebsocket==0.0.11
 
+# homeassistant.components.plum_lightpad
+plumlightpad==0.0.11
+
 # homeassistant.components.mhz19
 # homeassistant.components.serial_pm
 pmsensor==0.4
+
+# homeassistant.components.poolsense
+poolsense==0.0.5
 
 # homeassistant.components.reddit
 praw==6.5.1
@@ -564,7 +570,7 @@ pyblackbird==0.5
 pybotvac==0.0.17
 
 # homeassistant.components.cast
-pychromecast==6.0.0
+pychromecast==7.0.1
 
 # homeassistant.components.coolmaster
 pycoolmasternet==0.0.4
@@ -670,7 +676,7 @@ pymodbus==2.3.0
 pymonoprice==0.3
 
 # homeassistant.components.myq
-pymyq==2.0.4
+pymyq==2.0.5
 
 # homeassistant.components.nut
 pynut2==2.1.2
@@ -961,7 +967,7 @@ ya_ma==0.3.8
 zeroconf==0.27.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.40
+zha-quirks==0.0.41
 
 # homeassistant.components.zha
 zigpy-cc==0.4.4

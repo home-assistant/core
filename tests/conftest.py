@@ -5,7 +5,7 @@ import logging
 import pytest
 import requests_mock as _requests_mock
 
-from homeassistant import core as ha, util
+from homeassistant import core as ha, loader, util
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.providers import homeassistant, legacy_api_password
 from homeassistant.components import mqtt
@@ -15,7 +15,9 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.http import URL
+from homeassistant.const import ATTR_NOW, EVENT_TIME_CHANGED
 from homeassistant.exceptions import ServiceNotFound
+from homeassistant.helpers import event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
 
@@ -315,3 +317,43 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     component = hass.data["mqtt"]
     component.reset_mock()
     return component
+
+
+@pytest.fixture
+def legacy_patchable_time():
+    """Allow time to be patchable by using event listeners instead of asyncio loop."""
+
+    @ha.callback
+    @loader.bind_hass
+    def async_track_point_in_utc_time(hass, action, point_in_time):
+        """Add a listener that fires once after a specific point in UTC time."""
+        # Ensure point_in_time is UTC
+        point_in_time = event.dt_util.as_utc(point_in_time)
+
+        @ha.callback
+        def point_in_time_listener(event):
+            """Listen for matching time_changed events."""
+            now = event.data[ATTR_NOW]
+
+            if now < point_in_time or hasattr(point_in_time_listener, "run"):
+                return
+
+            # Set variable so that we will never run twice.
+            # Because the event bus might have to wait till a thread comes
+            # available to execute this listener it might occur that the
+            # listener gets lined up twice to be executed. This will make
+            # sure the second time it does nothing.
+            setattr(point_in_time_listener, "run", True)
+            async_unsub()
+
+            hass.async_run_job(action, now)
+
+        async_unsub = hass.bus.async_listen(EVENT_TIME_CHANGED, point_in_time_listener)
+
+        return async_unsub
+
+    with patch(
+        "homeassistant.helpers.event.async_track_point_in_utc_time",
+        async_track_point_in_utc_time,
+    ):
+        yield

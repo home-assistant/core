@@ -190,17 +190,16 @@ class NWSWeather(WeatherEntity):
     @property
     def wind_speed(self):
         """Return the current windspeed."""
-        wind_m_s = None
+        wind_km_hr = None
         if self.observation:
-            wind_m_s = self.observation.get("windSpeed")
-        if wind_m_s is None:
+            wind_km_hr = self.observation.get("windSpeed")
+        if wind_km_hr is None:
             return None
-        wind_m_hr = wind_m_s * 3600
 
         if self.is_metric:
-            wind = convert_distance(wind_m_hr, LENGTH_METERS, LENGTH_KILOMETERS)
+            wind = wind_km_hr
         else:
-            wind = convert_distance(wind_m_hr, LENGTH_METERS, LENGTH_MILES)
+            wind = convert_distance(wind_km_hr, LENGTH_KILOMETERS, LENGTH_MILES)
         return round(wind)
 
     @property

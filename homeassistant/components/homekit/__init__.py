@@ -327,9 +327,12 @@ def _async_register_events_and_services(hass: HomeAssistant):
             if HOMEKIT not in hass.data[DOMAIN][entry_id]:
                 continue
             homekit = hass.data[DOMAIN][entry_id][HOMEKIT]
+            if homekit.status == STATUS_RUNNING:
+                _LOGGER.debug("HomeKit is already running")
+                continue
             if homekit.status != STATUS_READY:
                 _LOGGER.warning(
-                    "HomeKit is not ready. Either it is already running or has "
+                    "HomeKit is not ready. Either it is already starting up or has "
                     "been stopped."
                 )
                 continue
@@ -573,6 +576,8 @@ class HomeKit:
         self.status = STATUS_STOPPED
         _LOGGER.debug("Driver stop for %s", self._name)
         self.hass.add_job(self.driver.stop)
+        for acc in self.bridge.accessories.values():
+            acc.async_stop()
 
     @callback
     def _async_configure_linked_sensors(self, ent_reg_ent, device_lookup, state):

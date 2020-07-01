@@ -193,7 +193,7 @@ homeassistant/components/iaqualink/* @flz
 homeassistant/components/icloud/* @Quentame
 homeassistant/components/ign_sismologia/* @exxamalte
 homeassistant/components/incomfort/* @zxdavb
-homeassistant/components/influxdb/* @fabaff
+homeassistant/components/influxdb/* @fabaff @mdegat01
 homeassistant/components/input_boolean/* @home-assistant/core
 homeassistant/components/input_datetime/* @home-assistant/core
 homeassistant/components/input_number/* @home-assistant/core
@@ -318,6 +318,7 @@ homeassistant/components/plex/* @jjlawren
 homeassistant/components/plugwise/* @CoMPaTech @bouwew
 homeassistant/components/plum_lightpad/* @ColinHarrington @prystupa
 homeassistant/components/point/* @fredrike
+homeassistant/components/poolsense/* @haemishkyd
 homeassistant/components/powerwall/* @bdraco @jrester
 homeassistant/components/prometheus/* @knyar
 homeassistant/components/proxmoxve/* @k4ds3 @jhollowe
