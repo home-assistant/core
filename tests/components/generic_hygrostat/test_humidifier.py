@@ -28,7 +28,8 @@ import homeassistant.core as ha
 from homeassistant.core import DOMAIN as HASS_DOMAIN, CoreState, State, callback
 from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, mock_restore_cache
+from tests.common import assert_setup_component, mock_restore_cache, async_fire_time_changed
+import homeassistant.util.dt as dt_util
 
 ENTITY = "humidifier.test"
 ENT_SENSOR = "sensor.test"
@@ -1005,14 +1006,11 @@ async def test_humidity_change_dry_trigger_on_long_enough_3(hass, setup_comp_7):
     calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
-    test_time = datetime.datetime.now(pytz.UTC)
-    _send_time_changed(hass, test_time)
+    assert 0 == len(calls)
+    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=5))
-    await hass.async_block_till_done()
-    assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
@@ -1026,25 +1024,17 @@ async def test_humidity_change_dry_trigger_off_long_enough_3(hass, setup_comp_7)
     calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
-    test_time = datetime.datetime.now(pytz.UTC)
-    _send_time_changed(hass, test_time)
+    assert 0 == len(calls)
+    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=5))
-    await hass.async_block_till_done()
-    assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
     assert HASS_DOMAIN == call.domain
     assert SERVICE_TURN_OFF == call.service
     assert ENT_SWITCH == call.data["entity_id"]
-
-
-def _send_time_changed(hass, now):
-    """Send a time changed event."""
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})
 
 
 @pytest.fixture
@@ -1076,14 +1066,11 @@ async def test_humidity_change_humidifier_trigger_on_long_enough_2(hass, setup_c
     calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
-    test_time = datetime.datetime.now(pytz.UTC)
-    _send_time_changed(hass, test_time)
+    assert 0 == len(calls)
+    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=5))
-    await hass.async_block_till_done()
-    assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
@@ -1097,14 +1084,11 @@ async def test_humidity_change_humidifier_trigger_off_long_enough_2(hass, setup_
     calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
-    test_time = datetime.datetime.now(pytz.UTC)
-    _send_time_changed(hass, test_time)
+    assert 0 == len(calls)
+    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=5))
-    await hass.async_block_till_done()
-    assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
@@ -1460,8 +1444,6 @@ async def test_sensor_stale_duration(hass, setup_comp_1, caplog):
     )
     await hass.async_block_till_done()
 
-    start_time = datetime.datetime.now(pytz.UTC)
-
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -1494,7 +1476,7 @@ async def test_sensor_stale_duration(hass, setup_comp_1, caplog):
     assert STATE_ON == hass.states.get(humidifier_switch).state
 
     # Wait 11 minutes
-    _send_time_changed(hass, start_time + datetime.timedelta(minutes=11))
+    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=11))
     await hass.async_block_till_done()
 
     # 11 minutes later, no news from the sensor : emergency cut off
@@ -1516,7 +1498,7 @@ async def test_sensor_stale_duration(hass, setup_comp_1, caplog):
     assert STATE_OFF == hass.states.get(humidifier_switch).state
 
     # Wait another 11 minutes
-    _send_time_changed(hass, start_time + datetime.timedelta(minutes=11 * 2))
+    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=22))
     await hass.async_block_till_done()
 
     # Still off

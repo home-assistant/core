@@ -143,6 +143,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self._away_humidity = away_humidity
         self._away_fixed = away_fixed
         self._sensor_stale_duration = sensor_stale_duration
+        self._remove_stale_tracking = None
         self._is_away = False
         if not self._device_class:
             self._device_class = DEVICE_CLASS_HUMIDIFIER
@@ -158,13 +159,6 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         async_track_state_change(
             self.hass, self._switch_entity_id, self._async_switch_changed
         )
-
-        if self._sensor_stale_duration:
-            async_track_time_interval(
-                self.hass,
-                self._async_check_sensor_not_responding,
-                self._sensor_stale_duration,
-            )
 
         if self._keep_alive:
             async_track_time_interval(self.hass, self._async_operate, self._keep_alive)
@@ -315,26 +309,26 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         if new_state is None:
             return
 
+        if self._sensor_stale_duration:
+            if self._remove_stale_tracking:
+                self._remove_stale_tracking()
+            self._remove_stale_tracking = async_track_time_interval(
+                self.hass,
+                self._async_sensor_not_responding,
+                self._sensor_stale_duration,
+            )
+
         await self._async_update_humidity(new_state.state)
         await self._async_operate()
         await self.async_update_ha_state()
 
-    async def _async_check_sensor_not_responding(self, now=None):
-        """Check if the sensor has emitted a value during the allowed stale period."""
+    @callback
+    async def _async_sensor_not_responding(self, now=None):
+        """The sensor has not updated a value during the allowed stale period."""
 
-        sensor_state = self.hass.states.get(self._sensor_entity_id)
-
-        if sensor_state.last_updated < now - self._sensor_stale_duration:
-            _LOGGER.debug(
-                "Time is %s, last changed is %s, stale duration is %s",
-                now,
-                sensor_state.last_updated,
-                self._sensor_stale_duration,
-            )
-            _LOGGER.warning("Sensor is stalled, call the emergency stop")
-            await self._async_update_humidity("Stalled")
-
-        return
+        _LOGGER.debug("Sensor has not been updated for %s", now - self.hass.states.get(self._sensor_entity_id).last_updated)
+        _LOGGER.warning("Sensor is stalled, call the emergency stop")
+        await self._async_update_humidity("Stalled")
 
     @callback
     def _async_switch_changed(self, entity_id, old_state, new_state):
