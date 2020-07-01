@@ -54,18 +54,18 @@ def find_coordinates(
     hass: HomeAssistantType, entity_id: str, recursion_history: Optional[list] = None
 ) -> Optional[str]:
     """Find the gps coordinates of the entity in the form of '90.000,180.000'."""
-    entity = hass.states.get(entity_id)
+    entity_state = hass.states.get(entity_id)
 
-    if entity is None:
+    if entity_state is None:
         _LOGGER.error("Unable to find entity %s", entity_id)
         return None
 
     # Check if the entity has location attributes
-    if has_location(entity):
-        return _get_location_from_attributes(entity)
+    if has_location(entity_state):
+        return _get_location_from_attributes(entity_state)
 
     # Check if device is in a zone
-    zone_entity = hass.states.get(f"zone.{entity.state}")
+    zone_entity = hass.states.get(f"zone.{entity_state.state}")
     if has_location(zone_entity):  # type: ignore
         _LOGGER.debug(
             "%s is in %s, getting zone location", entity_id, zone_entity.entity_id  # type: ignore
@@ -76,33 +76,33 @@ def find_coordinates(
     if recursion_history is None:
         recursion_history = []
     recursion_history.append(entity_id)
-    if entity.state in recursion_history:
+    if entity_state.state in recursion_history:
         _LOGGER.error(
             "Circular reference detected while trying to find coordinates of an entity. The state of %s has already been checked.",
-            entity.state,
+            entity_state.state,
         )
         return None
-    _LOGGER.debug("Getting nested entity for state: %s", entity.state)
-    nested_entity = hass.states.get(entity.state)
+    _LOGGER.debug("Getting nested entity for state: %s", entity_state.state)
+    nested_entity = hass.states.get(entity_state.state)
     if nested_entity is not None:
-        _LOGGER.debug("Resolving nested entity_id: %s", entity.state)
-        return find_coordinates(hass, entity.state, recursion_history)
+        _LOGGER.debug("Resolving nested entity_id: %s", entity_state.state)
+        return find_coordinates(hass, entity_state.state, recursion_history)
 
     # Check if state is valid coordinate set
     try:
-        cv.gps(entity.state.split(","))
+        cv.gps(entity_state.state.split(","))
     except vol.Invalid:
         _LOGGER.error(
             "The state of %s is not a valid set of coordinates: %s",
             entity_id,
-            entity.state,
+            entity_state.state,
         )
         return None
     else:
-        return entity.state
+        return entity_state.state
 
 
-def _get_location_from_attributes(entity: State) -> str:
+def _get_location_from_attributes(entity_state: State) -> str:
     """Get the lat/long string from an entities attributes."""
-    attr = entity.attributes
+    attr = entity_state.attributes
     return "{},{}".format(attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
