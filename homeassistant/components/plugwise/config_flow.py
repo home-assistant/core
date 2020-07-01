@@ -40,7 +40,10 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
     websession = async_get_clientsession(hass, verify_ssl=False)
     api = Smile(
-        host=data["host"], password=data["password"], timeout=30, websession=websession
+        host=data[CONF_HOST],
+        password=data[CONF_PASSWORD],
+        timeout=30,
+        websession=websession,
     )
 
     try:
@@ -63,9 +66,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the Plugwise config flow."""
         self.discovery_info = {}
 
-    async def _async_set_unique_id(self, id):
+    async def _async_set_unique_id(self, unique_id):
         """Helperfunction setting the config entry's unique ID."""
-        await self.async_set_unique_id(id)
+        await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
