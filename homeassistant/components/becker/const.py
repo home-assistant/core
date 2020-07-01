@@ -8,6 +8,7 @@ DEVICE_CLASS = "shutter"
 CONF_CHANNEL = "channel"
 CONF_COVERS = "covers"
 CONF_DEVICE = "device"
+CONF_DEVICE_PATH = "device"
 CONF_UNIT = "unit"
 
 CLOSED_POSITION = 0
