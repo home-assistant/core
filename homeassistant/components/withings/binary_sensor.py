@@ -4,7 +4,7 @@ from typing import Callable, List
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PRESENCE,
     DOMAIN as BINARY_SENSOR_DOMAIN,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -26,13 +26,13 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class WithingsHealthBinarySensor(BaseWithingsSensor, BinarySensorDevice):
+class WithingsHealthBinarySensor(BaseWithingsSensor, BinarySensorEntity):
     """Implementation of a Withings sensor."""
 
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self._state_data
+        return self._state_data.value if self._state_data else None
 
     @property
     def device_class(self) -> str:

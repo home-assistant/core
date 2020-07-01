@@ -7,6 +7,7 @@ CONF_PROFILES = "profiles"
 CONF_USE_WEBHOOK = "use_webhook"
 
 DATA_MANAGER = "data_manager"
+DEVICE_SYNCHRONIZER = "device_synchronizer"
 
 CONFIG = "config"
 DOMAIN = "withings"

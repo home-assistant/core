@@ -28,10 +28,12 @@ from homeassistant.helpers.typing import ConfigType
 from . import config_flow, const
 from .common import (
     _LOGGER,
+    DeviceSynchronizer,
     WithingsLocalOAuth2Implementation,
     async_get_data_manager,
-    async_remove_data_manager,
     get_data_manager_by_webhook_id,
+    hass_data_delete,
+    hass_data_get_value,
     json_message_response,
 )
 
@@ -157,6 +159,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Withings config entry."""
+    # Stop the device synchronizer.
+    device_synchronizer: DeviceSynchronizer = hass_data_get_value(
+        hass, entry, const.DEVICE_SYNCHRONIZER
+    )
+    device_synchronizer.async_stop()
+
+    # Stop the data manager.
     data_manager = await async_get_data_manager(hass, entry)
     data_manager.async_stop_polling_webhook_subscriptions()
 
@@ -168,7 +177,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_forward_entry_unload(entry, SENSOR_DOMAIN),
     )
 
-    async_remove_data_manager(hass, entry)
+    # Delete runtime data associated with this config entry.
+    hass_data_delete(hass, entry)
 
     return True
 

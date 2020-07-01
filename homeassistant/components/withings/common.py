@@ -6,7 +6,7 @@ from datetime import timedelta
 from enum import Enum, IntEnum
 import logging
 import re
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
 from aiohttp.web import Response
 import requests
@@ -20,6 +20,7 @@ from withings_api.common import (
     NotifyAppli,
     SleepGetSummaryResponse,
     UnauthorizedException,
+    UserGetDeviceDevice,
     query_measure_groups,
 )
 
@@ -56,7 +57,24 @@ _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
 NOT_AUTHENTICATED_ERROR = re.compile("^401,.*", re.IGNORECASE,)
 DATA_UPDATED_SIGNAL = "withings_entity_state_updated"
 
-MeasurementData = Dict[Measurement, Any]
+
+@dataclass
+class MeasurementDataValue:
+    """Data for a specific measurement."""
+
+    value: Any
+    device_id: Optional[str]
+
+
+MeasurementData = Dict[Measurement, MeasurementDataValue]
+
+
+@dataclass
+class ApiData:
+    """Consolidated data from Withings API."""
+
+    devices: Tuple[UserGetDeviceDevice, ...]
+    measurement_data: MeasurementData
 
 
 class NotAuthenticatedError(HomeAssistantError):
@@ -539,7 +557,7 @@ class WebhookUpdateCoordinator:
 
     def update_data(self, measurement: Measurement, value: Any) -> None:
         """Update the data object and notify listeners the data has changed."""
-        self.data[measurement] = value
+        self.data[measurement] = MeasurementDataValue(value=value, device_id=None)
         self.notify_data_changed()
 
     def notify_data_changed(self) -> None:
@@ -722,7 +740,7 @@ class DataManager:
                 self._api.notify_revoke, profile.callbackurl, profile.appli
             )
 
-    async def async_get_all_data(self) -> Optional[Dict[MeasureType, Any]]:
+    async def async_get_all_data(self) -> Optional[ApiData]:
         """Update all withings data."""
         try:
             return await self._do_retry(self._async_get_all_data)
@@ -742,10 +760,11 @@ class DataManager:
                     iter(
                         flow
                         for flow in self._hass.config_entries.flow.async_progress()
-                        if flow.context == context
+                        if flow["context"] == context
                     ),
                     None,
                 )
+
                 if flow:
                     return
 
@@ -757,14 +776,23 @@ class DataManager:
 
             raise exception
 
-    async def _async_get_all_data(self) -> Optional[Dict[MeasureType, Any]]:
+    async def _async_get_all_data(self) -> ApiData:
         _LOGGER.info("Updating all withings data.")
-        return {
-            **await self.async_get_measures(),
-            **await self.async_get_sleep_summary(),
-        }
 
-    async def async_get_measures(self) -> Dict[MeasureType, Any]:
+        return ApiData(
+            devices=await self.async_get_devices(),
+            measurement_data={
+                **await self.async_get_measures(),
+                **await self.async_get_sleep_summary(),
+            },
+        )
+
+    async def async_get_devices(self) -> Tuple[UserGetDeviceDevice, ...]:
+        """Get the devices."""
+        response = await self._hass.async_add_executor_job(self._api.user_get_device)
+        return response.devices
+
+    async def async_get_measures(self) -> MeasurementData:
         """Get the measures data."""
         _LOGGER.debug("Updating withings measures")
 
@@ -775,14 +803,15 @@ class DataManager:
         )
 
         return {
-            WITHINGS_MEASURE_TYPE_MAP[measure.type].measurement: round(
-                float(measure.value * pow(10, measure.unit)), 2
+            WITHINGS_MEASURE_TYPE_MAP[measure.type].measurement: MeasurementDataValue(
+                value=round(float(measure.value * pow(10, measure.unit)), 2),
+                device_id=group.deviceid,
             )
             for group in groups
             for measure in group.measures
         }
 
-    async def async_get_sleep_summary(self) -> Dict[MeasureType, Any]:
+    async def async_get_sleep_summary(self) -> MeasurementData:
         """Get the sleep summary data."""
         _LOGGER.debug("Updating withing sleep summary")
         now = dt.utcnow()
@@ -845,7 +874,9 @@ class DataManager:
         set_value(GetSleepSummaryField.WAKEUP_DURATION, average)
 
         return {
-            WITHINGS_MEASURE_TYPE_MAP[field].measurement: round(value, 4)
+            WITHINGS_MEASURE_TYPE_MAP[field].measurement: MeasurementDataValue(
+                value=round(value, 4), device_id=None
+            )
             if value is not None
             else None
             for field, value in values.items()
@@ -855,6 +886,7 @@ class DataManager:
         """Handle scenario when data is updated from a webook."""
         _LOGGER.debug("Withings webhook triggered")
         if data_category in {
+            NotifyAppli.USER,
             NotifyAppli.WEIGHT,
             NotifyAppli.CIRCULATORY,
             NotifyAppli.SLEEP,
@@ -901,7 +933,11 @@ class BaseWithingsSensor(Entity):
         self._user_id = self._data_manager.user_id
         self._name = f"Withings {self._attribute.measurement.value} {self._profile}"
         self._unique_id = get_attribute_unique_id(self._attribute, self._user_id)
-        self._state_data: Optional[Any] = None
+        self._state_data: Optional[MeasurementDataValue] = None
+        if self._attribute.update_type == UpdateType.POLL:
+            self._on_poll_data_updated(False)
+        else:
+            self._on_webhook_data_updated(False)
 
     @property
     def should_poll(self) -> bool:
@@ -941,73 +977,182 @@ class BaseWithingsSensor(Entity):
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._attribute.enabled_by_default
 
+    @property
+    def device_info(self):
+        """Return device specific attributes.
+
+        Implemented by platform classes.
+        """
+        if not self._state_data or not self._state_data.device_id:
+            return
+
+        # The full device data is provided by the .sensor.DeviceSensor
+        # Check there for an explanation why a separate device sensor is used.
+        return {
+            "identifiers": {(const.DOMAIN, self._state_data.device_id)},
+        }
+
     @callback
-    def _on_poll_data_updated(self) -> None:
+    def _on_poll_data_updated(self, write_ha_state=False) -> None:
+        api_data: ApiData = self._data_manager.poll_data_update_coordinator.data
         self._update_state_data(
-            self._data_manager.poll_data_update_coordinator.data or {}
+            api_data.measurement_data if api_data else {}, write_ha_state
         )
 
     @callback
-    def _on_webhook_data_updated(self) -> None:
+    def _on_webhook_data_updated(self, write_ha_state=False) -> None:
         self._update_state_data(
-            self._data_manager.webhook_update_coordinator.data or {}
+            self._data_manager.webhook_update_coordinator.data or {}, write_ha_state
         )
 
-    def _update_state_data(self, data: MeasurementData) -> None:
+    def _update_state_data(self, data: MeasurementData, write_ha_state=False) -> None:
         """Update the state data."""
         self._state_data = data.get(self._attribute.measurement)
-        self.async_write_ha_state()
+
+        if write_ha_state:
+            self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
-        """Register update dispatcher."""
+        """Register update listener."""
         if self._attribute.update_type == UpdateType.POLL:
+
+            def notify_data_updated():
+                self._on_poll_data_updated(True)
+
             self.async_on_remove(
                 self._data_manager.poll_data_update_coordinator.async_add_listener(
-                    self._on_poll_data_updated
+                    notify_data_updated
                 )
             )
-            self._on_poll_data_updated()
+            notify_data_updated()
 
         elif self._attribute.update_type == UpdateType.WEBHOOK:
+
+            def notify_data_updated():
+                self._on_webhook_data_updated(True)
+
             self.async_on_remove(
                 self._data_manager.webhook_update_coordinator.async_add_listener(
-                    self._on_webhook_data_updated
+                    notify_data_updated
                 )
             )
-            self._on_webhook_data_updated()
+            notify_data_updated()
+
+
+class DeviceSynchronizer:
+    """Creates new device entities from withings data."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        data_manager: DataManager,
+        async_add_entities: Callable[[List[Entity], bool], None],
+        generator: Callable[[DataManager, UserGetDeviceDevice], Entity],
+    ) -> None:
+        """Initialize new device synchronizer."""
+        self._hass = hass
+        self._data_manager = data_manager
+        self._async_add_entities = async_add_entities
+        self._generator = generator
+        self._remove_listener: Optional[Callable[[], None]] = None
+        self._processed_device_ids: Set[str] = set()
+
+    def async_start(self) -> None:
+        """Start polling for data."""
+        self.async_stop()
+        self._remove_listener = self._data_manager.poll_data_update_coordinator.async_add_listener(
+            self._async_on_data_updated
+        )
+        self._async_on_data_updated()
+
+    def async_stop(self) -> None:
+        """Stop polling for data."""
+        if self._remove_listener:
+            self._remove_listener()
+            self._remove_listener = None
+
+    def _async_on_data_updated(self) -> None:
+        api_data: ApiData = self._data_manager.poll_data_update_coordinator.data
+        if not api_data:
+            return
+
+        entities = []
+        for device in api_data.devices:
+            if device.deviceid in self._processed_device_ids:
+                continue
+
+            entities.append(self._generator(self._data_manager, device))
+            self._processed_device_ids.add(device.deviceid)
+
+        self._async_add_entities(entities)
+
+
+def hass_data_prime(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    """Prime the data structures for runtime config data."""
+    hass.data.setdefault(const.DOMAIN, {})
+    hass.data[const.DOMAIN].setdefault(config_entry.entry_id, {})
+
+
+def hass_data_set_value(
+    hass: HomeAssistant, config_entry: ConfigEntry, key: str, value: Any
+) -> None:
+    """Set specific runtime data for config entry."""
+    hass_data_prime(hass, config_entry)
+    hass.data[const.DOMAIN][config_entry.entry_id][key] = value
+
+
+def hass_data_get_value(
+    hass: HomeAssistant, config_entry: ConfigEntry, key: str
+) -> Any:
+    """Get specific runtime data for config entry."""
+    hass_data_prime(hass, config_entry)
+    return hass.data[const.DOMAIN][config_entry.entry_id].get(key)
+
+
+def hass_data_delete_value(
+    hass: HomeAssistant, config_entry: ConfigEntry, key: str
+) -> Any:
+    """Delete specific runtime data for config entry."""
+    hass_data_prime(hass, config_entry)
+    del hass.data[const.DOMAIN][config_entry.entry_id][key]
+
+
+def hass_data_delete(hass: HomeAssistant, config_entry: ConfigEntry) -> Any:
+    """Delete runtime data associated with a config entry."""
+    hass_data_prime(hass, config_entry)
+    del hass.data[const.DOMAIN][config_entry.entry_id]
 
 
 async def async_get_data_manager(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> DataManager:
     """Get the data manager for a config entry."""
-    hass.data.setdefault(const.DOMAIN, {})
-    hass.data[const.DOMAIN].setdefault(config_entry.entry_id, {})
-    config_entry_data = hass.data[const.DOMAIN][config_entry.entry_id]
-
-    if const.DATA_MANAGER not in config_entry_data:
+    if not hass_data_get_value(hass, config_entry, const.DATA_MANAGER):
         profile = config_entry.data.get(const.PROFILE)
-
-        _LOGGER.debug("Creating withings data manager for profile: %s", profile)
-        config_entry_data[const.DATA_MANAGER] = DataManager(
+        hass_data_set_value(
             hass,
-            profile,
-            ConfigEntryWithingsApi(
-                hass=hass,
-                config_entry=config_entry,
-                implementation=await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                    hass, config_entry
+            config_entry,
+            const.DATA_MANAGER,
+            DataManager(
+                hass,
+                profile,
+                ConfigEntryWithingsApi(
+                    hass=hass,
+                    config_entry=config_entry,
+                    implementation=await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                        hass, config_entry
+                    ),
                 ),
-            ),
-            config_entry.data["token"]["userid"],
-            WebhookConfig(
-                id=config_entry.data[CONF_WEBHOOK_ID],
-                url=config_entry.data[const.CONF_WEBHOOK_URL],
-                enabled=config_entry.data[const.CONF_USE_WEBHOOK],
+                config_entry.data["token"]["userid"],
+                WebhookConfig(
+                    id=config_entry.data[CONF_WEBHOOK_ID],
+                    url=config_entry.data[const.CONF_WEBHOOK_URL],
+                    enabled=config_entry.data[const.CONF_USE_WEBHOOK],
+                ),
             ),
         )
 
-    return config_entry_data[const.DATA_MANAGER]
+    return hass_data_get_value(hass, config_entry, const.DATA_MANAGER)
 
 
 def get_data_manager_by_webhook_id(
@@ -1035,11 +1180,6 @@ def get_all_data_managers(hass: HomeAssistant) -> Tuple[DataManager, ...]:
             if const.DATA_MANAGER in config_entry_data
         ]
     )
-
-
-def async_remove_data_manager(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Remove a data manager for a config entry."""
-    del hass.data[const.DOMAIN][config_entry.entry_id][const.DATA_MANAGER]
 
 
 async def async_create_entities(

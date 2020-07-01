@@ -83,15 +83,10 @@ class WithingsFlowHandler(
         if data is not None:
             return await self.async_step_user()
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        placeholders = {const.PROFILE: self.context["profile"]}
-
-        self.context.update({"title_placeholders": placeholders})
-
         return self.async_show_form(
             step_id="reauth",
             # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-            description_placeholders=placeholders,
+            description_placeholders={const.PROFILE: self.context["profile"]},
         )
 
     async def async_step_finish(self, data: dict) -> dict:
