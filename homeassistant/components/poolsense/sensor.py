@@ -163,7 +163,7 @@ class PoolSenseSensor(Entity):
 
     async def async_update(self):
         """Update status of sensor."""
-        await self._coordinator.async_request_refresh()
+        await self.coordinator.async_request_refresh()
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
