@@ -54,8 +54,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def get_coordinator(hass, entry):
     """Get the data update coordinator."""
-    if DOMAIN in hass.data:
-        return hass.data[DOMAIN]
+    if DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN]:
+        return hass.data[DOMAIN][entry.entry_id]
 
     async def async_get_data():
         _LOGGER.info("Run query to server")
@@ -73,12 +73,12 @@ async def get_coordinator(hass, entry):
 
         return return_data
 
-    hass.data[DOMAIN] = update_coordinator.DataUpdateCoordinator(
+    hass.data[DOMAIN][entry.entry_id] = update_coordinator.DataUpdateCoordinator(
         hass,
         logging.getLogger(__name__),
         name=DOMAIN,
         update_method=async_get_data,
         update_interval=timedelta(hours=1),
     )
-    await hass.data[DOMAIN].async_refresh()
-    return hass.data[DOMAIN]
+    await hass.data[DOMAIN][entry.entry_id].async_refresh()
+    return hass.data[DOMAIN][entry.entry_id]

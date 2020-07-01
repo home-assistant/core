@@ -25,10 +25,7 @@ async def test_invalid_credentials(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data={
-                CONF_EMAIL: "test-email",
-                CONF_PASSWORD: "test-password",
-            },
+            data={CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"},
         )
 
     assert result["type"] == "form"
@@ -47,10 +44,8 @@ async def test_valid_credentials(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data={
-                CONF_EMAIL: "test-email",
+            data={CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"},
                 CONF_PASSWORD: "test-password",
-            },
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
