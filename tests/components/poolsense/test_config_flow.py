@@ -45,7 +45,6 @@ async def test_valid_credentials(hass):
             DOMAIN,
             context={"source": SOURCE_USER},
             data={CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"},
-                CONF_PASSWORD: "test-password",
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
