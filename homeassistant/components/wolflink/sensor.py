@@ -18,7 +18,6 @@ from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
     PRESSURE_BAR,
     TEMP_CELSIUS,
-    TIME_HOURS,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -115,11 +114,6 @@ class WolfLinkHours(WolfLinkSensor):
     def device_class(self):
         """Return the device_class."""
         return DEVICE_CLASS_TIMESTAMP
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return TIME_HOURS
 
 
 class WolfLinkTemperature(WolfLinkSensor):
