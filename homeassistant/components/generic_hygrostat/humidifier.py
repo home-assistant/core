@@ -324,7 +324,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
 
     @callback
     async def _async_sensor_not_responding(self, now=None):
-        """The sensor has not updated a value during the allowed stale period."""
+        """Handle sensor stale event."""
 
         _LOGGER.debug(
             "Sensor has not been updated for %s",

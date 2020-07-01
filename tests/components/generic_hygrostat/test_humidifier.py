@@ -3,7 +3,6 @@ import datetime
 
 from asynctest import mock
 import pytest
-import pytz
 import voluptuous as vol
 
 from homeassistant.components import input_boolean, switch
