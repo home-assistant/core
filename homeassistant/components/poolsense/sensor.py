@@ -4,7 +4,6 @@ import logging
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_EMAIL,
-    CONF_PASSWORD,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
@@ -15,7 +14,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity import Entity
 
-from .const import ATTRIBUTION
+from .const import ATTRIBUTION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
