@@ -343,7 +343,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200629.0
+home-assistant-frontend==20200701.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -495,6 +495,9 @@ plumlightpad==0.0.11
 # homeassistant.components.mhz19
 # homeassistant.components.serial_pm
 pmsensor==0.4
+
+# homeassistant.components.poolsense
+poolsense==0.0.5
 
 # homeassistant.components.reddit
 praw==6.5.1
@@ -673,7 +676,7 @@ pymodbus==2.3.0
 pymonoprice==0.3
 
 # homeassistant.components.myq
-pymyq==2.0.4
+pymyq==2.0.5
 
 # homeassistant.components.nut
 pynut2==2.1.2
