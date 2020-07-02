@@ -246,28 +246,18 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None)
 
     with session_scope(hass=hass) as session:
         return _get_states_with_session(
-            session, utc_point_in_time, entity_ids, run, filters
+            hass, session, utc_point_in_time, entity_ids, run, filters
         )
 
 
 def _get_states_with_session(
-    session, utc_point_in_time, entity_ids=None, run=None, filters=None
+    hass, session, utc_point_in_time, entity_ids=None, run=None, filters=None
 ):
     """Return the states at a specific point in time."""
-    query = session.query(*QUERY_STATES)
-
     if entity_ids and len(entity_ids) == 1:
-        # Use an entirely different (and extremely fast) query if we only
-        # have a single entity id
-        query = (
-            query.filter(
-                States.last_updated < utc_point_in_time,
-                States.entity_id.in_(entity_ids),
-            )
-            .order_by(States.last_updated.desc())
-            .limit(1)
+        return _get_single_entity_states_with_session(
+            hass, session, utc_point_in_time, entity_ids[0]
         )
-        return [LazyState(row) for row in execute(query)]
 
     if run is None:
         run = recorder.run_information_with_session(session, utc_point_in_time)
@@ -279,6 +269,7 @@ def _get_states_with_session(
     # We have more than one entity to look at (most commonly we want
     # all entities,) so we need to do a search on all states since the
     # last recorder run started.
+    query = session.query(*QUERY_STATES)
 
     most_recent_states_by_date = session.query(
         States.entity_id.label("max_entity_id"),
@@ -318,6 +309,26 @@ def _get_states_with_session(
     return [LazyState(row) for row in execute(query)]
 
 
+def _get_single_entity_states_with_session(hass, session, utc_point_in_time, entity_id):
+    # Use an entirely different (and extremely fast) query if we only
+    # have a single entity id
+    baked_query = hass.data[HISTORY_BAKERY](
+        lambda session: session.query(*QUERY_STATES)
+    )
+    baked_query += lambda q: q.filter(
+        States.last_updated < bindparam("utc_point_in_time"),
+        States.entity_id == bindparam("entity_id"),
+    )
+    baked_query += lambda q: q.order_by(States.last_updated.desc())
+    baked_query += lambda q: q.limit(1)
+
+    query = baked_query(session).params(
+        utc_point_in_time=utc_point_in_time, entity_id=entity_id
+    )
+
+    return [LazyState(row) for row in execute(query)]
+
+
 def _sorted_states_to_json(
     hass,
     session,
@@ -350,7 +361,7 @@ def _sorted_states_to_json(
     if include_start_time_state:
         run = recorder.run_information_from_instance(hass, start_time)
         for state in _get_states_with_session(
-            session, start_time, entity_ids, run=run, filters=filters
+            hass, session, start_time, entity_ids, run=run, filters=filters
         ):
             state.last_changed = start_time
             state.last_updated = start_time
