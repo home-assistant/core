@@ -213,6 +213,7 @@ PROP_MAX_VALUE = "maxValue"
 PROP_MIN_VALUE = "minValue"
 PROP_MIN_STEP = "minStep"
 PROP_CELSIUS = {"minValue": -273, "maxValue": 999}
+PROP_VALID_VALUES = "ValidValues"
 
 # #### Device Classes ####
 DEVICE_CLASS_CO = "co"

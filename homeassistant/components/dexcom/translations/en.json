@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]"
+        },
+        "error": {
+            "account_error": "[%key:common::config_flow::error::invalid_auth%]",
+            "session_error": "[%key:common::config_flow::error::cannot_connect%]",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "[%key:common::config_flow::data::password%]",
+                    "server": "Server",
+                    "username": "[%key:common::config_flow::data::username%]"
+                },
+                "description": "Enter Dexcom Share credentials",
+                "title": "Setup Dexcom integration"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "unit_of_measurement": "Unit of measurement"
+                }
+            }
+        }
+    }
+}

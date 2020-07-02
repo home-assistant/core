@@ -34,6 +34,7 @@ FLOWS = [
     "deconz",
     "denonavr",
     "devolo_home_control",
+    "dexcom",
     "dialogflow",
     "directv",
     "doorbird",

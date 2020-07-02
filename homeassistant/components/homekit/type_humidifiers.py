@@ -50,6 +50,11 @@ HC_HASS_TO_HOMEKIT_DEVICE_CLASS = {
     DEVICE_CLASS_DEHUMIDIFIER: HC_DEHUMIDIFIER,
 }
 
+HC_HASS_TO_HOMEKIT_DEVICE_CLASS_NAME = {
+    DEVICE_CLASS_HUMIDIFIER: "Humidifier",
+    DEVICE_CLASS_DEHUMIDIFIER: "Dehumidifier",
+}
+
 HC_DEVICE_CLASS_TO_TARGET_CHAR = {
     HC_HUMIDIFIER: CHAR_HUMIDIFIER_THRESHOLD_HUMIDITY,
     HC_DEHUMIDIFIER: CHAR_DEHUMIDIFIER_THRESHOLD_HUMIDITY,
@@ -87,7 +92,13 @@ class HumidifierDehumidifier(HomeAccessory):
             CHAR_CURRENT_HUMIDIFIER_DEHUMIDIFIER, value=0
         )
         self.char_target_humidifier_dehumidifier = serv_humidifier_dehumidifier.configure_char(
-            CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER, value=0,
+            CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER,
+            value=self._hk_device_class,
+            valid_values={
+                HC_HASS_TO_HOMEKIT_DEVICE_CLASS_NAME[
+                    device_class
+                ]: self._hk_device_class
+            },
         )
 
         # Current and target humidity characteristics
@@ -172,30 +183,20 @@ class HumidifierDehumidifier(HomeAccessory):
 
     def _set_chars(self, char_values):
         _LOGGER.debug("HumidifierDehumidifier _set_chars: %s", char_values)
-        events = []
-        params = {}
-        service = None
-
-        if CHAR_ACTIVE in char_values:
-            service = SERVICE_TURN_ON if char_values[CHAR_ACTIVE] else SERVICE_TURN_OFF
-            events.append(f"{CHAR_ACTIVE} to {char_values[CHAR_ACTIVE]}")
 
         if CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER in char_values:
-            # We support either humidifiers or dehumidifiers. If incompatible setting is requested
-            # then we switch off the device to avoid humidifying when the user wants to dehumidify and vice versa
             hk_value = char_values[CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER]
-            if (self._hk_device_class == HC_HUMIDIFIER and hk_value == 0) or (
-                self._hk_device_class == HC_DEHUMIDIFIER and hk_value == 1
-            ):
-                service = SERVICE_TURN_OFF
-                events.append(
-                    f"{CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER} to {char_values[CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER]}"
+            if self._hk_device_class != hk_value:
+                _LOGGER.error(
+                    "%s is not supported", CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER
                 )
 
-        if service:
-            params[ATTR_ENTITY_ID] = self.entity_id
+        if CHAR_ACTIVE in char_values:
             self.call_service(
-                DOMAIN, service, params, ", ".join(events),
+                DOMAIN,
+                SERVICE_TURN_ON if char_values[CHAR_ACTIVE] else SERVICE_TURN_OFF,
+                {ATTR_ENTITY_ID: self.entity_id},
+                f"{CHAR_ACTIVE} to {char_values[CHAR_ACTIVE]}",
             )
 
         if self._target_humidity_char_name in char_values:
@@ -204,7 +205,8 @@ class HumidifierDehumidifier(HomeAccessory):
                 DOMAIN,
                 SERVICE_SET_HUMIDITY,
                 {ATTR_ENTITY_ID: self.entity_id, ATTR_HUMIDITY: humidity},
-                f"{self._target_humidity_char_name} to {char_values[self._target_humidity_char_name]}{UNIT_PERCENTAGE}",
+                f"{self._target_humidity_char_name} to "
+                f"{char_values[self._target_humidity_char_name]}{UNIT_PERCENTAGE}",
             )
 
     @callback
@@ -215,13 +217,6 @@ class HumidifierDehumidifier(HomeAccessory):
         # Update active state
         if self.char_active.value != is_active:
             self.char_active.set_value(is_active)
-
-        # Set correct value for TargetHumidifierDehumidifierState if the device is back on
-        if is_active:
-            if self.char_target_humidifier_dehumidifier.value != self._hk_device_class:
-                self.char_target_humidifier_dehumidifier.set_value(
-                    self._hk_device_class
-                )
 
         # Set current state
         if is_active:
