@@ -69,7 +69,9 @@ async def test_humidifier(hass, hk_driver, events):
     assert acc.char_target_humidity.properties[PROP_MAX_VALUE] == DEFAULT_MAX_HUMIDITY
     assert acc.char_target_humidity.properties[PROP_MIN_VALUE] == DEFAULT_MIN_HUMIDITY
     assert acc.char_target_humidity.properties[PROP_MIN_STEP] == 1.0
-    assert acc.char_target_humidifier_dehumidifier.properties[PROP_VALID_VALUES] == {"Humidifier": 1}
+    assert acc.char_target_humidifier_dehumidifier.properties[PROP_VALID_VALUES] == {
+        "Humidifier": 1
+    }
 
     hass.states.async_set(
         entity_id, STATE_ON, {ATTR_HUMIDITY: 47},
@@ -146,7 +148,9 @@ async def test_dehumidifier(hass, hk_driver, events):
     assert acc.char_target_humidity.properties[PROP_MAX_VALUE] == DEFAULT_MAX_HUMIDITY
     assert acc.char_target_humidity.properties[PROP_MIN_VALUE] == DEFAULT_MIN_HUMIDITY
     assert acc.char_target_humidity.properties[PROP_MIN_STEP] == 1.0
-    assert acc.char_target_humidifier_dehumidifier.properties[PROP_VALID_VALUES] == {"Dehumidifier": 2}
+    assert acc.char_target_humidifier_dehumidifier.properties[PROP_VALID_VALUES] == {
+        "Dehumidifier": 2
+    }
 
     hass.states.async_set(
         entity_id, STATE_ON, {ATTR_HUMIDITY: 30},
