@@ -52,7 +52,7 @@ REQUIRES = [
     "ruamel.yaml==0.15.100",
     "voluptuous==0.11.7",
     "voluptuous-serialize==2.3.0",
-    "ais-dom-frontend==20200701.1",
+    "ais-dom-frontend==20200701.2",
 ]
 
 MIN_PY_VERSION = ".".join(map(str, hass_const.REQUIRED_PYTHON_VER))
