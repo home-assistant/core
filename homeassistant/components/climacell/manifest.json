@@ -3,7 +3,7 @@
   "name": "ClimaCell",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/climacell",
-  "requirements": ["pyclimacell==0.10.0"],
+  "requirements": ["pyclimacell==0.12.0"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},

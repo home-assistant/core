@@ -2,10 +2,10 @@
 import logging
 from typing import Any, Dict
 
+from pyclimacell import ClimaCell
 from pyclimacell.const import REALTIME
-from pyclimacell.pyclimacell import (
+from pyclimacell.exceptions import (
     CantConnectException,
-    ClimaCell,
     InvalidAPIKeyException,
     RateLimitedException,
 )

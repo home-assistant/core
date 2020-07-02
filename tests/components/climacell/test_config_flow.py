@@ -1,10 +1,11 @@
 """Test the ClimaCell config flow."""
 import logging
 
-from pyclimacell.pyclimacell import (
+from pyclimacell.exceptions import (
     CantConnectException,
     InvalidAPIKeyException,
     RateLimitedException,
+    UnknownException,
 )
 
 from homeassistant import config_entries, data_entry_flow
@@ -28,7 +29,7 @@ from homeassistant.components.climacell.const import (
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import API_KEY, MIN_CONFIG, MockRequestInfo
+from .const import API_KEY, MIN_CONFIG
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -95,7 +96,7 @@ async def test_user_flow_invalid_api(hass: HomeAssistantType) -> None:
     """Test user config flow when API key is invalid."""
     with patch(
         "homeassistant.components.climacell.config_flow.ClimaCell.realtime",
-        side_effect=InvalidAPIKeyException(MockRequestInfo(), None),
+        side_effect=InvalidAPIKeyException,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -111,7 +112,7 @@ async def test_user_flow_rate_limited(hass: HomeAssistantType) -> None:
     """Test user config flow when API key is rate limited."""
     with patch(
         "homeassistant.components.climacell.config_flow.ClimaCell.realtime",
-        side_effect=RateLimitedException(MockRequestInfo(), None),
+        side_effect=RateLimitedException,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -123,11 +124,11 @@ async def test_user_flow_rate_limited(hass: HomeAssistantType) -> None:
         assert result["errors"] == {CONF_API_KEY: "rate_limited"}
 
 
-async def test_user_flow_rate_unknown(hass: HomeAssistantType) -> None:
+async def test_user_flow_unknown_exception(hass: HomeAssistantType) -> None:
     """Test user config flow when unknown error occurs."""
     with patch(
         "homeassistant.components.climacell.config_flow.ClimaCell.realtime",
-        side_effect=Exception,
+        side_effect=UnknownException,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

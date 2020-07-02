@@ -5,6 +5,7 @@ import logging
 from math import ceil
 from typing import Any, Dict
 
+from pyclimacell import ClimaCell
 from pyclimacell.const import (
     FORECAST_DAILY,
     FORECAST_HOURLY,
@@ -13,9 +14,9 @@ from pyclimacell.const import (
 )
 from pyclimacell.pyclimacell import (
     CantConnectException,
-    ClimaCell,
     InvalidAPIKeyException,
     RateLimitedException,
+    UnknownException,
 )
 import voluptuous as vol
 
@@ -247,6 +248,7 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
             CantConnectException,
             InvalidAPIKeyException,
             RateLimitedException,
+            UnknownException,
         ) as error:
             raise UpdateFailed(error)
 
