@@ -517,7 +517,11 @@ class EntityPlatform:
             """Handle the service."""
             await service.entity_service_call(
                 self.hass,
-                self.hass.data[DATA_ENTITY_PLATFORM][self.platform_name],
+                [
+                    plf
+                    for plf in self.hass.data[DATA_ENTITY_PLATFORM][self.platform_name]
+                    if plf.domain == self.domain
+                ],
                 func,
                 call,
                 required_features,
