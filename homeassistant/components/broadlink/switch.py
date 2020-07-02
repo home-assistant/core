@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Broadlink switches."""
     platform_data = hass.data[DOMAIN].platforms.setdefault(SWITCH_DOMAIN, {})
-    platform_data[config[CONF_MAC]] = config[CONF_SWITCHES]
+    platform_data.setdefault(config[CONF_MAC], {}).update(config[CONF_SWITCHES])
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
