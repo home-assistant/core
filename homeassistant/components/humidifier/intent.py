@@ -53,9 +53,9 @@ class HumidityHandler(intent.IntentHandler):
             await hass.services.async_call(
                 DOMAIN, SERVICE_TURN_ON, service_data, context=intent_obj.context
             )
-            speech = f"Turned {state.name} on and changed humidity to {humidity}%"
+            speech = f"Turned {state.name} on and set humidity to {humidity}%"
         else:
-            speech = f"Changed humidity to {humidity}% on {state.name}"
+            speech = f"The {state.name} is set to {humidity}%"
 
         service_data[ATTR_HUMIDITY] = humidity
         await hass.services.async_call(

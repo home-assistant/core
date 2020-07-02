@@ -38,7 +38,7 @@ async def test_intent_set_humidity(hass):
 
     assert (
         result.speech["plain"]["speech"]
-        == "Changed humidity to 50% on bedroom humidifier"
+        == "The bedroom humidifier is set to 50%"
     )
 
     assert len(turn_on_calls) == 0
@@ -68,7 +68,7 @@ async def test_intent_set_humidity_and_turn_on(hass):
 
     assert (
         result.speech["plain"]["speech"]
-        == "Turned bedroom humidifier on and changed humidity to 50%"
+        == "Turned bedroom humidifier on and set humidity to 50%"
     )
 
     assert len(turn_on_calls) == 1
