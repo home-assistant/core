@@ -884,7 +884,7 @@ async def test_platforms_sharing_services(hass):
 
     entity_platform3 = MockEntityPlatform(
         hass,
-        domain="different__integration",
+        domain="different_integration",
         platform_name="mock_platform",
         platform=None,
     )
