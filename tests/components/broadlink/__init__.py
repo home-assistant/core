@@ -18,15 +18,15 @@ class BroadlinkDevice:
 
     def get_mock_api(self):
         """Return a mock device (API)."""
-        mock_device = MagicMock()
-        mock_device.name = self.name
-        mock_device.host = (self.host, 80)
-        mock_device.mac = bytes.fromhex(self.mac)
-        mock_device.devtype = self.devtype
-        mock_device.timeout = self.timeout
-        mock_device.cloud = False
-        mock_device.auth.return_value = True
-        return mock_device
+        mock_api = MagicMock()
+        mock_api.name = self.name
+        mock_api.host = (self.host, 80)
+        mock_api.mac = bytes.fromhex(self.mac)
+        mock_api.devtype = self.devtype
+        mock_api.timeout = self.timeout
+        mock_api.cloud = False
+        mock_api.auth.return_value = True
+        return mock_api
 
     def get_mock_entry(self):
         """Return a mock config entry."""

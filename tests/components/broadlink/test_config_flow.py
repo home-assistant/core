@@ -36,7 +36,7 @@ async def test_flow_user_works(hass):
     Best case scenario with no errors or locks.
     """
     device = pick_device(0)
-    mock_device = device.get_mock_api()
+    mock_api = device.get_mock_api()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -46,7 +46,7 @@ async def test_flow_user_works(hass):
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch("broadlink.discover", return_value=[mock_device]) as mock_discover:
+    with patch("broadlink.discover", return_value=[mock_api]) as mock_discover:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": device.host, "timeout": device.timeout},
         )
@@ -64,7 +64,7 @@ async def test_flow_user_works(hass):
     assert result["data"] == device.get_entry_data()
 
     assert mock_discover.call_count == 1
-    assert mock_device.auth.call_count == 1
+    assert mock_api.auth.call_count == 1
 
 
 async def test_flow_user_already_in_progress(hass):
@@ -104,9 +104,9 @@ async def test_flow_user_device_is_unique(hass):
     )
 
     device.host = "192.168.1.240"  # The IP address has changed.
-    mock_device = device.get_mock_api()
+    mock_api = device.get_mock_api()
 
-    with patch("broadlink.discover", return_value=[mock_device]):
+    with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": device.host},
         )
@@ -178,14 +178,14 @@ async def test_flow_user_cannot_connect(hass):
 async def test_flow_auth_authentication_error(hass):
     """Test we handle an authentication error."""
     device = pick_device(0)
-    mock_device = device.get_mock_api()
-    mock_device.auth.side_effect = blke.AuthenticationError()
+    mock_api = device.get_mock_api()
+    mock_api.auth.side_effect = blke.AuthenticationError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("broadlink.discover", return_value=[mock_device]):
+    with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": device.host, "timeout": device.timeout},
         )
@@ -198,14 +198,14 @@ async def test_flow_auth_authentication_error(hass):
 async def test_flow_auth_cannot_connect(hass):
     """Test we handle a timeout error during authentication."""
     device = pick_device(0)
-    mock_device = device.get_mock_api()
-    mock_device.auth.side_effect = blke.DeviceOfflineError()
+    mock_api = device.get_mock_api()
+    mock_api.auth.side_effect = blke.DeviceOfflineError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("broadlink.discover", return_value=[mock_device]):
+    with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": device.host},
         )
@@ -218,14 +218,14 @@ async def test_flow_auth_cannot_connect(hass):
 async def test_flow_auth_firmware_error(hass):
     """Test we handle a firmware error during authentication."""
     device = pick_device(0)
-    mock_device = device.get_mock_api()
-    mock_device.auth.side_effect = blke.BroadlinkException()
+    mock_api = device.get_mock_api()
+    mock_api.auth.side_effect = blke.BroadlinkException()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("broadlink.discover", return_value=[mock_device]):
+    with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": device.host},
         )
@@ -238,14 +238,14 @@ async def test_flow_auth_firmware_error(hass):
 async def test_flow_reset_works(hass):
     """Test we finish a config flow after a factory reset."""
     device = pick_device(0)
-    mock_device = device.get_mock_api()
-    mock_device.auth.side_effect = blke.AuthenticationError()
+    mock_api = device.get_mock_api()
+    mock_api.auth.side_effect = blke.AuthenticationError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("broadlink.discover", return_value=[mock_device]):
+    with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": device.host, "timeout": device.timeout},
         )
@@ -267,14 +267,14 @@ async def test_flow_reset_works(hass):
 async def test_flow_unlock_works(hass):
     """Test a config flow with an unlock request."""
     device = pick_device(0)
-    mock_device = device.get_mock_api()
-    mock_device.cloud = True
+    mock_api = device.get_mock_api()
+    mock_api.cloud = True
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("broadlink.discover", return_value=[mock_device]):
+    with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": device.host, "timeout": device.timeout},
         )
@@ -295,22 +295,22 @@ async def test_flow_unlock_works(hass):
     assert result["title"] == device.name
     assert result["data"] == device.get_entry_data()
 
-    assert mock_device.set_lock.call_args == call(False)
-    assert mock_device.set_lock.call_count == 1
+    assert mock_api.set_lock.call_args == call(False)
+    assert mock_api.set_lock.call_count == 1
 
 
 async def test_flow_unlock_cannot_connect(hass):
     """Test we handle a timeout error during an unlock."""
     device = pick_device(0)
-    mock_device = device.get_mock_api()
-    mock_device.cloud = True
-    mock_device.set_lock.side_effect = blke.DeviceOfflineError
+    mock_api = device.get_mock_api()
+    mock_api.cloud = True
+    mock_api.set_lock.side_effect = blke.DeviceOfflineError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("broadlink.discover", return_value=[mock_device]):
+    with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": device.host, "timeout": device.timeout},
         )
@@ -327,15 +327,15 @@ async def test_flow_unlock_cannot_connect(hass):
 async def test_flow_unlock_firmware_error(hass):
     """Test we handle a firmware error during an unlock."""
     device = pick_device(0)
-    mock_device = device.get_mock_api()
-    mock_device.cloud = True
-    mock_device.set_lock.side_effect = blke.BroadlinkException
+    mock_api = device.get_mock_api()
+    mock_api.cloud = True
+    mock_api.set_lock.side_effect = blke.BroadlinkException
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("broadlink.discover", return_value=[mock_device]):
+    with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": device.host, "timeout": device.timeout},
         )
@@ -352,14 +352,14 @@ async def test_flow_unlock_firmware_error(hass):
 async def test_flow_do_not_unlock(hass):
     """Test we do not unlock the device if the user does not want to."""
     device = pick_device(0)
-    mock_device = device.get_mock_api()
-    mock_device.cloud = True
+    mock_api = device.get_mock_api()
+    mock_api.cloud = True
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("broadlink.discover", return_value=[mock_device]):
+    with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": device.host, "timeout": device.timeout},
         )
@@ -376,17 +376,17 @@ async def test_flow_do_not_unlock(hass):
     assert result["title"] == device.name
     assert result["data"] == device.get_entry_data()
 
-    assert mock_device.set_lock.call_count == 0
+    assert mock_api.set_lock.call_count == 0
 
 
 async def test_flow_reauth_works(hass):
     """Test a reauthentication flow."""
     device = pick_device(0)
-    mock_device = device.get_mock_api()
-    mock_device.auth.side_effect = blke.AuthenticationError()
+    mock_api = device.get_mock_api()
+    mock_api.auth.side_effect = blke.AuthenticationError()
     data = {"name": device.name, **device.get_entry_data()}
 
-    with patch("broadlink.gendevice", return_value=mock_device):
+    with patch("broadlink.gendevice", return_value=mock_api):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "reauth"}, data=data
         )
@@ -411,11 +411,11 @@ async def test_flow_reauth_invalid_host(hass):
     The MAC address cannot change.
     """
     device = pick_device(0)
-    mock_device = device.get_mock_api()
-    mock_device.auth.side_effect = blke.AuthenticationError()
+    mock_api = device.get_mock_api()
+    mock_api.auth.side_effect = blke.AuthenticationError()
     data = {"name": device.name, **device.get_entry_data()}
 
-    with patch("broadlink.gendevice", return_value=mock_device):
+    with patch("broadlink.gendevice", return_value=mock_api):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "reauth"}, data=data
         )
@@ -439,19 +439,19 @@ async def test_flow_reauth_valid_host(hass):
     The hostname or IP address may change.
     """
     device = pick_device(0)
-    mock_device = device.get_mock_api()
-    mock_device.auth.side_effect = blke.AuthenticationError()
+    mock_api = device.get_mock_api()
+    mock_api.auth.side_effect = blke.AuthenticationError()
     data = {"name": device.name, **device.get_entry_data()}
 
-    with patch("broadlink.gendevice", return_value=mock_device):
+    with patch("broadlink.gendevice", return_value=mock_api):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "reauth"}, data=data
         )
 
     device.host = "192.168.1.240"  # The IP address has changed.
-    mock_device = device.get_mock_api()
+    mock_api = device.get_mock_api()
 
-    with patch("broadlink.discover", return_value=[mock_device]):
+    with patch("broadlink.discover", return_value=[mock_api]):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": device.host, "timeout": device.timeout},
         )
