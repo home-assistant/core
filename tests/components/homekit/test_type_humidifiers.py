@@ -351,6 +351,11 @@ async def test_humidifier_with_linked_humidity_sensor(hass, hk_driver):
 
     assert acc.char_current_humidity.value == 43.0
 
+    hass.states.async_remove(humidity_sensor_entity_id)
+    await hass.async_block_till_done()
+
+    assert acc.char_current_humidity.value == 43.0
+
 
 async def test_humidifier_with_a_missing_linked_humidity_sensor(hass, hk_driver):
     """Test a humidifier with a configured linked motion sensor that is missing."""
@@ -373,3 +378,42 @@ async def test_humidifier_with_a_missing_linked_humidity_sensor(hass, hk_driver)
     await hass.async_block_till_done()
 
     assert acc.char_current_humidity.value == 0
+
+
+async def test_humidifier_as_dehumidifier(hass, hk_driver, events, caplog):
+    """Test an invalid char_target_humidifier_dehumidifier from HomeKit."""
+    entity_id = "humidifier.test"
+
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    acc = HumidifierDehumidifier(
+        hass, hk_driver, "HumidifierDehumidifier", entity_id, 1, None
+    )
+    hk_driver.add_accessory(acc)
+
+    await acc.run_handler()
+    await hass.async_block_till_done()
+
+    assert acc.char_target_humidifier_dehumidifier.value == 1
+
+    # Set from HomeKit
+    char_target_humidifier_dehumidifier_iid = acc.char_target_humidifier_dehumidifier.to_HAP()[
+        HAP_REPR_IID
+    ]
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_target_humidifier_dehumidifier_iid,
+                    HAP_REPR_VALUE: 0,
+                },
+            ]
+        },
+        "mock_addr",
+    )
+
+    await hass.async_block_till_done()
+    assert "TargetHumidifierDehumidifierState is not supported" in caplog.text
+    assert len(events) == 0
