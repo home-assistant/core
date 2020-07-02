@@ -36,10 +36,7 @@ async def test_intent_set_humidity(hass):
     )
     await hass.async_block_till_done()
 
-    assert (
-        result.speech["plain"]["speech"]
-        == "The bedroom humidifier is set to 50%"
-    )
+    assert result.speech["plain"]["speech"] == "The bedroom humidifier is set to 50%"
 
     assert len(turn_on_calls) == 0
     assert len(humidity_calls) == 1
