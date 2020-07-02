@@ -214,14 +214,15 @@ class GuardianEntity(Entity):
         """Update the entity."""
         raise NotImplementedError
 
-    @callback
-    def _update_callback(self):
-        """Define a callback to update the entity's state from the latest data."""
-        self._async_update_from_latest_data()
-        self.async_write_ha_state()
-
     async def async_added_to_hass(self):
         """Perform tasks when the entity is added."""
+
+        @callback
+        def update_callback(self):
+            """Define a callback to update the entity's state from the latest data."""
+            self._async_update_from_latest_data()
+            self.async_write_ha_state()
+
         await self._async_internal_added_to_hass()
-        self.async_on_remove(self._guardian.async_add_listener(self._update_callback))
+        self.async_on_remove(self._guardian.async_add_listener(update_callback))
         self._async_update_from_latest_data()
