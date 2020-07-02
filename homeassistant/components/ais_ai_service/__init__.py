@@ -21,14 +21,6 @@ from homeassistant.components.conversation.default_agent import (
     DefaultAgent,
     async_register,
 )
-from homeassistant.components.mobile_app.const import (
-    ATTR_APP_DATA,
-    ATTR_APP_ID,
-    ATTR_APP_VERSION,
-    ATTR_OS_VERSION,
-    ATTR_PUSH_TOKEN,
-    ATTR_PUSH_URL,
-)
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -2498,6 +2490,15 @@ async def async_setup(hass, config):
                     )
 
     async def async_mob_notify(service):
+        from homeassistant.components.mobile_app.const import (
+            ATTR_APP_DATA,
+            ATTR_APP_ID,
+            ATTR_APP_VERSION,
+            ATTR_OS_VERSION,
+            ATTR_PUSH_TOKEN,
+            ATTR_PUSH_URL,
+        )
+
         session = async_get_clientsession(hass)
 
         device_id = service.data["device_id"]
