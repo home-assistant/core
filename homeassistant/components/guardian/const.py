@@ -7,13 +7,14 @@ LOGGER = logging.getLogger(__package__)
 
 CONF_UID = "uid"
 
+API_SENSOR_PAIR_DUMP = "sensor_pair_dump"
+API_SYSTEM_DIAGNOSTICS = "system_diagnostics"
+API_SYSTEM_ONBOARD_SENSOR_STATUS = "system_onboard_sensor_status"
+API_VALVE_STATUS = "valve_status"
+
 DATA_CLIENT = "client"
-DATA_DIAGNOSTICS = "diagnostics"
-DATA_PAIR_DUMP = "pair_sensor"
-DATA_PING = "ping"
-DATA_SENSOR_STATUS = "sensor_status"
-DATA_VALVE_STATUS = "valve_status"
-DATA_WIFI_STATUS = "wifi_status"
+# DATA_VALVE_STATUS = "valve_status"
+# DATA_WIFI_STATUS = "wifi_status"
 
 SENSOR_KIND_AP_INFO = "ap_enabled"
 SENSOR_KIND_LEAK_DETECTED = "leak_detected"
