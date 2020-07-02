@@ -350,6 +350,13 @@ async def test_ongoing_event(mock_now, hass, calendar):
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
         "description": "Surprisingly rainy",
+        "event_id": "0123456789012345678901234567890123456789012345678901234567",
+        "status": "confirmed",
+        "created": "2017-11-26 16:30:00",
+        "updated": "2017-11-26 16:30:00",
+        "reminders": {"useDefault": True},
+        "transparency": "opaque",
+        "visibility": "private",
     }
 
 
@@ -371,6 +378,13 @@ async def test_just_ended_event(mock_now, hass, calendar):
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
         "description": "Surprisingly rainy",
+        "event_id": "0123456789012345678901234567890123456789012345678901234567",
+        "status": "confirmed",
+        "created": "2017-11-26 16:30:00",
+        "updated": "2017-11-26 16:30:00",
+        "reminders": {"useDefault": True},
+        "transparency": "opaque",
+        "visibility": "private",
     }
 
 
@@ -392,6 +406,13 @@ async def test_ongoing_event_different_tz(mock_now, hass, calendar):
         "description": "Sunny day",
         "end_time": "2017-11-27 17:30:00",
         "location": "San Francisco",
+        "event_id": "0123456789012345678901234567890123456789012345678901234567",
+        "status": "confirmed",
+        "created": "2017-11-26 16:30:00",
+        "updated": "2017-11-26 16:30:00",
+        "reminders": {"useDefault": True},
+        "transparency": "opaque",
+        "visibility": "private",
     }
 
 
@@ -415,6 +436,13 @@ async def test_ongoing_floating_event_returned(mock_now, hass, calendar):
         "end_time": "2017-11-27 20:00:00",
         "location": "Hamburg",
         "description": "What a day",
+        "event_id": "0123456789012345678901234567890123456789012345678901234567",
+        "status": "confirmed",
+        "created": "2017-11-26 16:30:00",
+        "updated": "2017-11-26 16:30:00",
+        "reminders": {"useDefault": True},
+        "transparency": "opaque",
+        "visibility": "private",
     }
 
 
@@ -436,6 +464,13 @@ async def test_ongoing_event_with_offset(mock_now, hass, calendar):
         "end_time": "2017-11-27 11:00:00",
         "location": "Hamburg",
         "description": "Surprisingly shiny",
+        "event_id": "0123456789012345678901234567890123456789012345678901234567",
+        "status": "confirmed",
+        "created": "2017-11-26 16:30:00",
+        "updated": "2017-11-26 16:30:00",
+        "reminders": {"useDefault": True},
+        "transparency": "opaque",
+        "visibility": "private",
     }
 
 
@@ -462,6 +497,13 @@ async def test_matching_filter(mock_now, hass, calendar):
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
         "description": "Surprisingly rainy",
+        "event_id": "0123456789012345678901234567890123456789012345678901234567",
+        "status": "confirmed",
+        "created": "2017-11-26 16:30:00",
+        "updated": "2017-11-26 16:30:00",
+        "reminders": {"useDefault": True},
+        "transparency": "opaque",
+        "visibility": "private",
     }
 
 
@@ -488,6 +530,13 @@ async def test_matching_filter_real_regexp(mock_now, hass, calendar):
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
         "description": "Surprisingly rainy",
+        "event_id": "0123456789012345678901234567890123456789012345678901234567",
+        "status": "confirmed",
+        "created": "2017-11-26 16:30:00",
+        "updated": "2017-11-26 16:30:00",
+        "reminders": {"useDefault": True},
+        "transparency": "opaque",
+        "visibility": "private",
     }
 
 
@@ -550,6 +599,13 @@ async def test_all_day_event_returned(mock_now, hass, calendar):
         "end_time": "2017-11-28 00:00:00",
         "location": "Hamburg",
         "description": "What a beautiful day",
+        "event_id": "0123456789012345678901234567890123456789012345678901234567",
+        "status": "confirmed",
+        "created": "2017-11-26 16:30:00",
+        "updated": "2017-11-26 16:30:00",
+        "reminders": {"useDefault": True},
+        "transparency": "opaque",
+        "visibility": "private",
     }
 
 
@@ -571,6 +627,13 @@ async def test_event_rrule(mock_now, hass, calendar):
         "end_time": "2017-11-27 22:30:00",
         "location": "Hamburg",
         "description": "Every day for a while",
+        "event_id": "0123456789012345678901234567890123456789012345678901234567",
+        "status": "confirmed",
+        "created": "2017-11-26 16:30:00",
+        "updated": "2017-11-26 16:30:00",
+        "reminders": {"useDefault": True},
+        "transparency": "opaque",
+        "visibility": "private",
     }
 
 
@@ -592,6 +655,13 @@ async def test_event_rrule_ongoing(mock_now, hass, calendar):
         "end_time": "2017-11-27 22:30:00",
         "location": "Hamburg",
         "description": "Every day for a while",
+        "event_id": "0123456789012345678901234567890123456789012345678901234567",
+        "status": "confirmed",
+        "created": "2017-11-26 16:30:00",
+        "updated": "2017-11-26 16:30:00",
+        "reminders": {"useDefault": True},
+        "transparency": "opaque",
+        "visibility": "private",
     }
 
 
@@ -613,6 +683,13 @@ async def test_event_rrule_duration(mock_now, hass, calendar):
         "end_time": "2017-11-27 23:30:00",
         "location": "Hamburg",
         "description": "Every day for a while as well",
+        "event_id": "0123456789012345678901234567890123456789012345678901234567",
+        "status": "confirmed",
+        "created": "2017-11-26 16:30:00",
+        "updated": "2017-11-26 16:30:00",
+        "reminders": {"useDefault": True},
+        "transparency": "opaque",
+        "visibility": "private",
     }
 
 
@@ -634,6 +711,13 @@ async def test_event_rrule_duration_ongoing(mock_now, hass, calendar):
         "end_time": "2017-11-27 23:30:00",
         "location": "Hamburg",
         "description": "Every day for a while as well",
+        "event_id": "0123456789012345678901234567890123456789012345678901234567",
+        "status": "confirmed",
+        "created": "2017-11-26 16:30:00",
+        "updated": "2017-11-26 16:30:00",
+        "reminders": {"useDefault": True},
+        "transparency": "opaque",
+        "visibility": "private",
     }
 
 
@@ -655,6 +739,13 @@ async def test_event_rrule_endless(mock_now, hass, calendar):
         "end_time": "2017-11-27 23:59:59",
         "location": "Hamburg",
         "description": "Every day forever",
+        "event_id": "0123456789012345678901234567890123456789012345678901234567",
+        "status": "confirmed",
+        "created": "2017-11-26 16:30:00",
+        "updated": "2017-11-26 16:30:00",
+        "reminders": {"useDefault": True},
+        "transparency": "opaque",
+        "visibility": "private",
     }
 
 
@@ -684,6 +775,13 @@ async def test_event_rrule_all_day(mock_now, hass, calendar):
         "end_time": "2016-12-02 00:00:00",
         "location": "Hamburg",
         "description": "Groundhog Day",
+        "event_id": "0123456789012345678901234567890123456789012345678901234567",
+        "status": "confirmed",
+        "created": "2017-11-26 16:30:00",
+        "updated": "2017-11-26 16:30:00",
+        "reminders": {"useDefault": True},
+        "transparency": "opaque",
+        "visibility": "private",
     }
 
 
@@ -708,6 +806,13 @@ async def test_event_rrule_hourly_on_first(mock_now, hass, calendar):
         "end_time": "2015-11-27 00:30:00",
         "location": "Hamburg",
         "description": "The bell tolls for thee",
+        "event_id": "0123456789012345678901234567890123456789012345678901234567",
+        "status": "confirmed",
+        "created": "2017-11-26 16:30:00",
+        "updated": "2017-11-26 16:30:00",
+        "reminders": {"useDefault": True},
+        "transparency": "opaque",
+        "visibility": "private",
     }
 
 
@@ -732,6 +837,13 @@ async def test_event_rrule_hourly_on_last(mock_now, hass, calendar):
         "end_time": "2015-11-27 11:30:00",
         "location": "Hamburg",
         "description": "The bell tolls for thee",
+        "event_id": "0123456789012345678901234567890123456789012345678901234567",
+        "status": "confirmed",
+        "created": "2017-11-26 16:30:00",
+        "updated": "2017-11-26 16:30:00",
+        "reminders": {"useDefault": True},
+        "transparency": "opaque",
+        "visibility": "private",
     }
 
 
