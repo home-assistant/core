@@ -192,13 +192,6 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
         if self.schedule_update:
 
-            @callback
-            def _make_disconnected(_):
-                """Mark client as disconnected."""
-                self._is_connected = False
-                self.cancel_scheduled_update = None
-                self.async_write_ha_state()
-
             self.schedule_update = False
 
             if self.cancel_scheduled_update:
@@ -206,11 +199,18 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
             self.cancel_scheduled_update = async_track_point_in_utc_time(
                 self.hass,
-                _make_disconnected,
+                self._make_disconnected,
                 dt_util.utcnow() + self.controller.option_detection_time,
             )
 
         super().async_update_callback()
+
+    @callback
+    def _make_disconnected(self, _):
+        """Mark client as disconnected."""
+        self._is_connected = False
+        self.cancel_scheduled_update = None
+        self.async_write_ha_state()
 
     @property
     def is_connected(self):
@@ -299,13 +299,6 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
 
         if self.device.last_updated == SOURCE_DATA:
 
-            @callback
-            def _no_heartbeat(_):
-                """No heart beat by device."""
-                self._is_connected = False
-                self.cancel_scheduled_update = None
-                self.async_write_ha_state()
-
             self._is_connected = True
 
             if self.cancel_scheduled_update:
@@ -313,7 +306,7 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
 
             self.cancel_scheduled_update = async_track_point_in_utc_time(
                 self.hass,
-                _no_heartbeat,
+                self._no_heartbeat,
                 dt_util.utcnow() + timedelta(seconds=self.device.next_interval + 60),
             )
 
@@ -325,6 +318,13 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
             return
 
         super().async_update_callback()
+
+    @callback
+    def _no_heartbeat(self, _):
+        """No heart beat by device."""
+        self._is_connected = False
+        self.cancel_scheduled_update = None
+        self.async_write_ha_state()
 
     @property
     def is_connected(self):
