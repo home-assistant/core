@@ -14,6 +14,7 @@ from withings_api import AbstractWithingsApi
 from withings_api.common import (
     AuthFailedException,
     GetSleepSummaryField,
+    MeasureGetMeasGroup,
     MeasureGroupAttribs,
     MeasureType,
     MeasureTypes,
@@ -770,8 +771,16 @@ class DataManager:
 
         response = await self._hass.async_add_executor_job(self._api.measure_get_meas)
 
-        groups = query_measure_groups(
-            response, MeasureTypes.ANY, MeasureGroupAttribs.UNAMBIGUOUS
+        def get_sort_key(group: MeasureGetMeasGroup) -> str:
+            return group.created.datetime
+
+        # Sort from oldest to newest.
+        groups = sorted(
+            query_measure_groups(
+                response, MeasureTypes.ANY, MeasureGroupAttribs.UNAMBIGUOUS
+            ),
+            key=get_sort_key,
+            reverse=False,
         )
 
         return {
