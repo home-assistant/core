@@ -476,10 +476,13 @@ async def async_setup_entry(hass, entry):
     if conf is None:
         conf = CONFIG_SCHEMA({DOMAIN: dict(entry.data)})[DOMAIN]
     elif any(key in conf for key in entry.data):
-        _LOGGER.warning(
+        tmp_data = dict(entry.data)
+        tmp_data.pop(CONF_PASSWORD, None)
+        tmp_data.pop(CONF_USERNAME, None)
+        _LOGGER.info(
             "Data in your configuration entry is going to override your "
             "configuration.yaml: %s",
-            entry.data,
+            tmp_data,
         )
 
     conf = _merge_config(entry, conf)
