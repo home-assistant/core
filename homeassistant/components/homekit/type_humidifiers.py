@@ -167,7 +167,6 @@ class HumidifierDehumidifier(HomeAccessory):
                 self.entity_id,
                 self.linked_humidity_sensor,
             )
-            self.char_current_humidity.set_value(0)
             return
         try:
             current_humidity = float(new_state.state)
@@ -186,7 +185,6 @@ class HumidifierDehumidifier(HomeAccessory):
                 self.linked_humidity_sensor,
                 ex,
             )
-            self.char_current_humidity.set_value(0)
 
     def _set_chars(self, char_values):
         _LOGGER.debug("HumidifierDehumidifier _set_chars: %s", char_values)

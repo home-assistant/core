@@ -349,24 +349,12 @@ async def test_humidifier_with_linked_humidity_sensor(hass, hk_driver):
     )
     await hass.async_block_till_done()
 
-    assert acc.char_current_humidity.value == 0
-
-    hass.states.async_set(
-        humidity_sensor_entity_id,
-        "44.0",
-        {
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-            ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert acc.char_current_humidity.value == 44.0
+    assert acc.char_current_humidity.value == 43.0
 
     hass.states.async_remove(humidity_sensor_entity_id)
     await hass.async_block_till_done()
 
-    assert acc.char_current_humidity.value == 0
+    assert acc.char_current_humidity.value == 43.0
 
 
 async def test_humidifier_with_a_missing_linked_humidity_sensor(hass, hk_driver):
