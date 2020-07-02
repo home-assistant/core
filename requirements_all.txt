@@ -460,7 +460,7 @@ crimereports==1.0.1
 crownstone-cloud==1.2.1
 
 # homeassistant.components.crownstone
-crownstone-sse==1.1.2
+crownstone-sse==1.2.0
 
 # homeassistant.components.crownstone
 crownstone-uart==0.7.5

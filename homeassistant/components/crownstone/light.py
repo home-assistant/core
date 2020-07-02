@@ -14,7 +14,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 
-from .const import CROWNSTONE_TYPES, DOMAIN
+from .const import CROWNSTONE_EXCLUDE, CROWNSTONE_TYPES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,9 +25,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     entities = []
     for crownstone in crownstone_hub.sphere.crownstones:
-        entities.append(
-            Crownstone(crownstone, crownstone_hub.uart_manager.uart_instance)
-        )
+        # some don't support light features
+        if crownstone.type not in CROWNSTONE_EXCLUDE:
+            entities.append(
+                Crownstone(crownstone, crownstone_hub.uart_manager.uart_instance)
+            )
 
     async_add_entities(entities, True)
 

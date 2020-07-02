@@ -106,7 +106,7 @@ class Presence(Entity):
     @property
     def available(self) -> bool:
         """Return if the presence sensor is available."""
-        return self.hub.sse.state == "running"
+        return self.hub.sse.is_available
 
     @property
     def device_info(self) -> Dict[str, Any]:

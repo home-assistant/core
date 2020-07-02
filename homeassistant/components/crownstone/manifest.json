@@ -6,7 +6,7 @@
   "requirements": [
     "crownstone-uart==0.7.5",
     "crownstone-cloud==1.2.1",
-    "crownstone-sse==1.1.2"
+    "crownstone-sse==1.2.0"
   ],
   "codeowners": [
     "@Crownstone",

@@ -11,6 +11,8 @@ CROWNSTONE_TYPES = {
     "GUIDESTONE": "Crownstone guidestone",
 }
 
+CROWNSTONE_EXCLUDE = ["CROWNSTONE_USB", "GUIDESTONE"]
+
 PRESENCE_SPHERE = {"icon": "mdi:earth", "description": "Sphere presence"}
 
 PRESENCE_LOCATION = {
