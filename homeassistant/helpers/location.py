@@ -93,7 +93,7 @@ def find_coordinates(
         cv.gps(entity_state.state.split(","))
     except vol.Invalid:
         _LOGGER.error(
-            "The state of %s is not a valid set of coordinates: %s",
+            "Entity %s does not contain a location and does not point at an entity that does: %s",
             entity_id,
             entity_state.state,
         )
