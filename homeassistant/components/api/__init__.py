@@ -20,6 +20,7 @@ from homeassistant.const import (
     HTTP_OK,
     MATCH_ALL,
     URL_API,
+    URL_API_AREAS,
     URL_API_COMPONENTS,
     URL_API_CONFIG,
     URL_API_DISCOVERY_INFO,
@@ -34,6 +35,17 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.exceptions import ServiceNotFound, TemplateError, Unauthorized
 from homeassistant.helpers import template
+from homeassistant.helpers.area_registry import (
+    async_get_registry as async_get_area_registry,
+)
+from homeassistant.helpers.device_registry import (
+    async_entries_for_area as device_entries_for_area,
+    async_get_registry as async_get_device_registry,
+)
+from homeassistant.helpers.entity_registry import (
+    async_entries_for_device as entity_entries_for_device,
+    async_get_registry as async_get_entity_registry,
+)
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.service import async_get_all_descriptions
@@ -68,6 +80,8 @@ def setup(hass, config):
     hass.http.register_view(APIDomainServicesView)
     hass.http.register_view(APIComponentsView)
     hass.http.register_view(APITemplateView)
+    hass.http.register_view(APIAreasView)
+    hass.http.register_view(APIAreaDetailView)
 
     if DATA_LOGGING in hass.data:
         hass.http.register_view(APIErrorLog)
@@ -352,6 +366,32 @@ class APIServicesView(HomeAssistantView):
         return self.json(services)
 
 
+class APIAreasView(HomeAssistantView):
+    """View to handle Areas requests."""
+
+    url = URL_API_AREAS
+    name = "api:areas"
+
+    async def get(self, request):
+        """Get registered areas."""
+        areas = await async_areas_json(request.app["hass"])
+        return self.json(areas)
+
+
+class APIAreaDetailView(HomeAssistantView):
+    """View to handle Area detail requests."""
+
+    url = URL_API_AREAS + "/{area_id}"
+    name = "api:area-detail"
+
+    async def get(self, request, area_id):
+        """Get detail for specified area."""
+        area_detail = await async_areas_area_json(request.app["hass"], area_id)
+        if area_detail:
+            return self.json(area_detail)
+        return self.json_message(f"Area {area_id} not found.", HTTP_NOT_FOUND)
+
+
 class APIDomainServicesView(HomeAssistantView):
     """View to handle DomainServices requests."""
 
@@ -430,6 +470,45 @@ async def async_services_json(hass):
     """Generate services data to JSONify."""
     descriptions = await async_get_all_descriptions(hass)
     return [{"domain": key, "services": value} for key, value in descriptions.items()]
+
+
+async def async_areas_json(hass):
+    """Generate areas data to JSONify."""
+    registry = await async_get_area_registry(hass)
+    return [
+        {"area_id": entry.id, "name": entry.name}
+        for entry in registry.async_list_areas()
+    ]
+
+
+async def async_areas_area_json(hass, area_id):
+    """Generate area detail to JSONify."""
+    area_registry = await async_get_area_registry(hass)
+    area = area_registry.async_get_area(area_id)
+    if not area:
+        return None
+
+    device_registry = await async_get_device_registry(hass)
+    entity_registry = await async_get_entity_registry(hass)
+    entities = []
+    devices = []
+
+    for device in device_entries_for_area(device_registry, area_id):
+        devices.append({"device_id": device.id, "name": device.name})
+        for entity in entity_entries_for_device(entity_registry, device.id):
+            entities.append(
+                {
+                    "entity_id": entity.entity_id,
+                    "name": entity.name or entity.original_name,
+                }
+            )
+
+    return {
+        "area_id": area_id,
+        "name": area.name,
+        "devices": devices,
+        "entities": entities,
+    }
 
 
 @ha.callback
