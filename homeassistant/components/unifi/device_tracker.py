@@ -182,7 +182,6 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
                 self.schedule_update = True
 
         elif not self.client.event and self.client.last_updated == SOURCE_DATA:
-
             if self.is_wired == self.client.is_wired:
                 self._is_connected = True
                 self.schedule_update = True
