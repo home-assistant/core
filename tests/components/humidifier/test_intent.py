@@ -6,7 +6,6 @@ from homeassistant.components.humidifier import (
     DOMAIN,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
-    SUPPORT_MODES,
     intent,
 )
 from homeassistant.const import (
