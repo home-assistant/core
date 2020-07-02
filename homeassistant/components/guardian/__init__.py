@@ -17,7 +17,7 @@ from .const import (
     API_VALVE_STATUS,
     API_WIFI_STATUS,
     CONF_UID,
-    DATA_CLIENT,
+    DATA_COORDINATOR,
     DOMAIN,
     LOGGER,
 )
@@ -29,7 +29,7 @@ PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the Elexa Guardian component."""
-    hass.data[DOMAIN] = {DATA_CLIENT: {}}
+    hass.data[DOMAIN] = {DATA_COORDINATOR: {}}
     return True
 
 
@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elexa Guardian from a config entry."""
     guardian = Guardian(hass, entry)
     await guardian.async_refresh()
-    hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = guardian
+    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = guardian
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -58,7 +58,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
     if unload_ok:
-        hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
+        hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
 
     return unload_ok
 
@@ -81,8 +81,8 @@ class Guardian(DataUpdateCoordinator):
             update_method=self.async_update,
         )
 
-        self._client = Client(entry.data[CONF_IP_ADDRESS], port=entry.data[CONF_PORT])
         self._hass = hass
+        self.client = Client(entry.data[CONF_IP_ADDRESS], port=entry.data[CONF_PORT])
         self.uid = entry.data[CONF_UID]
 
         self._api_init_lock = asyncio.Lock()
@@ -92,9 +92,9 @@ class Guardian(DataUpdateCoordinator):
             API_WIFI_STATUS: 0,
         }
         self._api_optional_coros = {
-            API_SYSTEM_ONBOARD_SENSOR_STATUS: self._client.system.onboard_sensor_status,
-            API_VALVE_STATUS: self._client.valve.status,
-            API_WIFI_STATUS: self._client.wifi.status,
+            API_SYSTEM_ONBOARD_SENSOR_STATUS: self.client.system.onboard_sensor_status,
+            API_VALVE_STATUS: self.client.valve.status,
+            API_WIFI_STATUS: self.client.wifi.status,
         }
 
     @callback
@@ -105,47 +105,37 @@ class Guardian(DataUpdateCoordinator):
 
         self._api_interest_count[api] -= 1
 
-        LOGGER.debug(
-            "Decremented %s API count: %s (%s)",
-            self.name,
-            api,
-            self._api_interest_count[api],
-        )
-
     async def async_register_api_interest(self, api: str) -> None:
         """Increment interest in an API category."""
         self._api_interest_count[api] += 1
 
-        LOGGER.debug(
-            "Incremented %s API count: %s (%s)",
-            self.name,
-            api,
-            self._api_interest_count[api],
-        )
-
         # If an entity registers interest in a particular API category and the data
         # doesn't exist for it yet, make the API call and grab the data:
-        if api not in self.data:
-            LOGGER.debug("Fetching first API data: %s", api)
-            async with self._api_init_lock:
-                try:
-                    self.data[api] = await self._api_optional_coros[api]()
-                except GuardianError as err:
-                    LOGGER.error(
-                        "Error fetching %s data: initial %s returned %s",
-                        self.name,
-                        api,
-                        err,
-                    )
-                    self.data[api] = {}
+        async with self._api_init_lock, self.client:
+            if api in self.data:
+                return
+
+            try:
+                resp = await self._api_optional_coros[api]()
+            except GuardianError as err:
+                LOGGER.error(
+                    "Error fetching %s data: initial %s returned %s",
+                    self.name,
+                    api,
+                    err,
+                )
+                self.data[api] = {}
+                return
+
+            self.data[api] = resp["data"]
 
     async def async_update(self) -> dict:
         """Get updated data from the valve controller."""
         data = {}
 
-        async with self._client:
+        async with self.client:
             # Diagnostics info will be relevant no matter which entities are active:
-            tasks = {API_SYSTEM_DIAGNOSTICS: self._client.system.diagnostics()}
+            tasks = {API_SYSTEM_DIAGNOSTICS: self.client.system.diagnostics()}
 
             # If at least one entity has registered interest in an API call, include it
             # in the update:
@@ -159,7 +149,7 @@ class Guardian(DataUpdateCoordinator):
         for api, result in zip(tasks, results):
             if isinstance(result, GuardianError):
                 raise UpdateFailed(f"{api} returned {result}")
-            data[api] = result
+            data[api] = result["data"]
 
         return data
 
@@ -225,7 +215,7 @@ class GuardianEntity(Entity):
         return f"{self._guardian.uid}_{self._kind}"
 
     @callback
-    def _async_setup_listeners(self):
+    def _async_internal_added_to_hass(self):
         """Perform tasks when the entity is added."""
         self.async_on_remove(self._guardian.async_add_listener(self._update_callback))
         self._async_update_from_latest_data()

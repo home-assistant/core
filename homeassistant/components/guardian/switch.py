@@ -13,7 +13,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from . import Guardian, GuardianEntity
-from .const import API_VALVE_STATUS, DATA_CLIENT, DOMAIN, LOGGER
+from .const import API_VALVE_STATUS, DATA_COORDINATOR, DOMAIN, LOGGER
 
 ATTR_AVG_CURRENT = "average_current"
 ATTR_INST_CURRENT = "instantaneous_current"
@@ -39,7 +39,7 @@ SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Guardian switches based on a config entry."""
-    guardian = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    guardian = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
 
     platform = entity_platform.current_platform.get()
 
@@ -103,7 +103,7 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
     async def async_added_to_hass(self):
         """Register API interest (and related tasks) when the entity is added."""
         await self._guardian.async_register_api_interest(API_VALVE_STATUS)
-        self._async_setup_listeners()
+        self._async_internal_added_to_hass()
 
     async def async_disable_ap(self):
         """Disable the device's onboard access point."""
@@ -174,4 +174,3 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Deregister API interest (and related tasks) when the entity is removed."""
         self._guardian.async_deregister_api_interest(API_VALVE_STATUS)
-        self._guardian.async_remove_listener(self._update_callback)

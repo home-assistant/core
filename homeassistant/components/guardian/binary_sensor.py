@@ -6,7 +6,7 @@ from . import GuardianEntity
 from .const import (
     API_SYSTEM_ONBOARD_SENSOR_STATUS,
     API_WIFI_STATUS,
-    DATA_CLIENT,
+    DATA_COORDINATOR,
     DOMAIN,
 )
 
@@ -22,7 +22,7 @@ SENSORS = [
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Guardian switches based on a config entry."""
-    guardian = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    guardian = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
     async_add_entities(
         [
             GuardianBinarySensor(guardian, kind, name, device_class)
@@ -70,7 +70,7 @@ class GuardianBinarySensor(GuardianEntity, BinarySensorEntity):
                 API_SYSTEM_ONBOARD_SENSOR_STATUS
             )
 
-        self._async_setup_listeners()
+        self._async_internal_added_to_hass()
 
     async def async_will_remove_from_hass(self) -> None:
         """Deregister API interest (and related tasks) when the entity is removed."""
@@ -80,5 +80,3 @@ class GuardianBinarySensor(GuardianEntity, BinarySensorEntity):
             self._guardian.async_deregister_api_interest(
                 API_SYSTEM_ONBOARD_SENSOR_STATUS
             )
-
-        self._guardian.async_remove_listener(self._update_callback)

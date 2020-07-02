@@ -12,4 +12,4 @@ API_WIFI_STATUS = "wifi_status"
 
 CONF_UID = "uid"
 
-DATA_CLIENT = "client"
+DATA_COORDINATOR = "coordinator"
