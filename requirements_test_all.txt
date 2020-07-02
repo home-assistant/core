@@ -310,7 +310,7 @@ gios==0.1.1
 glances_api==0.2.0
 
 # homeassistant.components.gogogate2
-gogogate2-api==1.0.3
+gogogate2-api==1.0.4
 
 # homeassistant.components.google
 google-api-python-client==1.6.4
@@ -343,7 +343,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200701.0
+home-assistant-frontend==20200702.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -715,7 +715,7 @@ pysignalclirestapi==0.3.4
 pysma==0.3.5
 
 # homeassistant.components.smappee
-pysmappee==0.1.0
+pysmappee==0.1.2
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.2

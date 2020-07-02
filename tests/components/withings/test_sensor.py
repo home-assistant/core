@@ -1,5 +1,4 @@
 """Tests for the Withings component."""
-import time
 from typing import Any
 from unittest.mock import patch
 
@@ -40,8 +39,8 @@ PERSON0 = new_profile_config(
             MeasureGetMeasGroup(
                 attrib=MeasureGetMeasGroupAttrib.DEVICE_ENTRY_FOR_USER,
                 category=MeasureGetMeasGroupCategory.REAL,
-                created=time.time(),
-                date=time.time(),
+                created=arrow.utcnow().shift(hours=-1),
+                date=arrow.utcnow().shift(hours=-1),
                 deviceid="DEV_ID",
                 grpid=1,
                 measures=(
@@ -88,10 +87,60 @@ PERSON0 = new_profile_config(
                 ),
             ),
             MeasureGetMeasGroup(
+                attrib=MeasureGetMeasGroupAttrib.DEVICE_ENTRY_FOR_USER,
+                category=MeasureGetMeasGroupCategory.REAL,
+                created=arrow.utcnow().shift(hours=-2),
+                date=arrow.utcnow().shift(hours=-2),
+                deviceid="DEV_ID",
+                grpid=1,
+                measures=(
+                    MeasureGetMeasMeasure(type=MeasureType.WEIGHT, unit=0, value=71),
+                    MeasureGetMeasMeasure(
+                        type=MeasureType.FAT_MASS_WEIGHT, unit=0, value=51
+                    ),
+                    MeasureGetMeasMeasure(
+                        type=MeasureType.FAT_FREE_MASS, unit=0, value=61
+                    ),
+                    MeasureGetMeasMeasure(
+                        type=MeasureType.MUSCLE_MASS, unit=0, value=51
+                    ),
+                    MeasureGetMeasMeasure(type=MeasureType.BONE_MASS, unit=0, value=11),
+                    MeasureGetMeasMeasure(type=MeasureType.HEIGHT, unit=0, value=21),
+                    MeasureGetMeasMeasure(
+                        type=MeasureType.TEMPERATURE, unit=0, value=41
+                    ),
+                    MeasureGetMeasMeasure(
+                        type=MeasureType.BODY_TEMPERATURE, unit=0, value=41
+                    ),
+                    MeasureGetMeasMeasure(
+                        type=MeasureType.SKIN_TEMPERATURE, unit=0, value=21
+                    ),
+                    MeasureGetMeasMeasure(
+                        type=MeasureType.FAT_RATIO, unit=-3, value=71
+                    ),
+                    MeasureGetMeasMeasure(
+                        type=MeasureType.DIASTOLIC_BLOOD_PRESSURE, unit=0, value=71
+                    ),
+                    MeasureGetMeasMeasure(
+                        type=MeasureType.SYSTOLIC_BLOOD_PRESSURE, unit=0, value=101
+                    ),
+                    MeasureGetMeasMeasure(
+                        type=MeasureType.HEART_RATE, unit=0, value=61
+                    ),
+                    MeasureGetMeasMeasure(type=MeasureType.SP02, unit=-2, value=96),
+                    MeasureGetMeasMeasure(
+                        type=MeasureType.HYDRATION, unit=-2, value=96
+                    ),
+                    MeasureGetMeasMeasure(
+                        type=MeasureType.PULSE_WAVE_VELOCITY, unit=0, value=101
+                    ),
+                ),
+            ),
+            MeasureGetMeasGroup(
                 attrib=MeasureGetMeasGroupAttrib.DEVICE_ENTRY_FOR_USER_AMBIGUOUS,
                 category=MeasureGetMeasGroupCategory.REAL,
-                created=time.time(),
-                date=time.time(),
+                created=arrow.utcnow(),
+                date=arrow.utcnow(),
                 deviceid="DEV_ID",
                 grpid=1,
                 measures=(
