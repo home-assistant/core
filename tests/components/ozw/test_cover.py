@@ -92,7 +92,7 @@ async def test_barrier(hass, cover_gdo_data, sent_messages, cover_gdo_msg):
     # Test loaded
     state = hass.states.get("cover.gd00z_4_barrier_state")
     assert state is not None
-    assert state.state == "open"
+    assert state.state == "closed"
 
     # Test opening
     await hass.services.async_call(
@@ -108,20 +108,20 @@ async def test_barrier(hass, cover_gdo_data, sent_messages, cover_gdo_msg):
 
     # Feedback on state
     cover_gdo_msg.decode()
-    cover_gdo_msg.payload["Selected"] = "Opened"
+    cover_gdo_msg.payload["Selected_id"] = 4
     cover_gdo_msg.encode()
     receive_message(cover_gdo_msg)
     await hass.async_block_till_done()
 
-    state = hass.states.get("cover.cover.gd00z_4_barrier_state")
+    state = hass.states.get("cover.gd00z_4_barrier_state")
     assert state is not None
-    assert state.state == "Opened"
+    assert state.state == "closed"
 
     # Test closing
     await hass.services.async_call(
         "cover",
         "close_cover",
-        {"entity_id": "cover.cover.gd00z_4_barrier_state"},
+        {"entity_id": "cover.gd00z_4_barrier_state"},
         blocking=True,
     )
     assert len(sent_messages) == 2

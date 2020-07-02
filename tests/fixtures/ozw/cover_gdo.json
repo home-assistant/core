@@ -1,5 +1,5 @@
 {
-    "topic": "OpenZWave/1/node/6/instance/1/commandclass/102/value/625573705/",
+    "topic": "OpenZWave/1/node/6/instance/1/commandclass/102/value/281475083239444/",
     "payload": {
         "Label": "Barrier State",
         "Value": {
@@ -29,8 +29,8 @@
                     "Label": "Unknown"
                 }
             ],
-            "Selected": "Opened",
-            "Selected_id": 4
+            "Selected": "Closed",
+            "Selected_id": 0
         },
         "Units": "",
         "ValueSet": true,
