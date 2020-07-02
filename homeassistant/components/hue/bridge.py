@@ -14,7 +14,14 @@ from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import DOMAIN, LOGGER
+from .const import (
+    CONF_ALLOW_HUE_GROUPS,
+    CONF_ALLOW_UNREACHABLE,
+    DEFAULT_ALLOW_HUE_GROUPS,
+    DEFAULT_ALLOW_UNREACHABLE,
+    DOMAIN,
+    LOGGER,
+)
 from .errors import AuthenticationRequired, CannotConnect
 from .helpers import create_config_flow
 from .sensor_base import SensorManager
@@ -33,12 +40,10 @@ _LOGGER = logging.getLogger(__name__)
 class HueBridge:
     """Manages a single Hue bridge."""
 
-    def __init__(self, hass, config_entry, allow_unreachable, allow_groups):
+    def __init__(self, hass, config_entry):
         """Initialize the system."""
         self.config_entry = config_entry
         self.hass = hass
-        self.allow_unreachable = allow_unreachable
-        self.allow_groups = allow_groups
         self.available = True
         self.authorized = False
         self.api = None
@@ -46,11 +51,26 @@ class HueBridge:
         # Jobs to be executed when API is reset.
         self.reset_jobs = []
         self.sensor_manager = None
+        self.unsub_config_entry_listner = None
 
     @property
     def host(self):
         """Return the host of this bridge."""
         return self.config_entry.data["host"]
+
+    @property
+    def allow_unreachable(self):
+        """Allow unreachable light bulbs."""
+        return self.config_entry.options.get(
+            CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE
+        )
+
+    @property
+    def allow_groups(self):
+        """Allow groups defined in the Hue bridge."""
+        return self.config_entry.options.get(
+            CONF_ALLOW_HUE_GROUPS, DEFAULT_ALLOW_HUE_GROUPS
+        )
 
     async def async_setup(self, tries=0):
         """Set up a phue bridge based on host parameter."""
@@ -103,6 +123,10 @@ class HueBridge:
 
         self.parallel_updates_semaphore = asyncio.Semaphore(
             3 if self.api.config.modelid == "BSB001" else 10
+        )
+
+        self.unsub_config_entry_listner = self.config_entry.add_update_listener(
+            _update_listener
         )
 
         self.authorized = True
@@ -159,6 +183,9 @@ class HueBridge:
 
         while self.reset_jobs:
             self.reset_jobs.pop()()
+
+        if self.unsub_config_entry_listner is not None:
+            self.unsub_config_entry_listner()
 
         # If setup was successful, we set api variable, forwarded entry and
         # register service
@@ -244,8 +271,18 @@ async def authenticate_bridge(hass: core.HomeAssistant, bridge: aiohue.Bridge):
 
     except (aiohue.LinkButtonNotPressed, aiohue.Unauthorized):
         raise AuthenticationRequired
-    except (asyncio.TimeoutError, client_exceptions.ClientOSError):
+    except (
+        asyncio.TimeoutError,
+        client_exceptions.ClientOSError,
+        client_exceptions.ServerDisconnectedError,
+        client_exceptions.ContentTypeError,
+    ):
         raise CannotConnect
     except aiohue.AiohueException:
         LOGGER.exception("Unknown Hue linking error occurred")
         raise AuthenticationRequired
+
+
+async def _update_listener(hass, entry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
