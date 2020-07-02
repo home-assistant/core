@@ -120,6 +120,7 @@ async def test_fire_event(hass):
             }
         },
     )
+    await hass.async_block_till_done()
 
     calls = []
 
@@ -180,6 +181,7 @@ async def test_fire_event_sensor(hass):
             }
         },
     )
+    await hass.async_block_till_done()
 
     calls = []
 

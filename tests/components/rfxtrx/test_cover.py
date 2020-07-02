@@ -28,6 +28,7 @@ async def test_valid_config(hass, rfxtrx):
                 }
             },
         )
+        await hass.async_block_till_done()
 
 
 async def test_default_config(hass, rfxtrx):
@@ -35,6 +36,8 @@ async def test_default_config(hass, rfxtrx):
     assert await async_setup_component(
         hass, "cover", {"cover": {"platform": "rfxtrx", "devices": {}}}
     )
+    await hass.async_block_till_done()
+
     assert 0 == len(rfxtrx_core.RFX_DEVICES)
 
 
@@ -50,6 +53,8 @@ async def test_one_cover(hass, rfxtrx):
             }
         },
     )
+    await hass.async_block_till_done()
+
     hass.data[rfxtrx_core.DATA_RFXOBJECT] = rfxtrxmod.Core(
         "", transport_protocol=rfxtrxmod.DummyTransport
     )

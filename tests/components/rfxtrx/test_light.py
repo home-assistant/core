@@ -51,6 +51,8 @@ async def test_default_config(hass, rfxtrx):
         await async_setup_component(
             hass, "light", {"light": {"platform": "rfxtrx", "devices": {}}}
         )
+        await hass.async_block_till_done()
+
     assert 0 == len(rfxtrx_core.RFX_DEVICES)
 
 
@@ -66,6 +68,7 @@ async def test_one_light(hass, rfxtrx):
             }
         },
     )
+    await hass.async_block_till_done()
 
     import RFXtrx as rfxtrxmod
 
@@ -142,6 +145,7 @@ async def test_several_lights(hass, rfxtrx):
             }
         },
     )
+    await hass.async_block_till_done()
 
     assert 3 == len(rfxtrx_core.RFX_DEVICES)
     device_num = 0
@@ -171,6 +175,7 @@ async def test_discover_light(hass, rfxtrx):
         "light",
         {"light": {"platform": "rfxtrx", "automatic_add": True, "devices": {}}},
     )
+    await hass.async_block_till_done()
 
     event = rfxtrx_core.get_rfx_object("0b11009e00e6116202020070")
     event.data = bytearray(b"\x0b\x11\x00\x9e\x00\xe6\x11b\x02\x02\x00p")
@@ -227,6 +232,7 @@ async def test_discover_light_noautoadd(hass, rfxtrx):
         "light",
         {"light": {"platform": "rfxtrx", "automatic_add": False, "devices": {}}},
     )
+    await hass.async_block_till_done()
 
     event = rfxtrx_core.get_rfx_object("0b1100120118cdea02020070")
     event.data = bytearray(

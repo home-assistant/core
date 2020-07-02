@@ -11,6 +11,8 @@ async def test_default_config(hass, rfxtrx):
     await async_setup_component(
         hass, "sensor", {"sensor": {"platform": "rfxtrx", "devices": {}}}
     )
+    await hass.async_block_till_done()
+
     assert 0 == len(rfxtrx_core.RFX_DEVICES)
 
 

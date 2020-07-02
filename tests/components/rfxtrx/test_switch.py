@@ -28,6 +28,7 @@ async def test_valid_config(hass, rfxtrx):
                 }
             },
         )
+        await hass.async_block_till_done()
 
 
 async def test_valid_config_int_device_id(hass, rfxtrx):
@@ -49,6 +50,7 @@ async def test_valid_config_int_device_id(hass, rfxtrx):
                 }
             },
         )
+        await hass.async_block_till_done()
 
 
 async def test_invalid_config2(hass, rfxtrx):
@@ -71,6 +73,7 @@ async def test_invalid_config2(hass, rfxtrx):
                 }
             },
         )
+        await hass.async_block_till_done()
 
 
 async def test_default_config(hass, rfxtrx):
@@ -78,6 +81,8 @@ async def test_default_config(hass, rfxtrx):
     await async_setup_component(
         hass, "switch", {"switch": {"platform": "rfxtrx", "devices": {}}}
     )
+    await hass.async_block_till_done()
+
     assert 0 == len(rfxtrx_core.RFX_DEVICES)
 
 
@@ -93,6 +98,7 @@ async def test_one_switch(hass, rfxtrx):
             }
         },
     )
+    await hass.async_block_till_done()
 
     hass.data[rfxtrx_core.DATA_RFXOBJECT] = rfxtrxmod.Core(
         "", transport_protocol=rfxtrxmod.DummyTransport
@@ -139,6 +145,7 @@ async def test_several_switches(hass, rfxtrx):
             }
         },
     )
+    await hass.async_block_till_done()
 
     assert 3 == len(rfxtrx_core.RFX_DEVICES)
     device_num = 0
@@ -168,6 +175,7 @@ async def test_discover_switch(hass, rfxtrx):
         "switch",
         {"switch": {"platform": "rfxtrx", "automatic_add": True, "devices": {}}},
     )
+    await hass.async_block_till_done()
 
     event = rfxtrx_core.get_rfx_object("0b1100100118cdea02010f70")
     event.data = bytearray(
@@ -222,6 +230,7 @@ async def test_discover_switch_noautoadd(hass, rfxtrx):
         "switch",
         {"switch": {"platform": "rfxtrx", "automatic_add": False, "devices": {}}},
     )
+    await hass.async_block_till_done()
 
     event = rfxtrx_core.get_rfx_object("0b1100100118cdea02010f70")
     event.data = bytearray(
