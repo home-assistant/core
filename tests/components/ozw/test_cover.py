@@ -1,8 +1,10 @@
 """Test Z-Wave Covers."""
 from homeassistant.components.cover import ATTR_CURRENT_POSITION
-from homeassistant.components.ozw.cover import VALUE_ID, VALUE_SELECTED_ID
+from homeassistant.components.ozw.cover import VALUE_SELECTED_ID
 
 from .common import setup_ozw
+
+VALUE_ID = "Value"
 
 
 async def test_cover(hass, cover_data, sent_messages, cover_msg):
