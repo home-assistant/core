@@ -310,7 +310,7 @@ gios==0.1.1
 glances_api==0.2.0
 
 # homeassistant.components.gogogate2
-gogogate2-api==1.0.3
+gogogate2-api==1.0.4
 
 # homeassistant.components.google
 google-api-python-client==1.6.4
