@@ -13,7 +13,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from . import Guardian, GuardianEntity
-from .const import DATA_CLIENT, DATA_VALVE_STATUS, DOMAIN, LOGGER, SWITCH_KIND_VALVE
+from .const import API_VALVE_STATUS, DATA_CLIENT, DOMAIN, LOGGER
 
 ATTR_AVG_CURRENT = "average_current"
 ATTR_INST_CURRENT = "instantaneous_current"
@@ -64,7 +64,7 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
 
     def __init__(self, guardian: Guardian):
         """Initialize."""
-        super().__init__(guardian, SWITCH_KIND_VALVE, "Valve", None, "mdi:water")
+        super().__init__(guardian, "valve", "Valve", None, "mdi:water")
 
         self._is_on = True
 
@@ -74,9 +74,9 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
         return self._is_on
 
     @callback
-    def _update_from_latest_data(self):
+    def _async_update_from_latest_data(self):
         """Update the entity."""
-        self._is_on = self._guardian.data[DATA_VALVE_STATUS]["state"] in (
+        self._is_on = self._guardian.data[API_VALVE_STATUS]["state"] in (
             "start_opening",
             "opening",
             "finish_opening",
@@ -85,20 +85,25 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
 
         self._attrs.update(
             {
-                ATTR_AVG_CURRENT: self._guardian.data[DATA_VALVE_STATUS][
+                ATTR_AVG_CURRENT: self._guardian.data[API_VALVE_STATUS][
                     "average_current"
                 ],
-                ATTR_INST_CURRENT: self._guardian.data[DATA_VALVE_STATUS][
+                ATTR_INST_CURRENT: self._guardian.data[API_VALVE_STATUS][
                     "instantaneous_current"
                 ],
-                ATTR_INST_CURRENT_DDT: self._guardian.data[DATA_VALVE_STATUS][
+                ATTR_INST_CURRENT_DDT: self._guardian.data[API_VALVE_STATUS][
                     "instantaneous_current_ddt"
                 ],
-                ATTR_TRAVEL_COUNT: self._guardian.data[DATA_VALVE_STATUS][
+                ATTR_TRAVEL_COUNT: self._guardian.data[API_VALVE_STATUS][
                     "travel_count"
                 ],
             }
         )
+
+    async def async_added_to_hass(self):
+        """Register API interest (and related tasks) when the entity is added."""
+        await self._guardian.async_register_api_interest(API_VALVE_STATUS)
+        self._async_setup_listeners()
 
     async def async_disable_ap(self):
         """Disable the device's onboard access point."""
@@ -165,3 +170,8 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
 
         self._is_on = True
         self.async_write_ha_state()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Deregister API interest (and related tasks) when the entity is removed."""
+        self._guardian.async_deregister_api_interest(API_VALVE_STATUS)
+        self._guardian.async_remove_listener(self._update_callback)

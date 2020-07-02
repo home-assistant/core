@@ -4,14 +4,14 @@ from homeassistant.core import callback
 
 from . import Guardian, GuardianEntity
 from .const import (
+    API_SYSTEM_DIAGNOSTICS,
+    API_SYSTEM_ONBOARD_SENSOR_STATUS,
     DATA_CLIENT,
-    DATA_DIAGNOSTICS,
-    DATA_SENSOR_STATUS,
     DOMAIN,
-    SENSOR_KIND_TEMPERATURE,
-    SENSOR_KIND_UPTIME,
 )
 
+SENSOR_KIND_TEMPERATURE = "temperature"
+SENSOR_KIND_UPTIME = "uptime"
 SENSORS = [
     (
         SENSOR_KIND_TEMPERATURE,
@@ -65,9 +65,29 @@ class GuardianSensor(GuardianEntity):
         return self._unit
 
     @callback
-    def _update_from_latest_data(self):
+    def _async_update_from_latest_data(self):
         """Update the entity."""
         if self._kind == SENSOR_KIND_TEMPERATURE:
-            self._state = self._guardian.data[DATA_SENSOR_STATUS]["temperature"]
+            self._state = self._guardian.data[API_SYSTEM_ONBOARD_SENSOR_STATUS][
+                "temperature"
+            ]
         elif self._kind == SENSOR_KIND_UPTIME:
-            self._state = self._guardian.data[DATA_DIAGNOSTICS]["uptime"]
+            self._state = self._guardian.data[API_SYSTEM_DIAGNOSTICS]["uptime"]
+
+    async def async_added_to_hass(self):
+        """Register API interest (and related tasks) when the entity is added."""
+        if self._kind == SENSOR_KIND_TEMPERATURE:
+            await self._guardian.async_register_api_interest(
+                API_SYSTEM_ONBOARD_SENSOR_STATUS
+            )
+
+        self._async_setup_listeners()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Deregister API interest (and related tasks) when the entity is removed."""
+        if self._kind == SENSOR_KIND_TEMPERATURE:
+            self._guardian.async_deregister_api_interest(
+                API_SYSTEM_ONBOARD_SENSOR_STATUS
+            )
+
+        self._guardian.async_remove_listener(self._update_callback)
