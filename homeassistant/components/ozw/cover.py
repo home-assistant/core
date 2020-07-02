@@ -5,6 +5,7 @@ from openzwavemqtt.const import CommandClass
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    DEVICE_CLASS_GARAGE,
     DOMAIN as COVER_DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
@@ -22,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_FEATURES_POSITION = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
+VALUE_ID = "Value"
 VALUE_SELECTED_ID = "Selected_id"
 
 
@@ -31,12 +33,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     @callback
     def async_add_cover(values):
         """Add Z-Wave Cover."""
-
         if values.primary.command_class == CommandClass.BARRIER_OPERATOR:
-            async_add_entities([ZwaveGarageDoorBarrier(values)])
-
+            cover = ZwaveGarageDoorBarrier(values)
         else:
-            async_add_entities([ZWaveCoverEntity(values)])
+            cover = ZWaveCoverEntity(values)
+
+        async_add_entities([cover])
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
         async_dispatcher_connect(hass, f"{DOMAIN}_new_{COVER_DOMAIN}", async_add_cover)
@@ -95,7 +97,7 @@ class ZwaveGarageDoorBarrier(ZWaveDeviceEntity, CoverEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return "garage"
+        return DEVICE_CLASS_GARAGE
 
     @property
     def is_opening(self):

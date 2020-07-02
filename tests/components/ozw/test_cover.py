@@ -1,5 +1,6 @@
 """Test Z-Wave Covers."""
 from homeassistant.components.cover import ATTR_CURRENT_POSITION
+from homeassistant.components.ozw.cover import VALUE_ID, VALUE_SELECTED_ID
 
 from .common import setup_ozw
 
@@ -108,14 +109,14 @@ async def test_barrier(hass, cover_gdo_data, sent_messages, cover_gdo_msg):
 
     # Feedback on state
     cover_gdo_msg.decode()
-    cover_gdo_msg.payload["Selected_id"] = 4
+    cover_gdo_msg.payload[VALUE_ID][VALUE_SELECTED_ID] = 4
     cover_gdo_msg.encode()
     receive_message(cover_gdo_msg)
     await hass.async_block_till_done()
 
     state = hass.states.get("cover.gd00z_4_barrier_state")
     assert state is not None
-    assert state.state == "closed"
+    assert state.state == "open"
 
     # Test closing
     await hass.services.async_call(
