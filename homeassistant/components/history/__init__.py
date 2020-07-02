@@ -8,7 +8,7 @@ import time
 from typing import Optional, cast
 
 from aiohttp import web
-from sqlalchemy import and_, func
+from sqlalchemy import and_, bindparam, func
 import voluptuous as vol
 
 from homeassistant.components import recorder
@@ -18,7 +18,7 @@ from homeassistant.components.recorder.models import (
     process_timestamp,
     process_timestamp_to_utc_isoformat,
 )
-from homeassistant.components.recorder.util import execute, session_scope
+from homeassistant.components.recorder.util import bakery, execute, session_scope
 from homeassistant.const import (
     CONF_DOMAINS,
     CONF_ENTITIES,
@@ -116,26 +116,16 @@ def _get_significant_states(
     """
     timer_start = time.perf_counter()
 
-    if significant_changes_only:
-        query = session.query(*QUERY_STATES).filter(
-            (
-                States.domain.in_(SIGNIFICANT_DOMAINS)
-                | (States.last_changed == States.last_updated)
-            )
-            & (States.last_updated > start_time)
+    states = execute(
+        _significant_states_query(
+            session,
+            start_time,
+            end_time=end_time,
+            entity_ids=entity_ids,
+            significant_changes_only=significant_changes_only,
+            filters=filters,
         )
-    else:
-        query = session.query(*QUERY_STATES).filter(States.last_updated > start_time)
-
-    if filters:
-        query = filters.apply(query, entity_ids)
-
-    if end_time is not None:
-        query = query.filter(States.last_updated < end_time)
-
-    query = query.order_by(States.entity_id, States.last_updated)
-
-    states = execute(query)
+    )
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
         elapsed = time.perf_counter() - timer_start
@@ -150,6 +140,40 @@ def _get_significant_states(
         filters,
         include_start_time_state,
         minimal_response,
+    )
+
+
+def _significant_states_query(
+    session,
+    start_time,
+    end_time=None,
+    entity_ids=None,
+    significant_changes_only=None,
+    filters=None,
+):
+    baked_query = bakery(lambda session: session.query(*QUERY_STATES))
+
+    if significant_changes_only:
+        baked_query += lambda q: q.filter(
+            (
+                States.domain.in_(SIGNIFICANT_DOMAINS)
+                | (States.last_changed == States.last_updated)
+            )
+            & (States.last_updated > bindparam("start_time"))
+        )
+    else:
+        baked_query += lambda q: q.filter(States.last_updated > start_time)
+
+    if filters:
+        filters.bake(baked_query, entity_ids)
+
+    if end_time is not None:
+        baked_query += lambda q: q.filter(States.last_updated < bindparam("end_time"))
+
+    baked_query += lambda q: q.order_by(States.entity_id, States.last_updated)
+
+    return baked_query(session).params(
+        start_time=start_time, end_time=end_time, entity_ids=entity_ids
     )
 
 
@@ -560,14 +584,42 @@ class Filters:
         """
         # specific entities requested - do not in/exclude anything
         if entity_ids is not None:
-            return query.filter(States.entity_id.in_(entity_ids))
-        query = query.filter(~States.domain.in_(IGNORE_DOMAINS))
+            return query.filter(self.entity_ids_filter(entity_ids))
+
+        query = query.filter(self.ignore_domains_filter())
 
         entity_filter = self.entity_filter()
         if entity_filter is not None:
             query = query.filter(entity_filter)
 
         return query
+
+    def bake(self, baked_query, entity_ids=None):
+        """Update a baked query.
+
+        Works the same as apply on a baked_query.
+        """
+        if entity_ids is not None:
+            baked_query += lambda q: q.filter(
+                self.entity_ids_filter(bindparam("entity_ids", expanding=True))
+            )
+            return
+
+        baked_query += lambda q: q.filter(self.ignore_domains_filter())
+
+        entity_filter = self.entity_filter()
+        if entity_filter is not None:
+            baked_query += lambda q: q.filter(entity_filter)
+
+        return
+
+    def entity_ids_filter(self, entity_ids):
+        """Include entity_ids in the filter."""
+        return States.entity_id.in_(entity_ids)
+
+    def ignore_domains_filter(self):
+        """Include ignored domains in the filter."""
+        return ~States.domain.in_(IGNORE_DOMAINS)
 
     def entity_filter(self):
         """Generate the entity filter query."""

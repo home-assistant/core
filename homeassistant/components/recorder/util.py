@@ -4,6 +4,7 @@ import logging
 import time
 
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.ext import baked
 
 from .const import DATA_INSTANCE
 
@@ -11,6 +12,8 @@ _LOGGER = logging.getLogger(__name__)
 
 RETRIES = 3
 QUERY_RETRY_WAIT = 0.1
+
+bakery = baked.bakery()
 
 
 @contextmanager
