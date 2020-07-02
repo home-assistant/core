@@ -218,11 +218,11 @@ class GuardianEntity(Entity):
         """Perform tasks when the entity is added."""
 
         @callback
-        def update_callback(self):
-            """Define a callback to update the entity's state from the latest data."""
+        def update(self):
+            """Update the state."""
             self._async_update_from_latest_data()
             self.async_write_ha_state()
 
         await self._async_internal_added_to_hass()
-        self.async_on_remove(self._guardian.async_add_listener(update_callback))
+        self.async_on_remove(self._guardian.async_add_listener(update))
         self._async_update_from_latest_data()
