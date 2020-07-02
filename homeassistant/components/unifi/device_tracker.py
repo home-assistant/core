@@ -167,15 +167,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
     def async_update_callback(self) -> None:
         """Update the clients state."""
 
-        @callback
-        def _make_disconnected(now):
-            """Mark client as disconnected."""
-            self._is_connected = False
-            self.cancel_scheduled_update = None
-            self.async_write_ha_state()
-
         if self.client.last_updated == SOURCE_EVENT:
-
             if (self.is_wired and self.client.event.event in WIRED_CONNECTION) or (
                 not self.is_wired and self.client.event.event in WIRELESS_CONNECTION
             ):
@@ -190,7 +182,6 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
                 self.schedule_update = True
 
         elif not self.client.event and self.client.last_updated == SOURCE_DATA:
-
             if self.is_wired == self.client.is_wired:
                 self._is_connected = True
                 self.schedule_update = True
@@ -203,11 +194,18 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
             self.cancel_scheduled_update = async_track_point_in_utc_time(
                 self.hass,
-                _make_disconnected,
+                self._make_disconnected,
                 dt_util.utcnow() + self.controller.option_detection_time,
             )
 
         super().async_update_callback()
+
+    @callback
+    def _make_disconnected(self, _):
+        """Mark client as disconnected."""
+        self._is_connected = False
+        self.cancel_scheduled_update = None
+        self.async_write_ha_state()
 
     @property
     def is_connected(self):
@@ -239,10 +237,13 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
         attributes["is_wired"] = self.is_wired
 
-        for variable in CLIENT_STATIC_ATTRIBUTES + CLIENT_CONNECTED_ATTRIBUTES:
+        if self.is_connected:
+            for variable in CLIENT_CONNECTED_ATTRIBUTES:
+                if variable in self.client.raw:
+                    attributes[variable] = self.client.raw[variable]
+
+        for variable in CLIENT_STATIC_ATTRIBUTES:
             if variable in self.client.raw:
-                if not self.is_connected and variable in CLIENT_CONNECTED_ATTRIBUTES:
-                    continue
                 attributes[variable] = self.client.raw[variable]
 
         return attributes
@@ -291,14 +292,8 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
     def async_update_callback(self):
         """Update the devices' state."""
 
-        @callback
-        def _no_heartbeat(now):
-            """No heart beat by device."""
-            self._is_connected = False
-            self.cancel_scheduled_update = None
-            self.async_write_ha_state()
-
         if self.device.last_updated == SOURCE_DATA:
+
             self._is_connected = True
 
             if self.cancel_scheduled_update:
@@ -306,7 +301,7 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
 
             self.cancel_scheduled_update = async_track_point_in_utc_time(
                 self.hass,
-                _no_heartbeat,
+                self._no_heartbeat,
                 dt_util.utcnow() + timedelta(seconds=self.device.next_interval + 60),
             )
 
@@ -318,6 +313,13 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
             return
 
         super().async_update_callback()
+
+    @callback
+    def _no_heartbeat(self, _):
+        """No heart beat by device."""
+        self._is_connected = False
+        self.cancel_scheduled_update = None
+        self.async_write_ha_state()
 
     @property
     def is_connected(self):
