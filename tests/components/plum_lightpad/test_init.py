@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_async_setup_no_domain_config(hass: HomeAssistant):
-    """Test setup without configuration."""
+    """Test setup without configuration is noop."""
     result = await async_setup_component(hass, DOMAIN, {})
 
     assert result is True
