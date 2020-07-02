@@ -191,7 +191,6 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
                 self.schedule_update = True
 
         if self.schedule_update:
-
             self.schedule_update = False
 
             if self.cancel_scheduled_update:
