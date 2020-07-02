@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     API_SYSTEM_DIAGNOSTICS,
@@ -148,7 +148,7 @@ class Guardian(DataUpdateCoordinator):
 
         for api, result in zip(tasks, results):
             if isinstance(result, GuardianError):
-                raise UpdateFailed(f"{api} returned {result}")
+                LOGGER.error("Error fetching %s data: %s", self.name, result)
             data[api] = result["data"]
 
         return data
