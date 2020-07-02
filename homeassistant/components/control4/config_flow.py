@@ -5,8 +5,10 @@ import voluptuous as vol
 
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
+from pyControl4.error_handling import C4Exception, BadCredentials, Unauthorized
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.core import callback
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -27,6 +29,12 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
+@callback
+def configured_instances(hass):
+    """Return a set of configured Control4 instances."""
+    return {entry.title for entry in hass.config_entries.async_entries(DOMAIN)}
+
+
 class Control4Validator:
     """Placeholder class to make tests pass.
 
@@ -39,6 +47,9 @@ class Control4Validator:
         self.username = username
         self.password = password
         self.account = C4Account(self.username, self.password)
+        self.controller_name = None
+        self.director_bearer_token = None
+        self.director = None
 
     async def authenticate(self) -> bool:
         """Test if we can authenticate with the Control4 account API."""
@@ -55,7 +66,7 @@ class Control4Validator:
                 self.controller_name
             )
             return True
-        except Exception as exception:
+        except (BadCredentials, Unauthorized) as exception:
             _LOGGER.error(exception)
             return False
 
@@ -65,7 +76,7 @@ class Control4Validator:
             self.director = C4Director(self.host, self.director_bearer_token)
             await self.director.getAllItemInfo()
             return True
-        except Exception as exception:
+        except Exception as exception:  # pylint: disable=broad-except
             _LOGGER.error(exception)
             return False
 
@@ -113,8 +124,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
+
             try:
                 info = await validate_input(self.hass, user_input)
+                if info["controller_name"] in configured_instances(self.hass):
+                    return self.async_abort(reason="already_configured")
 
                 return self.async_create_entry(
                     title=info["controller_name"],
