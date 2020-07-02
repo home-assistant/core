@@ -80,7 +80,7 @@ class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
 
     def _sync(self, message=None):
         """Update the multi level sensor state."""
-        if message[0].startswith("devolo.MultiLevelSensor"):
+        if message[0] == self._multi_level_sensor_property.element_uid:
             self._state = self._device_instance.multi_level_sensor_property[
                 message[0]
             ].value
