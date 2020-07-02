@@ -1,8 +1,11 @@
 """Support for Z-Wave cover devices."""
 import logging
 
+from openzwavemqtt.const import CommandClass
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    DEVICE_CLASS_GARAGE,
     DOMAIN as COVER_DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
@@ -19,6 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 SUPPORTED_FEATURES_POSITION = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
+SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
+VALUE_SELECTED_ID = "Selected_id"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -27,8 +32,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     @callback
     def async_add_cover(values):
         """Add Z-Wave Cover."""
+        if values.primary.command_class == CommandClass.BARRIER_OPERATOR:
+            cover = ZwaveGarageDoorBarrier(values)
+        else:
+            cover = ZWaveCoverEntity(values)
 
-        async_add_entities([ZWaveCoverEntity(values)])
+        async_add_entities([cover])
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
         async_dispatcher_connect(hass, f"{DOMAIN}_new_{COVER_DOMAIN}", async_add_cover)
@@ -74,3 +83,40 @@ class ZWaveCoverEntity(ZWaveDeviceEntity, CoverEntity):
     async def async_close_cover(self, **kwargs):
         """Close cover."""
         self.values.primary.send_value(0)
+
+
+class ZwaveGarageDoorBarrier(ZWaveDeviceEntity, CoverEntity):
+    """Representation of a barrier operator Zwave garage door device."""
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_GARAGE
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_GARAGE
+
+    @property
+    def is_opening(self):
+        """Return true if cover is in an opening state."""
+        return self.values.primary.value[VALUE_SELECTED_ID] == 3
+
+    @property
+    def is_closing(self):
+        """Return true if cover is in a closing state."""
+        return self.values.primary.value[VALUE_SELECTED_ID] == 1
+
+    @property
+    def is_closed(self):
+        """Return the current position of Zwave garage door."""
+        return self.values.primary.value[VALUE_SELECTED_ID] == 0
+
+    def close_cover(self, **kwargs):
+        """Close the garage door."""
+        self.values.primary.send_value(0)
+
+    def open_cover(self, **kwargs):
+        """Open the garage door."""
+        self.values.primary.send_value(4)
