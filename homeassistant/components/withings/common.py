@@ -779,7 +779,7 @@ class DataManager:
             query_measure_groups(
                 response, MeasureTypes.ANY, MeasureGroupAttribs.UNAMBIGUOUS
             ),
-            key=get_sort_key,
+            key=lambda group: group.created.datetime,
             reverse=False,
         )
 
