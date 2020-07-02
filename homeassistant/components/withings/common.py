@@ -771,9 +771,6 @@ class DataManager:
 
         response = await self._hass.async_add_executor_job(self._api.measure_get_meas)
 
-        def get_sort_key(group: MeasureGetMeasGroup) -> str:
-            return group.created.datetime
-
         # Sort from oldest to newest.
         groups = sorted(
             query_measure_groups(
