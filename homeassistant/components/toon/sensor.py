@@ -19,6 +19,7 @@ from .const import (
 from .coordinator import ToonDataUpdateCoordinator
 from .models import (
     ToonBoilerDeviceEntity,
+    ToonDisplayDeviceEntity,
     ToonElectricityMeterDeviceEntity,
     ToonEntity,
     ToonGasMeterDeviceEntity,
@@ -48,6 +49,10 @@ async def async_setup_entry(
             "solar_meter_reading_produced",
         )
     ]
+
+    sensors.extend(
+        [ToonDisplayDeviceSensor(coordinator, key="current_display_temperature")]
+    )
 
     if coordinator.data.gas_usage and coordinator.data.gas_usage.is_smart:
         sensors.extend(
@@ -147,3 +152,7 @@ class ToonSolarDeviceSensor(ToonSensor, ToonSolarDeviceEntity):
 
 class ToonBoilerDeviceSensor(ToonSensor, ToonBoilerDeviceEntity):
     """Defines a Boiler sensor."""
+
+
+class ToonDisplayDeviceSensor(ToonSensor, ToonDisplayDeviceEntity):
+    """Defines a Display sensor."""
