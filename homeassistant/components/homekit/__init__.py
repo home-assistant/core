@@ -15,6 +15,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -25,6 +26,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -53,6 +55,7 @@ from .const import (
     CONF_FILTER,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
+    CONF_LINKED_HUMIDITY_SENSOR,
     CONF_LINKED_MOTION_SENSOR,
     CONF_SAFE_MODE,
     CONF_ZEROCONF_DEFAULT_INTERFACE,
@@ -327,9 +330,12 @@ def _async_register_events_and_services(hass: HomeAssistant):
             if HOMEKIT not in hass.data[DOMAIN][entry_id]:
                 continue
             homekit = hass.data[DOMAIN][entry_id][HOMEKIT]
+            if homekit.status == STATUS_RUNNING:
+                _LOGGER.debug("HomeKit is already running")
+                continue
             if homekit.status != STATUS_READY:
                 _LOGGER.warning(
-                    "HomeKit is not ready. Either it is already running or has "
+                    "HomeKit is not ready. Either it is already starting up or has "
                     "been stopped."
                 )
                 continue
@@ -472,6 +478,7 @@ class HomeKit:
                 (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_BATTERY_CHARGING),
                 (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_MOTION),
                 (SENSOR_DOMAIN, DEVICE_CLASS_BATTERY),
+                (SENSOR_DOMAIN, DEVICE_CLASS_HUMIDITY),
             }
         )
 
@@ -546,6 +553,7 @@ class HomeKit:
             type_sensors,
             type_switches,
             type_thermostats,
+            type_humidifiers,
         )
 
         for state in bridged_states:
@@ -573,6 +581,8 @@ class HomeKit:
         self.status = STATUS_STOPPED
         _LOGGER.debug("Driver stop for %s", self._name)
         self.hass.add_job(self.driver.stop)
+        for acc in self.bridge.accessories.values():
+            acc.async_stop()
 
     @callback
     def _async_configure_linked_sensors(self, ent_reg_ent, device_lookup, state):
@@ -611,6 +621,15 @@ class HomeKit:
             if motion_binary_sensor_entity_id:
                 self._config.setdefault(state.entity_id, {}).setdefault(
                     CONF_LINKED_MOTION_SENSOR, motion_binary_sensor_entity_id,
+                )
+
+        if state.entity_id.startswith(f"{HUMIDIFIER_DOMAIN}."):
+            current_humidity_sensor_entity_id = device_lookup[
+                ent_reg_ent.device_id
+            ].get((SENSOR_DOMAIN, DEVICE_CLASS_HUMIDITY))
+            if current_humidity_sensor_entity_id:
+                self._config.setdefault(state.entity_id, {}).setdefault(
+                    CONF_LINKED_HUMIDITY_SENSOR, current_humidity_sensor_entity_id,
                 )
 
     async def _async_set_device_info_attributes(self, ent_reg_ent, dev_reg, entity_id):

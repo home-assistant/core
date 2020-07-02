@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 import functools as ft
 import logging
+import time
 from typing import Any, Awaitable, Callable, Dict, Iterable, Optional, Union
 
 import attr
@@ -316,26 +317,21 @@ def async_track_point_in_utc_time(
     point_in_time = dt_util.as_utc(point_in_time)
 
     @callback
-    def point_in_time_listener(event: Event) -> None:
+    def point_in_time_listener() -> None:
         """Listen for matching time_changed events."""
-        now = event.data[ATTR_NOW]
+        hass.async_run_job(action, point_in_time)
 
-        if now < point_in_time or hasattr(point_in_time_listener, "run"):
-            return
+    cancel_callback = hass.loop.call_at(
+        hass.loop.time() + point_in_time.timestamp() - time.time(),
+        point_in_time_listener,
+    )
 
-        # Set variable so that we will never run twice.
-        # Because the event bus might have to wait till a thread comes
-        # available to execute this listener it might occur that the
-        # listener gets lined up twice to be executed. This will make
-        # sure the second time it does nothing.
-        setattr(point_in_time_listener, "run", True)
-        async_unsub()
+    @callback
+    def unsub_point_in_time_listener() -> None:
+        """Cancel the call_later."""
+        cancel_callback.cancel()
 
-        hass.async_run_job(action, now)
-
-    async_unsub = hass.bus.async_listen(EVENT_TIME_CHANGED, point_in_time_listener)
-
-    return async_unsub
+    return unsub_point_in_time_listener
 
 
 track_point_in_utc_time = threaded_listener_factory(async_track_point_in_utc_time)

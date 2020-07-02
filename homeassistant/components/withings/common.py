@@ -770,8 +770,13 @@ class DataManager:
 
         response = await self._hass.async_add_executor_job(self._api.measure_get_meas)
 
-        groups = query_measure_groups(
-            response, MeasureTypes.ANY, MeasureGroupAttribs.UNAMBIGUOUS
+        # Sort from oldest to newest.
+        groups = sorted(
+            query_measure_groups(
+                response, MeasureTypes.ANY, MeasureGroupAttribs.UNAMBIGUOUS
+            ),
+            key=lambda group: group.created.datetime,
+            reverse=False,
         )
 
         return {

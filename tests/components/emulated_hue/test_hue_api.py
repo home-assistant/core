@@ -181,6 +181,8 @@ def hue_client(loop, hass_hue, aiohttp_client):
                 "climate.hvac": {emulated_hue.CONF_ENTITY_HIDDEN: False},
                 # Expose HeatPump
                 "climate.heatpump": {emulated_hue.CONF_ENTITY_HIDDEN: False},
+                # No expose setting (use default of not exposed)
+                "climate.nosetting": {},
             },
         },
     )

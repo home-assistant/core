@@ -310,7 +310,7 @@ gios==0.1.1
 glances_api==0.2.0
 
 # homeassistant.components.gogogate2
-gogogate2-api==1.0.3
+gogogate2-api==1.0.4
 
 # homeassistant.components.google
 google-api-python-client==1.6.4
@@ -343,7 +343,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200626.1
+home-assistant-frontend==20200702.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -424,7 +424,7 @@ nessclient==0.9.15
 
 # homeassistant.components.discovery
 # homeassistant.components.ssdp
-netdisco==2.7.1
+netdisco==2.8.0
 
 # homeassistant.components.nexia
 nexia==0.9.3
@@ -489,9 +489,15 @@ plexauth==0.0.5
 # homeassistant.components.plex
 plexwebsocket==0.0.11
 
+# homeassistant.components.plum_lightpad
+plumlightpad==0.0.11
+
 # homeassistant.components.mhz19
 # homeassistant.components.serial_pm
 pmsensor==0.4
+
+# homeassistant.components.poolsense
+poolsense==0.0.5
 
 # homeassistant.components.reddit
 praw==6.5.1
@@ -564,7 +570,7 @@ pyblackbird==0.5
 pybotvac==0.0.17
 
 # homeassistant.components.cast
-pychromecast==6.0.0
+pychromecast==7.0.1
 
 # homeassistant.components.coolmaster
 pycoolmasternet==0.0.4
@@ -577,6 +583,9 @@ pydaikin==2.2.0
 
 # homeassistant.components.deconz
 pydeconz==71
+
+# homeassistant.components.dexcom
+pydexcom==0.2.0
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -670,13 +679,13 @@ pymodbus==2.3.0
 pymonoprice==0.3
 
 # homeassistant.components.myq
-pymyq==2.0.4
+pymyq==2.0.5
 
 # homeassistant.components.nut
 pynut2==2.1.2
 
 # homeassistant.components.nws
-pynws==0.10.4
+pynws==1.2.1
 
 # homeassistant.components.nx584
 pynx584==0.5
@@ -699,7 +708,7 @@ pyotp==2.3.0
 pypoint==1.1.2
 
 # homeassistant.components.ps4
-pyps4-2ndscreen==1.1.0
+pyps4-2ndscreen==1.1.1
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.93
@@ -715,7 +724,7 @@ pysignalclirestapi==0.3.4
 pysma==0.3.5
 
 # homeassistant.components.smappee
-pysmappee==0.1.0
+pysmappee==0.1.2
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.2
@@ -748,7 +757,7 @@ python-izone==1.1.2
 python-juicenet==1.0.1
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.1
+python-miio==0.5.2.1
 
 # homeassistant.components.nest
 python-nest==4.1.0
@@ -775,7 +784,7 @@ python-velbus==2.0.43
 python_awair==0.1.1
 
 # homeassistant.components.tile
-pytile==3.0.6
+pytile==4.0.0
 
 # homeassistant.components.traccar
 pytraccar==0.9.0
@@ -853,7 +862,7 @@ solaredge==0.0.2
 somecomfort==0.5.2
 
 # homeassistant.components.sonarr
-sonarr==0.2.2
+sonarr==0.2.3
 
 # homeassistant.components.marytts
 speak2mary==1.4.0
@@ -890,7 +899,7 @@ tellduslive==0.10.11
 tesla-powerwall==0.2.11
 
 # homeassistant.components.tesla
-teslajsonpy==0.9.0
+teslajsonpy==0.9.2
 
 # homeassistant.components.toon
 toonapi==0.1.0
@@ -961,7 +970,7 @@ ya_ma==0.3.8
 zeroconf==0.27.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.40
+zha-quirks==0.0.41
 
 # homeassistant.components.zha
 zigpy-cc==0.4.4

@@ -70,7 +70,9 @@ async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
     assert state.attributes.get("unit_of_measurement") == "fav unit"
 
 
-async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
+async def test_setting_sensor_value_expires(
+    hass, mqtt_mock, legacy_patchable_time, caplog
+):
     """Test the expiration of the value."""
     assert await async_setup_component(
         hass,
@@ -91,7 +93,8 @@ async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
     state = hass.states.get("sensor.test")
     assert state.state == "unknown"
 
-    now = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
+    realnow = dt_util.utcnow()
+    now = datetime(realnow.year + 1, 1, 1, 1, tzinfo=dt_util.UTC)
     with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(hass, "test-topic", "100")
