@@ -32,10 +32,15 @@ ATTR_SCENE_ID = "scene_id"
 ATTR_SCENE_LABEL = "scene_label"
 ATTR_SCENE_VALUE_ID = "scene_value_id"
 ATTR_SCENE_VALUE_LABEL = "scene_value_label"
+ATTR_CODE_SLOT = "code_slot"
+ATTR_USERCODE = "usercode"
 
 # Service specific
 SERVICE_ADD_NODE = "add_node"
 SERVICE_REMOVE_NODE = "remove_node"
+SERVICE_SET_USERCODE = "set_usercode"
+SERVICE_GET_USERCODE = "get_usercode"
+SERVICE_CLEAR_USERCODE = "clear_usercode"
 
 # Home Assistant Events
 EVENT_SCENE_ACTIVATED = f"{DOMAIN}.scene_activated"
