@@ -9,6 +9,7 @@ from typing import Optional, cast
 
 from aiohttp import web
 from sqlalchemy import and_, bindparam, func
+from sqlalchemy.ext import baked
 import voluptuous as vol
 
 from homeassistant.components import recorder
@@ -18,7 +19,7 @@ from homeassistant.components.recorder.models import (
     process_timestamp,
     process_timestamp_to_utc_isoformat,
 )
-from homeassistant.components.recorder.util import bakery, execute, session_scope
+from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
     CONF_DOMAINS,
     CONF_ENTITIES,
@@ -89,6 +90,8 @@ QUERY_STATES = [
     States.created,
 ]
 
+HISTORY_BAKERY = "history_bakery"
+
 
 def get_significant_states(hass, *args, **kwargs):
     """Wrap _get_significant_states with a sql session."""
@@ -118,6 +121,7 @@ def _get_significant_states(
 
     states = execute(
         _significant_states_query(
+            hass,
             session,
             start_time,
             end_time=end_time,
@@ -144,6 +148,7 @@ def _get_significant_states(
 
 
 def _significant_states_query(
+    hass,
     session,
     start_time,
     end_time=None,
@@ -151,7 +156,9 @@ def _significant_states_query(
     significant_changes_only=None,
     filters=None,
 ):
-    baked_query = bakery(lambda session: session.query(*QUERY_STATES))
+    baked_query = hass.data[HISTORY_BAKERY](
+        lambda session: session.query(*QUERY_STATES)
+    )
 
     if significant_changes_only:
         baked_query += lambda q: q.filter(
@@ -421,6 +428,9 @@ async def async_setup(hass, config):
     conf = config.get(DOMAIN, {})
 
     filters = sqlalchemy_filter_from_include_exclude_conf(conf)
+
+    hass.data[HISTORY_BAKERY] = baked.bakery()
+
     use_include_order = conf.get(CONF_ORDER)
 
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
