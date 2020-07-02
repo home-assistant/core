@@ -67,8 +67,8 @@ class Guardian(DataUpdateCoordinator):
     """Define a class to communicate with a Guardian valve controller.
 
     Normally, we'd use a single DataUpdateCoordinator class for each API call; however,
-    because the valve controller's API-over-UDP cannot handle concurrent connections
-    easily, we extend a single DataUpdateCoordinator with the needed functionality.
+    because the valve controller's API-over-UDP cannot handle concurrent connections,
+    we extend a single DataUpdateCoordinator with the needed functionality.
     """
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -100,29 +100,25 @@ class Guardian(DataUpdateCoordinator):
     @callback
     def async_deregister_api_interest(self, api: str) -> None:
         """Decrement interest in an API category."""
-        if self._api_interest_count[api] == 0:
-            return
-
-        self._api_interest_count[api] -= 1
+        if self._api_interest_count[api] > 0:
+            self._api_interest_count[api] -= 1
 
     async def async_register_api_interest(self, api: str) -> None:
         """Increment interest in an API category."""
         self._api_interest_count[api] += 1
 
         # If an entity registers interest in a particular API category and the data
-        # doesn't exist for it yet, make the API call and grab the data:
-        async with self._api_init_lock, self.client:
+        # doesn't exist for it yet, make the API call and grab the data right away:
+        async with self._api_init_lock:
             if api in self.data:
                 return
 
             try:
-                resp = await self._api_optional_coros[api]()
+                async with self.client:
+                    resp = await self._api_optional_coros[api]()
             except GuardianError as err:
                 LOGGER.error(
-                    "Error fetching %s data: initial %s returned %s",
-                    self.name,
-                    api,
-                    err,
+                    "Error fetching initial %s data for %s: %s", api, self.name, err,
                 )
                 self.data[api] = {}
                 return
@@ -133,17 +129,17 @@ class Guardian(DataUpdateCoordinator):
         """Get updated data from the valve controller."""
         data = {}
 
+        # Diagnostics info will be relevant no matter which entities are active:
+        tasks = {API_SYSTEM_DIAGNOSTICS: self.client.system.diagnostics()}
+
+        # If at least one entity has registered interest in an API call, include it
+        # in the update:
+        for api in self._api_interest_count:
+            if self._api_interest_count[api] == 0:
+                continue
+            tasks[api] = self._api_optional_coros[api]()
+
         async with self.client:
-            # Diagnostics info will be relevant no matter which entities are active:
-            tasks = {API_SYSTEM_DIAGNOSTICS: self.client.system.diagnostics()}
-
-            # If at least one entity has registered interest in an API call, include it
-            # in the update:
-            for api in self._api_interest_count:
-                if self._api_interest_count[api] == 0:
-                    continue
-                tasks[api] = self._api_optional_coros[api]()
-
             results = await asyncio.gather(*tasks.values(), return_exceptions=True)
 
         for api, result in zip(tasks, results):
@@ -168,11 +164,6 @@ class GuardianEntity(Entity):
         self._icon = icon
         self._kind = kind
         self._name = name
-
-    @property
-    def available(self):
-        """Return whether the entity is available."""
-        return bool(self._guardian.data[API_SYSTEM_DIAGNOSTICS])
 
     @property
     def device_class(self):
@@ -214,11 +205,9 @@ class GuardianEntity(Entity):
         """Return the unique ID of the entity."""
         return f"{self._guardian.uid}_{self._kind}"
 
-    @callback
-    def _async_internal_added_to_hass(self):
-        """Perform tasks when the entity is added."""
-        self.async_on_remove(self._guardian.async_add_listener(self._update_callback))
-        self._async_update_from_latest_data()
+    async def _async_internal_added_to_hass(self):
+        """Perform additional, internal tasks when added. To be extended."""
+        raise NotImplementedError
 
     @callback
     def _async_update_from_latest_data(self):
@@ -230,3 +219,9 @@ class GuardianEntity(Entity):
         """Define a callback to update the entity's state from the latest data."""
         self._async_update_from_latest_data()
         self.async_write_ha_state()
+
+    async def async_added_to_hass(self):
+        """Perform tasks when the entity is added."""
+        await self._async_internal_added_to_hass()
+        self.async_on_remove(self._guardian.async_add_listener(self._update_callback))
+        self._async_update_from_latest_data()

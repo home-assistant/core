@@ -69,9 +69,18 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
         self._is_on = True
 
     @property
+    def available(self):
+        """Return whether the entity is available."""
+        return bool(self._guardian.data[API_VALVE_STATUS])
+
+    @property
     def is_on(self):
         """Return True if the valve is open."""
         return self._is_on
+
+    async def _async_internal_added_to_hass(self):
+        """Register API interest (and related tasks) when the entity is added."""
+        await self._guardian.async_register_api_interest(API_VALVE_STATUS)
 
     @callback
     def _async_update_from_latest_data(self):
@@ -99,11 +108,6 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
                 ],
             }
         )
-
-    async def async_added_to_hass(self):
-        """Register API interest (and related tasks) when the entity is added."""
-        await self._guardian.async_register_api_interest(API_VALVE_STATUS)
-        self._async_internal_added_to_hass()
 
     async def async_disable_ap(self):
         """Disable the device's onboard access point."""

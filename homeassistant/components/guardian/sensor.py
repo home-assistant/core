@@ -55,6 +55,13 @@ class GuardianSensor(GuardianEntity):
         self._unit = unit
 
     @property
+    def available(self):
+        """Return whether the entity is available."""
+        if self._kind == SENSOR_KIND_TEMPERATURE:
+            return bool(self._guardian.data[API_SYSTEM_ONBOARD_SENSOR_STATUS])
+        return bool(self._guardian.data[API_SYSTEM_DIAGNOSTICS])
+
+    @property
     def state(self):
         """Return the sensor state."""
         return self._state
@@ -63,6 +70,13 @@ class GuardianSensor(GuardianEntity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit
+
+    async def _async_internal_added_to_hass(self):
+        """Register API interest (and related tasks) when the entity is added."""
+        if self._kind == SENSOR_KIND_TEMPERATURE:
+            await self._guardian.async_register_api_interest(
+                API_SYSTEM_ONBOARD_SENSOR_STATUS
+            )
 
     @callback
     def _async_update_from_latest_data(self):
@@ -73,15 +87,6 @@ class GuardianSensor(GuardianEntity):
             ]
         elif self._kind == SENSOR_KIND_UPTIME:
             self._state = self._guardian.data[API_SYSTEM_DIAGNOSTICS]["uptime"]
-
-    async def async_added_to_hass(self):
-        """Register API interest (and related tasks) when the entity is added."""
-        if self._kind == SENSOR_KIND_TEMPERATURE:
-            await self._guardian.async_register_api_interest(
-                API_SYSTEM_ONBOARD_SENSOR_STATUS
-            )
-
-        self._async_internal_added_to_hass()
 
     async def async_will_remove_from_hass(self) -> None:
         """Deregister API interest (and related tasks) when the entity is removed."""

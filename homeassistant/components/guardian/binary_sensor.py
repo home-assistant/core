@@ -4,6 +4,7 @@ from homeassistant.core import callback
 
 from . import GuardianEntity
 from .const import (
+    API_SYSTEM_DIAGNOSTICS,
     API_SYSTEM_ONBOARD_SENSOR_STATUS,
     API_WIFI_STATUS,
     DATA_COORDINATOR,
@@ -42,9 +43,26 @@ class GuardianBinarySensor(GuardianEntity, BinarySensorEntity):
         self._is_on = True
 
     @property
+    def available(self):
+        """Return whether the entity is available."""
+        if self._kind == SENSOR_KIND_AP_INFO:
+            return bool(self._guardian.data[API_WIFI_STATUS])
+        if self._kind == SENSOR_KIND_LEAK_DETECTED:
+            return bool(self._guardian.data[API_SYSTEM_ONBOARD_SENSOR_STATUS])
+        return bool(self._guardian.data[API_SYSTEM_DIAGNOSTICS])
+
+    @property
     def is_on(self):
         """Return True if the binary sensor is on."""
         return self._is_on
+
+    async def _async_internal_added_to_hass(self):
+        if self._kind == SENSOR_KIND_AP_INFO:
+            await self._guardian.async_register_api_interest(API_WIFI_STATUS)
+        elif self._kind == SENSOR_KIND_LEAK_DETECTED:
+            await self._guardian.async_register_api_interest(
+                API_SYSTEM_ONBOARD_SENSOR_STATUS
+            )
 
     @callback
     def _async_update_from_latest_data(self):
@@ -60,17 +78,6 @@ class GuardianBinarySensor(GuardianEntity, BinarySensorEntity):
             )
         elif self._kind == SENSOR_KIND_LEAK_DETECTED:
             self._is_on = self._guardian.data[API_SYSTEM_ONBOARD_SENSOR_STATUS]["wet"]
-
-    async def async_added_to_hass(self):
-        """Register API interest (and related tasks) when the entity is added."""
-        if self._kind == SENSOR_KIND_AP_INFO:
-            await self._guardian.async_register_api_interest(API_WIFI_STATUS)
-        elif self._kind == SENSOR_KIND_LEAK_DETECTED:
-            await self._guardian.async_register_api_interest(
-                API_SYSTEM_ONBOARD_SENSOR_STATUS
-            )
-
-        self._async_internal_added_to_hass()
 
     async def async_will_remove_from_hass(self) -> None:
         """Deregister API interest (and related tasks) when the entity is removed."""
