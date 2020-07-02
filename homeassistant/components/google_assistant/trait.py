@@ -1073,7 +1073,7 @@ class ArmDisArmTrait(_Trait):
 
     def query_attributes(self):
         """Return ArmDisarm query attributes."""
-        if "post_pending_state" in self.state.attributes:
+        if "next_state" in self.state.attributes:
             armed_state = self.state.attributes["next_state"]
         else:
             armed_state = self.state.state
