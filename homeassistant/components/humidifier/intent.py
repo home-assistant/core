@@ -20,22 +20,12 @@ from . import (
 
 INTENT_HUMIDITY = "HassHumidifierSetpoint"
 INTENT_MODE = "HassHumidifierMode"
-INTENT_ON = "HassHumidifierOn"
-INTENT_OFF = "HassHumidifierOff"
 
 
 async def async_setup_intents(hass: HomeAssistant) -> None:
     """Set up the humidifier intents."""
     hass.helpers.intent.async_register(HumidityHandler())
     hass.helpers.intent.async_register(SetModeHandler())
-    hass.helpers.intent.async_register(
-        intent.ServiceIntentHandler(INTENT_ON, DOMAIN, SERVICE_TURN_ON, "Turned {} on")
-    )
-    hass.helpers.intent.async_register(
-        intent.ServiceIntentHandler(
-            INTENT_OFF, DOMAIN, SERVICE_TURN_OFF, "Turned {} off"
-        )
-    )
 
 
 class HumidityHandler(intent.IntentHandler):
