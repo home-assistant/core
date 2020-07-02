@@ -77,24 +77,6 @@ def mock_client_fixture(request):
         yield client
 
 
-@pytest.fixture(autouse=True)
-def mock_influx_platform():
-    """
-    Mock the influx client and queue in the main platform.
-
-    Successful sensor setup is really independent of the main platform.
-    But since its one integration there is an internal dependency.
-    Mocking the client library there prevents failures and mocking the queue
-    to return `None` on get makes the listener shutdown immediately after initialization.
-    """
-    with patch(f"{INFLUXDB_PATH}.InfluxDBClient") as mock_v1_client, patch(
-        f"{INFLUXDB_PATH}.InfluxDBClientV2"
-    ) as mock_v2_client, patch(
-        f"{INFLUXDB_PATH}.queue.Queue.get", return_value=None
-    ) as queue_get:
-        yield (mock_v1_client, mock_v2_client, queue_get)
-
-
 @pytest.fixture(autouse=True, scope="module")
 def mock_client_close():
     """Mock close method of clients at module scope."""
@@ -196,7 +178,7 @@ def _set_query_mock_v2(
 async def _setup(hass, config_ext, queries, expected_sensors):
     """Create client and test expected sensors."""
     config = {
-        DOMAIN: {},
+        DOMAIN: config_ext,
         sensor.DOMAIN: {"platform": DOMAIN},
     }
     influx_config = config[sensor.DOMAIN]
@@ -243,6 +225,8 @@ async def test_minimal_config(hass, mock_client, config_ext, queries, set_query_
                 "password": "pass",
                 "database": "db",
                 "verify_ssl": "true",
+            },
+            {
                 "queries": [
                     {
                         "name": "test",
@@ -256,7 +240,6 @@ async def test_minimal_config(hass, mock_client, config_ext, queries, set_query_
                     }
                 ],
             },
-            {},
             _set_query_mock_v1,
         ),
         (
@@ -270,6 +253,8 @@ async def test_minimal_config(hass, mock_client, config_ext, queries, set_query_
                 "token": "token",
                 "organization": "org",
                 "bucket": "bucket",
+            },
+            {
                 "queries_flux": [
                     {
                         "name": "test",
@@ -283,7 +268,6 @@ async def test_minimal_config(hass, mock_client, config_ext, queries, set_query_
                     }
                 ],
             },
-            {},
             _set_query_mock_v2,
         ),
     ],
