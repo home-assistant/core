@@ -14,7 +14,6 @@ from withings_api import AbstractWithingsApi
 from withings_api.common import (
     AuthFailedException,
     GetSleepSummaryField,
-    MeasureGetMeasGroup,
     MeasureGroupAttribs,
     MeasureType,
     MeasureTypes,
