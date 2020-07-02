@@ -172,14 +172,14 @@ class ModbusCover(CoverEntity, RestoreEntity):
     def open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         if self._coil is not None:
-            self._write_coil(self._state_open)
+            self._write_coil(True)
         else:
             self._write_register(self._state_open)
 
     def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         if self._coil is not None:
-            self._write_coil(self._state_closed)
+            self._write_coil(False)
         else:
             self._write_register(self._state_closed)
 
