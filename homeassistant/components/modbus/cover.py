@@ -40,39 +40,33 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-COVER_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-        vol.Optional(CONF_SLAVE, default=DEFAULT_SLAVE): cv.positive_int,
-        vol.Optional(CONF_STATE_CLOSED, default=0): cv.positive_int,
-        vol.Optional(CONF_STATE_CLOSING, default=3): cv.positive_int,
-        vol.Optional(CONF_STATE_OPEN, default=1): cv.positive_int,
-        vol.Optional(CONF_STATE_OPENING, default=2): cv.positive_int,
-        vol.Optional(CONF_STATUS_REGISTER): cv.positive_int,
-        vol.Optional(
-            CONF_STATUS_REGISTER_TYPE, default=CALL_TYPE_REGISTER_HOLDING
-        ): vol.In([CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]),
-    }
-)
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         # Make sure user specified either coil or register attribute (not both)
         vol.Required(CONF_COVERS): [
             vol.All(
-                COVER_SCHEMA.extend(
+                cv.has_at_least_one_key(CALL_TYPE_COIL, CONF_REGISTER),
+                vol.Schema(
                     {
+                        vol.Required(CONF_NAME): cv.string,
+                        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+                        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
+                        vol.Optional(
+                            CONF_SLAVE, default=DEFAULT_SLAVE
+                        ): cv.positive_int,
+                        vol.Optional(CONF_STATE_CLOSED, default=0): cv.positive_int,
+                        vol.Optional(CONF_STATE_CLOSING, default=3): cv.positive_int,
+                        vol.Optional(CONF_STATE_OPEN, default=1): cv.positive_int,
+                        vol.Optional(CONF_STATE_OPENING, default=2): cv.positive_int,
+                        vol.Optional(CONF_STATUS_REGISTER): cv.positive_int,
+                        vol.Optional(
+                            CONF_STATUS_REGISTER_TYPE,
+                            default=CALL_TYPE_REGISTER_HOLDING,
+                        ): vol.In(
+                            [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]
+                        ),
                         vol.Exclusive(CALL_TYPE_COIL, CONF_INPUT_TYPE): cv.positive_int,
                         vol.Exclusive(CONF_REGISTER, CONF_INPUT_TYPE): cv.positive_int,
-                    }
-                ),
-                COVER_SCHEMA.extend(
-                    {
-                        vol.Required(
-                            vol.Any(CALL_TYPE_COIL, CONF_REGISTER)
-                        ): cv.positive_int
                     }
                 ),
             )
@@ -85,18 +79,22 @@ async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Read configuration and create Modbus cover."""
+    covers = []
     for cover in config[CONF_COVERS]:
-        async_add_entities([ModbusCover(hass, cover)])
+        hub: ModbusHub = hass.data[MODBUS_DOMAIN][cover[CONF_HUB]]
+        covers.append(ModbusCover(hub, cover))
+
+    async_add_entities(covers)
 
 
 class ModbusCover(CoverEntity, RestoreEntity):
     """Representation of a Modbus cover."""
 
     def __init__(
-        self, hass: HomeAssistantType, config: Dict[str, Any],
+        self, hub: ModbusHub, config: Dict[str, Any],
     ):
         """Initialize the modbus cover."""
-        self._hub: ModbusHub = hass.data[MODBUS_DOMAIN][config[CONF_HUB]]
+        self._hub: ModbusHub = hub
         self._coil = config.get(CALL_TYPE_COIL)
         self._device_class = config.get(CONF_DEVICE_CLASS)
         self._name = config[CONF_NAME]
