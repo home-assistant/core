@@ -50,6 +50,11 @@ HC_HASS_TO_HOMEKIT_DEVICE_CLASS = {
     DEVICE_CLASS_DEHUMIDIFIER: HC_DEHUMIDIFIER,
 }
 
+HC_HASS_TO_HOMEKIT_DEVICE_CLASS_NAME = {
+    DEVICE_CLASS_HUMIDIFIER: "Humidifier",
+    DEVICE_CLASS_DEHUMIDIFIER: "Dehumidifier",
+}
+
 HC_DEVICE_CLASS_TO_TARGET_CHAR = {
     HC_HUMIDIFIER: CHAR_HUMIDIFIER_THRESHOLD_HUMIDITY,
     HC_DEHUMIDIFIER: CHAR_DEHUMIDIFIER_THRESHOLD_HUMIDITY,
@@ -90,7 +95,7 @@ class HumidifierDehumidifier(HomeAccessory):
             CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER, value=self._hk_device_class,
         )
         self.char_target_humidifier_dehumidifier.override_properties(
-            valid_values={device_class: self._hk_device_class}
+            valid_values={HC_HASS_TO_HOMEKIT_DEVICE_CLASS_NAME[device_class]: self._hk_device_class}
         )
 
         # Current and target humidity characteristics
