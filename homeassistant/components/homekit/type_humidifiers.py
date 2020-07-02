@@ -162,17 +162,23 @@ class HumidifierDehumidifier(HomeAccessory):
     def _async_update_current_humidity(self, new_state):
         """Handle linked humidity sensor state change to update HomeKit value."""
         if new_state is None:
+            _LOGGER.error(
+                "%s: Unable to update from linked humidity sensor %s: the entity state is None",
+                self.entity_id,
+                self.linked_humidity_sensor,
+            )
+            self.char_current_humidity.set_value(0)
             return
         try:
             current_humidity = float(new_state.state)
             if self.char_current_humidity.value != current_humidity:
-                self.char_current_humidity.set_value(current_humidity)
                 _LOGGER.debug(
                     "%s: Linked humidity sensor %s changed to %d",
                     self.entity_id,
                     self.linked_humidity_sensor,
                     current_humidity,
                 )
+                self.char_current_humidity.set_value(current_humidity)
         except ValueError as ex:
             _LOGGER.error(
                 "%s: Unable to update from linked humidity sensor %s: %s",
@@ -180,6 +186,7 @@ class HumidifierDehumidifier(HomeAccessory):
                 self.linked_humidity_sensor,
                 ex,
             )
+            self.char_current_humidity.set_value(0)
 
     def _set_chars(self, char_values):
         _LOGGER.debug("HumidifierDehumidifier _set_chars: %s", char_values)
