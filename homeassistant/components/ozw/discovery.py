@@ -160,6 +160,19 @@ DISCOVERY_SCHEMAS = (
             },
         },
     },
+    {  # Garage Door Barrier
+        const.DISC_COMPONENT: "cover",
+        const.DISC_GENERIC_DEVICE_CLASS: (const_ozw.GENERIC_TYPE_ENTRY_CONTROL,),
+        const.DISC_SPECIFIC_DEVICE_CLASS: (
+            const_ozw.SPECIFIC_TYPE_SECURE_BARRIER_ADDON,
+        ),
+        const.DISC_VALUES: {
+            const.DISC_PRIMARY: {
+                const.DISC_COMMAND_CLASS: CommandClass.BARRIER_OPERATOR,
+                const.DISC_INDEX: ValueIndex.BARRIER_OPERATOR_LABEL,
+            },
+        },
+    },
     {  # Fan
         const.DISC_COMPONENT: "fan",
         const.DISC_GENERIC_DEVICE_CLASS: const_ozw.GENERIC_TYPE_SWITCH_MULTILEVEL,
