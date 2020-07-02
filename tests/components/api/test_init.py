@@ -10,16 +10,59 @@ from homeassistant import const
 from homeassistant.bootstrap import DATA_LOGGING
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
+from homeassistant.components.config import area_registry
 
 from tests.async_mock import patch
-from tests.common import async_mock_service
+from tests.common import async_mock_service, mock_area_registry
 
 
 @pytest.fixture
 def mock_api_client(hass, hass_client):
     """Start the Home Assistant HTTP component and return admin API client."""
     hass.loop.run_until_complete(async_setup_component(hass, "api", {}))
+    hass.loop.run_until_complete(area_registry.async_setup(hass))
     return hass.loop.run_until_complete(hass_client())
+
+
+@pytest.fixture
+def test_area_registry(hass):
+    """Return an empty, loaded, registry."""
+    return mock_area_registry(hass)
+
+
+async def test_api_list_areas(hass, mock_api_client, test_area_registry):
+    """Test if the debug interface allows us to list areas."""
+    test_area_registry.async_create("mock 1")
+    test_area_registry.async_create("mock 2")
+
+    resp = await mock_api_client.get(const.URL_API_AREAS)
+    assert resp.status == 200
+    json = await resp.json()
+
+    assert len(json) == 2, "Incorrect number of areas returned"
+
+
+async def test_api_area_detail(hass, mock_api_client, test_area_registry):
+    """Test if the debug interface allows us to detail an area."""
+    test_area_registry.async_create("mock detail")
+
+    assert len(test_area_registry.async_list_areas()) == 1
+    for area in test_area_registry.async_list_areas():
+        resp = await mock_api_client.get("{}/{}".format(const.URL_API_AREAS, area.id))
+        assert resp.status == 200
+        json = await resp.json()
+
+        assert json["area_id"] == area.id
+        assert json["name"] == area.name
+
+
+async def test_api_area_detail_not_found(hass, mock_api_client, test_area_registry):
+    """Test if the debug interface handles an invalid area."""
+    test_area_registry.async_create("mock detail")
+
+    assert len(test_area_registry.async_list_areas()) == 1
+    resp = await mock_api_client.get("{}/invalid".format(const.URL_API_AREAS))
+    assert resp.status == 404
 
 
 async def test_api_list_state_entities(hass, mock_api_client):
