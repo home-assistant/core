@@ -127,7 +127,7 @@ class BroadlinkDevice:
             if self.api.type in types
         )
         results = await asyncio.gather(*tasks)
-        return False not in results
+        return all(results)
 
     async def async_auth(self):
         """Authenticate to the device."""

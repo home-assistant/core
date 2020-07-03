@@ -31,7 +31,8 @@
       }
     },
     "abort": {
-      "already_in_progress": "This configuration flow is already in progress"
+      "already_configured": "Device is already configured",
+      "already_in_progress": "There is already a configuration flow in progress for this device"
     },
     "error": {
       "cannot_connect": "Failed to connect",

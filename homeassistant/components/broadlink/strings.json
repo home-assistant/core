@@ -31,7 +31,8 @@
       }
     },
     "abort": {
-      "already_in_progress": "This configuration flow is already in progress"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "There is already a configuration flow in progress for this device"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

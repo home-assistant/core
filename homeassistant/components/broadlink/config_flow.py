@@ -76,6 +76,9 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
                 if self.unique_id is None:
                     await self.async_set_device(device)
+                    self._abort_if_unique_id_configured(
+                        updates={CONF_HOST: device.host[0], CONF_TIMEOUT: timeout}
+                    )
                     return await self.async_step_auth()
 
                 # The user came from a factory reset.
@@ -187,6 +190,11 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Choose a name for the device and create config entry."""
         device = self.device
         errors = {}
+
+        # Abort reauthentication flow.
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: device.host[0], CONF_TIMEOUT: device.timeout}
+        )
 
         if user_input is not None:
             return self.async_create_entry(
