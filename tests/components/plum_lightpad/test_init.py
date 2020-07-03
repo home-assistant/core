@@ -1,11 +1,9 @@
 """Tests for the Plum Lightpad config flow."""
 from aiohttp import ContentTypeError
-import pytest
 from requests.exceptions import HTTPError
 
 from homeassistant.components.plum_lightpad.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import Mock, patch
@@ -62,8 +60,7 @@ async def test_async_setup_entry_sets_up_light(hass: HomeAssistant):
 
         await hass.async_block_till_done()
 
-    # 1 call to validate 'form' input, 1 call to create a session-long Plum instance
-    assert len(mock_loadCloudData.mock_calls) == 2
+    assert len(mock_loadCloudData.mock_calls) == 1
     assert len(mock_light_async_setup_entry.mock_calls) == 1
 
 
@@ -77,7 +74,7 @@ async def test_async_setup_entry_handles_auth_error(hass: HomeAssistant):
 
     with patch(
         "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData",
-        side_effect=ContentTypeError(mock.Mock(), None),
+        side_effect=ContentTypeError(Mock(), None),
     ), patch(
         "homeassistant.components.plum_lightpad.light.async_setup_entry"
     ) as mock_light_async_setup_entry:
@@ -101,7 +98,7 @@ async def test_async_setup_entry_handles_http_error(hass: HomeAssistant):
     ), patch(
         "homeassistant.components.plum_lightpad.light.async_setup_entry"
     ) as mock_light_async_setup_entry:
-        with pytest.raises(ConfigEntryNotReady):
-            await hass.config_entries.async_setup(config_entry.entry_id)
+        result = await hass.config_entries.async_setup(config_entry.entry_id)
 
+    assert result is False
     assert len(mock_light_async_setup_entry.mock_calls) == 0
