@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/plugwise",
   "requirements": ["Plugwise_Smile==1.1.0"],
   "codeowners": ["@CoMPaTech", "@bouwew"],
+  "zeroconf": ["_plugwise._tcp.local."],
   "config_flow": true
 }
