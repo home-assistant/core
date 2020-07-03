@@ -264,7 +264,7 @@ async def test_default_availability_list_payload(hass, mqtt_mock):
 
 
 async def test_default_availability_list_single(hass, mqtt_mock, caplog):
-    """Test availability by default payload with defined topic."""
+    """Test availability list and availability_topic are mutually exclusive."""
     await help_test_default_availability_list_single(
         hass, mqtt_mock, caplog, sensor.DOMAIN, DEFAULT_CONFIG
     )

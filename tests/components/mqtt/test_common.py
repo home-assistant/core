@@ -175,7 +175,7 @@ async def help_test_default_availability_list_single(
     state_topic=None,
     state_message=None,
 ):
-    """Test availability by default payload with defined topic.
+    """Test availability list and availability_topic are mutually exclusive.
 
     This is a test helper for the MqttAvailability mixin.
     """
