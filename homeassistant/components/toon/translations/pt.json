@@ -12,8 +12,12 @@
             "authenticate": {
                 "data": {
                     "password": "Palavra-passe",
+                    "tenant": "Inquilino",
                     "username": "Nome de Utilizador"
                 }
+            },
+            "display": {
+                "title": "Seleccionar visor"
             }
         }
     }
