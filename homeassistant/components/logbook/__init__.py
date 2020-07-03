@@ -400,6 +400,7 @@ def _get_events(
                 | (
                     (States.state_id.isnot(None))
                     & (old_state.state_id.isnot(None))
+                    & (States.state.isnot(None))
                     & (States.state != old_state.state)
                 )
             )
