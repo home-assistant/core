@@ -47,7 +47,7 @@ class PoolSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             if not api_key_valid:
-                self._errors["base"] = "auth"
+                self._errors["base"] = "invalid_auth"
 
             if not self._errors:
                 return self.async_create_entry(
