@@ -36,7 +36,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-
 BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string})
 
 SERIAL_SCHEMA = BASE_SCHEMA.extend(
@@ -94,6 +93,10 @@ def setup(hass, config):
 
     for client_config in config[DOMAIN]:
         hub_collect[client_config[CONF_NAME]] = ModbusHub(client_config)
+
+        # Set first hub in a list as a default
+        if hub_collect.get(DEFAULT_HUB) is None:
+            hub_collect[DEFAULT_HUB] = hub_collect[client_config[CONF_NAME]]
 
     def stop_modbus(event):
         """Stop Modbus service."""
