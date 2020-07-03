@@ -23,7 +23,6 @@ homeassistant/components/alarmdecoder/* @ajschmidt8
 homeassistant/components/alexa/* @home-assistant/cloud @ochlocracy
 homeassistant/components/almond/* @gcampax @balloob
 homeassistant/components/alpha_vantage/* @fabaff
-homeassistant/components/amazon_polly/* @robbiet480
 homeassistant/components/ambiclimate/* @danielhiversen
 homeassistant/components/ambient_station/* @bachya
 homeassistant/components/amcrest/* @pnbruckner
@@ -47,7 +46,7 @@ homeassistant/components/automation/* @home-assistant/core
 homeassistant/components/avea/* @pattyland
 homeassistant/components/avri/* @timvancann
 homeassistant/components/awair/* @ahayworth @danielsjf
-homeassistant/components/aws/* @awarecan @robbiet480
+homeassistant/components/aws/* @awarecan
 homeassistant/components/axis/* @Kane610
 homeassistant/components/azure_event_hub/* @eavanvalkenburg
 homeassistant/components/azure_service_bus/* @hfurubotten
@@ -59,7 +58,7 @@ homeassistant/components/blink/* @fronzbot
 homeassistant/components/bmp280/* @belidzs
 homeassistant/components/bmw_connected_drive/* @gerard33 @rikroe
 homeassistant/components/bom/* @maddenp
-homeassistant/components/braviatv/* @robbiet480 @bieniu
+homeassistant/components/braviatv/* @bieniu
 homeassistant/components/broadlink/* @danielhiversen @felipediel
 homeassistant/components/brother/* @bieniu
 homeassistant/components/brunt/* @eavanvalkenburg
@@ -128,7 +127,6 @@ homeassistant/components/ezviz/* @baqs
 homeassistant/components/fastdotcom/* @rohankapoorcom
 homeassistant/components/file/* @fabaff
 homeassistant/components/filter/* @dgomes
-homeassistant/components/fitbit/* @robbiet480
 homeassistant/components/fixer/* @fabaff
 homeassistant/components/flick_electric/* @ZephireNZ
 homeassistant/components/flock/* @fabaff
@@ -137,7 +135,6 @@ homeassistant/components/flunearyou/* @bachya
 homeassistant/components/forked_daapd/* @uvjustin
 homeassistant/components/fortios/* @kimfrellsen
 homeassistant/components/foscam/* @skgsergio
-homeassistant/components/foursquare/* @robbiet480
 homeassistant/components/freebox/* @snoof85 @Quentame
 homeassistant/components/fronius/* @nielstron
 homeassistant/components/frontend/* @home-assistant/frontend
@@ -150,18 +147,15 @@ homeassistant/components/geonetnz_volcano/* @exxamalte
 homeassistant/components/gios/* @bieniu
 homeassistant/components/gitter/* @fabaff
 homeassistant/components/glances/* @fabaff @engrbm87
-homeassistant/components/gntp/* @robbiet480
 homeassistant/components/gogogate2/* @vangorra
 homeassistant/components/google_assistant/* @home-assistant/cloud
 homeassistant/components/google_cloud/* @lufton
 homeassistant/components/google_translate/* @awarecan
-homeassistant/components/google_travel_time/* @robbiet480
 homeassistant/components/gpsd/* @fabaff
 homeassistant/components/greeneye_monitor/* @jkeljo
 homeassistant/components/griddy/* @bdraco
 homeassistant/components/group/* @home-assistant/core
 homeassistant/components/growatt_server/* @indykoning
-homeassistant/components/gtfs/* @robbiet480
 homeassistant/components/guardian/* @bachya
 homeassistant/components/harmony/* @ehendrix23 @bramkragten @bdraco
 homeassistant/components/hassio/* @home-assistant/hass-io
@@ -180,7 +174,6 @@ homeassistant/components/homekit_controller/* @Jc2k
 homeassistant/components/homematic/* @pvizeli @danielperna84
 homeassistant/components/homematicip_cloud/* @SukramJ
 homeassistant/components/honeywell/* @zxdavb
-homeassistant/components/html5/* @robbiet480
 homeassistant/components/http/* @home-assistant/core
 homeassistant/components/huawei_lte/* @scop @fphammerle
 homeassistant/components/huawei_router/* @abmantis
@@ -433,8 +426,6 @@ homeassistant/components/transmission/* @engrbm87 @JPHutchins
 homeassistant/components/tts/* @pvizeli
 homeassistant/components/tuya/* @ollo69
 homeassistant/components/twentemilieu/* @frenck
-homeassistant/components/twilio_call/* @robbiet480
-homeassistant/components/twilio_sms/* @robbiet480
 homeassistant/components/ubee/* @mzdrale
 homeassistant/components/unifi/* @Kane610
 homeassistant/components/unifiled/* @florisvdk
@@ -480,7 +471,7 @@ homeassistant/components/yeelightsunflower/* @lindsaymarkward
 homeassistant/components/yessssms/* @flowolf
 homeassistant/components/yi/* @bachya
 homeassistant/components/yr/* @danielhiversen
-homeassistant/components/zeroconf/* @robbiet480 @Kane610
+homeassistant/components/zeroconf/* @Kane610
 homeassistant/components/zerproc/* @emlove
 homeassistant/components/zha/* @dmulcahey @adminiuga
 homeassistant/components/zone/* @home-assistant/core
