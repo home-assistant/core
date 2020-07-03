@@ -9,7 +9,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
 
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
+CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
 
 
 def get_integration_frame() -> Tuple[FrameSummary, str, str]:
