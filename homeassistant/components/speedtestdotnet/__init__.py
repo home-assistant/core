@@ -70,9 +70,10 @@ async def async_setup_entry(hass, config_entry):
     coordinator = SpeedTestDataCoordinator(hass, config_entry)
     await coordinator.async_setup()
 
-    await coordinator.async_refresh()
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    if not config_entry.options[CONF_MANUAL]:
+        await coordinator.async_refresh()
+        if not coordinator.last_update_success:
+            raise ConfigEntryNotReady
 
     hass.data[DOMAIN] = coordinator
 
@@ -162,6 +163,7 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         try:
             self.api = await self.hass.async_add_executor_job(speedtest.Speedtest)
         except speedtest.ConfigRetrievalError:
+            print("eroorrr")
             raise ConfigEntryNotReady
 
         async def request_update(call):
