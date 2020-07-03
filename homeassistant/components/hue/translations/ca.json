@@ -24,6 +24,12 @@
             "link": {
                 "description": "Prem el bot\u00f3 de l'enlla\u00e7 per registrar Philips Hue amb Home Assistant. \n\n ![Ubicaci\u00f3 del bot\u00f3 a l'element d'enlla\u00e7](/static/images/config_philips_hue.jpg)",
                 "title": "Vincular concentrador"
+            },
+            "manual": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                },
+                "title": "Configuraci\u00f3 manual d'enlla\u00e7 Hue"
             }
         }
     },
@@ -46,6 +52,16 @@
             "remote_button_short_release": "Bot\u00f3 \"{subtype}\" alliberat",
             "remote_double_button_long_press": "Ambd\u00f3s \"{subtype}\" alliberats despr\u00e9s d'una estona premuts",
             "remote_double_button_short_press": "Ambd\u00f3s \"{subtype}\" alliberats"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_how_groups": "Permet grups Hue",
+                    "allow_unreachable": "Permet que bombetes no accessibles puguin informar del seu estat correctament"
+                }
+            }
         }
     }
 }
