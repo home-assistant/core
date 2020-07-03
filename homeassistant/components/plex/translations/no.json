@@ -27,6 +27,9 @@
                 "title": "Manuell Plex-konfigurasjon"
             },
             "select_server": {
+                "data": {
+                    "server": ""
+                },
                 "description": "Flere servere tilgjengelig, velg en:",
                 "title": "Velg Plex-server"
             },

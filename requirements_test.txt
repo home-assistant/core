@@ -8,12 +8,12 @@ codecov==2.1.0
 coverage==5.1
 mock-open==1.4.0
 mypy==0.780
-pre-commit==2.4.0
+pre-commit==2.6.0
 pylint==2.4.4
 astroid==2.3.3
 pylint-strict-informational==0.1
 pytest-aiohttp==0.3.0
-pytest-cov==2.8.1
+pytest-cov==2.10.0
 pytest-sugar==0.9.3
 pytest-timeout==1.3.4
 pytest==5.4.3

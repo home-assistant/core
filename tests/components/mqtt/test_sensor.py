@@ -40,11 +40,7 @@ from .test_common import (
 )
 
 from tests.async_mock import patch
-from tests.common import (
-    MockConfigEntry,
-    async_fire_mqtt_message,
-    async_fire_time_changed,
-)
+from tests.common import async_fire_mqtt_message, async_fire_time_changed
 
 DEFAULT_CONFIG = {
     sensor.DOMAIN: {"platform": "mqtt", "name": "test", "state_topic": "test-topic"}
@@ -74,7 +70,9 @@ async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
     assert state.attributes.get("unit_of_measurement") == "fav unit"
 
 
-async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
+async def test_setting_sensor_value_expires(
+    hass, mqtt_mock, legacy_patchable_time, caplog
+):
     """Test the expiration of the value."""
     assert await async_setup_component(
         hass,
@@ -95,7 +93,8 @@ async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
     state = hass.states.get("sensor.test")
     assert state.state == "unknown"
 
-    now = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
+    realnow = dt_util.utcnow()
+    now = datetime(realnow.year + 1, 1, 1, 1, tzinfo=dt_util.UTC)
     with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(hass, "test-topic", "100")
@@ -341,7 +340,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     )
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass, mqtt_mock):
     """Test unique id option only creates one sensor per unique_id."""
     config = {
         sensor.DOMAIN: [
@@ -359,7 +358,7 @@ async def test_unique_id(hass):
             },
         ]
     }
-    await help_test_unique_id(hass, sensor.DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, sensor.DOMAIN, config)
 
 
 async def test_discovery_removal_sensor(hass, mqtt_mock, caplog):
@@ -431,8 +430,7 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 
 async def test_entity_device_info_with_hub(hass, mqtt_mock):
     """Test MQTT sensor device registry integration."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    entry.add_to_hass(hass)
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     await async_start(hass, "homeassistant", entry)
 
     registry = await hass.helpers.device_registry.async_get_registry()

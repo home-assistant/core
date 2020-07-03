@@ -197,6 +197,7 @@ class RfxtrxBinarySensor(BinarySensorEntity):
         self._data_bits = data_bits
         self._cmd_on = cmd_on
         self._cmd_off = cmd_off
+        self._unique_id = f"{slugify(self.event.device.type_string.lower())}_{slugify(self.event.device.id_string.lower())}"
 
         if data_bits is not None:
             self._masked_id = get_pt2262_deviceid(
@@ -254,6 +255,11 @@ class RfxtrxBinarySensor(BinarySensorEntity):
     def is_on(self):
         """Return true if the sensor state is True."""
         return self._state
+
+    @property
+    def unique_id(self):
+        """Return unique identifier of remote device."""
+        return self._unique_id
 
     def apply_cmd(self, cmd):
         """Apply a command for updating the state."""

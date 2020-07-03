@@ -25,5 +25,17 @@
                 "title": "MQTT Broker atrav\u00e9s do add-on Hass.io"
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Primeiro bot\u00e3o",
+            "button_2": "Segundo bot\u00e3o",
+            "button_3": "Terceiro bot\u00e3o",
+            "button_4": "Quarto bot\u00e3o",
+            "button_5": "Quinto bot\u00e3o",
+            "button_6": "Sexto bot\u00e3o",
+            "turn_off": "Desligar",
+            "turn_on": "Ligar"
+        }
     }
 }

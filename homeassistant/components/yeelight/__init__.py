@@ -239,11 +239,12 @@ class YeelightDevice:
 
     @property
     def is_nightlight_supported(self) -> bool:
-        """Return true / false if nightlight is supported."""
-        if self.model:
-            return self.bulb.get_model_specs().get("night_light", False)
+        """
+        Return true / false if nightlight is supported.
 
-        # It should support both ceiling and other lights
+        Uses brightness as it appears to be supported in both ceiling and other lights.
+        """
+
         return self._nightlight_brightness is not None
 
     @property
@@ -333,6 +334,12 @@ class YeelightDevice:
         """Request device capabilities."""
         try:
             self.bulb.get_capabilities()
+            _LOGGER.debug(
+                "Device %s, %s capabilities: %s",
+                self.ipaddr,
+                self.name,
+                self.bulb.capabilities,
+            )
         except BulbException as ex:
             _LOGGER.error(
                 "Unable to get device capabilities %s, %s: %s",

@@ -8,7 +8,7 @@
                 "data": {
                     "continuous": "Cont\u00ednuo",
                     "delay": "Atraso",
-                    "host": "Nome servidor ou endere\u00e7o IP",
+                    "host": "Servidor",
                     "password": "Palavra-passe"
                 },
                 "title": "Conectar ao dispositivo"

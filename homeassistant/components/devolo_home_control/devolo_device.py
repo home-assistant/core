@@ -8,8 +8,6 @@ from .subscriber import Subscriber
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_BATTERY_LEVEL = "battery_level"
-
 
 class DevoloDeviceEntity(Entity):
     """Representation of a sensor within devolo Home Control."""
@@ -20,15 +18,13 @@ class DevoloDeviceEntity(Entity):
         self._name = name
         self._unique_id = element_uid
         self._homecontrol = homecontrol
+
+        # This is not doing I/O. It fetches an internal state of the API
         self._available = device_instance.is_online()
 
         # Get the brand and model information
         self._brand = device_instance.brand
         self._model = device_instance.name
-
-        self._state_attrs = {}
-        if hasattr(self._device_instance, "batteryLevel"):
-            self._state_attrs = {ATTR_BATTERY_LEVEL: self._device_instance.batteryLevel}
 
         self.subscriber = None
         self.sync_callback = sync
@@ -62,11 +58,6 @@ class DevoloDeviceEntity(Entity):
             "manufacturer": self._brand,
             "model": self._model,
         }
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        return self._state_attrs
 
     @property
     def should_poll(self):

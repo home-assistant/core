@@ -1,5 +1,15 @@
 {
     "config": {
-        "flow_title": "Za\u0159\u00edzen\u00ed Axis: {name} ({host})"
+        "flow_title": "Za\u0159\u00edzen\u00ed Axis: {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostitel",
+                    "password": "Heslo",
+                    "port": "Port",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
+                }
+            }
+        }
     }
 }

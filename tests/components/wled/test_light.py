@@ -29,6 +29,7 @@ from homeassistant.const import (
     ATTR_ICON,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
@@ -50,7 +51,7 @@ async def test_rgb_light_state(
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     # First segment of the strip
-    state = hass.states.get("light.wled_rgb_light")
+    state = hass.states.get("light.wled_rgb_light_segment_0")
     assert state
     assert state.attributes.get(ATTR_BRIGHTNESS) == 127
     assert state.attributes.get(ATTR_EFFECT) == "Solid"
@@ -64,12 +65,12 @@ async def test_rgb_light_state(
     assert state.attributes.get(ATTR_SPEED) == 32
     assert state.state == STATE_ON
 
-    entry = entity_registry.async_get("light.wled_rgb_light")
+    entry = entity_registry.async_get("light.wled_rgb_light_segment_0")
     assert entry
     assert entry.unique_id == "aabbccddeeff_0"
 
     # Second segment of the strip
-    state = hass.states.get("light.wled_rgb_light_1")
+    state = hass.states.get("light.wled_rgb_light_segment_1")
     assert state
     assert state.attributes.get(ATTR_BRIGHTNESS) == 127
     assert state.attributes.get(ATTR_EFFECT) == "Blink"
@@ -83,22 +84,32 @@ async def test_rgb_light_state(
     assert state.attributes.get(ATTR_SPEED) == 16
     assert state.state == STATE_ON
 
-    entry = entity_registry.async_get("light.wled_rgb_light_1")
+    entry = entity_registry.async_get("light.wled_rgb_light_segment_1")
     assert entry
     assert entry.unique_id == "aabbccddeeff_1"
 
+    # Test master control of the lightstrip
+    state = hass.states.get("light.wled_rgb_light_master")
+    assert state
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 127
+    assert state.state == STATE_ON
 
-async def test_switch_change_state(
+    entry = entity_registry.async_get("light.wled_rgb_light_master")
+    assert entry
+    assert entry.unique_id == "aabbccddeeff"
+
+
+async def test_segment_change_state(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
 ) -> None:
-    """Test the change of state of the WLED switches."""
+    """Test the change of state of the WLED segments."""
     await init_integration(hass, aioclient_mock)
 
-    with patch("wled.WLED.light") as light_mock:
+    with patch("wled.WLED.segment") as light_mock:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.wled_rgb_light", ATTR_TRANSITION: 5},
+            {ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0", ATTR_TRANSITION: 5},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -106,14 +117,14 @@ async def test_switch_change_state(
             on=False, segment_id=0, transition=50,
         )
 
-    with patch("wled.WLED.light") as light_mock:
+    with patch("wled.WLED.segment") as light_mock:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {
                 ATTR_BRIGHTNESS: 42,
                 ATTR_EFFECT: "Chase",
-                ATTR_ENTITY_ID: "light.wled_rgb_light",
+                ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0",
                 ATTR_RGB_COLOR: [255, 0, 0],
                 ATTR_TRANSITION: 5,
             },
@@ -129,16 +140,79 @@ async def test_switch_change_state(
             transition=50,
         )
 
-    with patch("wled.WLED.light") as light_mock:
+    with patch("wled.WLED.segment") as light_mock:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "light.wled_rgb_light", ATTR_COLOR_TEMP: 400},
+            {ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0", ATTR_COLOR_TEMP: 400},
             blocking=True,
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
             color_primary=(255, 159, 70), on=True, segment_id=0,
+        )
+
+
+async def test_master_change_state(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+) -> None:
+    """Test the change of state of the WLED master light control."""
+    await init_integration(hass, aioclient_mock)
+
+    with patch("wled.WLED.master") as light_mock:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "light.wled_rgb_light_master", ATTR_TRANSITION: 5},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        light_mock.assert_called_once_with(
+            on=False, transition=50,
+        )
+
+    with patch("wled.WLED.master") as light_mock:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_BRIGHTNESS: 42,
+                ATTR_ENTITY_ID: "light.wled_rgb_light_master",
+                ATTR_TRANSITION: 5,
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        light_mock.assert_called_once_with(
+            brightness=42, on=True, transition=50,
+        )
+
+    with patch("wled.WLED.master") as light_mock:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "light.wled_rgb_light_master", ATTR_TRANSITION: 5},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        light_mock.assert_called_once_with(
+            on=False, transition=50,
+        )
+
+    with patch("wled.WLED.master") as light_mock:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_BRIGHTNESS: 42,
+                ATTR_ENTITY_ID: "light.wled_rgb_light_master",
+                ATTR_TRANSITION: 5,
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        light_mock.assert_called_once_with(
+            brightness=42, on=True, transition=50,
         )
 
 
@@ -148,27 +222,109 @@ async def test_dynamically_handle_segments(
     """Test if a new/deleted segment is dynamically added/removed."""
     await init_integration(hass, aioclient_mock)
 
-    assert hass.states.get("light.wled_rgb_light")
-    assert hass.states.get("light.wled_rgb_light_1")
+    assert hass.states.get("light.wled_rgb_light_master")
+    assert hass.states.get("light.wled_rgb_light_segment_0")
+    assert hass.states.get("light.wled_rgb_light_segment_1")
 
     data = json.loads(load_fixture("wled/rgb_single_segment.json"))
     device = WLEDDevice(data)
 
-    # Test removal if segment went missing
+    # Test removal if segment went missing, including the master entity
     with patch(
         "homeassistant.components.wled.WLED.update", return_value=device,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
-        assert hass.states.get("light.wled_rgb_light")
-        assert not hass.states.get("light.wled_rgb_light_1")
+        assert hass.states.get("light.wled_rgb_light_segment_0")
+        assert not hass.states.get("light.wled_rgb_light_segment_1")
+        assert not hass.states.get("light.wled_rgb_light_master")
 
-    # Test adding if segment shows up again
+    # Test adding if segment shows up again, including the master entity
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
-    assert hass.states.get("light.wled_rgb_light")
-    assert hass.states.get("light.wled_rgb_light_1")
+    assert hass.states.get("light.wled_rgb_light_master")
+    assert hass.states.get("light.wled_rgb_light_segment_0")
+    assert hass.states.get("light.wled_rgb_light_segment_1")
+
+
+async def test_single_segment_behavior(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+) -> None:
+    """Test the behavior of the integration with a single segment."""
+    await init_integration(hass, aioclient_mock)
+
+    data = json.loads(load_fixture("wled/rgb_single_segment.json"))
+    device = WLEDDevice(data)
+
+    # Test absent master
+    with patch(
+        "homeassistant.components.wled.WLED.update", return_value=device,
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+        await hass.async_block_till_done()
+
+        assert not hass.states.get("light.wled_rgb_light_master")
+
+        state = hass.states.get("light.wled_rgb_light_segment_0")
+        assert state
+        assert state.state == STATE_ON
+
+    # Test segment brightness takes master into account
+    device.state.brightness = 100
+    device.state.segments[0].brightness = 255
+    with patch(
+        "homeassistant.components.wled.WLED.update", return_value=device,
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("light.wled_rgb_light_segment_0")
+        assert state
+        assert state.attributes.get(ATTR_BRIGHTNESS) == 100
+
+    # Test segment is off when master is off
+    device.state.on = False
+    with patch(
+        "homeassistant.components.wled.WLED.update", return_value=device,
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+        await hass.async_block_till_done()
+        state = hass.states.get("light.wled_rgb_light_segment_0")
+        assert state
+        assert state.state == STATE_OFF
+
+    # Test master is turned off when turning off a single segment
+    with patch("wled.WLED.master") as master_mock:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0", ATTR_TRANSITION: 5},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        master_mock.assert_called_once_with(
+            on=False, transition=50,
+        )
+
+    # Test master is turned on when turning on a single segment, and segment
+    # brightness is set to 255.
+    with patch("wled.WLED.master") as master_mock, patch(
+        "wled.WLED.segment"
+    ) as segment_mock:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0",
+                ATTR_TRANSITION: 5,
+                ATTR_BRIGHTNESS: 42,
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        master_mock.assert_called_once_with(on=True, transition=50, brightness=42)
+        segment_mock.assert_called_once_with(on=True, segment_id=0, brightness=255)
 
 
 async def test_light_error(
@@ -182,12 +338,12 @@ async def test_light_error(
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.wled_rgb_light"},
+            {ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0"},
             blocking=True,
         )
         await hass.async_block_till_done()
 
-        state = hass.states.get("light.wled_rgb_light")
+        state = hass.states.get("light.wled_rgb_light_segment_0")
         assert state.state == STATE_ON
         assert "Invalid response from API" in caplog.text
 
@@ -199,17 +355,17 @@ async def test_light_connection_error(
     await init_integration(hass, aioclient_mock)
 
     with patch("homeassistant.components.wled.WLED.update"), patch(
-        "homeassistant.components.wled.WLED.light", side_effect=WLEDConnectionError
+        "homeassistant.components.wled.WLED.segment", side_effect=WLEDConnectionError
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.wled_rgb_light"},
+            {ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0"},
             blocking=True,
         )
         await hass.async_block_till_done()
 
-        state = hass.states.get("light.wled_rgb_light")
+        state = hass.states.get("light.wled_rgb_light_segment_0")
         assert state.state == STATE_UNAVAILABLE
 
 
@@ -224,7 +380,7 @@ async def test_rgbw_light(
     assert state.attributes.get(ATTR_HS_COLOR) == (0.0, 100.0)
     assert state.attributes.get(ATTR_WHITE_VALUE) == 139
 
-    with patch("wled.WLED.light") as light_mock:
+    with patch("wled.WLED.segment") as light_mock:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -236,7 +392,7 @@ async def test_rgbw_light(
             on=True, segment_id=0, color_primary=(255, 159, 70, 139),
         )
 
-    with patch("wled.WLED.light") as light_mock:
+    with patch("wled.WLED.segment") as light_mock:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -248,7 +404,7 @@ async def test_rgbw_light(
             color_primary=(255, 0, 0, 100), on=True, segment_id=0,
         )
 
-    with patch("wled.WLED.light") as light_mock:
+    with patch("wled.WLED.segment") as light_mock:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -271,13 +427,13 @@ async def test_effect_service(
     """Test the effect service of a WLED light."""
     await init_integration(hass, aioclient_mock)
 
-    with patch("wled.WLED.light") as light_mock:
+    with patch("wled.WLED.segment") as light_mock:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EFFECT,
             {
                 ATTR_EFFECT: "Rainbow",
-                ATTR_ENTITY_ID: "light.wled_rgb_light",
+                ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0",
                 ATTR_INTENSITY: 200,
                 ATTR_REVERSE: True,
                 ATTR_SPEED: 100,
@@ -289,11 +445,11 @@ async def test_effect_service(
             effect="Rainbow", intensity=200, reverse=True, segment_id=0, speed=100,
         )
 
-    with patch("wled.WLED.light") as light_mock:
+    with patch("wled.WLED.segment") as light_mock:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EFFECT,
-            {ATTR_ENTITY_ID: "light.wled_rgb_light", ATTR_EFFECT: 9},
+            {ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0", ATTR_EFFECT: 9},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -301,12 +457,12 @@ async def test_effect_service(
             segment_id=0, effect=9,
         )
 
-    with patch("wled.WLED.light") as light_mock:
+    with patch("wled.WLED.segment") as light_mock:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EFFECT,
             {
-                ATTR_ENTITY_ID: "light.wled_rgb_light",
+                ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0",
                 ATTR_INTENSITY: 200,
                 ATTR_REVERSE: True,
                 ATTR_SPEED: 100,
@@ -318,13 +474,13 @@ async def test_effect_service(
             intensity=200, reverse=True, segment_id=0, speed=100,
         )
 
-    with patch("wled.WLED.light") as light_mock:
+    with patch("wled.WLED.segment") as light_mock:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EFFECT,
             {
                 ATTR_EFFECT: "Rainbow",
-                ATTR_ENTITY_ID: "light.wled_rgb_light",
+                ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0",
                 ATTR_REVERSE: True,
                 ATTR_SPEED: 100,
             },
@@ -335,13 +491,13 @@ async def test_effect_service(
             effect="Rainbow", reverse=True, segment_id=0, speed=100,
         )
 
-    with patch("wled.WLED.light") as light_mock:
+    with patch("wled.WLED.segment") as light_mock:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EFFECT,
             {
                 ATTR_EFFECT: "Rainbow",
-                ATTR_ENTITY_ID: "light.wled_rgb_light",
+                ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0",
                 ATTR_INTENSITY: 200,
                 ATTR_SPEED: 100,
             },
@@ -352,13 +508,13 @@ async def test_effect_service(
             effect="Rainbow", intensity=200, segment_id=0, speed=100,
         )
 
-    with patch("wled.WLED.light") as light_mock:
+    with patch("wled.WLED.segment") as light_mock:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EFFECT,
             {
                 ATTR_EFFECT: "Rainbow",
-                ATTR_ENTITY_ID: "light.wled_rgb_light",
+                ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0",
                 ATTR_INTENSITY: 200,
                 ATTR_REVERSE: True,
             },
@@ -381,11 +537,11 @@ async def test_effect_service_error(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EFFECT,
-            {ATTR_ENTITY_ID: "light.wled_rgb_light", ATTR_EFFECT: 9},
+            {ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0", ATTR_EFFECT: 9},
             blocking=True,
         )
         await hass.async_block_till_done()
 
-        state = hass.states.get("light.wled_rgb_light")
+        state = hass.states.get("light.wled_rgb_light_segment_0")
         assert state.state == STATE_ON
         assert "Invalid response from API" in caplog.text

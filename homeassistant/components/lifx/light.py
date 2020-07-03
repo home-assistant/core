@@ -641,7 +641,9 @@ class LIFXLight(LightEntity):
         """Start an effect with default parameters."""
         service = kwargs[ATTR_EFFECT]
         data = {ATTR_ENTITY_ID: self.entity_id}
-        await self.hass.services.async_call(LIFX_DOMAIN, service, data)
+        await self.hass.services.async_call(
+            LIFX_DOMAIN, service, data, context=self._context
+        )
 
     async def async_update(self):
         """Update bulb status."""

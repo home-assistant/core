@@ -75,9 +75,6 @@ def setup(hass, config):
         if state is None or state.state == STATE_UNKNOWN:
             return
 
-        if state.attributes.get("hidden") is True:
-            return
-
         states = dict(state.attributes)
         metric = f"{prefix}.{state.domain}"
         tags = [f"entity:{state.entity_id}"]
