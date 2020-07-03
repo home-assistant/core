@@ -111,7 +111,6 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         vms = await self.hass.async_add_executor_job(self.proxmox_client.get_all_vms)
-        nodes = await self.hass.async_add_executor_job(self.proxmox_client.get_nodes)
 
         def vm_config_from_string(vm_string):
             id = vm_string.split("-")[0].strip()
@@ -127,15 +126,11 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             title = self._config[CONF_HOST]
 
-            selected_nodes = user_input.get(CONF_NODES)
             selected_vms = user_input.get(CONF_VMS)
 
             _LOGGER.debug(selected_vms)
 
             self._config[CONF_NODES] = []
-
-            for node in selected_nodes:
-                self._config[CONF_NODES].append(node)
 
             if CONF_VMS not in self._config:
                 self._config[CONF_VMS] = []
@@ -170,18 +165,11 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             f'{n.get("id")} - {n.get("node")} ({n.get("name")})' for n in vms
         ]
 
-        _LOGGER.debug(nodes)
-
-        available_nodes = [n.get("name") for n in nodes]
-
         data_schema = vol.Schema(
             {
                 vol.Optional(
                     CONF_VMS, default=user_input.get(CONF_VMS, available_vm)
                 ): cv.multi_select(available_vm),
-                vol.Optional(
-                    CONF_NODES, default=user_input.get(CONF_NODES, available_nodes)
-                ): cv.multi_select(available_nodes),
             }
         )
 
