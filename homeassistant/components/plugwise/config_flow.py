@@ -93,7 +93,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
 
             if self.discovery_info:
-                user_input.update({CONF_HOST: self.discovery_info[CONF_HOST]})
+                user_input[CONF_HOST] = self.discovery_info[CONF_HOST]
 
             try:
                 api = await validate_input(self.hass, user_input)
