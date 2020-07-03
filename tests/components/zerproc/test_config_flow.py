@@ -1,9 +1,10 @@
 """Test the zerproc config flow."""
-from asynctest import patch
 import pyzerproc
 
 from homeassistant import config_entries, setup
 from homeassistant.components.zerproc.config_flow import DOMAIN
+
+from tests.async_mock import patch
 
 
 async def test_flow_success(hass):

@@ -2,7 +2,6 @@
 import os
 from typing import Dict
 
-from asynctest import MagicMock
 import pytest
 
 from homeassistant.components import zeroconf
@@ -62,7 +61,7 @@ from homeassistant.util import json as json_util
 
 from .util import PATH_HOMEKIT, async_init_entry, async_init_integration
 
-from tests.async_mock import ANY, AsyncMock, Mock, patch
+from tests.async_mock import ANY, AsyncMock, MagicMock, Mock, patch
 from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 from tests.components.homekit.common import patch_debounce
 
