@@ -84,7 +84,7 @@ async def test_async_setup_entry_handles_auth_error(hass: HomeAssistant):
     ), patch(
         "homeassistant.components.plum_lightpad.light.async_setup_entry"
     ) as mock_light_async_setup_entry:
-        result = await async_setup_entry(hass, config_entry)
+        result = await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert result is False
     assert len(mock_light_async_setup_entry.mock_calls) == 0
