@@ -19,6 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
 
 from .config_flow import (
@@ -221,6 +222,12 @@ class TeslaDevice(Entity):
     @property
     def icon(self):
         """Return the icon of the sensor."""
+        if self.tesla_device.has_battery():
+            return icon_for_battery_level(
+                battery_level=self.tesla_device.battery_level(),
+                charging=self.tesla_device.battery_charging(),
+            )
+
         return self._icon
 
     @property
