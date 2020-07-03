@@ -165,6 +165,37 @@ async def help_test_default_availability_list_payload(
         assert state.state != STATE_UNAVAILABLE
 
 
+async def help_test_default_availability_list_single(
+    hass,
+    mqtt_mock,
+    caplog,
+    domain,
+    config,
+    no_assumed_state=False,
+    state_topic=None,
+    state_message=None,
+):
+    """Test availability by default payload with defined topic.
+
+    This is a test helper for the MqttAvailability mixin.
+    """
+    # Add availability settings to config
+    config = copy.deepcopy(config)
+    config[domain]["availability"] = [
+        {"topic": "availability-topic1"},
+    ]
+    config[domain]["availability_topic"] = "availability-topic"
+    assert await async_setup_component(hass, domain, config,)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{domain}.test")
+    assert state is None
+    assert (
+        "Invalid config for [sensor.mqtt]: two or more values in the same group of exclusion 'availability'"
+        in caplog.text
+    )
+
+
 async def help_test_custom_availability_payload(
     hass,
     mqtt_mock,

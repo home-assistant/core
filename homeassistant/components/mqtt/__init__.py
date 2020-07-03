@@ -207,7 +207,7 @@ SCHEMA_BASE = {vol.Optional(CONF_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA}
 
 MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_AVAILABILITY_TOPIC): valid_subscribe_topic,
+        vol.Exclusive(CONF_AVAILABILITY_TOPIC, "availability"): valid_subscribe_topic,
         vol.Optional(
             CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
         ): cv.string,
@@ -219,7 +219,7 @@ MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
 
 MQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
     {
-        CONF_AVAILABILITY: vol.All(
+        vol.Exclusive(CONF_AVAILABILITY, "availability"): vol.All(
             cv.ensure_list,
             [
                 {

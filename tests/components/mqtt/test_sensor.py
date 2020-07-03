@@ -17,6 +17,7 @@ from .test_common import (
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_list_payload,
+    help_test_default_availability_list_single,
     help_test_default_availability_payload,
     help_test_discovery_broken,
     help_test_discovery_removal,
@@ -259,6 +260,13 @@ async def test_default_availability_list_payload(hass, mqtt_mock):
     """Test availability by default payload with defined topic."""
     await help_test_default_availability_list_payload(
         hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_default_availability_list_single(hass, mqtt_mock, caplog):
+    """Test availability by default payload with defined topic."""
+    await help_test_default_availability_list_single(
+        hass, mqtt_mock, caplog, sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
