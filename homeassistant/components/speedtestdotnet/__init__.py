@@ -163,7 +163,6 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         try:
             self.api = await self.hass.async_add_executor_job(speedtest.Speedtest)
         except speedtest.ConfigRetrievalError:
-            print("eroorrr")
             raise ConfigEntryNotReady
 
         async def request_update(call):
