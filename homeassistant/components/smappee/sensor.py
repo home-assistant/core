@@ -193,17 +193,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 )
             )
 
-        # Add phase- and line voltages
-        for sensor_name, sensor in VOLTAGE_SENSORS.items():
-            if service_location.phase_type in sensor[5]:
-                entities.append(
-                    SmappeeSensor(
-                        smappee_base=smappee_base,
-                        service_location=service_location,
-                        sensor=sensor_name,
-                        attributes=sensor,
+        # Add phase- and line voltages if available
+        if service_location.has_voltage_values:
+            for sensor_name, sensor in VOLTAGE_SENSORS.items():
+                if service_location.phase_type in sensor[5]:
+                    entities.append(
+                        SmappeeSensor(
+                            smappee_base=smappee_base,
+                            service_location=service_location,
+                            sensor=sensor_name,
+                            attributes=sensor,
+                        )
                     )
-                )
 
         # Add Gas and Water sensors
         for sensor_id, sensor in service_location.sensors.items():
