@@ -1,4 +1,5 @@
-# Home Assistant core
+# Home Assistant Core, full dependency set
+
 aiohttp==3.6.1
 astral==1.10.1
 async_timeout==3.0.1
@@ -1564,7 +1565,7 @@ pypjlink2==1.2.1
 pypoint==1.1.2
 
 # homeassistant.components.ps4
-pyps4-2ndscreen==1.1.0
+pyps4-2ndscreen==1.1.1
 
 # homeassistant.components.qvr_pro
 pyqvrpro==0.52
@@ -1718,7 +1719,7 @@ python-juicenet==1.0.1
 # python-lirc==1.2.3
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.1
+python-miio==0.5.2.1
 
 # homeassistant.components.mpd
 python-mpd2==1.0.0
@@ -1784,7 +1785,7 @@ python_opendata_transport==0.2.1
 pythonegardia==1.0.40
 
 # homeassistant.components.tile
-pytile==3.0.6
+pytile==4.0.0
 
 # homeassistant.components.touchline
 pytouchline==0.7
@@ -2009,7 +2010,7 @@ somecomfort==0.5.2
 somfy-mylink-synergy==1.0.6
 
 # homeassistant.components.sonarr
-sonarr==0.2.2
+sonarr==0.2.3
 
 # homeassistant.components.marytts
 speak2mary==1.4.0
@@ -2100,7 +2101,7 @@ temperusb==1.5.3
 tesla-powerwall==0.2.11
 
 # homeassistant.components.tesla
-teslajsonpy==0.9.0
+teslajsonpy==0.9.2
 
 # homeassistant.components.thermoworks_smoke
 thermoworks_smoke==0.1.8
