@@ -355,7 +355,7 @@ def _get_events(
         """Yield Events that are not filtered away."""
         for row in query.yield_per(1000):
             event = LazyEventPartialState(row)
-            if _keep_event(hass, event, entities_filter, entity_attr_cache):
+            if _keep_event(hass, event, entities_filter):
                 yield event
 
     with session_scope(hass=hass) as session:
@@ -400,6 +400,7 @@ def _get_events(
                 | (
                     (States.state_id.isnot(None))
                     & (old_state.state_id.isnot(None))
+                    & (States.state.isnot(None))
                     & (States.state != old_state.state)
                 )
             )
@@ -444,12 +445,9 @@ def _get_events(
         return list(humanify(hass, yield_events(query), entity_attr_cache, prev_states))
 
 
-def _keep_event(hass, event, entities_filter, entity_attr_cache):
+def _keep_event(hass, event, entities_filter):
     if event.event_type == EVENT_STATE_CHANGED:
         entity_id = event.entity_id
-        if entity_id is None:
-            return False
-
         # Do not report on new entities
         # Do not report on entity removal
         if not event.has_old_and_new_state:
@@ -650,9 +648,12 @@ class LazyEventPartialState:
         # Delete this check once all states are saved in the v8 schema
         # format or later (they have the old_state_id column).
 
-        # New events in v8 schema format
+        # New events in v8+ schema format
         if self._row.event_data == EMPTY_JSON_OBJECT:
-            return self._row.state_id is not None and self._row.old_state_id is not None
+            # Events are already pre-filtered in sql
+            # to exclude missing old and new state
+            # if they are in v8+ format
+            return True
 
         # Old events not in v8 schema format
         return (
