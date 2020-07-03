@@ -96,7 +96,7 @@ class Measurement(Entity):
     @property
     def station_id(self):
         """Return the station id for the measure."""
-        return self.coordinator.data["stationReference"]
+        return self.coordinator.data["measures"][self.key]["stationReference"]
 
     @property
     def qualifier(self):
@@ -127,7 +127,7 @@ class Measurement(Entity):
     def device_info(self):
         """Return the device info."""
         return {
-            "identifiers": {(DOMAIN, "measure-id", self.unique_id)},
+            "identifiers": {(DOMAIN, "measure-id", self.station_id)},
             "name": self.name,
             "manufacturer": "https://environment.data.gov.uk/",
             "model": self.parameter_name,
