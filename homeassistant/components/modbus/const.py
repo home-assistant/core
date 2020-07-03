@@ -44,6 +44,7 @@ ATTR_ADDRESS = "address"
 ATTR_HUB = "hub"
 ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
+CONF_HUBS = "hubs"
 SERVICE_WRITE_COIL = "write_coil"
 SERVICE_WRITE_REGISTER = "write_register"
 
@@ -73,7 +74,6 @@ CONF_MIN_TEMP = "min_temp"
 CONF_STEP = "temp_step"
 
 # cover.py
-CONF_COVERS = "covers"
 CONF_STATE_OPEN = "state_open"
 CONF_STATE_CLOSED = "state_closed"
 CONF_STATE_OPENING = "state_opening"

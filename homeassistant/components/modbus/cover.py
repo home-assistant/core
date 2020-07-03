@@ -4,17 +4,9 @@ from typing import Any, Dict, Optional
 
 from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
-import voluptuous as vol
 
-from homeassistant.components.cover import (
-    DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    CoverEntity,
-)
+from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN, CoverEntity
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_SLAVE
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
@@ -23,9 +15,7 @@ from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
-    CONF_COVERS,
     CONF_HUB,
-    CONF_INPUT_TYPE,
     CONF_REGISTER,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
@@ -33,56 +23,23 @@ from .const import (
     CONF_STATE_OPENING,
     CONF_STATUS_REGISTER,
     CONF_STATUS_REGISTER_TYPE,
-    DEFAULT_HUB,
-    DEFAULT_SLAVE,
     MODBUS_DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        # Make sure user specified either coil or register attribute (not both)
-        vol.Required(CONF_COVERS): [
-            vol.All(
-                cv.has_at_least_one_key(CALL_TYPE_COIL, CONF_REGISTER),
-                vol.Schema(
-                    {
-                        vol.Required(CONF_NAME): cv.string,
-                        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-                        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-                        vol.Optional(
-                            CONF_SLAVE, default=DEFAULT_SLAVE
-                        ): cv.positive_int,
-                        vol.Optional(CONF_STATE_CLOSED, default=0): cv.positive_int,
-                        vol.Optional(CONF_STATE_CLOSING, default=3): cv.positive_int,
-                        vol.Optional(CONF_STATE_OPEN, default=1): cv.positive_int,
-                        vol.Optional(CONF_STATE_OPENING, default=2): cv.positive_int,
-                        vol.Optional(CONF_STATUS_REGISTER): cv.positive_int,
-                        vol.Optional(
-                            CONF_STATUS_REGISTER_TYPE,
-                            default=CALL_TYPE_REGISTER_HOLDING,
-                        ): vol.In(
-                            [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]
-                        ),
-                        vol.Exclusive(CALL_TYPE_COIL, CONF_INPUT_TYPE): cv.positive_int,
-                        vol.Exclusive(CONF_REGISTER, CONF_INPUT_TYPE): cv.positive_int,
-                    }
-                ),
-            )
-        ]
-    }
-)
 
 
 async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Read configuration and create Modbus cover."""
+    if discovery_info is None:
+        return
+
     covers = []
-    for cover in config[CONF_COVERS]:
-        hub: ModbusHub = hass.data[MODBUS_DOMAIN][cover[CONF_HUB]]
-        covers.append(ModbusCover(hub, cover))
+    for config in discovery_info:
+        hub: ModbusHub = hass.data[MODBUS_DOMAIN][config[CONF_HUB]]
+        covers.append(ModbusCover(hub, config))
 
     async_add_entities(covers)
 
