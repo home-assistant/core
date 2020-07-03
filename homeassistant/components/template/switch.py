@@ -134,6 +134,17 @@ class SwitchTemplate(SwitchEntity, RestoreEntity):
     async def async_added_to_hass(self):
         """Register callbacks."""
 
+        # restore state after startup
+        await super().async_added_to_hass()
+        state = await self.async_get_last_state()
+        if state:
+            self._state = state.state == STATE_ON
+
+        # no need to listen for events
+        if self._template is None:
+            return
+
+        # set up event listening
         @callback
         def template_switch_state_listener(entity, old_state, new_state):
             """Handle target device state changes."""
@@ -148,12 +159,6 @@ class SwitchTemplate(SwitchEntity, RestoreEntity):
                 )
 
             self.async_schedule_update_ha_state(True)
-
-        # restore state after startup
-        await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if state:
-            self._state = state.state in ("true", STATE_ON)
 
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, template_switch_startup
@@ -194,14 +199,14 @@ class SwitchTemplate(SwitchEntity, RestoreEntity):
         await self._on_script.async_run(context=self._context)
         if self._template is None:
             self._state = True
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Fire the off action."""
         await self._off_script.async_run(context=self._context)
         if self._template is None:
             self._state = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_update(self):
         """Update the state from the template."""

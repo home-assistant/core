@@ -1,7 +1,5 @@
 """The tests for the  Template switch platform."""
 
-import pytest
-
 from homeassistant import setup
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import CoreState, State, callback
@@ -14,26 +12,6 @@ from tests.common import (
     mock_restore_cache,
 )
 from tests.components.switch import common
-
-
-@pytest.fixture
-def storage_setup(hass, hass_storage):
-    """Storage setup."""
-
-    async def _storage(items=None, config=None):
-        if items is None:
-            hass_storage["switch"] = {
-                "key": "switch",
-                "version": 1,
-                "data": {"items": [{"id": "from_storage", "name": "from storage"}]},
-            }
-        else:
-            hass_storage["switch"] = items
-        if config is None:
-            config = {"switch": {}}
-        return await async_setup_component(hass, "switch", config)
-
-    return _storage
 
 
 class TestTemplateSwitch:
