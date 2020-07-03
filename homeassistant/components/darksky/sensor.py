@@ -828,7 +828,7 @@ class DarkSkyData:
             )
             if self._connect_error:
                 self._connect_error = False
-                _LOGGER.error("Reconnected to Dark Sky")
+                _LOGGER.info("Reconnected to Dark Sky")
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
             if not self._connect_error:
                 self._connect_error = True
