@@ -25,9 +25,9 @@ def _base_schema(discovery_info):
     base_schema = {}
 
     if not discovery_info:
-        base_schema.update({vol.Required(CONF_HOST): str})
+        base_schema[vol.Required(CONF_HOST)] = str
 
-    base_schema.update({vol.Required(CONF_PASSWORD): str})
+    base_schema[vol.Required(CONF_PASSWORD)] = str
 
     return vol.Schema(base_schema)
 
