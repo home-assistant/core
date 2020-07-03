@@ -34,27 +34,8 @@ def apply_mock_storage(hass_storage):
 
 
 @pytest.fixture(autouse=True)
-async def stop_hass(loop):
+async def apply_stop_hass(stop_hass):
     """Make sure all hass are stopped."""
-    orig_hass = core.HomeAssistant
-
-    created = []
-
-    def mock_hass(loop=loop):
-        hass = orig_hass(loop)
-        created.append(hass)
-        return hass
-
-    with patch("homeassistant.core.HomeAssistant", mock_hass):
-        yield
-
-    for hass in created:
-        with patch.object(loop, "stop"):
-            if hass.is_running:
-                await hass.async_block_till_done()
-                await hass.async_stop(force=True)
-            else:
-                hass.executor.shutdown(True)
 
 
 @pytest.fixture(autouse=True)
