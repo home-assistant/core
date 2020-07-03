@@ -1,6 +1,7 @@
 """Config flow for Vizio."""
 import copy
 import logging
+import socket
 from typing import Any, Dict, Optional
 
 from pyvizio import VizioAsync, async_guess_device_type
@@ -29,6 +30,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.util.network import is_ip_address
 
 from .const import (
     CONF_APPS,
@@ -90,7 +92,11 @@ def _get_pairing_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
 
 def _host_is_same(host1: str, host2: str) -> bool:
     """Check if host1 and host2 are the same."""
-    return host1.split(":")[0] == host2.split(":")[0]
+    host1 = host1.split(":")[0]
+    host1 = host1 if is_ip_address(host1) else socket.gethostbyname(host1)
+    host2 = host2.split(":")[0]
+    host2 = host2 if is_ip_address(host2) else socket.gethostbyname(host2)
+    return host1 == host2
 
 
 class VizioOptionsConfigFlow(config_entries.OptionsFlow):
@@ -289,6 +295,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 updated_data = {}
                 remove_apps = False
 
+                if entry.data[CONF_HOST] != import_config[CONF_HOST]:
+                    updated_data[CONF_HOST] = import_config[CONF_HOST]
+
                 if entry.data[CONF_NAME] != import_config[CONF_NAME]:
                     updated_data[CONF_NAME] = import_config[CONF_NAME]
 
@@ -298,9 +307,11 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     if not import_config.get(CONF_APPS):
                         remove_apps = True
                     else:
+                        updated_data[CONF_APPS] = import_config[CONF_APPS]
                         updated_options[CONF_APPS] = import_config[CONF_APPS]
 
                 if entry.data.get(CONF_VOLUME_STEP) != import_config[CONF_VOLUME_STEP]:
+                    updated_data[CONF_VOLUME_STEP] = import_config[CONF_VOLUME_STEP]
                     updated_options[CONF_VOLUME_STEP] = import_config[CONF_VOLUME_STEP]
 
                 if updated_options or updated_data or remove_apps:
