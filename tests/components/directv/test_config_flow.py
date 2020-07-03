@@ -207,7 +207,7 @@ async def test_full_import_flow_implementation(
     user_input = MOCK_USER_INPUT.copy()
     with patch(
         "homeassistant.components.directv.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.directv.async_setup", return_value=True
+    ), patch("homeassistant.components.directv.async_setup", return_value=True):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=user_input,
         )
@@ -236,7 +236,7 @@ async def test_full_user_flow_implementation(
     user_input = MOCK_USER_INPUT.copy()
     with patch(
         "homeassistant.components.directv.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.directv.async_setup", return_value=True
+    ), patch("homeassistant.components.directv.async_setup", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=user_input,
         )
