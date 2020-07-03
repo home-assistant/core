@@ -88,6 +88,7 @@ async def test_several_covers(hass, rfxtrx):
             }
         },
     )
+    await hass.async_block_till_done()
 
     assert 3 == len(rfxtrx_core.RFX_DEVICES)
     device_num = 0
@@ -111,6 +112,7 @@ async def test_discover_covers(hass, rfxtrx):
         "cover",
         {"cover": {"platform": "rfxtrx", "automatic_add": True, "devices": {}}},
     )
+    await hass.async_block_till_done()
 
     event = rfxtrx_core.get_rfx_object("0a140002f38cae010f0070")
     event.data = bytearray(
@@ -150,6 +152,7 @@ async def test_discover_cover_noautoadd(hass, rfxtrx):
         "cover",
         {"cover": {"platform": "rfxtrx", "automatic_add": False, "devices": {}}},
     )
+    await hass.async_block_till_done()
 
     event = rfxtrx_core.get_rfx_object("0a1400adf394ab010d0060")
     event.data = bytearray(
