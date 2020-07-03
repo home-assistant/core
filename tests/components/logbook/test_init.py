@@ -79,7 +79,15 @@ class TestComponentLogbook(unittest.TestCase):
             },
             True,
         )
-
+        self.hass.services.call(
+            logbook.DOMAIN,
+            "log",
+            {
+                logbook.ATTR_NAME: "This entry",
+                logbook.ATTR_MESSAGE: "has no domain or entity_id",
+            },
+            True,
+        )
         # Logbook entry service call results in firing an event.
         # Our service call will unblock when the event listeners have been
         # scheduled. This means that they may not have been processed yet.
@@ -94,15 +102,21 @@ class TestComponentLogbook(unittest.TestCase):
                 dt_util.utcnow() + timedelta(hours=1),
             )
         )
-        assert len(events) == 1
+        assert len(events) == 2
 
-        assert len(calls) == 1
+        assert len(calls) == 2
+        first_call = calls[-2]
+
+        assert first_call.data.get(logbook.ATTR_NAME) == "Alarm"
+        assert first_call.data.get(logbook.ATTR_MESSAGE) == "is triggered"
+        assert first_call.data.get(logbook.ATTR_DOMAIN) == "switch"
+        assert first_call.data.get(logbook.ATTR_ENTITY_ID) == "switch.test_switch"
+
         last_call = calls[-1]
 
-        assert last_call.data.get(logbook.ATTR_NAME) == "Alarm"
-        assert last_call.data.get(logbook.ATTR_MESSAGE) == "is triggered"
-        assert last_call.data.get(logbook.ATTR_DOMAIN) == "switch"
-        assert last_call.data.get(logbook.ATTR_ENTITY_ID) == "switch.test_switch"
+        assert last_call.data.get(logbook.ATTR_NAME) == "This entry"
+        assert last_call.data.get(logbook.ATTR_MESSAGE) == "has no domain or entity_id"
+        assert last_call.data.get(logbook.ATTR_DOMAIN) == "logbook"
 
     def test_service_call_create_log_book_entry_no_message(self):
         """Test if service call create log book entry without message."""
