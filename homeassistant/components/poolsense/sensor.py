@@ -96,12 +96,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class PoolSenseSensor(Entity):
     """Sensor representing poolsense data."""
 
-    unique_id = None
-
     def __init__(self, coordinator, email, info_type):
         """Initialize poolsense sensor."""
         self._email = email
-        self.unique_id = f"{email}-{info_type}"
+        self._unique_id = f"{email}-{info_type}"
         self.coordinator = coordinator
         self.info_type = info_type
 
@@ -111,9 +109,14 @@ class PoolSenseSensor(Entity):
         return self.coordinator.last_update_success
 
     @property
+    def unique_id(self):
+        """Return a unique ID to use for this sensor."""
+        return self._unique_id
+
+    @property
     def name(self):
         """Return the name of the particular component."""
-        return "PoolSense {}".format(SENSORS[self.info_type]["name"])
+        return f"PoolSense {SENSORS[self.info_type]['name']}"
 
     @property
     def should_poll(self):
