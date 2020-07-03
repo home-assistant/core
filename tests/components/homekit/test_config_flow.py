@@ -1,11 +1,10 @@
 """Test the HomeKit config flow."""
-from asynctest import patch
-
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.homekit.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_PORT
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
