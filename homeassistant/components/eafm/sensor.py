@@ -14,8 +14,6 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "This uses Environment Agency flood and river level data from the real-time data API"
-
 UNIT_MAPPING = {
     "http://qudt.org/1.1/vocab/unit#Meter": LENGTH_METERS,
 }
@@ -82,6 +80,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class Measurement(Entity):
     """A gauge at a flood monitoring station."""
+
+    attribution = "This uses Environment Agency flood and river level data from the real-time data API"
 
     def __init__(self, coordinator, key):
         """Initialise the gauge with a data instance and station."""
@@ -166,11 +166,6 @@ class Measurement(Entity):
         if "unit" not in measure:
             return None
         return UNIT_MAPPING.get(measure["unit"], measure["unitName"])
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION
 
     @property
     def device_state_attributes(self):
