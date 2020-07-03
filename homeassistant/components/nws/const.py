@@ -5,6 +5,8 @@ CONF_STATION = "station"
 
 ATTRIBUTION = "Data from National Weather Service/NOAA"
 
+ATTR_ALERTS = "alerts"
+ATTR_ZONES = "zones"
 ATTR_FORECAST_DETAILED_DESCRIPTION = "detailed_description"
 ATTR_FORECAST_PRECIP_PROB = "precipitation_probability"
 ATTR_FORECAST_DAYTIME = "daytime"
@@ -57,6 +59,8 @@ DAYNIGHT = "daynight"
 HOURLY = "hourly"
 
 NWS_DATA = "nws data"
+
+COORDINATOR_ALERTS = "coordinator_alerts"
 COORDINATOR_OBSERVATION = "coordinator_observation"
 COORDINATOR_FORECAST = "coordinator_forecast"
 COORDINATOR_FORECAST_HOURLY = "coordinator_forecast_hourly"

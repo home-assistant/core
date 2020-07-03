@@ -17,6 +17,7 @@ from homeassistant.util.dt import utcnow
 
 from .const import (
     CONF_STATION,
+    COORDINATOR_ALERTS,
     COORDINATOR_FORECAST,
     COORDINATOR_FORECAST_HOURLY,
     COORDINATOR_OBSERVATION,
@@ -26,9 +27,10 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["weather"]
+PLATFORMS = ["weather", "sensor"]
 
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(minutes=10)
+DEFAULT_SCAN_INTERVAL_ALERTS = datetime.timedelta(minutes=5)
 FAILED_SCAN_INTERVAL = datetime.timedelta(minutes=1)
 DEBOUNCE_TIME = 60  # in seconds
 
@@ -144,18 +146,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
         ),
     )
+
+    coordinator_alerts = NwsDataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"NWS alerts {station}",
+        update_method=nws_data.update_alerts_all_zones,
+        update_interval=DEFAULT_SCAN_INTERVAL_ALERTS,
+        failed_update_interval=FAILED_SCAN_INTERVAL,
+        request_refresh_debouncer=debounce.Debouncer(
+            hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
+        ),
+    )
+
     nws_hass_data = hass.data.setdefault(DOMAIN, {})
     nws_hass_data[entry.entry_id] = {
         NWS_DATA: nws_data,
         COORDINATOR_OBSERVATION: coordinator_observation,
         COORDINATOR_FORECAST: coordinator_forecast,
         COORDINATOR_FORECAST_HOURLY: coordinator_forecast_hourly,
+        COORDINATOR_ALERTS: coordinator_alerts,
     }
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator_observation.async_refresh()
     await coordinator_forecast.async_refresh()
     await coordinator_forecast_hourly.async_refresh()
+    # Alert coordinator refreshed in platform setup
 
     for component in PLATFORMS:
         hass.async_create_task(
