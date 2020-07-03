@@ -237,7 +237,9 @@ def requirements_all_output(reqs):
     """Generate output for requirements_all."""
     output = []
     output.append("# Home Assistant Core, full dependency set\n")
-    output.append("-r requirements.txt\n")
+    output.append("\n")
+    output.append("\n".join(core_requirements()))
+    output.append("\n")
     output.append(generate_requirements_list(reqs))
 
     return "".join(output)
