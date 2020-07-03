@@ -105,6 +105,6 @@ async def test_async_setup_entry_handles_http_error(hass: HomeAssistant):
         "homeassistant.components.plum_lightpad.light.async_setup_entry"
     ) as mock_light_async_setup_entry:
         with pytest.raises(ConfigEntryNotReady):
-            await async_setup_entry(hass, config_entry)
+            await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert len(mock_light_async_setup_entry.mock_calls) == 0
