@@ -43,19 +43,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             data = await get_station(session, station_key)
 
         measures = get_measures(data)
+        entities = []
 
         # Look to see if payload contains new measures
         for measure in measures:
-            if measure["@id"] not in measurements:
-                if "latestReading" not in measure:
-                    # Don't create a sensor entity for a gauge that isn't available
-                    continue
+            if measure["@id"] in measurements:
+                continue
 
-                if measure["@id"] not in measurements:
-                    async_add_entities(
-                        [Measurement(hass.data[DOMAIN][station_key], measure["@id"])]
-                    )
-                    measurements.add(measure["@id"])
+            if "latestReading" not in measure:
+                # Don't create a sensor entity for a gauge that isn't available
+                continue
+
+            if measure["@id"] not in measurements:
+                entities.append(
+                    Measurement(hass.data[DOMAIN][station_key], measure["@id"])
+                )
+                measurements.add(measure["@id"])
+
+        async_add_entities(entities)
 
         # Turn data.measures into a dict rather than a list so easier for entities to
         # find themselves.
@@ -73,8 +78,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
-
-    return len(measurements) > 0
 
 
 class Measurement(Entity):

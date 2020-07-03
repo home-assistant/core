@@ -10,7 +10,8 @@
             }
         },
         "abort": {
-            "no_stations": "No flood monitoring stations found."
+            "no_stations": "No flood monitoring stations found.",
+            "already_configured": "This station is already configured."
         }
     }
 }

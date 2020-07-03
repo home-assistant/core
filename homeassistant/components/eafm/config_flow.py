@@ -30,6 +30,7 @@ class UKFloodsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             station = self.stations[user_input["station"]]
             await self.async_set_unique_id(station, raise_on_progress=False)
+            self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=user_input["station"], data={"station": station},
             )
@@ -48,6 +49,6 @@ class UKFloodsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             errors=errors,
             data_schema=vol.Schema(
-                {vol.Required("station"): vol.In(sorted(self.stations.keys()))}
+                {vol.Required("station"): vol.In(sorted(self.stations))}
             ),
         )

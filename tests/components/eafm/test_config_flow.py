@@ -1,4 +1,5 @@
 """Tests for eafm config flow."""
+from asynctest import patch
 import pytest
 from voluptuous.error import MultipleInvalid
 
@@ -46,9 +47,11 @@ async def test_flow_works(hass, mock_get_stations, mock_get_station):
     )
     assert result["type"] == "form"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"station": "My station"}
-    )
+    with patch("homeassistant.components.eafm.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"station": "My station"}
+        )
+
     assert result["type"] == "create_entry"
     assert result["title"] == "My station"
     assert result["data"] == {

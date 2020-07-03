@@ -1,5 +1,4 @@
 """eafm fixtures."""
-# pylint: disable=redefined-outer-name
 
 import datetime
 

@@ -3,7 +3,6 @@
   "name": "Environment Agency Flood Gauges",
   "documentation": "https://www.home-assistant.io/integrations/eafm",
   "config_flow": true,
-  "dependencies": [],
   "codeowners": ["@Jc2k"],
   "requirements": ["aioeafm==0.1.2"]
 }
