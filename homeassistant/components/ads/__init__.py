@@ -46,6 +46,8 @@ STATE_KEY_STATE = "state"
 STATE_KEY_BRIGHTNESS = "brightness"
 STATE_KEY_POSITION = "position"
 
+DIGIT_DEFAULT = "1"
+
 DOMAIN = "ads"
 
 SERVICE_WRITE_DATA_BY_NAME = "write_data_by_name"
