@@ -2009,7 +2009,7 @@ somecomfort==0.5.2
 somfy-mylink-synergy==1.0.6
 
 # homeassistant.components.sonarr
-sonarr==0.2.2
+sonarr==0.2.3
 
 # homeassistant.components.marytts
 speak2mary==1.4.0
