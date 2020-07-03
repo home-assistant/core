@@ -331,7 +331,7 @@ def get_influx_connection(conf, test_write=False, test_read=False):
             """Close V2 influx client."""
             influx.close()
 
-        buckets = None
+        buckets = []
         if test_write:
             # Try to write [] to influx. If we can connect and creds are valid
             # Then invalid inputs is returned. Anything else is a broken config
@@ -410,7 +410,7 @@ def get_influx_connection(conf, test_write=False, test_read=False):
         """Close the V1 Influx client."""
         influx.close()
 
-    databases = None
+    databases = []
     if test_write:
         write_v1([])
 
