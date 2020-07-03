@@ -130,9 +130,9 @@ class VerisureDoorlock(LockEntity):
         while "result" not in transaction:
             transaction = hub.session.get_lock_state_transaction(transaction_id)
             attempts += 1
-            if attempts == 10:
+            if attempts == 30:
                 break
-            elif attempts > 1:
+            if attempts > 1:
                 sleep(0.5)
         if transaction["result"] == "OK":
             self._state = state
