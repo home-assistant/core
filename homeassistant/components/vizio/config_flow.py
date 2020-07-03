@@ -310,11 +310,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     if not import_config.get(CONF_APPS):
                         remove_apps = True
                     else:
-                        updated_data[CONF_APPS] = import_config[CONF_APPS]
                         updated_options[CONF_APPS] = import_config[CONF_APPS]
 
                 if entry.data.get(CONF_VOLUME_STEP) != import_config[CONF_VOLUME_STEP]:
-                    updated_data[CONF_VOLUME_STEP] = import_config[CONF_VOLUME_STEP]
                     updated_options[CONF_VOLUME_STEP] = import_config[CONF_VOLUME_STEP]
 
                 if updated_options or updated_data or remove_apps:
@@ -328,6 +326,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     if updated_data:
                         new_data.update(updated_data)
 
+                    # options are stored in entry options and data so update both
                     if updated_options:
                         new_data.update(updated_options)
                         new_options.update(updated_options)
