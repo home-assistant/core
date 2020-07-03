@@ -90,10 +90,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
 
-        for entry in self._async_current_entries():
-            if entry.unique_id == self.discovery_info.get("hostname").split(".")[0]:
-                self._abort_if_unique_id_configured()
-
         if user_input is not None:
 
             if self.discovery_info:
