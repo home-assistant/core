@@ -4,7 +4,18 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_HOST, CONF_PORT
 
-from . import CONF_CONTAINERS, CONF_NODES, CONF_VMS, PROXMOX_CLIENTS, ProxmoxItemType
+from .const import (
+    CONF_CONTAINERS,
+    CONF_NODES,
+    CONF_VMS,
+    PROXMOX_CLIENTS,
+    DOMAIN,
+    CONF_NODE,
+    CONF_VMID,
+    CONF_TYPE,
+)
+
+from . import ProxmoxItemType
 
 ATTRIBUTION = "Data provided by Proxmox VE"
 _LOGGER = logging.getLogger(__name__)
@@ -40,6 +51,31 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
 
     add_entities(sensors, True)
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
+    host = config_entry.data[CONF_HOST]
+
+    proxmox_client = hass.data[DOMAIN][host]
+
+    entities = []
+
+    for vm in config_entry.data[CONF_VMS]:
+
+        if vm[CONF_TYPE] == "qemu":
+            entities.append(
+                ProxmoxBinarySensor(
+                    proxmox_client, vm[CONF_NODE], ProxmoxItemType.qemu, vm[CONF_VMID],
+                )
+            )
+        elif vm[CONF_TYPE] == "lxc":
+            entities.append(
+                ProxmoxBinarySensor(
+                    proxmox_client, vm[CONF_NODE], ProxmoxItemType.lxc, vm[CONF_VMID],
+                )
+            )
+
+    async_add_entities(entities, True)
 
 
 class ProxmoxBinarySensor(BinarySensorEntity):
