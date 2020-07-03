@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
+from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 
