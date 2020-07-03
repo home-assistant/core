@@ -10,7 +10,16 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
-from .const import CONF_NODES, CONF_VMS, CONF_VMID, CONF_TYPE, CONF_NODE
+from .const import (
+    CONF_NODES,
+    CONF_VMS,
+    CONF_VMID,
+    CONF_TYPE,
+    CONF_NODE,
+    DEFAULT_PORT,
+    DEFAULT_REALM,
+    DEFAULT_VERIFY_SSL,
+)
 
 from proxmoxer.backends.https import AuthenticationError
 from requests import ConnectTimeout
@@ -21,9 +30,6 @@ from . import ProxmoxClient
 
 import voluptuous as vol
 
-
-DEFAULT_PORT = 8006
-DEFAULT_VERIFY_SSL = True
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,7 +97,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
                 ): str,
                 vol.Required(
-                    CONF_REALM, default=user_input.get(CONF_REALM, "pve")
+                    CONF_REALM, default=user_input.get(CONF_REALM, DEFAULT_REALM)
                 ): str,
                 vol.Optional(
                     CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)

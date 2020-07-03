@@ -9,3 +9,7 @@ CONF_CONTAINERS = "containers"
 
 CONF_VMID = "id"
 CONF_TYPE = "type"
+
+DEFAULT_PORT = 8006
+DEFAULT_REALM = "pam"
+DEFAULT_VERIFY_SSL = True
