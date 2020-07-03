@@ -212,8 +212,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # If source is ignore bypass host and name check and continue through loop
                 if entry.source == SOURCE_IGNORE:
                     continue
-
-                if _host_is_same(entry.data[CONF_HOST], user_input[CONF_HOST]):
+                if await self.hass.async_add_executor_job(
+                    _host_is_same, entry.data[CONF_HOST], user_input[CONF_HOST]
+                ):
                     errors[CONF_HOST] = "host_exists"
 
                 if entry.data[CONF_NAME] == user_input[CONF_NAME]:
@@ -290,7 +291,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.source == SOURCE_IGNORE:
                 continue
 
-            if _host_is_same(entry.data[CONF_HOST], import_config[CONF_HOST]):
+            if await self.hass.async_add_executor_job(
+                _host_is_same, entry.data[CONF_HOST], import_config[CONF_HOST]
+            ):
                 updated_options = {}
                 updated_data = {}
                 remove_apps = False
@@ -364,7 +367,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.source == SOURCE_IGNORE:
                 continue
 
-            if _host_is_same(entry.data[CONF_HOST], discovery_info[CONF_HOST]):
+            if await self.hass.async_add_executor_job(
+                _host_is_same, entry.data[CONF_HOST], discovery_info[CONF_HOST]
+            ):
                 return self.async_abort(reason="already_configured_device")
 
         # Set default name to discovered device name by stripping zeroconf service
