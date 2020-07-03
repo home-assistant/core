@@ -33,6 +33,39 @@ def apply_mock_storage(hass_storage):
     """Apply the storage mock."""
 
 
+@pytest.fixture(autouse=True)
+async def stop_hass(loop):
+    """Make sure all hass are stopped."""
+    orig_hass = core.HomeAssistant
+
+    created = []
+
+    def mock_hass(loop=loop):
+        hass = orig_hass(loop)
+        created.append(hass)
+        return hass
+
+    with patch("homeassistant.core.HomeAssistant", mock_hass):
+        yield
+
+    for hass in created:
+        with patch.object(loop, "stop"):
+            if hass.is_running:
+                await hass.async_block_till_done()
+                await hass.async_stop(force=True)
+            else:
+                hass.executor.shutdown(True)
+
+
+@pytest.fixture(autouse=True)
+def mock_http_start_stop():
+    """Mock HTTP start and stop."""
+    with patch(
+        "homeassistant.components.http.start_http_server_and_save_config"
+    ), patch("homeassistant.components.http.HomeAssistantHTTP.stop"):
+        yield
+
+
 @patch("homeassistant.bootstrap.async_enable_logging", Mock())
 async def test_home_assistant_core_config_validation(hass):
     """Test if we pass in wrong information for HA conf."""
@@ -360,9 +393,7 @@ async def test_setup_hass(
     with patch(
         "homeassistant.config.async_hass_config_yaml",
         return_value={"browser": {}, "frontend": {}},
-    ), patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 5000), patch(
-        "homeassistant.components.http.start_http_server_and_save_config"
-    ):
+    ), patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 5000):
         hass = await bootstrap.async_setup_hass(
             runner.RuntimeConfig(
                 config_dir=get_test_config_dir(),
@@ -418,8 +449,6 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
     ), patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.3), patch(
         "homeassistant.components.frontend.async_setup",
         side_effect=_async_setup_that_blocks_startup,
-    ), patch(
-        "homeassistant.components.http.start_http_server_and_save_config"
     ):
         await bootstrap.async_setup_hass(
             runner.RuntimeConfig(
@@ -447,7 +476,7 @@ async def test_setup_hass_invalid_yaml(
     """Test it works."""
     with patch(
         "homeassistant.config.async_hass_config_yaml", side_effect=HomeAssistantError
-    ), patch("homeassistant.components.http.start_http_server_and_save_config"):
+    ):
         hass = await bootstrap.async_setup_hass(
             runner.RuntimeConfig(
                 config_dir=get_test_config_dir(),
@@ -501,8 +530,6 @@ async def test_setup_hass_safe_mode(
 ):
     """Test it works."""
     with patch("homeassistant.components.browser.setup") as browser_setup, patch(
-        "homeassistant.components.http.start_http_server_and_save_config"
-    ), patch(
         "homeassistant.config_entries.ConfigEntries.async_domains",
         return_value=["browser"],
     ):
@@ -538,7 +565,7 @@ async def test_setup_hass_invalid_core_config(
     with patch(
         "homeassistant.config.async_hass_config_yaml",
         return_value={"homeassistant": {"non-existing": 1}},
-    ), patch("homeassistant.components.http.start_http_server_and_save_config"):
+    ):
         hass = await bootstrap.async_setup_hass(
             runner.RuntimeConfig(
                 config_dir=get_test_config_dir(),
@@ -578,7 +605,7 @@ async def test_setup_safe_mode_if_no_frontend(
             "map": {},
             "person": {"invalid": True},
         },
-    ), patch("homeassistant.components.http.start_http_server_and_save_config"):
+    ):
         hass = await bootstrap.async_setup_hass(
             runner.RuntimeConfig(
                 config_dir=get_test_config_dir(),
