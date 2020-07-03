@@ -78,6 +78,9 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Set up the component."""
 
+    if DOMAIN not in config:  # setting up with UI
+        return True
+
     # Create API Clients for later use
     hass.data[PROXMOX_CLIENTS] = {}
     for entry in config[DOMAIN]:
@@ -131,6 +134,13 @@ async def async_setup_entry(hass, config_entry) -> bool:
         config_entry.data[CONF_PASSWORD],
         config_entry.data[CONF_VERIFY_SSL],
     )
+
+    try:
+        await hass.async_add_executor_job(proxmox_client.build_client)
+    except Exception as exc:
+        _LOGGER.exception(exc)
+        _LOGGER.error("Could not setup proxmox client, check your config")
+        return False
 
     hass.data[DOMAIN][host] = proxmox_client
 
@@ -189,7 +199,7 @@ class ProxmoxClient:
         """Return list of VM in proxmox"""
         vms = []
 
-        for resource in self._proxmox.cluster.resources.get:
+        for resource in self._proxmox.cluster.resources.get():
             if resource["type"] in ["qemu", "lxc"]:
                 vms.append(
                     {
@@ -206,7 +216,7 @@ class ProxmoxClient:
         """Return proxmox nodes list"""
         nodes = []
 
-        for node in self._proxmox.nodes.get:
+        for node in self._proxmox.nodes.get():
             nodes.append({"name": node["node"], "status": node["status"]})
 
         return nodes
