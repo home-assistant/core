@@ -105,6 +105,11 @@ class ProxmoxBinarySensor(BinarySensorEntity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return uniqueid for entity based on node name and vmid."""
+        return f"{self._proxmox_client.host}_{self._item_node}_{self._item_id}"
+
+    @property
     def is_on(self):
         """Return true if VM/container is running."""
         return self._state

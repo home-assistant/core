@@ -179,6 +179,11 @@ class ProxmoxClient:
         self._proxmox = None
         self._connection_start_time = None
 
+    @property
+    def host(self):
+        """Return host."""
+        return self._host
+
     def build_client(self):
         """Construct the ProxmoxAPI client. Allows inserting the realm within the `user` value."""
 
