@@ -625,7 +625,7 @@ jobs:
       - name: Run pylint
         run: |
           . venv/bin/activate
-          pylint homeassistant
+          pylint -j4 homeassistant
 
   mypy:
     name: Check mypy
