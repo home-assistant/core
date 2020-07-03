@@ -16,16 +16,20 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
+from .const import (
+    CONF_CONTAINERS,
+    CONF_NODES,
+    CONF_REALM,
+    CONF_VMS,
+    CONF_NODE,
+    PROXMOX_CLIENTS,
+    DOMAIN,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 
-DOMAIN = "proxmoxve"
-PROXMOX_CLIENTS = "proxmox_clients"
-CONF_REALM = "realm"
-CONF_NODE = "node"
-CONF_NODES = "nodes"
-CONF_VMS = "vms"
-CONF_CONTAINERS = "containers"
+PLATFORMS = ["binary_sensor"]
 
 DEFAULT_PORT = 8006
 DEFAULT_REALM = "pam"
@@ -112,6 +116,36 @@ def setup(hass, config):
     return False
 
 
+async def async_setup_entry(hass, config_entry) -> bool:
+
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+
+    host = config_entry.data[CONF_HOST]
+
+    proxmox_client = ProxmoxClient(
+        host,
+        config_entry.data[CONF_PORT],
+        config_entry.data[CONF_USERNAME],
+        config_entry.data[CONF_REALM],
+        config_entry.data[CONF_PASSWORD],
+        config_entry.data[CONF_VERIFY_SSL],
+    )
+
+    hass.data[DOMAIN][host] = proxmox_client
+
+    if not proxmox_client:
+        _LOGGER.error("Could not setup proxmox client, check your config")
+        return False
+
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
+        )
+
+    return True
+
+
 class ProxmoxItemType(Enum):
     """Represents the different types of machines in Proxmox."""
 
@@ -150,6 +184,32 @@ class ProxmoxClient:
             password=self._password,
             verify_ssl=self._verify_ssl,
         )
+
+    def get_all_vms(self):
+        """Return list of VM in proxmox"""
+        vms = []
+
+        for resource in self._proxmox.cluster.resources.get:
+            if resource["type"] in ["qemu", "lxc"]:
+                vms.append(
+                    {
+                        "name": resource["name"],
+                        "id": resource["id"].split("/")[1],
+                        "node": resource["node"],
+                        "type": resource["type"],
+                    }
+                )
+
+        return vms
+
+    def get_nodes(self):
+        """Return proxmox nodes list"""
+        nodes = []
+
+        for node in self._proxmox.nodes.get:
+            nodes.append({"name": node["node"], "status": node["status"]})
+
+        return nodes
 
     def get_api_client(self):
         """Return the ProxmoxAPI client."""
