@@ -127,6 +127,7 @@ FLOWS = [
     "point",
     "poolsense",
     "powerwall",
+    "proxmoxve",
     "ps4",
     "pvpc_hourly_pricing",
     "rachio",

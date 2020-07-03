@@ -322,7 +322,7 @@ homeassistant/components/point/* @fredrike
 homeassistant/components/poolsense/* @haemishkyd
 homeassistant/components/powerwall/* @bdraco @jrester
 homeassistant/components/prometheus/* @knyar
-homeassistant/components/proxmoxve/* @k4ds3 @jhollowe
+homeassistant/components/proxmoxve/* @k4ds3 @jhollowe @edofullin
 homeassistant/components/ps4/* @ktnrg45
 homeassistant/components/ptvsd/* @swamp-ig
 homeassistant/components/push/* @dgomes
