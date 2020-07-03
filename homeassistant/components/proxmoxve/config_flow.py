@@ -1,35 +1,35 @@
-from homeassistant import config_entries
-from .const import DOMAIN, CONF_REALM
+"""Config flow for ProxmoxVE integration."""
+
 import logging
-
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_VERIFY_SSL,
-)
-
-from .const import (
-    CONF_NODES,
-    CONF_VMS,
-    CONF_VMID,
-    CONF_TYPE,
-    CONF_NODE,
-    DEFAULT_PORT,
-    DEFAULT_REALM,
-    DEFAULT_VERIFY_SSL,
-)
 
 from proxmoxer.backends.https import AuthenticationError
 from requests import ConnectTimeout
-from requests.exceptions import SSLError, ConnectionError
+from requests.exceptions import ConnectionError as RConnectionError, SSLError
+import voluptuous as vol
+
+from homeassistant import config_entries
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 import homeassistant.helpers.config_validation as cv
 
 from . import ProxmoxClient
-
-import voluptuous as vol
-
+from .const import (  # pylint: disable=unused-import
+    CONF_NODE,
+    CONF_NODES,
+    CONF_REALM,
+    CONF_TYPE,
+    CONF_VMID,
+    CONF_VMS,
+    DEFAULT_PORT,
+    DEFAULT_REALM,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,14 +41,15 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
+        """Initialize config flow."""
         super().__init__()
 
-        self._selected_nodes = []
-        self._selected_vms = []
-
         self._config = {}
+        self.proxmox_client = None
 
+    # pylint: disable=signature-differs
     async def async_step_user(self, user_input):
+        """Handle a flow initialized by the user."""
         errors = {}
 
         if user_input is not None:
@@ -74,9 +75,9 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "auth_error"
             except SSLError:
                 errors["base"] = "ssl_error"
-            except (ConnectTimeout, ConnectionError):
+            except (ConnectTimeout, RConnectionError):
                 errors["base"] = "server_unreachable"
-            except Exception as e:
+            except Exception:  # pylint: disable=broad-except
                 errors["base"] = "generic_error"
                 _LOGGER.exception("ProxmoxVE generic error")
 
@@ -114,17 +115,18 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_select_nodes_vms(self, user_input):
+        """Step to select which VM to add to hass."""
         errors = {}
 
         vms = await self.hass.async_add_executor_job(self.proxmox_client.get_all_vms)
 
         def vm_config_from_string(vm_string):
-            id = vm_string.split("-")[0].strip()
+            vmid = vm_string.split("-")[0].strip()
             vm_node = vm_string.split("-")[1].split(" (")[0].strip()
 
-            for vm in vms:
-                if vm["id"] == id and vm["node"] == vm_node:
-                    return vm
+            for elem in vms:
+                if elem["id"] == vmid and elem["node"] == vm_node:
+                    return elem
 
             return None
 
@@ -141,8 +143,8 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if CONF_VMS not in self._config:
                 self._config[CONF_VMS] = []
 
-            for vm in selected_vms:
-                vm_entity = vm_config_from_string(vm)
+            for virtual_machine in selected_vms:
+                vm_entity = vm_config_from_string(virtual_machine)
 
                 if vm_entity is None:
                     errors["base"] = "generic_error"

@@ -1,3 +1,5 @@
+"""ProxmoxVE constants."""
+
 DOMAIN = "proxmoxve"
 
 PROXMOX_CLIENTS = "proxmox_clients"

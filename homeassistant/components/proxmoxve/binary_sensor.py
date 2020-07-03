@@ -4,18 +4,17 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_HOST, CONF_PORT
 
+from . import ProxmoxItemType
 from .const import (
     CONF_CONTAINERS,
-    CONF_NODES,
-    CONF_VMS,
-    PROXMOX_CLIENTS,
-    DOMAIN,
     CONF_NODE,
-    CONF_VMID,
+    CONF_NODES,
     CONF_TYPE,
+    CONF_VMID,
+    CONF_VMS,
+    DOMAIN,
+    PROXMOX_CLIENTS,
 )
-
-from . import ProxmoxItemType
 
 ATTRIBUTION = "Data provided by Proxmox VE"
 _LOGGER = logging.getLogger(__name__)
@@ -54,24 +53,31 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
+    """Set up entry for ProxmoxVE integration."""
     host = config_entry.data[CONF_HOST]
 
     proxmox_client = hass.data[DOMAIN][host]
 
     entities = []
 
-    for vm in config_entry.data[CONF_VMS]:
+    for virtual_machine in config_entry.data[CONF_VMS]:
 
-        if vm[CONF_TYPE] == "qemu":
+        if virtual_machine[CONF_TYPE] == "qemu":
             entities.append(
                 ProxmoxBinarySensor(
-                    proxmox_client, vm[CONF_NODE], ProxmoxItemType.qemu, vm[CONF_VMID],
+                    proxmox_client,
+                    virtual_machine[CONF_NODE],
+                    ProxmoxItemType.qemu,
+                    virtual_machine[CONF_VMID],
                 )
             )
-        elif vm[CONF_TYPE] == "lxc":
+        elif virtual_machine[CONF_TYPE] == "lxc":
             entities.append(
                 ProxmoxBinarySensor(
-                    proxmox_client, vm[CONF_NODE], ProxmoxItemType.lxc, vm[CONF_VMID],
+                    proxmox_client,
+                    virtual_machine[CONF_NODE],
+                    ProxmoxItemType.lxc,
+                    virtual_machine[CONF_VMID],
                 )
             )
 

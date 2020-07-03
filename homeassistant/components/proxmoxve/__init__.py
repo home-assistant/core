@@ -18,15 +18,15 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_CONTAINERS,
+    CONF_NODE,
     CONF_NODES,
     CONF_REALM,
     CONF_VMS,
-    CONF_NODE,
-    PROXMOX_CLIENTS,
-    DOMAIN,
     DEFAULT_PORT,
     DEFAULT_REALM,
-    DEFAULT_VERIFY_SSL
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+    PROXMOX_CLIENTS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -119,6 +119,7 @@ def setup(hass, config):
 
 
 async def async_setup_entry(hass, config_entry) -> bool:
+    """Set up ProxmoxVE integration."""
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
@@ -136,7 +137,7 @@ async def async_setup_entry(hass, config_entry) -> bool:
 
     try:
         await hass.async_add_executor_job(proxmox_client.build_client)
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=broad-except
         _LOGGER.exception(exc)
         _LOGGER.error("Could not setup proxmox client, check your config")
         return False
@@ -195,7 +196,7 @@ class ProxmoxClient:
         )
 
     def get_all_vms(self):
-        """Return list of VM in proxmox"""
+        """Return list of VM in proxmox."""
         vms = []
 
         for resource in self._proxmox.cluster.resources.get():
@@ -212,7 +213,7 @@ class ProxmoxClient:
         return vms
 
     def get_nodes(self):
-        """Return proxmox nodes list"""
+        """Return proxmox nodes list."""
         nodes = []
 
         for node in self._proxmox.nodes.get():
