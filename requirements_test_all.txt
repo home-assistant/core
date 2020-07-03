@@ -708,7 +708,7 @@ pyotp==2.3.0
 pypoint==1.1.2
 
 # homeassistant.components.ps4
-pyps4-2ndscreen==1.1.0
+pyps4-2ndscreen==1.1.1
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.93
