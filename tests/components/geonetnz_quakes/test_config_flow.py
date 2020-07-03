@@ -1,6 +1,8 @@
 """Define tests for the GeoNet NZ Quakes config flow."""
 from datetime import timedelta
 
+from asynctest import patch
+
 from homeassistant import data_entry_flow
 from homeassistant.components.geonetnz_quakes import (
     CONF_MINIMUM_MAGNITUDE,
@@ -49,9 +51,12 @@ async def test_step_import(hass):
         CONF_MINIMUM_MAGNITUDE: 2.5,
     }
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "import"}, data=conf
-    )
+    with patch(
+        "homeassistant.components.geonetnz_quakes.async_setup_entry", return_value=True
+    ), patch("homeassistant.components.geonetnz_quakes.async_setup", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "import"}, data=conf
+        )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "-41.2, 174.7"
     assert result["data"] == {
@@ -71,9 +76,12 @@ async def test_step_user(hass):
     hass.config.longitude = 174.7
     conf = {CONF_RADIUS: 25, CONF_MMI: 4}
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}, data=conf
-    )
+    with patch(
+        "homeassistant.components.geonetnz_quakes.async_setup_entry", return_value=True
+    ), patch("homeassistant.components.geonetnz_quakes.async_setup", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=conf
+        )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "-41.2, 174.7"
     assert result["data"] == {
