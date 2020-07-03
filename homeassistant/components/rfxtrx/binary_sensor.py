@@ -60,29 +60,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def _apply_received_command(hass, event, sensor):
-    """Apply command from rfxtrx."""
-    if sensor.is_lighting4:
-        if sensor.data_bits is not None:
-            cmd = get_pt2262_cmd(event.device.device_id, sensor.data_bits)
-            sensor.apply_cmd(int(cmd, 16))
-        else:
-            sensor.update_state(True)
-    else:
-        apply_received_command(event, sensor)
-
-    if sensor.is_on and sensor.off_delay is not None and sensor.delay_listener is None:
-
-        def off_delay_listener(now):
-            """Switch device off after a delay."""
-            sensor.delay_listener = None
-            sensor.update_state(False)
-
-        sensor.delay_listener = evt.track_point_in_time(
-            hass, off_delay_listener, dt_util.utcnow() + sensor.off_delay
-        )
-
-
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Binary Sensor platform to RFXtrx."""
     sensors = []
@@ -153,8 +130,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 event.device.subtype,
             )
 
-            _apply_received_command(hass, event, sensor)
-
     # Subscribe to main RFXtrx events
     hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, binary_sensor_update)
 
@@ -194,6 +169,8 @@ class RfxtrxBinarySensor(BinarySensorEntity):
         else:
             self._masked_id = None
 
+        self._apply_event(event)
+
     async def async_added_to_hass(self):
         """Restore RFXtrx switch device state (ON/OFF)."""
         await super().async_added_to_hass()
@@ -210,7 +187,7 @@ class RfxtrxBinarySensor(BinarySensorEntity):
                 event.device.subtype,
             )
 
-            _apply_received_command(self.hass, event, self)
+            self._apply_event(event)
 
         self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
@@ -273,15 +250,37 @@ class RfxtrxBinarySensor(BinarySensorEntity):
         """Return unique identifier of remote device."""
         return self._unique_id
 
-    def apply_cmd(self, cmd):
-        """Apply a command for updating the state."""
-        if cmd == self.cmd_on:
-            self.update_state(True)
-        elif cmd == self.cmd_off:
-            self.update_state(False)
+    def _apply_event_lighting4(self, event):
+        """Apply event for a lighting 4 device."""
+        if self.data_bits is not None:
+            cmd = get_pt2262_cmd(event.device.device_id, self.data_bits)
+            cmd = int(cmd, 16)
+            if cmd == self.cmd_on:
+                self._state = True
+            elif cmd == self.cmd_off:
+                self._state = False
+        else:
+            self._state = True
 
-    def update_state(self, state):
-        """Update the state of the device."""
-        self._state = state
+    def _apply_event(self, event):
+        """Apply command from rfxtrx."""
+        if self.is_lighting4:
+            self._apply_event_lighting4(event)
+        else:
+            apply_received_command(event, self)
+
         if self.hass:
             self.schedule_update_ha_state()
+
+        if self.is_on and self.off_delay is not None and self.delay_listener is None:
+
+            def off_delay_listener(now):
+                """Switch device off after a delay."""
+                self.delay_listener = None
+                self._state = False
+                if self.hass:
+                    self.schedule_update_ha_state()
+
+            self.delay_listener = evt.track_point_in_time(
+                self.hass, off_delay_listener, dt_util.utcnow() + self.off_delay
+            )
