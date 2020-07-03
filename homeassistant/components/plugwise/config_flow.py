@@ -66,18 +66,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the Plugwise config flow."""
         self.discovery_info = {}
 
-    async def _async_set_unique_id(self, unique_id):
-        """Helperfunction setting the config entry's unique ID."""
-        await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured()
-
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Prepare configuration for a discovered Plugwise Smile."""
         self.discovery_info = discovery_info
         _properties = self.discovery_info.get("properties")
 
         unique_id = self.discovery_info.get("hostname").split(".")[0]
-        await self._async_set_unique_id(unique_id)
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured()
 
         _product = _properties.get("product", None)
         _version = _properties.get("version", "n/a")
