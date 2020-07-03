@@ -134,14 +134,15 @@ class SwitchTemplate(SwitchEntity, RestoreEntity):
     async def async_added_to_hass(self):
         """Register callbacks."""
 
-        # restore state after startup
-        await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if state:
-            self._state = state.state == STATE_ON
-
-        # no need to listen for events
         if self._template is None:
+
+            # restore state after startup
+            await super().async_added_to_hass()
+            state = await self.async_get_last_state()
+            if state:
+                self._state = state.state == STATE_ON
+
+            # no need to listen for events
             return
 
         # set up event listening
@@ -153,10 +154,9 @@ class SwitchTemplate(SwitchEntity, RestoreEntity):
         @callback
         def template_switch_startup(event):
             """Update template on startup."""
-            if self._template is not None:
-                async_track_state_change(
-                    self.hass, self._entities, template_switch_state_listener
-                )
+            async_track_state_change(
+                self.hass, self._entities, template_switch_state_listener
+            )
 
             self.async_schedule_update_ha_state(True)
 
