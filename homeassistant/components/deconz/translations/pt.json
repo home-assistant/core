@@ -46,6 +46,9 @@
             "turn_on": "Ligar"
         },
         "trigger_type": {
+            "remote_awakened": "Dispositivo acordou",
+            "remote_button_double_press": "Bot\u00e3o \"{subtype}\" clicado duas vezes",
+            "remote_button_long_press": "Bot\u00e3o \"{subtype}\" pressionado continuamente",
             "remote_falling": "Dispositivo em queda livre"
         }
     }
