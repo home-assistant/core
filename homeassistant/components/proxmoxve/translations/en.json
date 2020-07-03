@@ -1,0 +1,30 @@
+{
+    "config": {
+        "error": {
+            "auth_error": "Authentication error, check username, password, realm and privileges",
+            "generic_error": "Unknown error, could not setup integration",
+            "server_unreachable": "The server is unreachable, check host and port",
+            "ssl_error": "SSL verification error, check your certificate"
+        },
+        "step": {
+            "select_nodes_vms": {
+                "data": {
+                    "nodes": "Nodes",
+                    "vms": "Virtual Machines / Containers"
+                },
+                "title": "Select nodes and virtual machines"
+            },
+            "user": {
+                "data": {
+                    "host": "Hostname / IP Address",
+                    "password": "Password",
+                    "port": "Port",
+                    "realm": "Realm",
+                    "username": "Username",
+                    "verify_ssl": "Verify server SSL certificate"
+                },
+                "title": "Set up ProxmoxVE integration"
+            }
+        }
+    }
+}
