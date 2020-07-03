@@ -1,13 +1,13 @@
 """Test the Flick Electric config flow."""
 import asyncio
 
-from asynctest import patch
 from pyflick.authentication import AuthException
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.flick_electric.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CONF = {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"}
