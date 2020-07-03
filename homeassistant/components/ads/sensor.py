@@ -17,7 +17,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ADS_VAR): cv.string,
         vol.Optional(CONF_ADS_FACTOR): cv.positive_int,
-        vol.Optional(CONF_ADS_DIGIT, default=1): cv.positive_int,
+        vol.Optional(CONF_ADS_DIGIT, default=ads.DIGIT_DEFAULT): cv.positive_int,
         vol.Optional(CONF_ADS_TYPE, default=ads.ADSTYPE_INT): vol.In(
             [
                 ads.ADSTYPE_INT,
@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config[CONF_NAME]
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
     factor = config.get(CONF_ADS_FACTOR)
-    digit = config.get(CONF_ADS_DIGIT)
+    digit = config[CONF_ADS_DIGIT]
 
     entity = AdsSensor(ads_hub, ads_var, ads_type, name, unit_of_measurement, factor, digit)
 
