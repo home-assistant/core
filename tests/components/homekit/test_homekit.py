@@ -497,7 +497,7 @@ async def test_homekit_start(hass, hk_driver, device_reg, debounce_patcher):
     ) as mock_setup_msg, patch(
         "pyhap.accessory_driver.AccessoryDriver.add_accessory"
     ) as hk_driver_add_acc, patch(
-        "pyhap.accessory_driver.AccessoryDriver._do_start"
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
     ) as hk_driver_start:
         await homekit.async_start()
 
@@ -530,7 +530,7 @@ async def test_homekit_start(hass, hk_driver, device_reg, debounce_patcher):
     ) as mock_setup_msg, patch(
         "pyhap.accessory_driver.AccessoryDriver.add_accessory"
     ) as hk_driver_add_acc, patch(
-        "pyhap.accessory_driver.AccessoryDriver._do_start"
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
     ) as hk_driver_start:
         await homekit.async_start()
 
@@ -577,7 +577,7 @@ async def test_homekit_start_with_a_broken_accessory(hass, hk_driver, debounce_p
     ) as mock_setup_msg, patch(
         "pyhap.accessory_driver.AccessoryDriver.add_accessory",
     ) as hk_driver_add_acc, patch(
-        "pyhap.accessory_driver.AccessoryDriver._do_start"
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
     ) as hk_driver_start:
         await homekit.async_start()
 
@@ -610,6 +610,7 @@ async def test_homekit_stop(hass):
         entry_id=entry.entry_id,
     )
     homekit.driver = Mock()
+    homekit.driver.async_stop = AsyncMock()
     homekit.bridge = Mock()
     homekit.bridge.accessories = {}
 
@@ -622,13 +623,13 @@ async def test_homekit_stop(hass):
     homekit.status = STATUS_STOPPED
     await homekit.async_stop()
     await hass.async_block_till_done()
-    assert homekit.driver._do_stop.called is False
+    assert homekit.driver.async_stop.called is False
 
     # Test if driver is started
     homekit.status = STATUS_RUNNING
     await homekit.async_stop()
     await hass.async_block_till_done()
-    assert homekit.driver._do_stop.called is True
+    assert homekit.driver.async_stop.called is True
 
 
 async def test_homekit_reset_accessories(hass):
@@ -656,7 +657,7 @@ async def test_homekit_reset_accessories(hass):
     ), patch("pyhap.accessory.Bridge.add_accessory") as mock_add_accessory, patch(
         "pyhap.accessory_driver.AccessoryDriver.config_changed"
     ) as hk_driver_config_changed, patch(
-        "pyhap.accessory_driver.AccessoryDriver._do_start"
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
     ):
         await async_init_entry(hass, entry)
 
@@ -703,7 +704,7 @@ async def test_homekit_too_many_accessories(hass, hk_driver):
 
     hass.states.async_set("light.demo", "on")
 
-    with patch("pyhap.accessory_driver.AccessoryDriver._do_start"), patch(
+    with patch("pyhap.accessory_driver.AccessoryDriver.start_service"), patch(
         "pyhap.accessory_driver.AccessoryDriver.add_accessory"
     ), patch("homeassistant.components.homekit._LOGGER.warning") as mock_warn, patch(
         f"{PATH_HOMEKIT}.show_setup_message"

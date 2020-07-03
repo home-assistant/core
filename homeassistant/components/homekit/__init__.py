@@ -500,7 +500,7 @@ class HomeKit:
         self._async_register_bridge(dev_reg)
         await self.hass.async_add_executor_job(self._start, bridged_states)
         _LOGGER.debug("Driver start for %s", self._name)
-        self.hass.add_job(self.driver._do_start)
+        self.hass.add_job(self.driver.start_service)
         self.status = STATUS_RUNNING
 
     @callback
@@ -580,7 +580,7 @@ class HomeKit:
             return
         self.status = STATUS_STOPPED
         _LOGGER.debug("Driver stop for %s", self._name)
-        self.hass.add_job(self.driver._do_stop)
+        await self.driver.async_stop()
         for acc in self.bridge.accessories.values():
             acc.async_stop()
 
