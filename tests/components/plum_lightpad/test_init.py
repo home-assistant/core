@@ -1,5 +1,4 @@
 """Tests for the Plum Lightpad config flow."""
-
 from aiohttp import ContentTypeError
 import pytest
 from requests.exceptions import HTTPError
