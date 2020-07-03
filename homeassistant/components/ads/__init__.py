@@ -228,7 +228,7 @@ class AdsHub:
             else:
                 hnotify = int(hnotify)
                 self._notification_items[hnotify] = NotificationItem(
-                    hnotify, huser, name, plc_datatype,  callback
+                    hnotify, huser, name, plc_datatype, callback
                 )
 
                 _LOGGER.debug(
