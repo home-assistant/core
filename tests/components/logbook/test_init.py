@@ -190,7 +190,7 @@ class TestComponentLogbook(unittest.TestCase):
                 eventA,
                 eventB,
             )
-            if logbook._keep_event(self.hass, e, entities_filter, entity_attr_cache)
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events, entity_attr_cache))
 
@@ -228,7 +228,7 @@ class TestComponentLogbook(unittest.TestCase):
                 eventA,
                 eventB,
             )
-            if logbook._keep_event(self.hass, e, entities_filter, entity_attr_cache)
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events, entity_attr_cache))
 
@@ -275,7 +275,7 @@ class TestComponentLogbook(unittest.TestCase):
                 eventB,
                 eventC,
             )
-            if logbook._keep_event(self.hass, e, entities_filter, entity_attr_cache)
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events, entity_attr_cache))
 
@@ -317,7 +317,7 @@ class TestComponentLogbook(unittest.TestCase):
                 eventA,
                 eventB,
             )
-            if logbook._keep_event(self.hass, e, entities_filter, entity_attr_cache)
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events, entity_attr_cache))
 
@@ -363,7 +363,7 @@ class TestComponentLogbook(unittest.TestCase):
                 eventA,
                 eventB,
             )
-            if logbook._keep_event(self.hass, e, entities_filter, entity_attr_cache)
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events, entity_attr_cache))
 
@@ -417,7 +417,7 @@ class TestComponentLogbook(unittest.TestCase):
                 eventB,
                 eventC,
             )
-            if logbook._keep_event(self.hass, e, entities_filter, entity_attr_cache)
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events, entity_attr_cache))
 
@@ -474,7 +474,7 @@ class TestComponentLogbook(unittest.TestCase):
                 eventB1,
                 eventB2,
             )
-            if logbook._keep_event(self.hass, e, entities_filter, entity_attr_cache)
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events, entity_attr_cache))
 
@@ -548,7 +548,7 @@ class TestComponentLogbook(unittest.TestCase):
                 eventC2,
                 eventC3,
             )
-            if logbook._keep_event(self.hass, e, entities_filter, entity_attr_cache)
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events, entity_attr_cache))
 
@@ -600,7 +600,7 @@ class TestComponentLogbook(unittest.TestCase):
         events = [
             e
             for e in (eventA, eventB)
-            if logbook._keep_event(self.hass, e, entities_filter, entity_attr_cache)
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events, entity_attr_cache))
 
@@ -1764,8 +1764,8 @@ async def test_exclude_new_entities(hass, hass_client):
     await async_setup_component(hass, "logbook", {})
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
-    entity_id = "sensor.bla"
-    entity_id2 = "sensor.blu"
+    entity_id = "climate.bla"
+    entity_id2 = "climate.blu"
 
     hass.states.async_set(entity_id, STATE_OFF)
     hass.states.async_set(entity_id2, STATE_ON)
@@ -1799,18 +1799,16 @@ async def test_exclude_removed_entities(hass, hass_client):
     await async_setup_component(hass, "logbook", {})
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
-    entity_id = "sensor.bla"
-    entity_id2 = "sensor.blu"
+    entity_id = "climate.bla"
+    entity_id2 = "climate.blu"
 
-    hass.states.async_set(entity_id, STATE_OFF)
     hass.states.async_set(entity_id, STATE_ON)
-
-    hass.states.async_set(entity_id2, STATE_ON)
-    hass.states.async_set(entity_id2, STATE_OFF)
+    hass.states.async_set(entity_id, STATE_OFF)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
     hass.states.async_set(entity_id2, STATE_ON)
+    hass.states.async_set(entity_id2, STATE_OFF)
 
     hass.states.async_remove(entity_id)
     hass.states.async_remove(entity_id2)
@@ -1830,12 +1828,11 @@ async def test_exclude_removed_entities(hass, hass_client):
     assert response.status == 200
     response_json = await response.json()
 
-    assert len(response_json) == 2
+    assert len(response_json) == 3
     assert response_json[0]["entity_id"] == entity_id
-    assert response_json[1]["entity_id"] == entity_id2
-    assert response_json[2]["domain"] == "homeassistant"
-    assert response_json[2]["message"] == "started"
-    assert response_json[3]["entity_id"] == entity_id2
+    assert response_json[1]["domain"] == "homeassistant"
+    assert response_json[1]["message"] == "started"
+    assert response_json[2]["entity_id"] == entity_id2
 
 
 class MockLazyEventPartialState(ha.Event):

@@ -355,7 +355,7 @@ def _get_events(
         """Yield Events that are not filtered away."""
         for row in query.yield_per(1000):
             event = LazyEventPartialState(row)
-            if _keep_event(hass, event, entities_filter, entity_attr_cache):
+            if _keep_event(hass, event, entities_filter):
                 yield event
 
     with session_scope(hass=hass) as session:
@@ -444,7 +444,7 @@ def _get_events(
         return list(humanify(hass, yield_events(query), entity_attr_cache, prev_states))
 
 
-def _keep_event(hass, event, entities_filter, entity_attr_cache):
+def _keep_event(hass, event, entities_filter):
     if event.event_type == EVENT_STATE_CHANGED:
         entity_id = event.entity_id
         # Do not report on new entities
