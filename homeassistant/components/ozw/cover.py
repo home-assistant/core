@@ -113,10 +113,10 @@ class ZwaveGarageDoorBarrier(ZWaveDeviceEntity, CoverEntity):
         """Return the current position of Zwave garage door."""
         return self.values.primary.value[VALUE_SELECTED_ID] == 0
 
-    def close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs):
         """Close the garage door."""
         self.values.primary.send_value(0)
 
-    def open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs):
         """Open the garage door."""
         self.values.primary.send_value(4)
