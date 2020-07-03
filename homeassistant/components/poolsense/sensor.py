@@ -113,7 +113,7 @@ class PoolSenseSensor(Entity):
     @property
     def name(self):
         """Return the name of the particular component."""
-        return f"PoolSense {SENSORS[self.info_type]["name"]}"
+        return f"PoolSense {SENSORS[self.info_type]['name']}"
 
     @property
     def should_poll(self):
