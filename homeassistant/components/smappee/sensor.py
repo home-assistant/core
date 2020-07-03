@@ -16,13 +16,6 @@ TREND_SENSORS = {
         "total_power",
         DEVICE_CLASS_POWER,
     ],
-    "total_reactive_power": [
-        "Total consumption - Reactive power",
-        None,
-        POWER_WATT,
-        "total_reactive_power",
-        DEVICE_CLASS_POWER,
-    ],
     "alwayson": [
         "Always on - Active power",
         None,
@@ -58,6 +51,15 @@ TREND_SENSORS = {
         "alwayson_today",
         None,
     ],
+}
+REACTIVE_SENSORS = {
+    "total_reactive_power": [
+        "Total consumption - Reactive power",
+        None,
+        POWER_WATT,
+        "total_reactive_power",
+        DEVICE_CLASS_POWER,
+    ]
 }
 SOLAR_SENSORS = {
     "solar_power": [
@@ -150,6 +152,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     attributes=TREND_SENSORS[sensor],
                 )
             )
+
+        if service_location.has_reactive_value:
+            for reactive_sensor in REACTIVE_SENSORS:
+                entities.append(
+                    SmappeeSensor(
+                        smappee_base=smappee_base,
+                        service_location=service_location,
+                        sensor=reactive_sensor,
+                        attributes=TREND_SENSORS[reactive_sensor],
+                    )
+                )
 
         # Add solar sensors
         if service_location.has_solar_production:
