@@ -1778,7 +1778,7 @@ python_opendata_transport==0.2.1
 pythonegardia==1.0.40
 
 # homeassistant.components.tile
-pytile==3.0.6
+pytile==4.0.0
 
 # homeassistant.components.touchline
 pytouchline==0.7
