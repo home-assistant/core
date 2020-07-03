@@ -11,6 +11,8 @@ from voluptuous import Invalid
 from homeassistant.components.influxdb.const import (
     API_VERSION_2,
     DEFAULT_API_VERSION,
+    DEFAULT_BUCKET,
+    DEFAULT_DATABASE,
     DOMAIN,
     TEST_QUERY_V1,
     TEST_QUERY_V2,
@@ -75,24 +77,6 @@ def mock_client_fixture(request):
         yield client
 
 
-@pytest.fixture(autouse=True)
-def mock_influx_platform():
-    """
-    Mock the influx client and queue in the main platform.
-
-    Successful sensor setup is really independent of the main platform.
-    But since its one integration there is an internal dependency.
-    Mocking the client library there prevents failures and mocking the queue
-    to return `None` on get makes the listener shutdown immediately after initialization.
-    """
-    with patch(f"{INFLUXDB_PATH}.InfluxDBClient") as mock_v1_client, patch(
-        f"{INFLUXDB_PATH}.InfluxDBClientV2"
-    ) as mock_v2_client, patch(
-        f"{INFLUXDB_PATH}.queue.Queue.get", return_value=None
-    ) as queue_get:
-        yield (mock_v1_client, mock_v2_client, queue_get)
-
-
 @pytest.fixture(autouse=True, scope="module")
 def mock_client_close():
     """Mock close method of clients at module scope."""
@@ -108,6 +92,12 @@ def _make_v1_resultset(*args):
         yield {"value": arg}
 
 
+def _make_v1_databases_resultset():
+    """Create a mock V1 'show databases' resultset."""
+    for name in [DEFAULT_DATABASE, "db2"]:
+        yield {"name": name}
+
+
 def _make_v2_resultset(*args):
     """Create a mock V2 resultset."""
     tables = []
@@ -120,7 +110,18 @@ def _make_v2_resultset(*args):
     return tables
 
 
-def _set_query_mock_v1(mock_influx_client, return_value=None, side_effect=None):
+def _make_v2_buckets_resultset():
+    """Create a mock V2 'buckets()' resultset."""
+    records = []
+    for name in [DEFAULT_BUCKET, "bucket2"]:
+        records.append(Record({"name": name}))
+
+    return [Table(records)]
+
+
+def _set_query_mock_v1(
+    mock_influx_client, return_value=None, query_exception=None, side_effect=None
+):
     """Set return value or side effect for the V1 client."""
     query_api = mock_influx_client.return_value.query
     if side_effect:
@@ -133,10 +134,14 @@ def _set_query_mock_v1(mock_influx_client, return_value=None, side_effect=None):
         def get_return_value(query, **kwargs):
             """Return mock for test query, return value otherwise."""
             if query == TEST_QUERY_V1:
-                return MagicMock()
+                points = _make_v1_databases_resultset()
+            else:
+                if query_exception:
+                    raise query_exception
+                points = return_value
 
             query_output = MagicMock()
-            query_output.get_points.return_value = return_value
+            query_output.get_points.return_value = points
             return query_output
 
         query_api.side_effect = get_return_value
@@ -144,7 +149,9 @@ def _set_query_mock_v1(mock_influx_client, return_value=None, side_effect=None):
     return query_api
 
 
-def _set_query_mock_v2(mock_influx_client, return_value=None, side_effect=None):
+def _set_query_mock_v2(
+    mock_influx_client, return_value=None, query_exception=None, side_effect=None
+):
     """Set return value or side effect for the V2 client."""
     query_api = mock_influx_client.return_value.query_api.return_value.query
     if side_effect:
@@ -153,7 +160,17 @@ def _set_query_mock_v2(mock_influx_client, return_value=None, side_effect=None):
         if return_value is None:
             return_value = []
 
-        query_api.return_value = return_value
+        def get_return_value(query):
+            """Return buckets list for test query, return value otherwise."""
+            if query == TEST_QUERY_V2:
+                return _make_v2_buckets_resultset()
+
+            if query_exception:
+                raise query_exception
+
+            return return_value
+
+        query_api.side_effect = get_return_value
 
     return query_api
 
@@ -161,7 +178,7 @@ def _set_query_mock_v2(mock_influx_client, return_value=None, side_effect=None):
 async def _setup(hass, config_ext, queries, expected_sensors):
     """Create client and test expected sensors."""
     config = {
-        DOMAIN: {},
+        DOMAIN: config_ext,
         sensor.DOMAIN: {"platform": DOMAIN},
     }
     influx_config = config[sensor.DOMAIN]
@@ -181,20 +198,21 @@ async def _setup(hass, config_ext, queries, expected_sensors):
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, queries",
+    "mock_client, config_ext, queries, set_query_mock",
     [
-        (DEFAULT_API_VERSION, BASE_V1_CONFIG, BASE_V1_QUERY),
-        (API_VERSION_2, BASE_V2_CONFIG, BASE_V2_QUERY),
+        (DEFAULT_API_VERSION, BASE_V1_CONFIG, BASE_V1_QUERY, _set_query_mock_v1),
+        (API_VERSION_2, BASE_V2_CONFIG, BASE_V2_QUERY, _set_query_mock_v2),
     ],
     indirect=["mock_client"],
 )
-async def test_minimal_config(hass, mock_client, config_ext, queries):
+async def test_minimal_config(hass, mock_client, config_ext, queries, set_query_mock):
     """Test the minimal config and defaults."""
+    set_query_mock(mock_client)
     await _setup(hass, config_ext, queries, ["sensor.test"])
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, queries",
+    "mock_client, config_ext, queries, set_query_mock",
     [
         (
             DEFAULT_API_VERSION,
@@ -207,6 +225,8 @@ async def test_minimal_config(hass, mock_client, config_ext, queries):
                 "password": "pass",
                 "database": "db",
                 "verify_ssl": "true",
+            },
+            {
                 "queries": [
                     {
                         "name": "test",
@@ -220,7 +240,7 @@ async def test_minimal_config(hass, mock_client, config_ext, queries):
                     }
                 ],
             },
-            {},
+            _set_query_mock_v1,
         ),
         (
             API_VERSION_2,
@@ -233,6 +253,8 @@ async def test_minimal_config(hass, mock_client, config_ext, queries):
                 "token": "token",
                 "organization": "org",
                 "bucket": "bucket",
+            },
+            {
                 "queries_flux": [
                     {
                         "name": "test",
@@ -246,13 +268,14 @@ async def test_minimal_config(hass, mock_client, config_ext, queries):
                     }
                 ],
             },
-            {},
+            _set_query_mock_v2,
         ),
     ],
     indirect=["mock_client"],
 )
-async def test_full_config(hass, mock_client, config_ext, queries):
+async def test_full_config(hass, mock_client, config_ext, queries, set_query_mock):
     """Test the full config."""
+    set_query_mock(mock_client)
     await _setup(hass, config_ext, queries, ["sensor.test"])
 
 
@@ -403,14 +426,7 @@ async def test_error_querying_influx(
     hass, caplog, mock_client, config_ext, queries, set_query_mock, query_exception
 ):
     """Test behavior of sensor when influx returns error."""
-
-    def mock_query_error(query, **kwargs):
-        """Throw error for any query besides test query."""
-        if query in [TEST_QUERY_V1, TEST_QUERY_V2]:
-            return MagicMock()
-        raise query_exception
-
-    set_query_mock(mock_client, side_effect=mock_query_error)
+    set_query_mock(mock_client, query_exception=query_exception)
 
     sensors = await _setup(hass, config_ext, queries, ["sensor.test"])
     assert sensors[0].state == STATE_UNKNOWN
