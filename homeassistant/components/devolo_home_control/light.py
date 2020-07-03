@@ -42,6 +42,10 @@ class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
             element_uid=element_uid,
         )
 
+        self._binary_switch_property = device_instance.binary_switch_property.get(
+            element_uid.replace("Dimmer", "BinarySwitch")
+        )
+
     @property
     def brightness(self):
         """Return the brightness value of the light."""
@@ -59,9 +63,17 @@ class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
 
     def turn_on(self, **kwargs) -> None:
         """Turn device on."""
-        self._multi_level_switch_property.set(
-            round(kwargs.get(ATTR_BRIGHTNESS, 255) / 255 * 100)
-        )
+        if kwargs.get(ATTR_BRIGHTNESS) is not None:
+            self._multi_level_switch_property.set(
+                round(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
+            )
+        else:
+            if self._binary_switch_property is not None:
+                # Turn on the light device to the latest known value. The value is known by the device itself.
+                self._binary_switch_property.set(True)
+            else:
+                # If there is no binary switch attached to the device, turn it on to 100 %.
+                self._multi_level_switch_property.set(100)
 
     def turn_off(self, **kwargs) -> None:
         """Turn device off."""
