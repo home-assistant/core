@@ -5,7 +5,6 @@ from aiohttp import ContentTypeError
 import pytest
 from requests.exceptions import HTTPError
 
-from homeassistant.components.plum_lightpad import async_setup_entry
 from homeassistant.components.plum_lightpad.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
