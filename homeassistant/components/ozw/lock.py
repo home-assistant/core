@@ -78,7 +78,7 @@ class ZWaveLock(ZWaveDeviceEntity, LockEntity):
 
     def set_usercode(self, code_slot, usercode):
         """Set the usercode to index X on the lock."""
-        lock_node = self.values._node.values()
+        lock_node = self.values._node.values()  # pytest: disable=protected-access
 
         for value in lock_node:
             if (
@@ -96,7 +96,7 @@ class ZWaveLock(ZWaveDeviceEntity, LockEntity):
 
     def get_usercode(self, code_slot):
         """Get a usercode at index X on the lock."""
-        lock_node = self.values._node.values()
+        lock_node = self.values._node.values()  # pytest: disable=protected-access
 
         for value in lock_node:
             if (
@@ -108,7 +108,7 @@ class ZWaveLock(ZWaveDeviceEntity, LockEntity):
 
     def clear_usercode(self, code_slot):
         """Set usercode to slot X on the lock."""
-        lock_node = self.values._node.values()
+        lock_node = self.values._node.values()  # pytest: disable=protected-access
 
         for value in lock_node:
             if (
