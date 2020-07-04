@@ -79,7 +79,6 @@ NEED_ATTRIBUTE_DOMAINS = {
 }
 SCRIPT_DOMAIN = "script"
 ATTR_CAN_CANCEL = "can_cancel"
-ATTR_CAN_CANCEL_JSON = '"can_cancel":'
 
 QUERY_STATES = [
     States.domain,
@@ -532,10 +531,6 @@ class HistoryPeriodView(HomeAssistantView):
         minimal_response,
     ):
         """Fetch significant stats from the database as json."""
-        import cProfile
-
-        pr = cProfile.Profile()
-        pr.enable()
         timer_start = time.perf_counter()
 
         with session_scope(hass=hass) as session:
@@ -569,11 +564,7 @@ class HistoryPeriodView(HomeAssistantView):
             sorted_result.extend(result)
             result = sorted_result
 
-        result = self.json(result)
-        pr.disable()
-        pr.create_stats()
-        pr.dump_stats("history22.cprof")
-        return result
+        return self.json(result)
 
 
 def sqlalchemy_filter_from_include_exclude_conf(conf):
