@@ -195,6 +195,9 @@ jobs:
         run: |
           echo "Failed to restore Python virtual environment from cache"
           exit 1
+      - name: Register codespell problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/codespell.json"
       - name: Run codespell
         run: |
           . venv/bin/activate
