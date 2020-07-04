@@ -8,6 +8,7 @@ from homeassistant.components import (
     climate,
     cover,
     fan,
+    humidifier,
     light,
     media_player,
     scene,
@@ -33,6 +34,10 @@ from homeassistant.components.fan import (
 )
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_REAL_IP
+from homeassistant.components.humidifier.const import (
+    ATTR_HUMIDITY,
+    SERVICE_SET_HUMIDITY,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -386,6 +391,7 @@ class HueOneLightChangeView(HomeAssistantView):
                 fan.DOMAIN,
                 cover.DOMAIN,
                 climate.DOMAIN,
+                humidifier.DOMAIN,
             ]:
                 # Convert 0-254 to 0-100
                 level = (parsed[STATE_BRIGHTNESS] / HUE_API_STATE_BRI_MAX) * 100
@@ -456,6 +462,14 @@ class HueOneLightChangeView(HomeAssistantView):
                     domain = entity.domain
                     service = SERVICE_SET_TEMPERATURE
                     data[ATTR_TEMPERATURE] = parsed[STATE_BRIGHTNESS]
+
+        # If the requested entity is a humidifier, set the humidity
+        elif entity.domain == humidifier.DOMAIN:
+            if parsed[STATE_BRIGHTNESS] is not None:
+                turn_on_needed = True
+                domain = entity.domain
+                service = SERVICE_SET_HUMIDITY
+                data[ATTR_HUMIDITY] = parsed[STATE_BRIGHTNESS]
 
         # If the requested entity is a media player, convert to volume
         elif entity.domain == media_player.DOMAIN:
@@ -595,6 +609,10 @@ def get_entity_state(config, entity):
             temperature = entity.attributes.get(ATTR_TEMPERATURE, 0)
             # Convert 0-100 to 0-254
             data[STATE_BRIGHTNESS] = round(temperature * HUE_API_STATE_BRI_MAX / 100)
+        elif entity.domain == humidifier.DOMAIN:
+            humidity = entity.attributes.get(ATTR_HUMIDITY, 0)
+            # Convert 0-100 to 0-254
+            data[STATE_BRIGHTNESS] = round(humidity * HUE_API_STATE_BRI_MAX / 100)
         elif entity.domain == media_player.DOMAIN:
             level = entity.attributes.get(
                 ATTR_MEDIA_VOLUME_LEVEL, 1.0 if data[STATE_ON] else 0.0

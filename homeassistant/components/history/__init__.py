@@ -87,7 +87,6 @@ QUERY_STATES = [
     States.attributes,
     States.last_changed,
     States.last_updated,
-    States.created,
 ]
 
 HISTORY_BAKERY = "history_bakery"
