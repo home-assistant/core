@@ -27,13 +27,14 @@ from . import (
     CONF_OFF_DELAY,
     RFX_DEVICES,
     SIGNAL_EVENT,
-    apply_received_command,
     find_possible_pt2262_device,
+    fire_command_event,
     get_pt2262_cmd,
     get_pt2262_device,
     get_pt2262_deviceid,
     get_rfx_object,
 )
+from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,6 +121,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
             pkt_id = "".join(f"{x:02x}" for x in event.data)
             sensor = RfxtrxBinarySensor(event, pkt_id)
+            sensor._apply_event(event)  # pylint: disable=protected-access
             RFX_DEVICES[device_id] = sensor
             add_entities([sensor])
             _LOGGER.info(
@@ -262,15 +264,23 @@ class RfxtrxBinarySensor(BinarySensorEntity):
         else:
             self._state = True
 
+    def _apply_event_standard(self, event):
+        if event.values["Command"] in COMMAND_ON_LIST:
+            self._state = True
+        elif event.values["Command"] in COMMAND_OFF_LIST:
+            self._state = False
+
     def _apply_event(self, event):
         """Apply command from rfxtrx."""
         if self.is_lighting4:
             self._apply_event_lighting4(event)
         else:
-            apply_received_command(event, self)
+            self._apply_event_standard(event)
 
         if self.hass:
             self.schedule_update_ha_state()
+            if self.should_fire_event:
+                fire_command_event(self.hass, self.entity_id, event.values["Command"])
 
         if self.is_on and self.off_delay is not None and self.delay_listener is None:
 

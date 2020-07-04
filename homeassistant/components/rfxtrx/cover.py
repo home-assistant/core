@@ -15,10 +15,11 @@ from . import (
     DEFAULT_SIGNAL_REPETITIONS,
     SIGNAL_EVENT,
     RfxtrxDevice,
-    apply_received_command,
+    fire_command_event,
     get_devices_from_config,
     get_new_device,
 )
+from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -54,7 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         new_device = get_new_device(event, config, RfxtrxCover)
         if new_device:
-            apply_received_command(event, new_device)
+            new_device._apply_event(event)  # pylint: disable=protected-access
             add_entities([new_device])
 
     # Subscribe to main RFXtrx events
@@ -77,7 +78,7 @@ class RfxtrxCover(RfxtrxDevice, CoverEntity, RestoreEntity):
             if event.device.id_string != self._event.device.id_string:
                 return
 
-            apply_received_command(event, self)
+            self._apply_event(event)
 
         self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
@@ -106,3 +107,14 @@ class RfxtrxCover(RfxtrxDevice, CoverEntity, RestoreEntity):
     def stop_cover(self, **kwargs):
         """Stop the cover."""
         self._send_command("stop_roll")
+
+    def _apply_event(self, event):
+        if event.values["Command"] in COMMAND_ON_LIST:
+            self._state = True
+        elif event.values["Command"] in COMMAND_OFF_LIST:
+            self._state = False
+
+        if self.hass:
+            self.schedule_update_ha_state()
+            if self.should_fire_event:
+                fire_command_event(self.hass, self.entity_id, event.values["Command"])
