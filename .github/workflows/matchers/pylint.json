@@ -1,0 +1,17 @@
+{
+  "problemMatcher": [
+    {
+      "owner": "pylint",
+      "pattern": [
+        {
+          "regexp": "^(.+):(\\d+):(\\d+):\\s([CERW]\\d{4}):\\s(.+)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "message": 5,
+          "code": 4
+        }
+      ]
+    }
+  ]
+}
