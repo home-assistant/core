@@ -2,7 +2,7 @@
 import logging
 
 from bond import Bond
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError as RequestConnectionError
 from simplejson import JSONDecodeError
 import voluptuous as vol
 
@@ -29,7 +29,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         try:
             bond_hub.getDeviceIds()
             return True
-        except ConnectionError:
+        except RequestConnectionError:
             raise CannotConnect
         except JSONDecodeError:
             return False

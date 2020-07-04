@@ -45,7 +45,6 @@ class BondCover(CoverEntity):
         """Create HA entity representing Bond cover."""
         self._bond = bond
         self._device = device
-        pass
 
     @property
     def device_class(self) -> Optional[str]:
