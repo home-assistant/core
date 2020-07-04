@@ -201,10 +201,10 @@ CONFIG_SCHEMA = vol.Schema(
                         cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])
                     ),
                     vol.Optional(
-                        CONF_WILL_MESSAGE, default=dict(DEFAULT_WILL)
+                        CONF_WILL_MESSAGE, default=DEFAULT_WILL
                     ): MQTT_WILL_BIRTH_SCHEMA,
                     vol.Optional(
-                        CONF_BIRTH_MESSAGE, default=dict(DEFAULT_BIRTH)
+                        CONF_BIRTH_MESSAGE, default=DEFAULT_BIRTH
                     ): MQTT_WILL_BIRTH_SCHEMA,
                     vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
                     # discovery_prefix must be a valid publish topic because if no
