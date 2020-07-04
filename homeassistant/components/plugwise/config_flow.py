@@ -77,7 +77,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         _product = _properties.get("product", None)
         _version = _properties.get("version", "n/a")
-        _name = f"{ZEROCONF_MAP.get(_product,_product)} v{_version}"
+        _name = f"{ZEROCONF_MAP.get(_product, _product)} v{_version}"
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
