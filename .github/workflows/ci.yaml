@@ -201,7 +201,7 @@ jobs:
       - name: Run codespell
         run: |
           . venv/bin/activate
-          pre-commit run --show-diff-on-failure --color=always --hook-stage manual codespell --all-files
+          pre-commit run --show-diff-on-failure --hook-stage manual codespell --all-files
 
   lint-dockerfile:
     name: Check Dockerfile
