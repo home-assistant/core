@@ -154,7 +154,7 @@ class PrometheusMetrics:
 
         handler = f"_handle_{domain}"
 
-        if hasattr(self, handler):
+        if hasattr(self, handler) and state.state != STATE_UNAVAILABLE:
             getattr(self, handler)(state)
 
         labels = self._labels(state)
@@ -163,17 +163,19 @@ class PrometheusMetrics:
         )
         state_change.labels(**labels).inc()
 
-        unavailable = self._metric(
-            "unavailable",
+        entity_available = self._metric(
+            "entity_available",
             self.prometheus_cli.Gauge,
-            "Entity is in the unavailable state",
+            "Entity is available (not in the unavailable state)",
         )
-        unavailable.labels(**labels).set(float(state.state == STATE_UNAVAILABLE))
+        entity_available.labels(**labels).set(float(state.state != STATE_UNAVAILABLE))
 
-        last_updated = self._metric(
-            "last_updated", self.prometheus_cli.Gauge, "The last_updated timestamp"
+        last_updated_time_seconds = self._metric(
+            "last_updated_time_seconds",
+            self.prometheus_cli.Gauge,
+            "The last_updated timestamp",
         )
-        last_updated.labels(**labels).set(state.last_updated.timestamp())
+        last_updated_time_seconds.labels(**labels).set(state.last_updated.timestamp())
 
     def _handle_attributes(self, state):
         for key, value in state.attributes.items():

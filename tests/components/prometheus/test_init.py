@@ -171,13 +171,13 @@ async def test_view(hass, hass_client):
     )
 
     assert (
-        'unavailable{domain="sensor",'
+        'entity_available{domain="sensor",'
         'entity="sensor.radio_energy",'
-        'friendly_name="Radio Energy"} 0.0' in body
+        'friendly_name="Radio Energy"} 1.0' in body
     )
 
     assert (
-        'last_updated{domain="sensor",'
+        'last_updated_time_seconds{domain="sensor",'
         'entity="sensor.radio_energy",'
         'friendly_name="Radio Energy"} 86400.0' in body
     )
