@@ -81,7 +81,9 @@ def _create_index(engine, table_name, index_name):
     try:
         index.create(engine)
     except OperationalError as err:
-        if "already exists" not in str(err).lower():
+        lower_err_str = str(err).lower()
+
+        if "already exists" not in lower_err_str and "duplicate" not in lower_err_str:
             raise
 
         _LOGGER.warning(

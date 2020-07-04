@@ -1710,7 +1710,7 @@ python-hpilo==4.3
 python-izone==1.1.2
 
 # homeassistant.components.joaoapps_join
-python-join-api==0.0.4
+python-join-api==0.0.6
 
 # homeassistant.components.juicenet
 python-juicenet==1.0.1
