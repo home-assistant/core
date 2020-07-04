@@ -78,11 +78,12 @@ async def async_setup_cast(hass, config=None):
     """Set up the cast platform."""
     if config is None:
         config = {}
-    add_entities = Mock()
-
-    await async_setup_component(hass, "cast", {"cast": {"media_player": config}})
-    await cast.async_setup_entry(hass, MockConfigEntry(), add_entities)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.helpers.entity_platform.EntityPlatform._async_schedule_add_entities"
+    ) as add_entities:
+        MockConfigEntry(domain="cast").add_to_hass(hass)
+        await async_setup_component(hass, "cast", {"cast": {"media_player": config}})
+        await hass.async_block_till_done()
 
     return add_entities
 
@@ -205,15 +206,6 @@ async def test_stop_discovery_called_on_stop(hass):
         await hass.async_block_till_done()
 
         stop_discovery.assert_called_once_with(browser)
-
-    with patch(
-        "homeassistant.components.cast.discovery.pychromecast.start_discovery",
-        return_value=browser,
-    ) as start_discovery:
-        # start_discovery should be called again on re-startup
-        await async_setup_cast(hass)
-
-        assert start_discovery.call_count == 1
 
 
 async def test_create_cast_device_without_uuid(hass):
