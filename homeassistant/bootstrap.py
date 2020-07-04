@@ -158,7 +158,7 @@ async def async_setup_hass(
 
 async def async_from_config_dict(
     config: ConfigType, hass: core.HomeAssistant
-) -> core.HomeAssistant:
+) -> Optional[core.HomeAssistant]:
     """Try to configure Home Assistant from a configuration dictionary.
 
     Dynamically loads required components and its dependencies.
