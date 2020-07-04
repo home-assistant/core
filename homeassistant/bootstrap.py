@@ -8,7 +8,6 @@ import os
 import sys
 from time import monotonic
 from typing import Any, Dict, Optional, Set
-import yarl
 
 from async_timeout import timeout
 import voluptuous as vol
@@ -76,7 +75,7 @@ async def async_setup_hass(
     skip_pip: bool,
     safe_mode: bool,
 ) -> Optional[core.HomeAssistant]:
-    """working up Home Assistant."""
+    """Set up Home Assistant."""
     hass = core.HomeAssistant()
     hass.config.config_dir = config_dir
 
