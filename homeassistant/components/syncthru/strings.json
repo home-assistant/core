@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This device has already been configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "invalid_url": "Invalid URL",
