@@ -93,6 +93,7 @@ class ZWaveLock(ZWaveDeviceEntity, LockEntity):
                     )
                     break
                 value.send_value(usercode)
+                _LOGGER.debug("User code at slot %s set to: %s", code_slot, usercode)
                 break
 
     @callback
