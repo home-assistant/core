@@ -622,7 +622,7 @@ jobs:
         run: |
           echo "Failed to restore Python virtual environment from cache"
           exit 1
-      - name: Register flake8 problem matcher
+      - name: Register pylint problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pylint.json"
       - name: Run pylint
