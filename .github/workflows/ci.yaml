@@ -195,10 +195,13 @@ jobs:
         run: |
           echo "Failed to restore Python virtual environment from cache"
           exit 1
+      - name: Register codespell problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/codespell.json"
       - name: Run codespell
         run: |
           . venv/bin/activate
-          pre-commit run --show-diff-on-failure --color=always --hook-stage manual codespell --all-files
+          pre-commit run --show-diff-on-failure --hook-stage manual codespell --all-files
 
   lint-dockerfile:
     name: Check Dockerfile
