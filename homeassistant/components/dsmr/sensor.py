@@ -10,8 +10,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
+    CONF_FORCE_UPDATE,
     CONF_HOST,
     CONF_PORT,
+    CONF_PREFIX,
     EVENT_HOMEASSISTANT_STOP,
     TIME_HOURS,
 )
@@ -28,6 +30,8 @@ CONF_PRECISION = "precision"
 DEFAULT_DSMR_VERSION = "2.2"
 DEFAULT_PORT = "/dev/ttyUSB0"
 DEFAULT_PRECISION = 3
+DEFAULT_FORCE_UPDATE = False
+DEFAULT_PREFIX = ""
 
 DOMAIN = "dsmr"
 
@@ -47,6 +51,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_RECONNECT_INTERVAL, default=30): int,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
+        vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+        vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
     }
 )
 
@@ -57,6 +63,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     logging.getLogger("dsmr_parser").setLevel(logging.ERROR)
 
     dsmr_version = config[CONF_DSMR_VERSION]
+
+    prefix = config[CONF_PREFIX]
+    if prefix:
+        prefix += " "
 
     # Define list of name,obis mappings to generate entities
     obis_mapping = [
@@ -91,7 +101,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     ]
 
     # Generate device entities
-    devices = [DSMREntity(name, obis, config) for name, obis in obis_mapping]
+    devices = [DSMREntity(prefix + name, obis, config) for name, obis in obis_mapping]
 
     # Protocol version specific obis
     if dsmr_version in ("4", "5"):
@@ -262,6 +272,11 @@ class DSMREntity(Entity):
             return "low"
 
         return None
+
+    @property
+    def force_update(self):
+        """Force update."""
+        return self._config[CONF_FORCE_UPDATE]
 
 
 class DerivativeDSMREntity(DSMREntity):
