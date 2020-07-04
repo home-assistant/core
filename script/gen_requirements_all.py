@@ -7,6 +7,7 @@ from pathlib import Path
 import pkgutil
 import re
 import sys
+import pytest
 
 from script.hassfest.model import Integration
 

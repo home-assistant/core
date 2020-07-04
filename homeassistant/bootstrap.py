@@ -238,6 +238,7 @@ def async_enable_logging(
 
     if not log_no_color:
         try:
+            import homeassistant.helpers.config_validation
             # pylint: disable=import-outside-toplevel
             from colorlog import ColoredFormatter
 
