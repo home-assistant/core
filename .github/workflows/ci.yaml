@@ -45,6 +45,8 @@ jobs:
       - name: Create Python virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
+          sudo apt-get update
+          sudo apt-get install cmake
           python -m venv venv
           . venv/bin/activate
           pip install -U pip setuptools
