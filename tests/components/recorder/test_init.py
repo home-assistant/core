@@ -16,7 +16,7 @@ from homeassistant.components.recorder import (
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import Events, RecorderRuns, States
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.const import MATCH_ALL
+from homeassistant.const import MATCH_ALL, STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import ATTR_NOW, EVENT_TIME_CHANGED, Context, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -259,6 +259,27 @@ def test_saving_state_include_domain_glob_exclude_entity(hass_recorder):
     assert len(states) == 1
     assert _state_empty_context(hass, "test.ok") == states[0]
     assert _state_empty_context(hass, "test.ok").state == "state2"
+
+
+def test_saving_state_and_removing_entity(hass, hass_recorder):
+    """Test saving the state of a removed entity."""
+    hass = hass_recorder()
+    entity_id = "lock.mine"
+    hass.states.set(entity_id, STATE_LOCKED)
+    hass.states.set(entity_id, STATE_UNLOCKED)
+    hass.states.async_remove(entity_id)
+
+    wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        states = list(session.query(States))
+        assert len(states) == 3
+        assert states[0].entity_id == entity_id
+        assert states[0].state == STATE_LOCKED
+        assert states[1].entity_id == entity_id
+        assert states[1].state == STATE_UNLOCKED
+        assert states[2].entity_id == entity_id
+        assert states[2].state is None
 
 
 def test_recorder_setup_failure():
