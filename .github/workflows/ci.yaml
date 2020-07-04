@@ -207,6 +207,9 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
+      - name: Register hadolint problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/hadolint.json"
       - name: Check Dockerfile
         uses: docker://hadolint/hadolint:v1.18.0
         with:
