@@ -223,7 +223,10 @@ class TeslaDevice(Entity):
     @property
     def icon(self):
         """Return the icon of the sensor."""
-        if self.device_class == DEVICE_CLASS_BATTERY and self.tesla_device.has_battery():
+        if (
+            self.device_class == DEVICE_CLASS_BATTERY
+            and self.tesla_device.has_battery()
+        ):
             return icon_for_battery_level(
                 battery_level=self.tesla_device.battery_level(),
                 charging=self.tesla_device.battery_charging(),
