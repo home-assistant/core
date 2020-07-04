@@ -5,8 +5,8 @@
         "title": "Connect to iAqualink",
         "description": "Please enter the username and password for your iAqualink account.",
         "data": {
-          "username": "Username / Email Address",
-          "password": "Password"
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },

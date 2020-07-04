@@ -13,7 +13,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_EFFECT,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
@@ -103,7 +103,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities([device])
 
 
-class Hyperion(Light):
+class Hyperion(LightEntity):
     """Representation of a Hyperion remote."""
 
     def __init__(

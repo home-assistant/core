@@ -1,12 +1,10 @@
 """Test the sentry config flow."""
-from unittest.mock import patch
-
 from sentry_sdk.utils import BadDsn
 
 from homeassistant import config_entries, setup
 from homeassistant.components.sentry.const import DOMAIN
 
-from tests.common import mock_coro
+from tests.async_mock import patch
 
 
 async def test_form(hass):
@@ -20,12 +18,11 @@ async def test_form(hass):
 
     with patch(
         "homeassistant.components.sentry.config_flow.validate_input",
-        return_value=mock_coro({"title": "Sentry"}),
+        return_value={"title": "Sentry"},
     ), patch(
-        "homeassistant.components.sentry.async_setup", return_value=mock_coro(True)
+        "homeassistant.components.sentry.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.sentry.async_setup_entry",
-        return_value=mock_coro(True),
+        "homeassistant.components.sentry.async_setup_entry", return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"dsn": "http://public@sentry.local/1"},

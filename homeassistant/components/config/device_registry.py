@@ -71,6 +71,7 @@ def _entry_dict(entry):
         "model": entry.model,
         "name": entry.name,
         "sw_version": entry.sw_version,
+        "entry_type": entry.entry_type,
         "id": entry.id,
         "via_device_id": entry.via_device_id,
         "area_id": entry.area_id,

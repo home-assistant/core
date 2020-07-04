@@ -3,11 +3,10 @@ from pprint import pprint
 
 import requests
 
-from .const import CORE_PROJECT_ID
 from .util import get_lokalise_token
 
 
-def get_api(project_id=CORE_PROJECT_ID, debug=False) -> "Lokalise":
+def get_api(project_id, debug=False) -> "Lokalise":
     """Get Lokalise API."""
     return Lokalise(project_id, get_lokalise_token(), debug)
 

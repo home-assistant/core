@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 import homeassistant.helpers.config_validation as cv
 
 from . import (
@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class LinodeBinarySensor(BinarySensorDevice):
+class LinodeBinarySensor(BinarySensorEntity):
     """Representation of a Linode droplet sensor."""
 
     def __init__(self, li, node_id):

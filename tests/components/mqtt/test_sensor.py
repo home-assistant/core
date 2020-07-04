@@ -1,7 +1,8 @@
 """The tests for the MQTT sensor platform."""
 from datetime import datetime, timedelta
 import json
-from unittest.mock import patch
+
+import pytest
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.discovery import async_start
@@ -12,13 +13,17 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from .test_common import (
+    help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
+    help_test_default_availability_list_payload,
+    help_test_default_availability_list_single,
     help_test_default_availability_payload,
     help_test_discovery_broken,
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_discovery_update_availability,
     help_test_entity_debug_info,
     help_test_entity_debug_info_max_messages,
     help_test_entity_debug_info_message,
@@ -37,11 +42,8 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_mqtt_message,
-    async_fire_time_changed,
-)
+from tests.async_mock import patch
+from tests.common import async_fire_mqtt_message, async_fire_time_changed
 
 DEFAULT_CONFIG = {
     sensor.DOMAIN: {"platform": "mqtt", "name": "test", "state_topic": "test-topic"}
@@ -62,6 +64,7 @@ async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "test-topic", "100")
     state = hass.states.get("sensor.test")
@@ -70,7 +73,9 @@ async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
     assert state.attributes.get("unit_of_measurement") == "fav unit"
 
 
-async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
+async def test_setting_sensor_value_expires(
+    hass, mqtt_mock, legacy_patchable_time, caplog
+):
     """Test the expiration of the value."""
     assert await async_setup_component(
         hass,
@@ -86,11 +91,13 @@ async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test")
     assert state.state == "unknown"
 
-    now = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
+    realnow = dt_util.utcnow()
+    now = datetime(realnow.year + 1, 1, 1, 1, tzinfo=dt_util.UTC)
     with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(hass, "test-topic", "100")
@@ -153,6 +160,7 @@ async def test_setting_sensor_value_via_mqtt_json_message(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "test-topic", '{ "val": "100" }')
     state = hass.states.get("sensor.test")
@@ -174,6 +182,7 @@ async def test_force_update_disabled(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     events = []
 
@@ -207,6 +216,7 @@ async def test_force_update_enabled(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     events = []
 
@@ -225,6 +235,13 @@ async def test_force_update_enabled(hass, mqtt_mock):
     assert len(events) == 2
 
 
+async def test_availability_when_connection_lost(hass, mqtt_mock):
+    """Test availability after MQTT disconnection."""
+    await help_test_availability_when_connection_lost(
+        hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
+    )
+
+
 async def test_availability_without_topic(hass, mqtt_mock):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
@@ -239,9 +256,30 @@ async def test_default_availability_payload(hass, mqtt_mock):
     )
 
 
+async def test_default_availability_list_payload(hass, mqtt_mock):
+    """Test availability by default payload with defined topic."""
+    await help_test_default_availability_list_payload(
+        hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_default_availability_list_single(hass, mqtt_mock, caplog):
+    """Test availability list and availability_topic are mutually exclusive."""
+    await help_test_default_availability_list_single(
+        hass, mqtt_mock, caplog, sensor.DOMAIN, DEFAULT_CONFIG
+    )
+
+
 async def test_custom_availability_payload(hass, mqtt_mock):
     """Test availability by custom payload with defined topic."""
     await help_test_custom_availability_payload(
+        hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_discovery_update_availability(hass, mqtt_mock):
+    """Test availability discovery update."""
+    await help_test_discovery_update_availability(
         hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
     )
 
@@ -260,6 +298,7 @@ async def test_invalid_device_class(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test")
     assert state is None
@@ -325,7 +364,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     )
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass, mqtt_mock):
     """Test unique id option only creates one sensor per unique_id."""
     config = {
         sensor.DOMAIN: [
@@ -343,7 +382,7 @@ async def test_unique_id(hass):
             },
         ]
     }
-    await help_test_unique_id(hass, sensor.DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, sensor.DOMAIN, config)
 
 
 async def test_discovery_removal_sensor(hass, mqtt_mock, caplog):
@@ -361,6 +400,7 @@ async def test_discovery_update_sensor(hass, mqtt_mock, caplog):
     )
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer",' '  "state_topic": "test_topic#" }'
@@ -414,9 +454,8 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 
 async def test_entity_device_info_with_hub(hass, mqtt_mock):
     """Test MQTT sensor device registry integration."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    entry.add_to_hass(hass)
-    await async_start(hass, "homeassistant", {}, entry)
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    await async_start(hass, "homeassistant", entry)
 
     registry = await hass.helpers.device_registry.async_get_registry()
     hub = registry.async_get_or_create(

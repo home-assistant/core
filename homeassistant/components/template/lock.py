@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.lock import PLATFORM_SCHEMA, LockDevice
+from homeassistant.components.lock import PLATFORM_SCHEMA, LockEntity
 from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIMISTIC,
@@ -72,7 +72,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
     )
 
 
-class TemplateLock(LockDevice):
+class TemplateLock(LockEntity):
     """Representation of a template lock."""
 
     def __init__(

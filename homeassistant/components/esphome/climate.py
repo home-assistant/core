@@ -11,7 +11,7 @@ from aioesphomeapi import (
     ClimateSwingMode,
 )
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -75,7 +75,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         async_add_entities,
         component_key="climate",
         info_type=ClimateInfo,
-        entity_type=EsphomeClimateDevice,
+        entity_type=EsphomeClimateEntity,
         state_type=ClimateState,
     )
 
@@ -129,7 +129,7 @@ def _swing_modes():
     }
 
 
-class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
+class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
     """A climate implementation for ESPHome."""
 
     @property

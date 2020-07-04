@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane.",
+            "no_device": "\u017badne z Twoich urz\u0105dze\u0144 nie ma aktywowanej funkcji \"Znajd\u017a m\u00f3j iPhone\""
+        },
+        "error": {
+            "login": "B\u0142\u0105d logowania: sprawd\u017a adres e-mail i has\u0142o",
+            "send_verification_code": "Nie uda\u0142o si\u0119 wys\u0142a\u0107 kodu weryfikacyjnego",
+            "validate_verification_code": "Nie uda\u0142o si\u0119 zweryfikowa\u0107 kodu weryfikacyjnego, wybierz urz\u0105dzenie zaufane i ponownie rozpocznij weryfikacj\u0119"
+        },
+        "step": {
+            "trusted_device": {
+                "data": {
+                    "trusted_device": "Zaufane urz\u0105dzenie"
+                },
+                "description": "Wybierz zaufane urz\u0105dzenie",
+                "title": "Zaufane urz\u0105dzenie iCloud"
+            },
+            "user": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Adres e-mail",
+                    "with_family": "Z rodzin\u0105"
+                },
+                "description": "Wprowad\u017a dane uwierzytelniaj\u0105ce",
+                "title": "Dane uwierzytelniaj\u0105ce iCloud"
+            },
+            "verification_code": {
+                "data": {
+                    "verification_code": "Kod weryfikacyjny"
+                },
+                "description": "Wprowad\u017a kod weryfikacyjny, kt\u00f3ry w\u0142a\u015bnie otrzyma\u0142e\u015b z iCloud",
+                "title": "Kod weryfikacyjny iCloud"
+            }
+        }
+    }
+}

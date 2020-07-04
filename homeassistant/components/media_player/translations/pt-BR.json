@@ -1,0 +1,13 @@
+{
+    "state": {
+        "_": {
+            "idle": "Ocioso",
+            "off": "Desligado",
+            "on": "Ligado",
+            "paused": "Pausado",
+            "playing": "Tocando",
+            "standby": "Em espera"
+        }
+    },
+    "title": "Media player"
+}

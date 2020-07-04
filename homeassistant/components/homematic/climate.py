@@ -1,7 +1,7 @@
 """Support for Homematic thermostats."""
 import logging
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class HMThermostat(HMDevice, ClimateDevice):
+class HMThermostat(HMDevice, ClimateEntity):
     """Representation of a Homematic thermostat."""
 
     @property

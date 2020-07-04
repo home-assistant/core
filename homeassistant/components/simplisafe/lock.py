@@ -5,7 +5,7 @@ from simplipy.errors import SimplipyError
 from simplipy.lock import LockStates
 from simplipy.websocket import EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED
 
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import LockEntity
 from homeassistant.core import callback
 
 from . import SimpliSafeEntity
@@ -30,7 +30,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-class SimpliSafeLock(SimpliSafeEntity, LockDevice):
+class SimpliSafeLock(SimpliSafeEntity, LockEntity):
     """Define a SimpliSafe lock."""
 
     def __init__(self, simplisafe, system, lock):

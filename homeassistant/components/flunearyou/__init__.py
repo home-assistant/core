@@ -131,15 +131,6 @@ class FluNearYouData:
         self.latitude = latitude
         self.longitude = longitude
 
-        self._api_coros = {
-            CATEGORY_CDC_REPORT: self._client.cdc_reports.status_by_coordinates(
-                latitude, longitude
-            ),
-            CATEGORY_USER_REPORT: self._client.user_reports.status_by_coordinates(
-                latitude, longitude
-            ),
-        }
-
         self._api_category_count = {
             CATEGORY_CDC_REPORT: 0,
             CATEGORY_USER_REPORT: 0,
@@ -155,8 +146,17 @@ class FluNearYouData:
         if self._api_category_count[api_category] == 0:
             return
 
+        if api_category == CATEGORY_CDC_REPORT:
+            api_coro = self._client.cdc_reports.status_by_coordinates(
+                self.latitude, self.longitude
+            )
+        else:
+            api_coro = self._client.user_reports.status_by_coordinates(
+                self.latitude, self.longitude
+            )
+
         try:
-            self.data[api_category] = await self._api_coros[api_category]
+            self.data[api_category] = await api_coro
         except FluNearYouError as err:
             LOGGER.error("Unable to get %s data: %s", api_category, err)
             self.data[api_category] = None
@@ -200,7 +200,7 @@ class FluNearYouData:
         """Update Flu Near You data."""
         tasks = [
             self._async_get_data_from_api(api_category)
-            for api_category in self._api_coros
+            for api_category in self._api_category_count
         ]
 
         await asyncio.gather(*tasks)

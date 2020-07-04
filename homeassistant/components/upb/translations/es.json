@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "Un PIM UPB con esta direcci\u00f3n ya est\u00e1 configurado."
+        },
+        "error": {
+            "cannot_connect": "No se conect\u00f3 con UPB PIM, por favor, int\u00e9ntelo de nuevo.",
+            "invalid_upb_file": "Archivo de exportaci\u00f3n UPB UPStart faltante o no v\u00e1lido, verifique el nombre y la ruta del archivo.",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Direcci\u00f3n (v\u00e9ase la descripci\u00f3n anterior)",
+                    "file_path": "Ruta y nombre del archivo de exportaci\u00f3n UPStart UPB.",
+                    "protocol": "Protocolo"
+                },
+                "description": "Conecte un M\u00f3dulo de Interfaz Universal Powerline Bus Powerline (UPB PIM). La cadena de direcci\u00f3n debe tener el formato 'direcci\u00f3n [: puerto]' para 'tcp'. El puerto es opcional y el valor predeterminado es 2101. Ejemplo: '192.168.1.42'. Para el protocolo serie, la direcci\u00f3n debe estar en la forma 'tty [: baudios]'. El baud es opcional y el valor predeterminado es 4800. Ejemplo: '/ dev / ttyS1'.",
+                "title": "Conectar con UPB PIM"
+            }
+        }
+    }
+}

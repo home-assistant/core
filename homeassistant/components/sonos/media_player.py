@@ -13,7 +13,7 @@ import pysonos.music_library
 import pysonos.snapshot
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_MUSIC,
@@ -31,15 +31,23 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
-from homeassistant.const import ATTR_TIME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
+from homeassistant.const import (
+    ATTR_TIME,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_platform, service
+import homeassistant.helpers.device_registry as dr
 from homeassistant.util.dt import utcnow
 
 from . import (
     CONF_ADVERTISE_ADDR,
     CONF_HOSTS,
     CONF_INTERFACE_ADDR,
+    DATA_SONOS,
     DOMAIN as SONOS_DOMAIN,
 )
 
@@ -63,8 +71,6 @@ SUPPORT_SONOS = (
     | SUPPORT_CLEAR_PLAYLIST
 )
 
-DATA_SONOS = "sonos_media_player"
-
 SOURCE_LINEIN = "Line-in"
 SOURCE_TV = "TV"
 
@@ -81,6 +87,7 @@ SERVICE_CLEAR_TIMER = "clear_sleep_timer"
 SERVICE_UPDATE_ALARM = "update_alarm"
 SERVICE_SET_OPTION = "set_option"
 SERVICE_PLAY_QUEUE = "play_queue"
+SERVICE_REMOVE_FROM_QUEUE = "remove_from_queue"
 
 ATTR_SLEEP_TIME = "sleep_time"
 ATTR_ALARM_ID = "alarm_id"
@@ -92,6 +99,7 @@ ATTR_WITH_GROUP = "with_group"
 ATTR_NIGHT_SOUND = "night_sound"
 ATTR_SPEECH_ENHANCE = "speech_enhance"
 ATTR_QUEUE_POSITION = "queue_position"
+ATTR_STATUS_LIGHT = "status_light"
 
 UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
 
@@ -99,11 +107,13 @@ UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
 class SonosData:
     """Storage class for platform global data."""
 
-    def __init__(self, hass):
+    def __init__(self):
         """Initialize the data."""
         self.entities = []
         self.discovered = []
         self.topology_condition = asyncio.Condition()
+        self.discovery_thread = None
+        self.hosts_heartbeat = None
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -116,7 +126,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Sonos from a config entry."""
     if DATA_SONOS not in hass.data:
-        hass.data[DATA_SONOS] = SonosData(hass)
+        hass.data[DATA_SONOS] = SonosData()
 
     config = hass.data[SONOS_DOMAIN].get("media_player", {})
     _LOGGER.debug("Reached async_setup_entry, config=%s", config)
@@ -124,6 +134,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     advertise_addr = config.get(CONF_ADVERTISE_ADDR)
     if advertise_addr:
         pysonos.config.EVENT_ADVERTISE_IP = advertise_addr
+
+    def _stop_discovery(event):
+        data = hass.data[DATA_SONOS]
+        if data.discovery_thread:
+            data.discovery_thread.stop()
+            data.discovery_thread = None
+        if data.hosts_heartbeat:
+            data.hosts_heartbeat()
+            data.hosts_heartbeat = None
 
     def _discovery(now=None):
         """Discover players from network or configuration."""
@@ -134,15 +153,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             try:
                 _LOGGER.debug("Reached _discovered_player, soco=%s", soco)
 
-                if soco not in hass.data[DATA_SONOS].discovered:
+                if soco.uid not in hass.data[DATA_SONOS].discovered:
                     _LOGGER.debug("Adding new entity")
-                    hass.data[DATA_SONOS].discovered.append(soco)
+                    hass.data[DATA_SONOS].discovered.append(soco.uid)
                     hass.add_job(async_add_entities, [SonosEntity(soco)])
                 else:
                     entity = _get_entity_from_soco_uid(hass, soco.uid)
-                    if entity:
+                    if entity and (entity.soco == soco or not entity.available):
                         _LOGGER.debug("Seen %s", entity)
-                        hass.add_job(entity.async_seen())
+                        hass.add_job(entity.async_seen(soco))
+
             except SoCoException as ex:
                 _LOGGER.debug("SoCoException, ex=%s", ex)
 
@@ -162,10 +182,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         _LOGGER.warning("Failed to initialize '%s'", host)
 
             _LOGGER.debug("Tested all hosts")
-            hass.helpers.event.call_later(DISCOVERY_INTERVAL, _discovery)
+            hass.data[DATA_SONOS].hosts_heartbeat = hass.helpers.event.call_later(
+                DISCOVERY_INTERVAL, _discovery
+            )
         else:
             _LOGGER.debug("Starting discovery thread")
-            pysonos.discover_thread(
+            hass.data[DATA_SONOS].discovery_thread = pysonos.discover_thread(
                 _discovered_player,
                 interval=DISCOVERY_INTERVAL,
                 interface_addr=config.get(CONF_INTERFACE_ADDR),
@@ -173,6 +195,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     _LOGGER.debug("Adding discovery job")
     hass.async_add_executor_job(_discovery)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_discovery)
 
     platform = entity_platform.current_platform.get()
 
@@ -259,6 +282,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         {
             vol.Optional(ATTR_NIGHT_SOUND): cv.boolean,
             vol.Optional(ATTR_SPEECH_ENHANCE): cv.boolean,
+            vol.Optional(ATTR_STATUS_LIGHT): cv.boolean,
         },
         "set_option",
     )
@@ -267,6 +291,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         SERVICE_PLAY_QUEUE,
         {vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
         "play_queue",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_REMOVE_FROM_QUEUE,
+        {vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
+        "remove_from_queue",
     )
 
 
@@ -305,9 +335,7 @@ def soco_error(errorcodes=None):
             try:
                 return funct(*args, **kwargs)
             except SoCoUPnPException as err:
-                if errorcodes and err.error_code in errorcodes:
-                    pass
-                else:
+                if not errorcodes or err.error_code not in errorcodes:
                     _LOGGER.error("Error on %s with %s", funct.__name__, err)
             except SoCoException as err:
                 _LOGGER.error("Error on %s with %s", funct.__name__, err)
@@ -338,7 +366,7 @@ def _timespan_secs(timespan):
     return sum(60 ** x[0] * int(x[1]) for x in enumerate(reversed(timespan.split(":"))))
 
 
-class SonosEntity(MediaPlayerDevice):
+class SonosEntity(MediaPlayerEntity):
     """Representation of a Sonos entity."""
 
     def __init__(self, player):
@@ -363,6 +391,8 @@ class SonosEntity(MediaPlayerDevice):
         self._media_artist = None
         self._media_album_name = None
         self._media_title = None
+        self._is_playing_local_queue = None
+        self._queue_position = None
         self._night_sound = None
         self._speech_enhance = None
         self._source_name = None
@@ -374,10 +404,12 @@ class SonosEntity(MediaPlayerDevice):
         speaker_info = self.soco.get_speaker_info(True)
         self._name = speaker_info["zone_name"]
         self._model = speaker_info["model_name"]
+        self._sw_version = speaker_info["software_version"]
+        self._mac_address = speaker_info["mac_address"]
 
     async def async_added_to_hass(self):
         """Subscribe sonos events."""
-        await self.async_seen()
+        await self.async_seen(self.soco)
 
         self.hass.data[DATA_SONOS].entities.append(self)
 
@@ -409,6 +441,8 @@ class SonosEntity(MediaPlayerDevice):
             "identifiers": {(SONOS_DOMAIN, self._unique_id)},
             "name": self._name,
             "model": self._model.replace("Sonos ", ""),
+            "sw_version": self._sw_version,
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac_address)},
             "manufacturer": "Sonos",
         }
 
@@ -441,9 +475,11 @@ class SonosEntity(MediaPlayerDevice):
         """Return coordinator of this player."""
         return self._coordinator
 
-    async def async_seen(self):
+    async def async_seen(self, player):
         """Record that this player was seen right now."""
         was_available = self.available
+
+        self._player = player
 
         if self._seen_timer:
             self._seen_timer()
@@ -567,6 +603,8 @@ class SonosEntity(MediaPlayerDevice):
         update_position = new_status != self._status
         self._status = new_status
 
+        self._is_playing_local_queue = self.soco.is_playing_local_queue
+
         if self.soco.is_playing_tv:
             self.update_media_linein(SOURCE_TV)
         elif self.soco.is_playing_line_in:
@@ -585,7 +623,6 @@ class SonosEntity(MediaPlayerDevice):
                     variables = event and event.variables
                     self.update_media_radio(variables, track_info)
                 else:
-                    variables = event and event.variables
                     self.update_media_music(update_position, track_info)
 
         self.schedule_update_ha_state()
@@ -639,17 +676,14 @@ class SonosEntity(MediaPlayerDevice):
     def update_media_music(self, update_media_position, track_info):
         """Update state when playing music tracks."""
         self._media_duration = _timespan_secs(track_info.get("duration"))
-
-        position_info = self.soco.avTransport.GetPositionInfo(
-            [("InstanceID", 0), ("Channel", "Master")]
-        )
-        rel_time = _timespan_secs(position_info.get("RelTime"))
+        current_position = _timespan_secs(track_info.get("position"))
 
         # player started reporting position?
-        update_media_position |= rel_time is not None and self._media_position is None
+        if current_position is not None and self._media_position is None:
+            update_media_position = True
 
         # position jumped?
-        if rel_time is not None and self._media_position is not None:
+        if current_position is not None and self._media_position is not None:
             if self.state == STATE_PLAYING:
                 time_diff = utcnow() - self._media_position_updated_at
                 time_diff = time_diff.total_seconds()
@@ -658,15 +692,18 @@ class SonosEntity(MediaPlayerDevice):
 
             calculated_position = self._media_position + time_diff
 
-            update_media_position |= abs(calculated_position - rel_time) > 1.5
+            if abs(calculated_position - current_position) > 1.5:
+                update_media_position = True
 
-        if rel_time is None:
+        if current_position is None:
             self._clear_media_position()
         elif update_media_position:
-            self._media_position = rel_time
+            self._media_position = current_position
             self._media_position_updated_at = utcnow()
 
         self._media_image_url = track_info.get("album_art")
+
+        self._queue_position = int(track_info.get("playlist_position")) - 1
 
     def update_volume(self, event=None):
         """Update information about currently volume settings."""
@@ -840,6 +877,15 @@ class SonosEntity(MediaPlayerDevice):
 
     @property
     @soco_coordinator
+    def queue_position(self):
+        """If playing local queue return the position in the queue else None."""
+        if self._is_playing_local_queue:
+            return self._queue_position
+
+        return None
+
+    @property
+    @soco_coordinator
     def source(self):
         """Name of the current input source."""
         return self._source_name or None
@@ -907,7 +953,7 @@ class SonosEntity(MediaPlayerDevice):
             sources += [SOURCE_LINEIN]
         elif "PLAYBAR" in model:
             sources += [SOURCE_LINEIN, SOURCE_TV]
-        elif "BEAM" in model:
+        elif "BEAM" in model or "PLAYBASE" in model:
             sources += [SOURCE_TV]
 
         return sources
@@ -1198,7 +1244,7 @@ class SonosEntity(MediaPlayerDevice):
         alarm.save()
 
     @soco_error()
-    def set_option(self, night_sound=None, speech_enhance=None):
+    def set_option(self, night_sound=None, speech_enhance=None, status_light=None):
         """Modify playback options."""
         if night_sound is not None and self._night_sound is not None:
             self.soco.night_mode = night_sound
@@ -1206,10 +1252,19 @@ class SonosEntity(MediaPlayerDevice):
         if speech_enhance is not None and self._speech_enhance is not None:
             self.soco.dialog_mode = speech_enhance
 
+        if status_light is not None:
+            self.soco.status_light = status_light
+
     @soco_error()
     def play_queue(self, queue_position=0):
         """Start playing the queue."""
         self.soco.play_from_queue(queue_position)
+
+    @soco_error()
+    @soco_coordinator
+    def remove_from_queue(self, queue_position=0):
+        """Remove item from the queue."""
+        self.soco.remove_from_queue(queue_position)
 
     @property
     def device_state_attributes(self):
@@ -1221,5 +1276,8 @@ class SonosEntity(MediaPlayerDevice):
 
         if self._speech_enhance is not None:
             attributes[ATTR_SPEECH_ENHANCE] = self._speech_enhance
+
+        if self.queue_position is not None:
+            attributes[ATTR_QUEUE_POSITION] = self.queue_position
 
         return attributes

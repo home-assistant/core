@@ -1,0 +1,9 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "UPnP/IGD ya est\u00e1 configurado",
+            "no_devices_discovered": "No se han descubierto UPnP/IGDs",
+            "no_devices_found": "No se encuentran dispositivos UPnP/IGD en la red."
+        }
+    }
+}

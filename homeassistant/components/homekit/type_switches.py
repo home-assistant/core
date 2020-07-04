@@ -11,6 +11,12 @@ from pyhap.const import (
 
 from homeassistant.components.script import ATTR_CAN_CANCEL
 from homeassistant.components.switch import DOMAIN
+from homeassistant.components.vacuum import (
+    DOMAIN as VACUUM_DOMAIN,
+    SERVICE_RETURN_TO_BASE,
+    SERVICE_START,
+    STATE_CLEANING,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_TYPE,
@@ -18,11 +24,10 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import split_entity_id
+from homeassistant.core import callback, split_entity_id
 from homeassistant.helpers.event import call_later
 
-from . import TYPES
-from .accessories import HomeAccessory
+from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_ACTIVE,
     CHAR_IN_USE,
@@ -66,7 +71,7 @@ class Outlet(HomeAccessory):
         )
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
-        self.update_state(state)
+        self.async_update_state(state)
 
     def set_state(self, value):
         """Move switch state to value if call came from HomeKit."""
@@ -75,7 +80,8 @@ class Outlet(HomeAccessory):
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
         self.call_service(DOMAIN, service, params)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update switch state after state changed."""
         current_state = new_state.state == STATE_ON
         if self.char_on.value is not current_state:
@@ -101,7 +107,7 @@ class Switch(HomeAccessory):
         )
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
-        self.update_state(state)
+        self.async_update_state(state)
 
     def is_activate(self, state):
         """Check if entity is activate only."""
@@ -131,7 +137,8 @@ class Switch(HomeAccessory):
         if self.activate_only:
             call_later(self.hass, 1, self.reset_switch)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update switch state after state changed."""
         self.activate_only = self.is_activate(new_state)
         if self.activate_only:
@@ -141,6 +148,26 @@ class Switch(HomeAccessory):
             return
 
         current_state = new_state.state == STATE_ON
+        if self.char_on.value is not current_state:
+            _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
+            self.char_on.set_value(current_state)
+
+
+@TYPES.register("DockVacuum")
+class DockVacuum(Switch):
+    """Generate a Switch accessory."""
+
+    def set_state(self, value):
+        """Move switch state to value if call came from HomeKit."""
+        _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
+        params = {ATTR_ENTITY_ID: self.entity_id}
+        service = SERVICE_START if value else SERVICE_RETURN_TO_BASE
+        self.call_service(VACUUM_DOMAIN, service, params)
+
+    @callback
+    def async_update_state(self, new_state):
+        """Update switch state after state changed."""
+        current_state = new_state.state in (STATE_CLEANING, STATE_ON)
         if self.char_on.value is not current_state:
             _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
             self.char_on.set_value(current_state)
@@ -167,7 +194,7 @@ class Valve(HomeAccessory):
         )
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
-        self.update_state(state)
+        self.async_update_state(state)
 
     def set_state(self, value):
         """Move value state to value if call came from HomeKit."""
@@ -177,7 +204,8 @@ class Valve(HomeAccessory):
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
         self.call_service(DOMAIN, service, params)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update switch state after state changed."""
         current_state = 1 if new_state.state == STATE_ON else 0
         if self.char_active.value != current_state:

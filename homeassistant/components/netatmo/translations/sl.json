@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Konfigurirate lahko samo en ra\u010dun Netatmo.",
+            "authorize_url_timeout": "Potekla je \u010dasovna omejitev generiranja odobritnevega URL-ja.",
+            "missing_configuration": "Ta komponenta ni nastavljena, prosimo sledite dokumentaciji."
+        },
+        "create_entry": {
+            "default": "Uspe\u0161no overjeno z Netatmo."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Izberite medoto za preverjanje pristnosti"
+            }
+        }
+    }
+}

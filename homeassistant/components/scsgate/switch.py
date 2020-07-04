@@ -5,7 +5,7 @@ from scsgate.messages import ScenarioTriggeredMessage, StateMessage
 from scsgate.tasks import ToggleStatusTask
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE, CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -80,7 +80,7 @@ def _setup_scenario_switches(logger, config, scsgate, hass):
             scsgate.add_device(switch)
 
 
-class SCSGateSwitch(SwitchDevice):
+class SCSGateSwitch(SwitchEntity):
     """Representation of a SCSGate switch."""
 
     def __init__(self, scs_id, name, logger, scsgate):

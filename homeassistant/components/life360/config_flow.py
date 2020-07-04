@@ -47,8 +47,8 @@ class Life360ConfigFlow(config_entries.ConfigFlow):
             try:
                 # pylint: disable=no-value-for-parameter
                 vol.Email()(self._username)
-                authorization = self._api.get_authorization(
-                    self._username, self._password
+                authorization = await self.hass.async_add_executor_job(
+                    self._api.get_authorization, self._username, self._password
                 )
             except vol.Invalid:
                 errors[CONF_USERNAME] = "invalid_username"
@@ -89,7 +89,9 @@ class Life360ConfigFlow(config_entries.ConfigFlow):
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
         try:
-            authorization = self._api.get_authorization(username, password)
+            authorization = await self.hass.async_add_executor_job(
+                self._api.get_authorization, username, password
+            )
         except LoginError:
             _LOGGER.error("Invalid credentials for %s", username)
             return self.async_abort(reason="invalid_credentials")

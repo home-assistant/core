@@ -11,6 +11,9 @@ addons:
       - libswscale-dev
       - libswresample-dev
       - libavfilter-dev
+    sources:
+      - sourceline: ppa:savoury1/ffmpeg4
+
 matrix:
   fast_finish: true
   include:

@@ -89,10 +89,6 @@ class HKDevice:
         # mapped to a HA entity.
         self.entities = []
 
-        # There are multiple entities sharing a single connection - only
-        # allow one entity to use pairing at once.
-        self.pairing_lock = asyncio.Lock()
-
         self.available = True
 
         self.signal_state_updated = "_".join((DOMAIN, self.unique_id, "state_updated"))
@@ -333,13 +329,11 @@ class HKDevice:
 
     async def get_characteristics(self, *args, **kwargs):
         """Read latest state from homekit accessory."""
-        async with self.pairing_lock:
-            return await self.pairing.get_characteristics(*args, **kwargs)
+        return await self.pairing.get_characteristics(*args, **kwargs)
 
     async def put_characteristics(self, characteristics):
         """Control a HomeKit device state from Home Assistant."""
-        async with self.pairing_lock:
-            results = await self.pairing.put_characteristics(characteristics)
+        results = await self.pairing.put_characteristics(characteristics)
 
         # Feed characteristics back into HA and update the current state
         # results will only contain failures, so anythin in characteristics

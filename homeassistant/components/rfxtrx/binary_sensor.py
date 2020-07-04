@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import (
     CONF_COMMAND_OFF,
@@ -171,7 +171,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         RECEIVED_EVT_SUBSCRIBERS.append(binary_sensor_update)
 
 
-class RfxtrxBinarySensor(BinarySensorDevice):
+class RfxtrxBinarySensor(BinarySensorEntity):
     """A representation of a RFXtrx binary sensor."""
 
     def __init__(
@@ -197,6 +197,7 @@ class RfxtrxBinarySensor(BinarySensorDevice):
         self._data_bits = data_bits
         self._cmd_on = cmd_on
         self._cmd_off = cmd_off
+        self._unique_id = f"{slugify(self.event.device.type_string.lower())}_{slugify(self.event.device.id_string.lower())}"
 
         if data_bits is not None:
             self._masked_id = get_pt2262_deviceid(
@@ -254,6 +255,11 @@ class RfxtrxBinarySensor(BinarySensorDevice):
     def is_on(self):
         """Return true if the sensor state is True."""
         return self._state
+
+    @property
+    def unique_id(self):
+        """Return unique identifier of remote device."""
+        return self._unique_id
 
     def apply_cmd(self, cmd):
         """Apply a command for updating the state."""

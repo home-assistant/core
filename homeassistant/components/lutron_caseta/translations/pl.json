@@ -1,0 +1,7 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia mostkiem Cas\u00e9ta, sprawd\u017a konfiguracj\u0119 hosta i certyfikatu."
+        }
+    }
+}

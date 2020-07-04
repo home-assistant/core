@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_SLAVE
 from homeassistant.helpers import config_validation as cv
@@ -73,7 +73,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class ModbusBinarySensor(BinarySensorDevice):
+class ModbusBinarySensor(BinarySensorEntity):
     """Modbus binary sensor."""
 
     def __init__(self, hub, name, slave, address, device_class, input_type):

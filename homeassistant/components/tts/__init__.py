@@ -1,6 +1,5 @@
 """Provide functionality for TTS."""
 import asyncio
-import ctypes
 import functools as ft
 import hashlib
 import io
@@ -8,7 +7,7 @@ import logging
 import mimetypes
 import os
 import re
-from typing import Optional
+from typing import Dict, Optional
 
 from aiohttp import web
 import mutagen
@@ -33,6 +32,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_prepare_setup_platform
 
@@ -114,7 +114,7 @@ async def async_setup(hass, config):
         use_cache = conf.get(CONF_CACHE, DEFAULT_CACHE)
         cache_dir = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
         time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
-        base_url = conf.get(CONF_BASE_URL) or hass.config.api.base_url
+        base_url = conf.get(CONF_BASE_URL) or get_url(hass)
 
         await tts.async_init_cache(use_cache, cache_dir, time_memory, base_url)
     except (HomeAssistantError, KeyError) as err:
@@ -175,7 +175,11 @@ async def async_setup(hass, config):
             }
 
             await hass.services.async_call(
-                DOMAIN_MP, SERVICE_PLAY_MEDIA, data, blocking=True
+                DOMAIN_MP,
+                SERVICE_PLAY_MEDIA,
+                data,
+                blocking=True,
+                context=service.context,
             )
 
         service_name = p_config.get(CONF_SERVICE_NAME, f"{p_type}_{SERVICE_SAY}")
@@ -209,6 +213,16 @@ async def async_setup(hass, config):
     )
 
     return True
+
+
+def _hash_options(options: Dict) -> str:
+    """Hashes an options dictionary."""
+    opts_hash = hashlib.blake2s(digest_size=5)
+    for key, value in sorted(options.items()):
+        opts_hash.update(str(key).encode())
+        opts_hash.update(str(value).encode())
+
+    return opts_hash.hexdigest()
 
 
 class SpeechManager:
@@ -303,7 +317,7 @@ class SpeechManager:
             ]
             if invalid_opts:
                 raise HomeAssistantError(f"Invalid options found: {invalid_opts}")
-            options_key = ctypes.c_size_t(hash(frozenset(options))).value
+            options_key = _hash_options(options)
         else:
             options_key = "-"
 
@@ -398,7 +412,7 @@ class SpeechManager:
         @callback
         def async_remove_from_mem():
             """Cleanup memcache."""
-            self.mem_cache.pop(key)
+            self.mem_cache.pop(key, None)
 
         self.hass.loop.call_later(self.time_memory, async_remove_from_mem)
 
@@ -437,9 +451,8 @@ class SpeechManager:
         album = provider.name
         artist = language
 
-        if options is not None:
-            if options.get("voice") is not None:
-                artist = options.get("voice")
+        if options is not None and options.get("voice") is not None:
+            artist = options.get("voice")
 
         try:
             tts_file = mutagen.File(data_bytes, easy=True)
@@ -530,7 +543,7 @@ class TextToSpeechUrlView(HomeAssistantView):
         """Initialize a tts view."""
         self.tts = tts
 
-    async def post(self, request):
+    async def post(self, request: web.Request) -> web.Response:
         """Generate speech and provide url."""
         try:
             data = await request.json()
@@ -570,7 +583,7 @@ class TextToSpeechView(HomeAssistantView):
         """Initialize a tts view."""
         self.tts = tts
 
-    async def get(self, request, filename):
+    async def get(self, request: web.Request, filename: str) -> web.Response:
         """Start a get request."""
         try:
             content, data = await self.tts.async_read_tts(filename)

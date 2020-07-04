@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "La tua istanza di Home Assistant deve essere accessibile da Internet per ricevere messaggi da Geofency.",
+            "one_instance_allowed": "\u00c8 necessaria una sola istanza."
+        },
+        "create_entry": {
+            "default": "Per inviare localit\u00e0 a Home Assistant, dovrai configurare la funzionalit\u00e0 Webhook nell'app Locative.\n\n Compila le seguenti informazioni: \n\n - URL: `{webhook_url}` \n - Method: POST \n\n Vedi [la documentazione]({docs_url}) for ulteriori dettagli."
+        },
+        "step": {
+            "user": {
+                "description": "Sei sicuro di voler configurare il webhook di Locative?",
+                "title": "Configura il webhook di Locative"
+            }
+        }
+    }
+}

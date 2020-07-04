@@ -1,23 +1,28 @@
 """Set up some common test helper things."""
 import functools
 import logging
-from unittest.mock import patch
 
 import pytest
 import requests_mock as _requests_mock
 
-from homeassistant import util
+from homeassistant import core as ha, loader, util
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.providers import homeassistant, legacy_api_password
+from homeassistant.components import mqtt
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.http import URL
+from homeassistant.const import ATTR_NOW, EVENT_TIME_CHANGED
 from homeassistant.exceptions import ServiceNotFound
+from homeassistant.helpers import event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
+
+from tests.async_mock import MagicMock, patch
+from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 
 pytest.register_assert_rewrite("tests.common")
 
@@ -25,8 +30,8 @@ from tests.common import (  # noqa: E402, isort:skip
     CLIENT_ID,
     INSTANCES,
     MockUser,
+    async_fire_mqtt_message,
     async_test_home_assistant,
-    mock_coro,
     mock_storage as mock_storage,
 )
 from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
@@ -34,6 +39,13 @@ from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:ski
 
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+
+
+def pytest_configure(config):
+    """Register marker for tests that log exceptions."""
+    config.addinivalue_line(
+        "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
+    )
 
 
 def check_real(func):
@@ -95,6 +107,11 @@ def hass(loop, hass_storage, request):
 
     loop.run_until_complete(hass.async_stop(force=True))
     for ex in exceptions:
+        if (
+            request.module.__name__,
+            request.function.__name__,
+        ) in IGNORE_UNCAUGHT_EXCEPTIONS:
+            continue
         if isinstance(ex, ServiceNotFound):
             continue
         raise ex
@@ -128,7 +145,7 @@ def mock_device_tracker_conf():
         side_effect=mock_update_config,
     ), patch(
         "homeassistant.components.device_tracker.legacy.async_load_config",
-        side_effect=lambda *args: mock_coro(devices),
+        side_effect=lambda *args: devices,
     ):
         yield devices
 
@@ -242,3 +259,101 @@ def hass_ws_client(aiohttp_client, hass_access_token, hass):
         return websocket
 
     return create_client
+
+
+@pytest.fixture(autouse=True)
+def fail_on_log_exception(request, monkeypatch):
+    """Fixture to fail if a callback wrapped by catch_log_exception or coroutine wrapped by async_create_catching_coro throws."""
+    if "no_fail_on_log_exception" in request.keywords:
+        return
+
+    def log_exception(format_err, *args):
+        raise
+
+    monkeypatch.setattr("homeassistant.util.logging.log_exception", log_exception)
+
+
+@pytest.fixture
+def mqtt_config():
+    """Fixture to allow overriding MQTT config."""
+    return None
+
+
+@pytest.fixture
+def mqtt_client_mock(hass):
+    """Fixture to mock MQTT client."""
+
+    @ha.callback
+    def _async_fire_mqtt_message(topic, payload, qos, retain):
+        async_fire_mqtt_message(hass, topic, payload, qos, retain)
+
+    with patch("paho.mqtt.client.Client") as mock_client:
+        mock_client = mock_client.return_value
+        mock_client.connect.return_value = 0
+        mock_client.subscribe.return_value = (0, 0)
+        mock_client.unsubscribe.return_value = (0, 0)
+        mock_client.publish.side_effect = _async_fire_mqtt_message
+        yield mock_client
+
+
+@pytest.fixture
+async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
+    """Fixture to mock MQTT component."""
+    if mqtt_config is None:
+        mqtt_config = {mqtt.CONF_BROKER: "mock-broker"}
+
+    result = await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: mqtt_config})
+    assert result
+    await hass.async_block_till_done()
+
+    mqtt_component_mock = MagicMock(
+        return_value=hass.data["mqtt"],
+        spec_set=hass.data["mqtt"],
+        wraps=hass.data["mqtt"],
+    )
+    mqtt_component_mock._mqttc = mqtt_client_mock
+
+    hass.data["mqtt"] = mqtt_component_mock
+    component = hass.data["mqtt"]
+    component.reset_mock()
+    return component
+
+
+@pytest.fixture
+def legacy_patchable_time():
+    """Allow time to be patchable by using event listeners instead of asyncio loop."""
+
+    @ha.callback
+    @loader.bind_hass
+    def async_track_point_in_utc_time(hass, action, point_in_time):
+        """Add a listener that fires once after a specific point in UTC time."""
+        # Ensure point_in_time is UTC
+        point_in_time = event.dt_util.as_utc(point_in_time)
+
+        @ha.callback
+        def point_in_time_listener(event):
+            """Listen for matching time_changed events."""
+            now = event.data[ATTR_NOW]
+
+            if now < point_in_time or hasattr(point_in_time_listener, "run"):
+                return
+
+            # Set variable so that we will never run twice.
+            # Because the event bus might have to wait till a thread comes
+            # available to execute this listener it might occur that the
+            # listener gets lined up twice to be executed. This will make
+            # sure the second time it does nothing.
+            setattr(point_in_time_listener, "run", True)
+            async_unsub()
+
+            hass.async_run_job(action, now)
+
+        async_unsub = hass.bus.async_listen(EVENT_TIME_CHANGED, point_in_time_listener)
+
+        return async_unsub
+
+    with patch(
+        "homeassistant.helpers.event.async_track_point_in_utc_time",
+        async_track_point_in_utc_time,
+    ):
+        yield

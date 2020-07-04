@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "P\u0159emost\u011bn\u00ed je ji\u017e nakonfigurov\u00e1no",
+            "no_bridges": "\u017d\u00e1dn\u00e9 deCONZ p\u0159emost\u011bn\u00ed nebyly nalezeny",
+            "one_instance_only": "Komponent podporuje pouze jednu instanci deCONZ"
+        },
+        "error": {
+            "no_key": "Nelze z\u00edskat kl\u00ed\u010d API"
+        },
+        "flow_title": "Br\u00e1na deCONZ ZigBee ({host})",
+        "step": {
+            "hassio_confirm": {
+                "description": "Chcete nakonfigurovat slu\u017ebu Home Assistant pro p\u0159ipojen\u00ed k deCONZ br\u00e1n\u011b pomoc\u00ed hass.io {addon}?",
+                "title": "deCONZ Zigbee br\u00e1na prost\u0159ednictv\u00edm dopl\u0148ku Hass.io"
+            },
+            "link": {
+                "description": "Odemkn\u011bte br\u00e1nu deCONZ, pro registraci v Home Assistant. \n\n 1. P\u0159ejd\u011bte do nastaven\u00ed syst\u00e9mu deCONZ \n 2. Stiskn\u011bte tla\u010d\u00edtko \"Unlock Gateway\"",
+                "title": "Propojit s deCONZ"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Hostitel",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

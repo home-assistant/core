@@ -3,7 +3,7 @@ import logging
 
 import aiohttp
 
-from homeassistant.components.light import SUPPORT_BRIGHTNESS, Light
+from homeassistant.components.light import SUPPORT_BRIGHTNESS, LightEntity
 from homeassistant.const import CONF_HOST
 from homeassistant.exceptions import PlatformNotReady
 
@@ -26,7 +26,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([SisyphusLight(table_holder.name, table)], update_before_add=True)
 
 
-class SisyphusLight(Light):
+class SisyphusLight(LightEntity):
     """Representation of a Sisyphus table as a light."""
 
     def __init__(self, name, table):

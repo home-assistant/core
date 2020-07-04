@@ -1,7 +1,6 @@
 """Support for SNMP enabled switch."""
 import logging
 
-from pyasn1.type.univ import Integer
 import pysnmp.hlapi.asyncio as hlapi
 from pysnmp.hlapi.asyncio import (
     CommunityData,
@@ -14,9 +13,23 @@ from pysnmp.hlapi.asyncio import (
     getCmd,
     setCmd,
 )
+from pysnmp.proto.rfc1902 import (
+    Counter32,
+    Counter64,
+    Gauge32,
+    Integer,
+    Integer32,
+    IpAddress,
+    Null,
+    ObjectIdentifier,
+    OctetString,
+    Opaque,
+    TimeTicks,
+    Unsigned32,
+)
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -34,12 +47,14 @@ from .const import (
     CONF_COMMUNITY,
     CONF_PRIV_KEY,
     CONF_PRIV_PROTOCOL,
+    CONF_VARTYPE,
     CONF_VERSION,
     DEFAULT_AUTH_PROTOCOL,
     DEFAULT_HOST,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_PRIV_PROTOCOL,
+    DEFAULT_VARTYPE,
     DEFAULT_VERSION,
     MAP_AUTH_PROTOCOLS,
     MAP_PRIV_PROTOCOLS,
@@ -55,6 +70,22 @@ CONF_COMMAND_PAYLOAD_ON = "command_payload_on"
 DEFAULT_COMMUNITY = "private"
 DEFAULT_PAYLOAD_OFF = 0
 DEFAULT_PAYLOAD_ON = 1
+
+MAP_SNMP_VARTYPES = {
+    "Counter32": Counter32,
+    "Counter64": Counter64,
+    "Gauge32": Gauge32,
+    "Integer32": Integer32,
+    "Integer": Integer,
+    "IpAddress": IpAddress,
+    "Null": Null,
+    # some work todo to support tuple ObjectIdentifier, this just supports str
+    "ObjectIdentifier": ObjectIdentifier,
+    "OctetString": OctetString,
+    "Opaque": Opaque,
+    "TimeTicks": TimeTicks,
+    "Unsigned32": Unsigned32,
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -78,6 +109,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL): vol.In(
             MAP_PRIV_PROTOCOLS
         ),
+        vol.Optional(CONF_VARTYPE, default=DEFAULT_VARTYPE): cv.string,
     }
 )
 
@@ -100,6 +132,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     privproto = config.get(CONF_PRIV_PROTOCOL)
     payload_on = config.get(CONF_PAYLOAD_ON)
     payload_off = config.get(CONF_PAYLOAD_OFF)
+    vartype = config.get(CONF_VARTYPE)
 
     async_add_entities(
         [
@@ -120,13 +153,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 payload_off,
                 command_payload_on,
                 command_payload_off,
+                vartype,
             )
         ],
         True,
     )
 
 
-class SnmpSwitch(SwitchDevice):
+class SnmpSwitch(SwitchEntity):
     """Representation of a SNMP switch."""
 
     def __init__(
@@ -147,11 +181,13 @@ class SnmpSwitch(SwitchDevice):
         payload_off,
         command_payload_on,
         command_payload_off,
+        vartype,
     ):
         """Initialize the switch."""
 
         self._name = name
         self._baseoid = baseoid
+        self._vartype = vartype
 
         # Set the command OID to the base OID if command OID is unset
         self._commandoid = commandoid or baseoid
@@ -191,17 +227,24 @@ class SnmpSwitch(SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn on the switch."""
-        if self._command_payload_on.isdigit():
-            await self._set(Integer(self._command_payload_on))
-        else:
-            await self._set(self._command_payload_on)
+        # If vartype set, use it - http://snmplabs.com/pysnmp/docs/api-reference.html#pysnmp.smi.rfc1902.ObjectType
+        await self._execute_command(self._command_payload_on)
 
     async def async_turn_off(self, **kwargs):
         """Turn off the switch."""
-        if self._command_payload_on.isdigit():
-            await self._set(Integer(self._command_payload_off))
+        await self._execute_command(self._command_payload_off)
+
+    async def _execute_command(self, command):
+        # User did not set vartype and command is not a digit
+        if self._vartype == "none" and not self._command_payload_on.isdigit():
+            await self._set(command)
+        # User set vartype Null, command must be an empty string
+        elif self._vartype == "Null":
+            await self._set(Null)("")
+        # user did not set vartype but command is digit: defaulting to Integer
+        # or user did set vartype
         else:
-            await self._set(self._command_payload_off)
+            await self._set(MAP_SNMP_VARTYPES.get(self._vartype, Integer)(command))
 
     async def async_update(self):
         """Update the state."""
@@ -241,7 +284,6 @@ class SnmpSwitch(SwitchDevice):
         return self._state
 
     async def _set(self, value):
-
         await setCmd(
             *self._request_args, ObjectType(ObjectIdentity(self._commandoid), value)
         )

@@ -13,7 +13,7 @@ from nexia.const import (
 )
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
@@ -133,7 +133,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class NexiaZone(NexiaThermostatZoneEntity, ClimateDevice):
+class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
     """Provides Nexia Climate support."""
 
     def __init__(self, coordinator, zone):

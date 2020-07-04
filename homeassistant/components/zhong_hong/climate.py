@@ -5,7 +5,7 @@ import voluptuous as vol
 from zhong_hong_hvac.hub import ZhongHongGateway
 from zhong_hong_hvac.hvac import HVAC as ZhongHongHVAC
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     HVAC_MODE_COOL,
@@ -113,7 +113,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_listen)
 
 
-class ZhongHongClimate(ClimateDevice):
+class ZhongHongClimate(ClimateEntity):
     """Representation of a ZhongHong controller support HVAC."""
 
     def __init__(self, hub, addr_out, addr_in):

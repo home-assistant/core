@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "device_fail": "Onerwaarte Feeler",
+            "device_timeout": "Feeler beim verbannen",
+            "forbidden": "Ong\u00eblteg Authentifikatioun"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Apparat",
+                    "key": "API Schl\u00ebssel",
+                    "password": "Passwuert"
+                },
+                "description": "Gitt d'IP Adresse vum Daikin AC an.\n\nRemarque: API Schl\u00ebssel a Passwuert gi vu BRP072Cxx a SKYFi Apparater respektiv benotzt.",
+                "title": "Daikin AC konfigur\u00e9ieren"
+            }
+        }
+    }
+}

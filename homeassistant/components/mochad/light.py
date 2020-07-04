@@ -8,7 +8,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class MochadLight(Light):
+class MochadLight(LightEntity):
     """Representation of a X10 dimmer over Mochad."""
 
     def __init__(self, hass, ctrl, dev):

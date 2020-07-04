@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "flow_title": "Logitech Harmony Hub {name}",
+        "step": {
+            "link": {
+                "description": "Soll {name} ({host}) konfigur\u00e9iert ginn?",
+                "title": "Logitech Harmony Hub ariichten"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Numm vum Hub"
+                },
+                "title": "Logitech Harmony Hub ariichten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "activity": "Standard Aktivit\u00e9it d\u00e9i ausgef\u00e9iert g\u00ebtt wann keng uginn ass.",
+                    "delay_secs": "Delai zw\u00ebschen dem versch\u00e9cken vun Kommandoen"
+                },
+                "description": "Harmony Hub Optioune ajust\u00e9ieren"
+            }
+        }
+    }
+}

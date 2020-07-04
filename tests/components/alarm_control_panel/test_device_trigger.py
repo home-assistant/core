@@ -72,6 +72,13 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         {
             "platform": "device",
             "domain": DOMAIN,
+            "type": "arming",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "platform": "device",
+            "domain": DOMAIN,
             "type": "armed_home",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",

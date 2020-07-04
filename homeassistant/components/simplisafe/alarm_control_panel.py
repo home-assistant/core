@@ -21,7 +21,7 @@ from simplipy.websocket import (
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
     FORMAT_TEXT,
-    AlarmControlPanel,
+    AlarmControlPanelEntity,
 )
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -72,7 +72,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
+class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
     """Representation of a SimpliSafe alarm."""
 
     def __init__(self, simplisafe, system):

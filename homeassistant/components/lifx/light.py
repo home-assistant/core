@@ -32,7 +32,7 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     VALID_BRIGHTNESS,
     VALID_BRIGHTNESS_PCT,
-    Light,
+    LightEntity,
     preprocess_turn_on_alternatives,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, EVENT_HOMEASSISTANT_STOP
@@ -371,6 +371,12 @@ class LIFXManager:
 
             # Read initial state
             ack = AwaitAioLIFX().wait
+
+            # Used to populate sw_version
+            # no need to wait as we do not
+            # need it until later
+            bulb.get_hostfirmware()
+
             color_resp = await ack(bulb.get_color)
             if color_resp:
                 version_resp = await ack(bulb.get_version)
@@ -438,7 +444,7 @@ def convert_16_to_8(value):
     return value >> 8
 
 
-class LIFXLight(Light):
+class LIFXLight(LightEntity):
     """Representation of a LIFX light."""
 
     def __init__(self, bulb, effects_conductor):
@@ -459,7 +465,13 @@ class LIFXLight(Light):
             "manufacturer": "LIFX",
         }
 
-        model = aiolifx().products.product_map.get(self.bulb.product)
+        version = self.bulb.host_firmware_version
+        if version is not None:
+            info["sw_version"] = version
+
+        product_map = aiolifx().products.product_map
+
+        model = product_map.get(self.bulb.product) or self.bulb.product
         if model is not None:
             info["model"] = model
 
@@ -629,7 +641,9 @@ class LIFXLight(Light):
         """Start an effect with default parameters."""
         service = kwargs[ATTR_EFFECT]
         data = {ATTR_ENTITY_ID: self.entity_id}
-        await self.hass.services.async_call(LIFX_DOMAIN, service, data)
+        await self.hass.services.async_call(
+            LIFX_DOMAIN, service, data, context=self._context
+        )
 
     async def async_update(self):
         """Update bulb status."""

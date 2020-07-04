@@ -1,11 +1,10 @@
 """Tests for Brother Printer integration."""
 import json
 
-from asynctest import patch
-
 from homeassistant.components.brother.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_TYPE
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
 

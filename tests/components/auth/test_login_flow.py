@@ -1,8 +1,7 @@
 """Tests for the login flow."""
-from unittest.mock import patch
-
 from . import async_setup_auth
 
+from tests.async_mock import patch
 from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI
 
 

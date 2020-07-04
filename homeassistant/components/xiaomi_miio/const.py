@@ -34,6 +34,8 @@ SERVICE_EYECARE_MODE_OFF = "light_eyecare_mode_off"
 
 # Remote Services
 SERVICE_LEARN = "remote_learn_command"
+SERVICE_SET_LED_ON = "remote_set_led_on"
+SERVICE_SET_LED_OFF = "remote_set_led_off"
 
 # Switch Services
 SERVICE_SET_WIFI_LED_ON = "switch_set_wifi_led_on"
@@ -46,7 +48,9 @@ SERVICE_MOVE_REMOTE_CONTROL = "vacuum_remote_control_move"
 SERVICE_MOVE_REMOTE_CONTROL_STEP = "vacuum_remote_control_move_step"
 SERVICE_START_REMOTE_CONTROL = "vacuum_remote_control_start"
 SERVICE_STOP_REMOTE_CONTROL = "vacuum_remote_control_stop"
+SERVICE_CLEAN_SEGMENT = "vacuum_clean_segment"
 SERVICE_CLEAN_ZONE = "vacuum_clean_zone"
+SERVICE_GOTO = "vacuum_goto"
 
 # AirQuality Model
 MODEL_AIRQUALITYMONITOR_V1 = "zhimi.airmonitor.v1"

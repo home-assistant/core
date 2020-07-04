@@ -2,7 +2,6 @@
 import asyncio
 import logging
 from time import time
-from unittest.mock import Mock, patch
 
 import pytest
 
@@ -11,7 +10,8 @@ from homeassistant.components.cloud import account_link
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed, mock_coro, mock_platform
+from tests.async_mock import AsyncMock, Mock, patch
+from tests.common import async_fire_time_changed, mock_platform
 
 TEST_DOMAIN = "oauth2_test"
 
@@ -42,12 +42,10 @@ async def test_setup_provide_implementation(hass):
 
     with patch(
         "homeassistant.components.cloud.account_link._get_services",
-        side_effect=lambda _: mock_coro(
-            [
-                {"service": "test", "min_version": "0.1.0"},
-                {"service": "too_new", "min_version": "100.0.0"},
-            ]
-        ),
+        return_value=[
+            {"service": "test", "min_version": "0.1.0"},
+            {"service": "too_new", "min_version": "100.0.0"},
+        ],
     ):
         assert (
             await config_entry_oauth2_flow.async_get_implementations(
@@ -77,7 +75,7 @@ async def test_get_services_cached(hass):
 
     with patch.object(account_link, "CACHE_TIMEOUT", 0), patch(
         "hass_nabucasa.account_link.async_fetch_available_services",
-        side_effect=lambda _: mock_coro(services),
+        side_effect=lambda _: services,
     ) as mock_fetch:
         assert await account_link._get_services(hass) == 1
 
@@ -98,6 +96,18 @@ async def test_get_services_cached(hass):
         assert await account_link._get_services(hass) == 4
 
 
+async def test_get_services_error(hass):
+    """Test that we cache services."""
+    hass.data["cloud"] = None
+
+    with patch.object(account_link, "CACHE_TIMEOUT", 0), patch(
+        "hass_nabucasa.account_link.async_fetch_available_services",
+        side_effect=asyncio.TimeoutError,
+    ):
+        assert await account_link._get_services(hass) == []
+        assert account_link.DATA_SERVICES not in hass.data
+
+
 async def test_implementation(hass, flow_handler):
     """Test Cloud OAuth2 implementation."""
     hass.data["cloud"] = None
@@ -111,7 +121,7 @@ async def test_implementation(hass, flow_handler):
     flow_finished = asyncio.Future()
 
     helper = Mock(
-        async_get_authorize_url=Mock(return_value=mock_coro("http://example.com/auth")),
+        async_get_authorize_url=AsyncMock(return_value="http://example.com/auth"),
         async_get_tokens=Mock(return_value=flow_finished),
     )
 

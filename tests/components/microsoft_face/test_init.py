@@ -1,6 +1,5 @@
 """The tests for the microsoft face platform."""
 import asyncio
-from unittest.mock import patch
 
 from homeassistant.components import camera, microsoft_face as mf
 from homeassistant.components.microsoft_face import (
@@ -18,12 +17,8 @@ from homeassistant.components.microsoft_face import (
 from homeassistant.const import ATTR_NAME
 from homeassistant.setup import setup_component
 
-from tests.common import (
-    assert_setup_component,
-    get_test_home_assistant,
-    load_fixture,
-    mock_coro,
-)
+from tests.async_mock import patch
+from tests.common import assert_setup_component, get_test_home_assistant, load_fixture
 
 
 def create_group(hass, name):
@@ -97,7 +92,7 @@ class TestMicrosoftFaceSetup:
 
     @patch(
         "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
-        return_value=mock_coro(),
+        return_value=None,
     )
     def test_setup_component(self, mock_update):
         """Set up component."""
@@ -106,7 +101,7 @@ class TestMicrosoftFaceSetup:
 
     @patch(
         "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
-        return_value=mock_coro(),
+        return_value=None,
     )
     def test_setup_component_wrong_api_key(self, mock_update):
         """Set up component without api key."""
@@ -115,7 +110,7 @@ class TestMicrosoftFaceSetup:
 
     @patch(
         "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
-        return_value=mock_coro(),
+        return_value=None,
     )
     def test_setup_component_test_service(self, mock_update):
         """Set up component."""
@@ -171,7 +166,7 @@ class TestMicrosoftFaceSetup:
 
     @patch(
         "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
-        return_value=mock_coro(),
+        return_value=None,
     )
     def test_service_groups(self, mock_update, aioclient_mock):
         """Set up component, test groups services."""
@@ -258,7 +253,7 @@ class TestMicrosoftFaceSetup:
 
     @patch(
         "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
-        return_value=mock_coro(),
+        return_value=None,
     )
     def test_service_train(self, mock_update, aioclient_mock):
         """Set up component, test train groups services."""
@@ -278,7 +273,7 @@ class TestMicrosoftFaceSetup:
 
     @patch(
         "homeassistant.components.camera.async_get_image",
-        return_value=mock_coro(camera.Image("image/jpeg", b"Test")),
+        return_value=camera.Image("image/jpeg", b"Test"),
     )
     def test_service_face(self, camera_mock, aioclient_mock):
         """Set up component, test person face services."""
@@ -318,7 +313,7 @@ class TestMicrosoftFaceSetup:
 
     @patch(
         "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
-        return_value=mock_coro(),
+        return_value=None,
     )
     def test_service_status_400(self, mock_update, aioclient_mock):
         """Set up component, test groups services with error."""
@@ -340,7 +335,7 @@ class TestMicrosoftFaceSetup:
 
     @patch(
         "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
-        return_value=mock_coro(),
+        return_value=None,
     )
     def test_service_status_timeout(self, mock_update, aioclient_mock):
         """Set up component, test groups services with timeout."""

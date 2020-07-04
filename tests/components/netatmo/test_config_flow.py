@@ -1,6 +1,4 @@
 """Test the Netatmo config flow."""
-from asynctest import patch
-
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.netatmo import config_flow
 from homeassistant.components.netatmo.const import (
@@ -8,8 +6,10 @@ from homeassistant.components.netatmo.const import (
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CLIENT_ID = "1234"
@@ -44,7 +44,7 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
         hass,
         "netatmo",
         {
-            "netatmo": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
+            "netatmo": {CONF_CLIENT_ID: CLIENT_ID, CONF_CLIENT_SECRET: CLIENT_SECRET},
             "http": {"base_url": "https://example.com"},
         },
     )

@@ -1,10 +1,10 @@
 """The tests for time_date sensor platform."""
 import unittest
-from unittest.mock import patch
 
 import homeassistant.components.time_date.sensor as time_date
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 
@@ -23,8 +23,9 @@ class TestTimeDateSensor(unittest.TestCase):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
         self.DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         dt_util.set_default_time_zone(self.DEFAULT_TIME_ZONE)
         self.hass.stop()

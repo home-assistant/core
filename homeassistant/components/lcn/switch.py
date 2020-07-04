@@ -1,7 +1,7 @@
 """Support for LCN switches."""
 import pypck
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_ADDRESS
 
 from . import LcnDevice
@@ -34,7 +34,7 @@ async def async_setup_platform(
     async_add_entities(devices)
 
 
-class LcnOutputSwitch(LcnDevice, SwitchDevice):
+class LcnOutputSwitch(LcnDevice, SwitchEntity):
     """Representation of a LCN switch for output ports."""
 
     def __init__(self, config, address_connection):
@@ -79,7 +79,7 @@ class LcnOutputSwitch(LcnDevice, SwitchDevice):
         self.async_write_ha_state()
 
 
-class LcnRelaySwitch(LcnDevice, SwitchDevice):
+class LcnRelaySwitch(LcnDevice, SwitchEntity):
     """Representation of a LCN switch for relay ports."""
 
     def __init__(self, config, address_connection):

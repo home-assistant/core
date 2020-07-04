@@ -59,7 +59,9 @@ def setup(hass, config):
             "Streamlabs Water Monitor auto-detected location_id=%s", location_id
         )
     else:
-        location = next((l for l in locations if location_id == l["locationId"]), None)
+        location = next(
+            (loc for loc in locations if location_id == loc["locationId"]), None
+        )
         if location is None:
             _LOGGER.error("Supplied location_id is invalid")
             return False

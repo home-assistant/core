@@ -1,0 +1,63 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "All verbonne Server sinn scho konfigur\u00e9iert",
+            "already_configured": "D\u00ebse Plex Server ass scho konfigur\u00e9iert",
+            "already_in_progress": "Plex g\u00ebtt konfigur\u00e9iert",
+            "invalid_import": "D\u00e9i importiert Konfiguratioun ass ong\u00eblteg",
+            "non-interactive": "Net interaktiven Import",
+            "token_request_timeout": "Z\u00e4it Iwwerschreidung beim kr\u00e9ien vum Jeton",
+            "unknown": "Onbekannte Feeler opgetrueden"
+        },
+        "error": {
+            "faulty_credentials": "Feeler bei der Autorisatioun, iwwerpr\u00e9if de Jeton",
+            "host_or_token": "Op manst een Apparat oder Jeton muss ugi sinn.",
+            "no_servers": "Kee Server as mam Plex Kont verbonnen",
+            "not_found": "Kee Plex Server fonnt",
+            "ssl_error": "SSL Zertifikat Problem"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Apparat",
+                    "port": "Port",
+                    "ssl": "SSL benotzen",
+                    "token": "Jeton (Optionell)",
+                    "verify_ssl": "SSL Zertifikat iwwerpr\u00e9iwen"
+                },
+                "title": "Manuell Plex Konfiguratioun"
+            },
+            "select_server": {
+                "data": {
+                    "server": "Server"
+                },
+                "description": "M\u00e9i Server disponibel, wielt een aus:",
+                "title": "Plex Server auswielen"
+            },
+            "user": {
+                "description": "Verbann dech mat [plex.tv](https://pley.tv) fir ee Plex Server ze verlinken.",
+                "title": "Plex Media Server"
+            },
+            "user_advanced": {
+                "data": {
+                    "setup_method": "Setup Method"
+                },
+                "title": "Plex Media Server"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "ignore_new_shared_users": "Nei verwalt / gedeelt Benotzer ignor\u00e9ieren",
+                    "ignore_plex_web_clients": "Plex Web Cliente ignor\u00e9ieren",
+                    "monitored_users": "Iwwerwaachte Benotzer",
+                    "use_episode_art": "Benotz Biller vun der Episode"
+                },
+                "description": "Optioune fir Plex Medie Spiller"
+            }
+        }
+    }
+}

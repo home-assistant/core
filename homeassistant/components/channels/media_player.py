@@ -4,7 +4,7 @@ import logging
 from pychannels import Channels
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_EPISODE,
@@ -116,7 +116,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class ChannelsPlayer(MediaPlayerDevice):
+class ChannelsPlayer(MediaPlayerEntity):
     """Representation of a Channels instance."""
 
     def __init__(self, name, host, port):

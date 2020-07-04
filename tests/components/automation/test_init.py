@@ -1,16 +1,19 @@
 """The tests for the automation component."""
 from datetime import timedelta
-from unittest.mock import Mock, patch
 
 import pytest
 
+from homeassistant.components import logbook
 import homeassistant.components.automation as automation
-from homeassistant.components.automation import DOMAIN
+from homeassistant.components.automation import (
+    DOMAIN,
+    EVENT_AUTOMATION_RELOADED,
+    EVENT_AUTOMATION_TRIGGERED,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
-    EVENT_AUTOMATION_TRIGGERED,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     STATE_OFF,
     STATE_ON,
 )
@@ -19,6 +22,7 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import Mock, patch
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
@@ -26,6 +30,7 @@ from tests.common import (
     mock_restore_cache,
 )
 from tests.components.automation import common
+from tests.components.logbook.test_init import MockLazyEventPartialState
 
 
 @pytest.fixture
@@ -148,7 +153,7 @@ async def test_service_specify_entity_id(hass, calls):
 
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     assert ["hello.world"] == calls[0].data.get(ATTR_ENTITY_ID)
 
 
@@ -170,7 +175,7 @@ async def test_service_specify_entity_id_list(hass, calls):
 
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     assert ["hello.world", "hello.world2"] == calls[0].data.get(ATTR_ENTITY_ID)
 
 
@@ -192,10 +197,10 @@ async def test_two_triggers(hass, calls):
 
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     hass.states.async_set("test.entity", "hello")
     await hass.async_block_till_done()
-    assert 2 == len(calls)
+    assert len(calls) == 2
 
 
 async def test_trigger_service_ignoring_condition(hass, calls):
@@ -268,17 +273,17 @@ async def test_two_conditions_with_and(hass, calls):
     hass.states.async_set(entity_id, 100)
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
     hass.states.async_set(entity_id, 101)
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
     hass.states.async_set(entity_id, 151)
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_automation_list_setting(hass, calls):
@@ -302,11 +307,11 @@ async def test_automation_list_setting(hass, calls):
 
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
     hass.bus.async_fire("test_event_2")
     await hass.async_block_till_done()
-    assert 2 == len(calls)
+    assert len(calls) == 2
 
 
 async def test_automation_calling_two_actions(hass, calls):
@@ -368,7 +373,7 @@ async def test_shared_context(hass, calls):
     assert event_mock.call_count == 2
 
     # Verify automation triggered evenet for 'hello' automation
-    args, kwargs = event_mock.call_args_list[0]
+    args, _ = event_mock.call_args_list[0]
     first_trigger_context = args[0].context
     assert first_trigger_context.parent_id == context.id
     # Ensure event data has all attributes set
@@ -376,7 +381,7 @@ async def test_shared_context(hass, calls):
     assert args[0].data.get(ATTR_ENTITY_ID) is not None
 
     # Ensure context set correctly for event fired by 'hello' automation
-    args, kwargs = first_automation_listener.call_args
+    args, _ = first_automation_listener.call_args
     assert args[0].context is first_trigger_context
 
     # Ensure the 'hello' automation state has the right context
@@ -385,7 +390,7 @@ async def test_shared_context(hass, calls):
     assert state.context is first_trigger_context
 
     # Verify automation triggered evenet for 'bye' automation
-    args, kwargs = event_mock.call_args_list[1]
+    args, _ = event_mock.call_args_list[1]
     second_trigger_context = args[0].context
     assert second_trigger_context.parent_id == first_trigger_context.id
     # Ensure event data has all attributes set
@@ -483,6 +488,11 @@ async def test_reload_config_service(hass, calls, hass_admin_user, hass_read_onl
     assert len(calls) == 1
     assert calls[0].data.get("event") == "test_event"
 
+    test_reload_event = []
+    hass.bus.async_listen(
+        EVENT_AUTOMATION_RELOADED, lambda event: test_reload_event.append(event)
+    )
+
     with patch(
         "homeassistant.config.load_yaml_config_file",
         autospec=True,
@@ -504,6 +514,8 @@ async def test_reload_config_service(hass, calls, hass_admin_user, hass_read_onl
         await hass.async_block_till_done()
         # De-flake ?!
         await hass.async_block_till_done()
+
+    assert len(test_reload_event) == 1
 
     assert hass.states.get("automation.hello") is None
     assert hass.states.get("automation.bye") is not None
@@ -700,6 +712,7 @@ async def test_initial_value_on(hass):
     assert automation.is_on(hass, "automation.hello")
 
     await hass.async_start()
+    await hass.async_block_till_done()
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -822,7 +835,7 @@ async def test_automation_not_trigger_on_bootstrap(hass):
     await hass.async_block_till_done()
     assert len(calls) == 0
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
     assert automation.is_on(hass, "automation.hello")
 
@@ -1022,3 +1035,38 @@ async def test_extraction_functions(hass):
         "device-in-both",
         "device-in-last",
     }
+
+
+async def test_logbook_humanify_automation_triggered_event(hass):
+    """Test humanifying Automation Trigger event."""
+    hass.config.components.add("recorder")
+    await async_setup_component(hass, automation.DOMAIN, {})
+    await async_setup_component(hass, "logbook", {})
+    entity_attr_cache = logbook.EntityAttributeCache(hass)
+
+    event1, event2 = list(
+        logbook.humanify(
+            hass,
+            [
+                MockLazyEventPartialState(
+                    EVENT_AUTOMATION_TRIGGERED,
+                    {ATTR_ENTITY_ID: "automation.hello", ATTR_NAME: "Hello Automation"},
+                ),
+                MockLazyEventPartialState(
+                    EVENT_AUTOMATION_TRIGGERED,
+                    {ATTR_ENTITY_ID: "automation.bye", ATTR_NAME: "Bye Automation"},
+                ),
+            ],
+            entity_attr_cache,
+        )
+    )
+
+    assert event1["name"] == "Hello Automation"
+    assert event1["domain"] == "automation"
+    assert event1["message"] == "has been triggered"
+    assert event1["entity_id"] == "automation.hello"
+
+    assert event2["name"] == "Bye Automation"
+    assert event2["domain"] == "automation"
+    assert event2["message"] == "has been triggered"
+    assert event2["entity_id"] == "automation.bye"

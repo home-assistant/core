@@ -1,13 +1,12 @@
 """Test the DoorBird config flow."""
 import urllib
 
-from asynctest import MagicMock, patch
-
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.doorbird import CONF_CUSTOM_URL, CONF_TOKEN
 from homeassistant.components.doorbird.const import CONF_EVENTS, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
+from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry, init_recorder_component
 
 VALID_CONFIG = {

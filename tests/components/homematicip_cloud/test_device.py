@@ -1,5 +1,4 @@
 """Common tests for HomematicIP devices."""
-from asynctest import patch
 from homematicip.base.enums import EventType
 
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
@@ -14,6 +13,8 @@ from .helper import (
     get_and_check_entity_basics,
 )
 
+from tests.async_mock import patch
+
 
 async def test_hmip_load_all_supported_devices(hass, default_mock_hap_factory):
     """Ensure that all supported devices could be loaded."""
@@ -21,7 +22,7 @@ async def test_hmip_load_all_supported_devices(hass, default_mock_hap_factory):
         test_devices=None, test_groups=None
     )
 
-    assert len(mock_hap.hmip_device_by_entity_id) == 183
+    assert len(mock_hap.hmip_device_by_entity_id) == 186
 
 
 async def test_hmip_remove_device(hass, default_mock_hap_factory):

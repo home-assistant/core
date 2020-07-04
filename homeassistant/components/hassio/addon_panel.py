@@ -75,12 +75,9 @@ class HassIOAddonPanel(HomeAssistantView):
         return {}
 
 
-def _register_panel(hass, addon, data):
-    """Init coroutine to register the panel.
-
-    Return coroutine.
-    """
-    return hass.components.panel_custom.async_register_panel(
+async def _register_panel(hass, addon, data):
+    """Init coroutine to register the panel."""
+    await hass.components.panel_custom.async_register_panel(
         frontend_url_path=addon,
         webcomponent_name="hassio-main",
         sidebar_title=data[ATTR_TITLE],

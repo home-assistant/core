@@ -5,7 +5,7 @@ from typing import Any, Callable, Iterable, List
 
 from directv import DIRECTV, DIRECTVError
 
-from homeassistant.components.remote import RemoteDevice
+from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -36,7 +36,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class DIRECTVRemote(DIRECTVEntity, RemoteDevice):
+class DIRECTVRemote(DIRECTVEntity, RemoteEntity):
     """Device that sends commands to a DirecTV receiver."""
 
     def __init__(self, *, dtv: DIRECTV, name: str, address: str = "0") -> None:
@@ -95,12 +95,15 @@ class DIRECTVRemote(DIRECTVEntity, RemoteDevice):
         blue, chanup, chandown, prev, 0, 1, 2, 3, 4, 5,
         6, 7, 8, 9, dash, enter
         """
-        for single_command in command:
-            try:
-                await self.dtv.remote(single_command, self._address)
-            except DIRECTVError:
-                _LOGGER.exception(
-                    "Sending command %s to device %s failed",
-                    single_command,
-                    self._device_id,
-                )
+        num_repeats = kwargs[ATTR_NUM_REPEATS]
+
+        for _ in range(num_repeats):
+            for single_command in command:
+                try:
+                    await self.dtv.remote(single_command, self._address)
+                except DIRECTVError:
+                    _LOGGER.exception(
+                        "Sending command %s to device %s failed",
+                        single_command,
+                        self._device_id,
+                    )

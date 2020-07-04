@@ -1,0 +1,15 @@
+{
+    "state": {
+        "_": {
+            "cleaning": "\u010cist\u00ed",
+            "docked": "V stanici",
+            "error": "Chyba",
+            "idle": "Ne\u010dinn\u00fd",
+            "off": "Off",
+            "on": "On",
+            "paused": "Pozastaveno",
+            "returning": "N\u00e1vrat do stanice"
+        }
+    },
+    "title": "Vysava\u010d"
+}

@@ -1,5 +1,5 @@
 """Support for IKEA Tradfri switches."""
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from .base_class import TradfriBaseDevice
 from .const import CONF_GATEWAY_ID, KEY_API, KEY_GATEWAY
@@ -20,7 +20,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
 
 
-class TradfriSwitch(TradfriBaseDevice, SwitchDevice):
+class TradfriSwitch(TradfriBaseDevice, SwitchEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(self, device, api, gateway_id):

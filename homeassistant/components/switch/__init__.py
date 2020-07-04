@@ -78,7 +78,7 @@ async def async_unload_entry(hass, entry):
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-class SwitchDevice(ToggleEntity):
+class SwitchEntity(ToggleEntity):
     """Representation of a switch."""
 
     @property
@@ -112,3 +112,15 @@ class SwitchDevice(ToggleEntity):
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return None
+
+
+class SwitchDevice(SwitchEntity):
+    """Representation of a switch (for backwards compatibility)."""
+
+    def __init_subclass__(cls, **kwargs):
+        """Print deprecation warning."""
+        super().__init_subclass__(**kwargs)
+        _LOGGER.warning(
+            "SwitchDevice is deprecated, modify %s to extend SwitchEntity",
+            cls.__name__,
+        )

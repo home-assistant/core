@@ -1,5 +1,4 @@
 """Tests for the AdGuard Home config flow."""
-from unittest.mock import patch
 
 import aiohttp
 
@@ -15,7 +14,8 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 FIXTURE_USER_INPUT = {
     CONF_HOST: "127.0.0.1",
@@ -156,22 +156,16 @@ async def test_hassio_update_instance_running(hass, aioclient_mock):
     entry.add_to_hass(hass)
 
     with patch.object(
-        hass.config_entries,
-        "async_forward_entry_setup",
-        side_effect=lambda *_: mock_coro(True),
+        hass.config_entries, "async_forward_entry_setup", return_value=True,
     ) as mock_load:
         assert await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state == config_entries.ENTRY_STATE_LOADED
         assert len(mock_load.mock_calls) == 2
 
     with patch.object(
-        hass.config_entries,
-        "async_forward_entry_unload",
-        side_effect=lambda *_: mock_coro(True),
+        hass.config_entries, "async_forward_entry_unload", return_value=True,
     ) as mock_unload, patch.object(
-        hass.config_entries,
-        "async_forward_entry_setup",
-        side_effect=lambda *_: mock_coro(True),
+        hass.config_entries, "async_forward_entry_setup", return_value=True,
     ) as mock_load:
         result = await hass.config_entries.flow.async_init(
             "adguard",

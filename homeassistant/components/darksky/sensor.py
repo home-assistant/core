@@ -6,7 +6,7 @@ import forecastio
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
+    DEGREE,
     LENGTH_CENTIMETERS,
     LENGTH_KILOMETERS,
     SPEED_KILOMETERS_PER_HOUR,
@@ -23,9 +24,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TIME_HOURS,
-    UNIT_DEGREE,
     UNIT_PERCENTAGE,
-    UNIT_UV_INDEX,
+    UV_INDEX,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -89,11 +89,11 @@ SENSOR_TYPES = {
     ],
     "nearest_storm_bearing": [
         "Nearest Storm Bearing",
-        UNIT_DEGREE,
-        UNIT_DEGREE,
-        UNIT_DEGREE,
-        UNIT_DEGREE,
-        UNIT_DEGREE,
+        DEGREE,
+        DEGREE,
+        DEGREE,
+        DEGREE,
+        DEGREE,
         "mdi:weather-lightning",
         ["currently"],
     ],
@@ -179,11 +179,11 @@ SENSOR_TYPES = {
     ],
     "wind_bearing": [
         "Wind Bearing",
-        UNIT_DEGREE,
-        UNIT_DEGREE,
-        UNIT_DEGREE,
-        UNIT_DEGREE,
-        UNIT_DEGREE,
+        DEGREE,
+        DEGREE,
+        DEGREE,
+        DEGREE,
+        DEGREE,
         "mdi:compass",
         ["currently", "hourly", "daily"],
     ],
@@ -339,11 +339,11 @@ SENSOR_TYPES = {
     ],
     "uv_index": [
         "UV Index",
-        UNIT_UV_INDEX,
-        UNIT_UV_INDEX,
-        UNIT_UV_INDEX,
-        UNIT_UV_INDEX,
-        UNIT_UV_INDEX,
+        UV_INDEX,
+        UV_INDEX,
+        UV_INDEX,
+        UV_INDEX,
+        UV_INDEX,
         "mdi:weather-sunny",
         ["currently", "hourly", "daily"],
     ],
@@ -611,6 +611,14 @@ class DarkSkySensor(Entity):
         return SENSOR_TYPES[self.type][6]
 
     @property
+    def device_class(self):
+        """Device class of the entity."""
+        if SENSOR_TYPES[self.type][1] == TEMP_CELSIUS:
+            return DEVICE_CLASS_TEMPERATURE
+
+        return None
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
@@ -790,6 +798,7 @@ class DarkSkyData:
         self.longitude = longitude
         self.units = units
         self.language = language
+        self._connect_error = False
 
         self.data = None
         self.unit_system = None
@@ -817,8 +826,13 @@ class DarkSkyData:
                 units=self.units,
                 lang=self.language,
             )
+            if self._connect_error:
+                self._connect_error = False
+                _LOGGER.info("Reconnected to Dark Sky")
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
-            _LOGGER.error("Unable to connect to Dark Sky: %s", error)
+            if not self._connect_error:
+                self._connect_error = True
+                _LOGGER.error("Unable to connect to Dark Sky: %s", error)
             self.data = None
         self.unit_system = self.data and self.data.json["flags"]["units"]
 

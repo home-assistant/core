@@ -5,7 +5,7 @@ from pymfy.api.devices.category import Category
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    CoverDevice,
+    CoverEntity,
 )
 
 from . import API, CONF_OPTIMISTIC, DEVICES, DOMAIN, SomfyEntity
@@ -35,7 +35,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(await hass.async_add_executor_job(get_covers), True)
 
 
-class SomfyCover(SomfyEntity, CoverDevice):
+class SomfyCover(SomfyEntity, CoverEntity):
     """Representation of a Somfy cover device."""
 
     def __init__(self, device, api, optimistic):

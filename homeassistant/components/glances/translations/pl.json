@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Host jest ju\u017c skonfigurowany."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z hostem",
+            "wrong_version": "Wersja nieobs\u0142ugiwana (tylko 2 lub 3)"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "name": "Nazwa",
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "ssl": "U\u017cyj SSL/TLS, aby po\u0142\u0105czy\u0107 si\u0119 z systemem Glances",
+                    "username": "Nazwa u\u017cytkownika",
+                    "verify_ssl": "Sprawd\u017a certyfikacj\u0119 systemu",
+                    "version": "Glances wersja API (2 lub 3)"
+                },
+                "title": "Konfiguracja Glances"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Cz\u0119stotliwo\u015b\u0107 aktualizacji"
+                },
+                "description": "Konfiguracja opcji dla Glances"
+            }
+        }
+    }
+}

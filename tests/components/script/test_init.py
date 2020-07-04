@@ -1,16 +1,15 @@
 """The tests for the Script component."""
 # pylint: disable=protected-access
+import asyncio
 import unittest
-from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components import script
-from homeassistant.components.script import DOMAIN
+from homeassistant.components import logbook, script
+from homeassistant.components.script import DOMAIN, EVENT_SCRIPT_STARTED
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
-    EVENT_SCRIPT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -22,7 +21,9 @@ from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component, setup_component
 
+from tests.async_mock import Mock, patch
 from tests.common import get_test_home_assistant
+from tests.components.logbook.test_init import MockLazyEventPartialState
 
 ENTITY_ID = "script.test"
 
@@ -73,30 +74,11 @@ class TestScriptComponent(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    # pylint: disable=invalid-name
-    def tearDown(self):
+        self.addCleanup(self.tear_down_cleanup)
+
+    def tear_down_cleanup(self):
         """Stop down everything that was started."""
         self.hass.stop()
-
-    def test_setup_with_invalid_configs(self):
-        """Test setup with invalid configs."""
-        for value in (
-            {"test": {}},
-            {"test hello world": {"sequence": [{"event": "bla"}]}},
-            {
-                "test": {
-                    "sequence": {
-                        "event": "test_event",
-                        "service": "homeassistant.turn_on",
-                    }
-                }
-            },
-        ):
-            assert not setup_component(
-                self.hass, "script", {"script": value}
-            ), f"Script loaded with wrong config {value}"
-
-            assert 0 == len(self.hass.states.entity_ids("script"))
 
     def test_turn_on_service(self):
         """Verify that the turn_on service."""
@@ -212,31 +194,60 @@ class TestScriptComponent(unittest.TestCase):
         assert calls[1].context is context
         assert calls[1].data["hello"] == "universe"
 
-    def test_reload_service(self):
-        """Verify that the turn_on service."""
-        assert setup_component(
-            self.hass,
-            "script",
-            {"script": {"test": {"sequence": [{"delay": {"seconds": 5}}]}}},
-        )
 
-        assert self.hass.states.get(ENTITY_ID) is not None
-        assert self.hass.services.has_service(script.DOMAIN, "test")
+invalid_configs = [
+    {"test": {}},
+    {"test hello world": {"sequence": [{"event": "bla"}]}},
+    {"test": {"sequence": {"event": "test_event", "service": "homeassistant.turn_on"}}},
+    {"test": {"sequence": [], "mode": "parallel", "queue_size": 5}},
+]
 
-        with patch(
-            "homeassistant.config.load_yaml_config_file",
-            return_value={
-                "script": {"test2": {"sequence": [{"delay": {"seconds": 5}}]}}
-            },
-        ):
-            reload(self.hass)
-            self.hass.block_till_done()
 
-        assert self.hass.states.get(ENTITY_ID) is None
-        assert not self.hass.services.has_service(script.DOMAIN, "test")
+@pytest.mark.parametrize("value", invalid_configs)
+async def test_setup_with_invalid_configs(hass, value):
+    """Test setup with invalid configs."""
+    assert not await async_setup_component(
+        hass, "script", {"script": value}
+    ), f"Script loaded with wrong config {value}"
 
-        assert self.hass.states.get("script.test2") is not None
-        assert self.hass.services.has_service(script.DOMAIN, "test2")
+    assert 0 == len(hass.states.async_entity_ids("script"))
+
+
+@pytest.mark.parametrize("running", ["no", "same", "different"])
+async def test_reload_service(hass, running):
+    """Verify the reload service."""
+    assert await async_setup_component(
+        hass, "script", {"script": {"test": {"sequence": [{"delay": {"seconds": 5}}]}}}
+    )
+
+    assert hass.states.get(ENTITY_ID) is not None
+    assert hass.services.has_service(script.DOMAIN, "test")
+
+    if running != "no":
+        _, object_id = split_entity_id(ENTITY_ID)
+        await hass.services.async_call(DOMAIN, object_id)
+        await hass.async_block_till_done()
+
+        assert script.is_on(hass, ENTITY_ID)
+
+    object_id = "test" if running == "same" else "test2"
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        return_value={"script": {object_id: {"sequence": [{"delay": {"seconds": 5}}]}}},
+    ):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.async_block_till_done()
+
+    if running != "same":
+        assert hass.states.get(ENTITY_ID) is None
+        assert not hass.services.has_service(script.DOMAIN, "test")
+
+        assert hass.states.get("script.test2") is not None
+        assert hass.services.has_service(script.DOMAIN, "test2")
+
+    else:
+        assert hass.states.get(ENTITY_ID) is not None
+        assert hass.services.has_service(script.DOMAIN, "test")
 
 
 async def test_service_descriptions(hass):
@@ -448,7 +459,7 @@ async def test_extraction_functions(hass):
     }
 
 
-async def test_config(hass):
+async def test_config_basic(hass):
     """Test passing info in config."""
     assert await async_setup_component(
         hass,
@@ -467,3 +478,132 @@ async def test_config(hass):
     test_script = hass.states.get("script.test_script")
     assert test_script.name == "Script Name"
     assert test_script.attributes["icon"] == "mdi:party"
+
+
+async def test_config_legacy(hass, caplog):
+    """Test config defaulting to legacy mode."""
+    assert await async_setup_component(
+        hass, "script", {"script": {"test_script": {"sequence": []}}}
+    )
+    assert "To continue using previous behavior, which is now deprecated" in caplog.text
+
+
+async def test_logbook_humanify_script_started_event(hass):
+    """Test humanifying script started event."""
+    hass.config.components.add("recorder")
+    await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "logbook", {})
+    entity_attr_cache = logbook.EntityAttributeCache(hass)
+
+    event1, event2 = list(
+        logbook.humanify(
+            hass,
+            [
+                MockLazyEventPartialState(
+                    EVENT_SCRIPT_STARTED,
+                    {ATTR_ENTITY_ID: "script.hello", ATTR_NAME: "Hello Script"},
+                ),
+                MockLazyEventPartialState(
+                    EVENT_SCRIPT_STARTED,
+                    {ATTR_ENTITY_ID: "script.bye", ATTR_NAME: "Bye Script"},
+                ),
+            ],
+            entity_attr_cache,
+        )
+    )
+
+    assert event1["name"] == "Hello Script"
+    assert event1["domain"] == "script"
+    assert event1["message"] == "started"
+    assert event1["entity_id"] == "script.hello"
+
+    assert event2["name"] == "Bye Script"
+    assert event2["domain"] == "script"
+    assert event2["message"] == "started"
+    assert event2["entity_id"] == "script.bye"
+
+
+@pytest.mark.parametrize("concurrently", [False, True])
+async def test_concurrent_script(hass, concurrently):
+    """Test calling script concurrently or not."""
+    if concurrently:
+        call_script_2 = {
+            "service": "script.turn_on",
+            "data": {"entity_id": "script.script2"},
+        }
+    else:
+        call_script_2 = {"service": "script.script2"}
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "script1": {
+                    "mode": "parallel",
+                    "sequence": [
+                        call_script_2,
+                        {
+                            "wait_template": "{{ is_state('input_boolean.test1', 'on') }}"
+                        },
+                        {"service": "test.script", "data": {"value": "script1"}},
+                    ],
+                },
+                "script2": {
+                    "mode": "parallel",
+                    "sequence": [
+                        {"service": "test.script", "data": {"value": "script2a"}},
+                        {
+                            "wait_template": "{{ is_state('input_boolean.test2', 'on') }}"
+                        },
+                        {"service": "test.script", "data": {"value": "script2b"}},
+                    ],
+                },
+            }
+        },
+    )
+
+    service_called = asyncio.Event()
+    service_values = []
+
+    async def async_service_handler(service):
+        nonlocal service_values
+        service_values.append(service.data.get("value"))
+        service_called.set()
+
+    hass.services.async_register("test", "script", async_service_handler)
+    hass.states.async_set("input_boolean.test1", "off")
+    hass.states.async_set("input_boolean.test2", "off")
+
+    await hass.services.async_call("script", "script1")
+    await asyncio.wait_for(service_called.wait(), 1)
+    service_called.clear()
+
+    assert "script2a" == service_values[-1]
+    assert script.is_on(hass, "script.script1")
+    assert script.is_on(hass, "script.script2")
+
+    if not concurrently:
+        hass.states.async_set("input_boolean.test2", "on")
+        await asyncio.wait_for(service_called.wait(), 1)
+        service_called.clear()
+
+        assert "script2b" == service_values[-1]
+
+    hass.states.async_set("input_boolean.test1", "on")
+    await asyncio.wait_for(service_called.wait(), 1)
+    service_called.clear()
+
+    assert "script1" == service_values[-1]
+    assert concurrently == script.is_on(hass, "script.script2")
+
+    if concurrently:
+        hass.states.async_set("input_boolean.test2", "on")
+        await asyncio.wait_for(service_called.wait(), 1)
+        service_called.clear()
+
+        assert "script2b" == service_values[-1]
+
+    await hass.async_block_till_done()
+
+    assert not script.is_on(hass, "script.script1")
+    assert not script.is_on(hass, "script.script2")

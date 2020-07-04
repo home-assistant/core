@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
+            "unknown": "Nieoczekiwany b\u0142\u0105d."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Klucz API",
+                    "latitude": "Szeroko\u015b\u0107 geograficzna",
+                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna",
+                    "station": "Kod stacji METAR"
+                },
+                "description": "Je\u015bli nie podasz kodu stacji METAR, do znalezienia najbli\u017cszej stacji zostan\u0105 u\u017cyte wsp\u00f3\u0142rz\u0119dne geograficzne.",
+                "title": "Po\u0142\u0105czenie z National Weather Service"
+            }
+        }
+    }
+}

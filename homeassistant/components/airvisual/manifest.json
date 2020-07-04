@@ -3,6 +3,6 @@
   "name": "AirVisual",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airvisual",
-  "requirements": ["pyairvisual==3.0.1"],
+  "requirements": ["pyairvisual==4.4.0"],
   "codeowners": ["@bachya"]
 }

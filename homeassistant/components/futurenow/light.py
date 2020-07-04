@@ -9,7 +9,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
@@ -64,7 +64,7 @@ def to_hass_level(level):
     return int((level * 255) / 100)
 
 
-class FutureNowLight(Light):
+class FutureNowLight(LightEntity):
     """Representation of an FutureNow light."""
 
     def __init__(self, device):

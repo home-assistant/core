@@ -2,7 +2,6 @@
 import asyncio
 from unittest import mock
 
-import asynctest
 import pytest
 import zigpy.types as t
 import zigpy.zcl.clusters
@@ -13,6 +12,8 @@ import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.registries as registries
 
 from .common import get_zha_gateway, make_zcl_header
+
+import tests.async_mock
 
 
 @pytest.fixture
@@ -379,12 +380,12 @@ async def test_ep_channels_configure(channel):
     ch_1 = channel(zha_const.CHANNEL_ON_OFF, 6)
     ch_2 = channel(zha_const.CHANNEL_LEVEL, 8)
     ch_3 = channel(zha_const.CHANNEL_COLOR, 768)
-    ch_3.async_configure = asynctest.CoroutineMock(side_effect=asyncio.TimeoutError)
-    ch_3.async_initialize = asynctest.CoroutineMock(side_effect=asyncio.TimeoutError)
+    ch_3.async_configure = tests.async_mock.AsyncMock(side_effect=asyncio.TimeoutError)
+    ch_3.async_initialize = tests.async_mock.AsyncMock(side_effect=asyncio.TimeoutError)
     ch_4 = channel(zha_const.CHANNEL_ON_OFF, 6)
     ch_5 = channel(zha_const.CHANNEL_LEVEL, 8)
-    ch_5.async_configure = asynctest.CoroutineMock(side_effect=asyncio.TimeoutError)
-    ch_5.async_initialize = asynctest.CoroutineMock(side_effect=asyncio.TimeoutError)
+    ch_5.async_configure = tests.async_mock.AsyncMock(side_effect=asyncio.TimeoutError)
+    ch_5.async_initialize = tests.async_mock.AsyncMock(side_effect=asyncio.TimeoutError)
 
     channels = mock.MagicMock(spec_set=zha_channels.Channels)
     type(channels).semaphore = mock.PropertyMock(return_value=asyncio.Semaphore(3))
@@ -420,8 +421,8 @@ async def test_poll_control_configure(poll_control_ch):
 
 async def test_poll_control_checkin_response(poll_control_ch):
     """Test poll control channel checkin response."""
-    rsp_mock = asynctest.CoroutineMock()
-    set_interval_mock = asynctest.CoroutineMock()
+    rsp_mock = tests.async_mock.AsyncMock()
+    set_interval_mock = tests.async_mock.AsyncMock()
     cluster = poll_control_ch.cluster
     patch_1 = mock.patch.object(cluster, "checkin_response", rsp_mock)
     patch_2 = mock.patch.object(cluster, "set_long_poll_interval", set_interval_mock)
@@ -442,7 +443,7 @@ async def test_poll_control_checkin_response(poll_control_ch):
 
 async def test_poll_control_cluster_command(hass, poll_control_device):
     """Test poll control channel response to cluster command."""
-    checkin_mock = asynctest.CoroutineMock()
+    checkin_mock = tests.async_mock.AsyncMock()
     poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
     cluster = poll_control_ch.cluster
 

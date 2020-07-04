@@ -1,6 +1,7 @@
 """Fixtures for component testing."""
-from asynctest import patch
 import pytest
+
+from tests.async_mock import patch
 
 
 @pytest.fixture(autouse=True)

@@ -1,1 +1,9 @@
-{ "title": "Plant Monitor" }
+{
+  "title": "Plant Monitor",
+  "state": {
+    "_": {
+      "ok": "[%key:component::binary_sensor::state::problem::off%]",
+      "problem": "[%key:component::binary_sensor::state::problem::on%]"
+    }
+  }
+}

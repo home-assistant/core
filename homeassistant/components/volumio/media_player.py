@@ -11,7 +11,7 @@ import socket
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_CLEAR_PLAYLIST,
@@ -104,7 +104,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([entity])
 
 
-class Volumio(MediaPlayerDevice):
+class Volumio(MediaPlayerEntity):
     """Volumio Player Object."""
 
     def __init__(self, name, host, port, hass):
@@ -144,11 +144,7 @@ class Volumio(MediaPlayerDevice):
             )
             return False
 
-        try:
-            return data
-        except AttributeError:
-            _LOGGER.error("Received invalid response: %s", data)
-            return False
+        return data
 
     async def async_update(self):
         """Update state."""
@@ -267,6 +263,10 @@ class Volumio(MediaPlayerDevice):
             await self.send_volumio_msg("commands", params={"cmd": "stop"})
         else:
             await self.send_volumio_msg("commands", params={"cmd": "pause"})
+
+    async def async_media_stop(self):
+        """Send media_stop command to media player."""
+        await self.send_volumio_msg("commands", params={"cmd": "stop"})
 
     async def async_set_volume_level(self, volume):
         """Send volume_up command to media player."""

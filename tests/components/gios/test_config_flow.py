@@ -1,11 +1,12 @@
 """Define tests for the GIOS config flow."""
-from asynctest import patch
 from gios import ApiError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.gios import config_flow
 from homeassistant.components.gios.const import CONF_STATION_ID
 from homeassistant.const import CONF_NAME
+
+from tests.async_mock import patch
 
 CONFIG = {
     CONF_NAME: "Foo",

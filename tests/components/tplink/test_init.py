@@ -16,14 +16,12 @@ from homeassistant.components.tplink.common import (
 from homeassistant.const import CONF_HOST
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, MockDependency, mock_coro
-
-MOCK_PYHS100 = MockDependency("pyHS100")
+from tests.common import MockConfigEntry, mock_coro
 
 
 async def test_creating_entry_tries_discover(hass):
     """Test setting up does discovery."""
-    with MOCK_PYHS100, patch(
+    with patch(
         "homeassistant.components.tplink.async_setup_entry",
         return_value=mock_coro(True),
     ) as mock_setup, patch(
@@ -47,9 +45,7 @@ async def test_creating_entry_tries_discover(hass):
 
 async def test_configuring_tplink_causes_discovery(hass):
     """Test that specifying empty config does discovery."""
-    with MOCK_PYHS100, patch(
-        "homeassistant.components.tplink.common.Discover.discover"
-    ) as discover:
+    with patch("homeassistant.components.tplink.common.Discover.discover") as discover:
         discover.return_value = {"host": 1234}
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -71,6 +67,8 @@ async def test_configuring_device_types(hass, name, cls, platform, count):
         "homeassistant.components.tplink.common.Discover.discover"
     ) as discover, patch(
         "homeassistant.components.tplink.common.SmartDevice._query_helper"
+    ), patch(
+        "homeassistant.components.tplink.light.async_setup_entry", return_value=True,
     ):
         discovery_data = {
             f"123.123.123.{c}": cls("123.123.123.123") for c in range(count)
@@ -175,7 +173,7 @@ async def test_is_dimmable(hass):
 
 async def test_configuring_discovery_disabled(hass):
     """Test that discover does not get called when disabled."""
-    with MOCK_PYHS100, patch(
+    with patch(
         "homeassistant.components.tplink.async_setup_entry",
         return_value=mock_coro(True),
     ) as mock_setup, patch(
@@ -224,7 +222,7 @@ async def test_platforms_are_initialized(hass):
 
 async def test_no_config_creates_no_entry(hass):
     """Test for when there is no tplink in config."""
-    with MOCK_PYHS100, patch(
+    with patch(
         "homeassistant.components.tplink.async_setup_entry",
         return_value=mock_coro(True),
     ) as mock_setup:

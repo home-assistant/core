@@ -1,9 +1,10 @@
 """Test the Sense config flow."""
-from asynctest import patch
 from sense_energy import SenseAPITimeoutException, SenseAuthenticationException
 
 from homeassistant import config_entries, setup
 from homeassistant.components.sense.const import DOMAIN
+
+from tests.async_mock import patch
 
 
 async def test_form(hass):

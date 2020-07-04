@@ -19,6 +19,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
@@ -32,6 +33,7 @@ from . import DOMAIN
 TRIGGER_TYPES = {
     "triggered",
     "disarmed",
+    "arming",
     "armed_home",
     "armed_away",
     "armed_night",
@@ -79,6 +81,13 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
                 CONF_ENTITY_ID: entry.entity_id,
                 CONF_TYPE: "triggered",
             },
+            {
+                CONF_PLATFORM: "device",
+                CONF_DEVICE_ID: device_id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_ENTITY_ID: entry.entity_id,
+                CONF_TYPE: "arming",
+            },
         ]
         if supported_features & SUPPORT_ALARM_ARM_HOME:
             triggers.append(
@@ -122,29 +131,32 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     config = TRIGGER_SCHEMA(config)
+    from_state = None
 
     if config[CONF_TYPE] == "triggered":
-        from_state = STATE_ALARM_PENDING
         to_state = STATE_ALARM_TRIGGERED
     elif config[CONF_TYPE] == "disarmed":
-        from_state = STATE_ALARM_TRIGGERED
         to_state = STATE_ALARM_DISARMED
+    elif config[CONF_TYPE] == "arming":
+        from_state = STATE_ALARM_DISARMED
+        to_state = STATE_ALARM_ARMING
     elif config[CONF_TYPE] == "armed_home":
-        from_state = STATE_ALARM_PENDING
+        from_state = STATE_ALARM_PENDING or STATE_ALARM_ARMING
         to_state = STATE_ALARM_ARMED_HOME
     elif config[CONF_TYPE] == "armed_away":
-        from_state = STATE_ALARM_PENDING
+        from_state = STATE_ALARM_PENDING or STATE_ALARM_ARMING
         to_state = STATE_ALARM_ARMED_AWAY
     elif config[CONF_TYPE] == "armed_night":
-        from_state = STATE_ALARM_PENDING
+        from_state = STATE_ALARM_PENDING or STATE_ALARM_ARMING
         to_state = STATE_ALARM_ARMED_NIGHT
 
     state_config = {
         state.CONF_PLATFORM: "state",
         CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        state.CONF_FROM: from_state,
         state.CONF_TO: to_state,
     }
+    if from_state:
+        state_config[state.CONF_FROM] = from_state
     state_config = state.TRIGGER_SCHEMA(state_config)
     return await state.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"

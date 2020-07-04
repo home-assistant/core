@@ -4,7 +4,7 @@ import logging
 from pyemby import EmbyServer
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
@@ -134,7 +134,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_emby)
 
 
-class EmbyDevice(MediaPlayerDevice):
+class EmbyDevice(MediaPlayerEntity):
     """Representation of an Emby device."""
 
     def __init__(self, emby, device_id):

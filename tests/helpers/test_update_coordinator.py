@@ -4,12 +4,12 @@ from datetime import timedelta
 import logging
 
 import aiohttp
-from asynctest import CoroutineMock, Mock
 import pytest
 
 from homeassistant.helpers import update_coordinator
 from homeassistant.util.dt import utcnow
 
+from tests.async_mock import AsyncMock, Mock
 from tests.common import async_fire_time_changed
 
 LOGGER = logging.getLogger(__name__)
@@ -89,7 +89,7 @@ async def test_request_refresh(crd):
 )
 async def test_refresh_known_errors(err_msg, crd, caplog):
     """Test raising known errors."""
-    crd.update_method = CoroutineMock(side_effect=err_msg[0])
+    crd.update_method = AsyncMock(side_effect=err_msg[0])
 
     await crd.async_refresh()
 
@@ -102,7 +102,7 @@ async def test_refresh_fail_unknown(crd, caplog):
     """Test raising unknown error."""
     await crd.async_refresh()
 
-    crd.update_method = CoroutineMock(side_effect=ValueError)
+    crd.update_method = AsyncMock(side_effect=ValueError)
 
     await crd.async_refresh()
 

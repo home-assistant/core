@@ -56,7 +56,6 @@ def save_json(
     try:
         json_data = json.dumps(data, sort_keys=True, indent=4, cls=encoder)
     except TypeError:
-        # pylint: disable=no-member
         msg = f"Failed to serialize to JSON: {filename}. Bad data at {format_unserializable_data(find_paths_unserializable_data(data))}"
         _LOGGER.error(msg)
         raise SerializationError(msg)

@@ -1,5 +1,5 @@
 """Support for the Hive climate devices."""
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devs)
 
 
-class HiveClimateEntity(HiveEntity, ClimateDevice):
+class HiveClimateEntity(HiveEntity, ClimateEntity):
     """Hive Climate Device."""
 
     def __init__(self, hive_session, hive_device):

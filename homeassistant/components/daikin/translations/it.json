@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "device_fail": "Errore imprevisto",
+            "device_timeout": "Impossibile connettersi",
+            "forbidden": "Autenticazione non valida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "key": "Chiave API",
+                    "password": "Password"
+                },
+                "description": "Inserisci l'indirizzo IP del tuo condizionatore d'aria Daikin. \n\nSi noti che Chiave API e Password sono usati rispettivamente dai dispositivi BRP072Cxx e SKYFi.",
+                "title": "Configura Daikin AC"
+            }
+        }
+    }
+}

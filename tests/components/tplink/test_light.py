@@ -1,6 +1,5 @@
 """Tests for light platform."""
 from typing import Callable, NamedTuple
-from unittest.mock import Mock, PropertyMock, patch
 
 from pyHS100 import SmartDeviceException
 import pytest
@@ -29,6 +28,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import Mock, PropertyMock, patch
 
 
 class LightMockData(NamedTuple):

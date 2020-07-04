@@ -3,10 +3,17 @@
     "step": {
       "user": {
         "title": "Enter Username and Password",
-        "data": { "username": "Email Address", "password": "Password" }
+        "data": {
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
-    "error": { "invalid_login": "Invalid username or password" },
-    "abort": { "already_setup": "Only one Vesync instance is allowed" }
+    "error": {
+      "invalid_login": "Invalid username or password"
+    },
+    "abort": {
+      "already_setup": "Only one Vesync instance is allowed"
+    }
   }
 }

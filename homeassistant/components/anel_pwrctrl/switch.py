@@ -5,7 +5,7 @@ import logging
 from anel_pwrctrl import DeviceMaster
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class PwrCtrlSwitch(SwitchDevice):
+class PwrCtrlSwitch(SwitchEntity):
     """Representation of a PwrCtrl switch."""
 
     def __init__(self, port, parent_device):

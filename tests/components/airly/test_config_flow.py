@@ -2,7 +2,6 @@
 import json
 
 from airly.exceptions import AirlyError
-from asynctest import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.airly.const import DOMAIN
@@ -15,6 +14,7 @@ from homeassistant.const import (
     HTTP_FORBIDDEN,
 )
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
 CONFIG = {

@@ -1,0 +1,21 @@
+{
+    "state": {
+        "_": {
+            "clear-night": "Jasno, v noci",
+            "cloudy": "Zamra\u010den\u00e9",
+            "exceptional": "V\u00fdnimo\u010dn\u00e9",
+            "fog": "Hmla",
+            "hail": "Krupobitie",
+            "lightning": "Blesky",
+            "lightning-rainy": "Blesky, da\u017edivo",
+            "partlycloudy": "\u010ciasto\u010dne zamra\u010den\u00e9",
+            "pouring": "Lej\u00faco",
+            "rainy": "Da\u017edivo",
+            "snowy": "Zasne\u017eeno",
+            "snowy-rainy": "Zasne\u017eeno, da\u017edivo",
+            "sunny": "slne\u010dno",
+            "windy": "Veterno",
+            "windy-variant": "Veterno"
+        }
+    }
+}

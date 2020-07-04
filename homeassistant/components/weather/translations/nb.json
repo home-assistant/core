@@ -1,0 +1,21 @@
+{
+    "state": {
+        "_": {
+            "clear-night": "Klart, natt",
+            "cloudy": "Skyet",
+            "exceptional": "Eksepsjonell",
+            "fog": "T\u00e5ke",
+            "hail": "Hagl",
+            "lightning": "Lyn",
+            "lightning-rainy": "Lyn, regn",
+            "partlycloudy": "Delvis skyet",
+            "pouring": "Kraftig nedb\u00f8r",
+            "rainy": "Regn",
+            "snowy": "Sn\u00f8",
+            "snowy-rainy": "Sludd",
+            "sunny": "Solfylt",
+            "windy": "Vind",
+            "windy-variant": "Vind"
+        }
+    }
+}

@@ -1,0 +1,28 @@
+{
+    "config": {
+        "error": {
+            "general_error": "Tapahtui tuntematon virhe."
+        },
+        "step": {
+            "geography": {
+                "data": {
+                    "api_key": "API-avain",
+                    "latitude": "Leveysaste",
+                    "longitude": "Pituusaste"
+                }
+            },
+            "node_pro": {
+                "data": {
+                    "password": "Salasana"
+                }
+            },
+            "user": {
+                "data": {
+                    "cloud_api": "Maantieteellinen sijainti",
+                    "node_pro": "AirVisual Node Pro",
+                    "type": "Integrointityyppi"
+                }
+            }
+        }
+    }
+}

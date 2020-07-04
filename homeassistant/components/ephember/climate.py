@@ -15,7 +15,7 @@ from pyephember.pyephember import (
 )
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return
 
 
-class EphEmberThermostat(ClimateDevice):
+class EphEmberThermostat(ClimateEntity):
     """Representation of a EphEmber thermostat."""
 
     def __init__(self, ember, zone):

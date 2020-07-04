@@ -3,17 +3,23 @@ from pylutron_caseta import OCCUPANCY_GROUP_OCCUPIED
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_OCCUPANCY,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 
-from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice
+from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Lutron Caseta lights."""
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Lutron Caseta binary_sensor platform.
+
+    Adds occupancy groups from the Caseta bridge associated with the
+    config_entry as binary_sensor entities.
+    """
+
     entities = []
-    bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
+    bridge = hass.data[CASETA_DOMAIN][config_entry.entry_id]
     occupancy_groups = bridge.occupancy_groups
+
     for occupancy_group in occupancy_groups.values():
         entity = LutronOccupancySensor(occupancy_group, bridge)
         entities.append(entity)
@@ -21,7 +27,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities, True)
 
 
-class LutronOccupancySensor(LutronCasetaDevice, BinarySensorDevice):
+class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
     """Representation of a Lutron occupancy group."""
 
     @property

@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Lugar ya registrado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radius": "Radio"
+                },
+                "title": "Complete los detalles de su filtro."
+            }
+        }
+    }
+}

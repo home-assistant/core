@@ -11,7 +11,7 @@ from nuheat.util import (
     nuheat_to_fahrenheit,
 )
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     CURRENT_HVAC_HEAT,
@@ -77,7 +77,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities([entity], True)
 
 
-class NuHeatThermostat(ClimateDevice):
+class NuHeatThermostat(ClimateEntity):
     """Representation of a NuHeat Thermostat."""
 
     def __init__(self, thermostat, temperature_unit):

@@ -11,7 +11,7 @@ import logging
 import os
 import sys
 import threading
-from unittest.mock import MagicMock, Mock, patch
+import time
 import uuid
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa
@@ -24,7 +24,7 @@ from homeassistant.auth import (
     providers as auth_providers,
 )
 from homeassistant.auth.permissions import system_policies
-from homeassistant.components import mqtt, recorder
+from homeassistant.components import recorder
 from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
     _async_get_device_automations as async_get_device_automations,
@@ -54,11 +54,13 @@ from homeassistant.helpers import (
     storage,
 )
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.setup import async_setup_component, setup_component
+from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as date_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.yaml.loader as yaml_loader
+
+from tests.async_mock import AsyncMock, Mock, patch
 
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
@@ -159,20 +161,37 @@ async def async_test_home_assistant(loop):
 
     def async_add_job(target, *args):
         """Add job."""
-        if isinstance(target, Mock):
-            return mock_coro(target(*args))
+        check_target = target
+        while isinstance(check_target, ft.partial):
+            check_target = check_target.func
+
+        if isinstance(check_target, Mock) and not isinstance(target, AsyncMock):
+            fut = asyncio.Future()
+            fut.set_result(target(*args))
+            return fut
+
         return orig_async_add_job(target, *args)
 
     def async_add_executor_job(target, *args):
         """Add executor job."""
-        if isinstance(target, Mock):
-            return mock_coro(target(*args))
+        check_target = target
+        while isinstance(check_target, ft.partial):
+            check_target = check_target.func
+
+        if isinstance(check_target, Mock):
+            fut = asyncio.Future()
+            fut.set_result(target(*args))
+            return fut
+
         return orig_async_add_executor_job(target, *args)
 
     def async_create_task(coroutine):
         """Create task."""
-        if isinstance(coroutine, Mock):
-            return mock_coro()
+        if isinstance(coroutine, Mock) and not isinstance(coroutine, AsyncMock):
+            fut = asyncio.Future()
+            fut.set_result(None)
+            return fut
+
         return orig_async_create_task(coroutine)
 
     hass.async_add_job = async_add_job
@@ -266,9 +285,22 @@ fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
 
 
 @ha.callback
-def async_fire_time_changed(hass, time):
+def async_fire_time_changed(hass, datetime_):
     """Fire a time changes event."""
-    hass.bus.async_fire(EVENT_TIME_CHANGED, {"now": date_util.as_utc(time)})
+    hass.bus.async_fire(EVENT_TIME_CHANGED, {"now": date_util.as_utc(datetime_)})
+
+    for task in list(hass.loop._scheduled):
+        if not isinstance(task, asyncio.TimerHandle):
+            continue
+        if task.cancelled():
+            continue
+
+        future_seconds = task.when() - hass.loop.time()
+        mock_seconds_into_future = datetime_.timestamp() - time.time()
+
+        if mock_seconds_into_future >= future_seconds:
+            task._run()
+            task.cancel()
 
 
 fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
@@ -306,35 +338,6 @@ def mock_state_change_event(hass, new_state, old_state=None):
     hass.bus.fire(EVENT_STATE_CHANGED, event_data, context=new_state.context)
 
 
-async def async_mock_mqtt_component(hass, config=None):
-    """Mock the MQTT component."""
-    if config is None:
-        config = {mqtt.CONF_BROKER: "mock-broker"}
-
-    async def _async_fire_mqtt_message(topic, payload, qos, retain):
-        async_fire_mqtt_message(hass, topic, payload, qos, retain)
-
-    with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().connect.return_value = 0
-        mock_client().subscribe.return_value = (0, 0)
-        mock_client().unsubscribe.return_value = (0, 0)
-        mock_client().publish.return_value = (0, 0)
-        mock_client().publish.side_effect = _async_fire_mqtt_message
-
-        result = await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-        assert result
-        await hass.async_block_till_done()
-
-        hass.data["mqtt"] = MagicMock(
-            spec_set=hass.data["mqtt"], wraps=hass.data["mqtt"]
-        )
-
-        return hass.data["mqtt"]
-
-
-mock_mqtt_component = threadsafe_coroutine_factory(async_mock_mqtt_component)
-
-
 @ha.callback
 def mock_component(hass, component):
     """Mock a component is setup."""
@@ -362,10 +365,11 @@ def mock_area_registry(hass, mock_entries=None):
     return registry
 
 
-def mock_device_registry(hass, mock_entries=None):
+def mock_device_registry(hass, mock_entries=None, mock_deleted_entries=None):
     """Mock the Device Registry."""
     registry = device_registry.DeviceRegistry(hass)
     registry.devices = mock_entries or OrderedDict()
+    registry.deleted_devices = mock_deleted_entries or OrderedDict()
 
     hass.data[device_registry.DATA_REGISTRY] = registry
     return registry
@@ -503,7 +507,7 @@ class MockModule:
             self.async_setup = async_setup
 
         if setup is None and async_setup is None:
-            self.async_setup = mock_coro_func(True)
+            self.async_setup = AsyncMock(return_value=True)
 
         if async_setup_entry is not None:
             self.async_setup_entry = async_setup_entry
@@ -561,7 +565,7 @@ class MockPlatform:
             self.async_setup_entry = async_setup_entry
 
         if setup_platform is None and async_setup_platform is None:
-            self.async_setup_platform = mock_coro_func()
+            self.async_setup_platform = AsyncMock(return_value=None)
 
 
 class MockEntityPlatform(entity_platform.EntityPlatform):
@@ -725,20 +729,12 @@ def patch_yaml_files(files_dict, endswith=True):
 
 def mock_coro(return_value=None, exception=None):
     """Return a coro that returns a value or raise an exception."""
-    return mock_coro_func(return_value, exception)()
-
-
-def mock_coro_func(return_value=None, exception=None):
-    """Return a method to create a coro function that returns a value."""
-
-    @asyncio.coroutine
-    def coro(*args, **kwargs):
-        """Fake coroutine."""
-        if exception:
-            raise exception
-        return return_value
-
-    return coro
+    fut = asyncio.Future()
+    if exception is not None:
+        fut.set_exception(exception)
+    else:
+        fut.set_result(return_value)
+    return fut
 
 
 @contextmanager
@@ -821,52 +817,6 @@ def mock_restore_cache(hass, states):
 
     # Patch the singleton task in hass.data to return our new RestoreStateData
     hass.data[key] = hass.async_create_task(get_restore_state_data())
-
-
-class MockDependency:
-    """Decorator to mock install a dependency."""
-
-    def __init__(self, root, *args):
-        """Initialize decorator."""
-        self.root = root
-        self.submodules = args
-
-    def __enter__(self):
-        """Start mocking."""
-
-        def resolve(mock, path):
-            """Resolve a mock."""
-            if not path:
-                return mock
-
-            return resolve(getattr(mock, path[0]), path[1:])
-
-        base = MagicMock()
-        to_mock = {
-            f"{self.root}.{tom}": resolve(base, tom.split("."))
-            for tom in self.submodules
-        }
-        to_mock[self.root] = base
-
-        self.patcher = patch.dict("sys.modules", to_mock)
-        self.patcher.start()
-        return base
-
-    def __exit__(self, *exc):
-        """Stop mocking."""
-        self.patcher.stop()
-        return False
-
-    def __call__(self, func):
-        """Apply decorator."""
-
-        def run_mocked(*args, **kwargs):
-            """Run with mocked dependencies."""
-            with self as base:
-                args = list(args) + [base]
-                func(*args, **kwargs)
-
-        return run_mocked
 
 
 class MockEntity(entity.Entity):
@@ -1024,6 +974,8 @@ def mock_integration(hass, module):
     _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
     hass.data.setdefault(loader.DATA_INTEGRATIONS, {})[module.DOMAIN] = integration
     hass.data.setdefault(loader.DATA_COMPONENTS, {})[module.DOMAIN] = module
+
+    return integration
 
 
 def mock_entity_platform(hass, platform_path, module):

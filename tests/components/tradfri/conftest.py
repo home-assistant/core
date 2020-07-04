@@ -1,9 +1,7 @@
 """Common tradfri test fixtures."""
-from unittest.mock import patch
-
 import pytest
 
-from tests.common import mock_coro
+from tests.async_mock import patch
 
 
 @pytest.fixture
@@ -19,5 +17,5 @@ def mock_gateway_info():
 def mock_entry_setup():
     """Mock entry setup."""
     with patch("homeassistant.components.tradfri.async_setup_entry") as mock_setup:
-        mock_setup.return_value = mock_coro(True)
+        mock_setup.return_value = True
         yield mock_setup

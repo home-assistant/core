@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 
 from . import DOMAIN, IncomfortChild
@@ -20,7 +20,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([IncomfortFailed(client, h) for h in heaters])
 
 
-class IncomfortFailed(IncomfortChild, BinarySensorDevice):
+class IncomfortFailed(IncomfortChild, BinarySensorEntity):
     """Representation of an InComfort Failed sensor."""
 
     def __init__(self, client, heater) -> None:

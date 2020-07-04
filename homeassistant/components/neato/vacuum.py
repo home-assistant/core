@@ -22,7 +22,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_START,
     SUPPORT_STATE,
     SUPPORT_STOP,
-    StateVacuumDevice,
+    StateVacuumEntity,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 import homeassistant.helpers.config_validation as cv
@@ -126,7 +126,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-class NeatoConnectedVacuum(StateVacuumDevice):
+class NeatoConnectedVacuum(StateVacuumEntity):
     """Representation of a Neato Connected Vacuum."""
 
     def __init__(self, neato, robot, mapdata, persistent_maps):

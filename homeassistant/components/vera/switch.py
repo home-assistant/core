@@ -5,7 +5,7 @@ from typing import Callable, List
 from homeassistant.components.switch import (
     DOMAIN as PLATFORM_DOMAIN,
     ENTITY_ID_FORMAT,
-    SwitchDevice,
+    SwitchEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -33,7 +33,7 @@ async def async_setup_entry(
     )
 
 
-class VeraSwitch(VeraDevice, SwitchDevice):
+class VeraSwitch(VeraDevice, SwitchEntity):
     """Representation of a Vera Switch."""
 
     def __init__(self, vera_device, controller):

@@ -6,7 +6,7 @@ from homeassistant.components.cover import (
     DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -56,7 +56,7 @@ def get_device(hass, values, node_config, **kwargs):
     return None
 
 
-class ZwaveRollershutter(ZWaveDeviceEntity, CoverDevice):
+class ZwaveRollershutter(ZWaveDeviceEntity, CoverEntity):
     """Representation of an Z-Wave cover."""
 
     def __init__(self, hass, values, invert_buttons, invert_percent):
@@ -140,7 +140,7 @@ class ZwaveRollershutter(ZWaveDeviceEntity, CoverDevice):
         self._network.manager.releaseButton(self._open_id)
 
 
-class ZwaveGarageDoorBase(ZWaveDeviceEntity, CoverDevice):
+class ZwaveGarageDoorBase(ZWaveDeviceEntity, CoverEntity):
     """Base class for a Zwave garage door device."""
 
     def __init__(self, values):

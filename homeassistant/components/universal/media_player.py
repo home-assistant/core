@@ -4,7 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_APP_ID,
     ATTR_APP_NAME,
@@ -116,7 +116,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([player])
 
 
-class UniversalMediaPlayer(MediaPlayerDevice):
+class UniversalMediaPlayer(MediaPlayerEntity):
     """Representation of an universal media player."""
 
     def __init__(self, hass, name, children, commands, attributes, state_template=None):
@@ -205,7 +205,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         service_data[ATTR_ENTITY_ID] = active_child.entity_id
 
         await self.hass.services.async_call(
-            DOMAIN, service_name, service_data, blocking=True
+            DOMAIN, service_name, service_data, blocking=True, context=self._context
         )
 
     @property

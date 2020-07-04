@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
@@ -118,7 +118,7 @@ def ct_to_hs(temp):
     return [int(val) for val in colorlist]
 
 
-class ZwaveDimmer(ZWaveDeviceEntity, Light):
+class ZwaveDimmer(ZWaveDeviceEntity, LightEntity):
     """Representation of a Z-Wave dimmer."""
 
     def __init__(self, values, refresh, delay):

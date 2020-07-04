@@ -8,7 +8,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(UnifiLedLight(light, api) for light in api.getlights())
 
 
-class UnifiLedLight(Light):
+class UnifiLedLight(LightEntity):
     """Representation of an unifiled Light."""
 
     def __init__(self, light, api):

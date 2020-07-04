@@ -1,0 +1,14 @@
+{
+    "state": {
+        "_": {
+            "dead": "Mrtav",
+            "initializing": "Inicijalizacija",
+            "ready": "Spreman",
+            "sleeping": "Spava"
+        },
+        "query_stage": {
+            "dead": "Mrtav ({query_stage})",
+            "initializing": "Inicijalizacija ( {query_stage} )"
+        }
+    }
+}

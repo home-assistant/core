@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
 
 from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
@@ -24,7 +24,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class TahomaBinarySensor(TahomaDevice, BinarySensorDevice):
+class TahomaBinarySensor(TahomaDevice, BinarySensorEntity):
     """Representation of a Tahoma Binary Sensor."""
 
     def __init__(self, tahoma_device, controller):

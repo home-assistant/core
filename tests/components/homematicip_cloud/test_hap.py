@@ -1,6 +1,5 @@
 """Test HomematicIP Cloud accesspoint."""
 
-from asynctest import Mock, patch
 from homematicip.aio.auth import AsyncAuth
 from homematicip.base.base_connection import HmipConnectionError
 import pytest
@@ -21,6 +20,8 @@ from homeassistant.config_entries import ENTRY_STATE_NOT_LOADED
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .helper import HAPID, HAPPIN
+
+from tests.async_mock import Mock, patch
 
 
 async def test_auth_setup(hass):

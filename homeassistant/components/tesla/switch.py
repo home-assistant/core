@@ -1,7 +1,7 @@
 """Support for Tesla charger switches."""
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import STATE_OFF, STATE_ON
 
 from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
@@ -24,7 +24,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class ChargerSwitch(TeslaDevice, SwitchDevice):
+class ChargerSwitch(TeslaDevice, SwitchEntity):
     """Representation of a Tesla charger switch."""
 
     def __init__(self, tesla_device, controller, config_entry):
@@ -54,7 +54,7 @@ class ChargerSwitch(TeslaDevice, SwitchDevice):
         self._state = STATE_ON if self.tesla_device.is_charging() else STATE_OFF
 
 
-class RangeSwitch(TeslaDevice, SwitchDevice):
+class RangeSwitch(TeslaDevice, SwitchEntity):
     """Representation of a Tesla max range charging switch."""
 
     def __init__(self, tesla_device, controller, config_entry):
@@ -84,7 +84,7 @@ class RangeSwitch(TeslaDevice, SwitchDevice):
         self._state = bool(self.tesla_device.is_maxrange())
 
 
-class UpdateSwitch(TeslaDevice, SwitchDevice):
+class UpdateSwitch(TeslaDevice, SwitchEntity):
     """Representation of a Tesla update switch."""
 
     def __init__(self, tesla_device, controller, config_entry):
@@ -118,7 +118,7 @@ class UpdateSwitch(TeslaDevice, SwitchDevice):
         self._state = bool(self.controller.get_updates(car_id))
 
 
-class SentryModeSwitch(TeslaDevice, SwitchDevice):
+class SentryModeSwitch(TeslaDevice, SwitchEntity):
     """Representation of a Tesla sentry mode switch."""
 
     async def async_turn_on(self, **kwargs):

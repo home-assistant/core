@@ -7,7 +7,7 @@ import sys
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_HOST, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([PingBinarySensor(name, PingData(host, count))], True)
 
 
-class PingBinarySensor(BinarySensorDevice):
+class PingBinarySensor(BinarySensorEntity):
     """Representation of a Ping Binary sensor."""
 
     def __init__(self, name, ping):

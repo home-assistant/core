@@ -1,12 +1,11 @@
 """The tests the for Traccar device tracker platform."""
-from unittest.mock import Mock, patch
-
 import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components import traccar, zone
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.traccar import DOMAIN, TRACKER_UPDATE
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     HTTP_OK,
     HTTP_UNPROCESSABLE_ENTITY,
@@ -16,6 +15,8 @@ from homeassistant.const import (
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
+
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811
 
@@ -23,7 +24,6 @@ HOME_LONGITUDE = -115.815811
 @pytest.fixture(autouse=True)
 def mock_dev_track(mock_device_tracker_conf):
     """Mock device tracker config loading."""
-    pass
 
 
 @pytest.fixture(name="client")
@@ -60,7 +60,9 @@ async def setup_zones(loop, hass):
 @pytest.fixture(name="webhook_id")
 async def webhook_id_fixture(hass, client):
     """Initialize the Traccar component and get the webhook_id."""
-    hass.config.api = Mock(base_url="http://example.com")
+    await async_process_ha_core_config(
+        hass, {"external_url": "http://example.com"},
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
     )
