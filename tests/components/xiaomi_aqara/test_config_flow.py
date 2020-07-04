@@ -35,6 +35,9 @@ def xiaomi_aqara_fixture():
         "homeassistant.components.xiaomi_aqara.config_flow.XiaomiGatewayDiscovery",
         return_value=mock_gateway_discovery,
     ), patch(
+        "homeassistant.components.xiaomi_aqara.config_flow.XiaomiGateway",
+        return_value=mock_gateway_discovery.gateways[TEST_HOST],
+    ), patch(
         "homeassistant.components.xiaomi_aqara.async_setup_entry", return_value=True
     ):
         yield
@@ -335,34 +338,3 @@ async def test_zeroconf_unknown_device(hass):
 
     assert result["type"] == "abort"
     assert result["reason"] == "not_xiaomi_aqara"
-
-
-async def test_zeroconf_not_found_error(hass):
-    """Test a failed zeroconf discovery because the correct gateway could not be found."""
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            zeroconf.ATTR_HOST: TEST_HOST,
-            ZEROCONF_NAME: TEST_ZEROCONF_NAME,
-            ZEROCONF_PROP: {ZEROCONF_MAC: TEST_MAC},
-        },
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    mock_gateway_discovery = get_mock_discovery([TEST_HOST_2])
-
-    with patch(
-        "homeassistant.components.xiaomi_aqara.config_flow.XiaomiGatewayDiscovery",
-        return_value=mock_gateway_discovery,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE},
-        )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "not_found_error"}
