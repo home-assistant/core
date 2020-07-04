@@ -3,7 +3,7 @@ import logging
 from socket import gaierror
 
 import voluptuous as vol
-from xiaomi_gateway import XiaomiGatewayDiscovery
+from xiaomi_gateway import MULTICAST_PORT, XiaomiGateway, XiaomiGatewayDiscovery
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT
@@ -15,6 +15,7 @@ from .const import (
     CONF_KEY,
     CONF_PROTOCOL,
     CONF_SID,
+    DEFAULT_DISCOVERY_RETRY,
     DOMAIN,
     ZEROCONF_GATEWAY,
 )
@@ -46,6 +47,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self.host = None
         self.interface = DEFAULT_INTERFACE
+        self.sid = None
         self.gateways = None
         self.selected_gateway = None
 
@@ -54,6 +56,22 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             self.interface = user_input[CONF_INTERFACE]
+
+            # if host is already known by zeroconf discovery
+            if self.host is not None and self.sid is not None:
+                # Connect to Xiaomi Aqara Gateway
+                self.selected_gateway = await self.hass.async_add_executor_job(
+                    XiaomiGateway,
+                    self.host,
+                    self.sid,
+                    None,
+                    DEFAULT_DISCOVERY_RETRY,
+                    self.interface,
+                    MULTICAST_PORT,
+                    None,
+                )
+
+                return await self.async_step_settings()
 
             # Discover Xiaomi Aqara Gateways in the netwerk to get required SIDs.
             xiaomi = XiaomiGatewayDiscovery(self.hass.add_job, [], self.interface)
@@ -65,21 +83,14 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors:
                 self.gateways = xiaomi.gateways
 
-                # if host is already known by zeroconf discovery
-                if self.host is not None:
-                    self.selected_gateway = self.gateways.get(self.host)
-                    if self.selected_gateway is not None:
-                        return await self.async_step_settings()
+                if len(self.gateways) == 1:
+                    self.selected_gateway = list(self.gateways.values())[0]
+                    self.sid = self.selected_gateway.sid
+                    return await self.async_step_settings()
+                if len(self.gateways) > 1:
+                    return await self.async_step_select()
 
-                    errors["base"] = "not_found_error"
-                else:
-                    if len(self.gateways) == 1:
-                        self.selected_gateway = list(self.gateways.values())[0]
-                        return await self.async_step_settings()
-                    if len(self.gateways) > 1:
-                        return await self.async_step_select()
-
-                    errors["base"] = "discovery_error"
+                errors["base"] = "discovery_error"
 
         return self.async_show_form(
             step_id="user", data_schema=GATEWAY_CONFIG, errors=errors
@@ -91,6 +102,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             ip_adress = user_input["select_ip"]
             self.selected_gateway = self.gateways[ip_adress]
+            self.sid = self.selected_gateway.sid
             return await self.async_step_settings()
 
         select_schema = vol.Schema(
@@ -123,6 +135,9 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return self.async_abort(reason="not_xiaomi_aqara")
 
+        # format sid from mac_address
+        self.sid = mac_address.replace(":", "").lower()
+
         # format mac (include semicolns and make uppercase)
         mac_address = format_mac(mac_address)
 
@@ -144,19 +159,18 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             key = user_input.get(CONF_KEY)
             ip_adress = self.selected_gateway.ip_adress
             port = self.selected_gateway.port
-            sid = self.selected_gateway.sid
             protocol = self.selected_gateway.proto
 
             if key is not None:
                 # validate key by issuing stop ringtone playback command.
                 self.selected_gateway.key = key
-                valid_key = self.selected_gateway.write_to_hub(sid, mid=10000)
+                valid_key = self.selected_gateway.write_to_hub(self.sid, mid=10000)
             else:
                 valid_key = True
 
             if valid_key:
                 # format_mac, for a gateway the sid equels the mac address
-                mac_address = format_mac(sid)
+                mac_address = format_mac(self.sid)
 
                 # set unique_id
                 unique_id = mac_address
@@ -172,7 +186,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_INTERFACE: self.interface,
                         CONF_PROTOCOL: protocol,
                         CONF_KEY: key,
-                        CONF_SID: sid,
+                        CONF_SID: self.sid,
                     },
                 )
 
