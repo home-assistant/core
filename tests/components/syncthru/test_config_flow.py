@@ -101,12 +101,19 @@ async def test_success(hass, aioclient_mock):
     await setup.async_setup_component(hass, "persistent_notification", {})
     mock_connection(aioclient_mock)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=FIXTURE_USER_INPUT,
-    )
+    with patch(
+        "homeassistant.components.syncthru.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=FIXTURE_USER_INPUT,
+        )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_URL] == FIXTURE_USER_INPUT[CONF_URL]
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_ssdp(hass, aioclient_mock):
