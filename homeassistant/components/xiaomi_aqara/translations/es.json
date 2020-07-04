@@ -8,8 +8,7 @@
         "error": {
             "discovery_error": "No se pudo descubrir un Xiaomi Aqara Gateway, intenta utilizar la IP del dispositivo que ejecuta HomeAssistant como interfaz",
             "invalid_interface": "Interfaz de red inv\u00e1lida",
-            "invalid_key": "Clave del gateway inv\u00e1lida",
-            "not_found_error": "El Gateway descubierto por Zeroconf no puede localizarse para obtener toda la informaci\u00f3n necesaria, intenta usar la IP del dispositivo que ejecuta HomeAssistant como interfaz"
+            "invalid_key": "Clave del gateway inv\u00e1lida"
         },
         "flow_title": "Xiaomi Aqara Gateway: {name}",
         "step": {

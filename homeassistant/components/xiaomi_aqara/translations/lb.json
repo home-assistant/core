@@ -8,8 +8,7 @@
         "error": {
             "discovery_error": "Feeler beim entdecken vun enger Xiaomi Aqara Gateway, prob\u00e9ier d'IP vum Apparat op deem Home Assistant leeft als Interface ze benotzen",
             "invalid_interface": "Ong\u00ebltege Netzwierk Interface",
-            "invalid_key": "Ong\u00ebltegen Gateway Schl\u00ebssel",
-            "not_found_error": "D\u00e9i Gateway d\u00e9i duerch de Zeroconf entdeckt gouf konnt net lokalis\u00e9iert ginn, prob\u00e9ier d'IP vum Apparat op deem Home Assistant leeft als Interface ze benotzen"
+            "invalid_key": "Ong\u00ebltegen Gateway Schl\u00ebssel"
         },
         "flow_title": "Xiaomi Aqara Gateway: {name}",
         "step": {

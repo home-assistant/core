@@ -8,8 +8,7 @@
         "error": {
             "discovery_error": "Nie uda\u0142o si\u0119 wykry\u0107 bramki Xiaomi Aqara, spr\u00f3buj u\u017cy\u0107 adresu IP urz\u0105dzenia, na kt\u00f3rym pracuje Home Assistant jako interfejsu.",
             "invalid_interface": "Nieprawid\u0142owy interfejs sieciowy.",
-            "invalid_key": "Nieprawid\u0142owy klucz bramki.",
-            "not_found_error": "Nie mo\u017cna odnale\u017a\u0107 wykrytej bramki, aby uzyska\u0107 niezb\u0119dne informacje, spr\u00f3buj u\u017cy\u0107 adresu IP urz\u0105dzenia, na kt\u00f3rym pracuje Home Assistant jako interfejsu."
+            "invalid_key": "Nieprawid\u0142owy klucz bramki."
         },
         "flow_title": "Bramka Xiaomi Aqara: {name}",
         "step": {
