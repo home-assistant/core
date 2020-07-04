@@ -278,6 +278,11 @@ class DSMREntity(Entity):
         """Force update."""
         return self._config[CONF_FORCE_UPDATE]
 
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
 
 class DerivativeDSMREntity(DSMREntity):
     """Calculated derivative for values where the DSMR doesn't offer one.
