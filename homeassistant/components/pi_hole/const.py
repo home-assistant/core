@@ -22,6 +22,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 DATA_KEY_API = "api"
 DATA_KEY_COORDINATOR = "coordinator"
+DATA_KEY_UNSUB_UPDATE_LISTENER = "unsub_update_listener"
 
 SENSOR_DICT = {
     "ads_blocked_today": ["Ads Blocked Today", "ads", "mdi:close-octagon-outline"],
