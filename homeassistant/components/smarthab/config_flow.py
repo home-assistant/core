@@ -55,10 +55,15 @@ class SmartHabConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await hub.async_login(username, password)
-        except pysmarthab.RequestFailedException as ex:
+        except Exception as ex:
             _LOGGER.error("Error while trying to reach SmartHab API.")
             _LOGGER.debug(ex, exc_info=True)
-            errors["base"] = "service"
+
+            if ex is pysmarthab.RequestFailedException:
+                errors["base"] = "service"
+            else:
+                errors["base"] = "unknown_error"
+
             return self._show_setup_form(user_input, errors)
 
         # Verify that passed in configuration works

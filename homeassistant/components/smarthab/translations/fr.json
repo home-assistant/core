@@ -2,7 +2,8 @@
     "config": {
         "error": {
             "service": "Erreur de connexion à SmartHab. Vérifiez votre connexion. Le service peut être indisponible.",
-            "wrong_login": "Identifiants invalides : vérifiez votre adresse email et mot de passe."
+            "wrong_login": "Identifiants invalides : vérifiez votre adresse email et mot de passe.",
+            "unknown_error": "Erreur inconnue"
         },
         "step": {
             "user": {

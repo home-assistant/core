@@ -2,7 +2,8 @@
     "config": {
         "error": {
             "service": "Error while trying to reach SmartHab. Service might be down. Check your connection.",
-            "wrong_login": "Invalid credentials: please check your email and password."
+            "wrong_login": "Invalid credentials: please check your email and password.",
+            "unknown_error": "Unknown error"
         },
         "step": {
             "user": {

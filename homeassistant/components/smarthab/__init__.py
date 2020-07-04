@@ -48,15 +48,15 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up config entry for SmartHab integration."""
 
     # Assign configuration variables
-    username = entry.data.get(CONF_EMAIL)
-    password = entry.data.get(CONF_PASSWORD)
+    username = entry.data[CONF_EMAIL]
+    password = entry.data[CONF_PASSWORD]
 
     # Setup connection with SmartHab API
     hub = pysmarthab.SmartHab()
 
     try:
         await hub.async_login(username, password)
-    except pysmarthab.RequestFailedException as ex:
+    except Exception as ex:
         _LOGGER.error("Error while trying to reach SmartHab API.")
         _LOGGER.debug(ex, exc_info=True)
         return False
