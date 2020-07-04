@@ -117,6 +117,12 @@ async def async_setup(hass, config):
         domain = service.data.get(ATTR_DOMAIN)
         entity_id = service.data.get(ATTR_ENTITY_ID)
 
+        if entity_id is None and domain is None:
+            # If there is no entity_id or
+            # domain, the event will get filtered
+            # away so we use the "logbook" domain
+            domain = DOMAIN
+
         message.hass = hass
         message = message.async_render()
         async_log_entry(hass, name, message, domain, entity_id)
