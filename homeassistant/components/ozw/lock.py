@@ -1,7 +1,7 @@
 """Representation of Z-Wave locks."""
 import logging
 
-# from openzwavemqtt.const import CommandClass
+from openzwavemqtt.const import CommandClass
 import voluptuous as vol
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockEntity
@@ -78,52 +78,45 @@ class ZWaveLock(ZWaveDeviceEntity, LockEntity):
 
     def set_usercode(self, code_slot, usercode):
         """Set the usercode to index X on the lock."""
-        node_id = self.values().node_id
-        # lock_node = self.values.node_id(node_id).values()
+        lock_node = self.values._node.values()
 
-        _LOGGER.debug("Debug: %s", str(node_id))
-
-        # for value in lock_node:
-        #     _LOGGER.debug("Debug: %s", str(value))
-        #     if (
-        #         value.command_class == CommandClass.USER_CODE
-        #         and value.index == code_slot
-        #     ):
-        #         if len(str(usercode)) < 4:
-        #             _LOGGER.error(
-        #                 "Invalid code provided: (%s) user code must be at least 4 digits",
-        #                 usercode,
-        #             )
-        #             break
-        #         value.send_value(usercode)
-        #         break
+        for value in lock_node:
+            if (
+                value.command_class == CommandClass.USER_CODE
+                and value.index == code_slot
+            ):
+                if len(str(usercode)) < 4:
+                    _LOGGER.error(
+                        "Invalid code provided: (%s) user code must be at least 4 digits",
+                        usercode,
+                    )
+                    break
+                value.send_value(usercode)
+                break
 
     def get_usercode(self, code_slot):
         """Get a usercode at index X on the lock."""
-        # code_slot = service.data[ATTR_CODE_SLOT]
+        lock_node = self.values._node.values()
 
-        # lock_node = self._manager.get_instance(instance_id).get_node(node_id).values()
-
-        # for value in lock_node:
-        #     if (
-        #         value.command_class == CommandClass.USER_CODE
-        #         and value.index == code_slot
-        #     ):
-        #         _LOGGER.info("User code at slot %s is: %s", code_slot, value.value)
-        #         break
+        for value in lock_node:
+            if (
+                value.command_class == CommandClass.USER_CODE
+                and value.index == code_slot
+            ):
+                _LOGGER.info("User code at slot %s is: %s", code_slot, value.value)
+                break
 
     def clear_usercode(self, code_slot):
         """Set usercode to slot X on the lock."""
-        # code_slot = service.data[ATTR_CODE_SLOT]
+        lock_node = self.values._node.values()
 
-        # lock_node = self._manager.get_instance(instance_id).get_node(node_id).values()
-
-        # for value in lock_node:
-        #     if (
-        #         value.command_class == CommandClass.USER_CODE
-        #         and value.label == "Remove User Code"
-        #     ):
-        #         value.send_value(code_slot)
-        #         value.send_value(code_slot)
-        #         _LOGGER.info("Usercode at slot %s is cleared", code_slot)
-        #         break
+        for value in lock_node:
+            if (
+                value.command_class == CommandClass.USER_CODE
+                and value.label == "Remove User Code"
+            ):
+                value.send_value(code_slot)
+                # Sending twice because the first time it doesn't take
+                value.send_value(code_slot)
+                _LOGGER.info("Usercode at slot %s is cleared", code_slot)
+                break
