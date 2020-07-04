@@ -113,8 +113,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     # Add gas meter reading and derivative for usage
     devices += [
-        DSMREntity("Gas Consumption", gas_obis, config),
-        DerivativeDSMREntity("Hourly Gas Consumption", gas_obis, config),
+        DSMREntity(prefix + "Gas Consumption", gas_obis, config),
+        DerivativeDSMREntity(prefix + "Hourly Gas Consumption", gas_obis, config),
     ]
 
     async_add_entities(devices)
