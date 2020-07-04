@@ -175,8 +175,8 @@ def setup_androidtv(hass, config):
             keygen(adbkey)
 
         # Load the ADB key
-        with open(adbkey) as f:
-            priv = f.read()
+        with open(adbkey) as priv_key:
+            priv = priv_key.read()
         signer = PythonRSASigner("", priv)
         adb_log = f"using Python ADB implementation with adbkey='{adbkey}'"
 
