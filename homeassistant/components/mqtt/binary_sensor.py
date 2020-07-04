@@ -189,7 +189,7 @@ class MqttBinarySensor(
                 payload = value_template.async_render_with_possible_json_value(
                     payload, variables={"entity_id": self.entity_id}
                 )
-                if not payload:  # No output from template, ignore
+                if not payload.strip():  # No output from template, ignore
                     _LOGGER.debug(
                         "Empty template output for entity: %s with state topic: %s. Payload: '%s', with value template '%s'",
                         self._config[CONF_NAME],
