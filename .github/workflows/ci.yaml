@@ -706,7 +706,6 @@ jobs:
             tests
 
           touch make-dirty
-          ./script/check_dirty
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v1
         with:
