@@ -371,9 +371,12 @@ class AisCloudWS:
             # during the system start lot of things is done 300 sec should be enough
             with async_timeout.timeout(300):
                 ws_resp = await web_session.get(rest_url, headers=self.cloud_ws_header)
+                # TODO store in file
                 return await ws_resp.json()
         except Exception as e:
             _LOGGER.error("Couldn't fetch data for: " + service + " " + str(e))
+            # try to get from local store
+            # TODO
             # import traceback
             # traceback.print_exc()
 
