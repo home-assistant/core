@@ -161,7 +161,7 @@ async def async_from_config_dict(
 ) -> Optional[core.HomeAssistant]:
     """Try to configure Home Assistant from a configuration dictionary.
 
-    Dynamicaly loads required components and its dependencys.
+    Dynamically loads required components and its dependencies.
     This method is a coroutine.
     """
     start = monotonic()
