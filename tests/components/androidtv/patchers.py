@@ -26,12 +26,6 @@ class AdbDeviceTcpAsyncFake:
         """Try to connect to a device."""
         raise NotImplementedError
 
-    async def push(self, *args, **kwargs):
-        """Push a file to the device."""
-
-    async def pull(self, *args, **kwargs):
-        """Pull a file from the device."""
-
     async def shell(self, cmd, *args, **kwargs):
         """Send an ADB shell command."""
         return None
@@ -61,6 +55,7 @@ class ClientAsyncFakeFail:
     async def device(self, serial):
         """Mock the `ClientAsync.device` method when the device is not connected via ADB."""
         self._devices = []
+        return None
 
 
 class DeviceAsyncFake:
@@ -70,18 +65,8 @@ class DeviceAsyncFake:
         """Initialize a `DeviceAsyncFake` instance."""
         self.host = host
 
-    async def push(self, *args, **kwargs):
-        """Push a file to the device."""
-
-    async def pull(self, *args, **kwargs):
-        """Pull a file from the device."""
-
     async def shell(self, cmd):
         """Send an ADB shell command."""
-        raise NotImplementedError
-
-    async def screencap(self):
-        """Take a screencap."""
         raise NotImplementedError
 
 
