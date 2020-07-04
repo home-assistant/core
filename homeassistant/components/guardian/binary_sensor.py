@@ -1,12 +1,17 @@
 """Binary sensors for the Elexa Guardian integration."""
+from typing import Callable
+
+from aioguardian import Client
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 
 from . import GuardianEntity
 from .const import (
-    API_SYSTEM_DIAGNOSTICS,
     API_SYSTEM_ONBOARD_SENSOR_STATUS,
     API_WIFI_STATUS,
+    DATA_CLIENT,
     DATA_COORDINATOR,
     DOMAIN,
 )
@@ -21,12 +26,14 @@ SENSORS = [
 ]
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+) -> None:
     """Set up Guardian switches based on a config entry."""
-    guardian = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
+    client = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
     async_add_entities(
         [
-            GuardianBinarySensor(guardian, kind, name, device_class)
+            GuardianBinarySensor(entry, client, kind, name, device_class)
             for kind, name, device_class in SENSORS
         ],
         True,
@@ -36,54 +43,58 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class GuardianBinarySensor(GuardianEntity, BinarySensorEntity):
     """Define a generic Guardian sensor."""
 
-    def __init__(self, guardian, kind, name, device_class):
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        client: Client,
+        kind: str,
+        name: str,
+        device_class: str,
+    ) -> None:
         """Initialize."""
-        super().__init__(guardian, kind, name, device_class, None)
+        super().__init__(entry, client, kind, name, device_class, None)
 
         self._is_on = True
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return whether the entity is available."""
         if self._kind == SENSOR_KIND_AP_INFO:
-            return bool(self._guardian.data[API_WIFI_STATUS])
+            return self.hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
+                API_WIFI_STATUS
+            ].last_update_success
         if self._kind == SENSOR_KIND_LEAK_DETECTED:
-            return bool(self._guardian.data[API_SYSTEM_ONBOARD_SENSOR_STATUS])
-        return bool(self._guardian.data[API_SYSTEM_DIAGNOSTICS])
+            return self.hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
+                API_SYSTEM_ONBOARD_SENSOR_STATUS
+            ].last_update_success
+        return False
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return True if the binary sensor is on."""
         return self._is_on
 
-    async def _async_internal_added_to_hass(self):
+    async def _async_internal_added_to_hass(self) -> None:
         if self._kind == SENSOR_KIND_AP_INFO:
-            await self._guardian.async_register_api_interest(API_WIFI_STATUS)
+            self.async_add_coordinator_update_listener(API_WIFI_STATUS)
         elif self._kind == SENSOR_KIND_LEAK_DETECTED:
-            await self._guardian.async_register_api_interest(
-                API_SYSTEM_ONBOARD_SENSOR_STATUS
-            )
+            self.async_add_coordinator_update_listener(API_SYSTEM_ONBOARD_SENSOR_STATUS)
 
     @callback
-    def _async_update_from_latest_data(self):
+    def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
         if self._kind == SENSOR_KIND_AP_INFO:
-            self._is_on = self._guardian.data[API_WIFI_STATUS]["ap_enabled"]
+            self._is_on = self.hass.data[DOMAIN][DATA_COORDINATOR][
+                self._entry.entry_id
+            ][API_WIFI_STATUS].data["ap_enabled"]
             self._attrs.update(
                 {
-                    ATTR_CONNECTED_CLIENTS: self._guardian.data[API_WIFI_STATUS][
-                        "ap_clients"
-                    ]
+                    ATTR_CONNECTED_CLIENTS: self.hass.data[DOMAIN][DATA_COORDINATOR][
+                        self._entry.entry_id
+                    ][API_WIFI_STATUS].data["ap_clients"]
                 }
             )
         elif self._kind == SENSOR_KIND_LEAK_DETECTED:
-            self._is_on = self._guardian.data[API_SYSTEM_ONBOARD_SENSOR_STATUS]["wet"]
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Deregister API interest (and related tasks) when the entity is removed."""
-        if self._kind == SENSOR_KIND_AP_INFO:
-            self._guardian.async_deregister_api_interest(API_WIFI_STATUS)
-        elif self._kind == SENSOR_KIND_LEAK_DETECTED:
-            self._guardian.async_deregister_api_interest(
-                API_SYSTEM_ONBOARD_SENSOR_STATUS
-            )
+            self._is_on = self.hass.data[DOMAIN][DATA_COORDINATOR][
+                self._entry.entry_id
+            ][API_SYSTEM_ONBOARD_SENSOR_STATUS].data["wet"]
