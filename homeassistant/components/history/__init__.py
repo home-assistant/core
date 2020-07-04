@@ -228,6 +228,7 @@ def get_last_state_changes(hass, number_of_states, entity_id):
 
         if entity_id is not None:
             query = query.filter_by(entity_id=entity_id.lower())
+            entity_id = entity_id.lower()
 
         entity_ids = [entity_id] if entity_id is not None else None
 
