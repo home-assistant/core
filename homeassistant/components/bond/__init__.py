@@ -1,0 +1,35 @@
+"""The Bond integration."""
+
+from bond import Bond
+import voluptuous as vol
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
+from homeassistant.core import HomeAssistant
+
+from .const import DOMAIN
+
+CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
+
+PLATFORMS = ["cover"]
+
+
+async def async_setup(hass: HomeAssistant, config: dict):
+    """Set up the Bond component."""
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Set up Bond from a config entry."""
+    host = entry.data[CONF_HOST]
+    token = entry.data[CONF_ACCESS_TOKEN]
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = Bond(bondIp=host, bondToken=token)
+
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
+
+    return True

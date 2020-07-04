@@ -23,6 +23,7 @@ FLOWS = [
     "axis",
     "blebox",
     "blink",
+    "bond",
     "braviatv",
     "brother",
     "bsblan",
