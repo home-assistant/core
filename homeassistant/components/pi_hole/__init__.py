@@ -193,7 +193,3 @@ class PiHoleEntity(Entity):
     async def async_update(self):
         """Get the latest data from the Pi-hole API."""
         await self.coordinator.async_request_refresh()
-
-    async def async_disable(self, duration=None):
-        """Disable the service for a given duration."""
-        # Do nothing. To avoid problem caused by calling service targeting all entities.
