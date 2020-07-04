@@ -703,6 +703,8 @@ jobs:
             -o console_output_style=count \
             -p no:sugar \
             tests
+
+          touch make-dirty
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v1
         with:
