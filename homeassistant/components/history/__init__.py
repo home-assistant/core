@@ -222,21 +222,28 @@ def get_last_state_changes(hass, number_of_states, entity_id):
     start_time = dt_util.utcnow()
 
     with session_scope(hass=hass) as session:
-        query = session.query(*QUERY_STATES).filter(
-            States.last_changed == States.last_updated
+        baked_query = hass.data[HISTORY_BAKERY](
+            lambda session: session.query(*QUERY_STATES)
         )
+        baked_query += lambda q: q.filter(States.last_changed == States.last_updated)
 
         if entity_id is not None:
-            query = query.filter_by(entity_id=entity_id.lower())
+            baked_query += lambda q: q.filter_by(entity_id=bindparam("entity_id"))
             entity_id = entity_id.lower()
 
-        entity_ids = [entity_id] if entity_id is not None else None
+        baked_query += lambda q: q.order_by(
+            States.entity_id, States.last_updated.desc()
+        )
+
+        baked_query += lambda q: q.limit(bindparam("number_of_states"))
 
         states = execute(
-            query.order_by(States.entity_id, States.last_updated.desc()).limit(
-                number_of_states
+            baked_query(session).params(
+                number_of_states=number_of_states, entity_id=entity_id
             )
         )
+
+        entity_ids = [entity_id] if entity_id is not None else None
 
         return _sorted_states_to_json(
             hass,
