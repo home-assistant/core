@@ -14,7 +14,6 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-<<<<<<< HEAD
 ZEROCONF_MAP = {
     "smile": "P1 DSMR",
     "smile_thermo": "Climate (Anna)",
@@ -32,12 +31,6 @@ def _base_schema(discovery_info):
     base_schema[vol.Required(CONF_PASSWORD)] = str
 
     return vol.Schema(base_schema)
-=======
-DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_HOST): str, vol.Required(CONF_PASSWORD): str},
-    extra=vol.ALLOW_EXTRA,
-)
->>>>>>> Allow scan_interval adjustments using config_flow
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -121,11 +114,9 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=api.smile_name, data=user_input)
 
         return self.async_show_form(
-<<<<<<< HEAD
-            step_id="user", data_schema=_base_schema(self.discovery_info), errors=errors
-=======
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors or {}
->>>>>>> Allow scan_interval adjustments using config_flow
+            step_id="user",
+            data_schema=_base_schema(self.discovery_info),
+            errors=errors or {},
         )
 
     @staticmethod
@@ -151,7 +142,6 @@ class PlugwiseOptionsFlowHandler(config_entries.OptionsFlow):
         interval = DEFAULT_SCAN_INTERVAL["thermostat"]
         if api.smile_type == "power":
             interval = DEFAULT_SCAN_INTERVAL["power"]
-
         data = {
             vol.Optional(
                 CONF_SCAN_INTERVAL,
