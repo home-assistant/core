@@ -386,11 +386,14 @@ class Recorder(threading.Thread):
             if dbevent and event.event_type == EVENT_STATE_CHANGED:
                 try:
                     dbstate = States.from_event(event)
+                    has_new_state = event.data.get("new_state")
                     dbstate.old_state_id = self._old_state_ids.get(dbstate.entity_id)
+                    if not has_new_state:
+                        dbstate.state = None
                     dbstate.event_id = dbevent.event_id
                     self.event_session.add(dbstate)
                     self.event_session.flush()
-                    if "new_state" in event.data:
+                    if has_new_state:
                         self._old_state_ids[dbstate.entity_id] = dbstate.state_id
                     elif dbstate.entity_id in self._old_state_ids:
                         del self._old_state_ids[dbstate.entity_id]
