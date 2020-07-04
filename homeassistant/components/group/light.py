@@ -233,7 +233,11 @@ class LightGroup(light.LightEntity):
 
         if not emulate_color_temp_entity_ids:
             await self.hass.services.async_call(
-                light.DOMAIN, light.SERVICE_TURN_ON, data, blocking=True
+                light.DOMAIN,
+                light.SERVICE_TURN_ON,
+                data,
+                blocking=True,
+                context=self._context,
             )
             return
 
@@ -249,13 +253,18 @@ class LightGroup(light.LightEntity):
 
         await asyncio.gather(
             self.hass.services.async_call(
-                light.DOMAIN, light.SERVICE_TURN_ON, data, blocking=True
+                light.DOMAIN,
+                light.SERVICE_TURN_ON,
+                data,
+                blocking=True,
+                context=self._context,
             ),
             self.hass.services.async_call(
                 light.DOMAIN,
                 light.SERVICE_TURN_ON,
                 emulate_color_temp_data,
                 blocking=True,
+                context=self._context,
             ),
         )
 
@@ -267,7 +276,11 @@ class LightGroup(light.LightEntity):
             data[ATTR_TRANSITION] = kwargs[ATTR_TRANSITION]
 
         await self.hass.services.async_call(
-            light.DOMAIN, light.SERVICE_TURN_OFF, data, blocking=True
+            light.DOMAIN,
+            light.SERVICE_TURN_OFF,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     async def async_update(self):

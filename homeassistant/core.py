@@ -1219,7 +1219,16 @@ class ServiceRegistry:
             raise ServiceNotFound(domain, service) from None
 
         if handler.schema:
-            processed_data = handler.schema(service_data)
+            try:
+                processed_data = handler.schema(service_data)
+            except vol.Invalid:
+                _LOGGER.debug(
+                    "Invalid data for service call %s.%s: %s",
+                    domain,
+                    service,
+                    service_data,
+                )
+                raise
         else:
             processed_data = service_data
 
@@ -1332,6 +1341,9 @@ class Config:
         # List of allowed external dirs to access
         self.whitelist_external_dirs: Set[str] = set()
 
+        # List of allowed external URLs that integrations may use
+        self.allowlist_external_urls: Set[str] = set()
+
         # If Home Assistant is running in safe mode
         self.safe_mode: bool = False
 
@@ -1352,6 +1364,16 @@ class Config:
         if self.config_dir is None:
             raise HomeAssistantError("config_dir is not set")
         return os.path.join(self.config_dir, *path)
+
+    def is_allowed_external_url(self, url: str) -> bool:
+        """Check if an external URL is allowed."""
+        parsed_url = f"{str(yarl.URL(url))}/"
+
+        return any(
+            allowed
+            for allowed in self.allowlist_external_urls
+            if parsed_url.startswith(allowed)
+        )
 
     def is_allowed_path(self, path: str) -> bool:
         """Check if the path is valid for access from outside."""
@@ -1395,6 +1417,7 @@ class Config:
             "components": self.components,
             "config_dir": self.config_dir,
             "whitelist_external_dirs": self.whitelist_external_dirs,
+            "allowlist_external_urls": self.allowlist_external_urls,
             "version": __version__,
             "config_source": self.config_source,
             "safe_mode": self.safe_mode,

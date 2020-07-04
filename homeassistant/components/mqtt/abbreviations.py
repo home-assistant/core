@@ -7,6 +7,7 @@ ABBREVIATIONS = {
     "aux_cmd_t": "aux_command_topic",
     "aux_stat_tpl": "aux_state_template",
     "aux_stat_t": "aux_state_topic",
+    "avty": "availability",
     "avty_t": "availability_topic",
     "away_mode_cmd_t": "away_mode_command_topic",
     "away_mode_stat_tpl": "away_mode_state_template",

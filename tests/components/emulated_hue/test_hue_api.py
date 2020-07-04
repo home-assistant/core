@@ -195,6 +195,8 @@ def hue_client(loop, hass_hue, aiohttp_client):
                 "humidifier.humidifier": {emulated_hue.CONF_ENTITY_HIDDEN: False},
                 # Expose Dehumidifier
                 "humidifier.dehumidifier": {emulated_hue.CONF_ENTITY_HIDDEN: False},
+                # No expose setting (use default of not exposed)
+                "climate.nosetting": {},
             },
         },
     )

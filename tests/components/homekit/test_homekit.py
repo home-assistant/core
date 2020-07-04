@@ -2,7 +2,6 @@
 import os
 from typing import Dict
 
-from asynctest import MagicMock
 import pytest
 
 from homeassistant.components import zeroconf
@@ -42,13 +41,16 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PORT,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     STATE_ON,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import State
 from homeassistant.helpers import device_registry
@@ -59,27 +61,27 @@ from homeassistant.util import json as json_util
 
 from .util import PATH_HOMEKIT, async_init_entry, async_init_integration
 
-from tests.async_mock import ANY, AsyncMock, Mock, patch
+from tests.async_mock import ANY, AsyncMock, MagicMock, Mock, patch
 from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 from tests.components.homekit.common import patch_debounce
 
 IP_ADDRESS = "127.0.0.1"
 
 
-@pytest.fixture
-def device_reg(hass):
+@pytest.fixture(name="device_reg")
+def device_reg_fixture(hass):
     """Return an empty, loaded, registry."""
     return mock_device_registry(hass)
 
 
-@pytest.fixture
-def entity_reg(hass):
+@pytest.fixture(name="entity_reg")
+def entity_reg_fixture(hass):
     """Return an empty, loaded, registry."""
     return mock_registry(hass)
 
 
-@pytest.fixture(scope="module")
-def debounce_patcher():
+@pytest.fixture(name="debounce_patcher", scope="module")
+def debounce_patcher_fixture():
     """Patch debounce method."""
     patcher = patch_debounce()
     yield patcher.start()
@@ -88,7 +90,6 @@ def debounce_patcher():
 
 async def test_setup_min(hass):
     """Test async_setup with min config options."""
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_PORT},
@@ -413,6 +414,47 @@ async def test_homekit_entity_filter(hass):
         assert mock_get_acc.called is False
 
 
+async def test_homekit_entity_glob_filter(hass):
+    """Test the entity filter."""
+    entry = await async_init_integration(hass)
+
+    entity_filter = generate_filter(
+        ["cover"], ["demo.test"], [], [], ["*.included_*"], ["*.excluded_*"]
+    )
+    homekit = HomeKit(
+        hass,
+        None,
+        None,
+        None,
+        entity_filter,
+        {},
+        DEFAULT_SAFE_MODE,
+        advertise_ip=None,
+        entry_id=entry.entry_id,
+    )
+    homekit.bridge = Mock()
+    homekit.bridge.accessories = {}
+
+    with patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc:
+        mock_get_acc.return_value = None
+
+        homekit.add_bridge_accessory(State("cover.test", "open"))
+        assert mock_get_acc.called is True
+        mock_get_acc.reset_mock()
+
+        homekit.add_bridge_accessory(State("demo.test", "on"))
+        assert mock_get_acc.called is True
+        mock_get_acc.reset_mock()
+
+        homekit.add_bridge_accessory(State("cover.excluded_test", "open"))
+        assert mock_get_acc.called is False
+        mock_get_acc.reset_mock()
+
+        homekit.add_bridge_accessory(State("light.included_test", "light"))
+        assert mock_get_acc.called is True
+        mock_get_acc.reset_mock()
+
+
 async def test_homekit_start(hass, hk_driver, device_reg, debounce_patcher):
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
@@ -432,6 +474,7 @@ async def test_homekit_start(hass, hk_driver, device_reg, debounce_patcher):
     homekit.bridge = Mock()
     homekit.bridge.accessories = []
     homekit.driver = hk_driver
+    # pylint: disable=protected-access
     homekit._filter = Mock(return_value=True)
 
     connection = (device_registry.CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF")
@@ -564,6 +607,8 @@ async def test_homekit_stop(hass):
         entry_id=entry.entry_id,
     )
     homekit.driver = Mock()
+    homekit.bridge = Mock()
+    homekit.bridge.accessories = {}
 
     await async_init_integration(hass)
 
@@ -587,7 +632,6 @@ async def test_homekit_stop(hass):
 
 async def test_homekit_reset_accessories(hass):
     """Test adding too many accessories to HomeKit."""
-
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
@@ -629,7 +673,7 @@ async def test_homekit_reset_accessories(hass):
         )
         await hass.async_block_till_done()
 
-        assert 2 == hk_driver_config_changed.call_count
+        assert hk_driver_config_changed.call_count == 2
         assert mock_add_accessory.called
         homekit.status = STATUS_READY
 
@@ -686,6 +730,7 @@ async def test_homekit_finds_linked_batteries(
         entry_id=entry.entry_id,
     )
     homekit.driver = hk_driver
+    # pylint: disable=protected-access
     homekit._filter = Mock(return_value=True)
     homekit.bridge = HomeBridge(hass, hk_driver, "mock_bridge")
 
@@ -818,7 +863,6 @@ async def test_setup_imported(hass):
 
 async def test_yaml_updates_update_config_entry_for_name(hass):
     """Test async_setup with imported config."""
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_IMPORT,
@@ -858,7 +902,6 @@ async def test_yaml_updates_update_config_entry_for_name(hass):
 
 async def test_raise_config_entry_not_ready(hass):
     """Test async_setup when the port is not available."""
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_PORT},
@@ -918,6 +961,7 @@ async def test_homekit_ignored_missing_devices(
         entry_id=entry.entry_id,
     )
     homekit.driver = hk_driver
+    # pylint: disable=protected-access
     homekit._filter = Mock(return_value=True)
     homekit.bridge = HomeBridge(hass, hk_driver, "mock_bridge")
 
@@ -997,6 +1041,7 @@ async def test_homekit_finds_linked_motion_sensors(
         entry_id=entry.entry_id,
     )
     homekit.driver = hk_driver
+    # pylint: disable=protected-access
     homekit._filter = Mock(return_value=True)
     homekit.bridge = HomeBridge(hass, hk_driver, "mock_bridge")
 
@@ -1049,5 +1094,82 @@ async def test_homekit_finds_linked_motion_sensors(
             "model": "Camera Server",
             "sw_version": "0.16.0",
             "linked_motion_sensor": "binary_sensor.camera_motion_sensor",
+        },
+    )
+
+
+async def test_homekit_finds_linked_humidity_sensors(
+    hass, hk_driver, debounce_patcher, device_reg, entity_reg
+):
+    """Test HomeKit start method."""
+    entry = await async_init_integration(hass)
+
+    homekit = HomeKit(
+        hass,
+        None,
+        None,
+        None,
+        {},
+        {"humidifier.humidifier": {}},
+        DEFAULT_SAFE_MODE,
+        advertise_ip=None,
+        entry_id=entry.entry_id,
+    )
+    homekit.driver = hk_driver
+    homekit._filter = Mock(return_value=True)
+    homekit.bridge = HomeBridge(hass, hk_driver, "mock_bridge")
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        sw_version="0.16.1",
+        model="Smart Brainy Clever Humidifier",
+        manufacturer="Home Assistant",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    humidity_sensor = entity_reg.async_get_or_create(
+        "sensor",
+        "humidifier",
+        "humidity_sensor",
+        device_id=device_entry.id,
+        device_class=DEVICE_CLASS_HUMIDITY,
+    )
+    humidifier = entity_reg.async_get_or_create(
+        "humidifier", "humidifier", "demo", device_id=device_entry.id
+    )
+
+    hass.states.async_set(
+        humidity_sensor.entity_id,
+        "42",
+        {
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
+            ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+        },
+    )
+    hass.states.async_set(humidifier.entity_id, STATE_ON)
+
+    def _mock_get_accessory(*args, **kwargs):
+        return [None, "acc", None]
+
+    with patch.object(homekit.bridge, "add_accessory"), patch(
+        f"{PATH_HOMEKIT}.show_setup_message"
+    ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
+        "pyhap.accessory_driver.AccessoryDriver.start"
+    ):
+        await homekit.async_start()
+    await hass.async_block_till_done()
+
+    mock_get_acc.assert_called_with(
+        hass,
+        hk_driver,
+        ANY,
+        ANY,
+        {
+            "manufacturer": "Home Assistant",
+            "model": "Smart Brainy Clever Humidifier",
+            "sw_version": "0.16.1",
+            "linked_humidity_sensor": "sensor.humidifier_humidity_sensor",
         },
     )

@@ -14,7 +14,7 @@
                     "password": "Password",
                     "username": "Username"
                 },
-                "description": "Provide requisite information below. Note: only the 'admin' user is known to work.",
+                "description": "Provide requisite information below.",
                 "title": "Setup GogoGate2"
             }
         }
