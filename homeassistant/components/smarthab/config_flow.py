@@ -55,7 +55,7 @@ class SmartHabConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await hub.async_login(username, password)
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.error("Error while trying to reach SmartHab API.")
             _LOGGER.debug(ex, exc_info=True)
 
