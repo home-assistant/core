@@ -12,4 +12,4 @@ write_data_by_name:
       example: "int"
     value:
       description: The value to write to the variable.
-      example: 1
+      example: on
