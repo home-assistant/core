@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_ALIAS,
     CONF_ICON,
     CONF_MODE,
+    CONF_QUEUE_SIZE,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -23,11 +24,11 @@ from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.script import (
-    DEFAULT_QUEUE_MAX,
-    SCRIPT_MODE_CHOICES,
+    SCRIPT_BASE_SCHEMA,
     SCRIPT_MODE_LEGACY,
-    SCRIPT_MODE_QUEUE,
     Script,
+    validate_queue_size,
+    warn_deprecated_legacy,
 )
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.loader import bind_hass
@@ -44,7 +45,6 @@ CONF_DESCRIPTION = "description"
 CONF_EXAMPLE = "example"
 CONF_FIELDS = "fields"
 CONF_SEQUENCE = "sequence"
-CONF_QUEUE_MAX = "queue_size"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -59,55 +59,32 @@ def _deprecated_legacy_mode(config):
             legacy_scripts.append(object_id)
             cfg[CONF_MODE] = SCRIPT_MODE_LEGACY
     if legacy_scripts:
-        _LOGGER.warning(
-            "Script behavior has changed. "
-            "To continue using previous behavior, which is now deprecated, "
-            "add '%s: %s' to script(s): %s.",
-            CONF_MODE,
-            SCRIPT_MODE_LEGACY,
-            ", ".join(legacy_scripts),
-        )
+        warn_deprecated_legacy(_LOGGER, f"script(s): {', '.join(legacy_scripts)}")
     return config
 
 
-def _queue_max(config):
-    for object_id, cfg in config.items():
-        mode = cfg[CONF_MODE]
-        queue_max = cfg.get(CONF_QUEUE_MAX)
-        if mode == SCRIPT_MODE_QUEUE:
-            if queue_max is None:
-                cfg[CONF_QUEUE_MAX] = DEFAULT_QUEUE_MAX
-        elif queue_max is not None:
-            raise vol.Invalid(
-                f"{CONF_QUEUE_MAX} not valid with {mode} {CONF_MODE} "
-                f"for script '{object_id}'"
-            )
-    return config
-
-
-SCRIPT_ENTRY_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_ALIAS): cv.string,
-        vol.Optional(CONF_ICON): cv.icon,
-        vol.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_DESCRIPTION, default=""): cv.string,
-        vol.Optional(CONF_FIELDS, default={}): {
-            cv.string: {
-                vol.Optional(CONF_DESCRIPTION): cv.string,
-                vol.Optional(CONF_EXAMPLE): cv.string,
-            }
-        },
-        vol.Optional(CONF_MODE): vol.In(SCRIPT_MODE_CHOICES),
-        vol.Optional(CONF_QUEUE_MAX): vol.All(vol.Coerce(int), vol.Range(min=2)),
-    }
+SCRIPT_ENTRY_SCHEMA = vol.All(
+    SCRIPT_BASE_SCHEMA.extend(
+        {
+            vol.Optional(CONF_ALIAS): cv.string,
+            vol.Optional(CONF_ICON): cv.icon,
+            vol.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_DESCRIPTION, default=""): cv.string,
+            vol.Optional(CONF_FIELDS, default={}): {
+                cv.string: {
+                    vol.Optional(CONF_DESCRIPTION): cv.string,
+                    vol.Optional(CONF_EXAMPLE): cv.string,
+                }
+            },
+        }
+    ),
+    validate_queue_size,
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            cv.schema_with_slug_keys(SCRIPT_ENTRY_SCHEMA),
-            _deprecated_legacy_mode,
-            _queue_max,
+            cv.schema_with_slug_keys(SCRIPT_ENTRY_SCHEMA), _deprecated_legacy_mode
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -271,7 +248,7 @@ async def _async_process_config(hass, config, component):
                 cfg.get(CONF_ICON),
                 cfg[CONF_SEQUENCE],
                 cfg[CONF_MODE],
-                cfg.get(CONF_QUEUE_MAX, 0),
+                cfg.get(CONF_QUEUE_SIZE, 0),
             )
         )
 
@@ -303,7 +280,7 @@ class ScriptEntity(ToggleEntity):
 
     icon = None
 
-    def __init__(self, hass, object_id, name, icon, sequence, mode, queue_max):
+    def __init__(self, hass, object_id, name, icon, sequence, mode, queue_size):
         """Initialize the script."""
         self.object_id = object_id
         self.icon = icon
@@ -314,7 +291,7 @@ class ScriptEntity(ToggleEntity):
             name,
             self.async_change_listener,
             mode,
-            queue_max,
+            queue_size,
             logging.getLogger(f"{__name__}.{object_id}"),
         )
         self._changed = asyncio.Event()
