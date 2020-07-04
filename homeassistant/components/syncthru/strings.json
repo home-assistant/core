@@ -12,8 +12,8 @@
     "step": {
       "confirm": {
         "data": {
-          "name": "Name",
-          "url": "Web interface URL"
+          "name": "[%key:component::syncthru::config::step::user::data::name%]",
+          "url": "[%key:component::syncthru::config::step::user::data::url%]"
         }
       },
       "user": {
