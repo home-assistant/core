@@ -168,7 +168,7 @@ def _significant_states_query(
             & (States.last_updated > bindparam("start_time"))
         )
     else:
-        baked_query += lambda q: q.filter(States.last_updated > start_time)
+        baked_query += lambda q: q.filter(States.last_updated > bindparam("start_time"))
 
     if filters:
         filters.bake(baked_query, entity_ids)
@@ -186,20 +186,33 @@ def _significant_states_query(
 def state_changes_during_period(hass, start_time, end_time=None, entity_id=None):
     """Return states changes during UTC period start_time - end_time."""
     with session_scope(hass=hass) as session:
-        query = session.query(*QUERY_STATES).filter(
+        baked_query = hass.data[HISTORY_BAKERY](
+            lambda session: session.query(*QUERY_STATES)
+        )
+
+        baked_query += lambda q: q.filter(
             (States.last_changed == States.last_updated)
-            & (States.last_updated > start_time)
+            & (States.last_updated > bindparam("start_time"))
         )
 
         if end_time is not None:
-            query = query.filter(States.last_updated < end_time)
+            baked_query += lambda q: q.filter(
+                States.last_updated < bindparam("end_time")
+            )
 
         if entity_id is not None:
-            query = query.filter_by(entity_id=entity_id.lower())
+            baked_query += lambda q: q.filter_by(entity_id=bindparam("entity_id"))
+            entity_id = entity_id.lower()
+
+        baked_query += lambda q: q.order_by(States.entity_id, States.last_updated)
+
+        states = execute(
+            baked_query(session).params(
+                start_time=start_time, end_time=end_time, entity_id=entity_id
+            )
+        )
 
         entity_ids = [entity_id] if entity_id is not None else None
-
-        states = execute(query.order_by(States.entity_id, States.last_updated))
 
         return _sorted_states_to_json(hass, session, states, start_time, entity_ids)
 
