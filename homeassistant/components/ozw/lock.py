@@ -44,19 +44,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
             vol.Required(ATTR_USERCODE): cv.string,
         },
-        "set_usercode",
+        "async_set_usercode",
     )
 
     platform.async_register_entity_service(
         SERVICE_GET_USERCODE,
         {vol.Required(ATTR_CODE_SLOT): vol.Coerce(int)},
-        "get_usercode",
+        "async_get_usercode",
     )
 
     platform.async_register_entity_service(
         SERVICE_CLEAR_USERCODE,
         {vol.Required(ATTR_CODE_SLOT): vol.Coerce(int)},
-        "clear_usercode",
+        "async_clear_usercode",
     )
 
 
@@ -76,7 +76,8 @@ class ZWaveLock(ZWaveDeviceEntity, LockEntity):
         """Unlock the lock."""
         self.values.primary.send_value(False)
 
-    def set_usercode(self, code_slot, usercode):
+    @callback
+    def async_set_usercode(self, code_slot, usercode):
         """Set the usercode to index X on the lock."""
         lock_node = self.values._node.values()  # pytest: disable=protected-access
 
@@ -94,7 +95,8 @@ class ZWaveLock(ZWaveDeviceEntity, LockEntity):
                 value.send_value(usercode)
                 break
 
-    def get_usercode(self, code_slot):
+    @callback
+    def async_get_usercode(self, code_slot):
         """Get a usercode at index X on the lock."""
         lock_node = self.values._node.values()  # pytest: disable=protected-access
 
@@ -106,8 +108,9 @@ class ZWaveLock(ZWaveDeviceEntity, LockEntity):
                 _LOGGER.info("User code at slot %s is: %s", code_slot, value.value)
                 break
 
-    def clear_usercode(self, code_slot):
-        """Set usercode to slot X on the lock."""
+    @callback
+    def async_clear_usercode(self, code_slot):
+        """Clear usercode in slot X on the lock."""
         lock_node = self.values._node.values()  # pytest: disable=protected-access
 
         for value in lock_node:
