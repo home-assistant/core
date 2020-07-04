@@ -259,6 +259,76 @@ async def test_setting_sensor_value_via_mqtt_message_and_template(hass, mqtt_moc
     assert state.state == STATE_OFF
 
 
+async def test_setting_sensor_value_via_mqtt_message_and_template2(
+    hass, mqtt_mock, caplog
+):
+    """Test the setting of the value via MQTT."""
+    assert await async_setup_component(
+        hass,
+        binary_sensor.DOMAIN,
+        {
+            binary_sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+                "payload_on": "ON",
+                "payload_off": "OFF",
+                "value_template": "{{value | upper}}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_OFF
+
+    async_fire_mqtt_message(hass, "test-topic", "on")
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_ON
+
+    async_fire_mqtt_message(hass, "test-topic", "off")
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_OFF
+
+    async_fire_mqtt_message(hass, "test-topic", "illegal")
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_OFF
+    assert "template output: 'ILLEGAL'" in caplog.text
+
+
+async def test_setting_sensor_value_via_mqtt_message_empty_template(
+    hass, mqtt_mock, caplog
+):
+    """Test the setting of the value via MQTT."""
+    assert await async_setup_component(
+        hass,
+        binary_sensor.DOMAIN,
+        {
+            binary_sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+                "payload_on": "ON",
+                "payload_off": "OFF",
+                "value_template": '{%if value == "ABC"%}ON{%endif%}',
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_OFF
+
+    async_fire_mqtt_message(hass, "test-topic", "DEF")
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_OFF
+    assert "Empty template output" in caplog.text
+
+    async_fire_mqtt_message(hass, "test-topic", "ABC")
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_ON
+
+
 async def test_valid_device_class(hass, mqtt_mock):
     """Test the setting of a valid sensor class."""
     assert await async_setup_component(
