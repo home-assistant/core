@@ -4,12 +4,12 @@
       "owner": "pylint",
       "pattern": [
         {
-          "regexp": "^(.+):(\\d+):(\\d+):\\s([CERW]\\d{4}):\\s(.+)$",
+          "regexp": "^((\\/github\\/workspace\\/)?.+):(\\d+):(\\d+):\\s([CERW]\\d{4}):\\s(.+)$",
           "file": 1,
-          "line": 2,
-          "column": 3,
-          "message": 5,
-          "code": 4
+          "line": 3,
+          "column": 4,
+          "code": 5,
+          "message": 6
         }
       ]
     }
