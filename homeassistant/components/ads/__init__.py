@@ -298,9 +298,9 @@ class AdsEntity(Entity):
 
             """Format the float, with the Paramter digit"""
             if plctype == pyads.PLCTYPE_REAL:
-                value = float("{:0.{prec}f}".format(value, prec = digit))
+                value = float(f"{value:.{digit}f}")
             elif plctype == pyads.PLCTYPE_LREAL:
-                value = float("{:0.{prec}f}".format(value, prec = digit))
+                value = float(f"{value:.{digit}f}")
 
             if factor is None:
                 self._state_dict[state_key] = value
