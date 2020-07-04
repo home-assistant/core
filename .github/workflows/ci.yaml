@@ -560,7 +560,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8]
+        python-version: [3.7, 3.8, 3.9]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
@@ -665,7 +665,7 @@ jobs:
     strategy:
       matrix:
         group: [1, 2, 3, 4]
-        python-version: [3.7, 3.8]
+        python-version: [3.7, 3.8, 3.9]
     name: >-
       Run tests Python ${{ matrix.python-version }} (group ${{ matrix.group }})
     container: homeassistant/ci-azure:${{ matrix.python-version }}
