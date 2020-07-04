@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.core import callback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -57,13 +58,6 @@ class SpeedtestSensor(RestoreEntity):
     @property
     def state(self):
         """Return the state of the device."""
-        if self.coordinator.data:
-            if self.type == "ping":
-                self._state = self.coordinator.data["ping"]
-            elif self.type == "download":
-                self._state = round(self.coordinator.data["download"] / 10 ** 6, 2)
-            elif self.type == "upload":
-                self._state = round(self.coordinator.data["upload"] / 10 ** 6, 2)
         return self._state
 
     @property
@@ -107,9 +101,22 @@ class SpeedtestSensor(RestoreEntity):
             state = await self.async_get_last_state()
             if state:
                 self._state = state.state
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
+
+        @callback
+        def _update_state():
+            """Update sensors state."""
+            if self.coordinator.data:
+                if self.type == "ping":
+                    self._state = self.coordinator.data["ping"]
+                elif self.type == "download":
+                    self._state = round(self.coordinator.data["download"] / 10 ** 6, 2)
+                elif self.type == "upload":
+                    self._state = round(self.coordinator.data["upload"] / 10 ** 6, 2)
+
+            self.async_write_ha_state()
+
+        self.async_on_remove(self.coordinator.async_add_listener(_update_state))
+        _update_state()
 
     async def async_update(self):
         """Request coordinator to update data."""

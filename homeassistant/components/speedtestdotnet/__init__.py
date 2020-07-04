@@ -116,8 +116,8 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
             ),
         )
 
-    def update_data(self):
-        """Get the latest data from speedtest.net."""
+    def update_servers(self):
+        """Update list of test servers."""
         server_list = self.api.get_servers()
 
         self.servers[DEFAULT_SERVER] = {}
@@ -125,6 +125,10 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
             server_list.values(), key=lambda server: server[0]["country"]
         ):
             self.servers[f"{server[0]['country']} - {server[0]['sponsor']}"] = server[0]
+
+    def update_data(self):
+        """Get the latest data from speedtest.net."""
+        self.update_servers()
 
         if self.config_entry.options.get(CONF_SERVER_ID):
             server_id = self.config_entry.options.get(CONF_SERVER_ID)
@@ -170,6 +174,8 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
             await self.async_request_refresh()
 
         await self.async_set_options()
+
+        await self.hass.async_add_executor_job(self.update_servers)
 
         self.hass.services.async_register(DOMAIN, SPEED_TEST_SERVICE, request_update)
 
