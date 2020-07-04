@@ -375,12 +375,10 @@ def _get_events(
                 Events.event_data,
                 Events.time_fired,
                 Events.context_user_id,
-                States.state_id,
                 States.state,
                 States.entity_id,
                 States.domain,
                 States.attributes,
-                old_state.state_id.label("old_state_id"),
             )
             .order_by(Events.time_fired)
             .outerjoin(States, (Events.event_id == States.event_id))
