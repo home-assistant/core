@@ -690,6 +690,7 @@ jobs:
           exit 1
       - name: Run pytest
         run: |
+          set -e
           . venv/bin/activate
           pytest \
             -qq \
