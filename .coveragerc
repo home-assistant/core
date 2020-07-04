@@ -656,7 +656,6 @@ omit =
     homeassistant/components/plaato/*
     homeassistant/components/plex/media_player.py
     homeassistant/components/plex/sensor.py
-    homeassistant/components/plum_lightpad/__init__.py
     homeassistant/components/plum_lightpad/light.py
     homeassistant/components/pocketcasts/sensor.py
     homeassistant/components/point/*
