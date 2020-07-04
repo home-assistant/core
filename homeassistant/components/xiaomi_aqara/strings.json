@@ -27,7 +27,6 @@
     },
     "error": {
       "discovery_error": "Failed to discover a Xiaomi Aqara Gateway, try using the IP of the device running HomeAssistant as interface",
-      "not_found_error": "Zeroconf discovered Gateway could not be located to get the necessary information, try using the IP of the device running HomeAssistant as interface",
       "invalid_interface": "Invalid network interface",
       "invalid_key": "Invalid gateway key"
     },
