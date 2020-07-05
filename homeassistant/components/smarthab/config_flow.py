@@ -61,9 +61,9 @@ class SmartHabConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=username, data={CONF_EMAIL: username, CONF_PASSWORD: password}
                 )
-            else:
-                _LOGGER.error("Could not authenticate with SmartHab API")
-                errors["base"] = "wrong_login"
+
+            _LOGGER.error("Could not authenticate with SmartHab API")
+            errors["base"] = "wrong_login"
         except pysmarthab.RequestFailedException:
             _LOGGER.exception("Error while trying to reach SmartHab API")
             errors["base"] = "service"
