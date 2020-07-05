@@ -4,13 +4,12 @@ import pytest
 
 from homeassistant import setup
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import CoreState, State, callback
+from homeassistant.core import CoreState, State
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
     assert_setup_component,
     async_mock_service,
-    get_test_home_assistant,
     mock_component,
     mock_restore_cache,
 )
@@ -65,6 +64,7 @@ async def test_template_state_text(hass):
     state = hass.states.get("switch.test_template_switch")
     assert state.state == STATE_OFF
 
+
 async def test_template_state_boolean_on(hass):
     """Test the setting of the state with boolean on."""
     with assert_setup_component(1, "switch"):
@@ -98,6 +98,7 @@ async def test_template_state_boolean_on(hass):
     state = hass.states.get("switch.test_template_switch")
     assert state.state == STATE_ON
 
+
 async def test_template_state_boolean_off(hass):
     """Test the setting of the state with off."""
     with assert_setup_component(1, "switch"):
@@ -130,6 +131,7 @@ async def test_template_state_boolean_off(hass):
 
     state = hass.states.get("switch.test_template_switch")
     assert state.state == STATE_OFF
+
 
 async def test_icon_template(hass):
     """Test icon template."""
@@ -173,6 +175,7 @@ async def test_icon_template(hass):
     state = hass.states.get("switch.test_template_switch")
     assert state.attributes["icon"] == "mdi:check"
 
+
 async def test_entity_picture_template(hass):
     """Test entity_picture template."""
     with assert_setup_component(1, "switch"):
@@ -215,6 +218,7 @@ async def test_entity_picture_template(hass):
     state = hass.states.get("switch.test_template_switch")
     assert state.attributes["entity_picture"] == "/local/switch.png"
 
+
 async def test_template_syntax_error(hass):
     """Test templating syntax error."""
     with assert_setup_component(0, "switch"):
@@ -246,6 +250,7 @@ async def test_template_syntax_error(hass):
     await hass.async_block_till_done()
 
     assert hass.states.async_all() == []
+
 
 async def test_invalid_name_does_not_create(hass):
     """Test invalid name."""
@@ -279,6 +284,7 @@ async def test_invalid_name_does_not_create(hass):
 
     assert hass.states.async_all() == []
 
+
 async def test_invalid_switch_does_not_create(hass):
     """Test invalid switch."""
     with assert_setup_component(0, "switch"):
@@ -299,6 +305,7 @@ async def test_invalid_switch_does_not_create(hass):
 
     assert hass.states.async_all() == []
 
+
 async def test_no_switches_does_not_create(hass):
     """Test if there are no switches no creation."""
     with assert_setup_component(0, "switch"):
@@ -311,6 +318,7 @@ async def test_no_switches_does_not_create(hass):
     await hass.async_block_till_done()
 
     assert hass.states.async_all() == []
+
 
 async def test_missing_on_does_not_create(hass):
     """Test missing on."""
@@ -344,6 +352,7 @@ async def test_missing_on_does_not_create(hass):
 
     assert hass.states.async_all() == []
 
+
 async def test_missing_off_does_not_create(hass):
     """Test missing off."""
     with assert_setup_component(0, "switch"):
@@ -375,6 +384,7 @@ async def test_missing_off_does_not_create(hass):
     await hass.async_block_till_done()
 
     assert hass.states.async_all() == []
+
 
 async def test_on_action(hass, calls):
     """Test on action."""
@@ -413,6 +423,7 @@ async def test_on_action(hass, calls):
 
     assert len(calls) == 1
 
+
 async def test_on_action_optimistic(hass, calls):
     """Test on action in optimistic mode."""
     assert await async_setup_component(
@@ -450,6 +461,7 @@ async def test_on_action_optimistic(hass, calls):
     assert len(calls) == 1
     assert state.state == STATE_ON
 
+
 async def test_off_action(hass, calls):
     """Test off action."""
     assert await async_setup_component(
@@ -486,6 +498,7 @@ async def test_off_action(hass, calls):
     await hass.async_block_till_done()
 
     assert len(calls) == 1
+
 
 async def test_off_action_optimistic(hass, calls):
     """Test off action in optimistic mode."""
