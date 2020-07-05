@@ -1975,7 +1975,7 @@ sleepyq==0.7
 slixmpp==1.5.1
 
 # homeassistant.components.smarthab
-smarthab==0.20
+smarthab==0.21
 
 # homeassistant.components.bh1750
 # homeassistant.components.bme280
