@@ -175,6 +175,8 @@ def get_rfx_object(packetid):
         obj = rfxtrxmod.StatusEvent(pkt)
     else:
         obj = rfxtrxmod.ControlEvent(pkt)
+
+    obj.data = binarypacket
     return obj
 
 
