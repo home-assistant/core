@@ -1,16 +1,15 @@
 """The Elexa Guardian integration."""
 import asyncio
 from datetime import timedelta
-from typing import Awaitable, Callable, Dict
+from typing import Dict
 
 from aioguardian import Client
-from aioguardian.errors import GuardianError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     API_SYSTEM_DIAGNOSTICS,
@@ -21,8 +20,8 @@ from .const import (
     DATA_CLIENT,
     DATA_COORDINATOR,
     DOMAIN,
-    LOGGER,
 )
+from .util import GuardianDataUpdateCoordinator
 
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=30)
 
@@ -37,23 +36,15 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elexa Guardian from a config entry."""
-    client = Client(entry.data[CONF_IP_ADDRESS], port=entry.data[CONF_PORT])
-    hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = client
+    client = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = Client(
+        entry.data[CONF_IP_ADDRESS], port=entry.data[CONF_PORT]
+    )
     hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {}
 
     # The valve controller's UDP-based API can't handle concurrent requests very well,
     # so we use a lock to ensure that only one API request is reaching it at a time:
-    lock = asyncio.Lock()
+    api_lock = asyncio.Lock()
     initial_fetch_tasks = []
-
-    async def api_request(coro: Callable[..., Awaitable]) -> dict:
-        """Execute an AP request against the valve controller."""
-        async with lock, client:
-            try:
-                resp = await coro()
-            except GuardianError as err:
-                raise UpdateFailed(err)
-        return resp["data"]
 
     for api, api_coro in [
         (API_SYSTEM_DIAGNOSTICS, client.system.diagnostics),
@@ -63,12 +54,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ]:
         hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
             api
-        ] = DataUpdateCoordinator(
+        ] = GuardianDataUpdateCoordinator(
             hass,
-            LOGGER,
-            name=f"{entry.data[CONF_UID]}_{api}",
-            update_interval=DEFAULT_UPDATE_INTERVAL,
-            update_method=lambda c=api_coro: api_request(c),
+            client=client,
+            api_name=api,
+            api_coro=api_coro,
+            api_lock=api_lock,
+            valve_controller_uid=entry.data[CONF_UID],
         )
         initial_fetch_tasks.append(
             hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][api].async_refresh()
