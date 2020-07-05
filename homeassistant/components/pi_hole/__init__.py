@@ -55,7 +55,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass, config):
-    """Set up the pi_hole integration."""
+    """Set up the Pi-hole integration."""
 
     hass.data[DOMAIN] = {}
 
