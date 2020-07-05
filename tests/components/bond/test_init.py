@@ -43,7 +43,7 @@ async def test_unload_config_entry(hass: HomeAssistant):
     config_entry.add_to_hass(hass)
     
     with patch(
-        "homeassistant.components.bond.async_setup_entry", return_value=True
+        "homeassistant.components.bond.cover.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.async_setup(config_entry.entry_id)
         assert result is True
