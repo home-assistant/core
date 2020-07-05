@@ -1,5 +1,7 @@
 """The tests for the  Template switch platform."""
 
+import pytest
+
 from homeassistant import setup
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import CoreState, State, callback
@@ -51,13 +53,13 @@ async def test_template_state_text(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    state = hass.states.set("switch.test_state", STATE_ON)
+    hass.states.async_set("switch.test_state", STATE_ON)
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.test_template_switch")
     assert state.state == STATE_ON
 
-    state = hass.states.set("switch.test_state", STATE_OFF)
+    hass.states.async_set("switch.test_state", STATE_OFF)
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.test_template_switch")
@@ -165,7 +167,7 @@ async def test_icon_template(hass):
     state = hass.states.get("switch.test_template_switch")
     assert state.attributes.get("icon") == ""
 
-    state = hass.states.set("switch.test_state", STATE_ON)
+    hass.states.async_set("switch.test_state", STATE_ON)
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.test_template_switch")
@@ -207,7 +209,7 @@ async def test_entity_picture_template(hass):
     state = hass.states.get("switch.test_template_switch")
     assert state.attributes.get("entity_picture") == ""
 
-    state = hass.states.set("switch.test_state", STATE_ON)
+    hass.states.async_set("switch.test_state", STATE_ON)
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.test_template_switch")
@@ -400,7 +402,7 @@ async def test_on_action(hass, calls):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    hass.states.set("switch.test_state", STATE_OFF)
+    hass.states.async_set("switch.test_state", STATE_OFF)
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.test_template_switch")
@@ -435,7 +437,7 @@ async def test_on_action_optimistic(hass, calls):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    hass.states.set("switch.test_template_switch", STATE_OFF)
+    hass.states.async_set("switch.test_template_switch", STATE_OFF)
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.test_template_switch")
@@ -474,7 +476,7 @@ async def test_off_action(hass, calls):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    hass.states.set("switch.test_state", STATE_ON)
+    hass.states.async_set("switch.test_state", STATE_ON)
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.test_template_switch")
@@ -509,7 +511,7 @@ async def test_off_action_optimistic(hass, calls):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    hass.states.set("switch.test_template_switch", STATE_ON)
+    hass.states.async_set("switch.test_template_switch", STATE_ON)
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.test_template_switch")
