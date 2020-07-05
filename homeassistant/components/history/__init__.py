@@ -450,7 +450,7 @@ def _sorted_states_to_json(
 
 def get_state(hass, utc_point_in_time, entity_id, run=None):
     """Return a state at a specific point in time."""
-    states = list(get_states(hass, utc_point_in_time, (entity_id,), run))
+    states = get_states(hass, utc_point_in_time, (entity_id,), run)
     return states[0] if states else None
 
 
