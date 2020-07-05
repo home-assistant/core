@@ -180,7 +180,7 @@ class PlexServer:
                         f"hostname '{domain}' doesn't match"
                     ):
                         _LOGGER.warning(
-                            "Plex SSL certificate's hostname changed, updating."
+                            "Plex SSL certificate's hostname changed, updating"
                         )
                         if _update_plexdirect_hostname():
                             config_entry_update_needed = True
@@ -199,7 +199,7 @@ class PlexServer:
             system_accounts = self._plex_server.systemAccounts()
         except Unauthorized:
             _LOGGER.warning(
-                "Plex account has limited permissions, shared account filtering will not be available."
+                "Plex account has limited permissions, shared account filtering will not be available"
             )
         else:
             self._accounts = [
