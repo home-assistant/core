@@ -98,11 +98,11 @@ async def test_form_unknown_error(hass):
 async def test_import(hass):
     """Test import."""
     await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-    )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
+
+    imported_conf = {
+        CONF_EMAIL: "mock@example.com",
+        CONF_PASSWORD: "test-password",
+    }
 
     with patch("pysmarthab.SmartHab.async_login"), patch(
         "pysmarthab.SmartHab.is_logged_in", return_value=True
@@ -111,14 +111,13 @@ async def test_import(hass):
     ) as mock_setup, patch(
         "homeassistant.components.smarthab.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_EMAIL: "mock@example.com", CONF_PASSWORD: "test-password"},
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=imported_conf
         )
 
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "mock@example.com"
-    assert result2["data"] == {
+    assert result["type"] == "create_entry"
+    assert result["title"] == "mock@example.com"
+    assert result["data"] == {
         CONF_EMAIL: "mock@example.com",
         CONF_PASSWORD: "test-password",
     }
