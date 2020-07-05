@@ -1,7 +1,7 @@
 """The Elexa Guardian integration."""
 import asyncio
 from datetime import timedelta
-from typing import Awaitable, Callable
+from typing import Awaitable, Callable, Dict
 
 from aioguardian import Client
 from aioguardian.errors import GuardianError
@@ -107,6 +107,7 @@ class GuardianEntity(Entity):
         self,
         entry: ConfigEntry,
         client: Client,
+        coordinators: Dict[str, DataUpdateCoordinator],
         kind: str,
         name: str,
         device_class: str,
@@ -116,8 +117,8 @@ class GuardianEntity(Entity):
         self._attrs = {ATTR_ATTRIBUTION: "Data provided by Elexa"}
         self._available = True
         self._client = client
+        self._coordinators = coordinators
         self._device_class = device_class
-        self._entry = entry
         self._icon = icon
         self._kind = kind
         self._name = name
@@ -134,9 +135,7 @@ class GuardianEntity(Entity):
         return {
             "identifiers": {(DOMAIN, self._valve_controller_uid)},
             "manufacturer": "Elexa",
-            "model": self.hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
-                API_SYSTEM_DIAGNOSTICS
-            ].data["firmware"],
+            "model": self._coordinators[API_SYSTEM_DIAGNOSTICS].data["firmware"],
             "name": f"Guardian {self._valve_controller_uid}",
         }
 
@@ -190,11 +189,7 @@ class GuardianEntity(Entity):
             self._async_update_from_latest_data()
             self.async_write_ha_state()
 
-        self.async_on_remove(
-            self.hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
-                api
-            ].async_add_listener(async_update)
-        )
+        self.async_on_remove(self._coordinators[api].async_add_listener(async_update))
 
     async def async_added_to_hass(self) -> None:
         """Perform tasks when the entity is added."""

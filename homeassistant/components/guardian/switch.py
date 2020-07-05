@@ -1,5 +1,5 @@
 """Switches for the Elexa Guardian integration."""
-from typing import Callable
+from typing import Callable, Dict
 
 from aioguardian import Client
 from aioguardian.commands.system import (
@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FILENAME, CONF_PORT, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import GuardianEntity
 from .const import API_VALVE_STATUS, DATA_CLIENT, DATA_COORDINATOR, DOMAIN, LOGGER
@@ -45,8 +46,6 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
     """Set up Guardian switches based on a config entry."""
-    client = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
-
     platform = entity_platform.current_platform.get()
 
     for service_name, schema, method in [
@@ -62,24 +61,38 @@ async def async_setup_entry(
     ]:
         platform.async_register_entity_service(service_name, schema, method)
 
-    async_add_entities([GuardianSwitch(entry, client)], True)
+    async_add_entities(
+        [
+            GuardianSwitch(
+                entry,
+                hass.data[DOMAIN][DATA_CLIENT][entry.entry_id],
+                hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id],
+            )
+        ],
+        True,
+    )
 
 
 class GuardianSwitch(GuardianEntity, SwitchEntity):
     """Define a switch to open/close the Guardian valve."""
 
-    def __init__(self, entry: ConfigEntry, client: Client):
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        client: Client,
+        coordinators: Dict[str, DataUpdateCoordinator],
+    ):
         """Initialize."""
-        super().__init__(entry, client, "valve", "Valve", None, "mdi:water")
+        super().__init__(
+            entry, client, coordinators, "valve", "Valve", None, "mdi:water"
+        )
 
         self._is_on = True
 
     @property
     def available(self) -> bool:
         """Return whether the entity is available."""
-        return self.hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
-            API_VALVE_STATUS
-        ].last_update_success
+        return self._coordinators[API_VALVE_STATUS].last_update_success
 
     @property
     def is_on(self) -> bool:
@@ -93,24 +106,27 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
-        self._is_on = self.hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
-            API_VALVE_STATUS
-        ].data["state"] in ("start_opening", "opening", "finish_opening", "opened",)
+        self._is_on = self._coordinators[API_VALVE_STATUS].data["state"] in (
+            "start_opening",
+            "opening",
+            "finish_opening",
+            "opened",
+        )
 
         self._attrs.update(
             {
-                ATTR_AVG_CURRENT: self.hass.data[DOMAIN][DATA_COORDINATOR][
-                    self._entry.entry_id
-                ][API_VALVE_STATUS].data["average_current"],
-                ATTR_INST_CURRENT: self.hass.data[DOMAIN][DATA_COORDINATOR][
-                    self._entry.entry_id
-                ][API_VALVE_STATUS].data["instantaneous_current"],
-                ATTR_INST_CURRENT_DDT: self.hass.data[DOMAIN][DATA_COORDINATOR][
-                    self._entry.entry_id
-                ][API_VALVE_STATUS].data["instantaneous_current_ddt"],
-                ATTR_TRAVEL_COUNT: self.hass.data[DOMAIN][DATA_COORDINATOR][
-                    self._entry.entry_id
-                ][API_VALVE_STATUS].data["travel_count"],
+                ATTR_AVG_CURRENT: self._coordinators[API_VALVE_STATUS].data[
+                    "average_current"
+                ],
+                ATTR_INST_CURRENT: self._coordinators[API_VALVE_STATUS].data[
+                    "instantaneous_current"
+                ],
+                ATTR_INST_CURRENT_DDT: self._coordinators[API_VALVE_STATUS].data[
+                    "instantaneous_current_ddt"
+                ],
+                ATTR_TRAVEL_COUNT: self._coordinators[API_VALVE_STATUS].data[
+                    "travel_count"
+                ],
             }
         )
 

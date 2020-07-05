@@ -1,11 +1,12 @@
 """Binary sensors for the Elexa Guardian integration."""
-from typing import Callable
+from typing import Callable, Dict
 
 from aioguardian import Client
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import GuardianEntity
 from .const import (
@@ -30,10 +31,16 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
     """Set up Guardian switches based on a config entry."""
-    client = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
     async_add_entities(
         [
-            GuardianBinarySensor(entry, client, kind, name, device_class)
+            GuardianBinarySensor(
+                entry,
+                hass.data[DOMAIN][DATA_CLIENT][entry.entry_id],
+                hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id],
+                kind,
+                name,
+                device_class,
+            )
             for kind, name, device_class in SENSORS
         ],
         True,
@@ -47,12 +54,13 @@ class GuardianBinarySensor(GuardianEntity, BinarySensorEntity):
         self,
         entry: ConfigEntry,
         client: Client,
+        coordinators: Dict[str, DataUpdateCoordinator],
         kind: str,
         name: str,
         device_class: str,
     ) -> None:
         """Initialize."""
-        super().__init__(entry, client, kind, name, device_class, None)
+        super().__init__(entry, client, coordinators, kind, name, device_class, None)
 
         self._is_on = True
 
@@ -60,11 +68,9 @@ class GuardianBinarySensor(GuardianEntity, BinarySensorEntity):
     def available(self) -> bool:
         """Return whether the entity is available."""
         if self._kind == SENSOR_KIND_AP_INFO:
-            return self.hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
-                API_WIFI_STATUS
-            ].last_update_success
+            return self._coordinators[API_WIFI_STATUS].last_update_success
         if self._kind == SENSOR_KIND_LEAK_DETECTED:
-            return self.hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
+            return self._coordinators[
                 API_SYSTEM_ONBOARD_SENSOR_STATUS
             ].last_update_success
         return False
@@ -84,17 +90,15 @@ class GuardianBinarySensor(GuardianEntity, BinarySensorEntity):
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
         if self._kind == SENSOR_KIND_AP_INFO:
-            self._is_on = self.hass.data[DOMAIN][DATA_COORDINATOR][
-                self._entry.entry_id
-            ][API_WIFI_STATUS].data["ap_enabled"]
+            self._is_on = self._coordinators[API_WIFI_STATUS].data["ap_enabled"]
             self._attrs.update(
                 {
-                    ATTR_CONNECTED_CLIENTS: self.hass.data[DOMAIN][DATA_COORDINATOR][
-                        self._entry.entry_id
-                    ][API_WIFI_STATUS].data["ap_clients"]
+                    ATTR_CONNECTED_CLIENTS: self._coordinators[API_WIFI_STATUS].data[
+                        "ap_clients"
+                    ]
                 }
             )
         elif self._kind == SENSOR_KIND_LEAK_DETECTED:
-            self._is_on = self.hass.data[DOMAIN][DATA_COORDINATOR][
-                self._entry.entry_id
-            ][API_SYSTEM_ONBOARD_SENSOR_STATUS].data["wet"]
+            self._is_on = self._coordinators[API_SYSTEM_ONBOARD_SENSOR_STATUS].data[
+                "wet"
+            ]
