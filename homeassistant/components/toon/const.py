@@ -120,7 +120,7 @@ SENSOR_ENTITIES = {
         ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ATTR_ICON: None,
-        ATTR_DEFAULT_ENABLED: True,
+        ATTR_DEFAULT_ENABLED: False,
     },
     "gas_average": {
         ATTR_NAME: "Average Gas Usage",
