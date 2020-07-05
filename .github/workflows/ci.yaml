@@ -110,7 +110,7 @@ jobs:
       - name: Run bandit
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual bandit --all-files
+          pre-commit run --hook-stage manual bandit --all-files --show-diff-on-failure
 
   lint-black:
     name: Check black
@@ -154,7 +154,7 @@ jobs:
       - name: Run black
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual black --all-files
+          pre-commit run --hook-stage manual black --all-files --show-diff-on-failure
 
   lint-codespell:
     name: Check codespell
@@ -195,10 +195,13 @@ jobs:
         run: |
           echo "Failed to restore Python virtual environment from cache"
           exit 1
+      - name: Register codespell problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/codespell.json"
       - name: Run codespell
         run: |
           . venv/bin/activate
-          pre-commit run --show-diff-on-failure --color=always --hook-stage manual codespell --all-files
+          pre-commit run --show-diff-on-failure --hook-stage manual codespell --all-files
 
   lint-dockerfile:
     name: Check Dockerfile
@@ -207,6 +210,9 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
+      - name: Register hadolint problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/hadolint.json"
       - name: Check Dockerfile
         uses: docker://hadolint/hadolint:v1.18.0
         with:
@@ -255,6 +261,9 @@ jobs:
         run: |
           echo "Failed to restore Python virtual environment from cache"
           exit 1
+      - name: Register check executables problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/check-executables-have-shebangs.json"
       - name: Run executables check
         run: |
           . venv/bin/activate
@@ -299,6 +308,9 @@ jobs:
         run: |
           echo "Failed to restore Python virtual environment from cache"
           exit 1
+      - name: Register flake8 problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/flake8.json"
       - name: Run flake8
         run: |
           . venv/bin/activate
@@ -346,7 +358,7 @@ jobs:
       - name: Run isort
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual isort --all-files
+          pre-commit run --hook-stage manual isort --all-files --show-diff-on-failure
 
   lint-json:
     name: Check JSON
@@ -387,6 +399,9 @@ jobs:
         run: |
           echo "Failed to restore Python virtual environment from cache"
           exit 1
+      - name: Register check-json problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/check-json.json"
       - name: Run check-json
         run: |
           . venv/bin/activate
@@ -434,7 +449,7 @@ jobs:
       - name: Run pyupgrade
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual pyupgrade --all-files
+          pre-commit run --hook-stage manual pyupgrade --all-files --show-diff-on-failure
 
   # Disabled until we have the existing issues fixed
   # lint-shellcheck:
@@ -486,10 +501,13 @@ jobs:
         run: |
           echo "Failed to restore Python virtual environment from cache"
           exit 1
+      - name: Register yamllint problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/yamllint.json"
       - name: Run yamllint
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual yamllint --all-files
+          pre-commit run --hook-stage manual yamllint --all-files --show-diff-on-failure
 
   hassfest:
     name: Check hassfest
@@ -622,6 +640,9 @@ jobs:
         run: |
           echo "Failed to restore Python virtual environment from cache"
           exit 1
+      - name: Register pylint problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/pylint.json"
       - name: Run pylint
         run: |
           . venv/bin/activate
@@ -654,6 +675,9 @@ jobs:
         run: |
           echo "Failed to restore Python virtual environment from cache"
           exit 1
+      - name: Register mypy problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/mypy.json"
       - name: Run mypy
         run: |
           . venv/bin/activate
