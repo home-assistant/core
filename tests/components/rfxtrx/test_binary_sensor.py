@@ -34,6 +34,45 @@ async def test_one(hass, rfxtrx):
     assert state.attributes.get("friendly_name") == "Test"
 
 
+async def test_one_pt2262(hass, rfxtrx):
+    """Test with 1 sensor."""
+    await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "rfxtrx",
+                "devices": {
+                    "0913000022670e013970": {
+                        "name": "Test",
+                        "data_bits": 4,
+                        "command_on": 0xE,
+                        "command_off": 0x7,
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state
+    assert state.state == "off"  # probably aught to be unknown
+    assert state.attributes.get("friendly_name") == "Test"
+
+    await _signal_event(hass, "0913000022670e013970")
+    state = hass.states.get("binary_sensor.test")
+    assert state
+    assert state.state == "on"
+    assert state.attributes.get("friendly_name") == "Test"
+
+    await _signal_event(hass, "09130000226707013d70")
+    state = hass.states.get("binary_sensor.test")
+    assert state
+    assert state.state == "off"
+    assert state.attributes.get("friendly_name") == "Test"
+
+
 async def test_several(hass, rfxtrx):
     """Test with 3."""
     await async_setup_component(
