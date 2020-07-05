@@ -1,7 +1,12 @@
 """The tests for the Rfxtrx sensor platform."""
+from datetime import timedelta
+
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from . import _signal_event
+
+from tests.common import async_fire_time_changed
 
 
 async def test_default_config(hass, rfxtrx):
@@ -160,3 +165,44 @@ async def test_discover_noautoadd(hass, rfxtrx):
     # Trying to add switch
     await _signal_event(hass, "0b1100100118cdea02010f70")
     assert hass.states.async_all() == []
+
+
+async def test_off_delay(hass, rfxtrx):
+    """Test with discovery."""
+    await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "rfxtrx",
+                "automatic_add": True,
+                "devices": {
+                    "0b1100100118cdea02010f70": {"name": "Test", "off_delay": 5}
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state
+    assert state.state == "off"
+
+    await _signal_event(hass, "0b1100100118cdea02010f70")
+    state = hass.states.get("binary_sensor.test")
+    assert state
+    assert state.state == "on"
+
+    base_time = utcnow()
+
+    async_fire_time_changed(hass, base_time + timedelta(seconds=4))
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test")
+    assert state
+    assert state.state == "on"
+
+    async_fire_time_changed(hass, base_time + timedelta(seconds=6))
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test")
+    assert state
+    assert state.state == "off"
