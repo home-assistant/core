@@ -160,7 +160,6 @@ async def _test_reconnect(hass, caplog, config):
     ], patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
         await hass.helpers.entity_component.async_update_entity(entity_id)
 
-        # await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_STANDBY
@@ -1085,9 +1084,6 @@ async def _test_service(
             DOMAIN, ha_service_name, service_data=service_data, blocking=True,
         )
         assert service_call.called
-
-        # if args or kwargs:
-        #     assert service_call.call_args == call(*args, **kwargs)
 
 
 async def test_services_androidtv(hass):
