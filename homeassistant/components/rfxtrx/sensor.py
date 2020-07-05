@@ -92,6 +92,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     continue
                 sensor = sensors[data_type]
                 sensor.event = event
+                if sensor.hass:
+                    sensor.schedule_update_ha_state()
                 # Fire event
                 if sensor.should_fire_event:
                     sensor.hass.bus.fire(
