@@ -313,6 +313,7 @@ omit =
     homeassistant/components/guardian/binary_sensor.py
     homeassistant/components/guardian/sensor.py
     homeassistant/components/guardian/switch.py
+    homeassistant/components/guardian/util.py
     homeassistant/components/habitica/*
     homeassistant/components/hangouts/*
     homeassistant/components/hangouts/__init__.py
