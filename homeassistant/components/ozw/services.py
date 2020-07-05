@@ -95,13 +95,10 @@ class ZWaveServices:
                                 str(selection),
                             )
                             return
-                        else:
-                            _LOGGER.error(
-                                "Invalid value %s for parameter %s",
-                                str(selection),
-                                param,
-                            )
-                            break
+                        _LOGGER.error(
+                            "Invalid value %s for parameter %s", str(selection), param,
+                        )
+                        break
                     else:
                         # iterate list labels to get value
                         for selected in value.value["List"]:
@@ -114,13 +111,12 @@ class ZWaveServices:
                                     str(selection),
                                 )
                                 return
-                            else:
-                                _LOGGER.error(
-                                    "Invalid value %s for parameter %s",
-                                    str(selection),
-                                    param,
-                                )
-                                break
+                            _LOGGER.error(
+                                "Invalid value %s for parameter %s",
+                                str(selection),
+                                param,
+                            )
+                            break
                 if value.type == ValueType.BUTTON:
                     # Unsupported at this time
                     _LOGGER.info("Button type not supported yet")
@@ -135,14 +131,13 @@ class ZWaveServices:
                             selection,
                         )
                         return
-                    else:
-                        _LOGGER.error(
-                            "Invalid value %s for parameter %s, maximum value of %s",
-                            str(selection),
-                            param,
-                            value.max,
-                        )
-                        break
+                    _LOGGER.error(
+                        "Invalid value %s for parameter %s, maximum value of %s",
+                        str(selection),
+                        param,
+                        value.max,
+                    )
+                    break
 
     @callback
     def async_add_node(self, service):
