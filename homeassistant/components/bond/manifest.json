@@ -6,7 +6,6 @@
   "requirements": [
     "bond-home == 0.0.8"
   ],
-  "homekit": {},
   "dependencies": [],
   "codeowners": [
     "@prystupa"
