@@ -308,6 +308,9 @@ jobs:
         run: |
           echo "Failed to restore Python virtual environment from cache"
           exit 1
+      - name: Register flake8 problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/flake8.json"
       - name: Run flake8
         run: |
           . venv/bin/activate
