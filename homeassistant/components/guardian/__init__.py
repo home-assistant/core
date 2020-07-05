@@ -1,6 +1,5 @@
 """The Elexa Guardian integration."""
 import asyncio
-from datetime import timedelta
 from typing import Dict
 
 from aioguardian import Client
@@ -12,6 +11,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
+    API_SENSOR_PAIR_DUMP,
+    API_SENSOR_PAIRED_SENSOR_STATUS,
     API_SYSTEM_DIAGNOSTICS,
     API_SYSTEM_ONBOARD_SENSOR_STATUS,
     API_VALVE_STATUS,
@@ -20,17 +21,22 @@ from .const import (
     DATA_CLIENT,
     DATA_COORDINATOR,
     DOMAIN,
+    LOGGER,
 )
 from .util import GuardianDataUpdateCoordinator
 
-DEFAULT_UPDATE_INTERVAL = timedelta(seconds=30)
+DATA_LAST_SENSOR_PAIR_DUMP = "last_sensor_pair_dump"
 
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the Elexa Guardian component."""
-    hass.data[DOMAIN] = {DATA_CLIENT: {}, DATA_COORDINATOR: {}}
+    hass.data[DOMAIN] = {
+        DATA_CLIENT: {},
+        DATA_COORDINATOR: {},
+        DATA_LAST_SENSOR_PAIR_DUMP: {},
+    }
     return True
 
 
@@ -39,7 +45,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = Client(
         entry.data[CONF_IP_ADDRESS], port=entry.data[CONF_PORT]
     )
-    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {}
+    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {
+        API_SENSOR_PAIRED_SENSOR_STATUS: {}
+    }
 
     # The valve controller's UDP-based API can't handle concurrent requests very well,
     # so we use a lock to ensure that only one API request is reaching it at a time:
@@ -47,12 +55,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     initial_fetch_tasks = []
 
     for api, api_coro in [
+        (API_SENSOR_PAIR_DUMP, client.sensor.pair_dump),
         (API_SYSTEM_DIAGNOSTICS, client.system.diagnostics),
         (API_SYSTEM_ONBOARD_SENSOR_STATUS, client.system.onboard_sensor_status),
         (API_VALVE_STATUS, client.valve.status),
         (API_WIFI_STATUS, client.wifi.status),
     ]:
-        hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+        coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
             api
         ] = GuardianDataUpdateCoordinator(
             hass,
@@ -62,9 +71,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             api_lock=api_lock,
             valve_controller_uid=entry.data[CONF_UID],
         )
-        initial_fetch_tasks.append(
-            hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][api].async_refresh()
+        initial_fetch_tasks.append(coordinator.async_refresh())
+
+    # Add a listener for the `sensor_pair_dump` DataUpdateCoordinator that figures out
+    # whether paired sensors have been added/removed:
+    @callback
+    def process_sensor_pair_dump() -> None:
+        """Process the latest sensor pair dump info."""
+        old = hass.data[DOMAIN][DATA_LAST_SENSOR_PAIR_DUMP].get(entry.entry_id, set())
+        new = hass.data[DOMAIN][DATA_LAST_SENSOR_PAIR_DUMP][entry.entry_id] = set(
+            hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+                API_SENSOR_PAIR_DUMP
+            ].data["paired_uids"]
         )
+
+        to_add = new.difference(old)
+        to_remove = old.difference(new)
+
+        if to_add:
+            LOGGER.info("Identified paired sensor(s) to add: %s", to_add)
+            for uid in to_add:
+                coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+                    API_SENSOR_PAIRED_SENSOR_STATUS
+                ][uid] = GuardianDataUpdateCoordinator(
+                    hass,
+                    client=client,
+                    api_name=f"{API_SENSOR_PAIRED_SENSOR_STATUS}_{uid}",
+                    api_coro=lambda uid=uid: client.sensor.paired_sensor_status(uid),
+                    api_lock=api_lock,
+                    valve_controller_uid=entry.data[CONF_UID],
+                )
+                initial_fetch_tasks.append(coordinator.async_refresh())
+
+        if to_remove:
+            LOGGER.info("Identified paired sensor(s) to remove: %s", to_remove)
+
+    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+        API_SENSOR_PAIR_DUMP
+    ].async_add_listener(process_sensor_pair_dump)
 
     await asyncio.gather(*initial_fetch_tasks)
 
@@ -88,7 +132,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     if unload_ok:
         hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
-        hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
+        hass.data[DOMAIN][DATA_LAST_SENSOR_PAIR_DUMP].pop(entry.entry_id)
+
+        coordinators = hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
+        for coordinator in coordinators.values():
+            coordinator.async_remove_all_listeners()
 
     return unload_ok
 
