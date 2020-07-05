@@ -370,13 +370,11 @@ class HomeAccessory(Accessory):
                     self.async_update_linked_battery_callback,
                 )
             )
-        else:
+        elif state is not None:
             battery_state = state.attributes.get(ATTR_BATTERY_LEVEL)
         if self.linked_battery_charging_sensor:
-            battery_charging_state = (
-                self.hass.states.get(self.linked_battery_charging_sensor).state
-                == STATE_ON
-            )
+            state = self.hass.states.get(self.linked_battery_charging_sensor)
+            battery_charging_state = state and state.state == STATE_ON
             self._subscriptions.append(
                 async_track_state_change_event(
                     self.hass,
@@ -384,7 +382,7 @@ class HomeAccessory(Accessory):
                     self.async_update_linked_battery_charging_callback,
                 )
             )
-        elif battery_charging_state is None:
+        elif battery_charging_state is None and state is not None:
             battery_charging_state = state.attributes.get(ATTR_BATTERY_CHARGING)
 
         if battery_state is not None or battery_charging_state is not None:
