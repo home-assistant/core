@@ -99,24 +99,21 @@ class ZWaveServices:
                             "Invalid value %s for parameter %s", str(selection), param,
                         )
                         break
-                    else:
-                        # iterate list labels to get value
-                        for selected in value.value["List"]:
-                            if selected["Label"] == selection:
-                                value.send_value(int(selected["Value"]))
-                                _LOGGER.info(
-                                    "Setting configuration parameter %s on Node %s with list selection %s",
-                                    param,
-                                    node_id,
-                                    str(selection),
-                                )
-                                return
-                            _LOGGER.error(
-                                "Invalid value %s for parameter %s",
-                                str(selection),
+                    # iterate list labels to get value
+                    for selected in value.value["List"]:
+                        if selected["Label"] == selection:
+                            value.send_value(int(selected["Value"]))
+                            _LOGGER.info(
+                                "Setting configuration parameter %s on Node %s with list selection %s",
                                 param,
+                                node_id,
+                                str(selection),
                             )
-                            break
+                            return
+                        _LOGGER.error(
+                            "Invalid value %s for parameter %s", str(selection), param,
+                        )
+                        break
                 if value.type == ValueType.BUTTON:
                     # Unsupported at this time
                     _LOGGER.info("Button type not supported yet")
