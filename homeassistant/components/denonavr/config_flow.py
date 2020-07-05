@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "denonavr"
 
-SUPPORTED_MANUFACTURERS = ["Denon", "DENON", "Marantz"]
+SUPPORTED_MANUFACTURERS = ["Denon", "DENON", "DENON PROFESSIONAL", "Marantz"]
 
 CONF_SHOW_ALL_SOURCES = "show_all_sources"
 CONF_ZONE2 = "zone2"
