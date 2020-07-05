@@ -1,4 +1,7 @@
 """Switches for the Elexa Guardian integration."""
+from typing import Callable, Dict
+
+from aioguardian import Client
 from aioguardian.commands.system import (
     DEFAULT_FIRMWARE_UPGRADE_FILENAME,
     DEFAULT_FIRMWARE_UPGRADE_PORT,
@@ -8,12 +11,14 @@ from aioguardian.errors import GuardianError
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FILENAME, CONF_PORT, CONF_URL
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import Guardian, GuardianEntity
-from .const import DATA_CLIENT, DATA_VALVE_STATUS, DOMAIN, LOGGER, SWITCH_KIND_VALVE
+from . import GuardianEntity
+from .const import API_VALVE_STATUS, DATA_CLIENT, DATA_COORDINATOR, DOMAIN, LOGGER
 
 ATTR_AVG_CURRENT = "average_current"
 ATTR_INST_CURRENT = "instantaneous_current"
@@ -37,10 +42,10 @@ SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+) -> None:
     """Set up Guardian switches based on a config entry."""
-    guardian = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
-
     platform = entity_platform.current_platform.get()
 
     for service_name, schema, method in [
@@ -56,27 +61,52 @@ async def async_setup_entry(hass, entry, async_add_entities):
     ]:
         platform.async_register_entity_service(service_name, schema, method)
 
-    async_add_entities([GuardianSwitch(guardian)], True)
+    async_add_entities(
+        [
+            GuardianSwitch(
+                entry,
+                hass.data[DOMAIN][DATA_CLIENT][entry.entry_id],
+                hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id],
+            )
+        ],
+        True,
+    )
 
 
 class GuardianSwitch(GuardianEntity, SwitchEntity):
     """Define a switch to open/close the Guardian valve."""
 
-    def __init__(self, guardian: Guardian):
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        client: Client,
+        coordinators: Dict[str, DataUpdateCoordinator],
+    ):
         """Initialize."""
-        super().__init__(guardian, SWITCH_KIND_VALVE, "Valve", None, "mdi:water")
+        super().__init__(
+            entry, client, coordinators, "valve", "Valve", None, "mdi:water"
+        )
 
         self._is_on = True
 
     @property
-    def is_on(self):
+    def available(self) -> bool:
+        """Return whether the entity is available."""
+        return self._coordinators[API_VALVE_STATUS].last_update_success
+
+    @property
+    def is_on(self) -> bool:
         """Return True if the valve is open."""
         return self._is_on
 
+    async def _async_internal_added_to_hass(self):
+        """Register API interest (and related tasks) when the entity is added."""
+        self.async_add_coordinator_update_listener(API_VALVE_STATUS)
+
     @callback
-    def _update_from_latest_data(self):
+    def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
-        self._is_on = self._guardian.data[DATA_VALVE_STATUS]["state"] in (
+        self._is_on = self._coordinators[API_VALVE_STATUS].data["state"] in (
             "start_opening",
             "opening",
             "finish_opening",
@@ -85,16 +115,16 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
 
         self._attrs.update(
             {
-                ATTR_AVG_CURRENT: self._guardian.data[DATA_VALVE_STATUS][
+                ATTR_AVG_CURRENT: self._coordinators[API_VALVE_STATUS].data[
                     "average_current"
                 ],
-                ATTR_INST_CURRENT: self._guardian.data[DATA_VALVE_STATUS][
+                ATTR_INST_CURRENT: self._coordinators[API_VALVE_STATUS].data[
                     "instantaneous_current"
                 ],
-                ATTR_INST_CURRENT_DDT: self._guardian.data[DATA_VALVE_STATUS][
+                ATTR_INST_CURRENT_DDT: self._coordinators[API_VALVE_STATUS].data[
                     "instantaneous_current_ddt"
                 ],
-                ATTR_TRAVEL_COUNT: self._guardian.data[DATA_VALVE_STATUS][
+                ATTR_TRAVEL_COUNT: self._coordinators[API_VALVE_STATUS].data[
                     "travel_count"
                 ],
             }
@@ -103,40 +133,40 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
     async def async_disable_ap(self):
         """Disable the device's onboard access point."""
         try:
-            async with self._guardian.client:
-                await self._guardian.client.wifi.disable_ap()
+            async with self._client:
+                await self._client.wifi.disable_ap()
         except GuardianError as err:
             LOGGER.error("Error during service call: %s", err)
 
     async def async_enable_ap(self):
         """Enable the device's onboard access point."""
         try:
-            async with self._guardian.client:
-                await self._guardian.client.wifi.enable_ap()
+            async with self._client:
+                await self._client.wifi.enable_ap()
         except GuardianError as err:
             LOGGER.error("Error during service call: %s", err)
 
     async def async_reboot(self):
         """Reboot the device."""
         try:
-            async with self._guardian.client:
-                await self._guardian.client.system.reboot()
+            async with self._client:
+                await self._client.system.reboot()
         except GuardianError as err:
             LOGGER.error("Error during service call: %s", err)
 
     async def async_reset_valve_diagnostics(self):
         """Fully reset system motor diagnostics."""
         try:
-            async with self._guardian.client:
-                await self._guardian.client.valve.reset()
+            async with self._client:
+                await self._client.valve.reset()
         except GuardianError as err:
             LOGGER.error("Error during service call: %s", err)
 
     async def async_upgrade_firmware(self, *, url, port, filename):
         """Upgrade the device firmware."""
         try:
-            async with self._guardian.client:
-                await self._guardian.client.system.upgrade_firmware(
+            async with self._client:
+                await self._client.system.upgrade_firmware(
                     url=url, port=port, filename=filename,
                 )
         except GuardianError as err:
@@ -145,8 +175,8 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the valve off (closed)."""
         try:
-            async with self._guardian.client:
-                await self._guardian.client.valve.close()
+            async with self._client:
+                await self._client.valve.close()
         except GuardianError as err:
             LOGGER.error("Error while closing the valve: %s", err)
             return
@@ -157,8 +187,8 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the valve on (open)."""
         try:
-            async with self._guardian.client:
-                await self._guardian.client.valve.open()
+            async with self._client:
+                await self._client.valve.open()
         except GuardianError as err:
             LOGGER.error("Error while opening the valve: %s", err)
             return
