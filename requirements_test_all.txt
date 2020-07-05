@@ -852,6 +852,9 @@ simplisafe-python==9.2.0
 # homeassistant.components.sleepiq
 sleepyq==0.7
 
+# homeassistant.components.smarthab
+smarthab==0.21
+
 # homeassistant.components.smhi
 smhi-pkg==1.0.13
 
