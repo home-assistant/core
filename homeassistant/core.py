@@ -71,6 +71,7 @@ from homeassistant.exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
+from homeassistant.helpers.frame import warn_use
 from homeassistant.util import location, network
 from homeassistant.util.async_ import fire_coroutine_threadsafe, run_callback_threadsafe
 import homeassistant.util.dt as dt_util
@@ -190,6 +191,9 @@ class HomeAssistant:
 
         self.executor = ThreadPoolExecutor(**executor_opts)
         self.loop.set_default_executor(self.executor)
+        self.loop.set_default_executor = warn_use(  # type: ignore
+            self.loop.set_default_executor, "sets default executor on the event loop"
+        )
         self.loop.set_exception_handler(async_loop_exception_handler)
         self._pending_tasks: list = []
         self._track_task = True
