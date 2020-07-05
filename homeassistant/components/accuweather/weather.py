@@ -121,27 +121,21 @@ class AccuWeatherEntity(WeatherEntity):
                     ATTR_FORECAST_TIME: utc_from_timestamp(
                         item["EpochDate"]
                     ).isoformat(),
-                    ATTR_FORECAST_TEMP: item["Temperature"]["Maximum"]["Value"],
-                    ATTR_FORECAST_TEMP_LOW: item["Temperature"]["Minimum"]["Value"],
-                    ATTR_FORECAST_PRECIPITATION: self._calc_precipitation(
-                        item["Day"], item["Night"]
-                    ),
+                    ATTR_FORECAST_TEMP: item["TemperatureMax"]["Value"],
+                    ATTR_FORECAST_TEMP_LOW: item["TemperatureMin"]["Value"],
+                    ATTR_FORECAST_PRECIPITATION: self._calc_precipitation(item),
                     ATTR_FORECAST_PRECIPITATION_PROBABILITY: round(
                         mean(
                             [
-                                item["Day"]["PrecipitationProbability"],
-                                item["Night"]["PrecipitationProbability"],
+                                item["PrecipitationProbabilityDay"],
+                                item["PrecipitationProbabilityNight"],
                             ]
                         )
                     ),
-                    ATTR_FORECAST_WIND_SPEED: item["Day"]["Wind"]["Speed"]["Value"],
-                    ATTR_FORECAST_WIND_BEARING: item["Day"]["Wind"]["Direction"][
-                        "Degrees"
-                    ],
+                    ATTR_FORECAST_WIND_SPEED: item["WindDay"]["Speed"]["Value"],
+                    ATTR_FORECAST_WIND_BEARING: item["WindDay"]["Direction"]["Degrees"],
                     ATTR_FORECAST_CONDITION: [
-                        k
-                        for k, v in CONDITION_CLASSES.items()
-                        if item["Day"]["Icon"] in v
+                        k for k, v in CONDITION_CLASSES.items() if item["IconDay"] in v
                     ][0],
                 }
                 for item in self.coordinator.data["DailyForecasts"]
@@ -165,10 +159,16 @@ class AccuWeatherEntity(WeatherEntity):
         await self.coordinator.async_request_refresh()
 
     @staticmethod
-    def _calc_precipitation(day: dict, night: dict) -> float:
+    def _calc_precipitation(day: dict) -> float:
         """Return sum of the precipitation."""
         precip_sum = 0
         precip_types = ["Rain", "Snow", "Ice"]
         for precip in precip_types:
-            precip_sum = sum([precip_sum, day[precip]["Value"], night[precip]["Value"]])
+            precip_sum = sum(
+                [
+                    precip_sum,
+                    day[f"{precip}Day"]["Value"],
+                    day[f"{precip}Night"]["Value"],
+                ]
+            )
         return round(precip_sum, 1)

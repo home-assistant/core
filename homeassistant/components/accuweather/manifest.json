@@ -2,7 +2,7 @@
   "domain": "accuweather",
   "name": "AccuWeather",
   "documentation": "https://github.com/bieniu/ha-accuweather",
-  "requirements": ["accuweather==0.0.6"],
+  "requirements": ["accuweather==0.0.7"],
   "codeowners": ["@bieniu"],
   "config_flow": true
 }
