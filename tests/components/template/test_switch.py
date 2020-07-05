@@ -245,7 +245,7 @@ async def test_template_syntax_error(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert hass.states.all() == []
+    assert hass.states.async_all() == []
 
 async def test_invalid_name_does_not_create(hass):
     """Test invalid name."""
@@ -277,7 +277,7 @@ async def test_invalid_name_does_not_create(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert hass.states.all() == []
+    assert hass.states.async_all() == []
 
 async def test_invalid_switch_does_not_create(hass):
     """Test invalid switch."""
@@ -297,7 +297,7 @@ async def test_invalid_switch_does_not_create(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert hass.states.all() == []
+    assert hass.states.async_all() == []
 
 async def test_no_switches_does_not_create(hass):
     """Test if there are no switches no creation."""
@@ -310,7 +310,7 @@ async def test_no_switches_does_not_create(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert hass.states.all() == []
+    assert hass.states.async_all() == []
 
 async def test_missing_on_does_not_create(hass):
     """Test missing on."""
@@ -342,7 +342,7 @@ async def test_missing_on_does_not_create(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert hass.states.all() == []
+    assert hass.states.async_all() == []
 
 async def test_missing_off_does_not_create(hass):
     """Test missing off."""
@@ -374,7 +374,7 @@ async def test_missing_off_does_not_create(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert hass.states.all() == []
+    assert hass.states.async_all() == []
 
 async def test_on_action(hass, calls):
     """Test on action."""
