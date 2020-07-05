@@ -103,20 +103,23 @@ class SpeedtestSensor(RestoreEntity):
                 self._state = state.state
 
         @callback
-        def _update_state():
-            """Update sensors state."""
-            if self.coordinator.data:
-                if self.type == "ping":
-                    self._state = self.coordinator.data["ping"]
-                elif self.type == "download":
-                    self._state = round(self.coordinator.data["download"] / 10 ** 6, 2)
-                elif self.type == "upload":
-                    self._state = round(self.coordinator.data["upload"] / 10 ** 6, 2)
-
+        def update():
+            """Update state."""
+            self._update_state()
             self.async_write_ha_state()
 
-        self.async_on_remove(self.coordinator.async_add_listener(_update_state))
-        _update_state()
+        self.async_on_remove(self.coordinator.async_add_listener(update))
+        self._update_state()
+
+    def _update_state(self):
+        """Update sensors state."""
+        if self.coordinator.data:
+            if self.type == "ping":
+                self._state = self.coordinator.data["ping"]
+            elif self.type == "download":
+                self._state = round(self.coordinator.data["download"] / 10 ** 6, 2)
+            elif self.type == "upload":
+                self._state = round(self.coordinator.data["upload"] / 10 ** 6, 2)
 
     async def async_update(self):
         """Request coordinator to update data."""
