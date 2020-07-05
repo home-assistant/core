@@ -2189,7 +2189,7 @@ wiffi==1.0.0
 wirelesstagpy==0.4.0
 
 # homeassistant.components.wiser
-wiser-heating-api==1.0.8
+wiser-heating-api==1.0.8.1
 
 # homeassistant.components.withings
 withings-api==2.1.3
