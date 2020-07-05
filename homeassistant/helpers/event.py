@@ -577,5 +577,5 @@ def process_state_match(
     if isinstance(parameter, str) or not hasattr(parameter, "__iter__"):
         return lambda state: state == parameter
 
-    parameter_tuple = tuple(parameter)
-    return lambda state: state in parameter_tuple
+    parameter_set = set(parameter)
+    return lambda state: state in parameter_set

@@ -1,13 +1,7 @@
 """Offer zone automation rules."""
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_ENTITY_ID,
-    CONF_EVENT,
-    CONF_PLATFORM,
-    CONF_ZONE,
-    MATCH_ALL,
-)
+from homeassistant.const import CONF_ENTITY_ID, CONF_EVENT, CONF_PLATFORM, CONF_ZONE
 from homeassistant.core import callback
 from homeassistant.helpers import condition, config_validation as cv, location
 from homeassistant.helpers.event import async_track_state_change
@@ -74,6 +68,4 @@ async def async_attach_trigger(hass, config, action, automation_info):
                 )
             )
 
-    return async_track_state_change(
-        hass, entity_id, zone_automation_listener, MATCH_ALL, MATCH_ALL
-    )
+    return async_track_state_change(hass, entity_id, zone_automation_listener)
