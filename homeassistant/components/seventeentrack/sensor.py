@@ -203,7 +203,7 @@ class SeventeenTrackPackageSensor(Entity):
         name = self._friendly_name
         if not name:
             name = self._tracking_number
-        return f"Seventeentrack Package: {name}"
+        return f"Package: {name}"
 
     @property
     def state(self):
