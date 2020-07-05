@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Plats \u00e4r redan konfigurerad."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mmi": "MMI",
+                    "radius": "Radie"
+                },
+                "title": "Fyll i dina filterdetaljer."
+            }
+        }
+    }
+}

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El bridge Cas\u00e9ta ya est\u00e1 configurado.",
+            "cannot_connect": "Configuraci\u00f3n cancelada para el bridge Cas\u00e9ta debido a un error en la conexi\u00f3n."
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar con el bridge Cas\u00e9ta; compruebe la configuraci\u00f3n del host y del certificado."
+        },
+        "step": {
+            "import_failed": {
+                "description": "No se puede configurar bridge (host: {host}) importado desde configuration.yaml.",
+                "title": "Error al importar la configuraci\u00f3n del bridge Cas\u00e9ta."
+            }
+        }
+    }
+}

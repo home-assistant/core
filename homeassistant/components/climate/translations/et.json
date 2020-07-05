@@ -1,0 +1,14 @@
+{
+    "state": {
+        "_": {
+            "auto": "Automaatne",
+            "cool": "Jahuta",
+            "dry": "Kuiv",
+            "fan_only": "Ainult ventilaator",
+            "heat": "Soojenda",
+            "heat_cool": "K\u00fcta/jahuta",
+            "off": "V\u00e4ljas"
+        }
+    },
+    "title": "Kliima"
+}

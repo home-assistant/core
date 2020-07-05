@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert"
+                },
+                "description": "Fyll inn IP-adressen til din Daikin AC.",
+                "title": "Konfigurer Daikin AC"
+            }
+        }
+    }
+}

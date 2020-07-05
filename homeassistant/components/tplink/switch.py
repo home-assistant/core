@@ -7,7 +7,7 @@ from pyHS100 import SmartDeviceException, SmartPlug
 from homeassistant.components.switch import (
     ATTR_CURRENT_POWER_W,
     ATTR_TODAY_ENERGY_KWH,
-    SwitchDevice,
+    SwitchEntity,
 )
 from homeassistant.const import ATTR_VOLTAGE
 import homeassistant.helpers.device_registry as dr
@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_ent
     return True
 
 
-class SmartPlugSwitch(SwitchDevice):
+class SmartPlugSwitch(SwitchEntity):
     """Representation of a TPLink Smart Plug switch."""
 
     def __init__(self, smartplug: SmartPlug):

@@ -2,7 +2,6 @@
 from contextlib import contextmanager
 from datetime import timedelta
 import logging
-from unittest.mock import patch
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.utility_meter.const import (
@@ -20,6 +19,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
@@ -118,6 +118,17 @@ async def test_state(hass):
     state = hass.states.get("sensor.energy_bill_midpeak")
     assert state is not None
     assert state.state == "100"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CALIBRATE_METER,
+        {ATTR_ENTITY_ID: "sensor.energy_bill_midpeak", ATTR_VALUE: "0.123"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.energy_bill_midpeak")
+    assert state is not None
+    assert state.state == "0.123"
 
 
 async def test_net_consumption(hass):

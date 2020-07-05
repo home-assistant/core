@@ -1,16 +1,16 @@
 """Test the Elk-M1 Control config flow."""
 
-from asynctest import CoroutineMock, MagicMock, PropertyMock, patch
-
 from homeassistant import config_entries, setup
 from homeassistant.components.elkm1.const import DOMAIN
+
+from tests.async_mock import AsyncMock, MagicMock, PropertyMock, patch
 
 
 def mock_elk(invalid_auth=None, sync_complete=None):
     """Mock m1lib Elk."""
     mocked_elk = MagicMock()
     type(mocked_elk).invalid_auth = PropertyMock(return_value=invalid_auth)
-    type(mocked_elk).sync_complete = CoroutineMock()
+    type(mocked_elk).sync_complete = AsyncMock()
     return mocked_elk
 
 

@@ -1,7 +1,11 @@
 """Support for IHC lights."""
 import logging
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    SUPPORT_BRIGHTNESS,
+    LightEntity,
+)
 
 from . import IHC_CONTROLLER, IHC_INFO
 from .const import CONF_DIMMABLE, CONF_OFF_ID, CONF_ON_ID
@@ -35,7 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class IhcLight(IHCDevice, Light):
+class IhcLight(IHCDevice, LightEntity):
     """Representation of a IHC light.
 
     For dimmable lights, the associated IHC resource should be a light

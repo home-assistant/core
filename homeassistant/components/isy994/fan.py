@@ -1,9 +1,10 @@
 """Support for ISY994 fans."""
-import logging
 from typing import Callable
 
+from pyisy.constants import ISY_VALUE_UNKNOWN
+
 from homeassistant.components.fan import (
-    DOMAIN,
+    DOMAIN as FAN,
     SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
@@ -11,11 +12,13 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.typing import HomeAssistantType
 
-from . import ISY994_NODES, ISY994_PROGRAMS, ISYDevice
-
-_LOGGER = logging.getLogger(__name__)
+from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS
+from .entity import ISYNodeEntity, ISYProgramEntity
+from .helpers import migrate_old_unique_ids
+from .services import async_setup_device_services
 
 VALUE_TO_STATE = {
     0: SPEED_OFF,
@@ -31,37 +34,44 @@ for key in VALUE_TO_STATE:
     STATE_TO_VALUE[VALUE_TO_STATE[key]] = key
 
 
-def setup_platform(
-    hass, config: ConfigType, add_entities: Callable[[list], None], discovery_info=None
-):
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[list], None],
+) -> bool:
     """Set up the ISY994 fan platform."""
+    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     devices = []
 
-    for node in hass.data[ISY994_NODES][DOMAIN]:
-        devices.append(ISYFanDevice(node))
+    for node in hass_isy_data[ISY994_NODES][FAN]:
+        devices.append(ISYFanEntity(node))
 
-    for name, status, actions in hass.data[ISY994_PROGRAMS][DOMAIN]:
-        devices.append(ISYFanProgram(name, status, actions))
+    for name, status, actions in hass_isy_data[ISY994_PROGRAMS][FAN]:
+        devices.append(ISYFanProgramEntity(name, status, actions))
 
-    add_entities(devices)
+    await migrate_old_unique_ids(hass, FAN, devices)
+    async_add_entities(devices)
+    async_setup_device_services(hass)
 
 
-class ISYFanDevice(ISYDevice, FanEntity):
+class ISYFanEntity(ISYNodeEntity, FanEntity):
     """Representation of an ISY994 fan device."""
 
     @property
     def speed(self) -> str:
         """Return the current speed."""
-        return VALUE_TO_STATE.get(self.value)
+        return VALUE_TO_STATE.get(self._node.status)
 
     @property
     def is_on(self) -> bool:
         """Get if the fan is on."""
-        return self.value != 0
+        if self._node.status == ISY_VALUE_UNKNOWN:
+            return None
+        return self._node.status != 0
 
     def set_speed(self, speed: str) -> None:
         """Send the set speed command to the ISY994 fan device."""
-        self._node.on(val=STATE_TO_VALUE.get(speed, 255))
+        self._node.turn_on(val=STATE_TO_VALUE.get(speed, 255))
 
     def turn_on(self, speed: str = None, **kwargs) -> None:
         """Send the turn on command to the ISY994 fan device."""
@@ -69,7 +79,7 @@ class ISYFanDevice(ISYDevice, FanEntity):
 
     def turn_off(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 fan device."""
-        self._node.off()
+        self._node.turn_off()
 
     @property
     def speed_list(self) -> list:
@@ -82,26 +92,25 @@ class ISYFanDevice(ISYDevice, FanEntity):
         return SUPPORT_SET_SPEED
 
 
-class ISYFanProgram(ISYFanDevice):
+class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
     """Representation of an ISY994 fan program."""
 
-    def __init__(self, name: str, node, actions) -> None:
-        """Initialize the ISY994 fan program."""
-        super().__init__(node)
-        self._name = name
-        self._actions = actions
+    @property
+    def speed(self) -> str:
+        """Return the current speed."""
+        return VALUE_TO_STATE.get(self._node.status)
+
+    @property
+    def is_on(self) -> bool:
+        """Get if the fan is on."""
+        return self._node.status != 0
 
     def turn_off(self, **kwargs) -> None:
         """Send the turn on command to ISY994 fan program."""
-        if not self._actions.runThen():
+        if not self._actions.run_then():
             _LOGGER.error("Unable to turn off the fan")
 
     def turn_on(self, speed: str = None, **kwargs) -> None:
         """Send the turn off command to ISY994 fan program."""
-        if not self._actions.runElse():
+        if not self._actions.run_else():
             _LOGGER.error("Unable to turn on the fan")
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return 0

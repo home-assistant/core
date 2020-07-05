@@ -2,7 +2,7 @@
 import datetime
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, DOOR_STATION, DOOR_STATION_INFO
@@ -31,7 +31,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class DoorBirdSwitch(DoorBirdEntity, SwitchDevice):
+class DoorBirdSwitch(DoorBirdEntity, SwitchEntity):
     """A relay in a DoorBird device."""
 
     def __init__(self, doorstation, doorstation_info, relay):

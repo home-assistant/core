@@ -24,8 +24,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import convert, slugify
 from homeassistant.util.dt import utc_from_timestamp
 
-from .common import ControllerData, get_configured_platforms
-from .config_flow import new_options
+from .common import ControllerData, SubscriptionRegistry, get_configured_platforms
+from .config_flow import fix_device_id_list, new_options
 from .const import (
     ATTR_CURRENT_ENERGY_KWH,
     ATTR_CURRENT_POWER_W,
@@ -81,18 +81,25 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             ),
         )
 
+    saved_light_ids = config_entry.options.get(CONF_LIGHTS, [])
+    saved_exclude_ids = config_entry.options.get(CONF_EXCLUDE, [])
+
     base_url = config_entry.data[CONF_CONTROLLER]
-    light_ids = config_entry.options.get(CONF_LIGHTS, [])
-    exclude_ids = config_entry.options.get(CONF_EXCLUDE, [])
+    light_ids = fix_device_id_list(saved_light_ids)
+    exclude_ids = fix_device_id_list(saved_exclude_ids)
+
+    # If the ids were corrected. Update the config entry.
+    if light_ids != saved_light_ids or exclude_ids != saved_exclude_ids:
+        hass.config_entries.async_update_entry(
+            entry=config_entry, options=new_options(light_ids, exclude_ids)
+        )
 
     # Initialize the Vera controller.
-    controller = veraApi.VeraController(base_url)
-    controller.start()
+    subscription_registry = SubscriptionRegistry(hass)
+    controller = veraApi.VeraController(base_url, subscription_registry)
+    await hass.async_add_executor_job(controller.start)
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP,
-        lambda event: hass.async_add_executor_job(controller.stop),
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.stop)
 
     try:
         all_devices = await hass.async_add_executor_job(controller.get_devices)
@@ -135,12 +142,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Withings config entry."""
-    controller_data = hass.data[DOMAIN]
+    controller_data: ControllerData = hass.data[DOMAIN]
 
     tasks = [
         hass.config_entries.async_forward_entry_unload(config_entry, platform)
         for platform in get_configured_platforms(controller_data)
     ]
+    tasks.append(hass.async_add_executor_job(controller_data.controller.stop))
     await asyncio.gather(*tasks)
 
     return True

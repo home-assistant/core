@@ -2,6 +2,6 @@
   "domain": "alpha_vantage",
   "name": "Alpha Vantage",
   "documentation": "https://www.home-assistant.io/integrations/alpha_vantage",
-  "requirements": ["alpha_vantage==2.1.3"],
+  "requirements": ["alpha_vantage==2.2.0"],
   "codeowners": ["@fabaff"]
 }

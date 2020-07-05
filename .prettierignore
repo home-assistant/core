@@ -1,5 +1,5 @@
 *.md
 azure-*.yml
 docs/source/_templates/*
-homeassistant/components/*/.translations/*.json
+homeassistant/components/*/translations/*.json
 tests/fixtures/*

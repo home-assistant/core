@@ -10,7 +10,7 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR_TEMP,
-    Light,
+    LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME
@@ -45,7 +45,7 @@ async def async_setup_entry(
     async_add_entities([ElgatoLight(entry.entry_id, elgato, info)], True)
 
 
-class ElgatoLight(Light):
+class ElgatoLight(LightEntity):
     """Defines a Elgato Key Light."""
 
     def __init__(

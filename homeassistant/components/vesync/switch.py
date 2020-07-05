@@ -1,7 +1,7 @@
 """Support for Etekcity VeSync switches."""
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -55,7 +55,7 @@ def _async_setup_entities(devices, async_add_entities):
     async_add_entities(dev_list, update_before_add=True)
 
 
-class VeSyncSwitchHA(VeSyncDevice, SwitchDevice):
+class VeSyncSwitchHA(VeSyncDevice, SwitchEntity):
     """Representation of a VeSync switch."""
 
     def __init__(self, plug):
@@ -90,7 +90,7 @@ class VeSyncSwitchHA(VeSyncDevice, SwitchDevice):
         self.smartplug.update_energy()
 
 
-class VeSyncLightSwitch(VeSyncDevice, SwitchDevice):
+class VeSyncLightSwitch(VeSyncDevice, SwitchEntity):
     """Handle representation of VeSync Light Switch."""
 
     def __init__(self, switch):

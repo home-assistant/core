@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "missing_configuration": "Home Connect-komponenten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen."
+        },
+        "create_entry": {
+            "default": "Vellykket godkjenning med Home Connect"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Velg godkjenningsmetode"
+            }
+        }
+    }
+}

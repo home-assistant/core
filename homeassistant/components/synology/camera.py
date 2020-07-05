@@ -1,4 +1,5 @@
 """Support for Synology Surveillance Station Cameras."""
+from functools import partial
 import logging
 
 import requests
@@ -45,12 +46,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     timeout = config.get(CONF_TIMEOUT)
 
     try:
-        surveillance = SurveillanceStation(
-            config.get(CONF_URL),
-            config.get(CONF_USERNAME),
-            config.get(CONF_PASSWORD),
-            verify_ssl=verify_ssl,
-            timeout=timeout,
+        surveillance = await hass.async_add_executor_job(
+            partial(
+                SurveillanceStation,
+                config.get(CONF_URL),
+                config.get(CONF_USERNAME),
+                config.get(CONF_PASSWORD),
+                verify_ssl=verify_ssl,
+                timeout=timeout,
+            )
         )
     except (requests.exceptions.RequestException, ValueError):
         _LOGGER.exception("Error when initializing SurveillanceStation")

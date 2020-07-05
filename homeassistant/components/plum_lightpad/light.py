@@ -1,38 +1,69 @@
 """Support for Plum Lightpad lights."""
+import asyncio
+import logging
+from typing import Callable, List
+
+from plumlightpad import Plum
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
-    Light,
+    LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import Entity
 import homeassistant.util.color as color_util
 
-from . import PLUM_DATA
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Initialize the Plum Lightpad Light and GlowRing."""
-    if discovery_info is None:
-        return
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity]], None],
+) -> None:
+    """Set up Plum Lightpad dimmer lights and glow rings."""
 
-    plum = hass.data[PLUM_DATA]
+    plum: Plum = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
+    def setup_entities(device) -> None:
+        entities = []
 
-    if "lpid" in discovery_info:
-        lightpad = plum.get_lightpad(discovery_info["lpid"])
-        entities.append(GlowRing(lightpad=lightpad))
+        if "lpid" in device:
+            lightpad = plum.get_lightpad(device["lpid"])
+            entities.append(GlowRing(lightpad=lightpad))
 
-    if "llid" in discovery_info:
-        logical_load = plum.get_load(discovery_info["llid"])
-        entities.append(PlumLight(load=logical_load))
+        if "llid" in device:
+            logical_load = plum.get_load(device["llid"])
+            entities.append(PlumLight(load=logical_load))
 
-    if entities:
-        async_add_entities(entities)
+        if entities:
+            async_add_entities(entities)
+
+    async def new_load(device):
+        setup_entities(device)
+
+    async def new_lightpad(device):
+        setup_entities(device)
+
+    device_web_session = async_get_clientsession(hass, verify_ssl=False)
+    asyncio.create_task(
+        plum.discover(
+            hass.loop,
+            loadListener=new_load,
+            lightpadListener=new_lightpad,
+            websession=device_web_session,
+        )
+    )
 
 
-class PlumLight(Light):
+class PlumLight(LightEntity):
     """Representation of a Plum Lightpad dimmer."""
 
     def __init__(self, load):
@@ -55,9 +86,24 @@ class PlumLight(Light):
         return False
 
     @property
+    def unique_id(self):
+        """Combine logical load ID with .light to guarantee it is unique."""
+        return f"{self._load.llid}.light"
+
+    @property
     def name(self):
         """Return the name of the switch if any."""
         return self._load.name
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "name": self.name,
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "model": "Dimmer",
+            "manufacturer": "Plum",
+        }
 
     @property
     def brightness(self) -> int:
@@ -88,7 +134,7 @@ class PlumLight(Light):
         await self._load.turn_off()
 
 
-class GlowRing(Light):
+class GlowRing(LightEntity):
     """Representation of a Plum Lightpad dimmer glow ring."""
 
     def __init__(self, lightpad):
@@ -131,9 +177,24 @@ class GlowRing(Light):
         return False
 
     @property
+    def unique_id(self):
+        """Combine LightPad ID with .glow to guarantee it is unique."""
+        return f"{self._lightpad.lpid}.glow"
+
+    @property
     def name(self):
         """Return the name of the switch if any."""
         return self._name
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "name": self.name,
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "model": "Glow Ring",
+            "manufacturer": "Plum",
+        }
 
     @property
     def brightness(self) -> int:

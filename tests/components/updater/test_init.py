@@ -1,14 +1,12 @@
 """The tests for the Updater component."""
-from unittest.mock import Mock
-
-from asynctest import patch
 import pytest
 
 from homeassistant.components import updater
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockDependency, mock_component, mock_coro
+from tests.async_mock import patch
+from tests.common import mock_component
 
 NEW_VERSION = "10000.0"
 MOCK_VERSION = "10.0"
@@ -17,13 +15,6 @@ MOCK_HUUID = "abcdefg"
 MOCK_RESPONSE = {"version": "0.15", "release-notes": "https://home-assistant.io"}
 MOCK_CONFIG = {updater.DOMAIN: {"reporting": True}}
 RELEASE_NOTES = "test release notes"
-
-
-@pytest.fixture(autouse=True)
-def mock_distro():
-    """Mock distro dep."""
-    with MockDependency("distro"):
-        yield
 
 
 @pytest.fixture(autouse=True)
@@ -46,7 +37,7 @@ def mock_get_newest_version_fixture():
 @pytest.fixture(name="mock_get_uuid", autouse=True)
 def mock_get_uuid_fixture():
     """Fixture to mock get_uuid."""
-    with patch("homeassistant.components.updater._load_uuid") as mock:
+    with patch("homeassistant.helpers.instance_id.async_get") as mock:
         yield mock
 
 
@@ -75,7 +66,7 @@ async def test_same_version_shows_entity_false(
 ):
     """Test if sensor is false if no new version is available."""
     mock_get_uuid.return_value = MOCK_HUUID
-    mock_get_newest_version.return_value = mock_coro((MOCK_VERSION, ""))
+    mock_get_newest_version.return_value = (MOCK_VERSION, "")
 
     assert await async_setup_component(hass, updater.DOMAIN, {updater.DOMAIN: {}})
 
@@ -92,7 +83,7 @@ async def test_same_version_shows_entity_false(
 async def test_disable_reporting(hass, mock_get_uuid, mock_get_newest_version):
     """Test we do not gather analytics when disable reporting is active."""
     mock_get_uuid.return_value = MOCK_HUUID
-    mock_get_newest_version.return_value = mock_coro((MOCK_VERSION, ""))
+    mock_get_newest_version.return_value = (MOCK_VERSION, "")
 
     assert await async_setup_component(
         hass, updater.DOMAIN, {updater.DOMAIN: {"reporting": False}}
@@ -123,7 +114,7 @@ async def test_get_newest_version_analytics_when_huuid(hass, aioclient_mock):
 
     with patch(
         "homeassistant.helpers.system_info.async_get_system_info",
-        Mock(return_value=mock_coro({"fake": "bla"})),
+        return_value={"fake": "bla"},
     ):
         res = await updater.get_newest_version(hass, MOCK_HUUID, False)
         assert res == (MOCK_RESPONSE["version"], MOCK_RESPONSE["release-notes"])
@@ -135,7 +126,7 @@ async def test_error_fetching_new_version_bad_json(hass, aioclient_mock):
 
     with patch(
         "homeassistant.helpers.system_info.async_get_system_info",
-        Mock(return_value=mock_coro({"fake": "bla"})),
+        return_value={"fake": "bla"},
     ), pytest.raises(UpdateFailed):
         await updater.get_newest_version(hass, MOCK_HUUID, False)
 
@@ -152,7 +143,7 @@ async def test_error_fetching_new_version_invalid_response(hass, aioclient_mock)
 
     with patch(
         "homeassistant.helpers.system_info.async_get_system_info",
-        Mock(return_value=mock_coro({"fake": "bla"})),
+        return_value={"fake": "bla"},
     ), pytest.raises(UpdateFailed):
         await updater.get_newest_version(hass, MOCK_HUUID, False)
 
@@ -163,7 +154,12 @@ async def test_new_version_shows_entity_after_hour_hassio(
     """Test if binary sensor gets updated if new version is available / Hass.io."""
     mock_get_uuid.return_value = MOCK_HUUID
     mock_component(hass, "hassio")
-    hass.data["hassio_hass_version"] = "999.0"
+    hass.data["hassio_info"] = {"hassos": None, "homeassistant": "999.0"}
+    hass.data["hassio_host"] = {
+        "supervisor": "222",
+        "chassis": "vm",
+        "operating_system": "HassOS 4.6",
+    }
 
     assert await async_setup_component(hass, updater.DOMAIN, {updater.DOMAIN: {}})
 

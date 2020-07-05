@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "confirm": {
-        "title": "Mobile App",
         "description": "Do you want to set up the Mobile App component?"
       }
     },

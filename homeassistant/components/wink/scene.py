@@ -1,5 +1,6 @@
 """Support for Wink scenes."""
 import logging
+from typing import Any
 
 import pywink
 
@@ -31,6 +32,6 @@ class WinkScene(WinkDevice, Scene):
         """Call when entity is added to hass."""
         self.hass.data[DOMAIN]["entities"]["scene"].append(self)
 
-    def activate(self):
+    def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         self.wink.activate()

@@ -1,7 +1,4 @@
 """Tests for Samsung TV config flow."""
-from unittest.mock import Mock, PropertyMock, call, patch
-
-from asynctest import mock
 import pytest
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
 from samsungtvws.exceptions import ConnectionFailure
@@ -20,6 +17,8 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_UDN,
 )
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_METHOD, CONF_NAME, CONF_TOKEN
+
+from tests.async_mock import DEFAULT as DEFAULT_MOCK, Mock, PropertyMock, call, patch
 
 MOCK_USER_DATA = {CONF_HOST: "fake_host", CONF_NAME: "fake_name"}
 MOCK_SSDP_DATA = {
@@ -70,11 +69,11 @@ def remote_fixture():
     ) as remote_class, patch(
         "homeassistant.components.samsungtv.config_flow.socket"
     ) as socket_class:
-        remote = mock.Mock()
-        remote.__enter__ = mock.Mock()
-        remote.__exit__ = mock.Mock()
+        remote = Mock()
+        remote.__enter__ = Mock()
+        remote.__exit__ = Mock()
         remote_class.return_value = remote
-        socket = mock.Mock()
+        socket = Mock()
         socket_class.return_value = socket
         socket_class.gethostbyname.return_value = "FAKE_IP_ADDRESS"
         yield remote
@@ -88,12 +87,12 @@ def remotews_fixture():
     ) as remotews_class, patch(
         "homeassistant.components.samsungtv.config_flow.socket"
     ) as socket_class:
-        remotews = mock.Mock()
-        remotews.__enter__ = mock.Mock()
-        remotews.__exit__ = mock.Mock()
+        remotews = Mock()
+        remotews.__enter__ = Mock()
+        remotews.__exit__ = Mock()
         remotews_class.return_value = remotews
         remotews_class().__enter__().token = "FAKE_TOKEN"
-        socket = mock.Mock()
+        socket = Mock()
         socket_class.return_value = socket
         socket_class.gethostbyname.return_value = "FAKE_IP_ADDRESS"
         yield remotews
@@ -486,7 +485,7 @@ async def test_autodetect_websocket_ssl(hass, remote, remotews):
         "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
     ), patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS",
-        side_effect=[WebSocketProtocolException("Boom"), mock.DEFAULT],
+        side_effect=[WebSocketProtocolException("Boom"), DEFAULT_MOCK],
     ) as remotews:
         enter = Mock()
         type(enter).token = PropertyMock(return_value="123456789")

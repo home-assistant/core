@@ -2,7 +2,6 @@
 from collections import OrderedDict
 from copy import deepcopy
 import unittest
-from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -27,22 +26,25 @@ from homeassistant.helpers import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import (
     MockEntity,
     get_test_home_assistant,
-    mock_coro,
     mock_device_registry,
     mock_registry,
     mock_service,
 )
+
+SUPPORT_A = 1
+SUPPORT_B = 2
+SUPPORT_C = 4
 
 
 @pytest.fixture
 def mock_handle_entity_call():
     """Mock service platform call."""
     with patch(
-        "homeassistant.helpers.service._handle_entity_call",
-        side_effect=lambda *args: mock_coro(),
+        "homeassistant.helpers.service._handle_entity_call", return_value=None,
     ) as mock_call:
         yield mock_call
 
@@ -54,17 +56,31 @@ def mock_entities(hass):
         entity_id="light.kitchen",
         available=True,
         should_poll=False,
-        supported_features=1,
+        supported_features=SUPPORT_A,
     )
     living_room = MockEntity(
         entity_id="light.living_room",
         available=True,
         should_poll=False,
-        supported_features=0,
+        supported_features=SUPPORT_B,
+    )
+    bedroom = MockEntity(
+        entity_id="light.bedroom",
+        available=True,
+        should_poll=False,
+        supported_features=(SUPPORT_A | SUPPORT_B),
+    )
+    bathroom = MockEntity(
+        entity_id="light.bathroom",
+        available=True,
+        should_poll=False,
+        supported_features=(SUPPORT_B | SUPPORT_C),
     )
     entities = OrderedDict()
     entities[kitchen.entity_id] = kitchen
     entities[living_room.entity_id] = living_room
+    entities[bedroom.entity_id] = bedroom
+    entities[bathroom.entity_id] = bathroom
     return entities
 
 
@@ -309,23 +325,66 @@ async def test_async_get_all_descriptions(hass):
 
 
 async def test_call_with_required_features(hass, mock_entities):
-    """Test service calls invoked only if entity has required feautres."""
-    test_service_mock = Mock(return_value=mock_coro())
+    """Test service calls invoked only if entity has required features."""
+    test_service_mock = AsyncMock(return_value=None)
     await service.entity_service_call(
         hass,
         [Mock(entities=mock_entities)],
         test_service_mock,
         ha.ServiceCall("test_domain", "test_service", {"entity_id": "all"}),
-        required_features=[1],
+        required_features=[SUPPORT_A],
     )
-    assert len(mock_entities) == 2
-    # Called once because only one of the entities had the required features
+
+    assert test_service_mock.call_count == 2
+    expected = [
+        mock_entities["light.kitchen"],
+        mock_entities["light.bedroom"],
+    ]
+    actual = [call[0][0] for call in test_service_mock.call_args_list]
+    assert all(entity in actual for entity in expected)
+
+
+async def test_call_with_both_required_features(hass, mock_entities):
+    """Test service calls invoked only if entity has both features."""
+    test_service_mock = AsyncMock(return_value=None)
+    await service.entity_service_call(
+        hass,
+        [Mock(entities=mock_entities)],
+        test_service_mock,
+        ha.ServiceCall("test_domain", "test_service", {"entity_id": "all"}),
+        required_features=[SUPPORT_A | SUPPORT_B],
+    )
+
     assert test_service_mock.call_count == 1
+    assert [call[0][0] for call in test_service_mock.call_args_list] == [
+        mock_entities["light.bedroom"]
+    ]
+
+
+async def test_call_with_one_of_required_features(hass, mock_entities):
+    """Test service calls invoked with one entity having the required features."""
+    test_service_mock = AsyncMock(return_value=None)
+    await service.entity_service_call(
+        hass,
+        [Mock(entities=mock_entities)],
+        test_service_mock,
+        ha.ServiceCall("test_domain", "test_service", {"entity_id": "all"}),
+        required_features=[SUPPORT_A, SUPPORT_C],
+    )
+
+    assert test_service_mock.call_count == 3
+    expected = [
+        mock_entities["light.kitchen"],
+        mock_entities["light.bedroom"],
+        mock_entities["light.bathroom"],
+    ]
+    actual = [call[0][0] for call in test_service_mock.call_args_list]
+    assert all(entity in actual for entity in expected)
 
 
 async def test_call_with_sync_func(hass, mock_entities):
     """Test invoking sync service calls."""
-    test_service_mock = Mock()
+    test_service_mock = Mock(return_value=None)
     await service.entity_service_call(
         hass,
         [Mock(entities=mock_entities)],
@@ -337,7 +396,7 @@ async def test_call_with_sync_func(hass, mock_entities):
 
 async def test_call_with_sync_attr(hass, mock_entities):
     """Test invoking sync service calls."""
-    mock_method = mock_entities["light.kitchen"].sync_method = Mock()
+    mock_method = mock_entities["light.kitchen"].sync_method = Mock(return_value=None)
     await service.entity_service_call(
         hass,
         [Mock(entities=mock_entities)],
@@ -374,11 +433,9 @@ async def test_call_context_target_all(hass, mock_handle_entity_call, mock_entit
     """Check we only target allowed entities if targeting all."""
     with patch(
         "homeassistant.auth.AuthManager.async_get_user",
-        return_value=mock_coro(
-            Mock(
-                permissions=PolicyPermissions(
-                    {"entities": {"entity_ids": {"light.kitchen": True}}}, None
-                )
+        return_value=Mock(
+            permissions=PolicyPermissions(
+                {"entities": {"entity_ids": {"light.kitchen": True}}}, None
             )
         ),
     ):
@@ -404,11 +461,9 @@ async def test_call_context_target_specific(
     """Check targeting specific entities."""
     with patch(
         "homeassistant.auth.AuthManager.async_get_user",
-        return_value=mock_coro(
-            Mock(
-                permissions=PolicyPermissions(
-                    {"entities": {"entity_ids": {"light.kitchen": True}}}, None
-                )
+        return_value=Mock(
+            permissions=PolicyPermissions(
+                {"entities": {"entity_ids": {"light.kitchen": True}}}, None
             )
         ),
     ):
@@ -435,7 +490,7 @@ async def test_call_context_target_specific_no_auth(
     with pytest.raises(exceptions.Unauthorized) as err:
         with patch(
             "homeassistant.auth.AuthManager.async_get_user",
-            return_value=mock_coro(Mock(permissions=PolicyPermissions({}, None))),
+            return_value=Mock(permissions=PolicyPermissions({}, None)),
         ):
             await service.entity_service_call(
                 hass,
@@ -464,7 +519,7 @@ async def test_call_no_context_target_all(hass, mock_handle_entity_call, mock_en
         ),
     )
 
-    assert len(mock_handle_entity_call.mock_calls) == 2
+    assert len(mock_handle_entity_call.mock_calls) == 4
     assert [call[1][1] for call in mock_handle_entity_call.mock_calls] == list(
         mock_entities.values()
     )
@@ -500,7 +555,7 @@ async def test_call_with_match_all(
         ha.ServiceCall("test_domain", "test_service", {"entity_id": "all"}),
     )
 
-    assert len(mock_handle_entity_call.mock_calls) == 2
+    assert len(mock_handle_entity_call.mock_calls) == 4
     assert [call[1][1] for call in mock_handle_entity_call.mock_calls] == list(
         mock_entities.values()
     )
@@ -606,7 +661,7 @@ async def test_domain_control_unknown(hass, mock_entities):
 
     with patch(
         "homeassistant.helpers.entity_registry.async_get_registry",
-        return_value=mock_coro(Mock(entities=mock_entities)),
+        return_value=Mock(entities=mock_entities),
     ):
         protected_mock_service = hass.helpers.service.verify_domain_control(
             "test_domain"

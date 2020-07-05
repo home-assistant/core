@@ -1,12 +1,7 @@
 """Constants for the Solar-Log integration."""
 from datetime import timedelta
 
-from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-    UNIT_PERCENTAGE,
-    UNIT_VOLT,
-)
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT, UNIT_PERCENTAGE, VOLT
 
 DOMAIN = "solarlog"
 
@@ -22,8 +17,8 @@ SENSOR_TYPES = {
     "time": ["TIME", "last update", None, "mdi:calendar-clock"],
     "power_ac": ["powerAC", "power AC", POWER_WATT, "mdi:solar-power"],
     "power_dc": ["powerDC", "power DC", POWER_WATT, "mdi:solar-power"],
-    "voltage_ac": ["voltageAC", "voltage AC", UNIT_VOLT, "mdi:flash"],
-    "voltage_dc": ["voltageDC", "voltage DC", UNIT_VOLT, "mdi:flash"],
+    "voltage_ac": ["voltageAC", "voltage AC", VOLT, "mdi:flash"],
+    "voltage_dc": ["voltageDC", "voltage DC", VOLT, "mdi:flash"],
     "yield_day": ["yieldDAY", "yield day", ENERGY_KILO_WATT_HOUR, "mdi:solar-power"],
     "yield_yesterday": [
         "yieldYESTERDAY",

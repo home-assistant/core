@@ -6,7 +6,7 @@ from typing import Any
 import holidays
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_NAME, WEEKDAYS
 import homeassistant.helpers.config_validation as cv
 
@@ -119,7 +119,7 @@ def get_date(date):
     return date
 
 
-class IsWorkdaySensor(BinarySensorDevice):
+class IsWorkdaySensor(BinarySensorEntity):
     """Implementation of a Workday sensor."""
 
     def __init__(self, obj_holidays, workdays, excludes, days_offset, name):

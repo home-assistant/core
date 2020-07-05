@@ -1,12 +1,13 @@
 """Test Konnected setup process."""
-from asynctest import patch
 import pytest
 
 from homeassistant.components import konnected
 from homeassistant.components.konnected import config_flow
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -385,6 +386,9 @@ async def test_config_passed_to_config_entry(hass):
 
 async def test_unload_entry(hass, mock_panel):
     """Test being able to unload an entry."""
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
     entry = MockConfigEntry(
         domain=konnected.DOMAIN, data={konnected.CONF_ID: "aabbccddeeff"}
     )
@@ -563,7 +567,9 @@ async def test_api(hass, aiohttp_client, mock_panel):
 
 async def test_state_updates_zone(hass, aiohttp_client, mock_panel):
     """Test callback view."""
-    await async_setup_component(hass, "http", {"http": {}})
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
 
     device_config = config_flow.CONFIG_ENTRY_SCHEMA(
         {
@@ -711,7 +717,9 @@ async def test_state_updates_zone(hass, aiohttp_client, mock_panel):
 
 async def test_state_updates_pin(hass, aiohttp_client, mock_panel):
     """Test callback view."""
-    await async_setup_component(hass, "http", {"http": {}})
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
 
     device_config = config_flow.CONFIG_ENTRY_SCHEMA(
         {

@@ -76,7 +76,7 @@ async def async_setup_platform(
     )
 
 
-class LightGroup(light.Light):
+class LightGroup(light.LightEntity):
     """Representation of a light group."""
 
     def __init__(self, name: str, entity_ids: List[str]) -> None:
@@ -183,6 +183,11 @@ class LightGroup(light.Light):
         """No polling needed for a light group."""
         return False
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes for the light group."""
+        return {ATTR_ENTITY_ID: self._entity_ids}
+
     async def async_turn_on(self, **kwargs):
         """Forward the turn_on command to all lights in the light group."""
         data = {ATTR_ENTITY_ID: self._entity_ids}
@@ -228,7 +233,11 @@ class LightGroup(light.Light):
 
         if not emulate_color_temp_entity_ids:
             await self.hass.services.async_call(
-                light.DOMAIN, light.SERVICE_TURN_ON, data, blocking=True
+                light.DOMAIN,
+                light.SERVICE_TURN_ON,
+                data,
+                blocking=True,
+                context=self._context,
             )
             return
 
@@ -244,13 +253,18 @@ class LightGroup(light.Light):
 
         await asyncio.gather(
             self.hass.services.async_call(
-                light.DOMAIN, light.SERVICE_TURN_ON, data, blocking=True
+                light.DOMAIN,
+                light.SERVICE_TURN_ON,
+                data,
+                blocking=True,
+                context=self._context,
             ),
             self.hass.services.async_call(
                 light.DOMAIN,
                 light.SERVICE_TURN_ON,
                 emulate_color_temp_data,
                 blocking=True,
+                context=self._context,
             ),
         )
 
@@ -262,7 +276,11 @@ class LightGroup(light.Light):
             data[ATTR_TRANSITION] = kwargs[ATTR_TRANSITION]
 
         await self.hass.services.async_call(
-            light.DOMAIN, light.SERVICE_TURN_OFF, data, blocking=True
+            light.DOMAIN,
+            light.SERVICE_TURN_OFF,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     async def async_update(self):
@@ -326,7 +344,7 @@ def _mean_int(*args):
 
 def _mean_tuple(*args):
     """Return the mean values along the columns of the supplied values."""
-    return tuple(sum(l) / len(l) for l in zip(*args))
+    return tuple(sum(x) / len(x) for x in zip(*args))
 
 
 def _reduce_attribute(

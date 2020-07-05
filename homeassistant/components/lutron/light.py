@@ -1,7 +1,11 @@
 """Support for Lutron lights."""
 import logging
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    SUPPORT_BRIGHTNESS,
+    LightEntity,
+)
 
 from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
 
@@ -28,7 +32,7 @@ def to_hass_level(level):
     return int((level * 255) / 100)
 
 
-class LutronLight(LutronDevice, Light):
+class LutronLight(LutronDevice, LightEntity):
     """Representation of a Lutron Light, including dimmable."""
 
     def __init__(self, area_name, lutron_device, controller):

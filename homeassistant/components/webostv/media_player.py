@@ -8,7 +8,7 @@ from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
 from websockets.exceptions import ConnectionClosed
 
 from homeassistant import util
-from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerDevice
+from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
@@ -24,6 +24,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.webostv.const import (
+    ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
     CONF_ON_ACTION,
     CONF_SOURCES,
@@ -59,6 +60,7 @@ SUPPORT_WEBOSTV_VOLUME = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -109,14 +111,14 @@ def cmd(func):
     return wrapper
 
 
-class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
+class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     """Representation of a LG webOS Smart TV."""
 
     def __init__(self, client: WebOsClient, name: str, customize, on_script=None):
         """Initialize the webos device."""
         self._client = client
         self._name = name
-        self._unique_id = client.software_info["device_id"]
+        self._unique_id = client.client_key
         self._customize = customize
         self._on_script = on_script
 
@@ -450,6 +452,6 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
         await self._client.button(button)
 
     @cmd
-    async def async_command(self, command):
+    async def async_command(self, command, **kwargs):
         """Send a command."""
-        await self._client.request(command)
+        await self._client.request(command, payload=kwargs.get(ATTR_PAYLOAD))

@@ -4,7 +4,10 @@
     "step": {
       "user": {
         "title": "Setup Logitech Harmony Hub",
-        "data": { "host": "Hostname or IP Address", "name": "Hub Name" }
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "name": "Hub Name"
+        }
       },
       "link": {
         "title": "Setup Logitech Harmony Hub",
@@ -15,7 +18,9 @@
       "cannot_connect": "Failed to connect, please try again",
       "unknown": "Unexpected error"
     },
-    "abort": { "already_configured": "Device is already configured" }
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
   },
   "options": {
     "step": {
@@ -23,7 +28,8 @@
         "description": "Adjust Harmony Hub Options",
         "data": {
           "activity": "The default activity to execute when none is specified.",
-          "delay_secs": "The delay between sending commands."
+          "delay_secs": "The delay between sending commands.",
+          "activity_notify": "Update current activity on start of activity switch."
         }
       }
     }

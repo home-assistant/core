@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "De Shopping List is al geconfigureerd."
+        },
+        "step": {
+            "user": {
+                "description": "Wil je de Shopping List configureren?",
+                "title": "Shopping List"
+            }
+        }
+    },
+    "title": "Shopping List"
+}

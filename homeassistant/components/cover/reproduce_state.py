@@ -1,7 +1,7 @@
 """Reproduce an Cover state."""
 import asyncio
 import logging
-from typing import Iterable, Optional
+from typing import Any, Dict, Iterable, Optional
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -33,7 +33,11 @@ VALID_STATES = {STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING}
 
 
 async def _async_reproduce_state(
-    hass: HomeAssistantType, state: State, context: Optional[Context] = None
+    hass: HomeAssistantType,
+    state: State,
+    *,
+    context: Optional[Context] = None,
+    reproduce_options: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Reproduce a single state."""
     cur_state = hass.states.get(state.entity_id)
@@ -61,13 +65,15 @@ async def _async_reproduce_state(
     service_data = {ATTR_ENTITY_ID: state.entity_id}
     service_data_tilting = {ATTR_ENTITY_ID: state.entity_id}
 
-    if cur_state.state != state.state or cur_state.attributes.get(
-        ATTR_CURRENT_POSITION
-    ) != state.attributes.get(ATTR_CURRENT_POSITION):
+    if not (
+        cur_state.state == state.state
+        and cur_state.attributes.get(ATTR_CURRENT_POSITION)
+        == state.attributes.get(ATTR_CURRENT_POSITION)
+    ):
         # Open/Close
-        if state.state == STATE_CLOSED or state.state == STATE_CLOSING:
+        if state.state in [STATE_CLOSED, STATE_CLOSING]:
             service = SERVICE_CLOSE_COVER
-        elif state.state == STATE_OPEN or state.state == STATE_OPENING:
+        elif state.state in [STATE_OPEN, STATE_OPENING]:
             if (
                 ATTR_CURRENT_POSITION in cur_state.attributes
                 and ATTR_CURRENT_POSITION in state.attributes
@@ -108,10 +114,19 @@ async def _async_reproduce_state(
 
 
 async def async_reproduce_states(
-    hass: HomeAssistantType, states: Iterable[State], context: Optional[Context] = None
+    hass: HomeAssistantType,
+    states: Iterable[State],
+    *,
+    context: Optional[Context] = None,
+    reproduce_options: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Reproduce Cover states."""
     # Reproduce states in parallel.
     await asyncio.gather(
-        *(_async_reproduce_state(hass, state, context) for state in states)
+        *(
+            _async_reproduce_state(
+                hass, state, context=context, reproduce_options=reproduce_options
+            )
+            for state in states
+        )
     )

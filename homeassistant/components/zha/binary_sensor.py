@@ -12,7 +12,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_VIBRATION,
     DOMAIN,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import STATE_ON
 from homeassistant.core import callback
@@ -61,7 +61,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
 
-class BinarySensor(ZhaEntity, BinarySensorDevice):
+class BinarySensor(ZhaEntity, BinarySensorEntity):
     """ZHA BinarySensor."""
 
     SENSOR_ATTR = None

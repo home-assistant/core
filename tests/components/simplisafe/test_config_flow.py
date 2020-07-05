@@ -1,8 +1,6 @@
 """Define tests for the SimpliSafe config flow."""
 import json
-from unittest.mock import MagicMock, PropertyMock, mock_open
 
-from asynctest import patch
 from simplipy.errors import SimplipyError
 
 from homeassistant import data_entry_flow
@@ -10,6 +8,7 @@ from homeassistant.components.simplisafe import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 
+from tests.async_mock import MagicMock, PropertyMock, mock_open, patch
 from tests.common import MockConfigEntry
 
 

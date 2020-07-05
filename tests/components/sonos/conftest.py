@@ -1,11 +1,11 @@
 """Configuration for Sonos tests."""
-from asynctest.mock import Mock, patch as patch
 import pytest
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
 
+from tests.async_mock import Mock, patch as patch
 from tests.common import MockConfigEntry
 
 
@@ -69,4 +69,9 @@ def music_library_fixture():
 @pytest.fixture(name="speaker_info")
 def speaker_info_fixture():
     """Create speaker_info fixture."""
-    return {"zone_name": "Zone A", "model_name": "Model Name"}
+    return {
+        "zone_name": "Zone A",
+        "model_name": "Model Name",
+        "software_version": "49.2-64250",
+        "mac_address": "00-11-22-33-44-55",
+    }

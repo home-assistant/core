@@ -60,7 +60,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Unable to connect to Concord232: %s", str(ex))
 
 
-class Concord232Alarm(alarm.AlarmControlPanel):
+class Concord232Alarm(alarm.AlarmControlPanelEntity):
     """Representation of the Concord232-based alarm panel."""
 
     def __init__(self, url, name, code, mode):

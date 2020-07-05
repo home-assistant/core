@@ -11,7 +11,7 @@ from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequest
 from async_upnp_client.profiles.dlna import DeviceState, DmrDevice
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_EPISODE,
@@ -194,7 +194,7 @@ async def async_setup_platform(
     async_add_entities([device], True)
 
 
-class DlnaDmrDevice(MediaPlayerDevice):
+class DlnaDmrDevice(MediaPlayerEntity):
     """Representation of a DLNA DMR device."""
 
     def __init__(self, dmr_device, name=None):

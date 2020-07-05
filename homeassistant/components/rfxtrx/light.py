@@ -8,7 +8,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_NAME, STATE_ON
 from homeassistant.helpers import config_validation as cv
@@ -73,7 +73,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         RECEIVED_EVT_SUBSCRIBERS.append(light_update)
 
 
-class RfxtrxLight(RfxtrxDevice, Light, RestoreEntity):
+class RfxtrxLight(RfxtrxDevice, LightEntity, RestoreEntity):
     """Representation of a RFXtrx light."""
 
     async def async_added_to_hass(self):

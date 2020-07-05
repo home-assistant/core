@@ -186,7 +186,7 @@ class IcloudAccount:
             DEVICE_STATUS_CODES.get(list(api_devices)[0][DEVICE_STATUS]) == "pending"
             and not self._retried_fetch
         ):
-            _LOGGER.warning("Pending devices, trying again in 15s")
+            _LOGGER.debug("Pending devices, trying again in 15s")
             self._fetch_interval = 0.25
             self._retried_fetch = True
         else:

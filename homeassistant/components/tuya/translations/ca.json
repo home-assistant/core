@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "auth_failed": "Autenticaci\u00f3 inv\u00e0lida",
+            "conn_error": "Ha fallat la connexi\u00f3",
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+        },
+        "error": {
+            "auth_failed": "Autenticaci\u00f3 inv\u00e0lida"
+        },
+        "flow_title": "Configuraci\u00f3 de Tuya",
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "El teu codi de pa\u00eds (per exemple, 1 per l'EUA o 86 per la Xina)",
+                    "password": "Contrasenya",
+                    "platform": "L'aplicaci\u00f3 on es registra el teu compte",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Introdueix la teva credencial de Tuya.",
+                "title": "Tuya"
+            }
+        }
+    }
+}

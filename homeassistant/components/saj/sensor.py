@@ -91,9 +91,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         raise PlatformNotReady
 
     for sensor in sensor_def:
-        hass_sensors.append(
-            SAJsensor(saj.serialnumber, sensor, inverter_name=config.get(CONF_NAME))
-        )
+        if sensor.enabled:
+            hass_sensors.append(
+                SAJsensor(saj.serialnumber, sensor, inverter_name=config.get(CONF_NAME))
+            )
 
     async_add_entities(hass_sensors)
 

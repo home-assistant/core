@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Servidor"
+                },
+                "description": "Introduza o endere\u00e7o IP do seu Daikin AC.",
+                "title": "Configurar o Daikin AC"
+            }
+        }
+    }
+}

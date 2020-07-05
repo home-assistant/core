@@ -37,6 +37,7 @@ TAHOMA_TYPES = {
     "io:AwningValanceIOComponent": "cover",
     "io:ExteriorVenetianBlindIOComponent": "cover",
     "io:DiscreteGarageOpenerIOComponent": "cover",
+    "io:DiscreteGarageOpenerWithPartialPositionIOComponent": "cover",
     "io:HorizontalAwningIOComponent": "cover",
     "io:GarageOpenerIOComponent": "cover",
     "io:LightIOSystemSensor": "sensor",
@@ -61,9 +62,13 @@ TAHOMA_TYPES = {
     "rts:DualCurtainRTSComponent": "cover",
     "rts:ExteriorVenetianBlindRTSComponent": "cover",
     "rts:GarageDoor4TRTSComponent": "switch",
+    "rts:LightRTSComponent": "switch",
     "rts:RollerShutterRTSComponent": "cover",
     "rts:OnOffRTSComponent": "switch",
     "rts:VenetianBlindRTSComponent": "cover",
+    "somfythermostat:SomfyThermostatTemperatureSensor": "sensor",
+    "somfythermostat:SomfyThermostatHumiditySensor": "sensor",
+    "zwave:OnOffLightZWaveComponent": "switch",
 }
 
 

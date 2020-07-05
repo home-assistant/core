@@ -10,6 +10,9 @@ from . import DATA_ASUSWRT
 
 _LOGGER = logging.getLogger(__name__)
 
+UPLOAD_ICON = "mdi:upload-network"
+DOWNLOAD_ICON = "mdi:download-network"
+
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the asuswrt sensors."""
@@ -46,6 +49,7 @@ class AsuswrtSensor(Entity):
         self._devices = None
         self._rates = None
         self._speed = None
+        self._connect_error = False
 
     @property
     def name(self):
@@ -59,9 +63,23 @@ class AsuswrtSensor(Entity):
 
     async def async_update(self):
         """Fetch status from asuswrt."""
-        self._devices = await self._api.async_get_connected_devices()
-        self._rates = await self._api.async_get_bytes_total()
-        self._speed = await self._api.async_get_current_transfer_rates()
+        try:
+            self._devices = await self._api.async_get_connected_devices()
+            self._rates = await self._api.async_get_bytes_total()
+            self._speed = await self._api.async_get_current_transfer_rates()
+            if self._connect_error:
+                self._connect_error = False
+                _LOGGER.error(
+                    "Reconnected to ASUS router for %s update", self.entity_id
+                )
+        except OSError as err:
+            if not self._connect_error:
+                self._connect_error = True
+                _LOGGER.error(
+                    "Error connecting to ASUS router for %s update: %s",
+                    self.entity_id,
+                    err,
+                )
 
 
 class AsuswrtDevicesSensor(AsuswrtSensor):
@@ -83,6 +101,11 @@ class AsuswrtRXSensor(AsuswrtSensor):
     _unit = DATA_RATE_MEGABITS_PER_SECOND
 
     @property
+    def icon(self):
+        """Return the icon."""
+        return DOWNLOAD_ICON
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
@@ -99,6 +122,11 @@ class AsuswrtTXSensor(AsuswrtSensor):
 
     _name = "Asuswrt Upload Speed"
     _unit = DATA_RATE_MEGABITS_PER_SECOND
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return UPLOAD_ICON
 
     @property
     def unit_of_measurement(self):
@@ -119,6 +147,11 @@ class AsuswrtTotalRXSensor(AsuswrtSensor):
     _unit = DATA_GIGABYTES
 
     @property
+    def icon(self):
+        """Return the icon."""
+        return DOWNLOAD_ICON
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
@@ -135,6 +168,11 @@ class AsuswrtTotalTXSensor(AsuswrtSensor):
 
     _name = "Asuswrt Upload"
     _unit = DATA_GIGABYTES
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return UPLOAD_ICON
 
     @property
     def unit_of_measurement(self):

@@ -1,11 +1,11 @@
 """The tests for the MQTT device tracker platform."""
-from asynctest import patch
 import pytest
 
 from homeassistant.components.device_tracker.const import DOMAIN, SOURCE_TYPE_BLUETOOTH
 from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message
 
 

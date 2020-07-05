@@ -3,7 +3,7 @@ import abodepy.helpers.constants as CONST
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_WINDOW,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 
 from . import AbodeDevice
@@ -30,7 +30,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
+class AbodeBinarySensor(AbodeDevice, BinarySensorEntity):
     """A binary sensor implementation for Abode device."""
 
     @property

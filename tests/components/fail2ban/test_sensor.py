@@ -1,6 +1,5 @@
 """The tests for local file sensor platform."""
 import unittest
-from unittest.mock import Mock, patch
 
 from mock_open import MockOpen
 
@@ -12,6 +11,7 @@ from homeassistant.components.fail2ban.sensor import (
 )
 from homeassistant.setup import setup_component
 
+from tests.async_mock import Mock, patch
 from tests.common import assert_setup_component, get_test_home_assistant
 
 
@@ -66,10 +66,7 @@ class TestBanSensor(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     @patch("os.path.isfile", Mock(return_value=True))
     def test_setup(self):

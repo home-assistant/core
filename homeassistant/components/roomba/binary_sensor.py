@@ -1,10 +1,11 @@
 """Roomba binary sensor entities."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import roomba_reported_state
 from .const import BLID, DOMAIN, ROOMBA_SESSION
+from .irobot_base import IRobotEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,19 +21,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities([roomba_vac], True)
 
 
-class RoombaBinStatus(BinarySensorDevice):
+class RoombaBinStatus(IRobotEntity, BinarySensorEntity):
     """Class to hold Roomba Sensor basic info."""
 
     ICON = "mdi:delete-variant"
-
-    def __init__(self, roomba, blid):
-        """Initialize the sensor object."""
-        self.vacuum = roomba
-        self.vacuum_state = roomba_reported_state(roomba)
-        self._blid = blid
-        self._name = self.vacuum_state.get("name")
-        self._identifier = f"roomba_{self._blid}"
-        self._bin_status = None
 
     @property
     def name(self):
@@ -50,25 +42,10 @@ class RoombaBinStatus(BinarySensorDevice):
         return self.ICON
 
     @property
-    def state(self):
+    def is_on(self):
         """Return the state of the sensor."""
-        return self._bin_status
+        return roomba_reported_state(self.vacuum).get("bin", {}).get("full", False)
 
-    @property
-    def device_info(self):
-        """Return the device info of the vacuum cleaner."""
-        return {
-            "identifiers": {(DOMAIN, self._identifier)},
-            "name": str(self._name),
-        }
-
-    async def async_update(self):
-        """Return the update info of the vacuum cleaner."""
-        # No data, no update
-        if not self.vacuum.master_state:
-            _LOGGER.debug("Roomba %s has no data yet. Skip update", self.name)
-            return
-        self._bin_status = (
-            roomba_reported_state(self.vacuum).get("bin", {}).get("full", False)
-        )
-        _LOGGER.debug("Update Full Bin status from the vacuum: %s", self._bin_status)
+    def new_state_filter(self, new_state):
+        """Filter the new state."""
+        return "bin" in new_state

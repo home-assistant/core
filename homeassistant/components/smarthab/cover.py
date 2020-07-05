@@ -10,7 +10,7 @@ from homeassistant.components.cover import (
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
-    CoverDevice,
+    CoverEntity,
 )
 
 from . import DATA_HUB, DOMAIN
@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(entities, True)
 
 
-class SmartHabCover(CoverDevice):
+class SmartHabCover(CoverEntity):
     """Representation a cover."""
 
     def __init__(self, cover):

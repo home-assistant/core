@@ -12,14 +12,16 @@
     "step": {
       "user": {
         "data": {
-          "email": "E-Mail Address",
-          "password": "Password",
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]",
           "authorization_code": "Authorization Code (required for manual authentication)"
         },
         "title": "Google Hangouts Login"
       },
       "2fa": {
-        "data": { "2fa": "2FA Pin" },
+        "data": {
+          "2fa": "2FA Pin"
+        },
         "title": "2-Factor-Authentication"
       }
     }

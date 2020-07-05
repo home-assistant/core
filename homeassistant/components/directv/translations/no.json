@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "DirecTV-mottaker er allerede konfigurert",
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen"
+        },
+        "flow_title": "",
+        "step": {
+            "ssdp_confirm": {
+                "description": "Vil du sette opp {name} ?"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert eller IP-adresse"
+                }
+            }
+        }
+    }
+}

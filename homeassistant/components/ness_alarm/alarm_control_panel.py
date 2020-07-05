@@ -34,7 +34,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([device])
 
 
-class NessAlarmPanel(alarm.AlarmControlPanel):
+class NessAlarmPanel(alarm.AlarmControlPanelEntity):
     """Representation of a Ness alarm panel."""
 
     def __init__(self, client, name):

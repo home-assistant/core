@@ -1,7 +1,7 @@
 """Support for Melissa Climate A/C."""
 import logging
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_HIGH,
@@ -49,7 +49,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(all_devices)
 
 
-class MelissaClimate(ClimateDevice):
+class MelissaClimate(ClimateEntity):
     """Representation of a Melissa Climate device."""
 
     def __init__(self, api, serial_number, init_data):

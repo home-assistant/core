@@ -7,7 +7,7 @@ from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     SUPPORT_TARGET_TEMPERATURE,
@@ -115,7 +115,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class ModbusThermostat(ClimateDevice):
+class ModbusThermostat(ClimateEntity):
     """Representation of a Modbus Thermostat."""
 
     def __init__(

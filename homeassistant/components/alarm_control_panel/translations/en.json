@@ -1,0 +1,40 @@
+{
+    "device_automation": {
+        "action_type": {
+            "arm_away": "Arm {entity_name} away",
+            "arm_home": "Arm {entity_name} home",
+            "arm_night": "Arm {entity_name} night",
+            "disarm": "Disarm {entity_name}",
+            "trigger": "Trigger {entity_name}"
+        },
+        "condition_type": {
+            "is_armed_away": "{entity_name} is armed away",
+            "is_armed_home": "{entity_name} is armed home",
+            "is_armed_night": "{entity_name} is armed night",
+            "is_disarmed": "{entity_name} is disarmed",
+            "is_triggered": "{entity_name} is triggered"
+        },
+        "trigger_type": {
+            "armed_away": "{entity_name} armed away",
+            "armed_home": "{entity_name} armed home",
+            "armed_night": "{entity_name} armed night",
+            "disarmed": "{entity_name} disarmed",
+            "triggered": "{entity_name} triggered"
+        }
+    },
+    "state": {
+        "_": {
+            "armed": "Armed",
+            "armed_away": "Armed away",
+            "armed_custom_bypass": "Armed custom bypass",
+            "armed_home": "Armed home",
+            "armed_night": "Armed night",
+            "arming": "Arming",
+            "disarmed": "Disarmed",
+            "disarming": "Disarming",
+            "pending": "Pending",
+            "triggered": "Triggered"
+        }
+    },
+    "title": "Alarm control panel"
+}

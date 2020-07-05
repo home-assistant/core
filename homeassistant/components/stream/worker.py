@@ -164,3 +164,7 @@ def stream_worker(hass, stream, quit_event):
             # Assign the video packet to the new stream & mux
             packet.stream = buffer.vstream
             buffer.output.mux(packet)
+
+    # Close stream
+    buffer.output.close()
+    container.close()

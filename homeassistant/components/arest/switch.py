@@ -5,7 +5,7 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_NAME, CONF_RESOURCE, HTTP_OK
 import homeassistant.helpers.config_validation as cv
 
@@ -80,7 +80,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev)
 
 
-class ArestSwitchBase(SwitchDevice):
+class ArestSwitchBase(SwitchEntity):
     """Representation of an aREST switch."""
 
     def __init__(self, resource, location, name):

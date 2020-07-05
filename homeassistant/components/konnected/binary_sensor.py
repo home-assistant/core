@@ -1,7 +1,7 @@
 """Support for wired binary sensors attached to a Konnected device."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_STATE,
@@ -31,7 +31,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors)
 
 
-class KonnectedBinarySensor(BinarySensorDevice):
+class KonnectedBinarySensor(BinarySensorEntity):
     """Representation of a Konnected binary sensor."""
 
     def __init__(self, device_id, zone_num, data):

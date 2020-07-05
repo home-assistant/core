@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([device], True)
 
 
-class EgardiaAlarm(alarm.AlarmControlPanel):
+class EgardiaAlarm(alarm.AlarmControlPanelEntity):
     """Representation of a Egardia alarm."""
 
     def __init__(

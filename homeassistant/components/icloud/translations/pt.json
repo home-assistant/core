@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "trusted_device": {
+                "data": {
+                    "trusted_device": "Dispositivo confi\u00e1vel"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Palavra-passe"
+                }
+            }
+        }
+    }
+}

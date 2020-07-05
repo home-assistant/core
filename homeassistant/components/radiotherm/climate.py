@@ -4,7 +4,7 @@ import logging
 import radiotherm
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
@@ -125,7 +125,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(tstats, True)
 
 
-class RadioThermostat(ClimateDevice):
+class RadioThermostat(ClimateEntity):
     """Representation of a Radio Thermostat."""
 
     def __init__(self, device, hold_temp):

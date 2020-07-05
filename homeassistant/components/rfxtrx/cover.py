@@ -2,7 +2,7 @@
 import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
-from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
+from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
 from homeassistant.const import CONF_NAME, STATE_OPEN
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -63,7 +63,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         RECEIVED_EVT_SUBSCRIBERS.append(cover_update)
 
 
-class RfxtrxCover(RfxtrxDevice, CoverDevice, RestoreEntity):
+class RfxtrxCover(RfxtrxDevice, CoverEntity, RestoreEntity):
     """Representation of a RFXtrx cover."""
 
     async def async_added_to_hass(self):

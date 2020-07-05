@@ -5,11 +5,11 @@ import logging
 
 from aiohttp import ClientConnectionError
 from async_timeout import timeout
-from pydaikin.appliance import Appliance
+from pydaikin.daikin_base import Appliance
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_HOSTS
+from homeassistant.const import CONF_HOST, CONF_HOSTS, CONF_PASSWORD
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
 from . import config_flow  # noqa: F401
-from .const import TIMEOUT
+from .const import CONF_KEY, CONF_UUID, KEY_MAC, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,11 +29,18 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 COMPONENT_TYPES = ["climate", "sensor", "switch"]
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {vol.Optional(CONF_HOSTS, default=[]): vol.All(cv.ensure_list, [cv.string])}
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN, invalidation_version="0.113.0"),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Optional(CONF_HOSTS, default=[]): vol.All(
+                        cv.ensure_list, [cv.string]
+                    )
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -62,7 +69,18 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Establish connection with Daikin."""
     conf = entry.data
-    daikin_api = await daikin_api_setup(hass, conf[CONF_HOST])
+    # For backwards compat, set unique ID
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(entry, unique_id=conf[KEY_MAC])
+    elif ".local" in entry.unique_id:
+        hass.config_entries.async_update_entry(entry, unique_id=conf[KEY_MAC])
+    daikin_api = await daikin_api_setup(
+        hass,
+        conf[CONF_HOST],
+        conf.get(CONF_KEY),
+        conf.get(CONF_UUID),
+        conf.get(CONF_PASSWORD),
+    )
     if not daikin_api:
         return False
     hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: daikin_api})
@@ -87,14 +105,15 @@ async def async_unload_entry(hass, config_entry):
     return True
 
 
-async def daikin_api_setup(hass, host):
+async def daikin_api_setup(hass, host, key, uuid, password):
     """Create a Daikin instance only once."""
 
     session = hass.helpers.aiohttp_client.async_get_clientsession()
     try:
         with timeout(TIMEOUT):
-            device = Appliance(host, session)
-            await device.init()
+            device = await Appliance.factory(
+                host, session, key=key, uuid=uuid, password=password
+            )
     except asyncio.TimeoutError:
         _LOGGER.debug("Connection to %s timed out", host)
         raise ConfigEntryNotReady
@@ -113,11 +132,11 @@ async def daikin_api_setup(hass, host):
 class DaikinApi:
     """Keep the Daikin instance in one place and centralize the update."""
 
-    def __init__(self, device):
+    def __init__(self, device: Appliance):
         """Initialize the Daikin Handle."""
         self.device = device
-        self.name = device.values["name"]
-        self.ip_address = device.ip
+        self.name = device.values.get("name", "Daikin AC")
+        self.ip_address = device.device_ip
         self._available = True
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -136,19 +155,13 @@ class DaikinApi:
         return self._available
 
     @property
-    def mac(self):
-        """Return mac-address of device."""
-        return self.device.values.get(CONNECTION_NETWORK_MAC)
-
-    @property
     def device_info(self):
         """Return a device description for device registry."""
         info = self.device.values
         return {
-            "connections": {(CONNECTION_NETWORK_MAC, self.mac)},
-            "identifieres": self.mac,
+            "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
             "manufacturer": "Daikin",
             "model": info.get("model"),
             "name": info.get("name"),
-            "sw_version": info.get("ver").replace("_", "."),
+            "sw_version": info.get("ver", "").replace("_", "."),
         }

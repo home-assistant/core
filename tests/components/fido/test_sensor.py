@@ -1,11 +1,11 @@
 """The test for the fido sensor platform."""
 import logging
 import sys
-from unittest.mock import MagicMock, patch
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.fido import sensor as fido
 
+from tests.async_mock import MagicMock, patch
 from tests.common import assert_setup_component
 
 CONTRACT = "123456789"
@@ -76,6 +76,7 @@ async def test_fido_sensor(loop, hass):
         }
         with assert_setup_component(1):
             await async_setup_component(hass, "sensor", config)
+            await hass.async_block_till_done()
         state = hass.states.get("sensor.fido_1112223344_balance")
         assert state.state == "160.12"
         assert state.attributes.get("number") == "1112223344"

@@ -61,7 +61,7 @@ async def test_scan_not_all_present(hass, aioclient_mock):
     """Test match fails if some specified attributes are not present."""
     aioclient_mock.get(
         "http://1.1.1.1",
-        text=f"""
+        text="""
 <root>
   <device>
     <deviceType>Paulus</deviceType>
@@ -96,7 +96,7 @@ async def test_scan_not_all_match(hass, aioclient_mock):
     """Test match fails if some specified attribute values differ."""
     aioclient_mock.get(
         "http://1.1.1.1",
-        text=f"""
+        text="""
 <root>
   <device>
     <deviceType>Paulus</deviceType>

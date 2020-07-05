@@ -1,5 +1,5 @@
 """Support for the Hive binary sensors."""
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import DATA_HIVE, DOMAIN, HiveEntity
 
@@ -18,7 +18,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devs)
 
 
-class HiveBinarySensorEntity(HiveEntity, BinarySensorDevice):
+class HiveBinarySensorEntity(HiveEntity, BinarySensorEntity):
     """Representation of a Hive binary sensor."""
 
     @property

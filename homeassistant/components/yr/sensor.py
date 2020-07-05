@@ -17,14 +17,14 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    DEGREE,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
-    HTTP_OK,
+    HTTP_BAD_REQUEST,
     PRESSURE_HPA,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
-    UNIT_DEGREE,
     UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -48,7 +48,7 @@ SENSOR_TYPES = {
     "windSpeed": ["Wind speed", SPEED_METERS_PER_SECOND, None],
     "windGust": ["Wind gust", SPEED_METERS_PER_SECOND, None],
     "pressure": ["Pressure", PRESSURE_HPA, DEVICE_CLASS_PRESSURE],
-    "windDirection": ["Wind direction", UNIT_DEGREE, None],
+    "windDirection": ["Wind direction", DEGREE, None],
     "humidity": ["Humidity", UNIT_PERCENTAGE, DEVICE_CLASS_HUMIDITY],
     "fog": ["Fog", UNIT_PERCENTAGE, None],
     "cloudiness": ["Cloudiness", UNIT_PERCENTAGE, None],
@@ -187,7 +187,7 @@ class YrData:
             websession = async_get_clientsession(self.hass)
             with async_timeout.timeout(10):
                 resp = await websession.get(self._url, params=self._urlparams)
-            if resp.status != HTTP_OK:
+            if resp.status >= HTTP_BAD_REQUEST:
                 try_again(f"{resp.url} returned {resp.status}")
                 return
             text = await resp.text()

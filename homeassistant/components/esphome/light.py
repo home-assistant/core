@@ -21,7 +21,7 @@ from homeassistant.components.light import (
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
-    Light,
+    LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
@@ -50,7 +50,7 @@ async def async_setup_entry(
     )
 
 
-class EsphomeLight(EsphomeEntity, Light):
+class EsphomeLight(EsphomeEntity, LightEntity):
     """A switch implementation for ESPHome."""
 
     @property

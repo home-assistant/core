@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.spotify import config_flow
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CREDENTIALS
+from homeassistant.const import ATTR_CREDENTIALS, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
@@ -16,14 +16,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    DATA_SPOTIFY_CLIENT,
-    DATA_SPOTIFY_ME,
-    DATA_SPOTIFY_SESSION,
-    DOMAIN,
-)
+from .const import DATA_SPOTIFY_CLIENT, DATA_SPOTIFY_ME, DATA_SPOTIFY_SESSION, DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
     {

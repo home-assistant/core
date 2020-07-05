@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "La tua istanza di Home Assistant deve essere accessibile da Internet per ricevere messaggi da Plaato Airlook.",
+            "one_instance_allowed": "\u00c8 necessaria solo una singola istanza."
+        },
+        "create_entry": {
+            "default": "Per inviare eventi a Home Assistant, dovrai impostare la funzione webhook in Plaato Airlock. \n\n Inserisci le seguenti informazioni: \n\n - URL: `{webhook_url}` \n - Metodo: POST \n\n Vedi [la documentazione]({docs_url}) per ulteriori dettagli."
+        },
+        "step": {
+            "user": {
+                "description": "Sei sicuro di voler configurare Plaato Airlock?",
+                "title": "Configura il webhook di Plaato"
+            }
+        }
+    }
+}

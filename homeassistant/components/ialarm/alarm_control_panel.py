@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([ialarm], True)
 
 
-class IAlarmPanel(alarm.AlarmControlPanel):
+class IAlarmPanel(alarm.AlarmControlPanelEntity):
     """Representation of an iAlarm status."""
 
     def __init__(self, name, code, username, password, url):

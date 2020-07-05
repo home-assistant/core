@@ -7,7 +7,7 @@ from requests import RequestException
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
@@ -75,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([LgTVDevice(client, name, on_action_script)], True)
 
 
-class LgTVDevice(MediaPlayerDevice):
+class LgTVDevice(MediaPlayerEntity):
     """Representation of a LG TV."""
 
     def __init__(self, client, name, on_action_script):

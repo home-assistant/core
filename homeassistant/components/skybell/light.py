@@ -6,7 +6,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
-    Light,
+    LightEntity,
 )
 import homeassistant.util.color as color_util
 
@@ -36,7 +36,7 @@ def _to_hass_level(level):
     return int((level * 255) / 100)
 
 
-class SkybellLight(SkybellDevice, Light):
+class SkybellLight(SkybellDevice, LightEntity):
     """A binary sensor implementation for Skybell devices."""
 
     def __init__(self, device):

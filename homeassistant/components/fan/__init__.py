@@ -45,12 +45,6 @@ ATTR_SPEED_LIST = "speed_list"
 ATTR_OSCILLATING = "oscillating"
 ATTR_DIRECTION = "direction"
 
-PROP_TO_ATTR = {
-    "speed": ATTR_SPEED,
-    "oscillating": ATTR_OSCILLATING,
-    "current_direction": ATTR_DIRECTION,
-}
-
 
 @bind_hass
 def is_on(hass, entity_id: str) -> bool:
@@ -167,22 +161,31 @@ class FanEntity(ToggleEntity):
         return None
 
     @property
+    def oscillating(self):
+        """Return whether or not the fan is currently oscillating."""
+        return None
+
+    @property
     def capability_attributes(self):
         """Return capability attributes."""
-        return {ATTR_SPEED_LIST: self.speed_list}
+        if self.supported_features & SUPPORT_SET_SPEED:
+            return {ATTR_SPEED_LIST: self.speed_list}
+        return {}
 
     @property
     def state_attributes(self) -> dict:
         """Return optional state attributes."""
         data = {}
+        supported_features = self.supported_features
 
-        for prop, attr in PROP_TO_ATTR.items():
-            if not hasattr(self, prop):
-                continue
+        if supported_features & SUPPORT_DIRECTION:
+            data[ATTR_DIRECTION] = self.current_direction
 
-            value = getattr(self, prop)
-            if value is not None:
-                data[attr] = value
+        if supported_features & SUPPORT_OSCILLATE:
+            data[ATTR_OSCILLATING] = self.oscillating
+
+        if supported_features & SUPPORT_SET_SPEED:
+            data[ATTR_SPEED] = self.speed
 
         return data
 

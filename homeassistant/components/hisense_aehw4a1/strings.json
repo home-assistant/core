@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "confirm": {
-        "title": "Hisense AEH-W4A1",
         "description": "Do you want to set up Hisense AEH-W4A1?"
       }
     },

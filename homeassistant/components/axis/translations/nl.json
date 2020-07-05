@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "bad_config_file": "Slechte gegevens van het configuratiebestand",
+            "link_local_address": "Link-lokale adressen worden niet ondersteund",
+            "not_axis_device": "Ontdekte apparaat, is geen Axis-apparaat"
+        },
+        "error": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratiestroom voor het apparaat is al in volle gang.",
+            "device_unavailable": "Apparaat is niet beschikbaar",
+            "faulty_credentials": "Ongeldige gebruikersreferenties"
+        },
+        "flow_title": "Axis apparaat: {naam} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Wachtwoord",
+                    "port": "Poort",
+                    "username": "Gebruikersnaam"
+                },
+                "title": "Stel het Axis-apparaat in"
+            }
+        }
+    }
+}

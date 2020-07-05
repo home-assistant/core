@@ -1,5 +1,4 @@
 """Test the NuHeat config flow."""
-from asynctest import MagicMock, patch
 import requests
 
 from homeassistant import config_entries, setup
@@ -7,6 +6,8 @@ from homeassistant.components.nuheat.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_INTERNAL_SERVER_ERROR
 
 from .mocks import _get_mock_thermostat_run
+
+from tests.async_mock import MagicMock, patch
 
 
 async def test_form_user(hass):

@@ -1,0 +1,90 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\u00c8 consentita solo una singola configurazione di ZHA."
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi al dispositivo ZHA."
+        },
+        "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "Tipo di radio"
+                },
+                "description": "Scegli un tipo di radio Zigbee",
+                "title": "Tipo di radio"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "velocit\u00e0 della porta",
+                    "flow_control": "controllo del flusso di dati",
+                    "path": "Percorso del dispositivo seriale"
+                },
+                "description": "Inserire le impostazioni specifiche della porta",
+                "title": "Impostazioni"
+            },
+            "user": {
+                "data": {
+                    "path": "Percorso del dispositivo seriale"
+                },
+                "description": "Selezionare la porta seriale per la radio Zigbee",
+                "title": "ZHA"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "squawk": "Strillare",
+            "warn": "Avvertire"
+        },
+        "trigger_subtype": {
+            "both_buttons": "Entrambi i pulsanti",
+            "button_1": "Primo pulsante",
+            "button_2": "Secondo pulsante",
+            "button_3": "Terzo pulsante",
+            "button_4": "Quarto pulsante",
+            "button_5": "Quinto pulsante",
+            "button_6": "Sesto pulsante",
+            "close": "Chiudere",
+            "dim_down": "Diminuire luminosit\u00e0",
+            "dim_up": "Aumentare luminosit\u00e0",
+            "face_1": "con faccia 1 attivata",
+            "face_2": "con faccia 2 attivata",
+            "face_3": "con faccia 3 attivata",
+            "face_4": "con faccia 4 attivata",
+            "face_5": "con faccia 5 attivata",
+            "face_6": "con faccia 6 attivata",
+            "face_any": "Con una o pi\u00f9 facce specificate attivate",
+            "left": "Sinistra",
+            "open": "Aperto",
+            "right": "Destra",
+            "turn_off": "Spento",
+            "turn_on": "Acceso"
+        },
+        "trigger_type": {
+            "device_dropped": "Dispositivo caduto",
+            "device_flipped": "Dispositivo capovolto \" {subtype} \"",
+            "device_knocked": "Dispositivo bussato \" {subtype} \"",
+            "device_rotated": "Dispositivo ruotato \" {subtype} \"",
+            "device_shaken": "Dispositivo in vibrazione",
+            "device_slid": "Dispositivo scivolato \"{sottotipo}\"",
+            "device_tilted": "Dispositivo inclinato",
+            "remote_button_alt_double_press": "Pulsante \"{subtype}\" cliccato due volte (modalit\u00e0 Alternata)",
+            "remote_button_alt_long_press": "Pulsante \"{subtype}\" premuto continuamente (modalit\u00e0 Alternata)",
+            "remote_button_alt_long_release": "Pulsante \"{subtype}\" rilasciato dopo una lunga pressione (modalit\u00e0 Alternata)",
+            "remote_button_alt_quadruple_press": "Pulsante \"{subtype}\" cliccato quattro volte (modalit\u00e0 Alternata)",
+            "remote_button_alt_quintuple_press": "Pulsante \"{subtype}\" cliccato cinque volte (modalit\u00e0 Alternata)",
+            "remote_button_alt_short_press": "Pulsante \"{subtype}\" premuto (modalit\u00e0 Alternata)",
+            "remote_button_alt_short_release": "Pulsante \"{subtype}\" rilasciato (modalit\u00e0 Alternata)",
+            "remote_button_alt_triple_press": "Pulsante \"{subtype}\" cliccato tre volte (modalit\u00e0 Alternata)",
+            "remote_button_double_press": "Pulsante \"{subtype}\" cliccato due volte",
+            "remote_button_long_press": "Pulsante \"{subtype}\" premuto continuamente",
+            "remote_button_long_release": "Pulsante \"{subtype}\" rilasciato dopo una lunga pressione",
+            "remote_button_quadruple_press": "Pulsante \"{subtype}\" cliccato quattro volte",
+            "remote_button_quintuple_press": "Pulsante \"{subtype}\" cliccato cinque volte",
+            "remote_button_short_press": "Pulsante \"{subtype}\" premuto",
+            "remote_button_short_release": "Pulsante \"{subtype}\" rilasciato",
+            "remote_button_triple_press": "Pulsante \"{subtype}\" cliccato tre volte"
+        }
+    }
+}

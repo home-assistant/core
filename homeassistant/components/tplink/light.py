@@ -13,7 +13,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    Light,
+    LightEntity,
 )
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.device_registry as dr
@@ -120,7 +120,7 @@ class LightFeatures(NamedTuple):
     has_emeter: bool
 
 
-class TPLinkSmartBulb(Light):
+class TPLinkSmartBulb(LightEntity):
     """Representation of a TPLink Smart Bulb."""
 
     def __init__(self, smartbulb: SmartBulb) -> None:

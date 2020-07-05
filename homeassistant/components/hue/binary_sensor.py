@@ -4,7 +4,7 @@ from aiohue.sensors import TYPE_ZLL_PRESENCE
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 
 from .const import DOMAIN as HUE_DOMAIN
@@ -20,7 +20,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     ].sensor_manager.async_register_component("binary_sensor", async_add_entities)
 
 
-class HuePresence(GenericZLLSensor, BinarySensorDevice):
+class HuePresence(GenericZLLSensor, BinarySensorEntity):
     """The presence sensor entity for a Hue motion sensor device."""
 
     device_class = DEVICE_CLASS_MOTION

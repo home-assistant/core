@@ -59,7 +59,6 @@ async def test_reproducing_states(hass, caplog):
             State("vacuum.entity_returning", STATE_RETURNING),
             State("vacuum.entity_paused", STATE_PAUSED),
         ],
-        blocking=True,
     )
 
     assert len(turn_on_calls) == 0
@@ -72,7 +71,7 @@ async def test_reproducing_states(hass, caplog):
 
     # Test invalid state is handled
     await hass.helpers.state.async_reproduce_state(
-        [State("vacuum.entity_off", "not_supported")], blocking=True
+        [State("vacuum.entity_off", "not_supported")]
     )
 
     assert "not_supported" in caplog.text
@@ -98,7 +97,6 @@ async def test_reproducing_states(hass, caplog):
             # Should not raise
             State("vacuum.non_existing", STATE_ON),
         ],
-        blocking=True,
     )
 
     assert len(turn_on_calls) == 1

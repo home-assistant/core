@@ -3,7 +3,7 @@ import logging
 
 import temescal
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE,
@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities([LGDevice(discovery_info)], True)
 
 
-class LGDevice(MediaPlayerDevice):
+class LGDevice(MediaPlayerEntity):
     """Representation of an LG soundbar device."""
 
     def __init__(self, discovery_info):
@@ -114,6 +114,11 @@ class LGDevice(MediaPlayerDevice):
         self._device.get_settings()
         self._device.get_product_info()
 
+        # Temporary fix until handling of unknown equaliser settings is integrated in the temescal library
+        for equaliser in self._equalisers:
+            if equaliser >= len(temescal.equalisers):
+                temescal.equalisers.append("unknown " + str(equaliser))
+
     @property
     def name(self):
         """Return the name of the device."""
@@ -139,9 +144,8 @@ class LGDevice(MediaPlayerDevice):
     @property
     def sound_mode(self):
         """Return the current sound mode."""
-
-        if self._equaliser == -1:
-            return ""
+        if self._equaliser == -1 or self._equaliser >= len(temescal.equalisers):
+            return None
         return temescal.equalisers[self._equaliser]
 
     @property
@@ -156,7 +160,7 @@ class LGDevice(MediaPlayerDevice):
     def source(self):
         """Return the current input source."""
         if self._function == -1:
-            return ""
+            return None
         return temescal.functions[self._function]
 
     @property

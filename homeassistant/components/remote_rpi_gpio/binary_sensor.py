@@ -4,7 +4,7 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 
@@ -57,7 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class RemoteRPiGPIOBinarySensor(BinarySensorDevice):
+class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
     """Represent a binary sensor that uses a Remote Raspberry Pi GPIO."""
 
     def __init__(self, name, button, invert_logic):

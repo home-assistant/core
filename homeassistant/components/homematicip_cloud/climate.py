@@ -8,7 +8,7 @@ from homematicip.base.enums import AbsenceType
 from homematicip.device import Switch
 from homematicip.functionalHomes import IndoorClimateHome
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -57,7 +57,7 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
+class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateEntity):
     """Representation of a HomematicIP heating group.
 
     Heat mode is supported for all heating devices incl. their defined profiles.

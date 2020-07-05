@@ -1,10 +1,11 @@
 """Script to check the configuration file."""
 import argparse
 from collections import OrderedDict
+from collections.abc import Mapping, Sequence
 from glob import glob
 import logging
 import os
-from typing import Any, Callable, Dict, List, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Tuple
 from unittest.mock import patch
 
 from homeassistant import bootstrap, core
@@ -252,7 +253,7 @@ def dump_dict(layer, indent_count=3, listi=False, **kwargs):
     indent_str = indent_count * " "
     if listi or isinstance(layer, list):
         indent_str = indent_str[:-1] + "-"
-    if isinstance(layer, Dict):
+    if isinstance(layer, Mapping):
         for key, value in sorted(layer.items(), key=sort_dict_key):
             if isinstance(value, (dict, list)):
                 print(indent_str, str(key) + ":", line_info(value, **kwargs))

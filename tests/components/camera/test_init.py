@@ -2,28 +2,29 @@
 import asyncio
 import base64
 import io
-from unittest.mock import PropertyMock, mock_open
 
-from asynctest import patch
 import pytest
 
 from homeassistant.components import camera
 from homeassistant.components.camera.const import DOMAIN, PREF_PRELOAD_STREAM
 from homeassistant.components.camera.prefs import CameraEntityPreferences
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import PropertyMock, mock_open, patch
 from tests.components.camera import common
 
 
 @pytest.fixture(name="mock_camera")
-def mock_camera_fixture(hass):
+async def mock_camera_fixture(hass):
     """Initialize a demo camera platform."""
-    assert hass.loop.run_until_complete(
-        async_setup_component(hass, "camera", {camera.DOMAIN: {"platform": "demo"}})
+    assert await async_setup_component(
+        hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.demo.camera.Path.read_bytes", return_value=b"Test",
@@ -51,6 +52,7 @@ async def image_mock_url_fixture(hass):
     await async_setup_component(
         hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
 
 async def test_get_image_from_camera(hass, image_mock_url):
@@ -65,6 +67,19 @@ async def test_get_image_from_camera(hass, image_mock_url):
 
     assert mock_camera.called
     assert image.content == b"Test"
+
+
+async def test_get_stream_source_from_camera(hass, mock_camera):
+    """Fetch stream source from camera entity."""
+
+    with patch(
+        "homeassistant.components.camera.Camera.stream_source",
+        return_value="rtsp://127.0.0.1/stream",
+    ) as mock_camera_stream_source:
+        stream_source = await camera.async_get_stream_source(hass, "camera.demo_camera")
+
+    assert mock_camera_stream_source.called
+    assert stream_source == "rtsp://127.0.0.1/stream"
 
 
 async def test_get_image_without_exists_camera(hass, image_mock_url):
@@ -242,6 +257,9 @@ async def test_play_stream_service_no_source(hass, mock_camera, mock_stream):
 
 async def test_handle_play_stream_service(hass, mock_camera, mock_stream):
     """Test camera play_stream service."""
+    await async_process_ha_core_config(
+        hass, {"external_url": "https://example.com"},
+    )
     await async_setup_component(hass, "media_player", {})
     with patch(
         "homeassistant.components.camera.request_stream"
@@ -295,7 +313,10 @@ async def test_preload_stream(hass, mock_stream):
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
         return_value="http://example.com",
     ):
-        await async_setup_component(hass, "camera", {DOMAIN: {"platform": "demo"}})
+        assert await async_setup_component(
+            hass, "camera", {DOMAIN: {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
         assert mock_request_stream.called

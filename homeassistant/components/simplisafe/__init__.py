@@ -24,7 +24,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
@@ -223,7 +223,9 @@ async def async_setup_entry(hass, config_entry):
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
-        api = await API.login_via_token(config_entry.data[CONF_TOKEN], websession)
+        api = await API.login_via_token(
+            config_entry.data[CONF_TOKEN], session=websession
+        )
     except InvalidCredentialsError:
         _LOGGER.error("Invalid credentials provided")
         return False
@@ -272,6 +274,17 @@ async def async_setup_entry(hass, config_entry):
 
     @verify_system_exists
     @_verify_domain_control
+    async def clear_notifications(call):
+        """Clear all active notifications."""
+        system = simplisafe.systems[call.data[ATTR_SYSTEM_ID]]
+        try:
+            await system.clear_notifications()
+        except SimplipyError as err:
+            _LOGGER.error("Error during service call: %s", err)
+            return
+
+    @verify_system_exists
+    @_verify_domain_control
     async def remove_pin(call):
         """Remove a PIN."""
         system = simplisafe.systems[call.data[ATTR_SYSTEM_ID]]
@@ -311,6 +324,7 @@ async def async_setup_entry(hass, config_entry):
             return
 
     for service, method, schema in [
+        ("clear_notifications", clear_notifications, None),
         ("remove_pin", remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
         ("set_pin", set_pin, SERVICE_SET_PIN_SCHEMA),
         (
@@ -422,19 +436,24 @@ class SimpliSafe:
     @callback
     def _async_process_new_notifications(self, system):
         """Act on any new system notifications."""
-        old_notifications = self._system_notifications.get(system.system_id, [])
-        latest_notifications = system.notifications
+        if self._hass.state != CoreState.running:
+            # If HASS isn't fully running yet, it may cause the SIMPLISAFE_NOTIFICATION
+            # event to fire before dependent components (like automation) are fully
+            # ready. If that's the case, skip:
+            return
 
-        # Save the latest notifications:
-        self._system_notifications[system.system_id] = latest_notifications
+        latest_notifications = set(system.notifications)
 
-        # Process any notifications that are new:
-        to_add = set(latest_notifications) - set(old_notifications)
+        to_add = latest_notifications.difference(
+            self._system_notifications[system.system_id]
+        )
 
         if not to_add:
             return
 
         _LOGGER.debug("New system notifications: %s", to_add)
+
+        self._system_notifications[system.system_id].update(to_add)
 
         for notification in to_add:
             text = notification.text
@@ -457,6 +476,8 @@ class SimpliSafe:
 
         self.systems = await self._api.get_systems()
         for system in self.systems.values():
+            self._system_notifications[system.system_id] = set()
+
             self._hass.async_create_task(
                 async_register_base_station(
                     self._hass, system, self._config_entry.entry_id

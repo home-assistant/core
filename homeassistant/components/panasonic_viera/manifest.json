@@ -1,7 +1,8 @@
 {
   "domain": "panasonic_viera",
-  "name": "Panasonic Viera TV",
+  "name": "Panasonic Viera",
   "documentation": "https://www.home-assistant.io/integrations/panasonic_viera",
-  "requirements": ["panasonic_viera==0.3.2", "wakeonlan==1.1.6"],
-  "codeowners": []
+  "requirements": ["panasonic_viera==0.3.5"],
+  "codeowners": ["@joogps"],
+  "config_flow": true
 }

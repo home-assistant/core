@@ -5,7 +5,7 @@ from typing import Callable, List
 from homeassistant.components.binary_sensor import (
     DOMAIN as PLATFORM_DOMAIN,
     ENTITY_ID_FORMAT,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -32,7 +32,7 @@ async def async_setup_entry(
     )
 
 
-class VeraBinarySensor(VeraDevice, BinarySensorDevice):
+class VeraBinarySensor(VeraDevice, BinarySensorEntity):
     """Representation of a Vera Binary Sensor."""
 
     def __init__(self, vera_device, controller):

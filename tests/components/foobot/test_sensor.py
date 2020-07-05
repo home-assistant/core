@@ -2,7 +2,6 @@
 
 import asyncio
 import re
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -20,6 +19,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import MagicMock
 from tests.common import load_fixture
 
 VALID_CONFIG = {
@@ -39,6 +39,7 @@ async def test_default_setup(hass, aioclient_mock):
         re.compile("api.foobot.io/v2/device/.*"), text=load_fixture("foobot_data.json")
     )
     assert await async_setup_component(hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
+    await hass.async_block_till_done()
 
     metrics = {
         "co2": ["1232.0", CONCENTRATION_PARTS_PER_MILLION],

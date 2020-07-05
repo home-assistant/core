@@ -1,11 +1,10 @@
 """The tests for the Event automation."""
-from unittest.mock import Mock, patch
-
 import homeassistant.components.automation as automation
 from homeassistant.core import CoreState
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service, mock_coro
+from tests.async_mock import AsyncMock, patch
+from tests.common import async_mock_service
 
 
 async def test_if_fires_on_hass_start(hass):
@@ -25,12 +24,12 @@ async def test_if_fires_on_hass_start(hass):
     assert len(calls) == 0
 
     await hass.async_start()
+    await hass.async_block_till_done()
     assert automation.is_on(hass, "automation.hello")
     assert len(calls) == 1
 
     with patch(
-        "homeassistant.config.async_hass_config_yaml",
-        Mock(return_value=mock_coro(config)),
+        "homeassistant.config.async_hass_config_yaml", AsyncMock(return_value=config),
     ):
         await hass.services.async_call(
             automation.DOMAIN, automation.SERVICE_RELOAD, blocking=True
@@ -61,6 +60,7 @@ async def test_if_fires_on_hass_shutdown(hass):
 
     await hass.async_start()
     assert automation.is_on(hass, "automation.hello")
+    await hass.async_block_till_done()
     assert len(calls) == 0
 
     with patch.object(hass.loop, "stop"):

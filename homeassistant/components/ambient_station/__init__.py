@@ -10,13 +10,14 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_LOCATION,
     ATTR_NAME,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_API_KEY,
+    DEGREE,
     EVENT_HOMEASSISTANT_STOP,
     POWER_WATT,
     SPEED_MILES_PER_HOUR,
     TEMP_FAHRENHEIT,
-    UNIT_DEGREE,
     UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
@@ -126,6 +127,8 @@ TYPE_TEMPF = "tempf"
 TYPE_TEMPINF = "tempinf"
 TYPE_TOTALRAININ = "totalrainin"
 TYPE_UV = "uv"
+TYPE_PM25 = "pm25"
+TYPE_PM25_24H = "pm25_24h"
 TYPE_WEEKLYRAININ = "weeklyrainin"
 TYPE_WINDDIR = "winddir"
 TYPE_WINDDIR_AVG10M = "winddir_avg10m"
@@ -218,11 +221,18 @@ SENSOR_TYPES = {
     TYPE_TEMPINF: ("Inside Temp", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
     TYPE_TOTALRAININ: ("Lifetime Rain", "in", TYPE_SENSOR, None),
     TYPE_UV: ("uv", "Index", TYPE_SENSOR, None),
+    TYPE_PM25: ("PM25", CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, TYPE_SENSOR, None),
+    TYPE_PM25_24H: (
+        "PM25 24h Avg",
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        TYPE_SENSOR,
+        None,
+    ),
     TYPE_WEEKLYRAININ: ("Weekly Rain", "in", TYPE_SENSOR, None),
-    TYPE_WINDDIR: ("Wind Dir", UNIT_DEGREE, TYPE_SENSOR, None),
-    TYPE_WINDDIR_AVG10M: ("Wind Dir Avg 10m", UNIT_DEGREE, TYPE_SENSOR, None),
+    TYPE_WINDDIR: ("Wind Dir", DEGREE, TYPE_SENSOR, None),
+    TYPE_WINDDIR_AVG10M: ("Wind Dir Avg 10m", DEGREE, TYPE_SENSOR, None),
     TYPE_WINDDIR_AVG2M: ("Wind Dir Avg 2m", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
-    TYPE_WINDGUSTDIR: ("Gust Dir", UNIT_DEGREE, TYPE_SENSOR, None),
+    TYPE_WINDGUSTDIR: ("Gust Dir", DEGREE, TYPE_SENSOR, None),
     TYPE_WINDGUSTMPH: ("Wind Gust", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
     TYPE_WINDSPDMPH_AVG10M: ("Wind Avg 10m", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
     TYPE_WINDSPDMPH_AVG2M: ("Wind Avg 2m", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),

@@ -6,12 +6,7 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    async_fire_mqtt_message,
-    async_mock_mqtt_component,
-    async_mock_service,
-    mock_component,
-)
+from tests.common import async_fire_mqtt_message, async_mock_service, mock_component
 from tests.components.automation import common
 
 
@@ -22,10 +17,9 @@ def calls(hass):
 
 
 @pytest.fixture(autouse=True)
-def setup_comp(hass):
+def setup_comp(hass, mqtt_mock):
     """Initialize components."""
     mock_component(hass, "group")
-    hass.loop.run_until_complete(async_mock_mqtt_component(hass))
 
 
 async def test_if_fires_on_topic_match(hass, calls):
@@ -57,7 +51,7 @@ async def test_if_fires_on_topic_match(hass, calls):
     await hass.async_block_till_done()
     async_fire_mqtt_message(hass, "test-topic", "test_payload")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_topic_and_payload_match(hass, calls):
@@ -79,7 +73,7 @@ async def test_if_fires_on_topic_and_payload_match(hass, calls):
 
     async_fire_mqtt_message(hass, "test-topic", "hello")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_not_fires_on_topic_but_no_payload_match(hass, calls):
@@ -101,13 +95,11 @@ async def test_if_not_fires_on_topic_but_no_payload_match(hass, calls):
 
     async_fire_mqtt_message(hass, "test-topic", "no-hello")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
-async def test_encoding_default(hass, calls):
+async def test_encoding_default(hass, calls, mqtt_mock):
     """Test default encoding."""
-    mock_mqtt = await async_mock_mqtt_component(hass)
-
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -119,15 +111,13 @@ async def test_encoding_default(hass, calls):
         },
     )
 
-    mock_mqtt.async_subscribe.assert_called_once_with(
+    mqtt_mock.async_subscribe.assert_called_once_with(
         "test-topic", mock.ANY, 0, "utf-8"
     )
 
 
-async def test_encoding_custom(hass, calls):
+async def test_encoding_custom(hass, calls, mqtt_mock):
     """Test default encoding."""
-    mock_mqtt = await async_mock_mqtt_component(hass)
-
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -139,4 +129,4 @@ async def test_encoding_custom(hass, calls):
         },
     )
 
-    mock_mqtt.async_subscribe.assert_called_once_with("test-topic", mock.ANY, 0, None)
+    mqtt_mock.async_subscribe.assert_called_once_with("test-topic", mock.ANY, 0, None)

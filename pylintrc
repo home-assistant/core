@@ -8,7 +8,7 @@ persistent=no
 extension-pkg-whitelist=ciso8601
 
 [BASIC]
-good-names=id,i,j,k,ex,Run,_,fp
+good-names=id,i,j,k,ex,Run,_,fp,T
 
 [MESSAGES CONTROL]
 # Reasons disabled:
@@ -18,7 +18,6 @@ good-names=id,i,j,k,ex,Run,_,fp
 # cyclic-import - doesn't test if both import on load
 # abstract-class-little-used - prevents from setting right foundation
 # unused-argument - generic callbacks and setup methods create a lot of warnings
-# redefined-variable-type - this is Python, we're duck typing!
 # too-many-* - are not enforced for the sake of readability
 # too-few-* - same as too-many-*
 # abstract-method - with intro of async there are always methods missing
@@ -34,7 +33,6 @@ disable=
   inconsistent-return-statements,
   locally-disabled,
   not-context-manager,
-  redefined-variable-type,
   too-few-public-methods,
   too-many-ancestors,
   too-many-arguments,

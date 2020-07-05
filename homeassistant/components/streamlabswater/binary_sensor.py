@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.components.streamlabswater import DOMAIN as STREAMLABSWATER_DOMAIN
 from homeassistant.util import Throttle
 
@@ -46,7 +46,7 @@ class StreamlabsLocationData:
         return self._is_away
 
 
-class StreamlabsAwayMode(BinarySensorDevice):
+class StreamlabsAwayMode(BinarySensorEntity):
     """Monitor the away mode state."""
 
     def __init__(self, location_name, streamlabs_location_data):

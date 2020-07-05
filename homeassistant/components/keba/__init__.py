@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "keba"
-SUPPORTED_COMPONENTS = ["binary_sensor", "sensor", "lock"]
+SUPPORTED_COMPONENTS = ["binary_sensor", "sensor", "lock", "notify"]
 
 CONF_RFID = "rfid"
 CONF_FS = "failsafe"

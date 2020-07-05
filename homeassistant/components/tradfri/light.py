@@ -9,7 +9,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    Light,
+    LightEntity,
 )
 import homeassistant.util.color as color_util
 
@@ -49,7 +49,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             async_add_entities(TradfriGroup(group, api, gateway_id) for group in groups)
 
 
-class TradfriGroup(TradfriBaseClass, Light):
+class TradfriGroup(TradfriBaseClass, LightEntity):
     """The platform class for light groups required by hass."""
 
     def __init__(self, device, api, gateway_id):
@@ -106,7 +106,7 @@ class TradfriGroup(TradfriBaseClass, Light):
             await self._api(self._device.set_state(1))
 
 
-class TradfriLight(TradfriBaseDevice, Light):
+class TradfriLight(TradfriBaseDevice, LightEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(self, device, api, gateway_id):

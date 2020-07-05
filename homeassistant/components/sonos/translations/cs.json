@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "V s\u00edti nebyly nalezena \u017e\u00e1dn\u00e1 za\u0159\u00edzen\u00ed Sonos.",
+            "single_instance_allowed": "Je t\u0159eba jen jedna konfigurace Sonos."
+        },
+        "step": {
+            "confirm": {
+                "description": "Chcete nastavit Sonos?"
+            }
+        }
+    }
+}

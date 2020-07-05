@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'amfitri\u00f3 ja est\u00e0 configurat."
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar amb l'amfitri\u00f3",
+            "wrong_version": "Versi\u00f3 no compatible (2 o 3 necess\u00e0ria)"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "name": "Nom",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "ssl": "Utilitza SSL/TLS per connectar-te al sistema Glances",
+                    "username": "Nom d'usuari",
+                    "verify_ssl": "Verifica la certificaci\u00f3 del sistema",
+                    "version": "Versi\u00f3 de l'API de Glances (2 o 3)"
+                },
+                "title": "Configuraci\u00f3 de Glances"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Freq\u00fc\u00e8ncia d'actualitzaci\u00f3"
+                },
+                "description": "Opcions de configuraci\u00f3 de Glances"
+            }
+        }
+    }
+}

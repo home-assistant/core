@@ -99,15 +99,6 @@ class SmhiWeather(WeatherEntity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Refresh the forecast data from SMHI weather API."""
-
-        def fail():
-            """Postpone updates."""
-            self._fail_count += 1
-            if self._fail_count < 3:
-                self.hass.helpers.event.async_call_later(
-                    RETRY_TIMEOUT, self.retry_update()
-                )
-
         try:
             with async_timeout.timeout(10):
                 self._forecasts = await self.get_weather_forecast()
@@ -115,11 +106,15 @@ class SmhiWeather(WeatherEntity):
 
         except (asyncio.TimeoutError, SmhiForecastException):
             _LOGGER.error("Failed to connect to SMHI API, retry in 5 minutes")
-            fail()
+            self._fail_count += 1
+            if self._fail_count < 3:
+                self.hass.helpers.event.async_call_later(
+                    RETRY_TIMEOUT, self.retry_update
+                )
 
-    async def retry_update(self):
+    async def retry_update(self, _):
         """Retry refresh weather forecast."""
-        self.async_update()
+        await self.async_update()
 
     async def get_weather_forecast(self) -> []:
         """Return the current forecasts from SMHI API."""

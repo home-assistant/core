@@ -32,8 +32,9 @@ class TestSensorMoldIndicator(unittest.TestCase):
         self.hass.states.set(
             "test.indoorhumidity", "50", {ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE}
         )
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Stop down everything that was started."""
         self.hass.stop()
 
@@ -52,7 +53,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
                 }
             },
         )
-
+        self.hass.block_till_done()
         moldind = self.hass.states.get("sensor.mold_indicator")
         assert moldind
         assert UNIT_PERCENTAGE == moldind.attributes.get("unit_of_measurement")
@@ -82,6 +83,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
         moldind = self.hass.states.get("sensor.mold_indicator")
@@ -116,6 +118,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
         moldind = self.hass.states.get("sensor.mold_indicator")
@@ -159,6 +162,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
         moldind = self.hass.states.get("sensor.mold_indicator")
@@ -196,6 +200,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
         self.hass.start()
 
         self.hass.states.set(
@@ -268,6 +273,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
         self.hass.start()
 
         self.hass.states.set(

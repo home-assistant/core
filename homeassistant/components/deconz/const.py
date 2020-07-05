@@ -37,7 +37,7 @@ ATTR_ON = "on"
 ATTR_VALVE = "valve"
 
 DAMPERS = ["Level controllable output"]
-WINDOW_COVERS = ["Window covering device"]
+WINDOW_COVERS = ["Window covering device", "Window covering controller"]
 COVER_TYPES = DAMPERS + WINDOW_COVERS
 
 POWER_PLUGS = ["On/Off light", "On/Off plug-in unit", "Smart plug"]

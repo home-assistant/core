@@ -85,11 +85,21 @@ class PlexSensor(Entity):
             if sess.TYPE in ["clip", "episode"]:
                 # example:
                 # "Supernatural (2005) - s01e13 - Route 666"
+
+                def sync_io_attributes(session):
+                    year = None
+                    try:
+                        year = session.show().year
+                    except TypeError:
+                        pass
+                    return (year, session.seasonEpisode)
+
+                year, season_episode = await self.hass.async_add_executor_job(
+                    sync_io_attributes, sess
+                )
                 season_title = sess.grandparentTitle
-                show = await self.hass.async_add_executor_job(sess.show)
-                if show.year is not None:
-                    season_title += f" ({show.year!s})"
-                season_episode = sess.seasonEpisode
+                if year is not None:
+                    season_title += f" ({year!s})"
                 episode_title = sess.title
                 now_playing_title = (
                     f"{season_title} - {season_episode} - {episode_title}"

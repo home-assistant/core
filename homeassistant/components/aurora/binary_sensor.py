@@ -7,7 +7,7 @@ from aiohttp.hdrs import USER_AGENT
 import requests
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([AuroraSensor(aurora_data, name)], True)
 
 
-class AuroraSensor(BinarySensorDevice):
+class AuroraSensor(BinarySensorEntity):
     """Implementation of an aurora sensor."""
 
     def __init__(self, aurora_data, name):

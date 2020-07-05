@@ -1,5 +1,6 @@
 """Support for Tahoma scenes."""
 import logging
+from typing import Any
 
 from homeassistant.components.scene import Scene
 
@@ -13,9 +14,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is None:
         return
     controller = hass.data[TAHOMA_DOMAIN]["controller"]
-    scenes = []
-    for scene in hass.data[TAHOMA_DOMAIN]["scenes"]:
-        scenes.append(TahomaScene(scene, controller))
+    scenes = [
+        TahomaScene(scene, controller) for scene in hass.data[TAHOMA_DOMAIN]["scenes"]
+    ]
+
     add_entities(scenes, True)
 
 
@@ -28,7 +30,7 @@ class TahomaScene(Scene):
         self.controller = controller
         self._name = self.tahoma_scene.name
 
-    def activate(self):
+    def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         self.controller.launch_action_group(self.tahoma_scene.oid)
 

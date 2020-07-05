@@ -34,42 +34,7 @@ def generate_and_validate(integrations: Dict[str, Integration]):
         homekit = integration.manifest.get("homekit", {})
         homekit_models = homekit.get("models", [])
 
-        if not service_types and not homekit_models:
-            continue
-
-        try:
-            with open(str(integration.path / "config_flow.py")) as fp:
-                content = fp.read()
-                uses_discovery_flow = "register_discovery_flow" in content
-                uses_oauth2_flow = "AbstractOAuth2FlowHandler" in content
-
-                if (
-                    service_types
-                    and not uses_discovery_flow
-                    and not uses_oauth2_flow
-                    and " async_step_zeroconf" not in content
-                ):
-                    integration.add_error(
-                        "zeroconf", "Config flow has no async_step_zeroconf"
-                    )
-                    continue
-
-                if (
-                    homekit_models
-                    and not uses_discovery_flow
-                    and not uses_oauth2_flow
-                    and " async_step_homekit" not in content
-                ):
-                    integration.add_error(
-                        "zeroconf", "Config flow has no async_step_homekit"
-                    )
-                    continue
-
-        except FileNotFoundError:
-            integration.add_error(
-                "zeroconf",
-                "Zeroconf info in a manifest requires a config flow to exist",
-            )
+        if not (service_types or homekit_models):
             continue
 
         for service_type in service_types:

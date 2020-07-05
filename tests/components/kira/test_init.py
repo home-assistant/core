@@ -4,11 +4,11 @@ import os
 import shutil
 import tempfile
 import unittest
-from unittest.mock import MagicMock, patch
 
 import homeassistant.components.kira as kira
 from homeassistant.setup import setup_component
 
+from tests.async_mock import MagicMock, patch
 from tests.common import get_test_home_assistant
 
 TEST_CONFIG = {
@@ -45,8 +45,9 @@ class TestKiraSetup(unittest.TestCase):
         self._module_patcher.start()
 
         self.work_dir = tempfile.mkdtemp()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
         self._module_patcher.stop()

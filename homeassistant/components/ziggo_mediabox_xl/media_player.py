@@ -5,7 +5,7 @@ import socket
 import voluptuous as vol
 from ziggo_mediabox_xl import ZiggoMediaboxXL
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -92,7 +92,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(hosts, True)
 
 
-class ZiggoMediaboxXLDevice(MediaPlayerDevice):
+class ZiggoMediaboxXLDevice(MediaPlayerEntity):
     """Representation of a Ziggo Mediabox XL Device."""
 
     def __init__(self, mediabox, host, name, available):

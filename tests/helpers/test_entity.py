@@ -3,16 +3,14 @@
 import asyncio
 from datetime import timedelta
 import threading
-from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
-from homeassistant.config import DATA_CUSTOMIZE
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_HIDDEN, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE
 from homeassistant.core import Context
 from homeassistant.helpers import entity, entity_registry
-from homeassistant.helpers.entity_values import EntityValues
 
+from tests.async_mock import MagicMock, PropertyMock, patch
 from tests.common import get_test_home_assistant, mock_registry
 
 
@@ -89,21 +87,6 @@ class TestHelpersEntity:
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_default_hidden_not_in_attributes(self):
-        """Test that the default hidden property is set to False."""
-        assert ATTR_HIDDEN not in self.hass.states.get(self.entity.entity_id).attributes
-
-    def test_overwriting_hidden_property_to_true(self):
-        """Test we can overwrite hidden property to True."""
-        self.hass.data[DATA_CUSTOMIZE] = EntityValues(
-            {self.entity.entity_id: {ATTR_HIDDEN: True}}
-        )
-        self.entity.schedule_update_ha_state()
-        self.hass.block_till_done()
-
-        state = self.hass.states.get(self.entity.entity_id)
-        assert state.attributes.get(ATTR_HIDDEN)
-
     def test_generate_entity_id_given_hass(self):
         """Test generating an entity id given hass object."""
         fmt = "test.{}"
@@ -139,7 +122,7 @@ async def test_warn_slow_update(hass):
     mock_entity.entity_id = "comp_test.test_entity"
     mock_entity.async_update = async_update
 
-    with patch.object(hass.loop, "call_later", MagicMock()) as mock_call:
+    with patch.object(hass.loop, "call_later") as mock_call:
         await mock_entity.async_update_ha_state(True)
         assert mock_call.called
         assert len(mock_call.mock_calls) == 2
@@ -169,7 +152,7 @@ async def test_warn_slow_update_with_exception(hass):
     mock_entity.entity_id = "comp_test.test_entity"
     mock_entity.async_update = async_update
 
-    with patch.object(hass.loop, "call_later", MagicMock()) as mock_call:
+    with patch.object(hass.loop, "call_later") as mock_call:
         await mock_entity.async_update_ha_state(True)
         assert mock_call.called
         assert len(mock_call.mock_calls) == 2
@@ -198,7 +181,7 @@ async def test_warn_slow_device_update_disabled(hass):
     mock_entity.entity_id = "comp_test.test_entity"
     mock_entity.async_update = async_update
 
-    with patch.object(hass.loop, "call_later", MagicMock()) as mock_call:
+    with patch.object(hass.loop, "call_later") as mock_call:
         await mock_entity.async_device_update(warning=False)
 
         assert not mock_call.called
