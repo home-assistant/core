@@ -59,7 +59,6 @@ async def rfxtrx_cleanup():
     ):
         yield
 
-    rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS.clear()
     rfxtrx_core.RFX_DEVICES.clear()
 
 
