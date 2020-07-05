@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -51,8 +52,6 @@ CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [PI_HOLE_SCHEMA]))},
     extra=vol.ALLOW_EXTRA,
 )
-
-PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
 
 async def async_setup(hass, config):
@@ -112,7 +111,7 @@ async def async_setup_entry(hass, entry):
         DATA_KEY_COORDINATOR: coordinator,
     }
 
-    for platform in PLATFORMS:
+    for platform in _async_platforms(entry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
@@ -126,13 +125,24 @@ async def async_unload_entry(hass, entry):
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
+                for platform in _async_platforms(entry)
             ]
         )
     )
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
+
+
+@callback
+def _async_platforms(entry):
+    """Return platforms to be loaded / unloaded."""
+    platforms = ["sensor"]
+    if entry.data.get(CONF_API_KEY):
+        platforms.append("switch")
+    else:
+        platforms.append("binary_sensor")
+    return platforms
 
 
 class PiHoleEntity(Entity):

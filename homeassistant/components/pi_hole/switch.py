@@ -5,7 +5,7 @@ from hole.exceptions import HoleError
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from . import PiHoleEntity
@@ -22,8 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Pi-hole switch."""
-    if not entry.data.get(CONF_API_KEY):
-        return
     name = entry.data[CONF_NAME]
     hole_data = hass.data[PIHOLE_DOMAIN][entry.entry_id]
     switches = [

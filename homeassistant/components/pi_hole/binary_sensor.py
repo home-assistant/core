@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_NAME
 
 from . import PiHoleEntity
 from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN as PIHOLE_DOMAIN
@@ -12,8 +12,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Pi-hole binary sensor."""
-    if entry.data.get(CONF_API_KEY):
-        return  # Only setup when API key is not set (no switch)
     name = entry.data[CONF_NAME]
     hole_data = hass.data[PIHOLE_DOMAIN][entry.entry_id]
     binary_sensors = [
