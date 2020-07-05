@@ -563,8 +563,6 @@ class ADBDevice(MediaPlayerEntity):
         key = self._keys.get(cmd)
         if key:
             await self.aftv.adb_shell(f"input keyevent {key}")
-            # self._adb_response = None
-            # self.schedule_update_ha_state()
             return
 
         if cmd == "GET_PROPERTIES":
@@ -575,17 +573,12 @@ class ADBDevice(MediaPlayerEntity):
         try:
             response = await self.aftv.adb_shell(cmd)
         except UnicodeDecodeError:
-            # self._adb_response = None
-            # self.schedule_update_ha_state()
             return
 
         if isinstance(response, str) and response.strip():
             self._adb_response = response.strip()
             self.async_write_ha_state()
-        # else:
-        #     self._adb_response = None
 
-        # self.schedule_update_ha_state()
         return self._adb_response
 
     @adb_decorator()

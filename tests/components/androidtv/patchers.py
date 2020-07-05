@@ -6,8 +6,6 @@ KEY_PYTHON = "python"
 KEY_SERVER = "server"
 
 ADB_DEVICE_TCP_ASYNC_FAKE = "AdbDeviceTcpAsyncFake"
-# CLIENT_ASYNC_FAKE_SUCCESS = "ClientAsyncFakeSuccess"
-# CLIENT_ASYNC_FAKE_FAIL = "ClientAsyncFakeFail"
 DEVICE_ASYNC_FAKE = "DeviceAsyncFake"
 
 
@@ -32,7 +30,7 @@ class AdbDeviceTcpAsyncFake:
 
 
 class ClientAsyncFakeSuccess:
-    """A fake of the `ppadb.client.Client` class when the connection and shell commands succeed."""
+    """A fake of the `ClientAsync` class when the connection and shell commands succeed."""
 
     def __init__(self, host="127.0.0.1", port=5037):
         """Initialize a `ClientAsyncFakeSuccess` instance."""
@@ -46,7 +44,7 @@ class ClientAsyncFakeSuccess:
 
 
 class ClientAsyncFakeFail:
-    """A fake of the `ppadb.client.Client` class when the connection and shell commands fail."""
+    """A fake of the `ClientAsync` class when the connection and shell commands fail."""
 
     def __init__(self, host="127.0.0.1", port=5037):
         """Initialize a `ClientAsyncFakeFail` instance."""
@@ -59,7 +57,7 @@ class ClientAsyncFakeFail:
 
 
 class DeviceAsyncFake:
-    """A fake of the `ppadb.device.Device` class."""
+    """A fake of the `DeviceAsync` class."""
 
     def __init__(self, host):
         """Initialize a `DeviceAsyncFake` instance."""
@@ -71,7 +69,7 @@ class DeviceAsyncFake:
 
 
 def patch_connect(success):
-    """Mock the `adb_shell.adb_device_async.AdbDeviceTcpAsync` and `ppadb.client.Client` classes."""
+    """Mock the `adb_shell.adb_device_async.AdbDeviceTcpAsync` and `ClientAsync` classes."""
 
     async def connect_success_python(self, *args, **kwargs):
         """Mock the `AdbDeviceTcpAsyncFake.connect` method when it succeeds."""
