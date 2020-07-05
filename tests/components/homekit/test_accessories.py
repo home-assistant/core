@@ -478,7 +478,23 @@ async def test_missing_linked_battery_charging_sensor(hass, hk_driver, caplog):
     )
     assert acc.linked_battery_charging_sensor is None
 
+    # Make sure we don't throw if the linked_battery_charging_sensor
+    # is removed
+    hass.states.async_remove(linked_battery_charging_sensor)
+    with patch(
+        "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
+    ):
+        await acc.run_handler()
+        await hass.async_block_till_done()
+
+    # Make sure we don't throw if the entity_id
+    # is removed
     hass.states.async_remove(entity_id)
+    with patch(
+        "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
+    ):
+        await acc.run_handler()
+        await hass.async_block_till_done()
 
 
 async def test_missing_linked_battery_sensor(hass, hk_driver, caplog):
