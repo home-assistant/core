@@ -118,43 +118,6 @@ def _get_significant_states(
     """
     timer_start = time.perf_counter()
 
-    states = execute(
-        _significant_states_query(
-            hass,
-            session,
-            start_time,
-            end_time=end_time,
-            entity_ids=entity_ids,
-            significant_changes_only=significant_changes_only,
-            filters=filters,
-        )
-    )
-
-    if _LOGGER.isEnabledFor(logging.DEBUG):
-        elapsed = time.perf_counter() - timer_start
-        _LOGGER.debug("get_significant_states took %fs", elapsed)
-
-    return _sorted_states_to_json(
-        hass,
-        session,
-        states,
-        start_time,
-        entity_ids,
-        filters,
-        include_start_time_state,
-        minimal_response,
-    )
-
-
-def _significant_states_query(
-    hass,
-    session,
-    start_time,
-    end_time=None,
-    entity_ids=None,
-    significant_changes_only=None,
-    filters=None,
-):
     baked_query = hass.data[HISTORY_BAKERY](
         lambda session: session.query(*QUERY_STATES)
     )
@@ -178,8 +141,25 @@ def _significant_states_query(
 
     baked_query += lambda q: q.order_by(States.entity_id, States.last_updated)
 
-    return baked_query(session).params(
-        start_time=start_time, end_time=end_time, entity_ids=entity_ids
+    states = execute(
+        baked_query(session).params(
+            start_time=start_time, end_time=end_time, entity_ids=entity_ids
+        )
+    )
+
+    if _LOGGER.isEnabledFor(logging.DEBUG):
+        elapsed = time.perf_counter() - timer_start
+        _LOGGER.debug("get_significant_states took %fs", elapsed)
+
+    return _sorted_states_to_json(
+        hass,
+        session,
+        states,
+        start_time,
+        entity_ids,
+        filters,
+        include_start_time_state,
+        minimal_response,
     )
 
 
