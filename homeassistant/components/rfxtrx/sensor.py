@@ -18,8 +18,8 @@ from . import (
     CONF_DEVICES,
     CONF_FIRE_EVENT,
     DATA_TYPES,
-    RECEIVED_EVT_SUBSCRIBERS,
     RFX_DEVICES,
+    SIGNAL_EVENT,
     get_rfx_object,
 )
 
@@ -83,22 +83,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         device_id = f"sensor_{slugify(event.device.id_string.lower())}"
 
         if device_id in RFX_DEVICES:
-            sensors = RFX_DEVICES[device_id]
-            for data_type in sensors:
-                # Some multi-sensor devices send individual messages for each
-                # of their sensors. Update only if event contains the
-                # right data_type for the sensor.
-                if data_type not in event.values:
-                    continue
-                sensor = sensors[data_type]
-                sensor.event = event
-                if sensor.hass:
-                    sensor.schedule_update_ha_state()
-                # Fire event
-                if sensor.should_fire_event:
-                    sensor.hass.bus.fire(
-                        "signal_received", {ATTR_ENTITY_ID: sensor.entity_id}
-                    )
             return
 
         # Add entity if not exist and the automatic_add is True
@@ -114,13 +98,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 data_type = _data_type
                 break
         new_sensor = RfxtrxSensor(event, event.device, pkt_id, data_type)
+        new_sensor.apply_event(event)
         sub_sensors = {}
         sub_sensors[new_sensor.data_type] = new_sensor
         RFX_DEVICES[device_id] = sub_sensors
         add_entities([new_sensor])
 
-    if sensor_update not in RECEIVED_EVT_SUBSCRIBERS:
-        RECEIVED_EVT_SUBSCRIBERS.append(sensor_update)
+    # Subscribe to main RFXtrx events
+    hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, sensor_update)
 
 
 class RfxtrxSensor(Entity):
@@ -129,11 +114,42 @@ class RfxtrxSensor(Entity):
     def __init__(self, event, device, name, data_type, should_fire_event=False):
         """Initialize the sensor."""
         self.event = event
+        self._device = device
         self._name = name
         self.should_fire_event = should_fire_event
         self.data_type = data_type
         self._unit_of_measurement = DATA_TYPES.get(data_type, "")
         self._unique_id = f"{slugify(device.type_string.lower())}_{slugify(device.id_string.lower())}_{slugify(data_type)}"
+
+    async def async_added_to_hass(self):
+        """Restore RFXtrx switch device state (ON/OFF)."""
+        await super().async_added_to_hass()
+
+        def _handle_event(event):
+            """Check if event applies to me and update."""
+            if not isinstance(event, SensorEvent):
+                return
+
+            if event.device.id_string != self._device.id_string:
+                return
+
+            if self.data_type not in event.values:
+                return
+
+            _LOGGER.debug(
+                "Sensor update (Device ID: %s Class: %s Sub: %s)",
+                event.device.id_string,
+                event.device.__class__.__name__,
+                event.device.subtype,
+            )
+
+            self.apply_event(event)
+
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_EVENT, _handle_event
+            )
+        )
 
     def __str__(self):
         """Return the name of the sensor."""
@@ -167,3 +183,11 @@ class RfxtrxSensor(Entity):
     def unique_id(self):
         """Return unique identifier of remote device."""
         return self._unique_id
+
+    def apply_event(self, event):
+        """Apply command from rfxtrx."""
+        self.event = event
+        if self.hass:
+            self.schedule_update_ha_state()
+            if self.should_fire_event:
+                self.hass.bus.fire("signal_received", {ATTR_ENTITY_ID: self.entity_id})
