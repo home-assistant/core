@@ -55,12 +55,12 @@ class SmartHabConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await hub.async_login(username, password)
-        except pysmarthab.RequestFailedException as ex:
-            _LOGGER.exception("Error while trying to reach SmartHab API: %s", ex)
+        except pysmarthab.RequestFailedException:
+            _LOGGER.exception("Error while trying to reach SmartHab API")
             errors["base"] = "service"
             return self._show_setup_form(user_input, errors)
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected error during login: %s", ex)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected error during login")
             errors["base"] = "unknown_error"
             return self._show_setup_form(user_input, errors)
 

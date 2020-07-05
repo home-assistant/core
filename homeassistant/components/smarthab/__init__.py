@@ -58,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     try:
         await hub.async_login(username, password)
     except pysmarthab.RequestFailedException:
-        _LOGGER.exception("Error while trying to reach SmartHab API: %s", ex)
+        _LOGGER.exception("Error while trying to reach SmartHab API")
         raise ConfigEntryNotReady
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Unexpected error during login")
