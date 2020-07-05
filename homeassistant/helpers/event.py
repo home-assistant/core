@@ -78,8 +78,9 @@ def async_track_state_change(
 
     Must be run within the event loop.
     """
-    if from_state is not None and to_state is not None:
+    if from_state is not None:
         match_from_state = process_state_match(from_state)
+    if to_state is not None:
         match_to_state = process_state_match(to_state)
 
     # Ensure it is a lowercase list with entity ids we want to match on
@@ -93,16 +94,19 @@ def async_track_state_change(
     @callback
     def state_change_listener(event: Event) -> None:
         """Handle specific state changes."""
-        if from_state is not None and to_state is not None:
+        if from_state is not None:
             old_state = event.data.get("old_state")
             if old_state is not None:
                 old_state = old_state.state
 
+            if not match_from_state(old_state):
+                return
+        if to_state is not None:
             new_state = event.data.get("new_state")
             if new_state is not None:
                 new_state = new_state.state
 
-            if not match_from_state(old_state) or not match_to_state(new_state):
+            if not match_to_state(new_state):
                 return
 
         hass.async_run_job(
@@ -573,5 +577,5 @@ def process_state_match(
     if isinstance(parameter, str) or not hasattr(parameter, "__iter__"):
         return lambda state: state == parameter
 
-    parameter_tuple = tuple(parameter)
-    return lambda state: state in parameter_tuple
+    parameter_set = set(parameter)
+    return lambda state: state in parameter_set
