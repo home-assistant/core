@@ -54,7 +54,6 @@ CONF_CONFIG_FLOW = {
 }
 
 SWITCH_ENTITY_ID = "switch.pi_hole"
-STATUS_ENTITY_ID = "binary_sensor.pi_hole"
 
 
 def _create_mocked_hole(raise_exception=False):

@@ -24,7 +24,6 @@ from .const import (
     CONF_LOCATION,
     DATA_KEY_API,
     DATA_KEY_COORDINATOR,
-    DATA_KEY_UNSUB_UPDATE_LISTENER,
     DEFAULT_LOCATION,
     DEFAULT_NAME,
     DEFAULT_SSL,
@@ -75,20 +74,12 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up Pi-hole entry."""
-    # Move API key to options
-    if CONF_API_KEY in entry.data:
-        data = {**entry.data}
-        api_key = data.pop(CONF_API_KEY)
-        hass.config_entries.async_update_entry(
-            entry, data=data, options={CONF_API_KEY: api_key}
-        )
-
     name = entry.data[CONF_NAME]
     host = entry.data[CONF_HOST]
     use_tls = entry.data[CONF_SSL]
     verify_tls = entry.data[CONF_VERIFY_SSL]
     location = entry.data[CONF_LOCATION]
-    api_key = entry.options.get(CONF_API_KEY)
+    api_key = entry.data.get(CONF_API_KEY)
 
     _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
 
@@ -109,8 +100,6 @@ async def async_setup_entry(hass, entry):
         except HoleError as err:
             raise UpdateFailed(f"Failed to communicating with API: {err}")
 
-    unsub_update_listener = entry.add_update_listener(async_update_listener)
-
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
@@ -121,7 +110,6 @@ async def async_setup_entry(hass, entry):
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_KEY_API: api,
         DATA_KEY_COORDINATOR: coordinator,
-        DATA_KEY_UNSUB_UPDATE_LISTENER: unsub_update_listener,
     }
 
     for platform in PLATFORMS:
@@ -130,11 +118,6 @@ async def async_setup_entry(hass, entry):
         )
 
     return True
-
-
-async def async_update_listener(hass, entry):
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass, entry):
@@ -148,7 +131,6 @@ async def async_unload_entry(hass, entry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN][entry.entry_id][DATA_KEY_UNSUB_UPDATE_LISTENER]()
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
 

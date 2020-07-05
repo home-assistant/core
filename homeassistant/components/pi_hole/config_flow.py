@@ -22,7 +22,6 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,12 +32,6 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        """Get the options flow for this handler."""
-        return OptionsFlowHandler()
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
@@ -141,16 +134,3 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             api_token=api_token,
         )
         await pi_hole.get_data()
-
-
-class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle options."""
-
-    async def async_step_init(self, user_input=None):
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="init", data_schema=vol.Schema({vol.Optional(CONF_API_KEY): str}),
-        )

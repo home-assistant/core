@@ -3,7 +3,6 @@ import logging
 
 from homeassistant.components.pi_hole.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_API_KEY
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
@@ -11,19 +10,14 @@ from homeassistant.data_entry_flow import (
 )
 
 from . import (
-    API_KEY,
     CONF_CONFIG_FLOW,
     CONF_DATA,
     NAME,
-    STATUS_ENTITY_ID,
-    SWITCH_ENTITY_ID,
     _create_mocked_hole,
     _patch_config_flow_hole,
-    _patch_init_hole,
 )
 
 from tests.async_mock import patch
-from tests.common import MockConfigEntry
 
 
 def _flow_next(hass, flow_id):
@@ -108,43 +102,3 @@ async def test_flow_user_invalid(hass):
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_options_flow(hass):
-    """Test config flow options."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=CONF_DATA)
-    config_entry.add_to_hass(hass)
-
-    mocked_hole = _create_mocked_hole()
-    with _patch_config_flow_hole(mocked_hole), _patch_init_hole(mocked_hole):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        assert hass.states.get(SWITCH_ENTITY_ID) is not None
-        assert hass.states.get(STATUS_ENTITY_ID) is None
-        assert config_entry.options[CONF_API_KEY] == API_KEY
-        assert CONF_API_KEY not in config_entry.data
-
-        # Remove API key
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "init"
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={}
-        )
-        await hass.async_block_till_done()
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["data"] == {}
-        assert hass.states.get(SWITCH_ENTITY_ID) is None
-        assert hass.states.get(STATUS_ENTITY_ID) is not None
-        assert CONF_API_KEY not in config_entry.options
-
-        # Set new API key
-        result = await hass.config_entries.options.async_init(
-            config_entry.entry_id, data={CONF_API_KEY: API_KEY}
-        )
-        await hass.async_block_till_done()
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["data"] == {CONF_API_KEY: API_KEY}
-        assert hass.states.get(SWITCH_ENTITY_ID) is not None
-        assert hass.states.get(STATUS_ENTITY_ID) is None
-        assert config_entry.options[CONF_API_KEY] == API_KEY

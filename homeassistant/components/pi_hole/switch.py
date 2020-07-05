@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Pi-hole switch."""
-    if not entry.options.get(CONF_API_KEY):
+    if not entry.data.get(CONF_API_KEY):
         return
     name = entry.data[CONF_NAME]
     hole_data = hass.data[PIHOLE_DOMAIN][entry.entry_id]
