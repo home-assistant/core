@@ -83,16 +83,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         gateway = hass.data[DOMAIN][config_entry.entry_id]
         sub_devices = gateway.devices
         for sub_device in sub_devices.values():
+            sensor_variables = None
             if sub_device.type == DeviceType.SensorHT:
                 sensor_variables = ["temperature", "humidity"]
             if sub_device.type == DeviceType.AqaraHT:
                 sensor_variables = ["temperature", "humidity", "pressure"]
-            entities.extend(
-                [
-                    XiaomiGatewaySensor(sub_device, config_entry, variable)
-                    for variable in sensor_variables
-                ]
-            )
+            if sensor_variables is not None:
+                entities.extend(
+                    [
+                        XiaomiGatewaySensor(sub_device, config_entry, variable)
+                        for variable in sensor_variables
+                    ]
+                )
 
     async_add_entities(entities, update_before_add=True)
 
