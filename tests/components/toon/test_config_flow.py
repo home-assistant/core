@@ -36,7 +36,7 @@ async def test_abort_if_no_configuration(hass):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "missing_configuration"
+    assert result["reason"] == "missing_configurationn"
 
 
 async def test_full_flow_implementation(hass, aiohttp_client, aioclient_mock):
