@@ -389,6 +389,7 @@ class HomeKit:
             self.hass,
             self._entry_id,
             self._name,
+            loop=self.hass.loop,
             address=ip_addr,
             port=self._port,
             persist_file=persist_file,
@@ -498,6 +499,9 @@ class HomeKit:
 
         self._async_register_bridge(dev_reg)
         await self.hass.async_add_executor_job(self._start, bridged_states)
+        _LOGGER.debug("Driver start for %s", self._name)
+        self.hass.add_job(self.driver.start_service)
+        self.status = STATUS_RUNNING
 
     @callback
     def _async_register_bridge(self, dev_reg):
@@ -570,17 +574,13 @@ class HomeKit:
                 self.bridge.xhm_uri(),
             )
 
-        _LOGGER.debug("Driver start for %s", self._name)
-        self.hass.add_job(self.driver.start)
-        self.status = STATUS_RUNNING
-
     async def async_stop(self, *args):
         """Stop the accessory driver."""
         if self.status != STATUS_RUNNING:
             return
         self.status = STATUS_STOPPED
         _LOGGER.debug("Driver stop for %s", self._name)
-        self.hass.add_job(self.driver.stop)
+        await self.driver.async_stop()
         for acc in self.bridge.accessories.values():
             acc.async_stop()
 

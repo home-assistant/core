@@ -130,23 +130,17 @@ async def test_fire_event(hass):
         calls.append(event)
 
     hass.bus.async_listen(rfxtrx.EVENT_BUTTON_PRESSED, record_event)
-    await hass.async_block_till_done()
-    entity = rfxtrx.RFX_DEVICES["213c7f2_16"]
-    entity.update_state(False, 0)
-    assert "Test" == entity.name
-    assert "off" == entity.state
-    assert entity.should_fire_event
 
-    event = rfxtrx.get_rfx_object("0b1100cd0213c7f210010f51")
-    event.data = bytearray(
-        [0x0B, 0x11, 0x00, 0x10, 0x01, 0x18, 0xCD, 0xEA, 0x01, 0x01, 0x0F, 0x70]
-    )
-    await _signal_event(hass, event)
-    await hass.async_block_till_done()
+    state = hass.states.get("switch.test")
+    assert state
+    assert state.state == "off"
 
-    assert event.values["Command"] == "On"
-    assert "on" == entity.state
-    assert hass.states.get("switch.test").state == "on"
+    await _signal_event(hass, "0b1100cd0213c7f210010f51")
+
+    state = hass.states.get("switch.test")
+    assert state
+    assert state.state == "on"
+
     assert 1 == len(calls)
     assert calls[0].data == {"entity_id": "switch.test", "state": "on"}
 
@@ -191,11 +185,7 @@ async def test_fire_event_sensor(hass):
         calls.append(event)
 
     hass.bus.async_listen("signal_received", record_event)
-    await hass.async_block_till_done()
-    event = rfxtrx.get_rfx_object("0a520802060101ff0f0269")
-    event.data = bytearray(b"\nR\x08\x01\x07\x01\x00\xb8\x1b\x02y")
-    await _signal_event(hass, event)
 
-    await hass.async_block_till_done()
+    await _signal_event(hass, "0a520802060101ff0f0269")
     assert 1 == len(calls)
     assert calls[0].data == {"entity_id": "sensor.test_temperature"}
