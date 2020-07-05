@@ -110,7 +110,7 @@ jobs:
       - name: Run bandit
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual bandit --all-files
+          pre-commit run --hook-stage manual bandit --all-files --show-diff-on-failure
 
   lint-black:
     name: Check black
@@ -154,7 +154,7 @@ jobs:
       - name: Run black
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual black --all-files
+          pre-commit run --hook-stage manual black --all-files --show-diff-on-failure
 
   lint-codespell:
     name: Check codespell
@@ -358,7 +358,7 @@ jobs:
       - name: Run isort
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual isort --all-files
+          pre-commit run --hook-stage manual isort --all-files --show-diff-on-failure
 
   lint-json:
     name: Check JSON
@@ -449,7 +449,7 @@ jobs:
       - name: Run pyupgrade
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual pyupgrade --all-files
+          pre-commit run --hook-stage manual pyupgrade --all-files --show-diff-on-failure
 
   # Disabled until we have the existing issues fixed
   # lint-shellcheck:
@@ -507,7 +507,7 @@ jobs:
       - name: Run yamllint
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual yamllint --all-files
+          pre-commit run --hook-stage manual yamllint --all-files --show-diff-on-failure
 
   hassfest:
     name: Check hassfest
