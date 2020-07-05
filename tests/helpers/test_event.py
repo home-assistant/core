@@ -81,6 +81,64 @@ async def test_track_point_in_time(hass):
     assert len(runs) == 2
 
 
+async def test_track_state_change_from_to_state_match(hass):
+    """Test track_state_change with from and to state matchers."""
+    from_and_to_state_runs = []
+    only_from_runs = []
+    only_to_runs = []
+
+    def from_and_to_state_callback(entity_id, old_state, new_state):
+        from_and_to_state_runs.append(1)
+
+    def only_from_state_callback(entity_id, old_state, new_state):
+        only_from_runs.append(1)
+
+    def only_to_state_callback(entity_id, old_state, new_state):
+        only_to_runs.append(1)
+
+    async_track_state_change(
+        hass, "light.Bowl", from_and_to_state_callback, "on", "off"
+    )
+    async_track_state_change(hass, "light.Bowl", only_from_state_callback, "on", None)
+    async_track_state_change(hass, "light.Bowl", only_to_state_callback, None, "off")
+
+    hass.states.async_set("light.Bowl", "on")
+    await hass.async_block_till_done()
+    assert len(from_and_to_state_runs) == 0
+    assert len(only_from_runs) == 0
+    assert len(only_to_runs) == 0
+
+    hass.states.async_set("light.Bowl", "off")
+    await hass.async_block_till_done()
+    assert len(from_and_to_state_runs) == 1
+    assert len(only_from_runs) == 1
+    assert len(only_to_runs) == 1
+
+    hass.states.async_set("light.Bowl", "on")
+    await hass.async_block_till_done()
+    assert len(from_and_to_state_runs) == 1
+    assert len(only_from_runs) == 1
+    assert len(only_to_runs) == 1
+
+    hass.states.async_set("light.Bowl", "on")
+    await hass.async_block_till_done()
+    assert len(from_and_to_state_runs) == 1
+    assert len(only_from_runs) == 1
+    assert len(only_to_runs) == 1
+
+    hass.states.async_set("light.Bowl", "off")
+    await hass.async_block_till_done()
+    assert len(from_and_to_state_runs) == 2
+    assert len(only_from_runs) == 2
+    assert len(only_to_runs) == 2
+
+    hass.states.async_set("light.Bowl", "off")
+    await hass.async_block_till_done()
+    assert len(from_and_to_state_runs) == 2
+    assert len(only_from_runs) == 2
+    assert len(only_to_runs) == 2
+
+
 async def test_track_state_change(hass):
     """Test track_state_change."""
     # 2 lists to track how often our callbacks get called
