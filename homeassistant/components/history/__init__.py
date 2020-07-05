@@ -257,34 +257,42 @@ def get_last_state_changes(hass, number_of_states, entity_id):
 
 def get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None):
     """Return the states at a specific point in time."""
+    return list(_yield_states(hass, utc_point_in_time, entity_ids, run, filters))
+
+
+def _yield_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None):
+    """Yield states at a specific point in time."""
     if run is None:
         run = recorder.run_information_from_instance(hass, utc_point_in_time)
 
         # History did not run before utc_point_in_time
         if run is None:
-            return []
+            yield from ()
+            return
 
     with session_scope(hass=hass) as session:
-        return _get_states_with_session(
+        yield from _yield_states_with_session(
             hass, session, utc_point_in_time, entity_ids, run, filters
         )
 
 
-def _get_states_with_session(
+def _yield_states_with_session(
     hass, session, utc_point_in_time, entity_ids=None, run=None, filters=None
 ):
     """Return the states at a specific point in time."""
     if entity_ids and len(entity_ids) == 1:
-        return _get_single_entity_states_with_session(
+        yield from _yield_single_entity_states_with_session(
             hass, session, utc_point_in_time, entity_ids[0]
         )
+        return
 
     if run is None:
         run = recorder.run_information_with_session(session, utc_point_in_time)
 
         # History did not run before utc_point_in_time
         if run is None:
-            return []
+            yield from ()
+            return
 
     # We have more than one entity to look at (most commonly we want
     # all entities,) so we need to do a search on all states since the
@@ -326,10 +334,13 @@ def _get_states_with_session(
     if filters:
         query = filters.apply(query, entity_ids)
 
-    return [LazyState(row) for row in execute(query)]
+    for row in execute(query):
+        yield LazyState(row)
 
 
-def _get_single_entity_states_with_session(hass, session, utc_point_in_time, entity_id):
+def _yield_single_entity_states_with_session(
+    hass, session, utc_point_in_time, entity_id
+):
     # Use an entirely different (and extremely fast) query if we only
     # have a single entity id
     baked_query = hass.data[HISTORY_BAKERY](
@@ -346,7 +357,8 @@ def _get_single_entity_states_with_session(hass, session, utc_point_in_time, ent
         utc_point_in_time=utc_point_in_time, entity_id=entity_id
     )
 
-    return [LazyState(row) for row in execute(query)]
+    for row in execute(query):
+        yield LazyState(row)
 
 
 def _sorted_states_to_json(
@@ -380,7 +392,7 @@ def _sorted_states_to_json(
     timer_start = time.perf_counter()
     if include_start_time_state:
         run = recorder.run_information_from_instance(hass, start_time)
-        for state in _get_states_with_session(
+        for state in _yield_states_with_session(
             hass, session, start_time, entity_ids, run=run, filters=filters
         ):
             state.last_changed = start_time
@@ -409,7 +421,7 @@ def _sorted_states_to_json(
                     ]
                 )
             else:
-                ent_results.extend([LazyState(db_state) for db_state in group])
+                ent_results.extend(LazyState(db_state) for db_state in group)
             continue
 
         # With minimal response we only provide a native
@@ -450,8 +462,8 @@ def _sorted_states_to_json(
 
 def get_state(hass, utc_point_in_time, entity_id, run=None):
     """Return a state at a specific point in time."""
-    states = list(get_states(hass, utc_point_in_time, (entity_id,), run))
-    return states[0] if states else None
+    for state in _yield_states(hass, utc_point_in_time, (entity_id,), run):
+        return state
 
 
 async def async_setup(hass, config):
@@ -648,11 +660,13 @@ class Filters:
 
         baked_query += lambda q: q.filter(~States.domain.in_(IGNORE_DOMAINS))
 
-        entity_filter = self.entity_filter()
-        if entity_filter is not None:
-            baked_query += lambda q: q.filter(entity_filter)
-
-        return
+        if (
+            self.excluded_entities
+            or self.excluded_domains
+            or self.included_entities
+            or self.included_domains
+        ):
+            baked_query += lambda q: q.filter(self.entity_filter())
 
     def entity_filter(self):
         """Generate the entity filter query."""
