@@ -532,7 +532,7 @@ class NetatmoPublicData:
             return
 
         if data.CountStationInArea() == 0:
-            _LOGGER.warning("No Stations available in this area.")
+            _LOGGER.warning("No Stations available in this area")
             return
 
         self.data = data

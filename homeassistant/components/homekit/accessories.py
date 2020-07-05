@@ -129,7 +129,7 @@ def get_accessory(hass, driver, state, aid, config):
     if not aid:
         _LOGGER.warning(
             'The entity "%s" is not supported, since it '
-            "generates an invalid aid, please change it.",
+            "generates an invalid aid, please change it",
             state.entity_id,
         )
         return None

@@ -59,7 +59,6 @@ async def rfxtrx_cleanup():
     ):
         yield
 
-    rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS.clear()
     rfxtrx_core.RFX_DEVICES.clear()
 
 
@@ -68,7 +67,10 @@ async def rfxtrx_fixture(hass):
     """Stub out core rfxtrx to test platform."""
     mock_component(hass, "rfxtrx")
 
-    yield
+    rfxobject = mock.MagicMock()
+    hass.data[rfxtrx_core.DATA_RFXOBJECT] = rfxobject
+
+    yield rfxobject
 
     # These test don't listen for stop to do cleanup.
     if rfxtrx_core.DATA_RFXOBJECT in hass.data:

@@ -1,5 +1,7 @@
 """The tests for the RFXtrx switch platform."""
-import RFXtrx as rfxtrxmod
+from unittest.mock import call
+
+import pytest
 
 from homeassistant.components import rfxtrx as rfxtrx_core
 from homeassistant.setup import async_setup_component
@@ -82,8 +84,7 @@ async def test_default_config(hass, rfxtrx):
         hass, "switch", {"switch": {"platform": "rfxtrx", "devices": {}}}
     )
     await hass.async_block_till_done()
-
-    assert 0 == len(rfxtrx_core.RFX_DEVICES)
+    assert hass.states.async_all() == []
 
 
 async def test_one_switch(hass, rfxtrx):
@@ -100,32 +101,29 @@ async def test_one_switch(hass, rfxtrx):
     )
     await hass.async_block_till_done()
 
-    hass.data[rfxtrx_core.DATA_RFXOBJECT] = rfxtrxmod.Core(
-        "", transport_protocol=rfxtrxmod.DummyTransport
+    state = hass.states.get("switch.test")
+    assert state
+    assert state.state == "off"
+    assert state.attributes.get("friendly_name") == "Test"
+
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": "switch.test"}, blocking=True
     )
 
-    assert 1 == len(rfxtrx_core.RFX_DEVICES)
-    entity = rfxtrx_core.RFX_DEVICES["213c7f2_16"]
-    entity.hass = hass
-    assert "Test" == entity.name
-    assert "off" == entity.state
-    assert entity.assumed_state
-    assert entity.signal_repetitions == 1
-    assert not entity.should_fire_event
-    assert not entity.should_poll
+    state = hass.states.get("switch.test")
+    assert state.state == "on"
 
-    assert not entity.is_on
-    entity.turn_on()
-    assert entity.is_on
-    entity.turn_off()
-    assert not entity.is_on
+    await hass.services.async_call(
+        "switch", "turn_off", {"entity_id": "switch.test"}, blocking=True
+    )
 
-    assert "Test" == entity.name
-    assert "off" == entity.state
-    entity.turn_on()
-    assert "on" == entity.state
-    entity.turn_off()
-    assert "off" == entity.state
+    state = hass.states.get("switch.test")
+    assert state.state == "off"
+
+    assert rfxtrx.transport.send.mock_calls == [
+        call(bytearray(b"\x0b\x11\x00\x00\x02\x13\xc7\xf2\x10\x01\x00\x00")),
+        call(bytearray(b"\x0b\x11\x00\x00\x02\x13\xc7\xf2\x10\x00\x00\x00")),
+    ]
 
 
 async def test_several_switches(hass, rfxtrx):
@@ -147,25 +145,44 @@ async def test_several_switches(hass, rfxtrx):
     )
     await hass.async_block_till_done()
 
-    assert 3 == len(rfxtrx_core.RFX_DEVICES)
-    device_num = 0
-    for id in rfxtrx_core.RFX_DEVICES:
-        entity = rfxtrx_core.RFX_DEVICES[id]
-        assert entity.signal_repetitions == 3
-        if entity.name == "Living":
-            device_num = device_num + 1
-            assert "off" == entity.state
-            assert "<Entity Living: off>" == entity.__str__()
-        elif entity.name == "Bath":
-            device_num = device_num + 1
-            assert "off" == entity.state
-            assert "<Entity Bath: off>" == entity.__str__()
-        elif entity.name == "Test":
-            device_num = device_num + 1
-            assert "off" == entity.state
-            assert "<Entity Test: off>" == entity.__str__()
+    state = hass.states.get("switch.test")
+    assert state
+    assert state.state == "off"
+    assert state.attributes.get("friendly_name") == "Test"
 
-    assert 3 == device_num
+    state = hass.states.get("switch.bath")
+    assert state
+    assert state.state == "off"
+    assert state.attributes.get("friendly_name") == "Bath"
+
+    state = hass.states.get("switch.living")
+    assert state
+    assert state.state == "off"
+    assert state.attributes.get("friendly_name") == "Living"
+
+
+@pytest.mark.parametrize("repetitions", [1, 3])
+async def test_repetitions(hass, rfxtrx, repetitions):
+    """Test signal repetitions."""
+    await async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "rfxtrx",
+                "signal_repetitions": repetitions,
+                "devices": {"0b1100cd0213c7f230010f71": {"name": "Test"}},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": "switch.test"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert rfxtrx.transport.send.call_count == repetitions
 
 
 async def test_discover_switch(hass, rfxtrx):
@@ -177,50 +194,30 @@ async def test_discover_switch(hass, rfxtrx):
     )
     await hass.async_block_till_done()
 
-    event = rfxtrx_core.get_rfx_object("0b1100100118cdea02010f70")
-    event.data = bytearray(
-        [0x0B, 0x11, 0x00, 0x10, 0x01, 0x18, 0xCD, 0xEA, 0x01, 0x01, 0x0F, 0x70]
-    )
+    await _signal_event(hass, "0b1100100118cdea02010f70")
+    state = hass.states.get("switch.0b1100100118cdea02010f70")
+    assert state
+    assert state.state == "on"
 
-    await _signal_event(hass, event)
-    entity = rfxtrx_core.RFX_DEVICES["118cdea_2"]
-    assert 1 == len(rfxtrx_core.RFX_DEVICES)
-    assert "<Entity 0b1100100118cdea01010f70: on>" == entity.__str__()
-
-    await _signal_event(hass, event)
-    assert 1 == len(rfxtrx_core.RFX_DEVICES)
-
-    event = rfxtrx_core.get_rfx_object("0b1100100118cdeb02010f70")
-    event.data = bytearray(
-        [0x0B, 0x11, 0x00, 0x12, 0x01, 0x18, 0xCD, 0xEA, 0x02, 0x00, 0x00, 0x70]
-    )
-
-    await _signal_event(hass, event)
-    entity = rfxtrx_core.RFX_DEVICES["118cdeb_2"]
-    assert 2 == len(rfxtrx_core.RFX_DEVICES)
-    assert "<Entity 0b1100120118cdea02000070: on>" == entity.__str__()
+    await _signal_event(hass, "0b1100100118cdeb02010f70")
+    state = hass.states.get("switch.0b1100100118cdeb02010f70")
+    assert state
+    assert state.state == "on"
 
     # Trying to add a sensor
-    event = rfxtrx_core.get_rfx_object("0a52085e070100b31b0279")
-    event.data = bytearray(b"\nR\x08^\x07\x01\x00\xb3\x1b\x02y")
-    await _signal_event(hass, event)
-    assert 2 == len(rfxtrx_core.RFX_DEVICES)
+    await _signal_event(hass, "0a52085e070100b31b0279")
+    state = hass.states.get("sensor.0a52085e070100b31b0279")
+    assert state is None
 
     # Trying to add a light
-    event = rfxtrx_core.get_rfx_object("0b1100100118cdea02010f70")
-    event.data = bytearray(
-        [0x0B, 0x11, 0x11, 0x10, 0x01, 0x18, 0xCD, 0xEA, 0x01, 0x02, 0x0F, 0x70]
-    )
-    await _signal_event(hass, event)
-    assert 2 == len(rfxtrx_core.RFX_DEVICES)
+    await _signal_event(hass, "0b1100100118cdea02010f70")
+    state = hass.states.get("light.0b1100100118cdea02010f70")
+    assert state is None
 
     # Trying to add a rollershutter
-    event = rfxtrx_core.get_rfx_object("0a1400adf394ab020e0060")
-    event.data = bytearray(
-        [0x0A, 0x14, 0x00, 0xAD, 0xF3, 0x94, 0xAB, 0x02, 0x0E, 0x00, 0x60]
-    )
-    await _signal_event(hass, event)
-    assert 2 == len(rfxtrx_core.RFX_DEVICES)
+    await _signal_event(hass, "0a1400adf394ab020e0060")
+    state = hass.states.get("cover.0a1400adf394ab020e0060")
+    assert state is None
 
 
 async def test_discover_switch_noautoadd(hass, rfxtrx):
@@ -232,43 +229,6 @@ async def test_discover_switch_noautoadd(hass, rfxtrx):
     )
     await hass.async_block_till_done()
 
-    event = rfxtrx_core.get_rfx_object("0b1100100118cdea02010f70")
-    event.data = bytearray(
-        [0x0B, 0x11, 0x00, 0x10, 0x01, 0x18, 0xCD, 0xEA, 0x01, 0x01, 0x0F, 0x70]
-    )
-
-    await _signal_event(hass, event)
-    assert 0 == len(rfxtrx_core.RFX_DEVICES)
-    assert 0 == len(rfxtrx_core.RFX_DEVICES)
-
-    await _signal_event(hass, event)
-    assert 0 == len(rfxtrx_core.RFX_DEVICES)
-
-    event = rfxtrx_core.get_rfx_object("0b1100100118cdeb02010f70")
-    event.data = bytearray(
-        [0x0B, 0x11, 0x00, 0x12, 0x01, 0x18, 0xCD, 0xEA, 0x02, 0x00, 0x00, 0x70]
-    )
-    await _signal_event(hass, event)
-    assert 0 == len(rfxtrx_core.RFX_DEVICES)
-
-    # Trying to add a sensor
-    event = rfxtrx_core.get_rfx_object("0a52085e070100b31b0279")
-    event.data = bytearray(b"\nR\x08^\x07\x01\x00\xb3\x1b\x02y")
-    await _signal_event(hass, event)
-    assert 0 == len(rfxtrx_core.RFX_DEVICES)
-
-    # Trying to add a light
-    event = rfxtrx_core.get_rfx_object("0b1100100118cdea02010f70")
-    event.data = bytearray(
-        [0x0B, 0x11, 0x11, 0x10, 0x01, 0x18, 0xCD, 0xEA, 0x01, 0x02, 0x0F, 0x70]
-    )
-    await _signal_event(hass, event)
-    assert 0 == len(rfxtrx_core.RFX_DEVICES)
-
-    # Trying to add a rollershutter
-    event = rfxtrx_core.get_rfx_object("0a1400adf394ab020e0060")
-    event.data = bytearray(
-        [0x0A, 0x14, 0x00, 0xAD, 0xF3, 0x94, 0xAB, 0x02, 0x0E, 0x00, 0x60]
-    )
-    await _signal_event(hass, event)
-    assert 0 == len(rfxtrx_core.RFX_DEVICES)
+    # Trying to add switch
+    await _signal_event(hass, "0b1100100118cdea02010f70")
+    assert hass.states.async_all() == []

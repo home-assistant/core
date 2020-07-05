@@ -5,7 +5,7 @@
       "severity": "error",
       "pattern": [
         {
-          "regexp": "^(.*):(\\d+):(\\d+):\\s(E\\d{3}\\s.*)$",
+          "regexp": "^(.*):(\\d+):(\\d+):\\s([EF]\\d{3}\\s.*)$",
           "file": 1,
           "line": 2,
           "column": 3,
@@ -18,7 +18,7 @@
       "severity": "warning",
       "pattern": [
         {
-          "regexp": "^(.*):(\\d+):(\\d+):\\s([CDFNW]\\d{3}\\s.*)$",
+          "regexp": "^(.*):(\\d+):(\\d+):\\s([CDNW]\\d{3}\\s.*)$",
           "file": 1,
           "line": 2,
           "column": 3,

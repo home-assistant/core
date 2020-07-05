@@ -153,7 +153,7 @@ class HueBridge:
                     client_exceptions.ServerDisconnectedError,
                 ) as err:
                     if tries == 3:
-                        _LOGGER.error("Request failed %s times, giving up.", tries)
+                        _LOGGER.error("Request failed %s times, giving up", tries)
                         raise
 
                     # We only retry if it's a server error. So raise on all 4XX errors.
