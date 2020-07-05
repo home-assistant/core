@@ -177,8 +177,13 @@ class RfxtrxBinarySensor(BinarySensorEntity):
 
         def _handle_event(event):
             """Check if event applies to me and update."""
-            if event.device.id_string != self.event.device.id_string:
-                return
+            if self._masked_id:
+                masked_id = get_pt2262_deviceid(event.device.id_string, self._data_bits)
+                if masked_id != self._masked_id:
+                    return
+            else:
+                if event.device.id_string != self.event.device.id_string:
+                    return
 
             _LOGGER.debug(
                 "Binary sensor update (Device ID: %s Class: %s Sub: %s)",
