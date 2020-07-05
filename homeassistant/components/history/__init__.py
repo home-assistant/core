@@ -625,9 +625,9 @@ class Filters:
         """
         # specific entities requested - do not in/exclude anything
         if entity_ids is not None:
-            return query.filter(self.entity_ids_filter(entity_ids))
+            return query.filter(States.entity_id.in_(entity_ids))
 
-        query = query.filter(self.ignore_domains_filter())
+        query = query.filter(~States.domain.in_(IGNORE_DOMAINS))
 
         entity_filter = self.entity_filter()
         if entity_filter is not None:
@@ -642,25 +642,17 @@ class Filters:
         """
         if entity_ids is not None:
             baked_query += lambda q: q.filter(
-                self.entity_ids_filter(bindparam("entity_ids", expanding=True))
+                States.entity_id.in_(bindparam("entity_ids", expanding=True))
             )
             return
 
-        baked_query += lambda q: q.filter(self.ignore_domains_filter())
+        baked_query += lambda q: q.filter(~States.domain.in_(IGNORE_DOMAINS))
 
         entity_filter = self.entity_filter()
         if entity_filter is not None:
             baked_query += lambda q: q.filter(entity_filter)
 
         return
-
-    def entity_ids_filter(self, entity_ids):
-        """Include entity_ids in the filter."""
-        return States.entity_id.in_(entity_ids)
-
-    def ignore_domains_filter(self):
-        """Include ignored domains in the filter."""
-        return ~States.domain.in_(IGNORE_DOMAINS)
 
     def entity_filter(self):
         """Generate the entity filter query."""
