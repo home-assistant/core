@@ -652,8 +652,6 @@ class Filters:
         if entity_filter is not None:
             baked_query += lambda q: q.filter(entity_filter)
 
-        return
-
     def entity_filter(self):
         """Generate the entity filter query."""
         entity_filter = None
