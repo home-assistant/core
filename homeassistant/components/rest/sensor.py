@@ -216,7 +216,7 @@ class RestSensor(Entity):
                     _LOGGER.debug("JSON converted from XML: %s", value)
                 except ExpatError:
                     _LOGGER.warning(
-                        "REST xml result could not be parsed and converted to JSON."
+                        "REST xml result could not be parsed and converted to JSON"
                     )
                     _LOGGER.debug("Erroneous XML: %s", value)
 

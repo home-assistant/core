@@ -133,7 +133,7 @@ async def async_setup_platform(
     _LOGGER.warning(
         "Setting configuration for Cast via platform is deprecated. "
         "Configure via Cast integration instead."
-        "This option will become invalid in version 0.116."
+        "This option will become invalid in version 0.116"
     )
     await _async_setup_platform(hass, config, async_add_entities, discovery_info)
 
@@ -306,7 +306,7 @@ class CastDevice(MediaPlayerEntity):
             # Can't disconnect if not connected.
             return
         _LOGGER.debug(
-            "[%s %s] Disconnecting from chromecast socket.",
+            "[%s %s] Disconnecting from chromecast socket",
             self.entity_id,
             self._cast_info.friendly_name,
         )
@@ -479,7 +479,7 @@ class CastDevice(MediaPlayerEntity):
                 self._chromecast.start_app(app_id)
                 if app_data:
                     _LOGGER.warning(
-                        "Extra keys %s were ignored. Please use app_name to cast media.",
+                        "Extra keys %s were ignored. Please use app_name to cast media",
                         app_data.keys(),
                     )
                 return
