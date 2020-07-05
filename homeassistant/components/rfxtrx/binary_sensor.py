@@ -93,7 +93,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             entity.get(CONF_COMMAND_ON),
             entity.get(CONF_COMMAND_OFF),
         )
-        device.hass = hass
         sensors.append(device)
         RFX_DEVICES[device_id] = device
 
@@ -121,7 +120,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
             pkt_id = "".join(f"{x:02x}" for x in event.data)
             sensor = RfxtrxBinarySensor(event, pkt_id)
-            sensor.hass = hass
             RFX_DEVICES[device_id] = sensor
             add_entities([sensor])
             _LOGGER.info(
@@ -271,4 +269,5 @@ class RfxtrxBinarySensor(BinarySensorEntity):
     def update_state(self, state):
         """Update the state of the device."""
         self._state = state
-        self.schedule_update_ha_state()
+        if self.hass:
+            self.schedule_update_ha_state()

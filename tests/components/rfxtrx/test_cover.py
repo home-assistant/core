@@ -1,5 +1,5 @@
 """The tests for the Rfxtrx cover platform."""
-import RFXtrx as rfxtrxmod
+from unittest.mock import call
 
 from homeassistant.components import rfxtrx as rfxtrx_core
 from homeassistant.setup import async_setup_component
@@ -38,7 +38,7 @@ async def test_default_config(hass, rfxtrx):
     )
     await hass.async_block_till_done()
 
-    assert 0 == len(rfxtrx_core.RFX_DEVICES)
+    assert len(hass.states.async_all()) == 0
 
 
 async def test_one_cover(hass, rfxtrx):
@@ -55,20 +55,25 @@ async def test_one_cover(hass, rfxtrx):
     )
     await hass.async_block_till_done()
 
-    hass.data[rfxtrx_core.DATA_RFXOBJECT] = rfxtrxmod.Core(
-        "", transport_protocol=rfxtrxmod.DummyTransport
+    assert len(hass.states.async_all()) == 1
+
+    await hass.services.async_call(
+        "cover", "open_cover", {"entity_id": "cover.test"}, blocking=True
     )
 
-    assert 1 == len(rfxtrx_core.RFX_DEVICES)
-    for id in rfxtrx_core.RFX_DEVICES:
-        entity = rfxtrx_core.RFX_DEVICES[id]
-        entity.hass = hass
-        assert entity.signal_repetitions == 1
-        assert not entity.should_fire_event
-        assert not entity.should_poll
-        entity.open_cover()
-        entity.close_cover()
-        entity.stop_cover()
+    await hass.services.async_call(
+        "cover", "close_cover", {"entity_id": "cover.test"}, blocking=True
+    )
+
+    await hass.services.async_call(
+        "cover", "stop_cover", {"entity_id": "cover.test"}, blocking=True
+    )
+
+    assert rfxtrx.transport.send.mock_calls == [
+        call(bytearray(b"\n\x14\x00\x00\x02\x13\xc7\xf2\x0f\x00\x00")),
+        call(bytearray(b"\n\x14\x00\x00\x02\x13\xc7\xf2\r\x00\x00")),
+        call(bytearray(b"\n\x14\x00\x00\x02\x13\xc7\xf2\x0e\x00\x00")),
+    ]
 
 
 async def test_several_covers(hass, rfxtrx):
@@ -90,19 +95,22 @@ async def test_several_covers(hass, rfxtrx):
     )
     await hass.async_block_till_done()
 
-    assert 3 == len(rfxtrx_core.RFX_DEVICES)
-    device_num = 0
-    for id in rfxtrx_core.RFX_DEVICES:
-        entity = rfxtrx_core.RFX_DEVICES[id]
-        assert entity.signal_repetitions == 3
-        if entity.name == "Living":
-            device_num = device_num + 1
-        elif entity.name == "Bath":
-            device_num = device_num + 1
-        elif entity.name == "Test":
-            device_num = device_num + 1
+    state = hass.states.get("cover.test")
+    assert state
+    assert state.state == "closed"
+    assert state.attributes.get("friendly_name") == "Test"
 
-    assert 3 == device_num
+    state = hass.states.get("cover.bath")
+    assert state
+    assert state.state == "closed"
+    assert state.attributes.get("friendly_name") == "Bath"
+
+    state = hass.states.get("cover.living")
+    assert state
+    assert state.state == "closed"
+    assert state.attributes.get("friendly_name") == "Living"
+
+    assert len(hass.states.async_all()) == 3
 
 
 async def test_discover_covers(hass, rfxtrx):
@@ -114,35 +122,19 @@ async def test_discover_covers(hass, rfxtrx):
     )
     await hass.async_block_till_done()
 
-    event = rfxtrx_core.get_rfx_object("0a140002f38cae010f0070")
-    event.data = bytearray(
-        [0x0A, 0x14, 0x00, 0x02, 0xF3, 0x8C, 0xAE, 0x01, 0x0F, 0x00, 0x70]
-    )
+    await _signal_event(hass, "0a140002f38cae010f0070")
+    assert len(hass.states.async_all()) == 1
 
-    await _signal_event(hass, event)
-    assert 1 == len(rfxtrx_core.RFX_DEVICES)
-
-    event = rfxtrx_core.get_rfx_object("0a1400adf394ab020e0060")
-    event.data = bytearray(
-        [0x0A, 0x14, 0x00, 0xAD, 0xF3, 0x94, 0xAB, 0x02, 0x0E, 0x00, 0x60]
-    )
-
-    await _signal_event(hass, event)
-    assert 2 == len(rfxtrx_core.RFX_DEVICES)
+    await _signal_event(hass, "0a1400adf394ab020e0060")
+    assert len(hass.states.async_all()) == 2
 
     # Trying to add a sensor
-    event = rfxtrx_core.get_rfx_object("0a52085e070100b31b0279")
-    event.data = bytearray(b"\nR\x08^\x07\x01\x00\xb3\x1b\x02y")
-    await _signal_event(hass, event)
-    assert 2 == len(rfxtrx_core.RFX_DEVICES)
+    await _signal_event(hass, "0a52085e070100b31b0279")
+    assert len(hass.states.async_all()) == 2
 
     # Trying to add a light
-    event = rfxtrx_core.get_rfx_object("0b1100100118cdea02010f70")
-    event.data = bytearray(
-        [0x0B, 0x11, 0x11, 0x10, 0x01, 0x18, 0xCD, 0xEA, 0x01, 0x02, 0x0F, 0x70]
-    )
-    await _signal_event(hass, event)
-    assert 2 == len(rfxtrx_core.RFX_DEVICES)
+    await _signal_event(hass, "0b1100100118cdea02010f70")
+    assert len(hass.states.async_all()) == 2
 
 
 async def test_discover_cover_noautoadd(hass, rfxtrx):
@@ -154,31 +146,8 @@ async def test_discover_cover_noautoadd(hass, rfxtrx):
     )
     await hass.async_block_till_done()
 
-    event = rfxtrx_core.get_rfx_object("0a1400adf394ab010d0060")
-    event.data = bytearray(
-        [0x0A, 0x14, 0x00, 0xAD, 0xF3, 0x94, 0xAB, 0x01, 0x0D, 0x00, 0x60]
-    )
+    await _signal_event(hass, "0a1400adf394ab010d0060")
+    assert len(hass.states.async_all()) == 0
 
-    await _signal_event(hass, event)
-    assert 0 == len(rfxtrx_core.RFX_DEVICES)
-
-    event = rfxtrx_core.get_rfx_object("0a1400adf394ab020e0060")
-    event.data = bytearray(
-        [0x0A, 0x14, 0x00, 0xAD, 0xF3, 0x94, 0xAB, 0x02, 0x0E, 0x00, 0x60]
-    )
-    await _signal_event(hass, event)
-    assert 0 == len(rfxtrx_core.RFX_DEVICES)
-
-    # Trying to add a sensor
-    event = rfxtrx_core.get_rfx_object("0a52085e070100b31b0279")
-    event.data = bytearray(b"\nR\x08^\x07\x01\x00\xb3\x1b\x02y")
-    await _signal_event(hass, event)
-    assert 0 == len(rfxtrx_core.RFX_DEVICES)
-
-    # Trying to add a light
-    event = rfxtrx_core.get_rfx_object("0b1100100118cdea02010f70")
-    event.data = bytearray(
-        [0x0B, 0x11, 0x11, 0x10, 0x01, 0x18, 0xCD, 0xEA, 0x01, 0x02, 0x0F, 0x70]
-    )
-    await _signal_event(hass, event)
-    assert 0 == len(rfxtrx_core.RFX_DEVICES)
+    await _signal_event(hass, "0a1400adf394ab020e0060")
+    assert len(hass.states.async_all()) == 0
