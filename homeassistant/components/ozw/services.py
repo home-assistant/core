@@ -83,7 +83,7 @@ class ZWaveServices:
                         str(selection),
                     )
                     return
-                elif value.type == ValueType.LIST:
+                if value.type == ValueType.LIST:
                     # accept either string from the list value OR the int value
                     if isinstance(selection, int):
                         if selection <= value.max:
@@ -121,11 +121,11 @@ class ZWaveServices:
                                     param,
                                 )
                                 break
-                elif value.type == ValueType.BUTTON:
+                if value.type == ValueType.BUTTON:
                     # Unsupported at this time
                     _LOGGER.info("Button type not supported yet")
                     return
-                elif value.type == ValueType.INT:
+                if value.type == ValueType.INT:
                     if selection <= value.max:
                         value.send_value(int(selection))
                         _LOGGER.info(
