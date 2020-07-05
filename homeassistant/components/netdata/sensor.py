@@ -196,6 +196,10 @@ class NetdataAlarms(Entity):
         for alarm in alarms:
             if alarms[alarm]["recipient"] == "silent":
                 number_of_relevant_alarms = number_of_relevant_alarms - 1
+            elif alarms[alarm]["status"] == "CLEAR":
+                number_of_relevant_alarms = number_of_relevant_alarms - 1
+            elif alarms[alarm]["status"] == "UNDEFINED":
+                number_of_relevant_alarms = number_of_relevant_alarms - 1
             elif alarms[alarm]["status"] == "CRITICAL":
                 self._state = "critical"
                 return
