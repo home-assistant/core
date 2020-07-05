@@ -104,7 +104,7 @@ def setup_internal_discovery(hass: HomeAssistant) -> None:
             ),
         )
 
-    _LOGGER.debug("Starting internal pychromecast discovery.")
+    _LOGGER.debug("Starting internal pychromecast discovery")
     listener = pychromecast.CastListener(
         internal_add_update_callback,
         internal_remove_callback,
@@ -114,7 +114,7 @@ def setup_internal_discovery(hass: HomeAssistant) -> None:
 
     def stop_discovery(event):
         """Stop discovery of new chromecasts."""
-        _LOGGER.debug("Stopping internal pychromecast discovery.")
+        _LOGGER.debug("Stopping internal pychromecast discovery")
         pychromecast.discovery.stop_discovery(browser)
         hass.data[INTERNAL_DISCOVERY_RUNNING_KEY].release()
 

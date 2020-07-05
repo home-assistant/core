@@ -652,14 +652,14 @@ class DataManager:
         return await self._do_retry(self._async_subscribe_webhook)
 
     async def _async_subscribe_webhook(self) -> None:
-        _LOGGER.debug("Configuring withings webhook.")
+        _LOGGER.debug("Configuring withings webhook")
 
         # On first startup, perform a fresh re-subscribe. Withings stops pushing data
         # if the webhook fails enough times but they don't remove the old subscription
         # config. This ensures the subscription is setup correctly and they start
         # pushing again.
         if self._subscribe_webhook_run_count == 0:
-            _LOGGER.debug("Refreshing withings webhook configs.")
+            _LOGGER.debug("Refreshing withings webhook configs")
             await self.async_unsubscribe_webhook()
         self._subscribe_webhook_run_count += 1
 
@@ -758,7 +758,7 @@ class DataManager:
             raise exception
 
     async def _async_get_all_data(self) -> Optional[Dict[MeasureType, Any]]:
-        _LOGGER.info("Updating all withings data.")
+        _LOGGER.info("Updating all withings data")
         return {
             **await self.async_get_measures(),
             **await self.async_get_sleep_summary(),

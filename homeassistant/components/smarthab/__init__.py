@@ -41,7 +41,7 @@ def setup(hass, config) -> bool:
     try:
         hub.login(username, password)
     except pysmarthab.RequestFailedException as ex:
-        _LOGGER.error("Error while trying to reach SmartHab API.")
+        _LOGGER.error("Error while trying to reach SmartHab API")
         _LOGGER.debug(ex, exc_info=True)
         return False
 

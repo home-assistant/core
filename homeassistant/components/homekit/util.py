@@ -306,7 +306,7 @@ class HomeKitSpeedMapping:
             _LOGGER.warning(
                 "%s does not contain the speed setting "
                 "%s as its first element. "
-                "Assuming that %s is equivalent to 'off'.",
+                "Assuming that %s is equivalent to 'off'",
                 speed_list,
                 fan.SPEED_OFF,
                 speed_list[0],

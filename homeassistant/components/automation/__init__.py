@@ -338,7 +338,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         else:
             enable_automation = DEFAULT_INITIAL_STATE
             _LOGGER.debug(
-                "Automation %s not in state storage, state %s from default is used.",
+                "Automation %s not in state storage, state %s from default is used",
                 self.entity_id,
                 enable_automation,
             )
