@@ -9,8 +9,7 @@
             "user": {
                 "data": {
                     "host": "Bond device IP address or host name",
-                    "access_token": "Bond device token",
-                    "friendly_name": "Friendly name for this Bond device"
+                    "access_token": "Bond device token"
                 }
             }
         }

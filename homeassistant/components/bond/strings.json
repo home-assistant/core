@@ -4,8 +4,7 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "access_token": "[%key:common::config_flow::data::access_token%]",
-          "friendly_name": "Friendly name for this Bond device"
+          "access_token": "[%key:common::config_flow::data::access_token%]"
         }
       }
     },

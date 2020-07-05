@@ -7,18 +7,14 @@ from simplejson import JSONDecodeError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_FRIENDLY_NAME, CONF_HOST
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_ACCESS_TOKEN): str,
-        vol.Optional(CONF_FRIENDLY_NAME): str,
-    }
+    {vol.Required(CONF_HOST): str, vol.Required(CONF_ACCESS_TOKEN): str}
 )
 
 
@@ -40,7 +36,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise InvalidAuth
 
     # Return info that you want to store in the config entry.
-    return {"title": data.get(CONF_FRIENDLY_NAME, data[CONF_HOST])}
+    return {"title": data[CONF_HOST]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
