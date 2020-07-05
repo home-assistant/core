@@ -253,7 +253,7 @@ class RfxtrxBinarySensor(BinarySensorEntity):
     def _apply_event_lighting4(self, event):
         """Apply event for a lighting 4 device."""
         if self.data_bits is not None:
-            cmd = get_pt2262_cmd(event.device.device_id, self.data_bits)
+            cmd = get_pt2262_cmd(event.device.id_string, self.data_bits)
             cmd = int(cmd, 16)
             if cmd == self.cmd_on:
                 self._state = True
@@ -290,5 +290,5 @@ class RfxtrxBinarySensor(BinarySensorEntity):
                     self.schedule_update_ha_state()
 
             self.delay_listener = evt.call_later(
-                self.hass, off_delay_listener, self.off_delay
+                self.hass, self.off_delay.total_seconds(), off_delay_listener
             )
