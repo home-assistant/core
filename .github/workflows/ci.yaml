@@ -712,6 +712,16 @@ jobs:
         run: |
           echo "Failed to restore Python virtual environment from cache"
           exit 1
+      - name: Register Python problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/python.json"
+      - name: Install Pytest Annotation plugin
+        run: |
+          . venv/bin/activate
+          # Ideally this should be part of our dependencies
+          # However this plugin is fairly new and doesn't run correctly
+          # on a non-GitHub environment.
+          pip install pytest-github-actions-annotate-failures
       - name: Run pytest
         run: |
           . venv/bin/activate
