@@ -409,7 +409,7 @@ def _sorted_states_to_json(
                     ]
                 )
             else:
-                ent_results.extend([LazyState(db_state) for db_state in group])
+                ent_results.extend(LazyState(db_state) for db_state in group)
             continue
 
         # With minimal response we only provide a native
