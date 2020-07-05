@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -56,9 +57,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     try:
         await hub.async_login(username, password)
+    except pysmarthab.RequestFailedException as ex:
+        _LOGGER.exception("Error while trying to reach SmartHab API: %s", ex)
+        raise ConfigEntryNotReady from ex
     except Exception as ex:  # pylint: disable=broad-except
-        _LOGGER.error("Error while trying to reach SmartHab API.")
-        _LOGGER.debug(ex, exc_info=True)
+        _LOGGER.exception("Unexpected error during login: %s", ex)
         return False
 
     # Pass hub object to child platforms
