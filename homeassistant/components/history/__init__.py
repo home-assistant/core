@@ -648,9 +648,13 @@ class Filters:
 
         baked_query += lambda q: q.filter(~States.domain.in_(IGNORE_DOMAINS))
 
-        entity_filter = self.entity_filter()
-        if entity_filter is not None:
-            baked_query += lambda q: q.filter(entity_filter)
+        if (
+            self.excluded_entities
+            or self.excluded_domains
+            or self.included_entities
+            or self.included_domains
+        ):
+            baked_query += lambda q: q.filter(self.entity_filter())
 
     def entity_filter(self):
         """Generate the entity filter query."""
