@@ -98,7 +98,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 data_type = _data_type
                 break
         new_sensor = RfxtrxSensor(event, event.device, pkt_id, data_type)
-        new_sensor._apply_event(event)  # pylint: disable=protected-access
+        new_sensor.apply_event(event)
         sub_sensors = {}
         sub_sensors[new_sensor.data_type] = new_sensor
         RFX_DEVICES[device_id] = sub_sensors
@@ -143,7 +143,7 @@ class RfxtrxSensor(Entity):
                 event.device.subtype,
             )
 
-            self._apply_event(event)
+            self.apply_event(event)
 
         self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
@@ -184,7 +184,8 @@ class RfxtrxSensor(Entity):
         """Return unique identifier of remote device."""
         return self._unique_id
 
-    def _apply_event(self, event):
+    def apply_event(self, event):
+        """Apply command from rfxtrx."""
         self.event = event
         if self.hass:
             self.schedule_update_ha_state()

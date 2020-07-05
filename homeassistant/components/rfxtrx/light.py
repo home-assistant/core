@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         new_device = get_new_device(event, config, RfxtrxLight)
         if new_device:
-            new_device._apply_event(event)  # pylint: disable=protected-access
+            new_device.apply_event(event)
             add_entities([new_device])
 
     # Subscribe to main RFXtrx events
@@ -97,7 +97,7 @@ class RfxtrxLight(RfxtrxDevice, LightEntity, RestoreEntity):
             if event.device.id_string != self._event.device.id_string:
                 return
 
-            self._apply_event(event)
+            self.apply_event(event)
 
         self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
@@ -131,7 +131,8 @@ class RfxtrxLight(RfxtrxDevice, LightEntity, RestoreEntity):
         self._brightness = 0
         self._send_command("turn_off")
 
-    def _apply_event(self, event):
+    def apply_event(self, event):
+        """Apply command from rfxtrx."""
         if event.values["Command"] in COMMAND_ON_LIST:
             self._state = True
         elif event.values["Command"] in COMMAND_OFF_LIST:
