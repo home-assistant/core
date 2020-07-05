@@ -50,7 +50,7 @@ async def async_setup(hass, config):
     config_domain = config[DOMAIN]
     hass.data[DOMAIN] = {
         CONF_PORT: config_domain.get(CONF_PORT),
-        CONF_HOST: config_domain.getgit(CONF_HOST),
+        CONF_HOST: config_domain.get(CONF_HOST),
         CONF_DSMR_VERSION: config_domain.get(CONF_DSMR_VERSION),
         CONF_RECONNECT_INTERVAL: config_domain.get(CONF_RECONNECT_INTERVAL),
         CONF_PRECISION: config_domain.get(CONF_PRECISION),
