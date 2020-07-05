@@ -13,16 +13,32 @@ from homeassistant.components.androidtv.media_player import (
     CONF_ADBKEY,
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
+    CONF_TURN_OFF_COMMAND,
+    CONF_TURN_ON_COMMAND,
     KEYS,
     SERVICE_ADB_COMMAND,
     SERVICE_DOWNLOAD,
     SERVICE_LEARN_SENDEVENT,
     SERVICE_UPLOAD,
 )
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_VOLUME_LEVEL,
+    ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PLAY_PAUSE,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_STOP,
     SERVICE_SELECT_SOURCE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP,
 )
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import (
@@ -31,7 +47,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PLATFORM,
-    SERVICE_VOLUME_SET,
     STATE_OFF,
     STATE_PLAYING,
     STATE_STANDBY,
@@ -39,9 +54,11 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from . import patchers
-
 from tests.async_mock import patch
+from tests.components.androidtv import patchers
+
+SHELL_RESPONSE_OFF = ""
+SHELL_RESPONSE_STANDBY = "1"
 
 # Android TV device with Python ADB implementation
 CONFIG_ANDROIDTV_PYTHON_ADB = {
@@ -113,7 +130,7 @@ async def _test_reconnect(hass, caplog, config):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell("")[
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[
         patch_key
     ], patchers.PATCH_KEYGEN, patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
         assert await async_setup_component(hass, DOMAIN, config)
@@ -141,23 +158,11 @@ async def _test_reconnect(hass, caplog, config):
     assert caplog.record_tuples[1][1] == logging.WARNING
 
     caplog.set_level(logging.DEBUG)
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell("1")[
-        patch_key
-    ], patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
-        # Update 1 will reconnect
+    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
+        SHELL_RESPONSE_STANDBY
+    )[patch_key], patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
         await hass.helpers.entity_component.async_update_entity(entity_id)
 
-        # If using an ADB server, the state will get updated; otherwise, the
-        # state will be the last known state
-        state = hass.states.get(entity_id)
-        if patch_key == "server":
-            assert state.state == STATE_STANDBY
-        else:
-            assert state.state == STATE_OFF
-
-        # Update 2 will update the state, regardless of which ADB connection
-        # method is used
-        await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_STANDBY
@@ -185,7 +190,7 @@ async def _test_adb_shell_returns_none(hass, config):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell("")[
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[
         patch_key
     ], patchers.PATCH_KEYGEN, patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
         assert await async_setup_component(hass, DOMAIN, config)
@@ -294,7 +299,7 @@ async def test_setup_with_adbkey(hass):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell("")[
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[
         patch_key
     ], patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER, patchers.PATCH_ISFILE, patchers.PATCH_ACCESS:
         assert await async_setup_component(hass, DOMAIN, config)
@@ -311,13 +316,13 @@ async def _test_sources(hass, config0):
     config[DOMAIN][CONF_APPS] = {
         "com.app.test1": "TEST 1",
         "com.app.test3": None,
-        "com.app.test4": "",
+        "com.app.test4": SHELL_RESPONSE_OFF,
     }
     patch_key, entity_id = _setup(config)
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell("")[patch_key]:
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         await hass.helpers.entity_component.async_update_entity(entity_id)
@@ -392,13 +397,13 @@ async def _test_exclude_sources(hass, config0, expected_sources):
     config[DOMAIN][CONF_APPS] = {
         "com.app.test1": "TEST 1",
         "com.app.test3": None,
-        "com.app.test4": "",
+        "com.app.test4": SHELL_RESPONSE_OFF,
     }
     patch_key, entity_id = _setup(config)
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell("")[patch_key]:
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         await hass.helpers.entity_component.async_update_entity(entity_id)
@@ -467,7 +472,7 @@ async def _test_select_source(hass, config0, source, expected_arg, method_patch)
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell("")[patch_key]:
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         await hass.helpers.entity_component.async_update_entity(entity_id)
@@ -669,7 +674,7 @@ async def _test_setup_fail(hass, config):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(False)[
         patch_key
-    ], patchers.patch_shell("")[
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[
         patch_key
     ], patchers.PATCH_KEYGEN, patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
         assert await async_setup_component(hass, DOMAIN, config)
@@ -704,7 +709,7 @@ async def test_setup_two_devices(hass):
     patch_key = "server"
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell("")[patch_key]:
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
@@ -721,7 +726,7 @@ async def test_setup_same_device_twice(hass):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell("")[patch_key]:
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
@@ -731,7 +736,7 @@ async def test_setup_same_device_twice(hass):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell("")[patch_key]:
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
         await hass.async_block_till_done()
 
@@ -744,12 +749,12 @@ async def test_adb_command(hass):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell("")[patch_key]:
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
         await hass.async_block_till_done()
 
     with patch(
-        "androidtv.basetv.BaseTV.adb_shell", return_value=response
+        "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell", return_value=response
     ) as patch_shell:
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
@@ -772,12 +777,12 @@ async def test_adb_command_unicode_decode_error(hass):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell("")[patch_key]:
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
         await hass.async_block_till_done()
 
     with patch(
-        "androidtv.basetv.BaseTV.adb_shell",
+        "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell",
         side_effect=UnicodeDecodeError("utf-8", response, 0, len(response), "TEST"),
     ):
         await hass.services.async_call(
@@ -802,12 +807,12 @@ async def test_adb_command_key(hass):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell("")[patch_key]:
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
         await hass.async_block_till_done()
 
     with patch(
-        "androidtv.basetv.BaseTV.adb_shell", return_value=response
+        "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell", return_value=response
     ) as patch_shell:
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
@@ -831,12 +836,13 @@ async def test_adb_command_get_properties(hass):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell("")[patch_key]:
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
         await hass.async_block_till_done()
 
     with patch(
-        "androidtv.androidtv.AndroidTV.get_properties_dict", return_value=response
+        "androidtv.androidtv.androidtv_async.AndroidTVAsync.get_properties_dict",
+        return_value=response,
     ) as patch_get_props:
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
@@ -859,12 +865,13 @@ async def test_learn_sendevent(hass):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell("")[patch_key]:
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
         await hass.async_block_till_done()
 
         with patch(
-            "androidtv.basetv.BaseTV.learn_sendevent", return_value=response
+            "androidtv.basetv.basetv_async.BaseTVAsync.learn_sendevent",
+            return_value=response,
         ) as patch_learn_sendevent:
             await hass.services.async_call(
                 ANDROIDTV_DOMAIN,
@@ -885,26 +892,27 @@ async def test_update_lock_not_acquired(hass):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell("")[patch_key]:
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
         await hass.async_block_till_done()
 
-    with patchers.patch_shell("")[patch_key]:
+    with patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_OFF
 
     with patch(
-        "androidtv.androidtv.AndroidTV.update", side_effect=LockNotAcquiredException
+        "androidtv.androidtv.androidtv_async.AndroidTVAsync.update",
+        side_effect=LockNotAcquiredException,
     ):
-        with patchers.patch_shell("1")[patch_key]:
+        with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
             await hass.helpers.entity_component.async_update_entity(entity_id)
             state = hass.states.get(entity_id)
             assert state is not None
             assert state.state == STATE_OFF
 
-    with patchers.patch_shell("1")[patch_key]:
+    with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
         await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
@@ -919,12 +927,12 @@ async def test_download(hass):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell("")[patch_key]:
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
         await hass.async_block_till_done()
 
     # Failed download because path is not whitelisted
-    with patch("androidtv.basetv.BaseTV.adb_pull") as patch_pull:
+    with patch("androidtv.basetv.basetv_async.BaseTVAsync.adb_pull") as patch_pull:
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
             SERVICE_DOWNLOAD,
@@ -938,9 +946,9 @@ async def test_download(hass):
         patch_pull.assert_not_called()
 
     # Successful download
-    with patch("androidtv.basetv.BaseTV.adb_pull") as patch_pull, patch.object(
-        hass.config, "is_allowed_path", return_value=True
-    ):
+    with patch(
+        "androidtv.basetv.basetv_async.BaseTVAsync.adb_pull"
+    ) as patch_pull, patch.object(hass.config, "is_allowed_path", return_value=True):
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
             SERVICE_DOWNLOAD,
@@ -962,12 +970,12 @@ async def test_upload(hass):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell("")[patch_key]:
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
         await hass.async_block_till_done()
 
     # Failed upload because path is not whitelisted
-    with patch("androidtv.basetv.BaseTV.adb_push") as patch_push:
+    with patch("androidtv.basetv.basetv_async.BaseTVAsync.adb_push") as patch_push:
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
             SERVICE_UPLOAD,
@@ -981,9 +989,9 @@ async def test_upload(hass):
         patch_push.assert_not_called()
 
     # Successful upload
-    with patch("androidtv.basetv.BaseTV.adb_push") as patch_push, patch.object(
-        hass.config, "is_allowed_path", return_value=True
-    ):
+    with patch(
+        "androidtv.basetv.basetv_async.BaseTVAsync.adb_push"
+    ) as patch_push, patch.object(hass.config, "is_allowed_path", return_value=True):
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
             SERVICE_UPLOAD,
@@ -1003,17 +1011,17 @@ async def test_androidtv_volume_set(hass):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell("")[patch_key]:
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
         await hass.async_block_till_done()
 
     with patch(
-        "androidtv.basetv.BaseTV.set_volume_level", return_value=0.5
+        "androidtv.basetv.basetv_async.BaseTVAsync.set_volume_level", return_value=0.5
     ) as patch_set_volume_level:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_VOLUME_SET,
-            {ATTR_ENTITY_ID: entity_id, "volume_level": 0.5},
+            {ATTR_ENTITY_ID: entity_id, ATTR_MEDIA_VOLUME_LEVEL: 0.5},
             blocking=True,
         )
 
@@ -1029,7 +1037,7 @@ async def test_get_image(hass, hass_ws_client):
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell("")[patch_key]:
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
         assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
         await hass.async_block_till_done()
 
@@ -1038,7 +1046,9 @@ async def test_get_image(hass, hass_ws_client):
 
     client = await hass_ws_client(hass)
 
-    with patch("androidtv.basetv.BaseTV.adb_screencap", return_value=b"image"):
+    with patch(
+        "androidtv.basetv.basetv_async.BaseTVAsync.adb_screencap", return_value=b"image"
+    ):
         await client.send_json(
             {"id": 5, "type": "media_player_thumbnail", "entity_id": entity_id}
         )
@@ -1050,3 +1060,97 @@ async def test_get_image(hass, hass_ws_client):
     assert msg["success"]
     assert msg["result"]["content_type"] == "image/png"
     assert msg["result"]["content"] == base64.b64encode(b"image").decode("utf-8")
+
+
+async def _test_service(
+    hass,
+    entity_id,
+    ha_service_name,
+    androidtv_method,
+    additional_service_data=None,
+    return_value=None,
+):
+    """Test generic Android TV media player entity service."""
+    service_data = {ATTR_ENTITY_ID: entity_id}
+    if additional_service_data:
+        service_data.update(additional_service_data)
+
+    androidtv_patch = (
+        "androidtv.androidtv_async.AndroidTVAsync"
+        if "android" in entity_id
+        else "firetv.firetv_async.FireTVAsync"
+    )
+    with patch(
+        f"androidtv.{androidtv_patch}.{androidtv_method}", return_value=return_value
+    ) as service_call:
+        await hass.services.async_call(
+            DOMAIN, ha_service_name, service_data=service_data, blocking=True,
+        )
+        assert service_call.called
+
+
+async def test_services_androidtv(hass):
+    """Test media player services for an Android TV device."""
+    patch_key, entity_id = _setup(CONFIG_ANDROIDTV_ADB_SERVER)
+
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[patch_key]:
+        with patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
+            assert await async_setup_component(
+                hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER
+            )
+            await hass.async_block_till_done()
+
+        with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
+            await _test_service(
+                hass, entity_id, SERVICE_MEDIA_NEXT_TRACK, "media_next_track"
+            )
+            await _test_service(hass, entity_id, SERVICE_MEDIA_PAUSE, "media_pause")
+            await _test_service(hass, entity_id, SERVICE_MEDIA_PLAY, "media_play")
+            await _test_service(
+                hass, entity_id, SERVICE_MEDIA_PLAY_PAUSE, "media_play_pause"
+            )
+            await _test_service(
+                hass, entity_id, SERVICE_MEDIA_PREVIOUS_TRACK, "media_previous_track"
+            )
+            await _test_service(hass, entity_id, SERVICE_MEDIA_STOP, "media_stop")
+            await _test_service(hass, entity_id, SERVICE_TURN_OFF, "turn_off")
+            await _test_service(hass, entity_id, SERVICE_TURN_ON, "turn_on")
+            await _test_service(
+                hass, entity_id, SERVICE_VOLUME_DOWN, "volume_down", return_value=0.1
+            )
+            await _test_service(
+                hass,
+                entity_id,
+                SERVICE_VOLUME_MUTE,
+                "mute_volume",
+                {ATTR_MEDIA_VOLUME_MUTED: False},
+            )
+            await _test_service(
+                hass,
+                entity_id,
+                SERVICE_VOLUME_SET,
+                "set_volume_level",
+                {ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+                0.5,
+            )
+            await _test_service(
+                hass, entity_id, SERVICE_VOLUME_UP, "volume_up", return_value=0.2
+            )
+
+
+async def test_services_firetv(hass):
+    """Test media player services for a Fire TV device."""
+    patch_key, entity_id = _setup(CONFIG_FIRETV_ADB_SERVER)
+    config = CONFIG_FIRETV_ADB_SERVER.copy()
+    config[DOMAIN][CONF_TURN_OFF_COMMAND] = "test off"
+    config[DOMAIN][CONF_TURN_ON_COMMAND] = "test on"
+
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[patch_key]:
+        with patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
+            assert await async_setup_component(hass, DOMAIN, config)
+            await hass.async_block_till_done()
+
+        with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
+            await _test_service(hass, entity_id, SERVICE_MEDIA_STOP, "back")
+            await _test_service(hass, entity_id, SERVICE_TURN_OFF, "adb_shell")
+            await _test_service(hass, entity_id, SERVICE_TURN_ON, "adb_shell")
