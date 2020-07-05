@@ -98,7 +98,6 @@ ALLOWED_USED_COMPONENTS = {
     "group",
     "hassio",
     "homeassistant",
-    "humidifier",
     "input_boolean",
     "input_datetime",
     "input_number",
