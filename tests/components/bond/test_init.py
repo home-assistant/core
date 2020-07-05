@@ -41,7 +41,6 @@ async def test_unload_config_entry(hass: HomeAssistant):
         domain=DOMAIN, data={CONF_HOST: "1.1.1.1", CONF_ACCESS_TOKEN: "test-token"},
     )
     config_entry.add_to_hass(hass)
-    
     with patch(
         "homeassistant.components.bond.cover.async_setup_entry", return_value=True
     ):
