@@ -6,9 +6,12 @@ import logging
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
 import serial
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.dsmr import (
+    CONF_DSMR_VERSION,
+    CONF_PRECISION,
+    CONF_RECONNECT_INTERVAL,
+)
 from homeassistant.const import (
     CONF_FORCE_UPDATE,
     CONF_HOST,
@@ -18,20 +21,9 @@ from homeassistant.const import (
     TIME_HOURS,
 )
 from homeassistant.core import CoreState, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_DSMR_VERSION = "dsmr_version"
-CONF_RECONNECT_INTERVAL = "reconnect_interval"
-CONF_PRECISION = "precision"
-
-DEFAULT_DSMR_VERSION = "2.2"
-DEFAULT_PORT = "/dev/ttyUSB0"
-DEFAULT_PRECISION = 3
-DEFAULT_FORCE_UPDATE = False
-DEFAULT_PREFIX = ""
 
 DOMAIN = "dsmr"
 
@@ -40,31 +32,17 @@ ICON_POWER = "mdi:flash"
 ICON_POWER_FAILURE = "mdi:flash-off"
 ICON_SWELL_SAG = "mdi:pulse"
 
-RECONNECT_INTERVAL = 5
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION): vol.All(
-            cv.string, vol.In(["5B", "5", "4", "2.2"])
-        ),
-        vol.Optional(CONF_RECONNECT_INTERVAL, default=30): int,
-        vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
-        vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-        vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
-    }
-)
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the DSMR sensor."""
     # Suppress logging
     logging.getLogger("dsmr_parser").setLevel(logging.ERROR)
 
-    dsmr_version = config[CONF_DSMR_VERSION]
+    setup_config = hass.data[DOMAIN]
 
-    prefix = config[CONF_PREFIX]
+    dsmr_version = setup_config[CONF_DSMR_VERSION]
+
+    prefix = setup_config[CONF_PREFIX]
     if prefix:
         prefix += " "
 
@@ -101,7 +79,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     ]
 
     # Generate device entities
-    devices = [DSMREntity(prefix + name, obis, config) for name, obis in obis_mapping]
+    devices = [
+        DSMREntity(prefix + name, obis, setup_config) for name, obis in obis_mapping
+    ]
 
     # Protocol version specific obis
     if dsmr_version in ("4", "5"):
@@ -113,8 +93,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     # Add gas meter reading and derivative for usage
     devices += [
-        DSMREntity(prefix + "Gas Consumption", gas_obis, config),
-        DerivativeDSMREntity(prefix + "Hourly Gas Consumption", gas_obis, config),
+        DSMREntity(prefix + "Gas Consumption", gas_obis, setup_config),
+        DerivativeDSMREntity(prefix + "Hourly Gas Consumption", gas_obis, setup_config),
     ]
 
     async_add_entities(devices)
@@ -127,20 +107,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     # Creates an asyncio.Protocol factory for reading DSMR telegrams from
     # serial and calls update_entities_telegram to update entities on arrival
-    if CONF_HOST in config:
+    if CONF_HOST in setup_config:
         reader_factory = partial(
             create_tcp_dsmr_reader,
-            config[CONF_HOST],
-            config[CONF_PORT],
-            config[CONF_DSMR_VERSION],
+            setup_config[CONF_HOST],
+            setup_config[CONF_PORT],
+            setup_config[CONF_DSMR_VERSION],
             update_entities_telegram,
             loop=hass.loop,
         )
     else:
         reader_factory = partial(
             create_dsmr_reader,
-            config[CONF_PORT],
-            config[CONF_DSMR_VERSION],
+            setup_config[CONF_PORT],
+            setup_config[CONF_DSMR_VERSION],
             update_entities_telegram,
             loop=hass.loop,
         )
