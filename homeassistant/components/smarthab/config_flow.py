@@ -55,24 +55,23 @@ class SmartHabConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await hub.async_login(username, password)
+
+            # Verify that passed in configuration works
+            if hub.is_logged_in():
+                return self.async_create_entry(
+                    title=username, data={CONF_EMAIL: username, CONF_PASSWORD: password}
+                )
+            else:
+                _LOGGER.error("Could not authenticate with SmartHab API")
+                errors["base"] = "wrong_login"
         except pysmarthab.RequestFailedException:
             _LOGGER.exception("Error while trying to reach SmartHab API")
             errors["base"] = "service"
-            return self._show_setup_form(user_input, errors)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected error during login")
             errors["base"] = "unknown_error"
-            return self._show_setup_form(user_input, errors)
 
-        # Verify that passed in configuration works
-        if not hub.is_logged_in():
-            _LOGGER.error("Could not authenticate with SmartHab API")
-            errors["base"] = "wrong_login"
-            return self._show_setup_form(user_input, errors)
-
-        return self.async_create_entry(
-            title=username, data={CONF_EMAIL: username, CONF_PASSWORD: password},
-        )
+        return self._show_setup_form(user_input, errors)
 
     async def async_step_import(self, user_input):
         """Handle import from legacy config."""
