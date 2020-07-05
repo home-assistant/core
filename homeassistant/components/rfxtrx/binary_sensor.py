@@ -182,7 +182,7 @@ class RfxtrxBinarySensor(BinarySensorEntity):
 
             _LOGGER.debug(
                 "Binary sensor update (Device ID: %s Class: %s Sub: %s)",
-                slugify(event.device.id_string.lower()),
+                event.device.id_string,
                 event.device.__class__.__name__,
                 event.device.subtype,
             )
