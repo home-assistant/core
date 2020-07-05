@@ -21,7 +21,7 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-def test_template_state_text(hass):
+async def test_template_state_text(hass):
     """Test the state text of a template."""
     with assert_setup_component(1, "switch"):
         assert await async_setup_component(
@@ -63,7 +63,7 @@ def test_template_state_text(hass):
     state = hass.states.get("switch.test_template_switch")
     assert state.state == STATE_OFF
 
-def test_template_state_boolean_on(hass):
+async def test_template_state_boolean_on(hass):
     """Test the setting of the state with boolean on."""
     with assert_setup_component(1, "switch"):
         assert await async_setup_component(
@@ -96,7 +96,7 @@ def test_template_state_boolean_on(hass):
     state = hass.states.get("switch.test_template_switch")
     assert state.state == STATE_ON
 
-def test_template_state_boolean_off(hass):
+async def test_template_state_boolean_off(hass):
     """Test the setting of the state with off."""
     with assert_setup_component(1, "switch"):
         assert await async_setup_component(
@@ -129,7 +129,7 @@ def test_template_state_boolean_off(hass):
     state = hass.states.get("switch.test_template_switch")
     assert state.state == STATE_OFF
 
-def test_icon_template(hass):
+async def test_icon_template(hass):
     """Test icon template."""
     with assert_setup_component(1, "switch"):
         assert await async_setup_component(
@@ -171,7 +171,7 @@ def test_icon_template(hass):
     state = hass.states.get("switch.test_template_switch")
     assert state.attributes["icon"] == "mdi:check"
 
-def test_entity_picture_template(hass):
+async def test_entity_picture_template(hass):
     """Test entity_picture template."""
     with assert_setup_component(1, "switch"):
         assert await async_setup_component(
@@ -213,7 +213,7 @@ def test_entity_picture_template(hass):
     state = hass.states.get("switch.test_template_switch")
     assert state.attributes["entity_picture"] == "/local/switch.png"
 
-def test_template_syntax_error(hass):
+async def test_template_syntax_error(hass):
     """Test templating syntax error."""
     with assert_setup_component(0, "switch"):
         assert await async_setup_component(
@@ -245,7 +245,7 @@ def test_template_syntax_error(hass):
 
     assert hass.states.all() == []
 
-def test_invalid_name_does_not_create(hass):
+async def test_invalid_name_does_not_create(hass):
     """Test invalid name."""
     with assert_setup_component(0, "switch"):
         assert await async_setup_component(
@@ -277,7 +277,7 @@ def test_invalid_name_does_not_create(hass):
 
     assert hass.states.all() == []
 
-def test_invalid_switch_does_not_create(hass):
+async def test_invalid_switch_does_not_create(hass):
     """Test invalid switch."""
     with assert_setup_component(0, "switch"):
         assert await async_setup_component(
@@ -297,7 +297,7 @@ def test_invalid_switch_does_not_create(hass):
 
     assert hass.states.all() == []
 
-def test_no_switches_does_not_create(hass):
+async def test_no_switches_does_not_create(hass):
     """Test if there are no switches no creation."""
     with assert_setup_component(0, "switch"):
         assert await async_setup_component(
@@ -310,7 +310,7 @@ def test_no_switches_does_not_create(hass):
 
     assert hass.states.all() == []
 
-def test_missing_on_does_not_create(hass):
+async def test_missing_on_does_not_create(hass):
     """Test missing on."""
     with assert_setup_component(0, "switch"):
         assert await async_setup_component(
@@ -342,7 +342,7 @@ def test_missing_on_does_not_create(hass):
 
     assert hass.states.all() == []
 
-def test_missing_off_does_not_create(hass):
+async def test_missing_off_does_not_create(hass):
     """Test missing off."""
     with assert_setup_component(0, "switch"):
         assert await async_setup_component(
@@ -374,7 +374,7 @@ def test_missing_off_does_not_create(hass):
 
     assert hass.states.all() == []
 
-def test_on_action(hass, calls):
+async def test_on_action(hass, calls):
     """Test on action."""
     assert await async_setup_component(
         hass,
@@ -411,7 +411,7 @@ def test_on_action(hass, calls):
 
     assert len(calls) == 1
 
-def test_on_action_optimistic(hass, calls):
+async def test_on_action_optimistic(hass, calls):
     """Test on action in optimistic mode."""
     assert await async_setup_component(
         hass,
@@ -448,7 +448,7 @@ def test_on_action_optimistic(hass, calls):
     assert len(calls) == 1
     assert state.state == STATE_ON
 
-def test_off_action(hass, calls):
+async def test_off_action(hass, calls):
     """Test off action."""
     assert await async_setup_component(
         hass,
@@ -485,7 +485,7 @@ def test_off_action(hass, calls):
 
     assert len(calls) == 1
 
-def test_off_action_optimistic(hass, calls):
+async def test_off_action_optimistic(hass, calls):
     """Test off action in optimistic mode."""
     assert await async_setup_component(
         hass,
