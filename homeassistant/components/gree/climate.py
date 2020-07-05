@@ -1,0 +1,397 @@
+"""Support for interface with a Gree climate systems."""
+import asyncio
+from datetime import timedelta
+import logging
+from typing import List
+
+from greeclimate.device import (
+    FanSpeed,
+    HorizontalSwing,
+    Mode,
+    TemperatureUnits,
+    VerticalSwing,
+)
+from greeclimate.exceptions import DeviceTimeoutError
+
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
+from homeassistant.components.climate.const import (
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_COOL,
+    HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    PRESET_AWAY,
+    PRESET_BOOST,
+    PRESET_ECO,
+    PRESET_NONE,
+    PRESET_SLEEP,
+    SUPPORT_FAN_MODE,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_SWING_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    SWING_BOTH,
+    SWING_HORIZONTAL,
+    SWING_OFF,
+    SWING_VERTICAL,
+)
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_WHOLE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
+
+from .const import (
+    CONNECTION_NETWORK_MAC,
+    DOMAIN,
+    FAN_MEDIUMHIGH,
+    FAN_MEDIUMLOW,
+    MAX_ERRORS,
+    MAX_TEMP,
+    MIN_TEMP,
+    TARGET_TEMPERATURE_STEP,
+)
+
+_LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(seconds=60)
+PARALLEL_UPDATES = 0
+
+HVAC_MODES = {
+    Mode.Auto: HVAC_MODE_AUTO,
+    Mode.Cool: HVAC_MODE_COOL,
+    Mode.Dry: HVAC_MODE_DRY,
+    Mode.Fan: HVAC_MODE_FAN_ONLY,
+    Mode.Heat: HVAC_MODE_HEAT,
+}
+HVAC_MODES_REVERSE = {v: k for k, v in HVAC_MODES.items()}
+
+PRESET_MODES = [
+    PRESET_ECO,  # Power saving mode
+    PRESET_AWAY,  # Steady heat, or 8C mode on gree units
+    PRESET_BOOST,  # Turbo mode
+    PRESET_NONE,  # Default operating mode
+    PRESET_SLEEP,  # Sleep mode
+]
+
+FAN_MODES = {
+    FanSpeed.Auto: FAN_AUTO,
+    FanSpeed.Low: FAN_LOW,
+    FanSpeed.MediumLow: FAN_MEDIUMLOW,
+    FanSpeed.Medium: FAN_MEDIUM,
+    FanSpeed.MediumHigh: FAN_MEDIUMHIGH,
+    FanSpeed.High: FAN_HIGH,
+}
+FAN_MODES_REVERSE = {v: k for k, v in FAN_MODES.items()}
+
+SWING_MODES = [SWING_OFF, SWING_VERTICAL, SWING_HORIZONTAL, SWING_BOTH]
+
+SUPPORTED_FEATURES = (
+    SUPPORT_TARGET_TEMPERATURE
+    | SUPPORT_FAN_MODE
+    | SUPPORT_PRESET_MODE
+    | SUPPORT_SWING_MODE
+)
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Gree HVAC device from a config entry."""
+
+    async def _add_gree_device(device):
+        """Handle adding a gree device."""
+        async_add_entities([GreeClimateDevice(device)])
+
+    await asyncio.gather(
+        *[_add_gree_device(device) for device in hass.data[DOMAIN].pop("pending")]
+    )
+
+
+class GreeClimateDevice(ClimateEntity):
+    """Representation of a Gree HVAC device."""
+
+    def __init__(self, device):
+        """Initialize the Gree device."""
+        self._manufacturer = "Gree"
+        self._device = device
+        self._name = device.device_info.name
+        self._mac = device.device_info.mac
+        self._available = False
+        self._error_count = 0
+
+    async def async_update(self):
+        """Update the state of the device."""
+        try:
+            await self._device.update_state()
+            self._available = True
+            self._error_count = 0
+        except DeviceTimeoutError:
+            self._error_count += 1
+
+            # Under normal conditions GREE units timeout every once in a while
+            if self._available and self._error_count >= MAX_ERRORS:
+                self._available = False
+                _LOGGER.warning(
+                    "Device is unavailable: %s (%s)",
+                    self._name,
+                    str(self._device.device_info),
+                )
+        except Exception:  # pylint: disable=broad-except
+            # Under normal conditions GREE units timeout every once in a while
+            if self._available:
+                self._available = False
+                _LOGGER.exception(
+                    "Unknown exception caught during update by gree device: %s (%s)",
+                    self._name,
+                    str(self._device.device_info),
+                )
+
+    async def _push_state_update(self):
+        """Send state updates to the physical device."""
+        try:
+            return await self._device.push_state_update()
+        except DeviceTimeoutError:
+            self._error_count += 1
+
+            # Under normal conditions GREE units timeout every once in a while
+            if self._available and self._error_count >= MAX_ERRORS:
+                self._available = False
+                _LOGGER.warning(
+                    "Device timedout while sending state update: %s (%s)",
+                    self._name,
+                    str(self._device.device_info),
+                )
+        except Exception:  # pylint: disable=broad-except
+            # Under normal conditions GREE units timeout every once in a while
+            if self._available:
+                self._available = False
+                _LOGGER.exception(
+                    "Unknown exception caught while sending state update to: %s (%s)",
+                    self._name,
+                    str(self._device.device_info),
+                )
+
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return self._available
+
+    @property
+    def should_poll(self) -> bool:
+        """Return the polling state."""
+        return True
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device."""
+        return self._name
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique id for the device."""
+        return "_".join([self._mac, CLIMATE_DOMAIN])
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "name": self._name,
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "manufacturer": "Gree",
+            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
+        }
+
+    @property
+    def temperature_unit(self) -> str:
+        """Return the temperature units for the device."""
+        units = self._device.temperature_units
+        return TEMP_CELSIUS if units == TemperatureUnits.C else TEMP_FAHRENHEIT
+
+    @property
+    def precision(self) -> float:
+        """Return the precision of temperature for the device."""
+        return PRECISION_WHOLE
+
+    @property
+    def current_temperature(self) -> float:
+        """Return the target temperature, gree devices don't provide internal temp."""
+        return self.target_temperature
+
+    @property
+    def target_temperature(self) -> float:
+        """Return the target temperature for the device."""
+        return self._device.target_temperature
+
+    async def async_set_temperature(self, **kwargs):
+        """Set new target temperature."""
+        if ATTR_TEMPERATURE in kwargs:
+            temperature = kwargs[ATTR_TEMPERATURE]
+            _LOGGER.debug(
+                "Setting temperature to %d for %s", temperature, self._name,
+            )
+
+            if temperature:
+                self._device.target_temperature = round(temperature)
+                return await self._push_state_update()
+
+    @property
+    def min_temp(self) -> float:
+        """Return the minimum temperature supported by the device."""
+        return MIN_TEMP
+
+    @property
+    def max_temp(self) -> float:
+        """Return the maximum temperature supported by the device."""
+        return MAX_TEMP
+
+    @property
+    def target_temperature_step(self) -> float:
+        """Return the target temperature step support by the device."""
+        return TARGET_TEMPERATURE_STEP
+
+    @property
+    def hvac_mode(self) -> str:
+        """Return the current HVAC mode for the device."""
+        if not self._device.power:
+            return HVAC_MODE_OFF
+
+        return HVAC_MODES.get(self._device.mode)
+
+    async def async_set_hvac_mode(self, hvac_mode):
+        """Set new target hvac mode."""
+        _LOGGER.debug(
+            "Setting HVAC mode to %s for device %s", hvac_mode, self._name,
+        )
+
+        if hvac_mode == HVAC_MODE_OFF:
+            self._device.power = False
+            return await self._push_state_update()
+
+        if not self._device.power:
+            self._device.power = True
+
+        self._device.mode = HVAC_MODES_REVERSE.get(hvac_mode)
+        return await self._push_state_update()
+
+    @property
+    def hvac_modes(self) -> List[str]:
+        """Return the HVAC modes support by the device."""
+        modes = list(HVAC_MODES.values())
+        modes.append(HVAC_MODE_OFF)
+        return modes
+
+    @property
+    def preset_mode(self) -> str:
+        """Return the current preset mode for the device."""
+        if self._device.steady_heat:
+            return PRESET_AWAY
+        if self._device.power_save:
+            return PRESET_ECO
+        if self._device.sleep:
+            return PRESET_SLEEP
+        if self._device.turbo:
+            return PRESET_BOOST
+        return PRESET_NONE
+
+    async def async_set_preset_mode(self, preset_mode):
+        """Set new preset mode."""
+        _LOGGER.debug(
+            "Setting preset mode to %s for device %s", preset_mode, self._name,
+        )
+
+        if preset_mode not in PRESET_MODES:
+            _LOGGER.warning("Received and invalid preset mode: %s", preset_mode)
+            return
+
+        self._device.steady_heat = False
+        self._device.power_save = False
+        self._device.turbo = False
+        self._device.sleep = False
+
+        if preset_mode == PRESET_AWAY:
+            self._device.steady_heat = True
+        elif preset_mode == PRESET_ECO:
+            self._device.power_save = True
+        elif preset_mode == PRESET_BOOST:
+            self._device.turbo = True
+        elif preset_mode == PRESET_SLEEP:
+            self._device.sleep = True
+
+        return await self._push_state_update()
+
+    @property
+    def preset_modes(self) -> List[str]:
+        """Return the preset modes support by the device."""
+        return PRESET_MODES
+
+    @property
+    def fan_mode(self) -> str:
+        """Return the current fan mode for the device."""
+        speed = self._device.fan_speed
+        return FAN_MODES.get(speed)
+
+    async def async_set_fan_mode(self, fan_mode):
+        """Set new target fan mode."""
+        if fan_mode not in FAN_MODES_REVERSE.keys():
+            _LOGGER.warning("Received and invalid fan mode: %s", fan_mode)
+            return
+
+        self._device.fan_speed = FAN_MODES_REVERSE.get(fan_mode)
+        return await self._push_state_update()
+
+    @property
+    def fan_modes(self) -> List[str]:
+        """Return the fan modes support by the device."""
+        return list(FAN_MODES.values())
+
+    @property
+    def swing_mode(self) -> str:
+        """Return the current swing mode for the device."""
+        h_swing = self._device.horizontal_swing == HorizontalSwing.FullSwing
+        v_swing = self._device.vertical_swing == VerticalSwing.FullSwing
+
+        if h_swing and v_swing:
+            return SWING_BOTH
+        if h_swing:
+            return SWING_HORIZONTAL
+        if v_swing:
+            return SWING_VERTICAL
+        return SWING_OFF
+
+    async def async_set_swing_mode(self, swing_mode):
+        """Set new target swing operation."""
+        if swing_mode not in SWING_MODES:
+            _LOGGER.warning("Received and invalid swing mode: %s", swing_mode)
+            return
+
+        _LOGGER.debug(
+            "Setting swing mode to %s for device %s", swing_mode, self._name,
+        )
+
+        self._device.horizontal_swing = HorizontalSwing.Center
+        self._device.vertical_swing = VerticalSwing.FixedMiddle
+        if swing_mode in (SWING_BOTH, SWING_HORIZONTAL):
+            self._device.horizontal_swing = HorizontalSwing.FullSwing
+        if swing_mode in (SWING_BOTH, SWING_VERTICAL):
+            self._device.vertical_swing = VerticalSwing.FullSwing
+
+        return await self._push_state_update()
+
+    @property
+    def swing_modes(self) -> List[str]:
+        """Return the swing modes currently supported for this device."""
+        return SWING_MODES
+
+    @property
+    def supported_features(self) -> int:
+        """Return the supported features for this device integration."""
+        return SUPPORTED_FEATURES
+
+    async def async_added_to_hass(self):
+        """Register device notification."""
+        _LOGGER.debug("Gree HVAC device added")
+        self.schedule_update_ha_state()
