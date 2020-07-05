@@ -346,7 +346,7 @@ class KonnectedView(HomeAssistantView):
             _LOGGER.error(
                 "Your Konnected device software may be out of "
                 "date. Visit https://help.konnected.io for "
-                "updating instructions."
+                "updating instructions"
             )
 
         device = data[CONF_DEVICES].get(device_id)

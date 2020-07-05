@@ -221,14 +221,14 @@ class XiaomiMiioRemote(RemoteEntity):
         """Turn the device on."""
         _LOGGER.error(
             "Device does not support turn_on, "
-            "please use 'remote.send_command' to send commands."
+            "please use 'remote.send_command' to send commands"
         )
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         _LOGGER.error(
             "Device does not support turn_off, "
-            "please use 'remote.send_command' to send commands."
+            "please use 'remote.send_command' to send commands"
         )
 
     def _send_command(self, payload):

@@ -288,7 +288,7 @@ class HomeAssistant:
         if self.state != CoreState.starting:
             _LOGGER.warning(
                 "Home Assistant startup has been interrupted. "
-                "Its state may be inconsistent."
+                "Its state may be inconsistent"
             )
             return
 
@@ -1152,7 +1152,7 @@ class ServiceRegistry:
         service = service.lower()
 
         if service not in self._services.get(domain, {}):
-            _LOGGER.warning("Unable to remove unknown service %s/%s.", domain, service)
+            _LOGGER.warning("Unable to remove unknown service %s/%s", domain, service)
             return
 
         self._services[domain].pop(service)

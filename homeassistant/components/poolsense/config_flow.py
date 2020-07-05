@@ -37,7 +37,7 @@ class PoolSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             self._email = user_input[CONF_EMAIL]
             self._password = user_input[CONF_PASSWORD]
-            _LOGGER.debug("Configuring user: %s - Password hidden.", self._email)
+            _LOGGER.debug("Configuring user: %s - Password hidden", self._email)
 
             poolsense = PoolSense()
             api_key_valid = await poolsense.test_poolsense_credentials(
