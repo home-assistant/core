@@ -261,6 +261,9 @@ jobs:
         run: |
           echo "Failed to restore Python virtual environment from cache"
           exit 1
+      - name: Register check executables problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/check-executables-have-shebangs.json"
       - name: Run executables check
         run: |
           . venv/bin/activate
