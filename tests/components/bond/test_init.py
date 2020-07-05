@@ -32,3 +32,27 @@ async def test_async_setup_entry_sets_up_supported_domains(hass: HomeAssistant):
         await hass.async_block_till_done()
 
     assert len(mock_cover_async_setup_entry.mock_calls) == 1
+
+
+async def test_unload_config_entry(hass: HomeAssistant):
+    """Test that configuration entry supports unloading."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "1.1.1.1", CONF_ACCESS_TOKEN: "test-token"},
+    )
+    config_entry.add_to_hass(hass)
+    
+    with patch(
+        "homeassistant.components.bond.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.async_setup(config_entry.entry_id)
+        assert result is True
+        await hass.async_block_till_done()
+    
+    assert config_entry.entry_id in hass.data[DOMAIN]
+    assert config_entry.state == ENTRY_STATE_LOADED
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.entry_id not in hass.data[DOMAIN]
+    assert config_entry.state == ENTRY_STATE_NOT_LOADED
