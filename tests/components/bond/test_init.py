@@ -1,6 +1,7 @@
 """Tests for the Bond module."""
 from homeassistant.components.bond.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
+from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
