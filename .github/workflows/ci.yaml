@@ -607,6 +607,7 @@ jobs:
           pip install -U pip setuptools wheel
           pip install -r requirements_all.txt -c homeassistant/package_constraints.txt
           pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
+          pip install pytest-github-actions-annotate-failures
           # Uninstalling typing as a workaround. Eventually we should make sure
           # all our dependencies drop typing.
           # Find offending deps with `pipdeptree -r -p typing`
@@ -712,6 +713,9 @@ jobs:
         run: |
           echo "Failed to restore Python virtual environment from cache"
           exit 1
+      - name: Register Python problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/python.json"
       - name: Run pytest
         run: |
           . venv/bin/activate
