@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.helpers import config_validation as cv, event as evt
-from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util import slugify
 
 from . import (
     ATTR_NAME,
@@ -289,6 +289,6 @@ class RfxtrxBinarySensor(BinarySensorEntity):
                 if self.hass:
                     self.schedule_update_ha_state()
 
-            self.delay_listener = evt.track_point_in_time(
-                self.hass, off_delay_listener, dt_util.utcnow() + self.off_delay
+            self.delay_listener = evt.call_later(
+                self.hass, off_delay_listener, self.off_delay
             )
