@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "All Roon Core servers are already configured",
+            "already_configured": "Roon Core is already configured",
+            "cannot_connect": "Unable to connect to the Roon Core server",
+            "discover_timeout": "Unable to discover Roon servers",
+            "no_servers": "No Roon Core servers discovered",
+            "unknown": "Unknown error occurred"
+        },
+        "error": {
+            "linking": "Unknown linking error occurred.",
+            "register_failed": "Failed to register, please try again"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Hostname or IP",
+                    "custom_play_action": "Custom play script"
+                },
+                "title": "Configure Roon Server"
+            },
+            "link": {
+                "description": "You must authorize Home Assistant in Roon. After you click submit below, open the settings on your Roon Core and approve HomeAssistant on the Extensions tab.",
+                "title": "Authorize HomeAssistant in Roon"
+            }
+        },
+        "title": "Roon"
+    }
+}
