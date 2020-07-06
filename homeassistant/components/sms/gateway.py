@@ -69,7 +69,7 @@ class Gateway:
 
             self._hass.add_job(self._notify_incoming_sms, data)
 
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.error("Error during SMS callback:%s", ex)
 
     # pylint: disable=no-self-use
@@ -114,7 +114,7 @@ class Gateway:
                     _LOGGER.debug("Deleting message")
                     try:
                         state_machine.DeleteSMS(Folder=0, Location=entry[0]["Location"])
-                    except Exception as ex:
+                    except Exception as ex:  # pylint: disable=broad-except
                         _LOGGER.error("Error deleting SMS:%s", ex)
                 else:
                     _LOGGER.debug("Not all parts have arrived")
