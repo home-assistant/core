@@ -1,4 +1,5 @@
 """Constants used in modbus integration."""
+from datetime import timedelta
 
 # configuration names
 CONF_BAUDRATE = "baudrate"
@@ -47,7 +48,7 @@ ATTR_VALUE = "value"
 CONF_HUBS = "hubs"
 SERVICE_WRITE_COIL = "write_coil"
 SERVICE_WRITE_REGISTER = "write_register"
-DEFAULT_SCAN_INTERVAL = 10  # seconds
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
 
 # binary_sensor.py
 CONF_INPUTS = "inputs"

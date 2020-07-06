@@ -112,7 +112,7 @@ COVERS_SCHEMA = vol.All(
             vol.Required(CONF_NAME): cv.string,
             vol.Optional(
                 CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-            ): cv.positive_int,
+            ): cv.time_period,
             vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_SLAVE, default=DEFAULT_SLAVE): cv.positive_int,
             vol.Optional(CONF_STATE_CLOSED, default=0): cv.positive_int,

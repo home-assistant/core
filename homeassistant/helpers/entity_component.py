@@ -20,7 +20,7 @@ from homeassistant.helpers import (
     entity,
     service,
 )
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform
 
@@ -211,7 +211,7 @@ class EntityComponent:
         self,
         platform_type: str,
         platform_config: ConfigType,
-        discovery_info: Optional[DiscoveryInfoType] = None,
+        discovery_info: Optional[Any] = None,  # Optional[DiscoveryInfoType] = None,
     ) -> None:
         """Set up a platform for this component."""
         if self.config is None:
@@ -225,9 +225,23 @@ class EntityComponent:
             return
 
         # Use config scan interval, fallback to platform if none set
-        scan_interval = platform_config.get(
-            CONF_SCAN_INTERVAL, getattr(platform, "SCAN_INTERVAL", None)
-        )
+        # FIXME: Components don't pass discovery_info in the correct format:
+        # - Updater passes an empty dictionary instead of None
+        # - Cover passes a list containing a single dictionary when initialized
+        # etc.
+        if isinstance(discovery_info, list):
+            scan_interval = discovery_info[0].get(
+                CONF_SCAN_INTERVAL, getattr(platform, "SCAN_INTERVAL", None)
+            )
+        elif isinstance(discovery_info, dict):
+            scan_interval = discovery_info.get(
+                CONF_SCAN_INTERVAL, getattr(platform, "SCAN_INTERVAL", None)
+            )
+        else:
+            scan_interval = platform_config.get(
+                CONF_SCAN_INTERVAL, getattr(platform, "SCAN_INTERVAL", None)
+            )
+
         entity_namespace = platform_config.get(CONF_ENTITY_NAMESPACE)
 
         key = (platform_type, scan_interval, entity_namespace)
