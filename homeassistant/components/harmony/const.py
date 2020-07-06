@@ -9,3 +9,7 @@ HARMONY_OPTIONS_UPDATE = "harmony_options_update"
 ATTR_ACTIVITY_NOTIFY = "activity_notify"
 ATTR_ACTIVITY_LIST = "activity_list"
 ATTR_DEVICES_LIST = "devices_list"
+ATTR_LAST_ACTIVITY = "last_activity"
+ATTR_CURRENT_ACTIVITY = "current_activity"
+PREVIOUS_ACTIVE_ACTIVITY = "Previous Active Activity"
+DEFAULT_ACTIVITY_NOTIFY = True
