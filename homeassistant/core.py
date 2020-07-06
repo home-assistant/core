@@ -5,7 +5,6 @@ Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
 """
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 import datetime
 import enum
 import functools
@@ -145,19 +144,6 @@ def is_callback(func: Callable[..., Any]) -> bool:
     return getattr(func, "_hass_callback", False) is True
 
 
-@callback
-def async_loop_exception_handler(_: Any, context: Dict) -> None:
-    """Handle all exception inside the core loop."""
-    kwargs = {}
-    exception = context.get("exception")
-    if exception:
-        kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
-
-    _LOGGER.error(
-        "Error doing job: %s", context["message"], **kwargs  # type: ignore
-    )
-
-
 class CoreState(enum.Enum):
     """Represent the current state of Home Assistant."""
 
@@ -179,18 +165,9 @@ class HomeAssistant:
     http: "HomeAssistantHTTP" = None  # type: ignore
     config_entries: "ConfigEntries" = None  # type: ignore
 
-    def __init__(self, loop: Optional[asyncio.events.AbstractEventLoop] = None) -> None:
+    def __init__(self) -> None:
         """Initialize new Home Assistant object."""
-        self.loop: asyncio.events.AbstractEventLoop = (loop or asyncio.get_event_loop())
-
-        executor_opts: Dict[str, Any] = {
-            "max_workers": None,
-            "thread_name_prefix": "SyncWorker",
-        }
-
-        self.executor = ThreadPoolExecutor(**executor_opts)
-        self.loop.set_default_executor(self.executor)
-        self.loop.set_exception_handler(async_loop_exception_handler)
+        self.loop = asyncio.get_running_loop()
         self._pending_tasks: list = []
         self._track_task = True
         self.bus = EventBus(self)
@@ -461,7 +438,9 @@ class HomeAssistant:
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
         await self.async_block_till_done()
-        self.executor.shutdown()
+
+        # Python 3.9+ and backported in runner.py
+        await self.loop.shutdown_default_executor()  # type: ignore
 
         self.exit_code = exit_code
 
