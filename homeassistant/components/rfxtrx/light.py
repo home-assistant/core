@@ -15,14 +15,11 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
-    ATTR_FIRE_EVENT,
     CONF_AUTOMATIC_ADD,
-    CONF_FIRE_EVENT,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
     SIGNAL_EVENT,
     RfxtrxDevice,
-    fire_command_event,
     get_device_id,
     get_rfx_object,
 )
@@ -33,12 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICES, default={}): {
-            cv.string: vol.Schema(
-                {
-                    vol.Required(CONF_NAME): cv.string,
-                    vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-                }
-            )
+            cv.string: vol.Schema({vol.Required(CONF_NAME): cv.string})
         },
         vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
         vol.Optional(
@@ -67,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             continue
         device_ids.add(device_id)
 
-        datas = {ATTR_STATE: None, ATTR_FIRE_EVENT: entity_info[CONF_FIRE_EVENT]}
+        datas = {ATTR_STATE: None}
         entity = RfxtrxLight(
             entity_info[CONF_NAME], event.device, datas, config[CONF_SIGNAL_REPETITIONS]
         )
@@ -97,7 +89,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         )
 
         pkt_id = "".join(f"{x:02x}" for x in event.data)
-        datas = {ATTR_STATE: None, ATTR_FIRE_EVENT: False}
+        datas = {ATTR_STATE: None}
         entity = RfxtrxLight(
             pkt_id, event.device, datas, DEFAULT_SIGNAL_REPETITIONS, event=event
         )
@@ -179,5 +171,3 @@ class RfxtrxLight(RfxtrxDevice, LightEntity, RestoreEntity):
         self._apply_event(event)
 
         self.schedule_update_ha_state()
-        if self.should_fire_event:
-            fire_command_event(self.hass, self.entity_id, event.values["Command"])

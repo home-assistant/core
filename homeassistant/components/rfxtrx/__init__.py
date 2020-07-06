@@ -7,7 +7,6 @@ import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_STATE,
     CONF_DEVICE,
     CONF_HOST,
@@ -32,14 +31,12 @@ DEFAULT_SIGNAL_REPETITIONS = 1
 ATTR_AUTOMATIC_ADD = "automatic_add"
 ATTR_DEVICE = "device"
 ATTR_DEBUG = "debug"
-ATTR_FIRE_EVENT = "fire_event"
 ATTR_DATA_TYPE = "data_type"
 ATTR_DUMMY = "dummy"
 CONF_DATA_BITS = "data_bits"
 CONF_AUTOMATIC_ADD = "automatic_add"
 CONF_DATA_TYPE = "data_type"
 CONF_SIGNAL_REPETITIONS = "signal_repetitions"
-CONF_FIRE_EVENT = "fire_event"
 CONF_DUMMY = "dummy"
 CONF_DEBUG = "debug"
 CONF_OFF_DELAY = "off_delay"
@@ -257,21 +254,6 @@ def get_device_id(device, data_bits=None):
     return (f"{device.packettype:x}", f"{device.subtype:x}", id_string)
 
 
-def fire_command_event(hass, entity_id, command):
-    """Fire a command event."""
-    hass.bus.fire(
-        EVENT_BUTTON_PRESSED, {ATTR_ENTITY_ID: entity_id, ATTR_STATE: command.lower()}
-    )
-    _LOGGER.debug(
-        "Rfxtrx fired event: (event_type: %s, %s: %s, %s: %s)",
-        EVENT_BUTTON_PRESSED,
-        ATTR_ENTITY_ID,
-        entity_id,
-        ATTR_STATE,
-        command.lower(),
-    )
-
-
 class RfxtrxDevice(Entity):
     """Represents a Rfxtrx device.
 
@@ -284,7 +266,6 @@ class RfxtrxDevice(Entity):
         self._name = name
         self._device = device
         self._state = datas[ATTR_STATE]
-        self._should_fire_event = datas[ATTR_FIRE_EVENT]
         self._device_id = get_device_id(device)
         self._unique_id = "_".join(x for x in self._device_id)
 
@@ -300,11 +281,6 @@ class RfxtrxDevice(Entity):
     def name(self):
         """Return the name of the device if any."""
         return self._name
-
-    @property
-    def should_fire_event(self):
-        """Return is the device must fire event."""
-        return self._should_fire_event
 
     @property
     def is_on(self):
