@@ -140,6 +140,7 @@ def async_setup_scanner_platform(
     This method must be run in the event loop.
     """
     interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
+    location_name = config.get("location_name", None)
     update_lock = asyncio.Lock()
     scanner.hass = hass
 
@@ -181,8 +182,13 @@ def async_setup_scanner_platform(
                     **extra_attributes,
                 },
             }
+            zonename = hass.components.zone.ENTITY_ID_HOME
+            if location_name is not None:
+                kwargs["location_name"] = location_name
+                zonename = "zone." + location_name
 
-            zone_home = hass.states.get(hass.components.zone.ENTITY_ID_HOME)
+            zone_home = hass.states.get(zonename)
+
             if zone_home:
                 kwargs["gps"] = [
                     zone_home.attributes[ATTR_LATITUDE],
