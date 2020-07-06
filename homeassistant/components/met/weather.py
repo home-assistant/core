@@ -51,16 +51,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Met.no weather platform.
-    TBD: Can this be removed? If not, should this also contain the Update Coordinator"""
+    """Set up the Met.no weather platform."""
     _LOGGER.error("Loading Met.no via platform config is deprecated")
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
-    unique_id = (
-        f"{config_entry.data[CONF_LATITUDE]}-{config_entry.data[CONF_LONGITUDE]}"
-    )
+    if config_entry.data.get(CONF_TRACK_HOME, False):
+        unique_id = "home"
+    else:
+        unique_id = (
+            f"{config_entry.data[CONF_LATITUDE]}-{config_entry.data[CONF_LONGITUDE]}"
+        )
 
     async def async_update_data():
         """Fetch data from API endpoint."""
@@ -94,8 +96,6 @@ class MetWeather(WeatherEntity):
         """Initialise the platform with a data instance and site."""
         self._config = config
         self._coordinator = coordinator
-        # TBD: For _core_config_updated: remember current unique_id, to be able to find whether data when coordinations change
-        # self._unique_id = f"{config[CONF_LATITUDE]}-{config[CONF_LONGITUDE]}"
         self._is_metric = is_metric
         self._unsub_track_home = None
 
@@ -111,15 +111,10 @@ class MetWeather(WeatherEntity):
         await self.async_update()
 
     async def _core_config_updated(self, _event):
-        """Handle core config updated.
-        TBD: If the latitude or longitude changed, re-create the WeatherData
-        I have no idea how this Home tracking works"""
-        # del self.hass.data[DOMAIN][self.unique_id]
-        # self._unique_id = f"{config[CONF_LATITUDE]}-{config[CONF_LONGITUDE]}"
-        # self.hass.data[DOMAIN][self.unique_id] = MetWeatherData(config, self.hass.config.units.is_metric)
-        # self.hass.data[DOMAIN][self.unique_id].init_data()
-        # await self.hass.data[DOMAIN][self.unique_id].fetch_data()
-        pass
+        """Handle core config updated."""
+        if self._config.get(CONF_TRACK_HOME):
+            self.hass.data[DOMAIN]['home'].init_data()
+            await self.hass.data[DOMAIN]['home'].fetch_data()
 
     async def will_remove_from_hass(self):
         """Handle entity will be removed from hass."""

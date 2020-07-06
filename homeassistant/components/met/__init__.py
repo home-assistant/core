@@ -26,9 +26,12 @@ URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/1.9/"
 
 async def async_setup_entry(hass, config_entry):
     """Set up Met as config entry."""
-    unique_id = (
-        f"{config_entry.data[CONF_LATITUDE]}-{config_entry.data[CONF_LONGITUDE]}"
-    )
+    if config_entry.data.get(CONF_TRACK_HOME, False):
+        unique_id = "home"
+    else:
+        unique_id = (
+            f"{config_entry.data[CONF_LATITUDE]}-{config_entry.data[CONF_LONGITUDE]}"
+        )
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = dict()
     hass.data[DOMAIN][unique_id] = MetWeatherData(
@@ -42,9 +45,12 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    unique_id = (
-        f"{config_entry.data[CONF_LATITUDE]}-{config_entry.data[CONF_LONGITUDE]}"
-    )
+    if config_entry.data.get(CONF_TRACK_HOME, False):
+        unique_id = "home"
+    else:
+        unique_id = (
+            f"{config_entry.data[CONF_LATITUDE]}-{config_entry.data[CONF_LONGITUDE]}"
+        )
     del hass.data[DOMAIN][unique_id]
     await hass.config_entries.async_forward_entry_unload(config_entry, "weather")
     return True
