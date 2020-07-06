@@ -38,6 +38,7 @@ class RoonServer:
         host = self.host
         hass = self.hass
         token = self.config_entry.data[CONF_API_KEY]
+        _LOGGER.debug("async_setup: %s %s", token, host)
         self.roonapi = RoonApi(ROON_APPINFO, token, host, blocking_init=False)
         self.roonapi.register_state_callback(
             self.roonapi_state_callback, event_filter=["zones_changed"]
@@ -152,5 +153,5 @@ class RoonServer:
         new_dict["display_name"] = output["display_name"]
         new_dict["last_changed"] = utcnow()
         # we don't use the zone_id or output_id for now as unique id as I've seen cases were it changes for some reason
-        new_dict["dev_id"] = "roon_{}_{}".format(self.host, output["display_name"])
+        new_dict["dev_id"] = f"roon_{self.host}_{output['display_name']}"
         return new_dict

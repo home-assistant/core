@@ -13,11 +13,11 @@ CONF_CUSTOM_PLAY_ACTION = "custom_play_action"
 
 ROON_APPINFO = {
     "extension_id": "home_assistant",
-    "display_name": "Home Assistant",
+    "display_name": "Roon Integration for Home Assistant",
     "display_version": "1.0.0",
-    "publisher": "marcelveldt",
-    "email": "marcelveldt@users.noreply.github.com",
-    "website": "https://github.com/marcelveldt/roon-hass",
+    "publisher": "home_assistant",
+    "email": "home_assistant@users.noreply.github.com",
+    "website": "https://www.home-assistant.io/",
 }
 
 CONFIG_SCHEMA = vol.Schema(

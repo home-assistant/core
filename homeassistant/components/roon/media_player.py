@@ -175,7 +175,7 @@ class RoonDevice(MediaPlayerEntity):
 
     async def async_added_to_hass(self):
         """Register callback."""
-        _LOGGER.info(
+        _LOGGER.debug(
             "New Roon Device %s initialized with ID: %s", self.entity_id, self.unique_id
         )
 
@@ -460,11 +460,11 @@ class RoonDevice(MediaPlayerEntity):
 
     def select_source(self, source):
         """Select source on player (used to sync/unsync)."""
-        _LOGGER.info("select source called - unsync %s", self.name)
+        _LOGGER.debug("select source called - unsync %s", self.name)
         if source == self.name:
             self._server.roonapi.ungroup_outputs([self.output_id])
         else:
-            _LOGGER.info("select source called - sync %s with %s", self.name, source)
+            _LOGGER.debug("select source called - sync %s with %s", self.name, source)
             output_ids = []
             for _, zone in self._server.zones.items():
                 if zone["display_name"].lower() == source.lower():
@@ -508,7 +508,7 @@ class RoonDevice(MediaPlayerEntity):
             _domain, _entity = self._server.custom_play_action.split(".")
             self.hass.services.call(_domain, _entity, data, blocking=False)
         else:
-            _LOGGER.info(
+            _LOGGER.error(
                 "Playback requested of unsupported type: %s --> %s",
                 media_type,
                 media_id,

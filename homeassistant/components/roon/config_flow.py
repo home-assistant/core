@@ -28,6 +28,7 @@ class FlowHandler(config_entries.ConfigFlow):
     """Handle a config flow."""
 
     user_input = {}
+    roonapi = None
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
@@ -67,8 +68,8 @@ class FlowHandler(config_entries.ConfigFlow):
                 roonapi = RoonApi(
                     ROON_APPINFO, token, self.user_input[CONF_HOST], blocking_init=False
                 )
-                while count < 30:
-                    # wait a maximum of 30 seconds for the token
+                while count < 120:
+                    # wait a maximum of 120 seconds for the token
                     token = roonapi.token
                     count += 1
                     if token:
