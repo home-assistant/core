@@ -28,7 +28,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     ACTIVITY_POWER_OFF,
+    ATTR_ACTIVITY_LIST,
     ATTR_ACTIVITY_NOTIFY,
+    ATTR_DEVICES_LIST,
     DOMAIN,
     HARMONY_OPTIONS_UPDATE,
     SERVICE_CHANGE_CHANNEL,
@@ -40,6 +42,7 @@ from .util import (
     find_matching_config_entries_for_host,
     find_unique_id_for_remote,
     get_harmony_client_if_available,
+    list_names_from_hublist,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -241,7 +244,13 @@ class HarmonyRemote(remote.RemoteEntity):
     @property
     def device_state_attributes(self):
         """Add platform specific attributes."""
-        return {ATTR_CURRENT_ACTIVITY: self._current_activity}
+        return {
+            ATTR_CURRENT_ACTIVITY: self._current_activity,
+            ATTR_ACTIVITY_LIST: list_names_from_hublist(
+                self._client.hub_config.activities
+            ),
+            ATTR_DEVICES_LIST: list_names_from_hublist(self._client.hub_config.devices),
+        }
 
     @property
     def is_on(self):
