@@ -183,11 +183,11 @@ async def async_webhook_handler(
         return Response()
 
     if request.method.upper() != "POST":
-        return json_message_response("Invalid method.", message_code=2)
+        return json_message_response("Invalid method", message_code=2)
 
     # Handle http post calls to the path.
     if not request.body_exists:
-        return json_message_response("No request body.", message_code=12)
+        return json_message_response("No request body", message_code=12)
 
     params = await request.post()
 
@@ -204,7 +204,7 @@ async def async_webhook_handler(
     data_manager = get_data_manager_by_webhook_id(hass, webhook_id)
     if not data_manager:
         _LOGGER.error(
-            "Webhook id %s not handled by data manager. This is a bug and should be reported.",
+            "Webhook id %s not handled by data manager. This is a bug and should be reported",
             webhook_id,
         )
         return json_message_response("User not found", message_code=1)

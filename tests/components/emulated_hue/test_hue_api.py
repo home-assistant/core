@@ -13,6 +13,7 @@ from homeassistant.components import (
     emulated_hue,
     fan,
     http,
+    humidifier,
     light,
     media_player,
     script,
@@ -73,6 +74,9 @@ ENTITY_IDS_BY_NUMBER = {
     "13": "climate.heatpump",
     "14": "climate.ecobee",
     "15": "light.no_brightness",
+    "16": "humidifier.humidifier",
+    "17": "humidifier.dehumidifier",
+    "18": "humidifier.hygrostat",
 }
 
 ENTITY_NUMBERS_BY_ID = {v: k for k, v in ENTITY_IDS_BY_NUMBER.items()}
@@ -140,6 +144,12 @@ def hass_hue(loop, hass):
 
     loop.run_until_complete(
         setup.async_setup_component(
+            hass, humidifier.DOMAIN, {"humidifier": [{"platform": "demo"}]}
+        )
+    )
+
+    loop.run_until_complete(
+        setup.async_setup_component(
             hass, media_player.DOMAIN, {"media_player": [{"platform": "demo"}]}
         )
     )
@@ -181,6 +191,10 @@ def hue_client(loop, hass_hue, aiohttp_client):
                 "climate.hvac": {emulated_hue.CONF_ENTITY_HIDDEN: False},
                 # Expose HeatPump
                 "climate.heatpump": {emulated_hue.CONF_ENTITY_HIDDEN: False},
+                # Expose Humidifier
+                "humidifier.humidifier": {emulated_hue.CONF_ENTITY_HIDDEN: False},
+                # Expose Dehumidifier
+                "humidifier.dehumidifier": {emulated_hue.CONF_ENTITY_HIDDEN: False},
                 # No expose setting (use default of not exposed)
                 "climate.nosetting": {},
             },
@@ -225,6 +239,10 @@ async def test_discover_lights(hue_client):
     assert "00:42:03:fe:97:58:2d:b1-50" in devices  # climate.hvac
     assert "00:7b:2a:c7:08:d6:66:bf-80" in devices  # climate.heatpump
     assert "00:57:77:a1:6a:8e:ef:b3-6c" not in devices  # climate.ecobee
+    assert "00:18:7c:7e:78:0e:cd:86-ae" in devices  # light.no_brightness
+    assert "00:78:eb:f8:d5:0c:14:85-e7" in devices  # humidifier.humidifier
+    assert "00:67:19:bd:ea:e4:2d:ef-22" in devices  # humidifier.dehumidifier
+    assert "00:61:bf:ab:08:b1:a6:18-43" not in devices  # humidifier.hygrostat
 
 
 async def test_light_without_brightness_supported(hass_hue, hue_client):
@@ -629,6 +647,39 @@ async def test_put_light_state_climate_set_temperature(hass_hue, hue_client):
         hass_hue, hue_client, "climate.ecobee", True
     )
     assert ecobee_result.status == HTTP_UNAUTHORIZED
+
+
+async def test_put_light_state_humidifier_set_humidity(hass_hue, hue_client):
+    """Test setting humidifier target humidity."""
+    # Turn the humidifier off first
+    await hass_hue.services.async_call(
+        humidifier.DOMAIN,
+        const.SERVICE_TURN_OFF,
+        {const.ATTR_ENTITY_ID: "humidifier.humidifier"},
+        blocking=True,
+    )
+
+    brightness = 19
+    humidity = round(brightness / 254 * 100)
+
+    humidifier_result = await perform_put_light_state(
+        hass_hue, hue_client, "humidifier.humidifier", True, brightness
+    )
+
+    humidifier_result_json = await humidifier_result.json()
+
+    assert humidifier_result.status == HTTP_OK
+    assert len(humidifier_result_json) == 2
+
+    hvac = hass_hue.states.get("humidifier.humidifier")
+    assert hvac.state == "on"
+    assert hvac.attributes[humidifier.ATTR_HUMIDITY] == humidity
+
+    # Make sure we can't change the hygrostat humidity since it's not exposed
+    hygrostat_result = await perform_put_light_state(
+        hass_hue, hue_client, "humidifier.hygrostat", True
+    )
+    assert hygrostat_result.status == HTTP_UNAUTHORIZED
 
 
 async def test_put_light_state_media_player(hass_hue, hue_client):

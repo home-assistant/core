@@ -225,7 +225,7 @@ class StatisticsSensor(Entity):
 
     async def async_update(self):
         """Get the latest data and updates the states."""
-        _LOGGER.debug("%s: updating statistics.", self.entity_id)
+        _LOGGER.debug("%s: updating statistics", self.entity_id)
         if self._max_age is not None:
             self._purge_old()
 
@@ -323,7 +323,7 @@ class StatisticsSensor(Entity):
                 )
                 query = query.filter(States.last_updated >= records_older_then)
             else:
-                _LOGGER.debug("%s: retrieving all records.", self.entity_id)
+                _LOGGER.debug("%s: retrieving all records", self.entity_id)
 
             query = query.order_by(States.last_updated.desc()).limit(
                 self._sampling_size

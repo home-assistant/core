@@ -357,17 +357,17 @@ class Camera(HomeAccessory, PyhapCamera):
         self._async_stop_ffmpeg_watch()
 
         if not pid_is_alive(stream.process.pid):
-            _LOGGER.info("[%s] Stream already stopped.", session_id)
+            _LOGGER.info("[%s] Stream already stopped", session_id)
             return True
 
         for shutdown_method in ["close", "kill"]:
-            _LOGGER.info("[%s] %s stream.", session_id, shutdown_method)
+            _LOGGER.info("[%s] %s stream", session_id, shutdown_method)
             try:
                 await getattr(stream, shutdown_method)()
                 return
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception(
-                    "[%s] Failed to %s stream.", session_id, shutdown_method
+                    "[%s] Failed to %s stream", session_id, shutdown_method
                 )
 
     async def reconfigure_stream(self, session_info, stream_config):

@@ -161,14 +161,14 @@ def _handle_exception(err) -> bool:
         if err.status == HTTP_SERVICE_UNAVAILABLE:
             _LOGGER.warning(
                 "The vendor says their server is currently unavailable. "
-                "Check the vendor's service status page."
+                "Check the vendor's service status page"
             )
             return False
 
         if err.status == HTTP_TOO_MANY_REQUESTS:
             _LOGGER.warning(
                 "The vendor's API rate limit has been exceeded. "
-                "If this message persists, consider increasing the %s.",
+                "If this message persists, consider increasing the %s",
                 CONF_SCAN_INTERVAL,
             )
             return False
@@ -221,7 +221,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     except IndexError:
         _LOGGER.error(
             "Config error: '%s' = %s, but the valid range is 0-%s. "
-            "Unable to continue. Fix any configuration errors and restart HA.",
+            "Unable to continue. Fix any configuration errors and restart HA",
             CONF_LOCATION_IDX,
             loc_idx,
             len(client_v2.installation_info) - 1,
