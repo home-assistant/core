@@ -80,8 +80,8 @@ class BroadlinkSwitch(SwitchEntity, RestoreEntity, ABC):
         self._device = device
         self._command_on = command_on
         self._command_off = command_off
-        self._coordinator = device.coordinator
-        self._state = False
+        self._coordinator = device.update_manager.coordinator
+        self._state = None
 
     @property
     def name(self):
@@ -96,7 +96,7 @@ class BroadlinkSwitch(SwitchEntity, RestoreEntity, ABC):
     @property
     def available(self):
         """Return True if the switch is available."""
-        return self._coordinator.last_update_success
+        return self._device.update_manager.available
 
     @property
     def is_on(self):
@@ -126,8 +126,9 @@ class BroadlinkSwitch(SwitchEntity, RestoreEntity, ABC):
 
     async def async_added_to_hass(self):
         """Call when the switch is added to hass."""
-        state = await self.async_get_last_state()
-        self._state = state.state == STATE_ON if state is not None else False
+        if self._state is None:
+            state = await self.async_get_last_state()
+            self._state = state is not None and state.state == STATE_ON
         self.async_on_remove(self._coordinator.async_add_listener(self.update_data))
 
     async def async_update(self):
@@ -208,7 +209,8 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
     def __init__(self, *args, **kwargs):
         """Initialize the switch."""
         super().__init__(*args, **kwargs)
-        self._load_power = None
+        self._state = self._coordinator.data["state"]
+        self._load_power = self._coordinator.data["load_power"]
 
     @property
     def assumed_state(self):
@@ -236,6 +238,7 @@ class BroadlinkMP1Slot(BroadlinkSwitch):
         """Initialize the switch."""
         super().__init__(device, 1, 0)
         self._slot = slot
+        self._state = self._coordinator.data[f"s{slot}"]
 
     @property
     def unique_id(self):

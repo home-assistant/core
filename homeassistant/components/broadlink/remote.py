@@ -91,7 +91,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
     def __init__(self, device, codes, flags):
         """Initialize the remote."""
         self._device = device
-        self._coordinator = device.coordinator
+        self._coordinator = device.update_manager.coordinator
         self._code_storage = codes
         self._flag_storage = flags
         self._codes = {}
@@ -116,7 +116,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
     @property
     def available(self):
         """Return True if the remote is available."""
-        return self._coordinator.last_update_success
+        return self._device.update_manager.available
 
     @property
     def should_poll(self):

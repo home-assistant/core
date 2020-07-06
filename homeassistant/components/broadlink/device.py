@@ -17,7 +17,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import DEFAULT_PORT, DOMAIN, DOMAINS_AND_TYPES
-from .updater import get_update_coordinator
+from .updater import get_update_manager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class BroadlinkDevice:
         self.hass = hass
         self.config = config
         self.api = None
-        self.coordinator = None
+        self.update_manager = None
         self.fw_version = None
         self.authorized = None
         self.reset_jobs = []
@@ -61,7 +61,8 @@ class BroadlinkDevice:
         # Update the name in the API and related entities.
         device = hass.data[DOMAIN].devices[entry.entry_id]
         device.api.name = entry.title
-        await device.coordinator.async_request_refresh()
+        coordinator = device.update_manager.coordinator
+        await coordinator.async_request_refresh()
 
     async def async_setup(self):
         """Set up the device and related entities."""
@@ -88,19 +89,20 @@ class BroadlinkDevice:
         self.api = api
         self.authorized = True
 
-        coordinator = get_update_coordinator(self)
+        update_manager = get_update_manager(self)
+        coordinator = update_manager.coordinator
         await coordinator.async_refresh()
         if not coordinator.last_update_success:
             raise ConfigEntryNotReady()
 
-        self.coordinator = coordinator
+        self.update_manager = update_manager
         self.hass.data[DOMAIN].devices[config.entry_id] = self
         self.reset_jobs.append(config.add_update_listener(self.async_update))
 
         try:
             self.fw_version = await self.hass.async_add_executor_job(api.get_fwversion)
         except BroadlinkException:
-            self.fw_version = None
+            pass
 
         # Forward entry setup to related domains.
         tasks = (
@@ -115,7 +117,7 @@ class BroadlinkDevice:
 
     async def async_unload(self):
         """Unload the device and related entities."""
-        if self.coordinator is None:
+        if self.update_manager is None:
             return True
 
         while self.reset_jobs:

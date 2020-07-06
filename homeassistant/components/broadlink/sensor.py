@@ -1,5 +1,6 @@
 """Support for Broadlink sensors."""
 from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
@@ -16,7 +17,7 @@ SENSOR_TYPES = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Broadlink sensor."""
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
-    sensor_data = device.coordinator.data
+    sensor_data = device.update_manager.coordinator.data
     sensors = [
         BroadlinkSensor(device, monitored_condition)
         for monitored_condition in sensor_data
@@ -31,9 +32,10 @@ class BroadlinkSensor(Entity):
     def __init__(self, device, monitored_condition):
         """Initialize the sensor."""
         self._device = device
-        self._coordinator = device.coordinator
+        self._coordinator = device.update_manager.coordinator
         self._monitored_condition = monitored_condition
         self._unit_of_measurement = SENSOR_TYPES[monitored_condition][1]
+        self._state = self._coordinator.data[monitored_condition]
 
     @property
     def unique_id(self):
@@ -48,12 +50,12 @@ class BroadlinkSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._coordinator.data[self._monitored_condition]
+        return self._state
 
     @property
     def available(self):
         """Return True if the sensor is available."""
-        return self._coordinator.last_update_success
+        return self._device.update_manager.available
 
     @property
     def unit_of_measurement(self):
@@ -76,11 +78,16 @@ class BroadlinkSensor(Entity):
             "sw_version": self._device.fw_version,
         }
 
+    @callback
+    def update_data(self):
+        """Update data."""
+        if self._coordinator.last_update_success:
+            self._state = self._coordinator.data[self._monitored_condition]
+        self.async_write_ha_state()
+
     async def async_added_to_hass(self):
         """Call when the sensor is added to hass."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )
+        self.async_on_remove(self._coordinator.async_add_listener(self.update_data))
 
     async def async_update(self):
         """Update the sensor."""
