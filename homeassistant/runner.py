@@ -7,8 +7,6 @@ import sys
 import threading
 from typing import Any, Dict, Optional
 
-import yarl
-
 from homeassistant import bootstrap
 from homeassistant.core import callback
 from homeassistant.helpers.frame import warn_use
@@ -39,19 +37,6 @@ else:
     PolicyBase = asyncio.DefaultEventLoopPolicy  # pylint: disable=invalid-name
 
 
-@callback
-def async_loop_exception_handler(_: Any, context: Dict) -> None:
-    """Handle all exception inside the core loop."""
-    kwargs = {}
-    exception = context.get("exception")
-    if exception:
-        kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
-
-    logging.getLogger(__package__).error(
-        "Error doing job: %s", context["message"], **kwargs  # type: ignore
-    )
-
-
 class HassEventLoopPolicy(PolicyBase):
     """Event loop policy for Home Assistant."""
 
@@ -68,7 +53,7 @@ class HassEventLoopPolicy(PolicyBase):
     def new_event_loop(self):
         """Get the event loop."""
         loop = super().new_event_loop()
-        loop.set_exception_handler(async_loop_exception_handler)
+        loop.set_exception_handler(self.async_loop_exception_handler)
         if self.debug:
             loop.set_debug(True)
 
@@ -104,6 +89,18 @@ class HassEventLoopPolicy(PolicyBase):
 
         return loop
 
+    @callback
+    def async_loop_exception_handler(self, _: Any, context: Dict) -> None:
+        """Handle all exception inside the core loop."""
+        kwargs = {}
+        exception = context.get("exception")
+        if exception:
+            kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
+
+        logging.getLogger(__package__).error(
+            "Error doing job: %s", context["message"], **kwargs  # type: ignore
+        )
+
 
 async def setup_and_run_hass(runtime_config: RuntimeConfig,) -> int:
     """Set up Home Assistant and run."""
@@ -111,18 +108,6 @@ async def setup_and_run_hass(runtime_config: RuntimeConfig,) -> int:
 
     if hass is None:
         return 1
-
-    if runtime_config.open_ui:
-        import webbrowser  # pylint: disable=import-outside-toplevel
-
-        if hass.config.api is not None:
-            scheme = "https" if hass.config.api.use_ssl else "http"
-            url = str(
-                yarl.URL.build(
-                    scheme=scheme, host="127.0.0.1", port=hass.config.api.port
-                )
-            )
-            hass.add_job(webbrowser.open, url)
 
     return await hass.async_run()
 
