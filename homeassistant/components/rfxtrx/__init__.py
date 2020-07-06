@@ -40,7 +40,6 @@ CONF_SIGNAL_REPETITIONS = "signal_repetitions"
 CONF_DUMMY = "dummy"
 CONF_DEBUG = "debug"
 CONF_OFF_DELAY = "off_delay"
-EVENT_BUTTON_PRESSED = "button_pressed"
 SIGNAL_EVENT = f"{DOMAIN}_event"
 
 DATA_TYPES = OrderedDict(

@@ -21,12 +21,7 @@ async def test_valid_config(hass, rfxtrx):
                 "light": {
                     "platform": "rfxtrx",
                     "automatic_add": True,
-                    "devices": {
-                        "0b1100cd0213c7f210010f51": {
-                            "name": "Test",
-                            rfxtrx_core.ATTR_FIRE_EVENT: True,
-                        }
-                    },
+                    "devices": {"0b1100cd0213c7f210010f51": {"name": "Test"}},
                 }
             },
         )
