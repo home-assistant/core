@@ -48,7 +48,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     await coordinator.async_refresh()
 
-
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
