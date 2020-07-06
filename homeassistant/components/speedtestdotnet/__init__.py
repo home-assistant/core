@@ -136,7 +136,6 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         self.api.closest.clear()
         if self.config_entry.options.get(CONF_SERVER_ID):
             server_id = self.config_entry.options.get(CONF_SERVER_ID)
-            print(type(server_id))
             self.api.get_servers(servers=[server_id])
 
         self.api.get_best_server()
