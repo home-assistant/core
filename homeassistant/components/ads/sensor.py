@@ -8,7 +8,14 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
 import homeassistant.helpers.config_validation as cv
 
-from . import CONF_ADS_FACTOR, CONF_ADS_DIGIT, CONF_ADS_TYPE, CONF_ADS_VAR, STATE_KEY_STATE, AdsEntity
+from . import (
+    CONF_ADS_FACTOR,
+    CONF_ADS_DIGIT,
+    CONF_ADS_TYPE,
+    CONF_ADS_VAR,
+    STATE_KEY_STATE,
+    AdsEntity,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +53,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     factor = config.get(CONF_ADS_FACTOR)
     digit = config[CONF_ADS_DIGIT]
 
-    entity = AdsSensor(ads_hub, ads_var, ads_type, name, unit_of_measurement, factor, digit)
+    entity = AdsSensor(
+        ads_hub, ads_var, ads_type, name, unit_of_measurement, factor, digit
+    )
 
     add_entities([entity])
 
@@ -54,7 +63,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AdsSensor(AdsEntity):
     """Representation of an ADS sensor entity."""
 
-    def __init__(self, ads_hub, ads_var, ads_type, name, unit_of_measurement, factor, digit):
+    def __init__(
+        self, ads_hub, ads_var, ads_type, name, unit_of_measurement, factor, digit
+    ):
         """Initialize AdsSensor entity."""
         super().__init__(ads_hub, name, ads_var)
         self._unit_of_measurement = unit_of_measurement
@@ -82,4 +93,3 @@ class AdsSensor(AdsEntity):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
-    
