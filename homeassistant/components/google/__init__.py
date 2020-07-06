@@ -222,7 +222,7 @@ def check_correct_scopes(token_file):
     """Check for the correct scopes in file."""
     tokenfile = open(token_file).read()
     if "readonly" in tokenfile:
-        _LOGGER.warning("Please re-authenticate with Google.")
+        _LOGGER.warning("Please re-authenticate with Google")
         return False
     return True
 

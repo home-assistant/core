@@ -16,6 +16,7 @@
             "response_error": "Wyst\u0105pi\u0142 nieznany b\u0142\u0105d w urz\u0105dzeniu.",
             "unknown_connection_error": "Nieznany b\u0142\u0105d podczas \u0142\u0105czenia z urz\u0105dzeniem"
         },
+        "flow_title": "Huawei LTE: {name}",
         "step": {
             "user": {
                 "data": {

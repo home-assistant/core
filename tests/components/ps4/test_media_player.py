@@ -379,6 +379,22 @@ async def test_turn_off(hass):
     assert len(mock_call.mock_calls) == 1
 
 
+async def test_toggle(hass):
+    """Test that toggle service calls function."""
+    mock_entity_id = await setup_mock_component(hass)
+    mock_func = "{}{}".format(
+        "homeassistant.components.ps4.media_player.", "pyps4.Ps4Async.toggle"
+    )
+
+    with patch(mock_func) as mock_call:
+        await hass.services.async_call(
+            "media_player", "toggle", {ATTR_ENTITY_ID: mock_entity_id}
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_call.mock_calls) == 1
+
+
 async def test_media_pause(hass):
     """Test that media pause service calls function."""
     mock_entity_id = await setup_mock_component(hass)

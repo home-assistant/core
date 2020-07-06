@@ -335,7 +335,7 @@ class Recorder(threading.Thread):
         self.event_session = self.get_session()
         # Use a session for the event read loop
         # with a commit every time the event time
-        # has changed.  This reduces the disk io.
+        # has changed. This reduces the disk io.
         while True:
             event = self.queue.get()
             if event is None:
@@ -344,7 +344,9 @@ class Recorder(threading.Thread):
                 self.queue.task_done()
                 return
             if isinstance(event, PurgeTask):
-                purge.purge_old_data(self, event.keep_days, event.repack)
+                # Schedule a new purge task if this one didn't finish
+                if not purge.purge_old_data(self, event.keep_days, event.repack):
+                    self.queue.put(PurgeTask(event.keep_days, event.repack))
                 self.queue.task_done()
                 continue
             if event.event_type == EVENT_TIME_CHANGED:
@@ -384,11 +386,14 @@ class Recorder(threading.Thread):
             if dbevent and event.event_type == EVENT_STATE_CHANGED:
                 try:
                     dbstate = States.from_event(event)
+                    has_new_state = event.data.get("new_state")
                     dbstate.old_state_id = self._old_state_ids.get(dbstate.entity_id)
+                    if not has_new_state:
+                        dbstate.state = None
                     dbstate.event_id = dbevent.event_id
                     self.event_session.add(dbstate)
                     self.event_session.flush()
-                    if "new_state" in event.data:
+                    if has_new_state:
                         self._old_state_ids[dbstate.entity_id] = dbstate.state_id
                     elif dbstate.entity_id in self._old_state_ids:
                         del self._old_state_ids[dbstate.entity_id]
@@ -416,7 +421,7 @@ class Recorder(threading.Thread):
         except Exception as err:  # pylint: disable=broad-except
             # Must catch the exception to prevent the loop from collapsing
             _LOGGER.error(
-                "Error in database connectivity during keepalive: %s.", err,
+                "Error in database connectivity during keepalive: %s", err,
             )
             self._reopen_event_session()
 

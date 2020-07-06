@@ -4,7 +4,7 @@ import ssl
 import time
 from urllib.parse import urlparse
 
-from plexapi.exceptions import NotFound, Unauthorized
+from plexapi.exceptions import BadRequest, NotFound, Unauthorized
 import plexapi.myplex
 import plexapi.playqueue
 import plexapi.server
@@ -98,7 +98,7 @@ class PlexServer:
         if not self._plex_account and self._use_plex_tv:
             try:
                 self._plex_account = plexapi.myplex.MyPlexAccount(token=self._token)
-            except Unauthorized:
+            except (BadRequest, Unauthorized):
                 self._use_plex_tv = False
                 _LOGGER.error("Not authorized to access plex.tv with provided token")
                 raise
@@ -180,7 +180,7 @@ class PlexServer:
                         f"hostname '{domain}' doesn't match"
                     ):
                         _LOGGER.warning(
-                            "Plex SSL certificate's hostname changed, updating."
+                            "Plex SSL certificate's hostname changed, updating"
                         )
                         if _update_plexdirect_hostname():
                             config_entry_update_needed = True
@@ -199,7 +199,7 @@ class PlexServer:
             system_accounts = self._plex_server.systemAccounts()
         except Unauthorized:
             _LOGGER.warning(
-                "Plex account has limited permissions, shared account filtering will not be available."
+                "Plex account has limited permissions, shared account filtering will not be available"
             )
         else:
             self._accounts = [

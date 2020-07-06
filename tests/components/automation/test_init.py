@@ -1070,3 +1070,35 @@ async def test_logbook_humanify_automation_triggered_event(hass):
     assert event2["domain"] == "automation"
     assert event2["message"] == "has been triggered"
     assert event2["entity_id"] == "automation.bye"
+
+
+async def test_invalid_config(hass):
+    """Test invalid config."""
+    with assert_setup_component(0, automation.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "mode": "parallel",
+                    "queue_size": 5,
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": [],
+                }
+            },
+        )
+
+
+async def test_config_legacy(hass, caplog):
+    """Test config defaulting to legacy mode."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": [],
+            }
+        },
+    )
+    assert "To continue using previous behavior, which is now deprecated" in caplog.text

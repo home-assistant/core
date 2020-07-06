@@ -1,5 +1,12 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "unknown": "Onerwaarte Feeler"
+        },
         "step": {
             "user": {
                 "data": {
@@ -7,7 +14,8 @@
                     "latitude": "Breedegrad",
                     "longitude": "L\u00e4ngegrad"
                 },
-                "description": "L\u00e4ngegrad a Breedegrad gi benotzt fir d\u00e9i nooste Statioun auszewielen."
+                "description": "L\u00e4ngegrad a Breedegrad gi benotzt fir d\u00e9i nooste Statioun auszewielen.",
+                "title": "Mam UK Met Office verbannen"
             }
         }
     }

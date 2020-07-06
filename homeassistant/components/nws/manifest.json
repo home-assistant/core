@@ -3,7 +3,7 @@
   "name": "National Weather Service (NWS)",
   "documentation": "https://www.home-assistant.io/integrations/nws",
   "codeowners": ["@MatthewFlamm"],
-  "requirements": ["pynws==0.10.4"],
+  "requirements": ["pynws==1.2.1"],
   "quality_scale": "platinum",
   "config_flow": true
 }

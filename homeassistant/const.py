@@ -4,7 +4,7 @@ MINOR_VERSION = 113
 PATCH_VERSION = "0.dev0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
-REQUIRED_PYTHON_VER = (3, 7, 0)
+REQUIRED_PYTHON_VER = (3, 7, 1)
 # Truthy date string triggers showing related deprecation warning messages.
 REQUIRED_NEXT_PYTHON_VER = (3, 8, 0)
 REQUIRED_NEXT_PYTHON_DATE = ""
@@ -134,6 +134,7 @@ CONF_PREFIX = "prefix"
 CONF_PROFILE_NAME = "profile_name"
 CONF_PROTOCOL = "protocol"
 CONF_PROXY_SSL = "proxy_ssl"
+CONF_QUEUE_SIZE = "queue_size"
 CONF_QUOTE = "quote"
 CONF_RADIUS = "radius"
 CONF_RECIPIENT = "recipient"

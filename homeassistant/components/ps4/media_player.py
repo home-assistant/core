@@ -453,6 +453,10 @@ class PS4Device(MediaPlayerEntity):
         """Turn on the media player."""
         self._ps4.wakeup()
 
+    async def async_toggle(self):
+        """Toggle media player."""
+        await self._ps4.toggle()
+
     async def async_media_pause(self):
         """Send keypress ps to return to menu."""
         await self.async_send_remote_control("ps")

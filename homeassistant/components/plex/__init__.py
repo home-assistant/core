@@ -164,7 +164,7 @@ async def async_setup_entry(hass, entry):
     def get_plex_account(plex_server):
         try:
             return plex_server.account
-        except plexapi.exceptions.Unauthorized:
+        except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized):
             return None
 
     plex_account = await hass.async_add_executor_job(get_plex_account, plex_server)
