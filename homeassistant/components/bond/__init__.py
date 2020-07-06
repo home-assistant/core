@@ -17,6 +17,7 @@ PLATFORMS = ["cover"]
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Bond component."""
+    hass.data.setdefault(DOMAIN, {})
     return True
 
 
