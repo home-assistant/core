@@ -12,13 +12,13 @@
       },
       "setup_serial": {
         "data": {
-          "port": "USB Device Path"
+          "port": "[%key:common::config_flow::data::usb_path%]"
         }
       },
       "setup_host": {
         "data": {
-          "host": "IP Address",
-          "port": "Port Number"
+          "host": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]"
         }
       },
       "setup_options": {
@@ -31,21 +31,11 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "upcoming_days": "Number of upcoming days to display",
-          "wanted_max_items": "Max number of wanted items to display"
-        }
-      }
     }
   }
 }

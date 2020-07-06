@@ -1,19 +1,20 @@
 {
     "config": {
         "abort": {
-            "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-            "unknown": "[%key:common::config_flow::error::unknown%]"
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
         },
         "error": {
-            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-            "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
         },
         "flow_title": "DSMR Slimme Meter: {name}",
         "step": {
             "setup_host": {
                 "data": {
-                    "host": "IP Address",
-                    "port": "Port Number"
+                    "host": "IP address",
+                    "port": "Port"
                 }
             },
             "setup_options": {
@@ -34,16 +35,6 @@
                     "dsmr_version": "Select DSMR Version"
                 },
                 "description": "Connection Options"
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "upcoming_days": "Number of upcoming days to display",
-                    "wanted_max_items": "Max number of wanted items to display"
-                }
             }
         }
     },
