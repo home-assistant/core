@@ -13,7 +13,13 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_FORECAST, COORDINATOR, DOMAIN, UNDO_UPDATE_LISTENER
+from .const import (
+    ATTR_FORECAST,
+    CONF_FORECAST,
+    COORDINATOR,
+    DOMAIN,
+    UNDO_UPDATE_LISTENER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,4 +127,4 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator):
         ) as error:
             raise UpdateFailed(error)
         _LOGGER.debug("Requests remaining: %s", self.accuweather.requests_remaining)
-        return {**current, **forecast}
+        return {**current, **{ATTR_FORECAST: forecast}}

@@ -1,6 +1,6 @@
 """Constants for AccuWeather integration."""
 ATTRIBUTION = "Data provided by AccuWeather"
-CONF_FORECAST = "forecast"
+ATTR_FORECAST = CONF_FORECAST = "forecast"
 COORDINATOR = "coordinator"
 DOMAIN = "accuweather"
 UNDO_UPDATE_LISTENER = "undo_update_listener"

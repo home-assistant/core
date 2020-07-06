@@ -120,7 +120,7 @@ YesssSMS==0.4.1
 abodepy==0.19.0
 
 # homeassistant.components.accuweather
-accuweather==0.0.7
+accuweather==0.0.8
 
 # homeassistant.components.mcp23017
 adafruit-blinka==3.9.0
