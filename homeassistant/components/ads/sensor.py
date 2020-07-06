@@ -9,8 +9,8 @@ from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
 import homeassistant.helpers.config_validation as cv
 
 from . import (
-    CONF_ADS_FACTOR,
     CONF_ADS_DIGIT,
+    CONF_ADS_FACTOR,
     CONF_ADS_TYPE,
     CONF_ADS_VAR,
     STATE_KEY_STATE,
