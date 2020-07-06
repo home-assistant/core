@@ -129,17 +129,17 @@ async def test_fire_event(hass):
 
     assert calls == [
         {
-            "packettype": 17,
-            "subtype": 0,
-            "class": "LightingDevice",
+            "packet_type": 17,
+            "sub_type": 0,
+            "type_string": "AC",
             "id_string": "213c7f2:16",
             "data": "0b1100cd0213c7f210010f51",
             "values": {"Command": "On", "Rssi numeric": 5},
         },
         {
-            "packettype": 22,
-            "subtype": 0,
-            "class": "RFXtrxDevice",
+            "packet_type": 22,
+            "sub_type": 0,
+            "type_string": "Byron SX",
             "id_string": "00:90",
             "data": "0716000100900970",
             "values": {"Sound": 9, "Battery numeric": 0, "Rssi numeric": 7},
