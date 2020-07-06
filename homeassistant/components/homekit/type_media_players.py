@@ -280,7 +280,6 @@ class TelevisionMediaPlayer(HomeAccessory):
 
         serv_tv = self.add_preload_service(SERV_TELEVISION, self.chars_tv)
         self.set_primary_service(serv_tv)
-        serv_tv.configure_char(CHAR_CONFIGURED_NAME, value=self.display_name)
         serv_tv.configure_char(CHAR_SLEEP_DISCOVER_MODE, value=True)
         self.char_active = serv_tv.configure_char(
             CHAR_ACTIVE, setter_callback=self.set_on_off
