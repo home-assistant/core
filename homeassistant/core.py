@@ -5,7 +5,6 @@ Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
 """
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 import datetime
 import enum
 import functools
@@ -166,12 +165,9 @@ class HomeAssistant:
     http: "HomeAssistantHTTP" = None  # type: ignore
     config_entries: "ConfigEntries" = None  # type: ignore
 
-    def __init__(
-        self, loop: asyncio.events.AbstractEventLoop, executor: ThreadPoolExecutor
-    ) -> None:
+    def __init__(self) -> None:
         """Initialize new Home Assistant object."""
-        self.loop = loop
-        self.executor = executor
+        self.loop = asyncio.get_running_loop()
         self._pending_tasks: list = []
         self._track_task = True
         self.bus = EventBus(self)
@@ -443,11 +439,8 @@ class HomeAssistant:
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
         await self.async_block_till_done()
 
-        # Python 3.9+
-        if hasattr(self.loop, "shutdown_default_executor"):
-            await self.loop.shutdown_default_executor()  # type: ignore
-        else:
-            self.executor.shutdown()
+        # Python 3.9+ and backported in runner.py
+        await self.loop.shutdown_default_executor()  # type: ignore
 
         self.exit_code = exit_code
 

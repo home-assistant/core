@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 import dataclasses
 import logging
 import sys
+import threading
 from typing import Any, Dict, Optional
 
 import yarl
@@ -31,37 +32,11 @@ class RuntimeConfig:
     open_ui: bool = False
 
 
-def setup_loop(runtime_config: RuntimeConfig) -> asyncio.AbstractEventLoop:
-    """Create the event loop."""
-    # In Python 3.8+ proactor policy is the default on Windows
-    if sys.platform == "win32" and sys.version_info[:3] < (3, 8):
-        policy_base = asyncio.WindowsProactorEventLoopPolicy()
-    else:
-        policy_base = asyncio.DefaultEventLoopPolicy
-
-    class HassEventLoopPolicy(policy_base):
-        def get_event_loop(self):
-            """Get the event loop."""
-            loop = super().get_event_loop()
-            loop.set_exception_handler(async_loop_exception_handler)
-            if runtime_config.debug:
-                loop.set_debug(True)
-            return loop
-
-    asyncio.set_event_loop_policy(HassEventLoopPolicy())
-
-
-def setup_executor(loop: asyncio.AbstractEventLoop):
-    """Set up an executor on the loop.
-
-    Async friendly.
-    """
-    executor = ThreadPoolExecutor(thread_name_prefix="SyncWorker")
-    loop.set_default_executor(executor)
-    loop.set_default_executor = warn_use(  # type: ignore
-        loop.set_default_executor, "sets default executor on the event loop"
-    )
-    return executor
+# In Python 3.8+ proactor policy is the default on Windows
+if sys.platform == "win32" and sys.version_info[:2] < (3, 8):
+    POLICY_BASE = asyncio.WindowsProactorEventLoopPolicy
+else:
+    POLICY_BASE = asyncio.DefaultEventLoopPolicy
 
 
 @callback
@@ -77,12 +52,57 @@ def async_loop_exception_handler(_: Any, context: Dict) -> None:
     )
 
 
+class HassEventLoopPolicy(POLICY_BASE):
+    """Event loop policy for Home Assistant."""
+
+    def __init__(self, debug: bool) -> None:
+        """Init the event loop policy."""
+        super().__init__()
+        self.debug = debug
+
+    def new_event_loop(self):
+        """Get the event loop."""
+        loop = super().new_event_loop()
+        loop.set_exception_handler(async_loop_exception_handler)
+        if self.debug:
+            loop.set_debug(True)
+
+        executor = ThreadPoolExecutor(thread_name_prefix="SyncWorker")
+        loop.set_default_executor(executor)
+        loop.set_default_executor = warn_use(  # type: ignore
+            loop.set_default_executor, "sets default executor on the event loop"
+        )
+
+        # Python 3.9+
+        if hasattr(loop, "shutdown_default_executor"):
+            return loop
+
+        # Copied from Python 3.9 source
+        def _do_shutdown(future):
+            try:
+                executor.shutdown(wait=True)
+                loop.call_soon_threadsafe(future.set_result, None)
+            except Exception as ex:
+                loop.call_soon_threadsafe(future.set_exception, ex)
+
+        async def shutdown_default_executor():
+            """Schedule the shutdown of the default executor."""
+            future = loop.create_future()
+            thread = threading.Thread(target=_do_shutdown, args=(future,))
+            thread.start()
+            try:
+                await future
+            finally:
+                thread.join()
+
+        loop.shutdown_default_executor = shutdown_default_executor
+
+        return loop
+
+
 async def setup_and_run_hass(runtime_config: RuntimeConfig,) -> int:
     """Set up Home Assistant and run."""
-    loop = asyncio.get_running_loop()
-    hass = await bootstrap.async_setup_hass(
-        loop=loop, executor=setup_executor(loop), runtime_config=runtime_config
-    )
+    hass = await bootstrap.async_setup_hass(runtime_config)
 
     if hass is None:
         return 1
@@ -104,5 +124,5 @@ async def setup_and_run_hass(runtime_config: RuntimeConfig,) -> int:
 
 def run(runtime_config: RuntimeConfig) -> int:
     """Run Home Assistant."""
-    setup_loop(runtime_config)
+    asyncio.set_event_loop_policy(HassEventLoopPolicy(runtime_config.debug))
     return asyncio.run(setup_and_run_hass(runtime_config))

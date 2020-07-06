@@ -1,6 +1,5 @@
 """Provide methods to bootstrap a Home Assistant instance."""
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 import contextlib
 from datetime import datetime
 import logging
@@ -70,13 +69,10 @@ STAGE_1_INTEGRATIONS = {
 
 
 async def async_setup_hass(
-    *,
-    loop: asyncio.AbstractEventLoop,
-    executor: ThreadPoolExecutor,
     runtime_config: "RuntimeConfig",
 ) -> Optional[core.HomeAssistant]:
     """Set up Home Assistant."""
-    hass = core.HomeAssistant(loop, executor)
+    hass = core.HomeAssistant()
     hass.config.config_dir = runtime_config.config_dir
 
     async_enable_logging(
@@ -144,7 +140,7 @@ async def async_setup_hass(
 
         safe_mode = True
         old_config = hass.config
-        hass = core.HomeAssistant(loop, executor)
+        hass = core.HomeAssistant()
         hass.config.skip_pip = old_config.skip_pip
         hass.config.internal_url = old_config.internal_url
         hass.config.external_url = old_config.external_url

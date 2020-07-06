@@ -364,9 +364,7 @@ async def test_setup_hass(
         "homeassistant.components.http.start_http_server_and_save_config"
     ):
         hass = await bootstrap.async_setup_hass(
-            loop=loop,
-            executor=runner.setup_executor(loop),
-            runtime_config=runner.RuntimeConfig(
+            runner.RuntimeConfig(
                 config_dir=get_test_config_dir(),
                 verbose=verbose,
                 log_rotate_days=log_rotate_days,
@@ -424,9 +422,7 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
         "homeassistant.components.http.start_http_server_and_save_config"
     ):
         await bootstrap.async_setup_hass(
-            loop=loop,
-            executor=runner.setup_executor(loop),
-            runtime_config=runner.RuntimeConfig(
+            runner.RuntimeConfig(
                 config_dir=get_test_config_dir(),
                 verbose=verbose,
                 log_rotate_days=log_rotate_days,
@@ -453,9 +449,7 @@ async def test_setup_hass_invalid_yaml(
         "homeassistant.config.async_hass_config_yaml", side_effect=HomeAssistantError
     ), patch("homeassistant.components.http.start_http_server_and_save_config"):
         hass = await bootstrap.async_setup_hass(
-            loop=loop,
-            executor=runner.setup_executor(loop),
-            runtime_config=runner.RuntimeConfig(
+            runner.RuntimeConfig(
                 config_dir=get_test_config_dir(),
                 verbose=False,
                 log_rotate_days=10,
@@ -483,9 +477,7 @@ async def test_setup_hass_config_dir_nonexistent(
 
     assert (
         await bootstrap.async_setup_hass(
-            loop=loop,
-            executor=runner.setup_executor(loop),
-            runtime_config=runner.RuntimeConfig(
+            runner.RuntimeConfig(
                 config_dir=get_test_config_dir(),
                 verbose=False,
                 log_rotate_days=10,
@@ -515,9 +507,7 @@ async def test_setup_hass_safe_mode(
         return_value=["browser"],
     ):
         hass = await bootstrap.async_setup_hass(
-            loop=loop,
-            executor=runner.setup_executor(loop),
-            runtime_config=runner.RuntimeConfig(
+            runner.RuntimeConfig(
                 config_dir=get_test_config_dir(),
                 verbose=False,
                 log_rotate_days=10,
@@ -550,9 +540,7 @@ async def test_setup_hass_invalid_core_config(
         return_value={"homeassistant": {"non-existing": 1}},
     ), patch("homeassistant.components.http.start_http_server_and_save_config"):
         hass = await bootstrap.async_setup_hass(
-            loop=loop,
-            executor=runner.setup_executor(loop),
-            runtime_config=runner.RuntimeConfig(
+            runner.RuntimeConfig(
                 config_dir=get_test_config_dir(),
                 verbose=False,
                 log_rotate_days=10,
@@ -592,9 +580,7 @@ async def test_setup_safe_mode_if_no_frontend(
         },
     ), patch("homeassistant.components.http.start_http_server_and_save_config"):
         hass = await bootstrap.async_setup_hass(
-            loop=loop,
-            executor=runner.setup_executor(loop),
-            runtime_config=runner.RuntimeConfig(
+            runner.RuntimeConfig(
                 config_dir=get_test_config_dir(),
                 verbose=verbose,
                 log_rotate_days=log_rotate_days,

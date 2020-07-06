@@ -1106,7 +1106,7 @@ def test_timer_out_of_sync(mock_monotonic, loop):
 
 async def test_hass_start_starts_the_timer(loop):
     """Test when hass starts, it starts the timer."""
-    hass = ha.HomeAssistant(loop=loop, executor=Mock())
+    hass = ha.HomeAssistant()
 
     try:
         with patch("homeassistant.core._async_create_timer") as mock_timer:
@@ -1124,7 +1124,7 @@ async def test_hass_start_starts_the_timer(loop):
 
 async def test_start_taking_too_long(loop, caplog):
     """Test when async_start takes too long."""
-    hass = ha.HomeAssistant(loop=loop, executor=Mock())
+    hass = ha.HomeAssistant()
     caplog.set_level(logging.WARNING)
 
     try:
@@ -1145,7 +1145,7 @@ async def test_start_taking_too_long(loop, caplog):
 
 async def test_track_task_functions(loop):
     """Test function to start/stop track task and initial state."""
-    hass = ha.HomeAssistant(loop=loop, executor=Mock())
+    hass = ha.HomeAssistant()
     try:
         assert hass._track_task
 
