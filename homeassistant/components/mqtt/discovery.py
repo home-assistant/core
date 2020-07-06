@@ -104,9 +104,9 @@ async def async_start(
             base = payload.pop(TOPIC_BASE)
             for key, value in payload.items():
                 if isinstance(value, str) and value:
-                    if value[0] == TOPIC_BASE and key.endswith("_topic"):
+                    if value[0] == TOPIC_BASE and key.endswith("topic"):
                         payload[key] = f"{base}{value[1:]}"
-                    if value[-1] == TOPIC_BASE and key.endswith("_topic"):
+                    if value[-1] == TOPIC_BASE and key.endswith("topic"):
                         payload[key] = f"{value[:-1]}{base}"
 
         # If present, the node_id will be included in the discovered object id
