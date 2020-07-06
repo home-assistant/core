@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Unable to connect to Bond device",
+            "invalid_auth": "Unable to authenticate with Bond device, check provided token",
+            "unknown": "Unknown error while connecting to Bond device (check the logs for errors)"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Bond device IP address or host name",
+                    "access_token": "Bond device token"
+                }
+            }
+        }
+    },
+    "title": "Bond"
+}
