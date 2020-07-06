@@ -106,30 +106,23 @@ def setup(hass, config):
         # Log RFXCOM event
         if not event.device.id_string:
             return
-        _LOGGER.debug(
-            "Receive RFXCOM event from "
-            "(Device_id: %s Class: %s Sub: %s, Pkt_id: %s)",
-            slugify(event.device.id_string.lower()),
-            event.device.__class__.__name__,
-            event.device.subtype,
-            "".join(f"{x:02x}" for x in event.data),
-        )
+
+        event_data = {
+            "packet_type": event.device.packettype,
+            "sub_type": event.device.subtype,
+            "type_string": event.device.type_string,
+            "id_string": event.device.id_string,
+            "data": "".join(f"{x:02x}" for x in event.data),
+            "values": getattr(event, "values", None),
+        }
+
+        _LOGGER.debug("Receive RFXCOM event: %s", event_data)
 
         # Callback to HA registered components.
         hass.helpers.dispatcher.dispatcher_send(SIGNAL_EVENT, event)
 
         # Signal event to any other listeners
-        hass.bus.fire(
-            EVENT_RFXTRX_EVENT,
-            {
-                "packettype": event.device.packettype,
-                "subtype": event.device.subtype,
-                "class": event.device.__class__.__name__,
-                "id_string": event.device.id_string,
-                "data": "".join(f"{x:02x}" for x in event.data),
-                "values": event.values if hasattr(event, "values") else None,
-            },
-        )
+        hass.bus.fire(EVENT_RFXTRX_EVENT, event_data)
 
     device = config[DOMAIN].get(ATTR_DEVICE)
     host = config[DOMAIN].get(CONF_HOST)
