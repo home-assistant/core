@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     harmony_conf_file = hass.config.path(f"harmony_{entry.unique_id}.conf")
     try:
         device = HarmonyRemote(
-            name, entry.unique_id, address, activity, harmony_conf_file, delay_secs,
+            name, entry.unique_id, address, activity, harmony_conf_file, delay_secs
         )
         connected_ok = await device.connect()
     except (asyncio.TimeoutError, ValueError, AttributeError):
