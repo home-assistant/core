@@ -85,7 +85,7 @@ class ZWaveServices:
                     if selection > value.max or selection < value.min:
                         _LOGGER.error(
                             "Value %s out of range for parameter %s (Min: %s Max: %s)",
-                            str(selection),
+                            selection,
                             param,
                             value.min,
                             value.max,
@@ -101,7 +101,7 @@ class ZWaveServices:
 
                 if payload is None:
                     _LOGGER.error(
-                        "Invalid value %s for parameter %s", str(selection), param,
+                        "Invalid value %s for parameter %s", selection, param,
                     )
                     break
 
@@ -113,7 +113,7 @@ class ZWaveServices:
                 if selection > value.max or selection < value.min:
                     _LOGGER.error(
                         "Value %s out of range for parameter %s (Min: %s Max: %s)",
-                        str(selection),
+                        selection,
                         param,
                         value.min,
                         value.max,
@@ -126,8 +126,9 @@ class ZWaveServices:
                 "Setting configuration parameter %s on Node %s with value %s",
                 param,
                 node_id,
-                str(payload),
+                payload,
             )
+            return
 
     @callback
     def async_add_node(self, service):
