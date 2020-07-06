@@ -186,7 +186,7 @@ async def _logbook_filtering(hass, last_changed, last_updated):
     def yield_events(event):
         for _ in range(10 ** 5):
             # pylint: disable=protected-access
-            if logbook._keep_event(hass, event, entities_filter, entity_attr_cache):
+            if logbook._keep_event(hass, event, entities_filter):
                 yield event
 
     start = timer()
