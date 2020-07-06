@@ -68,6 +68,11 @@ from tests.components.homekit.common import patch_debounce
 IP_ADDRESS = "127.0.0.1"
 
 
+@pytest.fixture(autouse=True)
+def always_patch_driver(hk_driver):
+    """Load the hk_driver fixture."""
+
+
 @pytest.fixture(name="device_reg")
 def device_reg_fixture(hass):
     """Return an empty, loaded, registry."""
