@@ -228,7 +228,7 @@ class EntityComponent:
         # FIXME: Components don't pass discovery_info in the correct format:
         # - Updater passes an empty dictionary instead of None
         # - Cover passes a list containing a single dictionary when initialized
-        # etc.
+        # etc.mm@PentaphyllumYubiKey
         if isinstance(discovery_info, list):
             scan_interval = discovery_info[0].get(
                 CONF_SCAN_INTERVAL, getattr(platform, "SCAN_INTERVAL", None)
