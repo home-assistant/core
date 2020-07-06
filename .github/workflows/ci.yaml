@@ -738,7 +738,7 @@ jobs:
             -p no:sugar \
             tests
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2.0.1
         with:
           name: coverage-${{ matrix.python-version }}-group${{ matrix.group }}
           path: .coverage
