@@ -466,7 +466,7 @@ class NetatmoSensor(NetatmoBase):
                     self._state = "Unhealthy"
         except KeyError:
             if self._state:
-                _LOGGER.info("No %s data found for %s", self.type, self.module_name)
+                _LOGGER.debug("No %s data found for %s", self.type, self.module_name)
             self._state = None
             return
 
