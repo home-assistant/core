@@ -160,7 +160,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         smappee_base=smappee_base,
                         service_location=service_location,
                         sensor=reactive_sensor,
-                        attributes=TREND_SENSORS[reactive_sensor],
+                        attributes=REACTIVE_SENSORS[reactive_sensor],
                     )
                 )
 
