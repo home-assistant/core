@@ -1,9 +1,9 @@
 """Script to manage users for the Home Assistant auth provider."""
 import argparse
-import asyncio
 import logging
 import os
 
+from homeassistant import runner
 from homeassistant.auth import auth_manager_from_config
 from homeassistant.auth.providers import homeassistant as hass_auth
 from homeassistant.config import get_default_config_dir
@@ -44,8 +44,8 @@ def run(args):
     parser_change_pw.set_defaults(func=change_password)
 
     args = parser.parse_args(args)
-    loop = asyncio.get_event_loop()
-    hass = HomeAssistant(loop=loop)
+    loop = runner.setup_loop(runner.RuntimeConfig(args.config))
+    hass = HomeAssistant(loop=loop, executor=runner.setup_executor(loop))
     loop.run_until_complete(run_command(hass, args))
 
     # Triggers save on used storage helpers with delay (core auth)

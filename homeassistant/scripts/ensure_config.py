@@ -2,6 +2,7 @@
 import argparse
 import os
 
+from homeassistant import runner
 import homeassistant.config as config_util
 from homeassistant.core import HomeAssistant
 
@@ -31,7 +32,8 @@ def run(args):
         print("Creating directory", config_dir)
         os.makedirs(config_dir)
 
-    hass = HomeAssistant()
+    loop = runner.setup_loop(runner.RuntimeConfig(config_dir=config_dir))
+    hass = HomeAssistant(loop, runner.setup_executor(loop))
     hass.config.config_dir = config_dir
     config_path = hass.loop.run_until_complete(async_run(hass))
     print("Configuration file:", config_path)

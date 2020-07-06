@@ -8,7 +8,7 @@ import os
 from typing import Any, Callable, Dict, List, Tuple
 from unittest.mock import patch
 
-from homeassistant import bootstrap, core
+from homeassistant import bootstrap, core, runner
 from homeassistant.config import get_default_config_dir
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.check_config import async_check_ha_config_file
@@ -199,7 +199,8 @@ def check(config_dir, secrets=False):
         yaml_loader.yaml.SafeLoader.add_constructor("!secret", yaml_loader.secret_yaml)
 
     try:
-        hass = core.HomeAssistant()
+        loop = runner.setup_loop(runner.RuntimeConfig(config_dir=config_dir))
+        hass = core.HomeAssistant(loop, runner.setup_executor(loop))
         hass.config.config_dir = config_dir
 
         res["components"] = hass.loop.run_until_complete(
