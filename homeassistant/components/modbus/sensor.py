@@ -36,7 +36,6 @@ from .const import (
     DATA_TYPE_INT,
     DATA_TYPE_STRING,
     DATA_TYPE_UINT,
-    DEFAULT_HUB,
     MODBUS_DOMAIN,
 )
 
@@ -66,6 +65,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_REGISTERS): [
             {
+                vol.Required(CONF_HUB): cv.string,
                 vol.Required(CONF_NAME): cv.string,
                 vol.Required(CONF_REGISTER): cv.positive_int,
                 vol.Optional(CONF_COUNT, default=1): cv.positive_int,
@@ -79,7 +79,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                     ]
                 ),
                 vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-                vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
                 vol.Optional(CONF_OFFSET, default=0): number,
                 vol.Optional(CONF_PRECISION, default=0): cv.positive_int,
                 vol.Optional(

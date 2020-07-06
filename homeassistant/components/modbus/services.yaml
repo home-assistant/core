@@ -11,7 +11,7 @@ write_coil:
       description: Address of the modbus unit.
       example: 21
     hub:
-      description: Optional Modbus hub name. A hub with the name 'default' is used if not specified.
+      description: Modbus hub name.
       example: "hub1"
 write_register:
   description: Write to a modbus holding register.
@@ -26,5 +26,5 @@ write_register:
       description: Value (single value or array) to write.
       example: "0 or [4,0]"
     hub:
-      description: Optional Modbus hub name. A hub with the name 'default' is used if not specified.
+      description: Modbus hub name.
       example: "hub1"

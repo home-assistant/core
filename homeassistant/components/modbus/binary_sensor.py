@@ -22,7 +22,6 @@ from .const import (
     CONF_HUB,
     CONF_INPUT_TYPE,
     CONF_INPUTS,
-    DEFAULT_HUB,
     MODBUS_DOMAIN,
 )
 
@@ -38,9 +37,9 @@ PLATFORM_SCHEMA = vol.All(
                     vol.Schema(
                         {
                             vol.Required(CONF_ADDRESS): cv.positive_int,
+                            vol.Required(CONF_HUB): cv.string,
                             vol.Required(CONF_NAME): cv.string,
                             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-                            vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
                             vol.Optional(CONF_SLAVE): cv.positive_int,
                             vol.Optional(
                                 CONF_INPUT_TYPE, default=CALL_TYPE_COIL

@@ -28,7 +28,6 @@ from .const import (
     CONF_BYTESIZE,
     CONF_PARITY,
     CONF_STOPBITS,
-    DEFAULT_HUB,
     MODBUS_DOMAIN as DOMAIN,
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
@@ -37,7 +36,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string})
+BASE_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 
 SERIAL_SCHEMA = BASE_SCHEMA.extend(
     {
@@ -69,7 +68,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 SERVICE_WRITE_REGISTER_SCHEMA = vol.Schema(
     {
-        vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
+        vol.Required(ATTR_HUB): cv.string,
         vol.Required(ATTR_UNIT): cv.positive_int,
         vol.Required(ATTR_ADDRESS): cv.positive_int,
         vol.Required(ATTR_VALUE): vol.Any(
@@ -80,7 +79,7 @@ SERVICE_WRITE_REGISTER_SCHEMA = vol.Schema(
 
 SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
     {
-        vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
+        vol.Required(ATTR_HUB): cv.string,
         vol.Required(ATTR_UNIT): cv.positive_int,
         vol.Required(ATTR_ADDRESS): cv.positive_int,
         vol.Required(ATTR_STATE): cv.boolean,

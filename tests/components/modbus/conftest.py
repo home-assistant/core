@@ -10,7 +10,6 @@ from homeassistant.components.modbus.const import (
     CONF_REGISTER,
     CONF_REGISTER_TYPE,
     CONF_REGISTERS,
-    DEFAULT_HUB,
     MODBUS_DOMAIN as DOMAIN,
 )
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_SCAN_INTERVAL
@@ -18,6 +17,8 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockModule, async_fire_time_changed, mock_integration
+
+HUB_NAME = "hub"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,8 +28,8 @@ def mock_hub(hass):
     """Mock hub."""
     mock_integration(hass, MockModule(DOMAIN))
     hub = mock.MagicMock()
-    hub.name = "hub"
-    hass.data[DOMAIN] = {DEFAULT_HUB: hub}
+    hub.name = HUB_NAME
+    hass.data[DOMAIN] = {HUB_NAME: hub}
     return hub
 
 

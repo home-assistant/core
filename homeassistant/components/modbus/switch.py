@@ -31,7 +31,6 @@ from .const import (
     CONF_STATE_ON,
     CONF_VERIFY_REGISTER,
     CONF_VERIFY_STATE,
-    DEFAULT_HUB,
     MODBUS_DOMAIN,
 )
 
@@ -42,9 +41,9 @@ REGISTERS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_COMMAND_OFF): cv.positive_int,
         vol.Required(CONF_COMMAND_ON): cv.positive_int,
+        vol.Required(CONF_HUB): cv.string,
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_REGISTER): cv.positive_int,
-        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
         vol.Optional(CONF_REGISTER_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
             [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]
         ),
@@ -59,9 +58,9 @@ REGISTERS_SCHEMA = vol.Schema(
 COILS_SCHEMA = vol.Schema(
     {
         vol.Required(CALL_TYPE_COIL): cv.positive_int,
+        vol.Required(CONF_HUB): cv.string,
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_SLAVE): cv.positive_int,
-        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
     }
 )
 

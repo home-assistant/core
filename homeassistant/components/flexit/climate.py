@@ -11,7 +11,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.components.modbus.const import CONF_HUB, DEFAULT_HUB, MODBUS_DOMAIN
+from homeassistant.components.modbus.const import CONF_HUB, MODBUS_DOMAIN
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_NAME,
@@ -23,7 +23,7 @@ import homeassistant.helpers.config_validation as cv
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
+        vol.Required(CONF_HUB): cv.string,
         vol.Required(CONF_SLAVE): vol.All(int, vol.Range(min=0, max=32)),
         vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string,
     }

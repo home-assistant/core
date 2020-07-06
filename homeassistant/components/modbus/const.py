@@ -17,7 +17,6 @@ CONF_OFFSET = "offset"
 CONF_COILS = "coils"
 
 # integration names
-DEFAULT_HUB = "default"
 MODBUS_DOMAIN = "modbus"
 
 # data types

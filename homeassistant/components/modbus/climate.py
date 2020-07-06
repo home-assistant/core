@@ -40,7 +40,6 @@ from .const import (
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
     DATA_TYPE_UINT,
-    DEFAULT_HUB,
     MODBUS_DOMAIN,
 )
 
@@ -50,6 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_CURRENT_TEMP): cv.positive_int,
+        vol.Required(CONF_HUB): cv.string,
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_SLAVE): cv.positive_int,
         vol.Required(CONF_TARGET_TEMP): cv.positive_int,
@@ -60,7 +60,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_FLOAT): vol.In(
             [DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT]
         ),
-        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
         vol.Optional(CONF_PRECISION, default=1): cv.positive_int,
         vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
         vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),

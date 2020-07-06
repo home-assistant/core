@@ -6,6 +6,7 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_INPUT,
     CONF_COUNT,
     CONF_DATA_TYPE,
+    CONF_HUB,
     CONF_OFFSET,
     CONF_PRECISION,
     CONF_REGISTER_TYPE,
@@ -18,7 +19,7 @@ from homeassistant.components.modbus.const import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 
-from .conftest import run_test
+from .conftest import HUB_NAME, run_test
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +32,7 @@ async def test_simple_word_register(hass, mock_hub):
         CONF_SCALE: 1,
         CONF_OFFSET: 0,
         CONF_PRECISION: 0,
+        CONF_HUB: HUB_NAME,
     }
     await run_test(
         hass,
@@ -44,7 +46,9 @@ async def test_simple_word_register(hass, mock_hub):
 
 async def test_optional_conf_keys(hass, mock_hub):
     """Test handling of optional configuration keys."""
-    register_config = {}
+    register_config = {
+        CONF_HUB: HUB_NAME,
+    }
     await run_test(
         hass,
         mock_hub,
@@ -63,6 +67,7 @@ async def test_offset(hass, mock_hub):
         CONF_SCALE: 1,
         CONF_OFFSET: 13,
         CONF_PRECISION: 0,
+        CONF_HUB: HUB_NAME,
     }
     await run_test(
         hass,
@@ -82,6 +87,7 @@ async def test_scale_and_offset(hass, mock_hub):
         CONF_SCALE: 3,
         CONF_OFFSET: 13,
         CONF_PRECISION: 0,
+        CONF_HUB: HUB_NAME,
     }
     await run_test(
         hass,
@@ -101,6 +107,7 @@ async def test_ints_can_have_precision(hass, mock_hub):
         CONF_SCALE: 3,
         CONF_OFFSET: 13,
         CONF_PRECISION: 4,
+        CONF_HUB: HUB_NAME,
     }
     await run_test(
         hass,
@@ -120,6 +127,7 @@ async def test_floats_get_rounded_correctly(hass, mock_hub):
         CONF_SCALE: 1.5,
         CONF_OFFSET: 0,
         CONF_PRECISION: 0,
+        CONF_HUB: HUB_NAME,
     }
     await run_test(
         hass,
@@ -139,6 +147,7 @@ async def test_parameters_as_strings(hass, mock_hub):
         CONF_SCALE: "1.5",
         CONF_OFFSET: "5",
         CONF_PRECISION: "1",
+        CONF_HUB: HUB_NAME,
     }
     await run_test(
         hass,
@@ -158,6 +167,7 @@ async def test_floating_point_scale(hass, mock_hub):
         CONF_SCALE: 2.4,
         CONF_OFFSET: 0,
         CONF_PRECISION: 2,
+        CONF_HUB: HUB_NAME,
     }
     await run_test(
         hass,
@@ -177,6 +187,7 @@ async def test_floating_point_offset(hass, mock_hub):
         CONF_SCALE: 1,
         CONF_OFFSET: -10.3,
         CONF_PRECISION: 1,
+        CONF_HUB: HUB_NAME,
     }
     await run_test(
         hass,
@@ -196,6 +207,7 @@ async def test_signed_two_word_register(hass, mock_hub):
         CONF_SCALE: 1,
         CONF_OFFSET: 0,
         CONF_PRECISION: 0,
+        CONF_HUB: HUB_NAME,
     }
     await run_test(
         hass,
@@ -215,6 +227,7 @@ async def test_unsigned_two_word_register(hass, mock_hub):
         CONF_SCALE: 1,
         CONF_OFFSET: 0,
         CONF_PRECISION: 0,
+        CONF_HUB: HUB_NAME,
     }
     await run_test(
         hass,
@@ -232,6 +245,7 @@ async def test_reversed(hass, mock_hub):
         CONF_COUNT: 2,
         CONF_DATA_TYPE: DATA_TYPE_UINT,
         CONF_REVERSE_ORDER: True,
+        CONF_HUB: HUB_NAME,
     }
     await run_test(
         hass,
@@ -251,6 +265,7 @@ async def test_four_word_register(hass, mock_hub):
         CONF_SCALE: 1,
         CONF_OFFSET: 0,
         CONF_PRECISION: 0,
+        CONF_HUB: HUB_NAME,
     }
     await run_test(
         hass,
@@ -270,6 +285,7 @@ async def test_four_word_register_precision_is_intact_with_int_params(hass, mock
         CONF_SCALE: 2,
         CONF_OFFSET: 3,
         CONF_PRECISION: 0,
+        CONF_HUB: HUB_NAME,
     }
     await run_test(
         hass,
@@ -289,6 +305,7 @@ async def test_four_word_register_precision_is_lost_with_float_params(hass, mock
         CONF_SCALE: 2.0,
         CONF_OFFSET: 3.0,
         CONF_PRECISION: 0,
+        CONF_HUB: HUB_NAME,
     }
     await run_test(
         hass,
@@ -309,6 +326,7 @@ async def test_two_word_input_register(hass, mock_hub):
         CONF_SCALE: 1,
         CONF_OFFSET: 0,
         CONF_PRECISION: 0,
+        CONF_HUB: HUB_NAME,
     }
     await run_test(
         hass,
@@ -329,6 +347,7 @@ async def test_two_word_holding_register(hass, mock_hub):
         CONF_SCALE: 1,
         CONF_OFFSET: 0,
         CONF_PRECISION: 0,
+        CONF_HUB: HUB_NAME,
     }
     await run_test(
         hass,
@@ -349,6 +368,7 @@ async def test_float_data_type(hass, mock_hub):
         CONF_SCALE: 1,
         CONF_OFFSET: 0,
         CONF_PRECISION: 5,
+        CONF_HUB: HUB_NAME,
     }
     await run_test(
         hass,
@@ -369,6 +389,7 @@ async def test_string_data_type(hass, mock_hub):
         CONF_SCALE: 1,
         CONF_OFFSET: 0,
         CONF_PRECISION: 0,
+        CONF_HUB: HUB_NAME,
     }
     await run_test(
         hass,
