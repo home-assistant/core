@@ -296,7 +296,8 @@ class AdsEntity(Entity):
             """Handle device notifications."""
             _LOGGER.debug("Variable %s changed its value to %d", name, value)
 
-            """Format the float, with the Paramter digit"""
+            """Bring the value in a nice view."""
+            
             if plctype == pyads.PLCTYPE_REAL:
                 value = float(f"{value:.{digit}f}")
             elif plctype == pyads.PLCTYPE_LREAL:
