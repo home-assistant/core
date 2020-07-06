@@ -1,9 +1,11 @@
 """Provides alert sensor from NWS."""
+from datetime import timedelta
 import logging
 
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
+from homeassistant.util.dt import utcnow
 
 from . import base_unique_id
 from .const import (
@@ -16,6 +18,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+ALERT_VALID_TIME = timedelta(minutes=10)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -83,7 +87,13 @@ class NWSAlertSensor(Entity):
     @property
     def available(self):
         """Return if entity is available."""
-        return self._coordinator.last_update_success
+        if self._coordinator.last_update_success_time:
+            last_success_time = (
+                utcnow() - self._coordinator.last_update_success_time < ALERT_VALID_TIME
+            )
+        else:
+            last_success_time = False
+        return self._coordinator.last_update_success or last_success_time
 
     @property
     def unit_of_measurement(self):
