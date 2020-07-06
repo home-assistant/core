@@ -30,7 +30,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .const import (
     ACTIVITY_POWER_OFF,
     ATTR_ACTIVITY_LIST,
-    ATTR_ACTIVITY_NOTIFY,
     ATTR_CURRENT_ACTIVITY,
     ATTR_DEVICES_LIST,
     ATTR_LAST_ACTIVITY,
@@ -132,9 +131,7 @@ async def async_setup_entry(
 class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
     """Remote representation used to control a Harmony device."""
 
-    def __init__(
-        self, name, unique_id, host, activity, out_path, delay_secs, activity_notify
-    ):
+    def __init__(self, name, unique_id, host, activity, out_path, delay_secs):
         """Initialize HarmonyRemote class."""
         self._name = name
         self.host = host
@@ -146,7 +143,6 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         self.delay_secs = delay_secs
         self._available = False
         self._unique_id = unique_id
-        self._activity_notify = activity_notify
         self._last_activity = None
 
     @property
@@ -170,22 +166,14 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         if ATTR_ACTIVITY in data:
             self.default_activity = data[ATTR_ACTIVITY]
 
-        if ATTR_ACTIVITY_NOTIFY in data:
-            self._activity_notify = data[ATTR_ACTIVITY_NOTIFY]
-            self._update_callbacks()
-
     def _update_callbacks(self):
         callbacks = {
             "config_updated": self.new_config,
             "connect": self.got_connected,
             "disconnect": self.got_disconnected,
-            "new_activity_starting": None,
+            "new_activity_starting": self.new_activity,
             "new_activity": None,
         }
-        if self._activity_notify:
-            callbacks["new_activity_starting"] = self.new_activity
-        else:
-            callbacks["new_activity"] = self.new_activity
         self._client.callbacks = ClientCallbackType(**callbacks)
 
     async def async_added_to_hass(self):
