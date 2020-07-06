@@ -9,15 +9,14 @@ from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
-    CONF_FRIENDLY_NAME,
     CONF_MAC,
+    CONF_NAME,
     CONF_SWITCHES,
     STATE_ON,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.util import slugify
 
 from .const import DOMAIN, SWITCH_DOMAIN
 from .helpers import data_packet, mac_address
@@ -26,17 +25,17 @@ _LOGGER = logging.getLogger(__name__)
 
 SWITCH_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_COMMAND_OFF): data_packet,
         vol.Optional(CONF_COMMAND_ON): data_packet,
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
     }
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MAC): mac_address,
-        vol.Required(CONF_SWITCHES, default={}): cv.schema_with_slug_keys(
-            SWITCH_SCHEMA
+        vol.Required(CONF_SWITCHES, default=[]): vol.All(
+            [SWITCH_SCHEMA], cv.ensure_list
         ),
     }
 )
@@ -45,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Broadlink switches."""
     platform_data = hass.data[DOMAIN].platforms.setdefault(SWITCH_DOMAIN, {})
-    platform_data.setdefault(config[CONF_MAC], {}).update(config[CONF_SWITCHES])
+    platform_data.setdefault(config[CONF_MAC], []).extend(config[CONF_SWITCHES])
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -56,8 +55,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         platform_data = hass.data[DOMAIN].platforms.get(SWITCH_DOMAIN, {})
         user_defined_switches = platform_data.get(device.api.mac, {})
         switches = [
-            BroadlinkRMSwitch(device, name, config)
-            for name, config in user_defined_switches.items()
+            BroadlinkRMSwitch(device, config) for config in user_defined_switches
         ]
 
     elif device.api.type == "SP1":
@@ -155,13 +153,12 @@ class BroadlinkSwitch(SwitchEntity, RestoreEntity, ABC):
 class BroadlinkRMSwitch(BroadlinkSwitch):
     """Representation of a Broadlink RM switch."""
 
-    def __init__(self, device, name, config):
+    def __init__(self, device, config):
         """Initialize the switch."""
         super().__init__(
             device, config.get(CONF_COMMAND_ON), config.get(CONF_COMMAND_OFF)
         )
-        self.entity_id = f"{SWITCH_DOMAIN}.{slugify(name)}"
-        self._name = config.get(CONF_FRIENDLY_NAME, name)
+        self._name = config[CONF_NAME]
 
     @property
     def name(self):
