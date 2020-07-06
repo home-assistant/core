@@ -59,6 +59,7 @@ async def test_user_form(hass):
     assert result2["data"] == {
         "host": "1.2.3.4",
         "name": "friend",
+        "activity_notify": True,
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -147,6 +148,7 @@ async def test_form_ssdp(hass):
     assert result2["data"] == {
         "host": "192.168.1.12",
         "name": "Harmony Hub",
+        "activity_notify": True,
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
