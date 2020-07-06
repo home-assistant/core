@@ -73,7 +73,7 @@ def report(what: str) -> None:
 
 
 def warn_use(func: CALLABLE_T, what: str) -> CALLABLE_T:
-    """Mock close to avoid integrations closing our session."""
+    """Mock a function to warn when it was about to be used."""
     if asyncio.iscoroutinefunction(func):
 
         @functools.wraps(func)

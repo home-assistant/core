@@ -262,8 +262,6 @@ def main() -> int:
     """Start Home Assistant."""
     validate_python()
 
-    # set_loop()
-
     # Run a simple daemon runner process on Windows to handle restarts
     if os.name == "nt" and "--runner" not in sys.argv:
         nt_args = cmdline() + ["--runner"]
