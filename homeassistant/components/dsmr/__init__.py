@@ -1,25 +1,27 @@
 """The dsmr component."""
+import asyncio
+from asyncio import CancelledError
 import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_FORCE_UPDATE, CONF_HOST, CONF_PORT, CONF_PREFIX
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
+
+from .const import (
+    CONF_DSMR_VERSION,
+    CONF_PRECISION,
+    CONF_RECONNECT_INTERVAL,
+    DEFAULT_DSMR_VERSION,
+    DEFAULT_PORT,
+    DEFAULT_PRECISION,
+    DOMAIN,
+    PLATFORMS,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_DSMR_VERSION = "dsmr_version"
-CONF_RECONNECT_INTERVAL = "reconnect_interval"
-CONF_PRECISION = "precision"
-
-DEFAULT_DSMR_VERSION = "2.2"
-DEFAULT_PORT = "/dev/ttyUSB0"
-DEFAULT_PRECISION = 3
-DEFAULT_FORCE_UPDATE = False
-DEFAULT_PREFIX = ""
-
-DOMAIN = "dsmr"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -34,10 +36,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(
                     int
                 ),
-                vol.Optional(
-                    CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE
-                ): cv.boolean,
-                vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
             }
         )
     },
@@ -45,18 +43,50 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass, config: dict):
     """Set up the DSMR platform."""
-    config_domain = config[DOMAIN]
-    hass.data[DOMAIN] = {
-        CONF_PORT: config_domain.get(CONF_PORT),
-        CONF_HOST: config_domain.get(CONF_HOST),
-        CONF_DSMR_VERSION: config_domain.get(CONF_DSMR_VERSION),
-        CONF_RECONNECT_INTERVAL: config_domain.get(CONF_RECONNECT_INTERVAL),
-        CONF_PRECISION: config_domain.get(CONF_PRECISION),
-        CONF_FORCE_UPDATE: config_domain.get(CONF_FORCE_UPDATE),
-        CONF_PREFIX: config_domain.get(CONF_PREFIX),
-    }
+    hass.data[DOMAIN] = {}
 
-    hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
+    conf = config.get(DOMAIN)
+    if conf is None:
+        return True
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf,
+        )
+    )
+
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Set up DSMR from a config entry."""
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
+        )
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Unload a config entry."""
+    task = hass.data[DOMAIN][entry.title]
+
+    task.cancel()
+    try:
+        await task
+    except CancelledError:
+        pass
+
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+
+    return unload_ok

@@ -1,50 +1,45 @@
 """Support for Dutch Smart Meter (also known as Smartmeter or P1 port)."""
 import asyncio
+from asyncio import CancelledError
 from functools import partial
 import logging
+from typing import Dict
 
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
 import serial
 
-from homeassistant.components.dsmr import (
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_FORCE_UPDATE, CONF_HOST, CONF_PORT, TIME_HOURS
+from homeassistant.core import callback
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
+
+from .const import (
     CONF_DSMR_VERSION,
     CONF_PRECISION,
     CONF_RECONNECT_INTERVAL,
+    DOMAIN,
+    ICON_GAS,
+    ICON_POWER,
+    ICON_POWER_FAILURE,
+    ICON_SWELL_SAG,
 )
-from homeassistant.const import (
-    CONF_FORCE_UPDATE,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_PREFIX,
-    EVENT_HOMEASSISTANT_STOP,
-    TIME_HOURS,
-)
-from homeassistant.core import CoreState, callback
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "dsmr"
 
-ICON_GAS = "mdi:fire"
-ICON_POWER = "mdi:flash"
-ICON_POWER_FAILURE = "mdi:flash-off"
-ICON_SWELL_SAG = "mdi:pulse"
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up the DSMR sensor."""
     # Suppress logging
     logging.getLogger("dsmr_parser").setLevel(logging.ERROR)
 
-    setup_config = hass.data[DOMAIN]
+    config = entry.data
+    unique_base = f"dsmr_{entry.title}"
 
-    dsmr_version = setup_config[CONF_DSMR_VERSION]
-
-    prefix = setup_config[CONF_PREFIX]
-    if prefix:
-        prefix += " "
+    dsmr_version = config[CONF_DSMR_VERSION]
 
     # Define list of name,obis mappings to generate entities
     obis_mapping = [
@@ -80,7 +75,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     # Generate device entities
     devices = [
-        DSMREntity(prefix + name, obis, setup_config) for name, obis in obis_mapping
+        DSMREntity(
+            name, unique_base, "Electricity Meter", config["serial_id"], obis, config
+        )
+        for name, obis in obis_mapping
     ]
 
     # Protocol version specific obis
@@ -93,8 +91,22 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     # Add gas meter reading and derivative for usage
     devices += [
-        DSMREntity(prefix + "Gas Consumption", gas_obis, setup_config),
-        DerivativeDSMREntity(prefix + "Hourly Gas Consumption", gas_obis, setup_config),
+        DSMREntity(
+            "Gas Consumption",
+            unique_base,
+            "Gas Meter",
+            config["serial_id_gas"],
+            gas_obis,
+            config,
+        ),
+        DerivativeDSMREntity(
+            "Hourly Gas Consumption",
+            unique_base,
+            "Gas Meter",
+            config["serial_id_gas"],
+            gas_obis,
+            config,
+        ),
     ]
 
     async_add_entities(devices)
@@ -107,30 +119,46 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     # Creates an asyncio.Protocol factory for reading DSMR telegrams from
     # serial and calls update_entities_telegram to update entities on arrival
-    if CONF_HOST in setup_config:
+    host = config.get(CONF_HOST)
+    if host is not None:
         reader_factory = partial(
             create_tcp_dsmr_reader,
-            setup_config[CONF_HOST],
-            setup_config[CONF_PORT],
-            setup_config[CONF_DSMR_VERSION],
+            config[CONF_HOST],
+            config[CONF_PORT],
+            config[CONF_DSMR_VERSION],
             update_entities_telegram,
             loop=hass.loop,
         )
     else:
         reader_factory = partial(
             create_dsmr_reader,
-            setup_config[CONF_PORT],
-            setup_config[CONF_DSMR_VERSION],
+            config[CONF_PORT],
+            config[CONF_DSMR_VERSION],
             update_entities_telegram,
             loop=hass.loop,
         )
 
     async def connect_and_reconnect():
         """Connect to DSMR and keep reconnecting until Home Assistant stops."""
-        while hass.state != CoreState.stopping:
+        while True:
             # Start DSMR asyncio.Protocol reader
             try:
                 transport, protocol = await hass.loop.create_task(reader_factory())
+
+                if transport:
+                    # Wait for reader to close
+                    await protocol.wait_closed()
+
+                transport = None
+                protocol = None
+
+                # Reflect disconnect state in devices state by setting an
+                # empty telegram resulting in `unknown` states
+                update_entities_telegram({})
+
+                # throttle reconnect attempts
+                await asyncio.sleep(config[CONF_RECONNECT_INTERVAL])
+
             except (
                 serial.serialutil.SerialException,
                 ConnectionRefusedError,
@@ -140,42 +168,34 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 # connection wait
                 _LOGGER.exception("Error connecting to DSMR")
                 transport = None
-
-            if transport:
-                # Register listener to close transport on HA shutdown
-                stop_listener = hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_STOP, transport.close
-                )
-
-                # Wait for reader to close
-                await protocol.wait_closed()
-
-            if hass.state != CoreState.stopping:
-                # Unexpected disconnect
+                protocol = None
+            except CancelledError:
                 if transport:
-                    # remove listener
-                    stop_listener()
+                    transport.close()
 
-                # Reflect disconnect state in devices state by setting an
-                # empty telegram resulting in `unknown` states
-                update_entities_telegram({})
+                if protocol:
+                    await protocol.wait_closed()
 
-                # throttle reconnect attempts
-                await asyncio.sleep(config[CONF_RECONNECT_INTERVAL])
+                return
 
     # Can't be hass.async_add_job because job runs forever
-    hass.loop.create_task(connect_and_reconnect())
+    task = hass.loop.create_task(connect_and_reconnect())
+
+    hass.data[DOMAIN][entry.title] = task
 
 
 class DSMREntity(Entity):
     """Entity reading values from DSMR telegram."""
 
-    def __init__(self, name, obis, config):
+    def __init__(self, name, unique_id, device_name, device_serial, obis, config):
         """Initialize entity."""
         self._name = name
+        self._unique_id = f"{unique_id}_{name}"
         self._obis = obis
         self._config = config
         self.telegram = {}
+        self._device_name = device_name
+        self._device_serial = device_serial
 
     @callback
     def update_data(self, telegram):
@@ -262,6 +282,19 @@ class DSMREntity(Entity):
     def should_poll(self):
         """No polling needed."""
         return False
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
+    def device_info(self) -> Dict[str, any]:
+        """Return the device information."""
+        return {
+            "identifiers": {(DOMAIN, self._device_serial)},
+            "name": self._device_name,
+        }
 
 
 class DerivativeDSMREntity(DSMREntity):

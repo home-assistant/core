@@ -1,0 +1,51 @@
+{
+  "title": "DSMR Slimme Meter",
+  "config": {
+    "flow_title": "DSMR Slimme Meter: {name}",
+    "step": {
+      "user": {
+        "data": {
+          "type": "Select Connection Type",
+          "dsmr_version": "Select DSMR Version"
+        },
+        "description": "Connection Options"
+      },
+      "setup_serial": {
+        "data": {
+          "port": "USB Device Path"
+        }
+      },
+      "setup_host": {
+        "data": {
+          "host": "IP Address",
+          "port": "Port Number"
+        }
+      },
+      "setup_options": {
+        "data": {
+          "reconnect_interval": "Reconnection Interval",
+          "precision": "Precision",
+          "force_update": "Force update"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "upcoming_days": "Number of upcoming days to display",
+          "wanted_max_items": "Max number of wanted items to display"
+        }
+      }
+    }
+  }
+}
