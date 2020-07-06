@@ -431,7 +431,7 @@ class TelevisionMediaPlayer(HomeAccessory):
                 index = self.sources.index(source_name)
                 if self.char_input_source.value != index:
                     self.char_input_source.set_value(index)
-            else:
+            elif hk_state:
                 _LOGGER.warning(
                     "%s: Sources out of sync. Restart Home Assistant", self.entity_id,
                 )
