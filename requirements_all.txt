@@ -1899,6 +1899,9 @@ rokuecp==0.5.0
 # homeassistant.components.roomba
 roombapy==1.6.1
 
+# homeassistant.components.roon
+roonapi==0.0.20
+
 # homeassistant.components.rova
 rova==0.1.0
 

@@ -6,7 +6,7 @@
     "@pavoni"
   ],
   "requirements": [
-    "roonapi>=0.0.20"
+    "roonapi==0.0.20"
   ],
   "config_flow": true
 }

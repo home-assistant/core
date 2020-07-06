@@ -5,16 +5,18 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/roon/
 """
 import logging
+
 from homeassistant import config_entries
-from homeassistant.helpers import device_registry as dr
-from .server import RoonServer
 from homeassistant.const import CONF_HOST
-from .const import (DOMAIN, DATA_CONFIGS, CONFIG_SCHEMA, CONF_CUSTOM_PLAY_ACTION)
+from homeassistant.helpers import device_registry as dr
 
 # We need an import from .config_flow, without it .config_flow is never loaded.
-from .config_flow import FlowHandler, configured_hosts
+from .config_flow import configured_hosts
+from .const import CONF_CUSTOM_PLAY_ACTION, DATA_CONFIGS, DOMAIN
+from .server import RoonServer
 
 _LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup(hass, config):
     """Set up the Roon platform."""
@@ -30,9 +32,11 @@ async def async_setup(hass, config):
         # User has component configured but with no configured host
         if not configured_servers:
             # trigger config flow (can be removed once roon is added as official component to hass)
-            hass.async_create_task(hass.config_entries.flow.async_init(
-                DOMAIN, context={'source': config_entries.SOURCE_IMPORT}
-            ))
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
+                )
+            )
         return True
     # setup component with config from configfile
     host = conf[CONF_HOST]
@@ -46,10 +50,11 @@ async def async_setup(hass, config):
     # this component we'll have to use hass.async_add_job to avoid a
     # deadlock: creating a config entry will set up the component but the
     # setup would block till the entry is created!
-    hass.async_create_task(hass.config_entries.flow.async_init(
-        DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
-        data=conf
-    ))
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
+        )
+    )
     return True
 
 
@@ -70,13 +75,9 @@ async def async_setup_entry(hass, entry):
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={
-            (CONF_HOST, host)
-        },
-        identifiers={
-            (DOMAIN, host)
-        },
-        manufacturer='Roonlabs',
+        connections={(CONF_HOST, host)},
+        identifiers={(DOMAIN, host)},
+        manufacturer="Roonlabs",
         name=host,
         model="",
         sw_version="",
