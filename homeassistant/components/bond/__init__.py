@@ -26,7 +26,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_ACCESS_TOKEN]
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = Bond(bondIp=host, bondToken=token)
 
     for component in PLATFORMS:
