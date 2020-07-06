@@ -37,7 +37,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [MeteoclimaticSensor(sensor_type, hass_data) for sensor_type in SENSOR_TYPES],
-        True,
+        False,
     )
 
 

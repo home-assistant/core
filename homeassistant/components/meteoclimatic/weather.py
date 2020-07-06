@@ -28,7 +28,7 @@ async def async_setup_entry(
     """Set up the Meteoclimatic weather platform."""
     hass_data = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities([MeteoclimaticWeather(hass_data)], True)
+    async_add_entities([MeteoclimaticWeather(hass_data)], False)
 
 
 class MeteoclimaticWeather(WeatherEntity):
