@@ -318,6 +318,8 @@ class PlexServer:
                 _LOGGER.debug("plex.tv resource connection successful: %s", client)
             except NotFound:
                 _LOGGER.error("plex.tv resource connection failed: %s", resource.name)
+            else:
+                client.proxyThroughServer(value=False, server=self._plex_server)
 
             self._plextv_device_cache[client_id] = client
             return client
