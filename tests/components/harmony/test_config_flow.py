@@ -56,11 +56,7 @@ async def test_user_form(hass):
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "friend"
-    assert result2["data"] == {
-        "host": "1.2.3.4",
-        "name": "friend",
-        "activity_notify": True,
-    }
+    assert result2["data"] == {"host": "1.2.3.4", "name": "friend"}
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -86,7 +82,6 @@ async def test_form_import(hass):
                 "name": "friend",
                 "activity": "Watch TV",
                 "delay_secs": 0.9,
-                "activity_notify": True,
                 "unique_id": "555234534543",
             },
         )
@@ -99,7 +94,6 @@ async def test_form_import(hass):
         "name": "friend",
         "activity": "Watch TV",
         "delay_secs": 0.9,
-        "activity_notify": True,
     }
     # It is not possible to import options at this time
     # so they end up in the config entry data and are
@@ -145,11 +139,7 @@ async def test_form_ssdp(hass):
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Harmony Hub"
-    assert result2["data"] == {
-        "host": "192.168.1.12",
-        "name": "Harmony Hub",
-        "activity_notify": True,
-    }
+    assert result2["data"] == {"host": "192.168.1.12", "name": "Harmony Hub"}
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -171,7 +161,6 @@ async def test_form_cannot_connect(hass):
                 "name": "friend",
                 "activity": "Watch TV",
                 "delay_secs": 0.2,
-                "activity_notify": True,
             },
         )
 
@@ -213,6 +202,5 @@ async def test_options_flow(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         "activity": PREVIOUS_ACTIVE_ACTIVITY,
-        "activity_notify": False,
         "delay_secs": 0.4,
     }
