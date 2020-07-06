@@ -121,7 +121,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
             # ESPHome uses servicecall packet for both events and service calls
             # Ensure the user can only send events of form 'esphome.xyz'
             if domain != "esphome":
-                _LOGGER.error("Can only generate events under esphome domain! (%s)", host)
+                _LOGGER.error(
+                    "Can only generate events under esphome domain! (%s)", host
+                )
                 return
             hass.bus.async_fire(service.service, service_data)
         else:
