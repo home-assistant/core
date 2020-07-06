@@ -416,12 +416,21 @@ class HomeKit:
         for entity_id in entity_ids:
             aid = aid_storage.get_or_allocate_aid_for_entity_id(entity_id)
             if aid not in self.bridge.accessories:
-                _LOGGER.warning(
-                    "Could not reset accessory. entity_id not found %s", entity_id
-                )
                 continue
+
+            _LOGGER.info(
+                "HomeKit Bridge %s will reset accessory with linked entity_id %s",
+                self._name,
+                entity_id,
+            )
+
             acc = self.remove_bridge_accessory(aid)
             removed.append(acc)
+
+        if not removed:
+            # No matched accessories, probably on another bridge
+            return
+
         self.driver.config_changed()
 
         for acc in removed:
