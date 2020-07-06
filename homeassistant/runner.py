@@ -53,7 +53,7 @@ class HassEventLoopPolicy(PolicyBase):
     def new_event_loop(self):
         """Get the event loop."""
         loop = super().new_event_loop()
-        loop.set_exception_handler(self.async_loop_exception_handler)
+        loop.set_exception_handler(_async_loop_exception_handler)
         if self.debug:
             loop.set_debug(True)
 
@@ -89,17 +89,18 @@ class HassEventLoopPolicy(PolicyBase):
 
         return loop
 
-    @callback
-    def async_loop_exception_handler(self, _: Any, context: Dict) -> None:
-        """Handle all exception inside the core loop."""
-        kwargs = {}
-        exception = context.get("exception")
-        if exception:
-            kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
 
-        logging.getLogger(__package__).error(
-            "Error doing job: %s", context["message"], **kwargs  # type: ignore
-        )
+@callback
+def _async_loop_exception_handler(self, _: Any, context: Dict) -> None:
+    """Handle all exception inside the core loop."""
+    kwargs = {}
+    exception = context.get("exception")
+    if exception:
+        kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
+
+    logging.getLogger(__package__).error(
+        "Error doing job: %s", context["message"], **kwargs  # type: ignore
+    )
 
 
 async def setup_and_run_hass(runtime_config: RuntimeConfig,) -> int:
