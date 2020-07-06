@@ -112,7 +112,10 @@ class Gateway:
 
                     # delete retrieved sms
                     _LOGGER.debug("Deleting message")
-                    state_machine.DeleteSMS(Folder=0, Location=entry[0]["Location"])
+                    try:
+                        state_machine.DeleteSMS(Folder=0, Location=entry[0]["Location"])
+                    except Exception as ex:
+                        _LOGGER.error("Error deleting SMS:%s", ex)
                 else:
                     _LOGGER.debug("Not all parts have arrived")
                     break
