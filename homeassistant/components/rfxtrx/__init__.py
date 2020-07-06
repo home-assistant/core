@@ -23,7 +23,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-from .const import DEVICE_PACKET_TYPE_LIGHTING4
+from .const import DEVICE_PACKET_TYPE_LIGHTING4, EVENT_RFXTRX_EVENT
 
 DOMAIN = "rfxtrx"
 
@@ -120,6 +120,19 @@ def setup(hass, config):
 
         # Callback to HA registered components.
         hass.helpers.dispatcher.dispatcher_send(SIGNAL_EVENT, event)
+
+        # Signal event to any other listeners
+        hass.bus.fire(
+            EVENT_RFXTRX_EVENT,
+            {
+                "packettype": event.device.packettype,
+                "subtype": event.device.subtype,
+                "class": event.device.__class__.__name__,
+                "id_string": event.device.id_string,
+                "data": "".join(f"{x:02x}" for x in event.data),
+                "values": event.values if hasattr(event, "values") else None,
+            },
+        )
 
     device = config[DOMAIN].get(ATTR_DEVICE)
     host = config[DOMAIN].get(CONF_HOST)
