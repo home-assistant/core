@@ -36,7 +36,7 @@ class RuntimeConfig:
 if sys.platform == "win32" and sys.version_info[:2] < (3, 8):
     PolicyBase = asyncio.WindowsProactorEventLoopPolicy
 else:
-    PolicyBase = asyncio.DefaultEventLoopPolicy
+    PolicyBase = asyncio.DefaultEventLoopPolicy  # pylint: disable=invalid-name
 
 
 @callback
