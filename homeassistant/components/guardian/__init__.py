@@ -21,7 +21,6 @@ from .const import (
     DATA_CLIENT,
     DATA_COORDINATOR,
     DOMAIN,
-    LOGGER,
 )
 from .util import GuardianDataUpdateCoordinator
 
@@ -52,8 +51,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # The valve controller's UDP-based API can't handle concurrent requests very well,
     # so we use a lock to ensure that only one API request is reaching it at a time:
     api_lock = asyncio.Lock()
-    initial_fetch_tasks = []
 
+    # Set up DataUpdateCoordinators for the valve controller:
+    init_valve_controller_tasks = []
     for api, api_coro in [
         (API_SENSOR_PAIR_DUMP, client.sensor.pair_dump),
         (API_SYSTEM_DIAGNOSTICS, client.system.diagnostics),
@@ -71,46 +71,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             api_lock=api_lock,
             valve_controller_uid=entry.data[CONF_UID],
         )
-        initial_fetch_tasks.append(coordinator.async_refresh())
+        init_valve_controller_tasks.append(coordinator.async_refresh())
 
-    # Add a listener for the `sensor_pair_dump` DataUpdateCoordinator that figures out
-    # whether paired sensors have been added/removed:
-    @callback
-    def process_sensor_pair_dump() -> None:
-        """Process the latest sensor pair dump info."""
-        old = hass.data[DOMAIN][DATA_LAST_SENSOR_PAIR_DUMP].get(entry.entry_id, set())
-        new = hass.data[DOMAIN][DATA_LAST_SENSOR_PAIR_DUMP][entry.entry_id] = set(
-            hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
-                API_SENSOR_PAIR_DUMP
-            ].data["paired_uids"]
-        )
+    await asyncio.gather(*init_valve_controller_tasks)
 
-        to_add = new.difference(old)
-        to_remove = old.difference(new)
-
-        if to_add:
-            LOGGER.info("Identified paired sensor(s) to add: %s", to_add)
-            for uid in to_add:
-                coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
-                    API_SENSOR_PAIRED_SENSOR_STATUS
-                ][uid] = GuardianDataUpdateCoordinator(
-                    hass,
-                    client=client,
-                    api_name=f"{API_SENSOR_PAIRED_SENSOR_STATUS}_{uid}",
-                    api_coro=lambda uid=uid: client.sensor.paired_sensor_status(uid),
-                    api_lock=api_lock,
-                    valve_controller_uid=entry.data[CONF_UID],
-                )
-                initial_fetch_tasks.append(coordinator.async_refresh())
-
-        if to_remove:
-            LOGGER.info("Identified paired sensor(s) to remove: %s", to_remove)
-
-    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+    # Set up DataUpdateCoordinators for any paired sensors:
+    init_paired_sensor_tasks = []
+    for uid in hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
         API_SENSOR_PAIR_DUMP
-    ].async_add_listener(process_sensor_pair_dump)
+    ].data["paired_uids"]:
+        coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+            API_SENSOR_PAIRED_SENSOR_STATUS
+        ][uid] = GuardianDataUpdateCoordinator(
+            hass,
+            client=client,
+            api_name=f"{API_SENSOR_PAIRED_SENSOR_STATUS}_{uid}",
+            api_coro=lambda uid=uid: client.sensor.paired_sensor_status(uid),
+            api_lock=api_lock,
+            valve_controller_uid=entry.data[CONF_UID],
+        )
+        init_paired_sensor_tasks.append(coordinator.async_refresh())
 
-    await asyncio.gather(*initial_fetch_tasks)
+    await asyncio.gather(*init_paired_sensor_tasks)
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -120,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unloa_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(
@@ -132,11 +114,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     if unload_ok:
         hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
+        hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
         hass.data[DOMAIN][DATA_LAST_SENSOR_PAIR_DUMP].pop(entry.entry_id)
-
-        coordinators = hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
-        for coordinator in coordinators.values():
-            coordinator.async_remove_all_listeners()
 
     return unload_ok
 

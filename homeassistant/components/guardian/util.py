@@ -6,7 +6,7 @@ from typing import Awaitable, Callable
 from aioguardian import Client
 from aioguardian.errors import GuardianError
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
@@ -47,10 +47,3 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             except GuardianError as err:
                 raise UpdateFailed(err) from err
         return resp["data"]
-
-    @callback
-    def async_remove_all_listeners(self) -> None:
-        """Remove all existing listeners."""
-        self._listeners.clear()
-        if self._unsub_refresh:
-            self._unsub_refresh()
