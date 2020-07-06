@@ -18,6 +18,7 @@ from homeassistant.helpers.entity import Entity
 from . import (
     CONF_AUTOMATIC_ADD,
     CONF_DATA_TYPE,
+    CONF_FIRE_EVENT,
     DATA_TYPES,
     SIGNAL_EVENT,
     get_device_id,
@@ -32,6 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             cv.string: vol.Schema(
                 {
                     vol.Optional(CONF_NAME): cv.string,
+                    vol.Remove(CONF_FIRE_EVENT): cv.boolean,
                     vol.Optional(CONF_DATA_TYPE, default=[]): vol.All(
                         cv.ensure_list, [vol.In(DATA_TYPES.keys())]
                     ),

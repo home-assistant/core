@@ -11,6 +11,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
     CONF_AUTOMATIC_ADD,
+    CONF_FIRE_EVENT,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
     SIGNAL_EVENT,
@@ -23,7 +24,12 @@ from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICES, default={}): {
-            cv.string: vol.Schema({vol.Required(CONF_NAME): cv.string})
+            cv.string: vol.Schema(
+                {
+                    vol.Required(CONF_NAME): cv.string,
+                    vol.Remove(CONF_FIRE_EVENT): cv.boolean,
+                }
+            )
         },
         vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
         vol.Optional(

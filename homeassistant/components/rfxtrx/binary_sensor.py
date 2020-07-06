@@ -21,6 +21,7 @@ from homeassistant.helpers import config_validation as cv, event as evt
 from . import (
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
+    CONF_FIRE_EVENT,
     CONF_OFF_DELAY,
     SIGNAL_EVENT,
     find_possible_pt2262_device,
@@ -41,6 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 {
                     vol.Optional(CONF_NAME): cv.string,
                     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+                    vol.Remove(CONF_FIRE_EVENT): cv.boolean,
                     vol.Optional(CONF_OFF_DELAY): vol.Any(
                         cv.time_period, cv.positive_timedelta
                     ),

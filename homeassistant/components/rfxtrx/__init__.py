@@ -31,6 +31,7 @@ DEFAULT_SIGNAL_REPETITIONS = 1
 ATTR_AUTOMATIC_ADD = "automatic_add"
 ATTR_DEVICE = "device"
 ATTR_DEBUG = "debug"
+CONF_FIRE_EVENT = "fire_event"
 ATTR_DATA_TYPE = "data_type"
 ATTR_DUMMY = "dummy"
 CONF_DATA_BITS = "data_bits"
