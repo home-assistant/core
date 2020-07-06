@@ -12,7 +12,6 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
-    HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
@@ -65,6 +64,16 @@ class ThermostatMode(IntEnum):
     MANUFACTURER_SPECIFIC = 31
 
 
+# In Z-Wave the modes and presets are both in ThermostatMode.
+# This list contains thermostatmodes we should consider a mode only
+MODES_LIST = [
+    ThermostatMode.OFF,
+    ThermostatMode.HEAT,
+    ThermostatMode.COOL,
+    ThermostatMode.AUTO,
+    ThermostatMode.AUTO_CHANGE_OVER,
+]
+
 MODE_SETPOINT_MAPPINGS = {
     ThermostatMode.OFF: (),
     ThermostatMode.HEAT: ("setpoint_heating",),
@@ -105,6 +114,7 @@ ZW_HVAC_MODE_MAPPINGS = {
     ThermostatMode.OFF: HVAC_MODE_OFF,
     ThermostatMode.HEAT: HVAC_MODE_HEAT,
     ThermostatMode.COOL: HVAC_MODE_COOL,
+    # Z-Wave auto mode is actually heat/cool in the hass world
     ThermostatMode.AUTO: HVAC_MODE_HEAT_COOL,
     ThermostatMode.AUXILIARY: HVAC_MODE_HEAT,
     ThermostatMode.FAN: HVAC_MODE_FAN_ONLY,
@@ -122,7 +132,6 @@ HVAC_MODE_ZW_MAPPINGS = {
     HVAC_MODE_OFF: ThermostatMode.OFF,
     HVAC_MODE_HEAT: ThermostatMode.HEAT,
     HVAC_MODE_COOL: ThermostatMode.COOL,
-    HVAC_MODE_AUTO: ThermostatMode.AUTO,
     HVAC_MODE_FAN_ONLY: ThermostatMode.FAN,
     HVAC_MODE_DRY: ThermostatMode.DRY,
     HVAC_MODE_HEAT_COOL: ThermostatMode.AUTO_CHANGE_OVER,
@@ -163,7 +172,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         if not self.values.mode:
             return None
         return ZW_HVAC_MODE_MAPPINGS.get(
-            self.values.mode.value[VALUE_SELECTED_ID], HVAC_MODE_AUTO
+            self.values.mode.value[VALUE_SELECTED_ID], HVAC_MODE_HEAT_COOL
         )
 
     @property
@@ -214,19 +223,19 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     @property
     def preset_mode(self):
         """Return preset operation ie. eco, away."""
-        # Z-Wave uses mode-values > 3 for presets
-        if self.values.mode.value[VALUE_SELECTED_ID] > 3:
+        # A Zwave mode that can not be translated to a hass mode is considered a preset
+        if self.values.mode.value[VALUE_SELECTED_ID] not in MODES_LIST:
             return self.values.mode.value[VALUE_SELECTED_LABEL]
         return PRESET_NONE
 
     @property
     def preset_modes(self):
         """Return the list of available preset operation modes."""
-        # Z-Wave uses mode-values > 3 for presets
+        # A Zwave mode that can not be translated to a hass mode is considered a preset
         return [PRESET_NONE] + [
             val[VALUE_LABEL]
             for val in self.values.mode.value[VALUE_LIST]
-            if val[VALUE_ID] > 3
+            if val[VALUE_ID] not in MODES_LIST
         ]
 
     @property
@@ -280,6 +289,14 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
             _LOGGER.warning("Received an invalid hvac mode: %s", hvac_mode)
             return
         hvac_mode_value = HVAC_MODE_ZW_MAPPINGS.get(hvac_mode)
+        if hvac_mode == HVAC_MODE_HEAT_COOL:
+            # determine the correct value to set
+            for val in self.values.mode.value[VALUE_LIST]:
+                zwave_mode = val[VALUE_ID]
+                hass_mode = ZW_HVAC_MODE_MAPPINGS.get(zwave_mode)
+                if hass_mode == HVAC_MODE_HEAT_COOL:
+                    hvac_mode_value = zwave_mode
+                    break
         self.values.mode.send_value(hvac_mode_value)
 
     async def async_set_preset_mode(self, preset_mode):
