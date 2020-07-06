@@ -76,7 +76,7 @@ SCHEMA_SERVICE_WRITE_DATA_BY_NAME = vol.Schema(
                 ADSTYPE_DINT,
                 ADSTYPE_UDINT,
                 ADSTYPE_REAL,
-                ADSTYPE_LREAL
+                ADSTYPE_LREAL,
             ]
         ),
         vol.Required(CONF_ADS_VALUE): vol.Coerce(int),
@@ -296,8 +296,7 @@ class AdsEntity(Entity):
             """Handle device notifications."""
             _LOGGER.debug("Variable %s changed its value to %d", name, value)
 
-            """Bring the value in a nice view."""
-            
+            """Format the value."""
             if plctype == pyads.PLCTYPE_REAL:
                 value = float(f"{value:.{digit}f}")
             elif plctype == pyads.PLCTYPE_LREAL:
