@@ -25,14 +25,18 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     ACTIVITY_POWER_OFF,
     ATTR_ACTIVITY_LIST,
     ATTR_ACTIVITY_NOTIFY,
+    ATTR_CURRENT_ACTIVITY,
     ATTR_DEVICES_LIST,
+    ATTR_LAST_ACTIVITY,
     DOMAIN,
     HARMONY_OPTIONS_UPDATE,
+    PREVIOUS_ACTIVE_ACTIVITY,
     SERVICE_CHANGE_CHANNEL,
     SERVICE_SYNC,
     UNIQUE_ID,
@@ -51,7 +55,6 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 ATTR_CHANNEL = "channel"
-ATTR_CURRENT_ACTIVITY = "current_activity"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -126,7 +129,7 @@ async def async_setup_entry(
     )
 
 
-class HarmonyRemote(remote.RemoteEntity):
+class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
     """Remote representation used to control a Harmony device."""
 
     def __init__(
@@ -144,6 +147,7 @@ class HarmonyRemote(remote.RemoteEntity):
         self._available = False
         self._unique_id = unique_id
         self._activity_notify = activity_notify
+        self._last_activity = None
 
     @property
     def activity_names(self):
@@ -186,6 +190,8 @@ class HarmonyRemote(remote.RemoteEntity):
 
     async def async_added_to_hass(self):
         """Complete the initialization."""
+        await super().async_added_to_hass()
+
         _LOGGER.debug("%s: Harmony Hub added", self._name)
         # Register the callbacks
         self._update_callbacks()
@@ -201,6 +207,19 @@ class HarmonyRemote(remote.RemoteEntity):
         # Store Harmony HUB config, this will also update our current
         # activity
         await self.new_config()
+
+        # Restore the last activity so we know
+        # how what to turn on if nothing
+        # is specified
+        last_state = await self.async_get_last_state()
+        if not last_state:
+            return
+        if ATTR_LAST_ACTIVITY not in last_state.attributes:
+            return
+        if self.is_on:
+            return
+
+        self._last_activity = last_state.attributes[ATTR_LAST_ACTIVITY]
 
     async def shutdown(self):
         """Close connection on shutdown."""
@@ -250,6 +269,7 @@ class HarmonyRemote(remote.RemoteEntity):
                 self._client.hub_config.activities
             ),
             ATTR_DEVICES_LIST: list_names_from_hublist(self._client.hub_config.devices),
+            ATTR_LAST_ACTIVITY: self._last_activity,
         }
 
     @property
@@ -280,6 +300,11 @@ class HarmonyRemote(remote.RemoteEntity):
         activity_id, activity_name = activity_info
         _LOGGER.debug("%s: activity reported as: %s", self._name, activity_name)
         self._current_activity = activity_name
+        if activity_id != -1:
+            # Save the activity so we can restore
+            # to that activity if none is specified
+            # when turning on
+            self._last_activity = activity_name
         self._state = bool(activity_id != -1)
         self._available = True
         self.async_write_ha_state()
@@ -314,6 +339,16 @@ class HarmonyRemote(remote.RemoteEntity):
         _LOGGER.debug("%s: Turn On", self.name)
 
         activity = kwargs.get(ATTR_ACTIVITY, self.default_activity)
+
+        if not activity or activity == PREVIOUS_ACTIVE_ACTIVITY:
+            if self._last_activity:
+                activity = self._last_activity
+            else:
+                all_activities = list_names_from_hublist(
+                    self._client.hub_config.activities
+                )
+                if all_activities:
+                    activity = all_activities[0]
 
         if activity:
             activity_id = None
