@@ -1,5 +1,6 @@
 """Script to manage users for the Home Assistant auth provider."""
 import argparse
+import asyncio
 import logging
 import os
 
@@ -43,23 +44,23 @@ def run(args):
     parser_change_pw.add_argument("new_password", type=str)
     parser_change_pw.set_defaults(func=change_password)
 
-    args = parser.parse_args(args)
-    loop = runner.setup_loop(runner.RuntimeConfig(args.config))
-    hass = HomeAssistant(loop=loop, executor=runner.setup_executor(loop))
-    loop.run_until_complete(run_command(hass, args))
-
-    # Triggers save on used storage helpers with delay (core auth)
-    logging.getLogger("homeassistant.core").setLevel(logging.WARNING)
-    loop.run_until_complete(hass.async_stop())
+    asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
+    asyncio.run(run_command(parser.parse_args(args)))
 
 
-async def run_command(hass, args):
+async def run_command(args):
     """Run the command."""
+    hass = HomeAssistant()
     hass.config.config_dir = os.path.join(os.getcwd(), args.config)
     hass.auth = await auth_manager_from_config(hass, [{"type": "homeassistant"}], [])
     provider = hass.auth.auth_providers[0]
     await provider.async_initialize()
     await args.func(hass, provider, args)
+
+    # Triggers save on used storage helpers with delay (core auth)
+    logging.getLogger("homeassistant.core").setLevel(logging.WARNING)
+
+    await hass.async_stop()
 
 
 async def list_users(hass, provider, args):

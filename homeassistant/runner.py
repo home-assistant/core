@@ -34,9 +34,9 @@ class RuntimeConfig:
 
 # In Python 3.8+ proactor policy is the default on Windows
 if sys.platform == "win32" and sys.version_info[:2] < (3, 8):
-    POLICY_BASE = asyncio.WindowsProactorEventLoopPolicy
+    PolicyBase = asyncio.WindowsProactorEventLoopPolicy
 else:
-    POLICY_BASE = asyncio.DefaultEventLoopPolicy
+    PolicyBase = asyncio.DefaultEventLoopPolicy
 
 
 @callback
@@ -52,13 +52,18 @@ def async_loop_exception_handler(_: Any, context: Dict) -> None:
     )
 
 
-class HassEventLoopPolicy(POLICY_BASE):
+class HassEventLoopPolicy(PolicyBase):
     """Event loop policy for Home Assistant."""
 
     def __init__(self, debug: bool) -> None:
         """Init the event loop policy."""
         super().__init__()
         self.debug = debug
+
+    @property
+    def loop_name(self) -> str:
+        """Return name of the loop."""
+        return self._loop_factory.__name__
 
     def new_event_loop(self):
         """Get the event loop."""
@@ -82,7 +87,7 @@ class HassEventLoopPolicy(POLICY_BASE):
             try:
                 executor.shutdown(wait=True)
                 loop.call_soon_threadsafe(future.set_result, None)
-            except Exception as ex:
+            except Exception as ex:  # pylint: disable=broad-except
                 loop.call_soon_threadsafe(future.set_exception, ex)
 
         async def shutdown_default_executor():

@@ -9,7 +9,7 @@ import logging
 from timeit import default_timer as timer
 from typing import Callable, Dict, TypeVar
 
-from homeassistant import core, runner
+from homeassistant import core
 from homeassistant.components.websocket_api.const import JSON_DUMP
 from homeassistant.const import ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED
 from homeassistant.helpers.entityfilter import convert_include_exclude_filter
@@ -36,18 +36,19 @@ def run(args):
     args = parser.parse_args()
 
     bench = BENCHMARKS[args.name]
-
-    print("Using event loop:", asyncio.get_event_loop_policy().__module__)
+    print("Using event loop:", asyncio.get_event_loop_policy().loop_name)
 
     with suppress(KeyboardInterrupt):
         while True:
-            loop = runner.setup_loop(runner.RuntimeConfig(config_dir=None))
-            hass = core.HomeAssistant(loop, runner.setup_executor(loop))
-            hass.async_stop_track_tasks()
-            runtime = loop.run_until_complete(bench(hass))
-            print(f"Benchmark {bench.__name__} done in {runtime}s")
-            loop.run_until_complete(hass.async_stop())
-            loop.close()
+            asyncio.run(run_benchmark(bench))
+
+
+async def run_benchmark(bench):
+    """Run a benchmark."""
+    hass = core.HomeAssistant()
+    runtime = await bench(hass)
+    print(f"Benchmark {bench.__name__} done in {runtime}s")
+    await hass.async_stop()
 
 
 def benchmark(func: CALLABLE_T) -> CALLABLE_T:

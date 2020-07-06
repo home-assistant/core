@@ -1,8 +1,8 @@
 """Script to ensure a configuration file exists."""
 import argparse
+import asyncio
 import os
 
-from homeassistant import runner
 import homeassistant.config as config_util
 from homeassistant.core import HomeAssistant
 
@@ -32,16 +32,15 @@ def run(args):
         print("Creating directory", config_dir)
         os.makedirs(config_dir)
 
-    loop = runner.setup_loop(runner.RuntimeConfig(config_dir=config_dir))
-    hass = HomeAssistant(loop, runner.setup_executor(loop))
-    hass.config.config_dir = config_dir
-    config_path = hass.loop.run_until_complete(async_run(hass))
+    config_path = asyncio.run(async_run(config_dir))
     print("Configuration file:", config_path)
     return 0
 
 
-async def async_run(hass):
+async def async_run(config_dir):
     """Make sure config exists."""
+    hass = HomeAssistant()
+    hass.config.config_dir = config_dir
     path = await config_util.async_ensure_config_exists(hass)
     await hass.async_stop(force=True)
     return path
