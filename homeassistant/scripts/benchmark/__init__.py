@@ -9,7 +9,7 @@ import logging
 from timeit import default_timer as timer
 from typing import Callable, Dict, TypeVar
 
-from homeassistant import core
+from homeassistant import core, runner
 from homeassistant.components.websocket_api.const import JSON_DUMP
 from homeassistant.const import ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED
 from homeassistant.helpers.entityfilter import convert_include_exclude_filter
@@ -41,8 +41,8 @@ def run(args):
 
     with suppress(KeyboardInterrupt):
         while True:
-            loop = asyncio.new_event_loop()
-            hass = core.HomeAssistant(loop)
+            loop = runner.setup_loop(runner.RuntimeConfig(config_dir=None))
+            hass = core.HomeAssistant(loop, runner.setup_executor(loop))
             hass.async_stop_track_tasks()
             runtime = loop.run_until_complete(bench(hass))
             print(f"Benchmark {bench.__name__} done in {runtime}s")

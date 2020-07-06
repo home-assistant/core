@@ -37,7 +37,8 @@ def setup_loop(runtime_config: RuntimeConfig) -> asyncio.AbstractEventLoop:
     if sys.platform == "win32" and sys.version_info[:3] < (3, 8):
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     loop.set_exception_handler(async_loop_exception_handler)
     if runtime_config.debug:
         loop.set_debug(True)
