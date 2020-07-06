@@ -14,7 +14,6 @@ async def test_async_setup_no_domain_config(hass: HomeAssistant):
     result = await async_setup_component(hass, DOMAIN, {})
 
     assert result is True
-    assert DOMAIN not in hass.data
 
 
 async def test_async_setup_entry_sets_up_supported_domains(hass: HomeAssistant):
