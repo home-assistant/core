@@ -82,6 +82,7 @@ class FlowHandler(config_entries.ConfigFlow):
             else:
                 user_input = self.user_input
                 user_input[CONF_API_KEY] = token
+                roonapi.stop()
                 return await self.async_step_link(user_input)
 
         return self.async_show_form(step_id="link", errors=errors,)
