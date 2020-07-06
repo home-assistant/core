@@ -416,7 +416,7 @@ def convert_isy_value_to_hass(
     """
     if value is None or value == ISY_VALUE_UNKNOWN:
         return None
-    if uom in [UOM_DOUBLE_TEMP, UOM_ISYV4_DEGREES]:
+    if uom in [UOM_DOUBLE_TEMP, UOM_ISYV4_DEGREES, ""]:
         return round(float(value) / 2.0, 1)
     if precision != "0":
         return round(float(value) / 10 ** int(precision), int(precision))
