@@ -374,7 +374,7 @@ bomradarloop==0.1.4
 boto3==1.9.252
 
 # homeassistant.components.braviatv
-bravia-tv==1.0.5
+bravia-tv==1.0.6
 
 # homeassistant.components.broadlink
 broadlink==0.14.0
@@ -738,7 +738,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200702.0
+home-assistant-frontend==20200702.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
