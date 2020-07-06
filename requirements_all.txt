@@ -370,6 +370,9 @@ blockchain==1.4.4
 # homeassistant.components.bom
 bomradarloop==0.1.4
 
+# homeassistant.components.bond
+bond-home==0.0.8
+
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
 boto3==1.9.252
