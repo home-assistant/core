@@ -1,5 +1,6 @@
 """Provide methods to bootstrap a Home Assistant instance."""
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 import contextlib
 from datetime import datetime
 import logging
@@ -7,7 +8,7 @@ import logging.handlers
 import os
 import sys
 from time import monotonic
-from typing import Any, Dict, Optional, Set
+from typing import TYPE_CHECKING, Any, Dict, Optional, Set
 
 from async_timeout import timeout
 import voluptuous as vol
@@ -30,6 +31,9 @@ from homeassistant.setup import (
 from homeassistant.util.logging import async_activate_log_queue_handler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
 from homeassistant.util.yaml import clear_secret_cache
+
+if TYPE_CHECKING:
+    from .runner import RuntimeConfig
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,22 +71,24 @@ STAGE_1_INTEGRATIONS = {
 
 async def async_setup_hass(
     *,
-    config_dir: str,
-    verbose: bool,
-    log_rotate_days: int,
-    log_file: str,
-    log_no_color: bool,
-    skip_pip: bool,
-    safe_mode: bool,
+    loop: asyncio.AbstractEventLoop,
+    executor: ThreadPoolExecutor,
+    runtime_config: "RuntimeConfig",
 ) -> Optional[core.HomeAssistant]:
     """Set up Home Assistant."""
-    hass = core.HomeAssistant()
-    hass.config.config_dir = config_dir
+    hass = core.HomeAssistant(loop, executor)
+    hass.config.config_dir = runtime_config.config_dir
 
-    async_enable_logging(hass, verbose, log_rotate_days, log_file, log_no_color)
+    async_enable_logging(
+        hass,
+        runtime_config.verbose,
+        runtime_config.log_rotate_days,
+        runtime_config.log_file,
+        runtime_config.log_no_color,
+    )
 
-    hass.config.skip_pip = skip_pip
-    if skip_pip:
+    hass.config.skip_pip = runtime_config.skip_pip
+    if runtime_config.skip_pip:
         _LOGGER.warning(
             "Skipping pip installation of required modules. This may cause issues"
         )
@@ -91,10 +97,11 @@ async def async_setup_hass(
         _LOGGER.error("Error getting configuration path")
         return None
 
-    _LOGGER.info("Config directory: %s", config_dir)
+    _LOGGER.info("Config directory: %s", runtime_config.config_dir)
 
     config_dict = None
     basic_setup_success = False
+    safe_mode = runtime_config.safe_mode
 
     if not safe_mode:
         await hass.async_add_executor_job(conf_util.process_ha_config_upgrade, hass)
@@ -107,7 +114,7 @@ async def async_setup_hass(
             )
         else:
             if not is_virtual_env():
-                await async_mount_local_lib_path(config_dir)
+                await async_mount_local_lib_path(runtime_config.config_dir)
 
             basic_setup_success = (
                 await async_from_config_dict(config_dict, hass) is not None
@@ -137,7 +144,7 @@ async def async_setup_hass(
 
         safe_mode = True
         old_config = hass.config
-        hass = core.HomeAssistant()
+        hass = core.HomeAssistant(loop, executor)
         hass.config.skip_pip = old_config.skip_pip
         hass.config.internal_url = old_config.internal_url
         hass.config.external_url = old_config.external_url

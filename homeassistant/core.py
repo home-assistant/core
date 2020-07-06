@@ -71,7 +71,6 @@ from homeassistant.exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
-from homeassistant.helpers.frame import warn_use
 from homeassistant.util import location, network
 from homeassistant.util.async_ import fire_coroutine_threadsafe, run_callback_threadsafe
 import homeassistant.util.dt as dt_util
@@ -146,19 +145,6 @@ def is_callback(func: Callable[..., Any]) -> bool:
     return getattr(func, "_hass_callback", False) is True
 
 
-@callback
-def async_loop_exception_handler(_: Any, context: Dict) -> None:
-    """Handle all exception inside the core loop."""
-    kwargs = {}
-    exception = context.get("exception")
-    if exception:
-        kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
-
-    _LOGGER.error(
-        "Error doing job: %s", context["message"], **kwargs  # type: ignore
-    )
-
-
 class CoreState(enum.Enum):
     """Represent the current state of Home Assistant."""
 
@@ -180,21 +166,12 @@ class HomeAssistant:
     http: "HomeAssistantHTTP" = None  # type: ignore
     config_entries: "ConfigEntries" = None  # type: ignore
 
-    def __init__(self, loop: Optional[asyncio.events.AbstractEventLoop] = None) -> None:
+    def __init__(
+        self, loop: asyncio.events.AbstractEventLoop, executor: ThreadPoolExecutor
+    ) -> None:
         """Initialize new Home Assistant object."""
-        self.loop: asyncio.events.AbstractEventLoop = (loop or asyncio.get_event_loop())
-
-        executor_opts: Dict[str, Any] = {
-            "max_workers": None,
-            "thread_name_prefix": "SyncWorker",
-        }
-
-        self.executor = ThreadPoolExecutor(**executor_opts)
-        self.loop.set_default_executor(self.executor)
-        self.loop.set_default_executor = warn_use(  # type: ignore
-            self.loop.set_default_executor, "sets default executor on the event loop"
-        )
-        self.loop.set_exception_handler(async_loop_exception_handler)
+        self.loop = loop
+        self.executor = executor
         self._pending_tasks: list = []
         self._track_task = True
         self.bus = EventBus(self)
@@ -465,7 +442,12 @@ class HomeAssistant:
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
         await self.async_block_till_done()
-        self.executor.shutdown()
+
+        # Python 3.9+
+        if hasattr(self.loop, "shutdown_default_executor"):
+            await self.loop.shutdown_default_executor()  # type: ignore
+        else:
+            self.executor.shutdown()
 
         self.exit_code = exit_code
 

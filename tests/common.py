@@ -16,7 +16,7 @@ import uuid
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa
 
-from homeassistant import auth, config_entries, core as ha, loader
+from homeassistant import auth, config_entries, core as ha, loader, runner
 from homeassistant.auth import (
     auth_store,
     models as auth_models,
@@ -149,7 +149,7 @@ def get_test_home_assistant():
 # pylint: disable=protected-access
 async def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
-    hass = ha.HomeAssistant(loop)
+    hass = ha.HomeAssistant(loop, runner.setup_executor(loop))
     store = auth_store.AuthStore(hass)
     hass.auth = auth.AuthManager(hass, store, {}, {})
     ensure_auth_manager_loaded(hass.auth)
