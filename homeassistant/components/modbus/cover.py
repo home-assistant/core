@@ -8,7 +8,11 @@ from pymodbus.pdu import ExceptionResponse
 from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN, CoverEntity
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_SLAVE
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import (
+    ConfigType,
+    DiscoveryInfoType,
+    HomeAssistantType,
+)
 
 from . import ModbusHub
 from .const import (
@@ -30,16 +34,19 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistantType,
+    config: ConfigType,
+    async_add_entities,
+    discovery_info: Optional[DiscoveryInfoType] = None,
 ):
     """Read configuration and create Modbus cover."""
     if discovery_info is None:
         return
 
     covers = []
-    for config in discovery_info:
-        hub: ModbusHub = hass.data[MODBUS_DOMAIN][config[CONF_HUB]]
-        covers.append(ModbusCover(hub, config))
+    for cover in discovery_info:
+        hub: ModbusHub = hass.data[MODBUS_DOMAIN][cover[CONF_HUB]]
+        covers.append(ModbusCover(hub, cover))
 
     async_add_entities(covers)
 
