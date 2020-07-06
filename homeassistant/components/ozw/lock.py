@@ -79,7 +79,7 @@ class ZWaveLock(ZWaveDeviceEntity, LockEntity):
     @callback
     def async_set_usercode(self, code_slot, usercode):
         """Set the usercode to index X on the lock."""
-        lock_node = self.values._node.values()  # pytest: disable=protected-access
+        lock_node = self.values.primary.node.values()
 
         for value in lock_node:
             if (
@@ -99,7 +99,7 @@ class ZWaveLock(ZWaveDeviceEntity, LockEntity):
     @callback
     def async_get_usercode(self, code_slot):
         """Get a usercode at index X on the lock."""
-        lock_node = self.values._node.values()  # pytest: disable=protected-access
+        lock_node = self.values.primary.node.values()
 
         for value in lock_node:
             if (
@@ -112,7 +112,7 @@ class ZWaveLock(ZWaveDeviceEntity, LockEntity):
     @callback
     def async_clear_usercode(self, code_slot):
         """Clear usercode in slot X on the lock."""
-        lock_node = self.values._node.values()  # pytest: disable=protected-access
+        lock_node = self.values.primary.node.values()
 
         for value in lock_node:
             if (
