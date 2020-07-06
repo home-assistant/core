@@ -11,12 +11,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, update_coordinator
-from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
-PLATFORMS = ["sensor"]
+PLATFORMS = ["sensor", "binary_sensor"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up PoolSense from a config entry."""
+
     poolsense = PoolSense()
     auth_valid = await poolsense.test_poolsense_credentials(
         aiohttp_client.async_get_clientsession(hass),
@@ -41,9 +43,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.error("Invalid authentication")
         return False
 
-    coordinator = await get_coordinator(hass, entry)
+    coordinator = PoolSenseDataUpdateCoordinator(hass, entry)
 
-    await hass.data[DOMAIN][entry.entry_id].async_refresh()
+    await coordinator.async_refresh()
 
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
@@ -75,29 +77,51 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-async def get_coordinator(hass, entry):
-    """Get the data update coordinator."""
+class PoolSenseEntity(Entity):
+    """Implements a common class elements representing the PoolSense component."""
 
-    async def async_get_data():
-        _LOGGER.info("Run query to server")
-        poolsense = PoolSense()
-        return_data = {}
+    def __init__(self, coordinator, email, password, info_type):
+        """Initialize poolsense sensor."""
+        self._email = email
+        self._password = password
+        self._unique_id = f"{email}-{info_type}"
+        self.coordinator = coordinator
+        self.info_type = info_type
+
+    @property
+    def unique_id(self):
+        """Return a unique id."""
+        return self._unique_id
+
+    @property
+    def available(self):
+        """Return if sensor is available."""
+        return self.coordinator.last_update_success
+
+
+class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator):
+    """Define an object to hold PoolSense data."""
+
+    def __init__(self, hass, entry):
+        """Initialize."""
+        self.poolsense = PoolSense()
+        self.hass = hass
+        self.entry = entry
+
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=timedelta(hours=1))
+
+    async def _async_update_data(self):
+        """Update data via library."""
+        data = {}
         with async_timeout.timeout(10):
             try:
-                return_data = await poolsense.get_poolsense_data(
-                    aiohttp_client.async_get_clientsession(hass),
-                    entry.data[CONF_EMAIL],
-                    entry.data[CONF_PASSWORD],
+                data = await self.poolsense.get_poolsense_data(
+                    aiohttp_client.async_get_clientsession(self.hass),
+                    self.entry.data[CONF_EMAIL],
+                    self.entry.data[CONF_PASSWORD],
                 )
             except (PoolSenseError) as error:
+                _LOGGER.error("PoolSense query did not complete.")
                 raise UpdateFailed(error)
 
-        return return_data
-
-    return update_coordinator.DataUpdateCoordinator(
-        hass,
-        logging.getLogger(__name__),
-        name=DOMAIN,
-        update_method=async_get_data,
-        update_interval=timedelta(hours=1),
-    )
+        return data
