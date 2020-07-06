@@ -36,18 +36,19 @@ def run(args):
     args = parser.parse_args()
 
     bench = BENCHMARKS[args.name]
-
-    print("Using event loop:", asyncio.get_event_loop_policy().__module__)
+    print("Using event loop:", asyncio.get_event_loop_policy().loop_name)
 
     with suppress(KeyboardInterrupt):
         while True:
-            loop = asyncio.new_event_loop()
-            hass = core.HomeAssistant(loop)
-            hass.async_stop_track_tasks()
-            runtime = loop.run_until_complete(bench(hass))
-            print(f"Benchmark {bench.__name__} done in {runtime}s")
-            loop.run_until_complete(hass.async_stop())
-            loop.close()
+            asyncio.run(run_benchmark(bench))
+
+
+async def run_benchmark(bench):
+    """Run a benchmark."""
+    hass = core.HomeAssistant()
+    runtime = await bench(hass)
+    print(f"Benchmark {bench.__name__} done in {runtime}s")
+    await hass.async_stop()
 
 
 def benchmark(func: CALLABLE_T) -> CALLABLE_T:
