@@ -274,7 +274,7 @@ async def system_options_update(hass, connection, msg):
     {"type": "config_entries/update", "entry_id": str, vol.Optional("title"): str}
 )
 async def config_entry_update(hass, connection, msg):
-    """Update config entry system options."""
+    """Update config entry."""
     changes = dict(msg)
     changes.pop("id")
     changes.pop("type")

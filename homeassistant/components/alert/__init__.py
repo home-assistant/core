@@ -222,11 +222,6 @@ class Alert(ToggleEntity):
             return STATE_ON
         return STATE_IDLE
 
-    @property
-    def hidden(self):
-        """Hide the alert when it is not firing."""
-        return not self._can_ack or not self._firing
-
     async def watched_entity_change(self, entity, from_state, to_state):
         """Determine if the alert should start or stop."""
         _LOGGER.debug("Watched entity (%s) has changed", entity)
@@ -310,7 +305,9 @@ class Alert(ToggleEntity):
         _LOGGER.debug(msg_payload)
 
         for target in self._notifiers:
-            await self.hass.services.async_call(DOMAIN_NOTIFY, target, msg_payload)
+            await self.hass.services.async_call(
+                DOMAIN_NOTIFY, target, msg_payload, context=self._context
+            )
 
     async def async_turn_on(self, **kwargs):
         """Async Unacknowledge alert."""

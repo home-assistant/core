@@ -84,7 +84,7 @@ class AdGuardHomeFlowHandler(ConfigFlow):
             errors["base"] = "connection_error"
             return await self._show_setup_form(errors)
 
-        if LooseVersion(MIN_ADGUARD_HOME_VERSION) > LooseVersion(version):
+        if version and LooseVersion(MIN_ADGUARD_HOME_VERSION) > LooseVersion(version):
             return self.async_abort(
                 reason="adguard_home_outdated",
                 description_placeholders={

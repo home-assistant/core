@@ -14,9 +14,9 @@ class ChromecastInfo:
     This also has the same attributes as the mDNS fields by zeroconf.
     """
 
-    host = attr.ib(type=str)
-    port = attr.ib(type=int)
-    service = attr.ib(type=Optional[str], default=None)
+    services = attr.ib(type=Optional[set])
+    host = attr.ib(type=Optional[str], default=None)
+    port = attr.ib(type=Optional[int], default=0)
     uuid = attr.ib(
         type=Optional[str], converter=attr.converters.optional(str), default=None
     )  # always convert UUID to string if not None

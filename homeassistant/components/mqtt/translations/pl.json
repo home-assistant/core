@@ -47,5 +47,19 @@
             "button_short_release": "\"{subtype}\" zostanie zwolniony",
             "button_triple_press": "\"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty"
         }
+    },
+    "options": {
+        "step": {
+            "broker": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "username": "U\u017cytkownik"
+                }
+            },
+            "options": {
+                "description": "Wybierz opcje MQTT."
+            }
+        }
     }
 }

@@ -101,7 +101,7 @@ async def async_setup(hass, config):
         for stream in hass.data[DOMAIN][ATTR_STREAMS].values():
             stream.keepalive = False
             stream.stop()
-        _LOGGER.info("Stopped stream workers.")
+        _LOGGER.info("Stopped stream workers")
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 

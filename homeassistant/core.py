@@ -288,7 +288,7 @@ class HomeAssistant:
         if self.state != CoreState.starting:
             _LOGGER.warning(
                 "Home Assistant startup has been interrupted. "
-                "Its state may be inconsistent."
+                "Its state may be inconsistent"
             )
             return
 
@@ -739,14 +739,12 @@ class State:
         last_changed: Optional[datetime.datetime] = None,
         last_updated: Optional[datetime.datetime] = None,
         context: Optional[Context] = None,
-        # Temp, because database can still store invalid entity IDs
-        # Remove with 1.0 or in 2020.
-        temp_invalid_id_bypass: Optional[bool] = False,
+        validate_entity_id: Optional[bool] = True,
     ) -> None:
         """Initialize a new state."""
         state = str(state)
 
-        if not valid_entity_id(entity_id) and not temp_invalid_id_bypass:
+        if validate_entity_id and not valid_entity_id(entity_id):
             raise InvalidEntityFormatError(
                 f"Invalid entity id encountered: {entity_id}. "
                 "Format should be <domain>.<object_id>"
@@ -1154,7 +1152,7 @@ class ServiceRegistry:
         service = service.lower()
 
         if service not in self._services.get(domain, {}):
-            _LOGGER.warning("Unable to remove unknown service %s/%s.", domain, service)
+            _LOGGER.warning("Unable to remove unknown service %s/%s", domain, service)
             return
 
         self._services[domain].pop(service)
@@ -1221,7 +1219,16 @@ class ServiceRegistry:
             raise ServiceNotFound(domain, service) from None
 
         if handler.schema:
-            processed_data = handler.schema(service_data)
+            try:
+                processed_data = handler.schema(service_data)
+            except vol.Invalid:
+                _LOGGER.debug(
+                    "Invalid data for service call %s.%s: %s",
+                    domain,
+                    service,
+                    service_data,
+                )
+                raise
         else:
             processed_data = service_data
 
@@ -1334,6 +1341,9 @@ class Config:
         # List of allowed external dirs to access
         self.whitelist_external_dirs: Set[str] = set()
 
+        # List of allowed external URLs that integrations may use
+        self.allowlist_external_urls: Set[str] = set()
+
         # If Home Assistant is running in safe mode
         self.safe_mode: bool = False
 
@@ -1354,6 +1364,16 @@ class Config:
         if self.config_dir is None:
             raise HomeAssistantError("config_dir is not set")
         return os.path.join(self.config_dir, *path)
+
+    def is_allowed_external_url(self, url: str) -> bool:
+        """Check if an external URL is allowed."""
+        parsed_url = f"{str(yarl.URL(url))}/"
+
+        return any(
+            allowed
+            for allowed in self.allowlist_external_urls
+            if parsed_url.startswith(allowed)
+        )
 
     def is_allowed_path(self, path: str) -> bool:
         """Check if the path is valid for access from outside."""
@@ -1397,6 +1417,7 @@ class Config:
             "components": self.components,
             "config_dir": self.config_dir,
             "whitelist_external_dirs": self.whitelist_external_dirs,
+            "allowlist_external_urls": self.allowlist_external_urls,
             "version": __version__,
             "config_source": self.config_source,
             "safe_mode": self.safe_mode,

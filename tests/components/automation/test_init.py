@@ -1039,7 +1039,10 @@ async def test_extraction_functions(hass):
 
 async def test_logbook_humanify_automation_triggered_event(hass):
     """Test humanifying Automation Trigger event."""
+    hass.config.components.add("recorder")
     await async_setup_component(hass, automation.DOMAIN, {})
+    await async_setup_component(hass, "logbook", {})
+    entity_attr_cache = logbook.EntityAttributeCache(hass)
 
     event1, event2 = list(
         logbook.humanify(
@@ -1054,6 +1057,7 @@ async def test_logbook_humanify_automation_triggered_event(hass):
                     {ATTR_ENTITY_ID: "automation.bye", ATTR_NAME: "Bye Automation"},
                 ),
             ],
+            entity_attr_cache,
         )
     )
 
@@ -1066,3 +1070,35 @@ async def test_logbook_humanify_automation_triggered_event(hass):
     assert event2["domain"] == "automation"
     assert event2["message"] == "has been triggered"
     assert event2["entity_id"] == "automation.bye"
+
+
+async def test_invalid_config(hass):
+    """Test invalid config."""
+    with assert_setup_component(0, automation.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "mode": "parallel",
+                    "queue_size": 5,
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": [],
+                }
+            },
+        )
+
+
+async def test_config_legacy(hass, caplog):
+    """Test config defaulting to legacy mode."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": [],
+            }
+        },
+    )
+    assert "To continue using previous behavior, which is now deprecated" in caplog.text

@@ -1,5 +1,6 @@
 """The tests the History component."""
 # pylint: disable=protected-access,invalid-name
+from copy import copy
 from datetime import timedelta
 import json
 import unittest
@@ -60,7 +61,7 @@ class TestComponentHistory(unittest.TestCase):
 
     def test_get_states(self):
         """Test getting states at a specific point in time."""
-        self.init_recorder()
+        self.test_setup()
         states = []
 
         now = dt_util.utcnow()
@@ -114,7 +115,7 @@ class TestComponentHistory(unittest.TestCase):
 
     def test_state_changes_during_period(self):
         """Test state change during period."""
-        self.init_recorder()
+        self.test_setup()
         entity_id = "media_player.test"
 
         def set_state(state):
@@ -155,7 +156,7 @@ class TestComponentHistory(unittest.TestCase):
 
     def test_get_last_state_changes(self):
         """Test number of state changes."""
-        self.init_recorder()
+        self.test_setup()
         entity_id = "sensor.test"
 
         def set_state(state):
@@ -187,6 +188,39 @@ class TestComponentHistory(unittest.TestCase):
         hist = history.get_last_state_changes(self.hass, 2, entity_id)
 
         assert states == hist[entity_id]
+
+    def test_ensure_state_can_be_copied(self):
+        """Ensure a state can pass though copy().
+
+        The filter integration uses copy() on states
+        from history.
+        """
+        self.test_setup()
+        entity_id = "sensor.test"
+
+        def set_state(state):
+            """Set the state."""
+            self.hass.states.set(entity_id, state)
+            wait_recording_done(self.hass)
+            return self.hass.states.get(entity_id)
+
+        start = dt_util.utcnow() - timedelta(minutes=2)
+        point = start + timedelta(minutes=1)
+
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=start
+        ):
+            set_state("1")
+
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=point
+        ):
+            set_state("2")
+
+        hist = history.get_last_state_changes(self.hass, 2, entity_id)
+
+        assert copy(hist[entity_id][0]) == hist[entity_id][0]
+        assert copy(hist[entity_id][1]) == hist[entity_id][1]
 
     def test_get_significant_states(self):
         """Test that only significant states are returned.
@@ -574,7 +608,7 @@ class TestComponentHistory(unittest.TestCase):
 
     def test_get_significant_states_only(self):
         """Test significant states when significant_states_only is set."""
-        self.init_recorder()
+        self.test_setup()
         entity_id = "sensor.test"
 
         def set_state(state, **kwargs):
@@ -649,7 +683,7 @@ class TestComponentHistory(unittest.TestCase):
         We inject a bunch of state updates from media player, zone and
         thermostat.
         """
-        self.init_recorder()
+        self.test_setup()
         mp = "media_player.test"
         mp2 = "media_player.test2"
         mp3 = "media_player.test3"
@@ -696,12 +730,6 @@ class TestComponentHistory(unittest.TestCase):
         ):
             # This state will be skipped only different in time
             set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt3)})
-            # This state will be skipped as it hidden
-            set_state(
-                mp3,
-                "Apple TV",
-                attributes={"media_title": str(sentinel.mt2), "hidden": True},
-            )
             # This state will be skipped because domain blacklisted
             set_state(zone, "zoning")
             set_state(script_nc, "off")
@@ -728,8 +756,6 @@ class TestComponentHistory(unittest.TestCase):
             states[therm].append(
                 set_state(therm, 21, attributes={"current_temperature": 20})
             )
-            # state will be skipped since entity is hidden
-            set_state(therm, 22, attributes={"current_temperature": 21, "hidden": True})
 
         return zero, four, states
 
@@ -765,6 +791,16 @@ async def test_fetch_period_api_with_minimal_response(hass, hass_client):
     response = await client.get(
         f"/api/history/period/{dt_util.utcnow().isoformat()}?minimal_response"
     )
+    assert response.status == 200
+
+
+async def test_fetch_period_api_with_no_timestamp(hass, hass_client):
+    """Test the fetch period view for history with no timestamp."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "history", {})
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    client = await hass_client()
+    response = await client.get("/api/history/period")
     assert response.status == 200
 
 

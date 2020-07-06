@@ -9,18 +9,17 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
+    DEVICE_CLASS_TIMESTAMP,
     EVENT_HOMEASSISTANT_START,
     TIME_DAYS,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util import dt
 
 from .const import DEFAULT_PORT, DOMAIN
-from .errors import TemporaryFailure, ValidationFailure
-from .helper import get_cert_time_to_expiry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,63 +55,37 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Add cert-expiry entry."""
-    days = 0
-    error = None
-    hostname = entry.data[CONF_HOST]
-    port = entry.data[CONF_PORT]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    if entry.unique_id is None:
-        hass.config_entries.async_update_entry(entry, unique_id=f"{hostname}:{port}")
+    sensors = [
+        SSLCertificateDays(coordinator),
+        SSLCertificateTimestamp(coordinator),
+    ]
 
-    try:
-        days = await get_cert_time_to_expiry(hass, hostname, port)
-    except TemporaryFailure as err:
-        _LOGGER.error(err)
-        raise PlatformNotReady
-    except ValidationFailure as err:
-        error = err
-
-    async_add_entities(
-        [SSLCertificate(hostname, port, days, error)], False,
-    )
-    return True
+    async_add_entities(sensors, True)
 
 
-class SSLCertificate(Entity):
-    """Implementation of the certificate expiry sensor."""
+class CertExpiryEntity(Entity):
+    """Defines a base Cert Expiry entity."""
 
-    def __init__(self, server_name, server_port, days, error):
-        """Initialize the sensor."""
-        self.server_name = server_name
-        self.server_port = server_port
-        display_port = f":{server_port}" if server_port != DEFAULT_PORT else ""
-        self._name = f"Cert Expiry ({self.server_name}{display_port})"
-        self._available = True
-        self._error = error
-        self._state = days
-        self._valid = False
-        if error is None:
-            self._valid = True
+    def __init__(self, coordinator):
+        """Initialize the Cert Expiry entity."""
+        self.coordinator = coordinator
+
+    async def async_added_to_hass(self):
+        """Connect to dispatcher listening for entity data notifications."""
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
+
+    async def async_update(self):
+        """Update Cert Expiry entity."""
+        await self.coordinator.async_request_refresh()
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique id for the sensor."""
-        return f"{self.server_name}:{self.server_port}"
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return TIME_DAYS
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
+    def available(self):
+        """Return True if entity is available."""
+        return self.coordinator.last_update_success
 
     @property
     def icon(self):
@@ -120,42 +93,68 @@ class SSLCertificate(Entity):
         return "mdi:certificate"
 
     @property
-    def available(self):
-        """Return the availability of the sensor."""
-        return self._available
-
-    async def async_update(self):
-        """Fetch the certificate information."""
-        try:
-            days_to_expiry = await get_cert_time_to_expiry(
-                self.hass, self.server_name, self.server_port
-            )
-        except TemporaryFailure as err:
-            _LOGGER.error(err.args[0])
-            self._available = False
-            return
-        except ValidationFailure as err:
-            _LOGGER.error(
-                "Certificate validation error: %s [%s]", self.server_name, err
-            )
-            self._available = True
-            self._error = err
-            self._state = 0
-            self._valid = False
-            return
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception(
-                "Unknown error checking %s:%s", self.server_name, self.server_port
-            )
-            self._available = False
-            return
-
-        self._available = True
-        self._error = None
-        self._state = days_to_expiry
-        self._valid = True
+    def should_poll(self):
+        """Return the polling requirement of the entity."""
+        return False
 
     @property
     def device_state_attributes(self):
         """Return additional sensor state attributes."""
-        return {"is_valid": self._valid, "error": str(self._error)}
+        return {
+            "is_valid": self.coordinator.is_cert_valid,
+            "error": str(self.coordinator.cert_error),
+        }
+
+
+class SSLCertificateDays(CertExpiryEntity):
+    """Implementation of the Cert Expiry days sensor."""
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"Cert Expiry ({self.coordinator.name})"
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        if not self.coordinator.is_cert_valid:
+            return 0
+
+        expiry = self.coordinator.data - dt.utcnow()
+        return expiry.days
+
+    @property
+    def unique_id(self):
+        """Return a unique id for the sensor."""
+        return f"{self.coordinator.host}:{self.coordinator.port}"
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit this state is expressed in."""
+        return TIME_DAYS
+
+
+class SSLCertificateTimestamp(CertExpiryEntity):
+    """Implementation of the Cert Expiry timestamp sensor."""
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_TIMESTAMP
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"Cert Expiry Timestamp ({self.coordinator.name})"
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        if self.coordinator.data:
+            return self.coordinator.data.isoformat()
+        return None
+
+    @property
+    def unique_id(self):
+        """Return a unique id for the sensor."""
+        return f"{self.coordinator.host}:{self.coordinator.port}-timestamp"

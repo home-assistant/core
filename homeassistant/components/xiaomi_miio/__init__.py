@@ -11,7 +11,7 @@ from .gateway import ConnectXiaomiGateway
 
 _LOGGER = logging.getLogger(__name__)
 
-GATEWAY_PLATFORMS = ["alarm_control_panel"]
+GATEWAY_PLATFORMS = ["alarm_control_panel", "sensor"]
 
 
 async def async_setup(hass: core.HomeAssistant, config: dict):

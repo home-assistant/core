@@ -19,6 +19,7 @@ from .const import DOMAIN
 
 PLATFORMS = ["sensor", "binary_sensor"]
 
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -46,6 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coordinator = PoolSenseDataUpdateCoordinator(hass, entry)
 
     await coordinator.async_refresh()
+
 
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady

@@ -16,6 +16,7 @@ from homeassistant.const import (
     ATTR_CODE,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
@@ -108,6 +109,8 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
             self._state = STATE_ALARM_TRIGGERED
         elif message.armed_away:
             self._state = STATE_ALARM_ARMED_AWAY
+        elif message.armed_home and (message.entry_delay_off or message.perimeter_only):
+            self._state = STATE_ALARM_ARMED_NIGHT
         elif message.armed_home:
             self._state = STATE_ALARM_ARMED_HOME
         else:
