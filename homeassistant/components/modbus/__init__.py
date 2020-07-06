@@ -148,10 +148,6 @@ def setup(hass, config):
     for conf_hub in config[DOMAIN][CONF_HUBS]:
         hub_collect[conf_hub[CONF_NAME]] = ModbusHub(conf_hub)
 
-        # Set first hub in a list as a default
-        if hub_collect.get(DEFAULT_HUB) is None:
-            hub_collect[DEFAULT_HUB] = hub_collect[conf_hub[CONF_NAME]]
-
     def stop_modbus(event):
         """Stop Modbus service."""
         for client in hub_collect.values():
