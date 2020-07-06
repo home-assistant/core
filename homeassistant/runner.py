@@ -35,18 +35,27 @@ def setup_loop(runtime_config: RuntimeConfig) -> asyncio.AbstractEventLoop:
     """Create the event loop."""
     # In Python 3.8+ proactor policy is the default on Windows
     if sys.platform == "win32" and sys.version_info[:3] < (3, 8):
-        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+        policy_base = asyncio.WindowsProactorEventLoopPolicy()
+    else:
+        policy_base = asyncio.DefaultEventLoopPolicy
 
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.set_exception_handler(async_loop_exception_handler)
-    if runtime_config.debug:
-        loop.set_debug(True)
-    return loop
+    class HassEventLoopPolicy(policy_base):
+        def get_event_loop(self):
+            """Get the event loop."""
+            loop = super().get_event_loop()
+            loop.set_exception_handler(async_loop_exception_handler)
+            if runtime_config.debug:
+                loop.set_debug(True)
+            return loop
+
+    asyncio.set_event_loop_policy(HassEventLoopPolicy())
 
 
 def setup_executor(loop: asyncio.AbstractEventLoop):
-    """Set up an executor on the loop."""
+    """Set up an executor on the loop.
+
+    Async friendly.
+    """
     executor = ThreadPoolExecutor(thread_name_prefix="SyncWorker")
     loop.set_default_executor(executor)
     loop.set_default_executor = warn_use(  # type: ignore
@@ -68,14 +77,11 @@ def async_loop_exception_handler(_: Any, context: Dict) -> None:
     )
 
 
-async def setup_and_run_hass(
-    loop: asyncio.AbstractEventLoop,
-    executor: ThreadPoolExecutor,
-    runtime_config: RuntimeConfig,
-) -> int:
+async def setup_and_run_hass(runtime_config: RuntimeConfig,) -> int:
     """Set up Home Assistant and run."""
+    loop = asyncio.get_running_loop()
     hass = await bootstrap.async_setup_hass(
-        loop=loop, executor=executor, runtime_config=runtime_config
+        loop=loop, executor=setup_executor(loop), runtime_config=runtime_config
     )
 
     if hass is None:
@@ -98,7 +104,5 @@ async def setup_and_run_hass(
 
 def run(runtime_config: RuntimeConfig) -> int:
     """Run Home Assistant."""
-    loop = setup_loop(runtime_config)
-    executor = setup_executor(loop)
-
-    return loop.run_until_complete(setup_and_run_hass(loop, executor, runtime_config))
+    setup_loop(runtime_config)
+    return asyncio.run(setup_and_run_hass(runtime_config))
