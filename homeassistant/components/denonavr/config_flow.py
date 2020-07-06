@@ -20,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "denonavr"
 
 SUPPORTED_MANUFACTURERS = ["Denon", "DENON", "Marantz"]
+IGNORED_MODELS = ["HEOS 1", "HEOS 3", "HEOS 5", "HEOS 7"]
 
 CONF_SHOW_ALL_SOURCES = "show_all_sources"
 CONF_ZONE2 = "zone2"
@@ -216,6 +217,9 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.model_name = discovery_info[ssdp.ATTR_UPNP_MODEL_NAME].replace("*", "")
         self.serial_number = discovery_info[ssdp.ATTR_UPNP_SERIAL]
         self.host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
+
+        if self.model_name in IGNORED_MODELS:
+            return self.async_abort(reason="not_denonavr_manufacturer")
 
         unique_id = self.construct_unique_id(self.model_name, self.serial_number)
         await self.async_set_unique_id(unique_id)
