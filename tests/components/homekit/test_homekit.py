@@ -69,7 +69,7 @@ IP_ADDRESS = "127.0.0.1"
 
 
 @pytest.fixture(autouse=True)
-def always_patch_drive(hk_driver):
+def always_patch_driver(hk_driver):
     """Load the hk_driver fixture."""
 
 
