@@ -70,9 +70,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         "director_sw_version"
     ] = await account.getControllerOSVersion(controller_href)
 
+    # Add Control4 controller to device registry
     result = re.search("_(.*)_", entry.title)
     hass.data[DOMAIN][entry.title]["director_model"] = result.group(1).upper()
-
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -83,10 +83,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         sw_version=hass.data[DOMAIN][entry.title]["director_sw_version"],
     )
 
+    # Store all items found on controller for platforms to use
     director_all_items = await director.getAllItemInfo()
     director_all_items = json.loads(director_all_items)
     hass.data[DOMAIN][entry.title]["director_all_items"] = director_all_items
 
+    # Load options from config entry
     hass.data[DOMAIN][entry.title][CONF_SCAN_INTERVAL] = entry.options.get(
         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
     )
@@ -240,10 +242,9 @@ class Control4Entity(entity.Entity):
             await _refresh_tokens(self)
         try:
             await self._coordinator.async_request_refresh()
-        except Unauthorized as exception:
+        except Unauthorized:
             _LOGGER.warning(
                 "Got Unauthorized response from Control4 controller, attempting to refresh tokens."
-                + exception
             )
             await _refresh_tokens(self)
             await self._coordinator.async_request_refresh()

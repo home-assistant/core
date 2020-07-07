@@ -20,8 +20,6 @@ from homeassistant.const import CONF_SCAN_INTERVAL
 
 from .const import (
     DOMAIN,
-    DEFAULT_SCAN_INTERVAL,
-    MIN_SCAN_INTERVAL,
     CONF_LIGHT_TRANSITION_TIME,
     CONF_LIGHT_COLD_START_TRANSITION_TIME,
 )
@@ -59,22 +57,14 @@ async def async_setup_entry(
         return return_dict
 
     async def async_update_data_non_dimmer():
-        """Fetch data from API endpoint.
-
-        This is the place to pre-process the data to lookup tables
-        so entities can quickly look up their data.
-        """
+        """Fetch data from Control4 director for non-dimmer lights."""
         try:
             return await director_update_data(CONTROL4_NON_DIMMER_VAR)
         except C4Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}")
 
     async def async_update_data_dimmer():
-        """Fetch data from API endpoint.
-
-        This is the place to pre-process the data to lookup tables
-        so entities can quickly look up their data.
-        """
+        """Fetch data from Control4 director for dimmer lights."""
         try:
             return await director_update_data(CONTROL4_DIMMER_VAR)
         except C4Exception as err:
@@ -83,19 +73,15 @@ async def async_setup_entry(
     non_dimmer_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        # Name of the data. For logging purposes.
         name="light",
         update_method=async_update_data_non_dimmer,
-        # Polling interval. Will only be polled if there are subscribers.
         update_interval=timedelta(seconds=scan_interval),
     )
     dimmer_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        # Name of the data. For logging purposes.
         name="light",
         update_method=async_update_data_dimmer,
-        # Polling interval. Will only be polled if there are subscribers.
         update_interval=timedelta(seconds=scan_interval),
     )
 

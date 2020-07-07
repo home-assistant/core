@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
-from pyControl4.error_handling import C4Exception, BadCredentials, Unauthorized
+from pyControl4.error_handling import BadCredentials, Unauthorized
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.helpers import config_validation as cv
@@ -29,7 +29,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
@@ -64,14 +63,14 @@ class Control4Validator:
     async def authenticate(self) -> bool:
         """Test if we can authenticate with the Control4 account API."""
         try:
-            """Authenticate with Control4 account"""
+            # Authenticate with Control4 account
             await self.account.getAccountBearerToken()
 
-            """Get controller name"""
+            # Get controller name
             account_controllers = await self.account.getAccountControllers()
             self.controller_name = account_controllers["controllerCommonName"]
 
-            """Get bearer token to communicate with controller locally"""
+            # Get bearer token to communicate with controller locally
             self.director_bearer_token = await self.account.getDirectorBearerToken(
                 self.controller_name
             )
@@ -96,13 +95,6 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    # TODO validate the data can be used to set up a connection.
-
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data["username"], data["password"]
-    # )
 
     hub = Control4Validator(data["host"], data["username"], data["password"])
 
@@ -127,7 +119,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Control4."""
 
     VERSION = 1
-    # TODO pick one of the available connection classes in homeassistant/config_entries.py
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def async_step_user(self, user_input=None):
