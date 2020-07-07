@@ -229,6 +229,10 @@ class MockPlexClient:
         """Mock the version attribute."""
         return "1.0"
 
+    def proxyThroughServer(self, value=True, server=None):
+        """Mock the proxyThroughServer method."""
+        pass
+
     def playMedia(self, item):
         """Mock the playMedia method."""
         pass

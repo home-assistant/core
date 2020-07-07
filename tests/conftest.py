@@ -1,11 +1,12 @@
 """Set up some common test helper things."""
+import asyncio
 import functools
 import logging
 
 import pytest
 import requests_mock as _requests_mock
 
-from homeassistant import core as ha, loader, util
+from homeassistant import core as ha, loader, runner, util
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.providers import homeassistant, legacy_api_password
 from homeassistant.components import mqtt
@@ -39,6 +40,10 @@ from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:ski
 
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+
+asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
+# Disable fixtures overriding our beautiful policy
+asyncio.set_event_loop_policy = lambda policy: None
 
 
 def pytest_configure(config):

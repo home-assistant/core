@@ -231,7 +231,7 @@ async def _async_process_config(hass, config, component):
         entity_id = ENTITY_ID_FORMAT.format(service.service)
         script_entity = component.get_entity(entity_id)
         if script_entity.script.is_legacy and script_entity.is_on:
-            _LOGGER.warning("Script %s already running.", entity_id)
+            _LOGGER.warning("Script %s already running", entity_id)
             return
         await script_entity.async_turn_on(
             variables=service.data, context=service.context

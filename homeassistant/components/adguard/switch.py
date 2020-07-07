@@ -73,7 +73,7 @@ class AdGuardHomeSwitch(AdGuardHomeDeviceEntity, SwitchEntity):
         try:
             await self._adguard_turn_off()
         except AdGuardHomeError:
-            _LOGGER.error("An error occurred while turning off AdGuard Home switch.")
+            _LOGGER.error("An error occurred while turning off AdGuard Home switch")
             self._available = False
 
     async def _adguard_turn_off(self) -> None:
@@ -85,7 +85,7 @@ class AdGuardHomeSwitch(AdGuardHomeDeviceEntity, SwitchEntity):
         try:
             await self._adguard_turn_on()
         except AdGuardHomeError:
-            _LOGGER.error("An error occurred while turning on AdGuard Home switch.")
+            _LOGGER.error("An error occurred while turning on AdGuard Home switch")
             self._available = False
 
     async def _adguard_turn_on(self) -> None:

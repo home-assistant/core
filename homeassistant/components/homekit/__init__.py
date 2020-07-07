@@ -191,7 +191,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # If the previous instance hasn't cleaned up yet
     # we need to wait a bit
     if not await hass.async_add_executor_job(port_is_available, port):
-        _LOGGER.warning("The local port %s is in use.", port)
+        _LOGGER.warning("The local port %s is in use", port)
         raise ConfigEntryNotReady
 
     if CONF_ENTRY_INDEX in conf and conf[CONF_ENTRY_INDEX] == 0:
@@ -266,7 +266,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         if not await hass.async_add_executor_job(
             port_is_available, entry.data[CONF_PORT]
         ):
-            _LOGGER.info("Waiting for the HomeKit server to shutdown.")
+            _LOGGER.info("Waiting for the HomeKit server to shutdown")
             await asyncio.sleep(1)
 
     hass.data[DOMAIN].pop(entry.entry_id)
@@ -310,7 +310,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
             if homekit.status != STATUS_RUNNING:
                 _LOGGER.warning(
                     "HomeKit is not running. Either it is waiting to be "
-                    "started or has been stopped."
+                    "started or has been stopped"
                 )
                 continue
 
@@ -336,7 +336,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
             if homekit.status != STATUS_READY:
                 _LOGGER.warning(
                     "HomeKit is not ready. Either it is already starting up or has "
-                    "been stopped."
+                    "been stopped"
                 )
                 continue
             await homekit.async_start()
@@ -416,12 +416,21 @@ class HomeKit:
         for entity_id in entity_ids:
             aid = aid_storage.get_or_allocate_aid_for_entity_id(entity_id)
             if aid not in self.bridge.accessories:
-                _LOGGER.warning(
-                    "Could not reset accessory. entity_id not found %s", entity_id
-                )
                 continue
+
+            _LOGGER.info(
+                "HomeKit Bridge %s will reset accessory with linked entity_id %s",
+                self._name,
+                entity_id,
+            )
+
             acc = self.remove_bridge_accessory(aid)
             removed.append(acc)
+
+        if not removed:
+            # No matched accessories, probably on another bridge
+            return
+
         self.driver.config_changed()
 
         for acc in removed:
@@ -436,7 +445,7 @@ class HomeKit:
         # The bridge itself counts as an accessory
         if len(self.bridge.accessories) + 1 >= MAX_DEVICES:
             _LOGGER.warning(
-                "Cannot add %s as this would exceeded the %d device limit. Consider using the filter option.",
+                "Cannot add %s as this would exceeded the %d device limit. Consider using the filter option",
                 state.entity_id,
                 MAX_DEVICES,
             )

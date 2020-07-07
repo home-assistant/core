@@ -225,7 +225,7 @@ async def create_yaml_resource_col(hass, yaml_resources):
         else:
             if CONF_RESOURCES in ll_conf:
                 _LOGGER.warning(
-                    "Resources need to be specified in your configuration.yaml. Please see the docs."
+                    "Resources need to be specified in your configuration.yaml. Please see the docs"
                 )
                 yaml_resources = ll_conf[CONF_RESOURCES]
 

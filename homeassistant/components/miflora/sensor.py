@@ -79,7 +79,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the MiFlora sensor."""
     backend = BACKEND
-    _LOGGER.debug("Miflora is using %s backend.", backend.__name__)
+    _LOGGER.debug("Miflora is using %s backend", backend.__name__)
 
     cache = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL).total_seconds()
     poller = miflora_poller.MiFloraPoller(

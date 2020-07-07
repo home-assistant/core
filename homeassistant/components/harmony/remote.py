@@ -258,7 +258,7 @@ class HarmonyRemote(remote.RemoteEntity):
         _LOGGER.debug("%s: Connecting", self._name)
         try:
             if not await self._client.connect():
-                _LOGGER.warning("%s: Unable to connect to HUB.", self._name)
+                _LOGGER.warning("%s: Unable to connect to HUB", self._name)
                 await self._client.close()
                 return False
         except aioexc.TimeOut:
@@ -283,14 +283,14 @@ class HarmonyRemote(remote.RemoteEntity):
 
     async def got_connected(self, _=None):
         """Notification that we're connected to the HUB."""
-        _LOGGER.debug("%s: connected to the HUB.", self._name)
+        _LOGGER.debug("%s: connected to the HUB", self._name)
         if not self._available:
             # We were disconnected before.
             await self.new_config()
 
     async def got_disconnected(self, _=None):
         """Notification that we're disconnected from the HUB."""
-        _LOGGER.debug("%s: disconnected from the HUB.", self._name)
+        _LOGGER.debug("%s: disconnected from the HUB", self._name)
         self._available = False
         # We're going to wait for 10 seconds before announcing we're
         # unavailable, this to allow a reconnection to happen.
