@@ -4,16 +4,16 @@ import logging
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_EMAIL,
+    CONF_PASSWORD,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
-    STATE_OK,
-    STATE_PROBLEM,
     TEMP_CELSIUS,
     UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 
+from . import PoolSenseEntity
 from .const import ATTRIBUTION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,18 +68,6 @@ SENSORS = {
         "name": "pH Low",
         "device_class": None,
     },
-    "pH Status": {
-        "unit": None,
-        "icon": "mdi:pool",
-        "name": "pH Status",
-        "device_class": None,
-    },
-    "Chlorine Status": {
-        "unit": None,
-        "icon": "mdi:pool",
-        "name": "Chlorine Status",
-        "device_class": None,
-    },
 }
 
 
@@ -87,31 +75,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer sensor setup to the shared sensor module."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_entities(
-        PoolSenseSensor(coordinator, config_entry.data[CONF_EMAIL], info_type)
-        for info_type in SENSORS
-    )
+    sensors_list = []
+    for sensor in SENSORS:
+        sensors_list.append(
+            PoolSenseSensor(
+                coordinator,
+                config_entry.data[CONF_EMAIL],
+                config_entry.data[CONF_PASSWORD],
+                sensor,
+            )
+        )
+
+    async_add_entities(sensors_list, False)
 
 
-class PoolSenseSensor(Entity):
+class PoolSenseSensor(PoolSenseEntity, Entity):
     """Sensor representing poolsense data."""
-
-    def __init__(self, coordinator, email, info_type):
-        """Initialize poolsense sensor."""
-        self._email = email
-        self._unique_id = f"{email}-{info_type}"
-        self.coordinator = coordinator
-        self.info_type = info_type
-
-    @property
-    def available(self):
-        """Return if sensor is available."""
-        return self.coordinator.last_update_success
-
-    @property
-    def unique_id(self):
-        """Return a unique ID to use for this sensor."""
-        return self._unique_id
 
     @property
     def name(self):
@@ -126,14 +105,6 @@ class PoolSenseSensor(Entity):
     @property
     def state(self):
         """State of the sensor."""
-        if self.info_type == "pH Status":
-            if self.coordinator.data[self.info_type] == "red":
-                return STATE_PROBLEM
-            return STATE_OK
-        if self.info_type == "Chlorine Status":
-            if self.coordinator.data[self.info_type] == "red":
-                return STATE_PROBLEM
-            return STATE_OK
         return self.coordinator.data[self.info_type]
 
     @property
@@ -144,14 +115,6 @@ class PoolSenseSensor(Entity):
     @property
     def icon(self):
         """Return the icon."""
-        if self.info_type == "pH Status":
-            if self.coordinator.data[self.info_type] == "red":
-                return "mdi:thumb-down"
-            return "mdi:thumb-up"
-        if self.info_type == "Chlorine Status":
-            if self.coordinator.data[self.info_type] == "red":
-                return "mdi:thumb-down"
-            return "mdi:thumb-up"
         return SENSORS[self.info_type]["icon"]
 
     @property
