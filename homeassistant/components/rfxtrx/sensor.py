@@ -119,7 +119,9 @@ class RfxtrxSensor(Entity):
         self.should_fire_event = should_fire_event
         self.data_type = data_type
         self._unit_of_measurement = DATA_TYPES.get(data_type, "")
-        self._unique_id = f"{slugify(device.type_string.lower())}_{slugify(device.id_string.lower())}_{slugify(data_type)}"
+        self._unique_id = (
+            f"{device.packettype:x}_{device.subtype:x}_{device.id_string}_{data_type}"
+        )
 
     async def async_added_to_hass(self):
         """Restore RFXtrx switch device state (ON/OFF)."""
