@@ -13,7 +13,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_HOST,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
@@ -30,7 +29,6 @@ from .const import (
     DEFAULT_LIGHT_TRANSITION_TIME,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    MIN_SCAN_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -145,7 +143,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 
 async def get_items_of_category(hass: HomeAssistant, entry: ConfigEntry, category: str):
-    """Returns a list of all Control4 items with the specified category."""
+    """Return a list of all Control4 items with the specified category."""
     director_all_items = hass.data[DOMAIN][entry.title]["director_all_items"]
     return_list = []
     for item in director_all_items:
@@ -169,6 +167,7 @@ class Control4Entity(entity.Entity):
         device_model: str,
         device_id: int,
     ):
+        """Initializes a Control4 entity."""
         self.entry = entry
         self.account = hass.data[DOMAIN][self.entry.title]["account"]
         self.director = hass.data[DOMAIN][self.entry.title]["director"]
