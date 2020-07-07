@@ -12,11 +12,7 @@ from pyControl4.error_handling import Unauthorized
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import device_registry as dr, entity
