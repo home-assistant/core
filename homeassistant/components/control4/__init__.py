@@ -1,5 +1,6 @@
 """The Control4 integration."""
 import asyncio
+from aiohttp import client_exceptions
 import datetime
 import json
 import logging
@@ -11,6 +12,7 @@ from pyControl4.error_handling import Unauthorized
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -54,7 +56,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     config = entry.data
     account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD])
-    await account.getAccountBearerToken()
+    try:
+        await account.getAccountBearerToken()
+    except client_exceptions.ClientError as exception:
+        _LOGGER.error("Error connecting to Control4 account API: %s", exception)
+        raise PlatformNotReady()
     hass.data[DOMAIN][entry.title]["account"] = account
 
     director_token_dict = await account.getDirectorBearerToken(entry.title)
