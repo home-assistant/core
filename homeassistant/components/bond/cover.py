@@ -26,8 +26,8 @@ async def async_setup_entry(
 
     bond: Bond = hass.data[DOMAIN][entry.entry_id]
 
-    async def discover():
-        devices = await get_bond_devices(hass, bond)
+    def discover():
+        devices = get_bond_devices(hass, bond)
         covers = [
             BondCover(bond, device)
             for device in devices
@@ -35,8 +35,7 @@ async def async_setup_entry(
         ]
         async_add_entities(covers)
 
-    asyncio.create_task(discover())
-
+    await hass.async_add_executor_job(discover)
 
 class BondCover(CoverEntity):
     """Representation of a Bond cover."""
