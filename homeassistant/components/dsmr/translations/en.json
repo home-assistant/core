@@ -21,9 +21,10 @@
             },
             "setup_options": {
                 "data": {
-                    "force_update": "Force update",
+                    "force_update": "Force update when data is received",
                     "precision": "Precision",
-                    "reconnect_interval": "Reconnection Interval"
+                    "reconnect_interval": "Reconnection interval",
+                    "power_watt": "Always report Power in [W]"
                 }
             },
             "setup_serial": {

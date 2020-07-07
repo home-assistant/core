@@ -6,17 +6,21 @@ import logging
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_FORCE_UPDATE, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_DSMR_VERSION,
+    CONF_POWER_WATT,
     CONF_PRECISION,
     CONF_RECONNECT_INTERVAL,
     DEFAULT_DSMR_VERSION,
+    DEFAULT_FORCE_UPDATE,
     DEFAULT_PORT,
+    DEFAULT_POWER_WATT,
     DEFAULT_PRECISION,
+    DEFAULT_RECONNECT_INTERVAL,
     DOMAIN,
     PLATFORMS,
 )
@@ -32,10 +36,16 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION): vol.All(
                     cv.string, vol.In(["5B", "5", "4", "2.2"])
                 ),
-                vol.Optional(CONF_RECONNECT_INTERVAL, default=30): int,
+                vol.Optional(
+                    CONF_RECONNECT_INTERVAL, default=DEFAULT_RECONNECT_INTERVAL
+                ): int,
                 vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(
                     int
                 ),
+                vol.Optional(
+                    CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE
+                ): cv.boolean,
+                vol.Optional(CONF_POWER_WATT, default=DEFAULT_POWER_WATT): cv.boolean,
             }
         )
     },

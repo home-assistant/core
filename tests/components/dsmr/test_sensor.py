@@ -14,6 +14,7 @@ import pytest
 
 from homeassistant.components.dsmr.const import (
     CONF_DSMR_VERSION,
+    CONF_POWER_WATT,
     CONF_PRECISION,
     CONF_RECONNECT_INTERVAL,
     CONF_SERIAL_ID,
@@ -26,6 +27,8 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     ENERGY_KILO_WATT_HOUR,
+    POWER_KILO_WATT,
+    POWER_WATT,
     TIME_HOURS,
     VOLUME_CUBIC_METERS,
 )
@@ -44,6 +47,7 @@ TEST_RECONNECT_INTERVAL = 30
 TEST_UNIQUE_ID = f"{DOMAIN}-{TEST_SERIALNUMBER}"
 TEST_DSMR_VERSION = "2.2"
 TEST_FORCE_UPDATE = False
+TEST_POWER_WATT = False
 
 
 @pytest.fixture
@@ -77,9 +81,11 @@ async def test_default_setup(hass, mock_connection_factory):
     (connection_factory, transport, protocol) = mock_connection_factory
 
     from dsmr_parser.obis_references import (
-        CURRENT_ELECTRICITY_USAGE,
         ELECTRICITY_ACTIVE_TARIFF,
+        ELECTRICITY_USED_TARIFF_1,
         GAS_METER_READING,
+        CURRENT_ELECTRICITY_USAGE,
+        CURRENT_ELECTRICITY_DELIVERY,
     )
     from dsmr_parser.objects import CosemObject, MBusObject
 
@@ -89,11 +95,12 @@ async def test_default_setup(hass, mock_connection_factory):
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
-        CONF_PRECISION: TEST_PRECISION,
+        CONF_PRECISION: 4,
+        CONF_POWER_WATT: TEST_POWER_WATT,
     }
 
     telegram = {
-        CURRENT_ELECTRICITY_USAGE: CosemObject(
+        ELECTRICITY_USED_TARIFF_1: CosemObject(
             [{"value": Decimal("0.0"), "unit": ENERGY_KILO_WATT_HOUR}]
         ),
         ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0001", "unit": ""}]),
@@ -102,6 +109,12 @@ async def test_default_setup(hass, mock_connection_factory):
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal(745.695), "unit": VOLUME_CUBIC_METERS},
             ]
+        ),
+        CURRENT_ELECTRICITY_USAGE: CosemObject(
+            [{"value": Decimal("2343.2"), "unit": POWER_WATT}]
+        ),
+        CURRENT_ELECTRICITY_DELIVERY: CosemObject(
+            [{"value": Decimal("2.3432"), "unit": POWER_KILO_WATT}]
         ),
     }
 
@@ -128,11 +141,116 @@ async def test_default_setup(hass, mock_connection_factory):
     await asyncio.sleep(0)
 
     # ensure entities have new state value after incoming telegram
-    power_consumption = hass.states.get("sensor.power_consumption")
-    assert power_consumption.state == "0.0"
+    energy_consumption = hass.states.get("sensor.energy_consumption_tarif_1")
+    assert energy_consumption.state == "0.0"
     assert (
-        power_consumption.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
+        energy_consumption.attributes.get("unit_of_measurement")
+        == ENERGY_KILO_WATT_HOUR
     )
+
+    # check if power units are untouched
+    power_consumption = hass.states.get("sensor.power_consumption")
+    assert power_consumption.state == "2343.2"
+    assert power_consumption.attributes.get("unit_of_measurement") == POWER_WATT
+
+    power_production = hass.states.get("sensor.power_production")
+    assert power_production.state == "2.3432"
+    assert power_production.attributes.get("unit_of_measurement") == POWER_KILO_WATT
+
+    # tariff should be translated in human readable and have no unit
+    power_tariff = hass.states.get("sensor.power_tariff")
+    assert power_tariff.state == "low"
+    assert power_tariff.attributes.get("unit_of_measurement") == ""
+
+    # check if gas consumption is parsed correctly
+    gas_consumption = hass.states.get("sensor.gas_consumption")
+    assert gas_consumption.state == "745.695"
+    assert gas_consumption.attributes.get("unit_of_measurement") == VOLUME_CUBIC_METERS
+
+    await hass.config_entries.async_unload(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_power_in_watt(hass, mock_connection_factory):
+    """Test the setup with power in watt."""
+    (connection_factory, transport, protocol) = mock_connection_factory
+
+    from dsmr_parser.obis_references import (
+        ELECTRICITY_ACTIVE_TARIFF,
+        ELECTRICITY_USED_TARIFF_1,
+        GAS_METER_READING,
+        CURRENT_ELECTRICITY_USAGE,
+        CURRENT_ELECTRICITY_DELIVERY,
+    )
+    from dsmr_parser.objects import CosemObject, MBusObject
+
+    entry_data = {
+        CONF_PORT: TEST_USB_PATH,
+        CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
+        CONF_DSMR_VERSION: TEST_DSMR_VERSION,
+        CONF_SERIAL_ID: TEST_SERIALNUMBER,
+        CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
+        CONF_PRECISION: 4,
+        CONF_POWER_WATT: True,
+    }
+
+    telegram = {
+        ELECTRICITY_USED_TARIFF_1: CosemObject(
+            [{"value": Decimal("0.0"), "unit": ENERGY_KILO_WATT_HOUR}]
+        ),
+        ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0001", "unit": ""}]),
+        GAS_METER_READING: MBusObject(
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": Decimal(745.695), "unit": VOLUME_CUBIC_METERS},
+            ]
+        ),
+        CURRENT_ELECTRICITY_USAGE: CosemObject(
+            [{"value": Decimal("2343.2"), "unit": POWER_WATT}]
+        ),
+        CURRENT_ELECTRICITY_DELIVERY: CosemObject(
+            [{"value": Decimal("2.3432"), "unit": POWER_KILO_WATT}]
+        ),
+    }
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=TEST_UNIQUE_ID, data=entry_data
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+
+    # make sure entities have been created and return 'unknown' state
+    power_consumption = hass.states.get("sensor.power_consumption")
+    assert power_consumption.state == "unknown"
+    assert power_consumption.attributes.get("unit_of_measurement") is None
+
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # after receiving telegram entities need to have the chance to update
+    await asyncio.sleep(0)
+
+    # ensure entities have new state value after incoming telegram
+    energy_consumption = hass.states.get("sensor.energy_consumption_tarif_1")
+    assert energy_consumption.state == "0.0"
+    assert (
+        energy_consumption.attributes.get("unit_of_measurement")
+        == ENERGY_KILO_WATT_HOUR
+    )
+
+    # check if power units are untouched
+    power_consumption = hass.states.get("sensor.power_consumption")
+    assert power_consumption.state == "2343.2"
+    assert power_consumption.attributes.get("unit_of_measurement") == POWER_WATT
+
+    power_production = hass.states.get("sensor.power_production")
+    assert power_production.state == "2343.2"
+    assert power_production.attributes.get("unit_of_measurement") == POWER_WATT
 
     # tariff should be translated in human readable and have no unit
     power_tariff = hass.states.get("sensor.power_tariff")
@@ -206,6 +324,7 @@ async def test_v4_meter(hass, mock_connection_factory):
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
         CONF_PRECISION: TEST_PRECISION,
         CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
+        CONF_POWER_WATT: TEST_POWER_WATT,
     }
 
     telegram = {
@@ -267,6 +386,7 @@ async def test_v5_meter(hass, mock_connection_factory):
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
         CONF_PRECISION: TEST_PRECISION,
         CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
+        CONF_POWER_WATT: TEST_POWER_WATT,
     }
 
     telegram = {
@@ -328,6 +448,7 @@ async def test_belgian_meter(hass, mock_connection_factory):
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
         CONF_PRECISION: TEST_PRECISION,
         CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
+        CONF_POWER_WATT: TEST_POWER_WATT,
     }
 
     telegram = {
@@ -386,6 +507,7 @@ async def test_belgian_meter_low(hass, mock_connection_factory):
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
         CONF_PRECISION: TEST_PRECISION,
         CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
+        CONF_POWER_WATT: TEST_POWER_WATT,
     }
 
     telegram = {ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0002", "unit": ""}])}
@@ -429,6 +551,7 @@ async def test_tcp(hass, mock_connection_factory):
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
         CONF_PRECISION: TEST_PRECISION,
         CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
+        CONF_POWER_WATT: TEST_POWER_WATT,
     }
 
     mock_entry = MockConfigEntry(
@@ -459,6 +582,7 @@ async def test_connection_errors_retry(hass, monkeypatch, mock_connection_factor
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
         CONF_PRECISION: TEST_PRECISION,
         CONF_RECONNECT_INTERVAL: 0,
+        CONF_POWER_WATT: TEST_POWER_WATT,
     }
 
     # override the mock to have it fail the first time and succeed after
@@ -500,6 +624,7 @@ async def test_reconnect(hass, monkeypatch, mock_connection_factory):
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
         CONF_PRECISION: TEST_PRECISION,
         CONF_RECONNECT_INTERVAL: 0,
+        CONF_POWER_WATT: TEST_POWER_WATT,
     }
 
     # mock waiting coroutine while connection lasts

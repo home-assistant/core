@@ -10,13 +10,21 @@ from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_rea
 import serial
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_FORCE_UPDATE, CONF_HOST, CONF_PORT, TIME_HOURS
+from homeassistant.const import (
+    CONF_FORCE_UPDATE,
+    CONF_HOST,
+    CONF_PORT,
+    POWER_KILO_WATT,
+    POWER_WATT,
+    TIME_HOURS,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     CONF_DSMR_VERSION,
+    CONF_POWER_WATT,
     CONF_PRECISION,
     CONF_RECONNECT_INTERVAL,
     CONF_SERIAL_ID,
@@ -239,12 +247,17 @@ class DSMREntity(Entity):
     def state(self):
         """Return the state of sensor, if available, translate if needed."""
         value = self.get_dsmr_object_attr("value")
+        unit = self.get_dsmr_object_attr("unit")
 
         if self._obis == obis_ref.ELECTRICITY_ACTIVE_TARIFF:
             return self.translate_tariff(value, self._config[CONF_DSMR_VERSION])
 
         try:
-            value = round(float(value), self._config[CONF_PRECISION])
+            if unit == POWER_KILO_WATT and self._config[CONF_POWER_WATT]:
+                value = round(float(value) * 1000.0, self._config[CONF_PRECISION])
+            else:
+                value = round(float(value), self._config[CONF_PRECISION])
+
         except TypeError:
             pass
 
@@ -256,7 +269,12 @@ class DSMREntity(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return self.get_dsmr_object_attr("unit")
+        unit = self.get_dsmr_object_attr("unit")
+
+        if unit == POWER_KILO_WATT and self._config[CONF_POWER_WATT]:
+            return POWER_WATT
+
+        return unit
 
     @staticmethod
     def translate_tariff(value, dsmr_version):

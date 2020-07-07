@@ -14,11 +14,13 @@ from homeassistant.const import CONF_FORCE_UPDATE, CONF_HOST, CONF_PORT, CONF_TY
 # pylint: disable=unused-import
 from .const import (
     CONF_DSMR_VERSION,
+    CONF_POWER_WATT,
     CONF_PRECISION,
     CONF_RECONNECT_INTERVAL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
     DEFAULT_FORCE_UPDATE,
+    DEFAULT_POWER_WATT,
     DEFAULT_PRECISION,
     DOMAIN,
 )
@@ -233,6 +235,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_RECONNECT_INTERVAL: user_input.get(CONF_RECONNECT_INTERVAL),
                     CONF_PRECISION: user_input.get(CONF_PRECISION),
                     CONF_FORCE_UPDATE: user_input.get(CONF_FORCE_UPDATE),
+                    CONF_POWER_WATT: user_input.get(CONF_POWER_WATT),
                     CONF_SERIAL_ID: self._serial_id,
                     CONF_SERIAL_ID_GAS: self._serial_id_gas,
                 },
@@ -243,6 +246,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_RECONNECT_INTERVAL, default=30): int,
                 vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): int,
                 vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): bool,
+                vol.Optional(CONF_POWER_WATT, default=DEFAULT_POWER_WATT): bool,
             }
         )
 
