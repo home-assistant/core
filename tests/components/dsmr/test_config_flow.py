@@ -250,6 +250,18 @@ async def test_config_flow_manual_usb_connection_error(hass, mock_connection_fac
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    with patch(
+        "homeassistant.components.dsmr.config_flow.validate_input",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PORT: TEST_USB_PATH}
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_serial"
+    assert result["errors"] == {"base": "unknown"}
+
 
 async def test_config_flow_manual_host_connection_error(hass, mock_connection_factory):
     """
@@ -286,6 +298,18 @@ async def test_config_flow_manual_host_connection_error(hass, mock_connection_fa
     assert result["type"] == "form"
     assert result["step_id"] == "setup_host"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "homeassistant.components.dsmr.config_flow.validate_input",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_host"
+    assert result["errors"] == {"base": "unknown"}
 
 
 async def test_config_flow_manual_usb_wrong_telegram(hass, mock_connection_factory):
@@ -528,3 +552,74 @@ async def test_config_flow_import_host(hass, mock_connection_factory):
     conf_entries = hass.config_entries.async_entries(DOMAIN)
     await hass.config_entries.async_unload(conf_entries[0].entry_id)
     await hass.async_block_till_done()
+
+
+async def test_config_flow_import_usb_errors(hass, mock_connection_factory):
+    """
+    Failed flow on import.
+
+    USB specified and wrong telegram data received.
+    """
+    from homeassistant.components.dsmr.config_flow import CannotConnect
+
+    (connection_factory, transport, protocol) = mock_connection_factory
+
+    data = {
+        CONF_PORT: TEST_USB_PATH,
+        CONF_DSMR_VERSION: DEFAULT_DSMR_VERSION,
+        CONF_PRECISION: DEFAULT_PRECISION,
+        CONF_RECONNECT_INTERVAL: DEFAULT_RECONNECT_INTERVAL,
+        CONF_FORCE_UPDATE: DEFAULT_FORCE_UPDATE,
+        CONF_POWER_WATT: DEFAULT_POWER_WATT,
+    }
+
+    with patch(
+        "homeassistant.components.dsmr.config_flow.validate_input",
+        side_effect=CannotConnect,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"
+
+    with patch(
+        "homeassistant.components.dsmr.config_flow.validate_input",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "unknown"
+
+
+async def test_config_flow_import_usb_wrong_telegram(hass, mock_connection_factory):
+    """
+    Failed flow on import.
+
+    USB specified and wrong telegram data received.
+    """
+    (connection_factory, transport, protocol) = mock_connection_factory
+
+    (connection_factory, transport, protocol) = mock_connection_factory
+
+    data = {
+        CONF_PORT: TEST_USB_PATH,
+        CONF_DSMR_VERSION: DEFAULT_DSMR_VERSION,
+        CONF_PRECISION: DEFAULT_PRECISION,
+        CONF_RECONNECT_INTERVAL: DEFAULT_RECONNECT_INTERVAL,
+        CONF_FORCE_UPDATE: DEFAULT_FORCE_UPDATE,
+        CONF_POWER_WATT: DEFAULT_POWER_WATT,
+    }
+
+    protocol.telegram = {}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_communicate"

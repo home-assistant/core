@@ -21,7 +21,7 @@ from homeassistant.components.dsmr.const import (
     CONF_SERIAL_ID_GAS,
     DOMAIN,
 )
-from homeassistant.components.dsmr.sensor import DerivativeDSMREntity
+from homeassistant.components.dsmr.sensor import DerivativeDSMREntity, DSMREntity
 from homeassistant.const import (
     CONF_FORCE_UPDATE,
     CONF_HOST,
@@ -75,6 +75,23 @@ def mock_connection_factory(monkeypatch):
     )
 
     return connection_factory, transport, protocol
+
+
+async def test_entity(hass):
+    """Test the basic property of the entity."""
+    config = {"platform": DOMAIN, CONF_FORCE_UPDATE: TEST_FORCE_UPDATE}
+
+    entity = DSMREntity("test", "1234", "test_device", "5678", "1.0.0", config)
+
+    assert entity.force_update == TEST_FORCE_UPDATE
+    assert not entity.should_poll
+    assert entity.unique_id == "1234_test"
+
+    device_info = entity.device_info
+
+    assert device_info
+    assert device_info["identifiers"] == {(DOMAIN, "5678")}
+    assert device_info["name"] == "test_device"
 
 
 async def test_default_setup(hass, mock_connection_factory):
