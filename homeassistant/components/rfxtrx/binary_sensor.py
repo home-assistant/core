@@ -162,14 +162,15 @@ class RfxtrxBinarySensor(BinarySensorEntity):
         self._data_bits = data_bits
         self._cmd_on = cmd_on
         self._cmd_off = cmd_off
-        self._unique_id = f"{slugify(self.event.device.type_string.lower())}_{slugify(self.event.device.id_string.lower())}"
 
         if data_bits is not None:
             self._masked_id = get_pt2262_deviceid(
                 event.device.id_string.lower(), data_bits
             )
+            self._unique_id = f"{event.device.packettype:x}_{event.device.subtype:x}_{self._masked_id}"
         else:
             self._masked_id = None
+            self._unique_id = f"{event.device.packettype:x}_{event.device.subtype:x}_{event.device.id_string}"
 
     async def async_added_to_hass(self):
         """Restore RFXtrx switch device state (ON/OFF)."""
