@@ -259,6 +259,7 @@ class Sun(Entity):
 
     async def async_will_remove_from_hass(self):
         """When entity will be removed from hass."""
+        _LOGGER.debug("sun remove")
         if self._update_sun_position_listener:
             self._update_sun_position_listener()
             self._update_sun_position_listener = None
@@ -268,6 +269,8 @@ class Sun(Entity):
         if self._core_config_listener:
             self._core_config_listener()
             self._core_config_listener = None
+        await super().async_will_remove_from_hass()
+        _LOGGER.debug("sun removed")
 
     @callback
     def _async_update_location_event(self, _):
