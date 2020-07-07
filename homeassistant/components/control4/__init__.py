@@ -8,15 +8,29 @@ import json
 
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
+from pyControl4.error_handling import Unauthorized
 
 from homeassistant.helpers import entity
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_HOST,
+    CONF_SCAN_INTERVAL,
+)
 
-
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    DEFAULT_SCAN_INTERVAL,
+    MIN_SCAN_INTERVAL,
+    DEFAULT_LIGHT_TRANSITION_TIME,
+    CONF_LIGHT_TRANSITION_TIME,
+    CONF_LIGHT_COLD_START_TRANSITION_TIME,
+    DEFAULT_LIGHT_COLD_START_TRANSITION_TIME,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN].setdefault(entry.title, {})
 
     config = entry.data
-    account = C4Account(config["username"], config["password"])
+    account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD])
     await account.getAccountBearerToken()
     hass.data[DOMAIN][entry.title]["account"] = account
 
@@ -73,12 +87,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     director_all_items = json.loads(director_all_items)
     hass.data[DOMAIN][entry.title]["director_all_items"] = director_all_items
 
+    hass.data[DOMAIN][entry.title][CONF_SCAN_INTERVAL] = entry.options.get(
+        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+    )
+    hass.data[DOMAIN][entry.title][CONF_LIGHT_TRANSITION_TIME] = entry.options.get(
+        CONF_LIGHT_TRANSITION_TIME, DEFAULT_LIGHT_TRANSITION_TIME
+    )
+    hass.data[DOMAIN][entry.title][
+        CONF_LIGHT_COLD_START_TRANSITION_TIME
+    ] = entry.options.get(
+        CONF_LIGHT_COLD_START_TRANSITION_TIME, DEFAULT_LIGHT_COLD_START_TRANSITION_TIME
+    )
+
+    hass.data[DOMAIN][entry.title]["config_listener"] = entry.add_update_listener(
+        update_listener
+    )
+
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
     return True
+
+
+async def update_listener(hass, config_entry):
+    """Update when config_entry options update."""
+    _LOGGER.debug("Config entry was updated, rerunning setup")
+    await async_unload_entry(hass, config_entry)
+    await async_setup_entry(hass, config_entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -91,6 +128,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
+    hass.data[DOMAIN][entry.title]["config_listener"]()
     if unload_ok:
         controller_name = entry.title
         hass.data[DOMAIN].pop(entry.title)
@@ -176,14 +214,10 @@ class Control4Entity(entity.Entity):
 
     async def async_update(self):
         """Update the state of the device."""
-        if (
-            self.director_token_expiry is not None
-            and datetime.datetime.now() < self.director_token_expiry
-        ):
-            _LOGGER.debug("Old director token is still valid. Not getting a new one.")
-        else:
+
+        async def _refresh_tokens(self):
             config = self.entry.data
-            self.account = C4Account(config["username"], config["password"])
+            self.account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD])
             director_token_dict = await self.account.getDirectorBearerToken(
                 self.entry.title
             )
@@ -196,4 +230,21 @@ class Control4Entity(entity.Entity):
             self.hass.data[DOMAIN][self.entry.title][
                 "director_token_expiry"
             ] = self.director_token_expiry
-        await self._coordinator.async_request_refresh()
+
+        if (
+            self.director_token_expiry is not None
+            and datetime.datetime.now() < self.director_token_expiry
+        ):
+            _LOGGER.debug("Old director token is still valid. Not getting a new one.")
+        else:
+            await _refresh_tokens(self)
+        try:
+            await self._coordinator.async_request_refresh()
+        except Unauthorized as exception:
+            _LOGGER.warning(
+                "Got Unauthorized response from Control4 controller, attempting to refresh tokens."
+                + exception
+            )
+            await _refresh_tokens(self)
+            await self._coordinator.async_request_refresh()
+

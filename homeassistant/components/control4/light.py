@@ -16,8 +16,15 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LightEntity,
 )
+from homeassistant.const import CONF_SCAN_INTERVAL
 
-from .const import DOMAIN, UPDATE_INTERVAL
+from .const import (
+    DOMAIN,
+    DEFAULT_SCAN_INTERVAL,
+    MIN_SCAN_INTERVAL,
+    CONF_LIGHT_TRANSITION_TIME,
+    CONF_LIGHT_COLD_START_TRANSITION_TIME,
+)
 from . import Control4Entity, get_items_of_category
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,8 +37,19 @@ CONTROL4_DIMMER_VAR = "LIGHT_LEVEL"
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
-    """Set up Control4 from a config entry."""
+    """Set up Control4 lights from a config entry."""
     director = hass.data[DOMAIN][entry.title]["director"]
+    scan_interval = hass.data[DOMAIN][entry.title][CONF_SCAN_INTERVAL]
+    light_transition_time = hass.data[DOMAIN][entry.title][CONF_LIGHT_TRANSITION_TIME]
+    light_cold_start_transition_time = hass.data[DOMAIN][entry.title][
+        CONF_LIGHT_COLD_START_TRANSITION_TIME
+    ]
+    _LOGGER.debug(
+        "Scan interval = %s, light transition time = %s, light cold start transition time = %s",
+        scan_interval,
+        light_transition_time,
+        light_cold_start_transition_time,
+    )
 
     async def director_update_data(var: str) -> dict:
         data = await director.getAllItemVariableValue(var)
@@ -69,7 +87,7 @@ async def async_setup_entry(
         name="light",
         update_method=async_update_data_non_dimmer,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=UPDATE_INTERVAL),
+        update_interval=timedelta(seconds=scan_interval),
     )
     dimmer_coordinator = DataUpdateCoordinator(
         hass,
@@ -78,7 +96,7 @@ async def async_setup_entry(
         name="light",
         update_method=async_update_data_dimmer,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=UPDATE_INTERVAL),
+        update_interval=timedelta(seconds=scan_interval),
     )
 
     # Fetch initial data so we have data when entities subscribe
@@ -116,6 +134,8 @@ async def async_setup_entry(
                         item_model,
                         item_parent_id,
                         item_is_dimmer,
+                        light_transition_time,
+                        light_cold_start_transition_time,
                     )
                 ],
                 True,
@@ -137,6 +157,8 @@ class Control4Light(Control4Entity, LightEntity):
         device_model: str,
         device_id: int,
         is_dimmer: bool,
+        light_transition_time: int,
+        light_cold_start_transition_time: int,
     ):
         super().__init__(
             hass,
@@ -150,6 +172,8 @@ class Control4Light(Control4Entity, LightEntity):
             device_id,
         )
         self._is_dimmer = is_dimmer
+        self._transition_time = light_transition_time
+        self._cold_start_transition_time = light_cold_start_transition_time
         # pylint: disable=invalid-name
         self._C4Light = C4Light(self.director, idx)
 
@@ -178,8 +202,10 @@ class Control4Light(Control4Entity, LightEntity):
         if self._is_dimmer:
             if ATTR_TRANSITION in kwargs:
                 transition_length = kwargs[ATTR_TRANSITION] * 1000
+            elif self.brightness == 0:
+                transition_length = self._cold_start_transition_time * 1000
             else:
-                transition_length = 0
+                transition_length = self._transition_time * 1000
             if ATTR_BRIGHTNESS in kwargs:
                 brightness = (kwargs[ATTR_BRIGHTNESS] / 255) * 100
             else:
@@ -189,8 +215,10 @@ class Control4Light(Control4Entity, LightEntity):
             transition_length = 0
             await self._C4Light.setLevel(100)
         if transition_length == 0:
-            transition_length = 1500
-        await asyncio.sleep(transition_length / 1000)
+            transition_length = 1000
+        delay_time = (transition_length / 1000) + 0.7
+        _LOGGER.debug("Delaying light update by %s seconds", delay_time)
+        await asyncio.sleep(delay_time)
         await self._coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs) -> None:
@@ -199,12 +227,14 @@ class Control4Light(Control4Entity, LightEntity):
             if ATTR_TRANSITION in kwargs:
                 transition_length = kwargs[ATTR_TRANSITION] * 1000
             else:
-                transition_length = 0
+                transition_length = self._cold_start_transition_time * 1000
             await self._C4Light.rampToLevel(0, transition_length)
         else:
             transition_length = 0
             await self._C4Light.setLevel(0)
         if transition_length == 0:
             transition_length = 1500
-        await asyncio.sleep(transition_length / 1000)
+        delay_time = (transition_length / 1000) + 0.7
+        _LOGGER.debug("Delaying light update by %s seconds", delay_time)
+        await asyncio.sleep(delay_time)
         await self._coordinator.async_request_refresh()

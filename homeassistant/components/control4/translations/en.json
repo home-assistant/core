@@ -11,13 +11,24 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Controller Hostname",
+                    "host": "Controller hostname",
                     "password": "Password",
                     "username": "Username/Email"
                 },
-                "description": "Please enter your Control4 account details and the hostname of your local controller."
+                "description": "Please enter your Control4 account details and the hostname of your local controller.",
+                "title": "Control4"
             }
         }
     },
-    "title": "Control4"
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "light_cold_start_transition_time": "Default light cold start time (seconds)",
+                    "light_transition_time": "Default light brightness transition time (seconds)",
+                    "scan_interval": "Seconds between updates"
+                }
+            }
+        }
+    }
 }

@@ -8,14 +8,24 @@ from pyControl4.director import C4Director
 from pyControl4.error_handling import C4Exception, BadCredentials, Unauthorized
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.helpers import config_validation as cv
 from homeassistant.core import callback
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     CONF_HOST,
+    CONF_SCAN_INTERVAL,
 )
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import (
+    DOMAIN,
+    DEFAULT_SCAN_INTERVAL,
+    MIN_SCAN_INTERVAL,
+    DEFAULT_LIGHT_TRANSITION_TIME,
+    CONF_LIGHT_TRANSITION_TIME,
+    CONF_LIGHT_COLD_START_TRANSITION_TIME,
+    DEFAULT_LIGHT_COLD_START_TRANSITION_TIME,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -149,6 +159,50 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a option flow for Control4."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_SCAN_INTERVAL,
+                    default=self.config_entry.options.get(
+                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                    ),
+                ): vol.All(cv.positive_int, vol.Clamp(min=MIN_SCAN_INTERVAL)),
+                vol.Optional(
+                    CONF_LIGHT_COLD_START_TRANSITION_TIME,
+                    default=self.config_entry.options.get(
+                        CONF_LIGHT_COLD_START_TRANSITION_TIME,
+                        DEFAULT_LIGHT_COLD_START_TRANSITION_TIME,
+                    ),
+                ): vol.All(cv.positive_int),
+                vol.Optional(
+                    CONF_LIGHT_TRANSITION_TIME,
+                    default=self.config_entry.options.get(
+                        CONF_LIGHT_TRANSITION_TIME, DEFAULT_LIGHT_TRANSITION_TIME
+                    ),
+                ): vol.All(cv.positive_int),
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)
 
 
 class CannotConnect(exceptions.HomeAssistantError):
