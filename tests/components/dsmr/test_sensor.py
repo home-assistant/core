@@ -32,6 +32,7 @@ from homeassistant.const import (
     TIME_HOURS,
     VOLUME_CUBIC_METERS,
 )
+from homeassistant.helpers import entity_registry
 
 import tests.async_mock
 from tests.async_mock import DEFAULT, Mock
@@ -261,6 +262,12 @@ async def test_power_in_watt(hass, mock_connection_factory):
     gas_consumption = hass.states.get("sensor.gas_consumption")
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get("unit_of_measurement") == VOLUME_CUBIC_METERS
+
+    registry = await entity_registry.async_get_registry(hass)
+    entry = registry.async_get("sensor.power_consumption")
+
+    assert entry
+    assert entry.unique_id
 
     await hass.config_entries.async_unload(mock_entry.entry_id)
     await hass.async_block_till_done()

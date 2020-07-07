@@ -323,6 +323,41 @@ async def test_config_flow_manual_usb_wrong_telegram(hass, mock_connection_facto
     assert result["errors"] == {"base": "cannot_communicate"}
 
 
+async def test_config_flow_manual_host_wrong_telegram(hass, mock_connection_factory):
+    """
+    Failed flow manually initialized by the user.
+
+    Host specified and wrong telegram data received.
+    """
+    (connection_factory, transport, protocol) = mock_connection_factory
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TYPE: "Host", CONF_DSMR_VERSION: TEST_DSMR_VERSION},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_host"
+    assert result["errors"] == {}
+
+    protocol.telegram = {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_host"
+    assert result["errors"] == {"base": "cannot_communicate"}
+
+
 async def test_config_flow_manual_usb_no_gas(hass, mock_connection_factory):
     """
     Failed flow manually initialized by the user.
@@ -396,7 +431,7 @@ async def test_config_flow_manual_usb_no_gas(hass, mock_connection_factory):
     await hass.async_block_till_done()
 
 
-async def test_config_flow_import_usb_success(hass, mock_connection_factory):
+async def test_config_flow_import_usb(hass, mock_connection_factory):
     """
     Test flow manually initialized by user.
 
@@ -433,12 +468,19 @@ async def test_config_flow_import_usb_success(hass, mock_connection_factory):
 
     await hass.async_block_till_done()
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
     conf_entries = hass.config_entries.async_entries(DOMAIN)
     await hass.config_entries.async_unload(conf_entries[0].entry_id)
     await hass.async_block_till_done()
 
 
-async def test_config_flow_import_host_success(hass, mock_connection_factory):
+async def test_config_flow_import_host(hass, mock_connection_factory):
     """
     Test flow manually initialized by user.
 
@@ -475,6 +517,13 @@ async def test_config_flow_import_host_success(hass, mock_connection_factory):
     }
 
     await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
 
     conf_entries = hass.config_entries.async_entries(DOMAIN)
     await hass.config_entries.async_unload(conf_entries[0].entry_id)
