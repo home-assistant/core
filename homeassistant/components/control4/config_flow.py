@@ -17,6 +17,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
+    CONF_CONTROLLER_NAME,
     CONF_LIGHT_COLD_START_TRANSITION_TIME,
     CONF_LIGHT_TRANSITION_TIME,
     DEFAULT_LIGHT_COLD_START_TRANSITION_TIME,
@@ -24,7 +25,6 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     MIN_SCAN_INTERVAL,
-    CONF_CONTROLLER_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)

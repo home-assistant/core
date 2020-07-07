@@ -20,6 +20,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from . import Control4Entity, get_items_of_category
 from .const import (
+    CONF_DIRECTOR,
     CONF_LIGHT_COLD_START_TRANSITION_TIME,
     CONF_LIGHT_TRANSITION_TIME,
     DOMAIN,
@@ -36,7 +37,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
     """Set up Control4 lights from a config entry."""
-    director = hass.data[DOMAIN][entry.entry_id]["director"]
+    director = hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR]
     scan_interval = hass.data[DOMAIN][entry.entry_id][CONF_SCAN_INTERVAL]
     light_transition_time = hass.data[DOMAIN][entry.entry_id][
         CONF_LIGHT_TRANSITION_TIME
