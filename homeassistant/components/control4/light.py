@@ -146,6 +146,7 @@ class Control4Light(Control4Entity, LightEntity):
         light_transition_time: int,
         light_cold_start_transition_time: int,
     ):
+        """Initialize Control4 light entity."""
         super().__init__(
             hass,
             entry,
@@ -165,6 +166,7 @@ class Control4Light(Control4Entity, LightEntity):
 
     @property
     def is_on(self):
+        """Return whether this light is on or off."""
         return bool(self._coordinator.data[self._idx]["value"] > 0)
 
     @property

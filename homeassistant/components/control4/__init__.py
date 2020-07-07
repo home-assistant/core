@@ -163,7 +163,7 @@ class Control4Entity(entity.Entity):
         device_model: str,
         device_id: int,
     ):
-        """Initializes a Control4 entity."""
+        """Initialize a Control4 entity."""
         self.entry = entry
         self.account = hass.data[DOMAIN][self.entry.title]["account"]
         self.director = hass.data[DOMAIN][self.entry.title]["director"]
@@ -180,6 +180,7 @@ class Control4Entity(entity.Entity):
 
     @property
     def name(self):
+        """Return name of entity."""
         return self._name
 
     @property
@@ -189,6 +190,7 @@ class Control4Entity(entity.Entity):
 
     @property
     def device_info(self):
+        """Return info of parent Control4 device of entity."""
         return {
             "config_entry_id": self.entry.entry_id,
             "identifiers": {(DOMAIN, self._device_id)},
