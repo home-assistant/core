@@ -328,7 +328,7 @@ class RfxtrxDevice(Entity):
         self._event = event
         self._state = datas[ATTR_STATE]
         self._should_fire_event = datas[ATTR_FIRE_EVENT]
-        self._unique_id = f"{slugify(self._event.device.type_string.lower())}_{slugify(self._event.device.id_string.lower())}"
+        self._unique_id = f"{event.device.packettype:x}_{event.device.subtype:x}_{event.device.id_string}"
 
     @property
     def should_poll(self):

@@ -378,7 +378,7 @@ async def _async_log_pending_setups(
         remaining = [domain for domain in domains if domain in setup_started]
 
         if remaining:
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Waiting on integrations to complete setup: %s", ", ".join(remaining),
             )
 
