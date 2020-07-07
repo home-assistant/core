@@ -141,12 +141,18 @@ class Gogogate2Cover(CoverEntity):
 
     async def async_open_cover(self, **kwargs):
         """Open the door."""
+        if not self.is_closed:
+            return
+
         await self.hass.async_add_executor_job(self._api.open_door, self._door.door_id)
         self._transition_state = STATE_OPENING
         self._transition_state_start = datetime.now()
 
     async def async_close_cover(self, **kwargs):
         """Close the door."""
+        if self.is_closed:
+            return
+
         await self.hass.async_add_executor_job(self._api.close_door, self._door.door_id)
         self._transition_state = STATE_CLOSING
         self._transition_state_start = datetime.now()

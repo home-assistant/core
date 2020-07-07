@@ -400,21 +400,54 @@ async def test_open_close(
     component_data.api.activate.return_value = ActivateResponse(result=True)
 
     assert hass.states.get("cover.door1").state == STATE_OPEN
+
+    # Attempt to open an already open cover.
+    await hass.services.async_call(
+        COVER_DOMAIN, "open_cover", service_data={"entity_id": "cover.door1"},
+    )
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        HA_DOMAIN, "update_entity", service_data={"entity_id": "cover.door1"},
+    )
+    await hass.async_block_till_done()
+    component_data.api.close_door.assert_not_called()
+    component_data.api.open_door.assert_not_called()
+    component_data.api.close_door.reset_mock()
+    component_data.api.open_door.reset_mock()
+
+    # Close the cover.
     await hass.services.async_call(
         COVER_DOMAIN, "close_cover", service_data={"entity_id": "cover.door1"},
     )
     await hass.async_block_till_done()
     component_data.api.close_door.assert_called_with(1)
+    component_data.api.open_door.assert_not_called()
     await hass.services.async_call(
         HA_DOMAIN, "update_entity", service_data={"entity_id": "cover.door1"},
     )
     await hass.async_block_till_done()
     assert hass.states.get("cover.door1").state == STATE_CLOSING
-
     component_data.data_update_coordinator.api.info.return_value = closed_door_response
     await component_data.data_update_coordinator.async_refresh()
     await hass.async_block_till_done()
     assert hass.states.get("cover.door1").state == STATE_CLOSED
+    component_data.api.close_door.assert_called_with(1)
+    component_data.api.open_door.assert_not_called()
+    component_data.api.close_door.reset_mock()
+    component_data.api.open_door.reset_mock()
+
+    # Attempt to close an already closed cover.
+    await hass.services.async_call(
+        COVER_DOMAIN, "close_cover", service_data={"entity_id": "cover.door1"},
+    )
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        HA_DOMAIN, "update_entity", service_data={"entity_id": "cover.door1"},
+    )
+    await hass.async_block_till_done()
+    component_data.api.open_door.assert_not_called()
+    component_data.api.close_door.assert_not_called()
+    component_data.api.close_door.reset_mock()
 
     # Assert mid state changed when new status is received.
     await hass.services.async_call(
