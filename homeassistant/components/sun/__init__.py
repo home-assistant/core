@@ -250,6 +250,7 @@ class Sun(Entity):
 
     async def async_added_to_hass(self):
         """Complete the initialization."""
+        _LOGGER.debug("sun added")
         await super().async_added_to_hass()
         self._async_update_location()
         self._core_config_listener = self.hass.bus.async_listen(
