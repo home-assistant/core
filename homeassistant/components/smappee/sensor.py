@@ -88,48 +88,48 @@ VOLTAGE_SENSORS = {
         "mdi:flash",
         VOLT,
         "phase_voltage_a",
-        ["ONE", "TWO", "THREE_STAR", "THREE_DELTA"],
         None,
+        ["ONE", "TWO", "THREE_STAR", "THREE_DELTA"],
     ],
     "phase_voltages_b": [
         "Phase voltages - B",
         "mdi:flash",
         VOLT,
         "phase_voltage_b",
-        ["TWO", "THREE_STAR", "THREE_DELTA"],
         None,
+        ["TWO", "THREE_STAR", "THREE_DELTA"],
     ],
     "phase_voltages_c": [
         "Phase voltages - C",
         "mdi:flash",
         VOLT,
         "phase_voltage_c",
-        ["THREE_STAR"],
         None,
+        ["THREE_STAR"],
     ],
     "line_voltages_a": [
         "Line voltages - A",
         "mdi:flash",
         VOLT,
         "line_voltage_a",
-        ["ONE", "TWO", "THREE_STAR", "THREE_DELTA"],
         None,
+        ["ONE", "TWO", "THREE_STAR", "THREE_DELTA"],
     ],
     "line_voltages_b": [
         "Line voltages - B",
         "mdi:flash",
         VOLT,
         "line_voltage_b",
-        ["TWO", "THREE_STAR", "THREE_DELTA"],
         None,
+        ["TWO", "THREE_STAR", "THREE_DELTA"],
     ],
     "line_voltages_c": [
         "Line voltages - C",
         "mdi:flash",
         VOLT,
         "line_voltage_c",
-        ["THREE_STAR", "THREE_DELTA"],
         None,
+        ["THREE_STAR", "THREE_DELTA"],
     ],
 }
 
@@ -182,7 +182,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         # Add phase- and line voltages
         for sensor_name, sensor in VOLTAGE_SENSORS.items():
-            if service_location.phase_type in sensor[4]:
+            if service_location.phase_type in sensor[5]:
                 entities.append(
                     SmappeeSensor(
                         smappee_base=smappee_base,
