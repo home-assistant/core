@@ -36,10 +36,12 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
     """Set up Control4 lights from a config entry."""
-    director = hass.data[DOMAIN][entry.title]["director"]
-    scan_interval = hass.data[DOMAIN][entry.title][CONF_SCAN_INTERVAL]
-    light_transition_time = hass.data[DOMAIN][entry.title][CONF_LIGHT_TRANSITION_TIME]
-    light_cold_start_transition_time = hass.data[DOMAIN][entry.title][
+    director = hass.data[DOMAIN][entry.entry_id]["director"]
+    scan_interval = hass.data[DOMAIN][entry.entry_id][CONF_SCAN_INTERVAL]
+    light_transition_time = hass.data[DOMAIN][entry.entry_id][
+        CONF_LIGHT_TRANSITION_TIME
+    ]
+    light_cold_start_transition_time = hass.data[DOMAIN][entry.entry_id][
         CONF_LIGHT_COLD_START_TRANSITION_TIME
     ]
     _LOGGER.debug(

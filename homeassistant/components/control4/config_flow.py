@@ -24,6 +24,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     MIN_SCAN_INTERVAL,
+    CONF_CONTROLLER_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,7 +41,10 @@ DATA_SCHEMA = vol.Schema(
 @callback
 def configured_instances(hass):
     """Return a set of configured Control4 instances."""
-    return {entry.title for entry in hass.config_entries.async_entries(DOMAIN)}
+    return {
+        entry.data.get(CONF_CONTROLLER_NAME)
+        for entry in hass.config_entries.async_entries(DOMAIN)
+    }
 
 
 class Control4Validator:
@@ -133,9 +137,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=info["controller_name"],
                     data={
-                        "host": user_input["host"],
-                        "username": user_input["username"],
-                        "password": user_input["password"],
+                        CONF_HOST: user_input["host"],
+                        CONF_USERNAME: user_input["username"],
+                        CONF_PASSWORD: user_input["password"],
+                        CONF_CONTROLLER_NAME: info["controller_name"],
                     },
                 )
             except CannotConnect:

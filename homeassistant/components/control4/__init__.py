@@ -25,6 +25,7 @@ from .const import (
     DEFAULT_LIGHT_TRANSITION_TIME,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    CONF_CONTROLLER_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Control4 from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(entry.title, {})
+    hass.data[DOMAIN].setdefault(entry.entry_id, {})
 
     config = entry.data
     account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD])
@@ -55,52 +56,55 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except client_exceptions.ClientError as exception:
         _LOGGER.error("Error connecting to Control4 account API: %s", exception)
         raise PlatformNotReady()
-    hass.data[DOMAIN][entry.title]["account"] = account
+    hass.data[DOMAIN][entry.entry_id]["account"] = account
 
-    director_token_dict = await account.getDirectorBearerToken(entry.title)
+    controller_name = config[CONF_CONTROLLER_NAME]
+    hass.data[DOMAIN][entry.entry_id][CONF_CONTROLLER_NAME] = controller_name
+
+    director_token_dict = await account.getDirectorBearerToken(controller_name)
     director = C4Director(config["host"], director_token_dict["token"])
-    hass.data[DOMAIN][entry.title]["director"] = director
-    hass.data[DOMAIN][entry.title]["director_token_expiry"] = director_token_dict[
+    hass.data[DOMAIN][entry.entry_id]["director"] = director
+    hass.data[DOMAIN][entry.entry_id]["director_token_expiry"] = director_token_dict[
         "token_expiration"
     ]
 
     controller_href = (await account.getAccountControllers())["href"]
-    hass.data[DOMAIN][entry.title][
+    hass.data[DOMAIN][entry.entry_id][
         "director_sw_version"
     ] = await account.getControllerOSVersion(controller_href)
 
     # Add Control4 controller to device registry
-    result = re.search("_(.*)_", entry.title)
-    hass.data[DOMAIN][entry.title]["director_model"] = result.group(1).upper()
+    result = re.search("_(.*)_", controller_name)
+    hass.data[DOMAIN][entry.entry_id]["director_model"] = result.group(1).upper()
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.title)},
+        identifiers={(DOMAIN, controller_name)},
         manufacturer="Control4",
-        name=entry.title,
-        model=hass.data[DOMAIN][entry.title]["director_model"],
-        sw_version=hass.data[DOMAIN][entry.title]["director_sw_version"],
+        name=controller_name,
+        model=hass.data[DOMAIN][entry.entry_id]["director_model"],
+        sw_version=hass.data[DOMAIN][entry.entry_id]["director_sw_version"],
     )
 
     # Store all items found on controller for platforms to use
     director_all_items = await director.getAllItemInfo()
     director_all_items = json.loads(director_all_items)
-    hass.data[DOMAIN][entry.title]["director_all_items"] = director_all_items
+    hass.data[DOMAIN][entry.entry_id]["director_all_items"] = director_all_items
 
     # Load options from config entry
-    hass.data[DOMAIN][entry.title][CONF_SCAN_INTERVAL] = entry.options.get(
+    hass.data[DOMAIN][entry.entry_id][CONF_SCAN_INTERVAL] = entry.options.get(
         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
     )
-    hass.data[DOMAIN][entry.title][CONF_LIGHT_TRANSITION_TIME] = entry.options.get(
+    hass.data[DOMAIN][entry.entry_id][CONF_LIGHT_TRANSITION_TIME] = entry.options.get(
         CONF_LIGHT_TRANSITION_TIME, DEFAULT_LIGHT_TRANSITION_TIME
     )
-    hass.data[DOMAIN][entry.title][
+    hass.data[DOMAIN][entry.entry_id][
         CONF_LIGHT_COLD_START_TRANSITION_TIME
     ] = entry.options.get(
         CONF_LIGHT_COLD_START_TRANSITION_TIME, DEFAULT_LIGHT_COLD_START_TRANSITION_TIME
     )
 
-    hass.data[DOMAIN][entry.title]["config_listener"] = entry.add_update_listener(
+    hass.data[DOMAIN][entry.entry_id]["config_listener"] = entry.add_update_listener(
         update_listener
     )
 
@@ -129,10 +133,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
-    hass.data[DOMAIN][entry.title]["config_listener"]()
+    hass.data[DOMAIN][entry.entry_id]["config_listener"]()
     if unload_ok:
-        controller_name = entry.title
-        hass.data[DOMAIN].pop(entry.title)
+        controller_name = entry.entry_id
+        hass.data[DOMAIN].pop(entry.entry_id)
         _LOGGER.debug("Unloaded entry for %s", controller_name)
 
     return unload_ok
@@ -140,7 +144,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def get_items_of_category(hass: HomeAssistant, entry: ConfigEntry, category: str):
     """Return a list of all Control4 items with the specified category."""
-    director_all_items = hass.data[DOMAIN][entry.title]["director_all_items"]
+    director_all_items = hass.data[DOMAIN][entry.entry_id]["director_all_items"]
     return_list = []
     for item in director_all_items:
         if "categories" in item.keys() and category in item["categories"]:
@@ -165,14 +169,17 @@ class Control4Entity(entity.Entity):
     ):
         """Initialize a Control4 entity."""
         self.entry = entry
-        self.account = hass.data[DOMAIN][self.entry.title]["account"]
-        self.director = hass.data[DOMAIN][self.entry.title]["director"]
-        self.director_token_expiry = hass.data[DOMAIN][self.entry.title][
+        self.account = hass.data[DOMAIN][self.entry.entry_id]["account"]
+        self.director = hass.data[DOMAIN][self.entry.entry_id]["director"]
+        self.director_token_expiry = hass.data[DOMAIN][self.entry.entry_id][
             "director_token_expiry"
         ]
         self._name = name
         self._idx = idx
         self._coordinator = coordinator
+        self._controller_name = hass.data[DOMAIN][self.entry.entry_id][
+            CONF_CONTROLLER_NAME
+        ]
         self._device_name = device_name
         self._device_manufacturer = device_manufacturer
         self._device_model = device_model
@@ -197,7 +204,7 @@ class Control4Entity(entity.Entity):
             "name": self._device_name,
             "manufacturer": self._device_manufacturer,
             "model": self._device_model,
-            "via_device": (DOMAIN, self.entry.title),
+            "via_device": (DOMAIN, self._controller_name),
         }
 
     @property
@@ -223,15 +230,15 @@ class Control4Entity(entity.Entity):
             config = self.entry.data
             self.account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD])
             director_token_dict = await self.account.getDirectorBearerToken(
-                self.entry.title
+                self._controller_name
             )
             self.director = C4Director(config["host"], director_token_dict["token"])
             self.director_token_expiry = director_token_dict["token_expiration"]
 
             _LOGGER.debug("Saving new tokens in config_entry")
-            self.hass.data[DOMAIN][self.entry.title]["account"] = self.account
-            self.hass.data[DOMAIN][self.entry.title]["director"] = self.director
-            self.hass.data[DOMAIN][self.entry.title][
+            self.hass.data[DOMAIN][self.entry.entry_id]["account"] = self.account
+            self.hass.data[DOMAIN][self.entry.entry_id]["director"] = self.director
+            self.hass.data[DOMAIN][self.entry.entry_id][
                 "director_token_expiry"
             ] = self.director_token_expiry
 
