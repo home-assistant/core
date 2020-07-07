@@ -545,11 +545,13 @@ class _ScriptRun(_ScriptRunBase):
         description = self._action.get(CONF_ALIAS, "sequence")
         repeat = self._action[CONF_REPEAT]
 
-        async def async_run_sequence(iteration, extra_msg="", extra_vars={}):
+        async def async_run_sequence(iteration, extra_msg="", extra_vars=None):
             self._log("Repeating %s: Iteration %i%s", description, iteration, extra_msg)
             repeat_vars = {"repeat": {"first": iteration == 1, "index": iteration}}
-            repeat_vars["repeat"].update(extra_vars)
+            if extra_vars:
+                repeat_vars["repeat"].update(extra_vars)
             task = self._hass.async_create_task(
+                # pylint: disable=protected-access
                 self._script._repeat_script[self._step].async_run(
                     # Add repeat to variables. Override if it already exists in case of
                     # nested calls.
@@ -787,7 +789,6 @@ class _LegacyScriptRun(_ScriptRunBase):
     async def _async_repeat_step(self):
         """Repeat a sequence."""
         # Not supported in legacy mode.
-        pass
 
     def _async_remove_listener(self):
         """Remove listeners, if any."""
