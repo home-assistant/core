@@ -159,12 +159,16 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     def __init__(self, values):
         """Initialize the entity."""
         super().__init__(values)
-        self._current_mode_setpoint_values = self._get_current_mode_setpoint_values()
+        self._hvac_modes = {}
+        self._hvac_presets = {}
+        self.on_value_update()
 
     @callback
     def on_value_update(self):
-        """Call when the underlying value(s) is added or updated."""
+        """Call when the underlying values object changes."""
         self._current_mode_setpoint_values = self._get_current_mode_setpoint_values()
+        if not self._hvac_modes:
+            self._set_modes_and_presets()
 
     @property
     def hvac_mode(self):
@@ -178,15 +182,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     @property
     def hvac_modes(self):
         """Return the list of available hvac operation modes."""
-        if not self.values.mode:
-            return []
-        # Z-Wave uses one list for both modes and presets. Extract the unique modes
-        all_modes = []
-        for val in self.values.mode.value[VALUE_LIST]:
-            hass_mode = ZW_HVAC_MODE_MAPPINGS.get(val[VALUE_ID])
-            if hass_mode and hass_mode not in all_modes:
-                all_modes.append(hass_mode)
-        return all_modes
+        return list(self._hvac_modes.keys())
 
     @property
     def fan_mode(self):
@@ -231,12 +227,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     @property
     def preset_modes(self):
         """Return the list of available preset operation modes."""
-        # A Zwave mode that can not be translated to a hass mode is considered a preset
-        return [PRESET_NONE] + [
-            val[VALUE_LABEL]
-            for val in self.values.mode.value[VALUE_LIST]
-            if val[VALUE_ID] not in MODES_LIST
-        ]
+        return list(self._hvac_presets.keys())
 
     @property
     def target_temperature(self):
@@ -283,20 +274,10 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
-        if not self.values.mode:
-            return
-        if hvac_mode not in self.hvac_modes:
+        hvac_mode_value = self._hvac_modes.get(hvac_mode)
+        if not hvac_mode_value:
             _LOGGER.warning("Received an invalid hvac mode: %s", hvac_mode)
             return
-        hvac_mode_value = HVAC_MODE_ZW_MAPPINGS.get(hvac_mode)
-        if hvac_mode == HVAC_MODE_HEAT_COOL:
-            # determine the correct value to set
-            for val in self.values.mode.value[VALUE_LIST]:
-                zwave_mode = val[VALUE_ID]
-                hass_mode = ZW_HVAC_MODE_MAPPINGS.get(zwave_mode)
-                if hass_mode == HVAC_MODE_HEAT_COOL:
-                    hvac_mode_value = zwave_mode
-                    break
         self.values.mode.send_value(hvac_mode_value)
 
     async def async_set_preset_mode(self, preset_mode):
@@ -305,9 +286,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
             # try to restore to the (translated) main hvac mode
             await self.async_set_hvac_mode(self.hvac_mode)
             return
-        preset_mode_value = _get_list_id(
-            self.values.mode.value[VALUE_LIST], preset_mode
-        )
+        preset_mode_value = self._hvac_presets.get(preset_mode)
         if preset_mode_value is None:
             _LOGGER.warning("Received an invalid preset mode: %s", preset_mode)
             return
@@ -349,6 +328,25 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
             for value_name in setpoint_names
             if getattr(self.values, value_name, None)
         )
+
+    def _set_modes_and_presets(self):
+        """Convert Z-Wave Thermostat modes into Home Assistant modes and presets."""
+        if not self.values.mode:
+            return
+        all_modes = {}
+        all_presets = {PRESET_NONE: None}
+        # Z-Wave uses one list for both modes and presets.
+        # Iterate over all Z-Wave ThermostatModes and extract the hvac modes and presets.
+        for val in self.values.mode.value[VALUE_LIST]:
+            if val[VALUE_ID] in MODES_LIST:
+                # treat value as hvac mode
+                hass_mode = ZW_HVAC_MODE_MAPPINGS.get(val[VALUE_ID])
+                all_modes[hass_mode] = val[VALUE_ID]
+            else:
+                # treat value as hvac preset
+                all_presets[val[VALUE_LABEL]] = val[VALUE_ID]
+        self._hvac_modes = all_modes
+        self._hvac_presets = all_presets
 
 
 def _get_list_id(value_lst, value_lbl):
