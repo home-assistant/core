@@ -92,13 +92,10 @@ async def test_stop_cover(hass):
     """Tests that stop cover command delegates to API."""
 
     with patch(
-        "homeassistant.components.bond.utils.get_bond_devices",
-        return_value=[
-            BondDevice(
-                "device-1",
-                {"name": "name-1", "type": BOND_DEVICE_TYPE_MOTORIZED_SHADES},
-            )
-        ],
+        "bond.Bond.getDeviceIds", return_value=["device-1"],
+    ), patch(
+        "bond.Bond.getDevice",
+        return_value={"name": "name-1", type: BOND_DEVICE_TYPE_MOTORIZED_SHADES}
     ):
         await setup_platform(hass, COVER_DOMAIN)
 
