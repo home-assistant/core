@@ -201,7 +201,7 @@ aioimaplib==0.7.15
 aiokafka==0.5.1
 
 # homeassistant.components.kef
-aiokef==0.2.12
+aiokef==0.2.13
 
 # homeassistant.components.lifx
 aiolifx==0.6.7
