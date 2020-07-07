@@ -545,7 +545,11 @@ class Entity(ABC):
         """
         if self.platform:
             assert self.hass is not None
-            self.hass.data[DATA_ENTITY_SOURCE].pop(self.entity_id)
+            self.hass.data[DATA_ENTITY_SOURCE].pop(
+                self.entity_id,
+                # In rare cases removal can be called twice, this will prevent it from blowing up
+                None,
+            )
 
     async def _async_registry_updated(self, event: Event) -> None:
         """Handle entity registry update."""
