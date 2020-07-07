@@ -76,6 +76,7 @@ class ZWaveServices:
                 or value.index != param
             ):
                 continue
+
             if value.type == ValueType.BOOL:
                 payload = selection == "True"
 
@@ -109,7 +110,11 @@ class ZWaveServices:
                 # Unsupported at this time
                 _LOGGER.info("Button type not supported yet")
                 return
-            if value.type == ValueType.INT:
+
+            if value.type == ValueType.STRING:
+                payload = selection
+
+            if value.type == ValueType.INT or value.type == ValueType.BYTE:
                 if selection > value.max or selection < value.min:
                     _LOGGER.error(
                         "Value %s out of range for parameter %s (Min: %s Max: %s)",
