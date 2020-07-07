@@ -70,9 +70,10 @@ async def async_setup_entry(hass, config_entry):
     coordinator = SpeedTestDataCoordinator(hass, config_entry)
     await coordinator.async_setup()
 
-    await coordinator.async_refresh()
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    if not config_entry.options[CONF_MANUAL]:
+        await coordinator.async_refresh()
+        if not coordinator.last_update_success:
+            raise ConfigEntryNotReady
 
     hass.data[DOMAIN] = coordinator
 
@@ -115,9 +116,12 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
             ),
         )
 
-    def update_data(self):
-        """Get the latest data from speedtest.net."""
-        server_list = self.api.get_servers()
+    def update_servers(self):
+        """Update list of test servers."""
+        try:
+            server_list = self.api.get_servers()
+        except speedtest.ConfigRetrievalError:
+            return
 
         self.servers[DEFAULT_SERVER] = {}
         for server in sorted(
@@ -125,14 +129,20 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         ):
             self.servers[f"{server[0]['country']} - {server[0]['sponsor']}"] = server[0]
 
+    def update_data(self):
+        """Get the latest data from speedtest.net."""
+        self.update_servers()
+
+        self.api.closest.clear()
         if self.config_entry.options.get(CONF_SERVER_ID):
             server_id = self.config_entry.options.get(CONF_SERVER_ID)
-            self.api.closest.clear()
             self.api.get_servers(servers=[server_id])
+
+        self.api.get_best_server()
         _LOGGER.debug(
             "Executing speedtest.net speed test with server_id: %s", self.api.best["id"]
         )
-        self.api.get_best_server()
+
         self.api.download()
         self.api.upload()
         return self.api.results.dict()
@@ -169,6 +179,8 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
             await self.async_request_refresh()
 
         await self.async_set_options()
+
+        await self.hass.async_add_executor_job(self.update_servers)
 
         self.hass.services.async_register(DOMAIN, SPEED_TEST_SERVICE, request_update)
 
