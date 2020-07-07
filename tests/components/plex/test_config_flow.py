@@ -191,6 +191,10 @@ async def test_single_available_server(hass):
         "plexapi.server.PlexServer", return_value=mock_plex_server
     ), patch("plexauth.PlexAuth.initiate_auth"), patch(
         "plexauth.PlexAuth.token", return_value=MOCK_TOKEN
+    ), patch(
+        "homeassistant.components.plex.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.plex.async_setup", return_value=True
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -232,6 +236,10 @@ async def test_multiple_servers_with_selection(hass):
         "plexauth.PlexAuth.initiate_auth"
     ), patch(
         "plexauth.PlexAuth.token", return_value=MOCK_TOKEN
+    ), patch(
+        "homeassistant.components.plex.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.plex.async_setup", return_value=True
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -287,6 +295,10 @@ async def test_adding_last_unconfigured_server(hass):
         "plexauth.PlexAuth.initiate_auth"
     ), patch(
         "plexauth.PlexAuth.token", return_value=MOCK_TOKEN
+    ), patch(
+        "homeassistant.components.plex.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.plex.async_setup", return_value=True
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -673,6 +685,10 @@ async def test_manual_config(hass):
 
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
         "homeassistant.components.plex.PlexWebsocket", autospec=True
+    ), patch(
+        "homeassistant.components.plex.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.plex.async_setup", return_value=True
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MANUAL_SERVER
@@ -707,7 +723,11 @@ async def test_manual_config_with_token(hass):
 
     with patch("plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()), patch(
         "plexapi.server.PlexServer", return_value=mock_plex_server
-    ), patch("homeassistant.components.plex.PlexWebsocket", autospec=True):
+    ), patch("homeassistant.components.plex.PlexWebsocket", autospec=True), patch(
+        "homeassistant.components.plex.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.plex.async_setup", return_value=True
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_TOKEN: MOCK_TOKEN}
         )
