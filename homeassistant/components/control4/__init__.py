@@ -11,6 +11,7 @@ from pyControl4.director import C4Director
 
 from homeassistant.helpers import entity
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -110,13 +111,67 @@ async def get_items_of_category(hass: HomeAssistant, entry: ConfigEntry, categor
 
 
 class Control4Entity(entity.Entity):
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        coordinator: DataUpdateCoordinator,
+        name: str,
+        idx: int,
+        device_name: str,
+        device_manufacturer: str,
+        device_model: str,
+        device_id: int,
+    ):
         self.entry = entry
         self.account = hass.data[DOMAIN][self.entry.title]["account"]
         self.director = hass.data[DOMAIN][self.entry.title]["director"]
         self.director_token_expiry = hass.data[DOMAIN][self.entry.title][
             "director_token_expiry"
         ]
+        self._name = name
+        self._idx = idx
+        self._coordinator = coordinator
+        self._device_name = device_name
+        self._device_manufacturer = device_manufacturer
+        self._device_model = device_model
+        self._device_id = device_id
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._idx
+
+    @property
+    def device_info(self):
+        return {
+            "config_entry_id": self.entry.entry_id,
+            "identifiers": {(DOMAIN, self._device_id)},
+            "name": self._device_name,
+            "manufacturer": self._device_manufacturer,
+            "model": self._device_model,
+            "via_device": (DOMAIN, self.entry.title),
+        }
+
+    @property
+    def should_poll(self):
+        """No need to poll. Coordinator notifies entity of updates."""
+        return False
+
+    @property
+    def available(self):
+        """Return if entity is available."""
+        return self._coordinator.last_update_success
+
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     async def async_update(self):
         """Update the state of the device."""
@@ -140,4 +195,5 @@ class Control4Entity(entity.Entity):
             self.hass.data[DOMAIN][self.entry.title][
                 "director_token_expiry"
             ] = self.director_token_expiry
+        await self._coordinator.async_request_refresh()
 

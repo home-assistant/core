@@ -138,41 +138,19 @@ class Control4Light(Control4Entity, LightEntity):
         device_id: int,
         is_dimmer: bool,
     ):
-        super().__init__(hass, entry)
-        self._name = name
-        self._idx = idx
-        self._coordinator = coordinator
-        self._device_name = device_name
-        self._device_manufacturer = device_manufacturer
-        self._device_model = device_model
-        self._device_id = device_id
+        super().__init__(
+            hass,
+            entry,
+            coordinator,
+            name,
+            idx,
+            device_name,
+            device_manufacturer,
+            device_model,
+            device_id,
+        )
         self._is_dimmer = is_dimmer
         self._C4Light = C4Light(self.director, idx)
-
-    @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
-
-    @property
-    def available(self):
-        """Return if entity is available."""
-        return self._coordinator.last_update_success
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update the state of the device."""
-        await super().async_update()
-        await self._coordinator.async_request_refresh()
-
-    @property
-    def name(self):
-        return self._name
 
     @property
     def is_on(self):
@@ -193,17 +171,6 @@ class Control4Light(Control4Entity, LightEntity):
             flags |= SUPPORT_BRIGHTNESS
             flags |= SUPPORT_TRANSITION
         return flags
-
-    @property
-    def device_info(self):
-        return {
-            "config_entry_id": self.entry.entry_id,
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": self._device_name,
-            "manufacturer": self._device_manufacturer,
-            "model": self._device_model,
-            "via_device": (DOMAIN, self.entry.title),
-        }
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
