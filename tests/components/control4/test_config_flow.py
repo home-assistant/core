@@ -16,8 +16,14 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.control4.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.control4.config_flow.Control4Validator.authenticate",
         return_value=True,
+    ), patch(
+        "homeassistant.components.control4.config_flow.Control4Validator.connect_to_director",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.control4.config_flow.validate_input",
+        return_value={"controller_name": "Name of the device"},
     ), patch(
         "homeassistant.components.control4.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -51,7 +57,7 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.control4.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.control4.config_flow.Control4Validator.authenticate",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -74,7 +80,10 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.control4.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.control4.config_flow.Control4Validator.authenticate",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.control4.config_flow.Control4Validator.connect_to_director",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
