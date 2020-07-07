@@ -91,7 +91,7 @@ class HassEventLoopPolicy(PolicyBase):
 
 
 @callback
-def _async_loop_exception_handler(self, _: Any, context: Dict) -> None:
+def _async_loop_exception_handler(_: Any, context: Dict) -> None:
     """Handle all exception inside the core loop."""
     kwargs = {}
     exception = context.get("exception")
