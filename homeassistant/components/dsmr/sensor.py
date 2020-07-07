@@ -19,6 +19,8 @@ from .const import (
     CONF_DSMR_VERSION,
     CONF_PRECISION,
     CONF_RECONNECT_INTERVAL,
+    CONF_SERIAL_ID,
+    CONF_SERIAL_ID_GAS,
     DOMAIN,
     ICON_GAS,
     ICON_POWER,
@@ -76,38 +78,39 @@ async def async_setup_entry(
     # Generate device entities
     devices = [
         DSMREntity(
-            name, unique_base, "Electricity Meter", config["serial_id"], obis, config
+            name, unique_base, "Electricity Meter", config[CONF_SERIAL_ID], obis, config
         )
         for name, obis in obis_mapping
     ]
 
-    # Protocol version specific obis
-    if dsmr_version in ("4", "5"):
-        gas_obis = obis_ref.HOURLY_GAS_METER_READING
-    elif dsmr_version in ("5B",):
-        gas_obis = obis_ref.BELGIUM_HOURLY_GAS_METER_READING
-    else:
-        gas_obis = obis_ref.GAS_METER_READING
+    if config[CONF_SERIAL_ID_GAS] is not None:
+        # Protocol version specific obis
+        if dsmr_version in ("4", "5"):
+            gas_obis = obis_ref.HOURLY_GAS_METER_READING
+        elif dsmr_version in ("5B",):
+            gas_obis = obis_ref.BELGIUM_HOURLY_GAS_METER_READING
+        else:
+            gas_obis = obis_ref.GAS_METER_READING
 
-    # Add gas meter reading and derivative for usage
-    devices += [
-        DSMREntity(
-            "Gas Consumption",
-            unique_base,
-            "Gas Meter",
-            config["serial_id_gas"],
-            gas_obis,
-            config,
-        ),
-        DerivativeDSMREntity(
-            "Hourly Gas Consumption",
-            unique_base,
-            "Gas Meter",
-            config["serial_id_gas"],
-            gas_obis,
-            config,
-        ),
-    ]
+        # Add gas meter reading and derivative for usage
+        devices += [
+            DSMREntity(
+                "Gas Consumption",
+                unique_base,
+                "Gas Meter",
+                config[CONF_SERIAL_ID_GAS],
+                gas_obis,
+                config,
+            ),
+            DerivativeDSMREntity(
+                "Hourly Gas Consumption",
+                unique_base,
+                "Gas Meter",
+                config[CONF_SERIAL_ID_GAS],
+                gas_obis,
+                config,
+            ),
+        ]
 
     async_add_entities(devices)
 

@@ -86,12 +86,6 @@ class DSMRConnection:
         if transport:
             await protocol.wait_closed()
 
-        if (
-            obis_ref.EQUIPMENT_IDENTIFIER not in self._telegram
-            or obis_ref.EQUIPMENT_IDENTIFIER_GAS not in self._telegram
-        ):
-            return False
-
         return True
 
 
@@ -104,6 +98,9 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     equipment_identifier = conn.equipment_identifier()
     equipment_identifier_gas = conn.equipment_identifier_gas()
+
+    if equipment_identifier is None:
+        raise CannotCommunicate
 
     info = {
         CONF_SERIAL_ID: equipment_identifier,
@@ -169,6 +166,8 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except CannotCommunicate:
+                errors["base"] = "cannot_communicate"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -201,6 +200,8 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except CannotCommunicate:
+                errors["base"] = "cannot_communicate"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -255,6 +256,11 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             if self.host_already_configured(self._host, self._port):
                 return self.async_abort(reason="already_configured")
+        else:
+            self._port = user_input.get(CONF_PORT)
+
+            if self.usb_already_configured(self._port):
+                return self.async_abort(reason="already_configured")
 
         self._dsmr_version = user_input.get(CONF_DSMR_VERSION)
 
@@ -270,19 +276,29 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._serial_id = info[CONF_SERIAL_ID]
             self._serial_id_gas = info[CONF_SERIAL_ID_GAS]
 
-            return await self.async_step_setup_options()
+            return await self.async_step_setup_options(user_input)
 
         except CannotConnect:
             _LOGGER.exception("Cannot connect to device")
-            return self.async_abort(reason="connection_error")
+            return self.async_abort(reason="cannot_connect")
+        except CannotCommunicate:
+            _LOGGER.exception("Cannot communicate with device")
+            return self.async_abort(reason="cannot_communicate")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unexpected_exception")
+            return self.async_abort(reason="unknown")
 
         return await self.async_step_setup_options(user_input)
 
+    def usb_already_configured(self, port):
+        """See if we already have a DSMR USB entry matching user input configured."""
+        existing_usb = {
+            entry.data[CONF_PORT] for entry in self._async_current_entries()
+        }
+        return port in existing_usb
+
     def host_already_configured(self, host, port):
-        """See if we already have a DSMR entry matching user input configured."""
+        """See if we already have a DSMR Host entry matching user input configured."""
         for entry in self._async_current_entries():
             if (
                 entry.data[CONF_HOST] == self._host
@@ -295,3 +311,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
+
+
+class CannotCommunicate(exceptions.HomeAssistantError):
+    """Error to indicate we cannot communicate with device."""

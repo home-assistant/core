@@ -2,11 +2,13 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
+            "cannot_communicate": "Cannot communicate with device",
             "cannot_connect": "Failed to connect",
             "unknown": "Unexpected error"
         },
         "error": {
             "cannot_connect": "Failed to connect",
+            "cannot_communicate": "Cannot communicate with device",
             "unknown": "Unexpected error"
         },
         "flow_title": "DSMR Slimme Meter: {name}",
