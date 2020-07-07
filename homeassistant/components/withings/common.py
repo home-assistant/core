@@ -450,7 +450,7 @@ WITHINGS_ATTRIBUTES = [
         NotifyAppli.BED_IN,
         "In bed",
         "",
-        "mdi:bed",
+        "mdi:hotel",
         BINARY_SENSOR_DOMAIN,
         True,
         UpdateType.WEBHOOK,

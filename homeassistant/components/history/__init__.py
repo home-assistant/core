@@ -394,16 +394,9 @@ def get_state(hass, utc_point_in_time, entity_id, run=None):
 
 async def async_setup(hass, config):
     """Set up the history hooks."""
-    filters = Filters()
     conf = config.get(DOMAIN, {})
-    exclude = conf.get(CONF_EXCLUDE)
-    if exclude:
-        filters.excluded_entities = exclude.get(CONF_ENTITIES, [])
-        filters.excluded_domains = exclude.get(CONF_DOMAINS, [])
-    include = conf.get(CONF_INCLUDE)
-    if include:
-        filters.included_entities = include.get(CONF_ENTITIES, [])
-        filters.included_domains = include.get(CONF_DOMAINS, [])
+
+    filters = sqlalchemy_filter_from_include_exclude_conf(conf)
     use_include_order = conf.get(CONF_ORDER)
 
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
@@ -530,6 +523,20 @@ class HistoryPeriodView(HomeAssistantView):
         return self.json(result)
 
 
+def sqlalchemy_filter_from_include_exclude_conf(conf):
+    """Build a sql filter from config."""
+    filters = Filters()
+    exclude = conf.get(CONF_EXCLUDE)
+    if exclude:
+        filters.excluded_entities = exclude.get(CONF_ENTITIES, [])
+        filters.excluded_domains = exclude.get(CONF_DOMAINS, [])
+    include = conf.get(CONF_INCLUDE)
+    if include:
+        filters.included_entities = include.get(CONF_ENTITIES, [])
+        filters.included_domains = include.get(CONF_DOMAINS, [])
+    return filters
+
+
 class Filters:
     """Container for the configured include and exclude filters."""
 
@@ -556,26 +563,34 @@ class Filters:
             return query.filter(States.entity_id.in_(entity_ids))
         query = query.filter(~States.domain.in_(IGNORE_DOMAINS))
 
-        filter_query = None
+        entity_filter = self.entity_filter()
+        if entity_filter is not None:
+            query = query.filter(entity_filter)
+
+        return query
+
+    def entity_filter(self):
+        """Generate the entity filter query."""
+        entity_filter = None
         # filter if only excluded domain is configured
         if self.excluded_domains and not self.included_domains:
-            filter_query = ~States.domain.in_(self.excluded_domains)
+            entity_filter = ~States.domain.in_(self.excluded_domains)
             if self.included_entities:
-                filter_query &= States.entity_id.in_(self.included_entities)
+                entity_filter &= States.entity_id.in_(self.included_entities)
         # filter if only included domain is configured
         elif not self.excluded_domains and self.included_domains:
-            filter_query = States.domain.in_(self.included_domains)
+            entity_filter = States.domain.in_(self.included_domains)
             if self.included_entities:
-                filter_query |= States.entity_id.in_(self.included_entities)
+                entity_filter |= States.entity_id.in_(self.included_entities)
         # filter if included and excluded domain is configured
         elif self.excluded_domains and self.included_domains:
-            filter_query = ~States.domain.in_(self.excluded_domains)
+            entity_filter = ~States.domain.in_(self.excluded_domains)
             if self.included_entities:
-                filter_query &= States.domain.in_(
+                entity_filter &= States.domain.in_(
                     self.included_domains
                 ) | States.entity_id.in_(self.included_entities)
             else:
-                filter_query &= States.domain.in_(
+                entity_filter &= States.domain.in_(
                     self.included_domains
                 ) & ~States.domain.in_(self.excluded_domains)
         # no domain filter just included entities
@@ -584,13 +599,17 @@ class Filters:
             and not self.included_domains
             and self.included_entities
         ):
-            filter_query = States.entity_id.in_(self.included_entities)
-        if filter_query is not None:
-            query = query.filter(filter_query)
+            entity_filter = States.entity_id.in_(self.included_entities)
         # finally apply excluded entities filter if configured
         if self.excluded_entities:
-            query = query.filter(~States.entity_id.in_(self.excluded_entities))
-        return query
+            if entity_filter is not None:
+                entity_filter = (entity_filter) & ~States.entity_id.in_(
+                    self.excluded_entities
+                )
+            else:
+                entity_filter = ~States.entity_id.in_(self.excluded_entities)
+
+        return entity_filter
 
 
 class LazyState(State):
