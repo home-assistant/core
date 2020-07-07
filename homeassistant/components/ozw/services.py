@@ -91,7 +91,7 @@ class ZWaveServices:
                             value.min,
                             value.max,
                         )
-                        break
+                        return
                     payload = int(selection)
 
                 # iterate list labels to get value
@@ -104,7 +104,7 @@ class ZWaveServices:
                     _LOGGER.error(
                         "Invalid value %s for parameter %s", selection, param,
                     )
-                    break
+                    return
 
             if value.type == ValueType.BUTTON:
                 # Unsupported at this time
@@ -123,7 +123,7 @@ class ZWaveServices:
                         value.min,
                         value.max,
                     )
-                    break
+                    return
                 payload = int(selection)
 
             value.send_value(payload)  # send the payload
