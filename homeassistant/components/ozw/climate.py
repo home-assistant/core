@@ -182,7 +182,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     @property
     def hvac_modes(self):
         """Return the list of available hvac operation modes."""
-        return list(self._hvac_modes.keys())
+        return list(self._hvac_modes)
 
     @property
     def fan_mode(self):
@@ -227,7 +227,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     @property
     def preset_modes(self):
         """Return the list of available preset operation modes."""
-        return list(self._hvac_presets.keys())
+        return list(self._hvac_presets)
 
     @property
     def target_temperature(self):
