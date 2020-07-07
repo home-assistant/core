@@ -80,11 +80,11 @@ class StarlineAccount:
         """Return the instance of the API."""
         return self._api
 
-    async def update(self):
+    async def update(self, unused=None):
         """Update StarLine data."""
         await self._hass.async_add_executor_job(self._update_data)
 
-    async def update_obd(self):
+    async def update_obd(self, unused=None):
         """Update StarLine OBD data."""
         await self._hass.async_add_executor_job(self._update_obd_data)
 
