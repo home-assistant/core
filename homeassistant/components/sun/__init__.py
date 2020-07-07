@@ -104,6 +104,7 @@ class Sun(Entity):
         self._next_change = None
         self._update_sun_position_listener = None
         self._update_events_listener = None
+        self._core_config_listener = None
 
     @property
     def name(self):
@@ -251,7 +252,7 @@ class Sun(Entity):
         """Complete the initialization."""
         await super().async_added_to_hass()
         self._async_update_location()
-        self.hass.bus.async_listen(
+        self._core_config_listener = self.hass.bus.async_listen(
             EVENT_CORE_CONFIG_UPDATE, self._async_update_location_event
         )
 
@@ -263,6 +264,9 @@ class Sun(Entity):
         if self._update_events_listener:
             self._update_events_listener()
             self._update_events_listener = None
+        if self._core_config_listener:
+            self._core_config_listener()
+            self._core_config_listener = None
 
     @callback
     def _async_update_location_event(self, _):
