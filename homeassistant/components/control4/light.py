@@ -207,4 +207,3 @@ class Control4Light(Control4Entity, LightEntity):
             transition_length = 1500
         await asyncio.sleep(transition_length / 1000)
         await self._coordinator.async_request_refresh()
-

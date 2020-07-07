@@ -196,4 +196,3 @@ class Control4Entity(entity.Entity):
                 "director_token_expiry"
             ] = self.director_token_expiry
         await self._coordinator.async_request_refresh()
-
