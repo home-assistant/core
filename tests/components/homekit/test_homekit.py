@@ -785,7 +785,7 @@ async def test_homekit_finds_linked_batteries(
     with patch.object(homekit.bridge, "add_accessory"), patch(
         f"{PATH_HOMEKIT}.show_setup_message"
     ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
-        "pyhap.accessory_driver.AccessoryDriver.start"
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
     ):
         await homekit.async_start()
     await hass.async_block_till_done()
@@ -932,11 +932,15 @@ async def test_homekit_uses_system_zeroconf(hass, hk_driver, mock_zeroconf):
     )
     system_zc = await zeroconf.async_get_instance(hass)
 
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert hass.data[DOMAIN][entry.entry_id][HOMEKIT].driver.advertiser == system_zc
-    await hass.async_block_till_done()
+    with patch("pyhap.accessory_driver.AccessoryDriver.start_service"), patch(
+        f"{PATH_HOMEKIT}.HomeKit.async_stop"
+    ):
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert hass.data[DOMAIN][entry.entry_id][HOMEKIT].driver.advertiser == system_zc
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
 
 
 def _write_data(path: str, data: Dict) -> None:
@@ -1008,7 +1012,7 @@ async def test_homekit_ignored_missing_devices(
     with patch.object(homekit.bridge, "add_accessory"), patch(
         f"{PATH_HOMEKIT}.show_setup_message"
     ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
-        "pyhap.accessory_driver.AccessoryDriver.start"
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
     ):
         await homekit.async_start()
     await hass.async_block_till_done()
@@ -1082,7 +1086,7 @@ async def test_homekit_finds_linked_motion_sensors(
     with patch.object(homekit.bridge, "add_accessory"), patch(
         f"{PATH_HOMEKIT}.show_setup_message"
     ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
-        "pyhap.accessory_driver.AccessoryDriver.start"
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
     ):
         await homekit.async_start()
     await hass.async_block_till_done()
@@ -1159,7 +1163,7 @@ async def test_homekit_finds_linked_humidity_sensors(
     with patch.object(homekit.bridge, "add_accessory"), patch(
         f"{PATH_HOMEKIT}.show_setup_message"
     ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
-        "pyhap.accessory_driver.AccessoryDriver.start"
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
     ):
         await homekit.async_start()
     await hass.async_block_till_done()
