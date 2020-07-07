@@ -3,7 +3,6 @@ import logging
 
 from bond import BOND_DEVICE_TYPE_MOTORIZED_SHADES
 
-from homeassistant.components.bond.utils import BondDevice
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
