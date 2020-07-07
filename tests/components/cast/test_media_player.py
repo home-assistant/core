@@ -56,8 +56,22 @@ def get_fake_chromecast_info(
 ):
     """Generate a Fake ChromecastInfo with the specified arguments."""
     return ChromecastInfo(
-        host=host, port=port, uuid=uuid, friendly_name="Speaker", service="the-service"
+        host=host,
+        port=port,
+        uuid=uuid,
+        friendly_name="Speaker",
+        services={"the-service"},
     )
+
+
+def get_fake_zconf(host="192.168.178.42", port=8009):
+    """Generate a Fake Zeroconf object with the specified arguments."""
+    parsed_addresses = MagicMock()
+    parsed_addresses.return_value = [host]
+    service_info = MagicMock(parsed_addresses=parsed_addresses, port=port)
+    zconf = MagicMock()
+    zconf.get_service_info.return_value = service_info
+    return zconf
 
 
 async def async_setup_cast(hass, config=None, discovery_info=None):
@@ -96,14 +110,13 @@ async def async_setup_cast_internal_discovery(hass, config=None, discovery_info=
 
     def discover_chromecast(service_name: str, info: ChromecastInfo) -> None:
         """Discover a chromecast device."""
-        listener.services[service_name] = (
-            info.host,
-            info.port,
+        listener.services[info.uuid] = (
+            {service_name},
             info.uuid,
             info.model_name,
             info.friendly_name,
         )
-        discovery_callback(service_name)
+        discovery_callback(info.uuid, service_name)
 
     return discover_chromecast, add_entities
 
@@ -113,6 +126,7 @@ async def async_setup_media_player_cast(hass: HomeAssistantType, info: Chromecas
     listener = MagicMock(services={})
     browser = MagicMock(zc={})
     chromecast = get_fake_chromecast(info)
+    zconf = get_fake_zconf(host=info.host, port=info.port)
 
     cast.CastStatusListener = MagicMock()
 
@@ -125,6 +139,9 @@ async def async_setup_media_player_cast(hass: HomeAssistantType, info: Chromecas
     ) as cast_listener, patch(
         "homeassistant.components.cast.discovery.pychromecast.start_discovery",
         return_value=browser,
+    ), patch(
+        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+        return_value=zconf,
     ):
         await async_setup_component(
             hass,
@@ -138,14 +155,13 @@ async def async_setup_media_player_cast(hass: HomeAssistantType, info: Chromecas
 
         def discover_chromecast(service_name: str, info: ChromecastInfo) -> None:
             """Discover a chromecast device."""
-            listener.services[service_name] = (
-                info.host,
-                info.port,
+            listener.services[info.uuid] = (
+                {service_name},
                 info.uuid,
                 info.model_name,
                 info.friendly_name,
             )
-            discovery_callback(service_name)
+            discovery_callback(info.uuid, service_name)
 
         discover_chromecast("the-service", info)
         await hass.async_block_till_done()
@@ -184,7 +200,7 @@ async def test_stop_discovery_called_on_stop(hass):
         assert start_discovery.call_count == 1
 
     with patch(
-        "homeassistant.components.cast.discovery.pychromecast.stop_discovery"
+        "homeassistant.components.cast.discovery.pychromecast.discovery.stop_discovery"
     ) as stop_discovery:
         # stop discovery should be called on shutdown
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
@@ -229,15 +245,26 @@ async def test_replay_past_chromecasts(hass):
     cast_group2 = get_fake_chromecast_info(
         host="host2", port=42, uuid=UUID("9462202c-e747-4af5-a66b-7dce0e1ebc09")
     )
+    zconf_1 = get_fake_zconf(host="host1", port=42)
+    zconf_2 = get_fake_zconf(host="host2", port=42)
 
     discover_cast, add_dev1 = await async_setup_cast_internal_discovery(
         hass, discovery_info={"host": "host1", "port": 42}
     )
-    discover_cast("service2", cast_group2)
-    await hass.async_block_till_done()
-    assert add_dev1.call_count == 0
 
-    discover_cast("service1", cast_group1)
+    with patch(
+        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+        return_value=zconf_2,
+    ):
+        discover_cast("service2", cast_group2)
+        await hass.async_block_till_done()
+        assert add_dev1.call_count == 0
+
+    with patch(
+        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+        return_value=zconf_1,
+    ):
+        discover_cast("service1", cast_group1)
     await hass.async_block_till_done()
     await hass.async_block_till_done()  # having tasks that add jobs
     assert add_dev1.call_count == 1
@@ -249,21 +276,61 @@ async def test_replay_past_chromecasts(hass):
     assert add_dev2.call_count == 1
 
 
-async def test_manual_cast_chromecasts(hass):
+async def test_manual_cast_chromecasts_host(hass):
     """Test only wanted casts are added for manual configuration."""
     cast_1 = get_fake_chromecast_info(host="configured_host")
     cast_2 = get_fake_chromecast_info(host="other_host", uuid=FakeUUID2)
+    zconf_1 = get_fake_zconf(host="configured_host")
+    zconf_2 = get_fake_zconf(host="other_host")
 
     # Manual configuration of media player with host "configured_host"
     discover_cast, add_dev1 = await async_setup_cast_internal_discovery(
         hass, config={"host": "configured_host"}
     )
-    discover_cast("service2", cast_2)
+    with patch(
+        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+        return_value=zconf_2,
+    ):
+        discover_cast("service2", cast_2)
     await hass.async_block_till_done()
     await hass.async_block_till_done()  # having tasks that add jobs
     assert add_dev1.call_count == 0
 
-    discover_cast("service1", cast_1)
+    with patch(
+        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+        return_value=zconf_1,
+    ):
+        discover_cast("service1", cast_1)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()  # having tasks that add jobs
+    assert add_dev1.call_count == 1
+
+
+async def test_manual_cast_chromecasts_uuid(hass):
+    """Test only wanted casts are added for manual configuration."""
+    cast_1 = get_fake_chromecast_info(host="host_1", uuid=FakeUUID)
+    cast_2 = get_fake_chromecast_info(host="host_2", uuid=FakeUUID2)
+    zconf_1 = get_fake_zconf(host="host_1")
+    zconf_2 = get_fake_zconf(host="host_2")
+
+    # Manual configuration of media player with host "configured_host"
+    discover_cast, add_dev1 = await async_setup_cast_internal_discovery(
+        hass, config={"uuid": FakeUUID}
+    )
+    with patch(
+        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+        return_value=zconf_2,
+    ):
+        discover_cast("service2", cast_2)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()  # having tasks that add jobs
+    assert add_dev1.call_count == 0
+
+    with patch(
+        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+        return_value=zconf_1,
+    ):
+        discover_cast("service1", cast_1)
     await hass.async_block_till_done()
     await hass.async_block_till_done()  # having tasks that add jobs
     assert add_dev1.call_count == 1
@@ -273,15 +340,25 @@ async def test_auto_cast_chromecasts(hass):
     """Test all discovered casts are added for default configuration."""
     cast_1 = get_fake_chromecast_info(host="some_host")
     cast_2 = get_fake_chromecast_info(host="other_host", uuid=FakeUUID2)
+    zconf_1 = get_fake_zconf(host="some_host")
+    zconf_2 = get_fake_zconf(host="other_host")
 
     # Manual configuration of media player with host "configured_host"
     discover_cast, add_dev1 = await async_setup_cast_internal_discovery(hass)
-    discover_cast("service2", cast_2)
+    with patch(
+        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+        return_value=zconf_1,
+    ):
+        discover_cast("service2", cast_2)
     await hass.async_block_till_done()
     await hass.async_block_till_done()  # having tasks that add jobs
     assert add_dev1.call_count == 1
 
-    discover_cast("service1", cast_1)
+    with patch(
+        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+        return_value=zconf_2,
+    ):
+        discover_cast("service1", cast_1)
     await hass.async_block_till_done()
     await hass.async_block_till_done()  # having tasks that add jobs
     assert add_dev1.call_count == 2
@@ -291,15 +368,26 @@ async def test_update_cast_chromecasts(hass):
     """Test discovery of same UUID twice only adds one cast."""
     cast_1 = get_fake_chromecast_info(host="old_host")
     cast_2 = get_fake_chromecast_info(host="new_host")
+    zconf_1 = get_fake_zconf(host="old_host")
+    zconf_2 = get_fake_zconf(host="new_host")
 
     # Manual configuration of media player with host "configured_host"
     discover_cast, add_dev1 = await async_setup_cast_internal_discovery(hass)
-    discover_cast("service1", cast_1)
+
+    with patch(
+        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+        return_value=zconf_1,
+    ):
+        discover_cast("service1", cast_1)
     await hass.async_block_till_done()
     await hass.async_block_till_done()  # having tasks that add jobs
     assert add_dev1.call_count == 1
 
-    discover_cast("service2", cast_2)
+    with patch(
+        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+        return_value=zconf_2,
+    ):
+        discover_cast("service2", cast_2)
     await hass.async_block_till_done()
     await hass.async_block_till_done()  # having tasks that add jobs
     assert add_dev1.call_count == 1

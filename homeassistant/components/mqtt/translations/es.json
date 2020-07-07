@@ -47,5 +47,37 @@
             "button_short_release": "\"{subtype}\" soltado",
             "button_triple_press": "\"{subtype}\" triple pulsaci\u00f3n"
         }
+    },
+    "options": {
+        "error": {
+            "bad_birth": "Tema de nacimiento inv\u00e1lido.",
+            "bad_will": "Tema deseado inv\u00e1lido.",
+            "cannot_connect": "No se puede conectar con el agente."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Agente",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto",
+                    "username": "Usuario"
+                },
+                "description": "Por favor, introduce la informaci\u00f3n de tu agente MQTT."
+            },
+            "options": {
+                "data": {
+                    "birth_payload": "Carga del mensaje de nacimiento",
+                    "birth_qos": "QoS del mensaje de nacimiento",
+                    "birth_retain": "Retenci\u00f3n del mensaje de nacimiento",
+                    "birth_topic": "Tema del mensaje de nacimiento",
+                    "discovery": "Habilitar descubrimiento",
+                    "will_payload": "Enviar\u00e1 la carga",
+                    "will_qos": "El mensaje usar\u00e1 el QoS",
+                    "will_retain": "Retendr\u00e1 el mensaje",
+                    "will_topic": "Enviar\u00e1 un mensaje al tema"
+                },
+                "description": "Por favor, selecciona las opciones para MQTT."
+            }
+        }
     }
 }

@@ -14,6 +14,7 @@ from netdisco.discovery import NetworkDiscovery
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -147,6 +148,8 @@ async def async_setup(hass, config):
                 platform,
             )
 
+    zeroconf_instance = await zeroconf.async_get_instance(hass)
+
     async def new_service_found(service, info):
         """Handle a new service if one is found."""
         if service in MIGRATED_SERVICE_HANDLERS:
@@ -193,7 +196,7 @@ async def async_setup(hass, config):
     async def scan_devices(now):
         """Scan for devices."""
         try:
-            results = await hass.async_add_job(_discover, netdisco)
+            results = await hass.async_add_job(_discover, netdisco, zeroconf_instance)
 
             for result in results:
                 hass.async_create_task(new_service_found(*result))
@@ -214,11 +217,11 @@ async def async_setup(hass, config):
     return True
 
 
-def _discover(netdisco):
+def _discover(netdisco, zeroconf_instance):
     """Discover devices."""
     results = []
     try:
-        netdisco.scan()
+        netdisco.scan(zeroconf_instance=zeroconf_instance)
 
         for disc in netdisco.discover():
             for service in netdisco.get_info(disc):

@@ -6,20 +6,23 @@
             "reauth_successful": "Token de acceso actualizado correctamente "
         },
         "error": {
-            "auth": "Token de acceso no v\u00e1lido"
+            "auth": "Token de acceso no v\u00e1lido",
+            "unknown": "Error desconocido en API Awair"
         },
         "step": {
             "reauth": {
                 "data": {
                     "access_token": "Token de acceso",
                     "email": "Correo electr\u00f3nico"
-                }
+                },
+                "description": "Por favor, vuelve a introducir tu token de acceso de desarrollador Awair."
             },
             "user": {
                 "data": {
                     "access_token": "Token de acceso",
                     "email": "Correo electr\u00f3nico"
-                }
+                },
+                "description": "Debes registrarte para obtener un token de acceso de desarrollador Awair en: https://developer.getawair.com/onboard/login"
             }
         }
     }

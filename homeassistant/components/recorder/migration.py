@@ -4,7 +4,7 @@ import os
 
 from sqlalchemy import Table, text
 from sqlalchemy.engine import reflection
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.exc import InternalError, OperationalError, SQLAlchemyError
 
 from .models import SCHEMA_VERSION, Base, SchemaChanges
 from .util import session_scope
@@ -81,7 +81,16 @@ def _create_index(engine, table_name, index_name):
     try:
         index.create(engine)
     except OperationalError as err:
-        if "already exists" not in str(err).lower():
+        lower_err_str = str(err).lower()
+
+        if "already exists" not in lower_err_str and "duplicate" not in lower_err_str:
+            raise
+
+        _LOGGER.warning(
+            "Index %s already exists on %s, continuing", index_name, table_name
+        )
+    except InternalError as err:
+        if "duplicate" not in str(err).lower():
             raise
 
         _LOGGER.warning(
@@ -148,10 +157,15 @@ def _drop_index(engine, table_name, index_name):
             "Finished dropping index %s from table %s", index_name, table_name
         )
     else:
+        if index_name == "ix_states_context_parent_id":
+            # Was only there on nightly so we do not want
+            # to generate log noise or issues about it.
+            return
+
         _LOGGER.warning(
             "Failed to drop index %s from table %s. Schema "
             "Migration will continue; this is not a "
-            "critical operation.",
+            "critical operation",
             index_name,
             table_name,
         )
@@ -178,10 +192,10 @@ def _add_columns(engine, table_name, columns_def):
             )
         )
         return
-    except OperationalError:
+    except (InternalError, OperationalError):
         # Some engines support adding all columns at once,
         # this error is when they don't
-        _LOGGER.info("Unable to use quick column add. Adding 1 by 1.")
+        _LOGGER.info("Unable to use quick column add. Adding 1 by 1")
 
     for column_def in columns_def:
         try:
@@ -192,7 +206,7 @@ def _add_columns(engine, table_name, columns_def):
                     )
                 )
             )
-        except OperationalError as err:
+        except (InternalError, OperationalError) as err:
             if "duplicate" not in str(err).lower():
                 raise
 
@@ -254,9 +268,7 @@ def _apply_update(engine, new_version, old_version):
         _create_index(engine, "states", "ix_states_entity_id")
     elif new_version == 8:
         _add_columns(engine, "events", ["context_parent_id CHARACTER(36)"])
-        _add_columns(engine, "states", ["context_parent_id CHARACTER(36)"])
         _add_columns(engine, "states", ["old_state_id INTEGER"])
-        _create_index(engine, "states", "ix_states_context_parent_id")
         _create_index(engine, "events", "ix_events_context_parent_id")
     elif new_version == 9:
         # We now get the context from events with a join
@@ -269,6 +281,8 @@ def _apply_update(engine, new_version, old_version):
         #
         _drop_index(engine, "states", "ix_states_context_id")
         _drop_index(engine, "states", "ix_states_context_user_id")
+        # This index won't be there if they were not running
+        # nightly but we don't treat that as a critical issue
         _drop_index(engine, "states", "ix_states_context_parent_id")
         # Redundant keys on composite index:
         # We already have ix_states_entity_id_last_updated

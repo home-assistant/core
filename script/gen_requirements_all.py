@@ -222,10 +222,21 @@ def generate_requirements_list(reqs):
     return "".join(output)
 
 
+def requirements_output(reqs):
+    """Generate output for requirements."""
+    output = []
+    output.append("# Home Assistant Core")
+    output.append("\n")
+    output.append("\n".join(core_requirements()))
+    output.append("\n")
+
+    return "".join(output)
+
+
 def requirements_all_output(reqs):
     """Generate output for requirements_all."""
     output = []
-    output.append("# Home Assistant core")
+    output.append("# Home Assistant Core, full dependency set\n")
     output.append("\n")
     output.append("\n".join(core_requirements()))
     output.append("\n")
@@ -315,13 +326,15 @@ def main(validate):
     if data is None:
         return 1
 
-    reqs_file = requirements_all_output(data)
+    reqs_file = requirements_output(data)
+    reqs_all_file = requirements_all_output(data)
     reqs_test_file = requirements_test_output(data)
     reqs_pre_commit_file = requirements_pre_commit_output()
     constraints = gather_constraints()
 
     files = (
-        ("requirements_all.txt", reqs_file),
+        ("requirements.txt", reqs_file),
+        ("requirements_all.txt", reqs_all_file),
         ("requirements_test_pre_commit.txt", reqs_pre_commit_file),
         ("requirements_test_all.txt", reqs_test_file),
         ("homeassistant/package_constraints.txt", constraints),

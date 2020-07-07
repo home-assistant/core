@@ -13,12 +13,13 @@ from . import (
     CONF_FIRE_EVENT,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
-    RECEIVED_EVT_SUBSCRIBERS,
+    SIGNAL_EVENT,
     RfxtrxDevice,
-    apply_received_command,
+    fire_command_event,
     get_devices_from_config,
     get_new_device,
 )
+from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -54,13 +55,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         new_device = get_new_device(event, config, RfxtrxCover)
         if new_device:
+            new_device.apply_event(event)
             add_entities([new_device])
 
-        apply_received_command(event)
-
     # Subscribe to main RFXtrx events
-    if cover_update not in RECEIVED_EVT_SUBSCRIBERS:
-        RECEIVED_EVT_SUBSCRIBERS.append(cover_update)
+    hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, cover_update)
 
 
 class RfxtrxCover(RfxtrxDevice, CoverEntity, RestoreEntity):
@@ -73,6 +72,19 @@ class RfxtrxCover(RfxtrxDevice, CoverEntity, RestoreEntity):
         old_state = await self.async_get_last_state()
         if old_state is not None:
             self._state = old_state.state == STATE_OPEN
+
+        def _handle_event(event):
+            """Check if event applies to me and update."""
+            if event.device.id_string != self._event.device.id_string:
+                return
+
+            self.apply_event(event)
+
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_EVENT, _handle_event
+            )
+        )
 
     @property
     def should_poll(self):
@@ -95,3 +107,15 @@ class RfxtrxCover(RfxtrxDevice, CoverEntity, RestoreEntity):
     def stop_cover(self, **kwargs):
         """Stop the cover."""
         self._send_command("stop_roll")
+
+    def apply_event(self, event):
+        """Apply command from rfxtrx."""
+        if event.values["Command"] in COMMAND_ON_LIST:
+            self._state = True
+        elif event.values["Command"] in COMMAND_OFF_LIST:
+            self._state = False
+
+        if self.hass:
+            self.schedule_update_ha_state()
+            if self.should_fire_event:
+                fire_command_event(self.hass, self.entity_id, event.values["Command"])

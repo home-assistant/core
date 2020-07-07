@@ -78,7 +78,7 @@ class HassIOBaseAuth(HomeAssistantView):
         if prv is not None:
             return prv
 
-        _LOGGER.error("Can't find Home Assistant auth.")
+        _LOGGER.error("Can't find Home Assistant auth")
         raise HTTPNotFound()
 
 

@@ -12,6 +12,11 @@
             "display_exists": "Wybrany ekran jest ju\u017c skonfigurowany."
         },
         "step": {
+            "agreement": {
+                "data": {
+                    "agreement": "Umowa"
+                }
+            },
             "authenticate": {
                 "data": {
                     "password": "Has\u0142o",

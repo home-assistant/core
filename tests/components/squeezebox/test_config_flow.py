@@ -1,5 +1,4 @@
 """Test the Logitech Squeezebox config flow."""
-from asynctest import patch
 from pysqueezebox import Server
 
 from homeassistant import config_entries
@@ -17,6 +16,7 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 HOST = "1.1.1.1"

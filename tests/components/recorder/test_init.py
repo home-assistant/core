@@ -6,6 +6,8 @@ import unittest
 import pytest
 
 from homeassistant.components.recorder import (
+    CONFIG_SCHEMA,
+    DOMAIN,
     Recorder,
     run_information,
     run_information_from_instance,
@@ -14,7 +16,7 @@ from homeassistant.components.recorder import (
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import Events, RecorderRuns, States
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.const import MATCH_ALL
+from homeassistant.const import MATCH_ALL, STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import ATTR_NOW, EVENT_TIME_CHANGED, Context, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -152,6 +154,19 @@ def test_saving_state_include_domains(hass_recorder):
     assert _state_empty_context(hass, "test2.recorder") == states[0]
 
 
+def test_saving_state_include_domains_globs(hass_recorder):
+    """Test saving and restoring a state."""
+    hass = hass_recorder(
+        {"include": {"domains": "test2", "entity_globs": "*.included_*"}}
+    )
+    states = _add_entities(
+        hass, ["test.recorder", "test2.recorder", "test3.included_entity"]
+    )
+    assert len(states) == 2
+    assert _state_empty_context(hass, "test2.recorder") == states[0]
+    assert _state_empty_context(hass, "test3.included_entity") == states[1]
+
+
 def test_saving_state_incl_entities(hass_recorder):
     """Test saving and restoring a state."""
     hass = hass_recorder({"include": {"entities": "test2.recorder"}})
@@ -176,6 +191,18 @@ def test_saving_state_exclude_domains(hass_recorder):
     assert _state_empty_context(hass, "test2.recorder") == states[0]
 
 
+def test_saving_state_exclude_domains_globs(hass_recorder):
+    """Test saving and restoring a state."""
+    hass = hass_recorder(
+        {"exclude": {"domains": "test", "entity_globs": "*.excluded_*"}}
+    )
+    states = _add_entities(
+        hass, ["test.recorder", "test2.recorder", "test2.excluded_entity"]
+    )
+    assert len(states) == 1
+    assert _state_empty_context(hass, "test2.recorder") == states[0]
+
+
 def test_saving_state_exclude_entities(hass_recorder):
     """Test saving and restoring a state."""
     hass = hass_recorder({"exclude": {"entities": "test.recorder"}})
@@ -193,6 +220,20 @@ def test_saving_state_exclude_domain_include_entity(hass_recorder):
     assert len(states) == 2
 
 
+def test_saving_state_exclude_domain_glob_include_entity(hass_recorder):
+    """Test saving and restoring a state."""
+    hass = hass_recorder(
+        {
+            "include": {"entities": ["test.recorder", "test.excluded_entity"]},
+            "exclude": {"domains": "test", "entity_globs": "*._excluded_*"},
+        }
+    )
+    states = _add_entities(
+        hass, ["test.recorder", "test2.recorder", "test.excluded_entity"]
+    )
+    assert len(states) == 3
+
+
 def test_saving_state_include_domain_exclude_entity(hass_recorder):
     """Test saving and restoring a state."""
     hass = hass_recorder(
@@ -202,6 +243,43 @@ def test_saving_state_include_domain_exclude_entity(hass_recorder):
     assert len(states) == 1
     assert _state_empty_context(hass, "test.ok") == states[0]
     assert _state_empty_context(hass, "test.ok").state == "state2"
+
+
+def test_saving_state_include_domain_glob_exclude_entity(hass_recorder):
+    """Test saving and restoring a state."""
+    hass = hass_recorder(
+        {
+            "exclude": {"entities": ["test.recorder", "test2.included_entity"]},
+            "include": {"domains": "test", "entity_globs": "*._included_*"},
+        }
+    )
+    states = _add_entities(
+        hass, ["test.recorder", "test2.recorder", "test.ok", "test2.included_entity"]
+    )
+    assert len(states) == 1
+    assert _state_empty_context(hass, "test.ok") == states[0]
+    assert _state_empty_context(hass, "test.ok").state == "state2"
+
+
+def test_saving_state_and_removing_entity(hass, hass_recorder):
+    """Test saving the state of a removed entity."""
+    hass = hass_recorder()
+    entity_id = "lock.mine"
+    hass.states.set(entity_id, STATE_LOCKED)
+    hass.states.set(entity_id, STATE_UNLOCKED)
+    hass.states.async_remove(entity_id)
+
+    wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        states = list(session.query(States))
+        assert len(states) == 3
+        assert states[0].entity_id == entity_id
+        assert states[0].state == STATE_LOCKED
+        assert states[1].entity_id == entity_id
+        assert states[1].state == STATE_UNLOCKED
+        assert states[2].entity_id == entity_id
+        assert states[2].state is None
 
 
 def test_recorder_setup_failure():
@@ -220,8 +298,8 @@ def test_recorder_setup_failure():
             uri="sqlite://",
             db_max_retries=10,
             db_retry_wait=3,
-            include={},
-            exclude={},
+            entity_filter=CONFIG_SCHEMA({DOMAIN: {}}),
+            exclude_t=[],
         )
         rec.start()
         rec.join()
@@ -243,6 +321,7 @@ async def test_defaults_set(hass):
         assert await async_setup_component(hass, "history", {})
 
     assert recorder_config is not None
+    # pylint: disable=unsubscriptable-object
     assert recorder_config["auto_purge"]
     assert recorder_config["purge_keep_days"] == 10
 
@@ -259,7 +338,7 @@ def test_auto_purge(hass_recorder):
     test_time = tz.localize(datetime(2020, 1, 1, 4, 12, 0))
 
     with patch(
-        "homeassistant.components.recorder.purge.purge_old_data"
+        "homeassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data:
         for delta in (-1, 0, 1):
             hass.bus.fire(
