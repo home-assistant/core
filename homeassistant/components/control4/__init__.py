@@ -1,18 +1,17 @@
 """The Control4 integration."""
 import asyncio
-from aiohttp import client_exceptions
 import datetime
 import json
 import logging
 import re
 
+from aiohttp import client_exceptions
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
 from pyControl4.error_handling import Unauthorized
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -20,6 +19,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import device_registry as dr, entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
