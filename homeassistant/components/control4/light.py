@@ -2,12 +2,10 @@
 from datetime import timedelta
 import asyncio
 import logging
-import json
 
 from pyControl4.light import C4Light
 from pyControl4.error_handling import C4Exception
 
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -125,6 +123,8 @@ async def async_setup_entry(
 
 
 class Control4Light(Control4Entity, LightEntity):
+    """Control4 light entity."""
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -150,6 +150,7 @@ class Control4Light(Control4Entity, LightEntity):
             device_id,
         )
         self._is_dimmer = is_dimmer
+        # pylint: disable=invalid-name
         self._C4Light = C4Light(self.director, idx)
 
     @property

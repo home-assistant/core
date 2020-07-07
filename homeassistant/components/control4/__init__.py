@@ -22,8 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-# TODO List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
 PLATFORMS = ["light"]
 
 
@@ -102,6 +100,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 
 async def get_items_of_category(hass: HomeAssistant, entry: ConfigEntry, category: str):
+    """Returns a list of all Control4 items with the specified category."""
     director_all_items = hass.data[DOMAIN][entry.title]["director_all_items"]
     return_list = []
     for item in director_all_items:
@@ -111,6 +110,8 @@ async def get_items_of_category(hass: HomeAssistant, entry: ConfigEntry, categor
 
 
 class Control4Entity(entity.Entity):
+    """Base entity for Control4."""
+
     def __init__(
         self,
         hass: HomeAssistant,
