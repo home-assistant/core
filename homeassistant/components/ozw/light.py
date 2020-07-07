@@ -74,7 +74,6 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         self._supported_features = SUPPORT_BRIGHTNESS
         # make sure that supported features is correctly set
         self.on_value_update()
-        self.update_properties()
 
     @callback
     def on_value_update(self):
@@ -90,9 +89,6 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         if self.values.color_channels is not None:
             self._supported_features |= SUPPORT_WHITE_VALUE
 
-    @callback
-    def update_properties(self):
-        """Update internal properties based on zwave values."""
         if self.values.color is None:
             return
         if self.values.color_channels is None:
