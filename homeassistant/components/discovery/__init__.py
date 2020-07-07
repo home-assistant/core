@@ -181,7 +181,7 @@ async def async_setup(hass, config):
 
         # We do not know how to handle this service.
         if not comp_plat:
-            logger.info("Unknown service discovered: %s %s", service, info)
+            logger.debug("Unknown service discovered: %s %s", service, info)
             return
 
         logger.info("Found new service: %s %s", service, info)
