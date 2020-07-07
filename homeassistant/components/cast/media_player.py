@@ -226,7 +226,6 @@ class CastDevice(MediaPlayerEntity):
         self._hass_cast_controller: Optional[HomeAssistantController] = None
 
         self._add_remove_handler = None
-        self._del_remove_handler = None
         self._cast_view_remove_handler = None
 
     async def async_added_to_hass(self):
@@ -253,9 +252,6 @@ class CastDevice(MediaPlayerEntity):
         if self._add_remove_handler:
             self._add_remove_handler()
             self._add_remove_handler = None
-        if self._del_remove_handler:
-            self._del_remove_handler()
-            self._del_remove_handler = None
         if self._cast_view_remove_handler:
             self._cast_view_remove_handler()
             self._cast_view_remove_handler = None
