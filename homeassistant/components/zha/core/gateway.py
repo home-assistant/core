@@ -297,7 +297,7 @@ class ZHAGateway:
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_ADDED)
 
     def group_removed(self, zigpy_group: ZigpyGroupType) -> None:
-        """Handle zigpy group added event."""
+        """Handle zigpy group removed event."""
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_REMOVED)
         zha_group = self._groups.pop(zigpy_group.group_id, None)
         zha_group.info("group_removed")

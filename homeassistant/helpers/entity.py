@@ -25,7 +25,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
-from homeassistant.exceptions import NoEntitySpecifiedError
+from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.event import Event, async_track_entity_registry_updated_event
@@ -119,6 +119,9 @@ class Entity(ABC):
     # Context
     _context: Optional[Context] = None
     _context_set: Optional[datetime] = None
+
+    # If entity is added to an entity platform
+    _added = False
 
     @property
     def should_poll(self) -> bool:
@@ -488,9 +491,48 @@ class Entity(ABC):
         To be extended by integrations.
         """
 
+    @callback
+    def add_to_platform_start(
+        self,
+        hass: HomeAssistant,
+        platform: EntityPlatform,
+        parallel_updates: Optional[asyncio.Semaphore],
+    ) -> None:
+        """Start adding an entity to a platform."""
+        if self._added:
+            raise HomeAssistantError(
+                f"Entity {self.entity_id} cannot be added a second time to an entity platform"
+            )
+
+        self.hass = hass
+        self.platform = platform
+        self.parallel_updates = parallel_updates
+        self._added = True
+
+    @callback
+    def add_to_platform_abort(self) -> None:
+        """Abort adding an entity to a platform."""
+        self.hass = None
+        self.platform = None
+        self.parallel_updates = None
+        self._added = False
+
+    async def add_to_platform_finish(self) -> None:
+        """Finish adding an entity to a platform."""
+        await self.async_internal_added_to_hass()
+        await self.async_added_to_hass()
+        self.async_write_ha_state()
+
     async def async_remove(self) -> None:
         """Remove entity from Home Assistant."""
         assert self.hass is not None
+
+        if self.platform and not self._added:
+            # Can be converted to an error once ZHA groups have been updated
+            _LOGGER.warning("Entity %s async_remove called twice", self.entity_id)
+            return
+
+        self._added = False
 
         if self._on_remove is not None:
             while self._on_remove:
@@ -545,11 +587,7 @@ class Entity(ABC):
         """
         if self.platform:
             assert self.hass is not None
-            self.hass.data[DATA_ENTITY_SOURCE].pop(
-                self.entity_id,
-                # In rare cases removal can be called twice, this will prevent it from blowing up
-                None,
-            )
+            self.hass.data[DATA_ENTITY_SOURCE].pop(self.entity_id)
 
     async def _async_registry_updated(self, event: Event) -> None:
         """Handle entity registry update."""
