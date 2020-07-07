@@ -223,6 +223,7 @@ datapoint==0.9.5
 # homeassistant.components.debugpy
 debugpy==1.0.0b12
 
+# homeassistant.components.denonavr
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
 # homeassistant.components.ohmconnect

@@ -469,6 +469,7 @@ debugpy==1.0.0b12
 # homeassistant.components.decora_wifi
 # decora_wifi==1.4
 
+# homeassistant.components.denonavr
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
 # homeassistant.components.ohmconnect
