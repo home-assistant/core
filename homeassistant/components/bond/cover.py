@@ -1,5 +1,4 @@
 """Support for Bond covers."""
-import asyncio
 import logging
 from typing import Any, Callable, Dict, List, Optional
 
@@ -36,6 +35,7 @@ async def async_setup_entry(
         async_add_entities(covers)
 
     await hass.async_add_executor_job(discover)
+
 
 class BondCover(CoverEntity):
     """Representation of a Bond cover."""
