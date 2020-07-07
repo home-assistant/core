@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/omnilogic",
   "requirements": [
-    "omnilogic==0.1.8"
+    "omnilogic==0.2.3"
   ],
   "ssdp": [],
   "zeroconf": [],
