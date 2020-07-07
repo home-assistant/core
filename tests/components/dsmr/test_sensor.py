@@ -77,7 +77,7 @@ def mock_connection_factory(monkeypatch):
     return connection_factory, transport, protocol
 
 
-async def test_entity(hass):
+async def test_entity():
     """Test the basic property of the entity."""
     config = {"platform": DOMAIN, CONF_FORCE_UPDATE: TEST_FORCE_UPDATE}
 
