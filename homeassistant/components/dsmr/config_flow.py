@@ -1,4 +1,5 @@
 """Config flow for DSMR integration."""
+import asyncio
 from functools import partial
 import logging
 
@@ -79,6 +80,7 @@ class DSMRConnection:
             serial.serialutil.SerialException,
             ConnectionRefusedError,
             TimeoutError,
+            asyncio.TimeoutError,
         ):
             _LOGGER.exception("Error connecting to DSMR")
             return False

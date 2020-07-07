@@ -166,6 +166,7 @@ async def async_setup_entry(
                 serial.serialutil.SerialException,
                 ConnectionRefusedError,
                 TimeoutError,
+                asyncio.TimeoutError,
             ):
                 # Log any error while establishing connection and drop to retry
                 # connection wait
