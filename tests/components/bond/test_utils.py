@@ -18,7 +18,7 @@ async def test_get_bond_devices(hass: HomeAssistant):
     with patch(
         "bond.Bond.getDeviceIds", return_value=["device-1", "device-2"],
     ) as mock_get_device_ids, patch("bond.Bond.getDevice") as mock_get_device:
-        await get_bond_devices(hass, bond)
+        get_bond_devices(hass, bond)
 
     assert len(mock_get_device_ids.mock_calls) == 1
     assert len(mock_get_device.mock_calls) == 2
