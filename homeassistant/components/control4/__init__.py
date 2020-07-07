@@ -4,6 +4,7 @@ import voluptuous as vol
 import datetime
 import logging
 import re
+import json
 
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
@@ -25,9 +26,11 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 PLATFORMS = ["light"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Control4 component."""
+async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Stub to allow setting up this component.
 
+    Configuration through YAML is not supported at this time.
+    """
     return True
 
 
@@ -67,6 +70,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         sw_version=hass.data[DOMAIN][entry.title]["director_sw_version"],
     )
 
+    director_all_items = await director.getAllItemInfo()
+    director_all_items = json.loads(director_all_items)
+    hass.data[DOMAIN][entry.title]["director_all_items"] = director_all_items
+
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
@@ -93,12 +100,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-class Control4Controller(entity.Entity):
-    def __init__(self, entry: ConfigEntry):
+async def get_items_of_category(hass: HomeAssistant, entry: ConfigEntry, category: str):
+    director_all_items = hass.data[DOMAIN][entry.title]["director_all_items"]
+    return_list = []
+    for item in director_all_items:
+        if "categories" in item.keys() and category in item["categories"]:
+            return_list.append(item)
+    return return_list
+
+
+class Control4Entity(entity.Entity):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
         self.entry = entry
-        self.account = self.hass.data[DOMAIN][self.entry.title]["account"]
-        self.director = self.hass.data[DOMAIN][self.entry.title]["director"]
-        self.director_token_expiry = self.hass.data[DOMAIN][self.entry.title][
+        self.account = hass.data[DOMAIN][self.entry.title]["account"]
+        self.director = hass.data[DOMAIN][self.entry.title]["director"]
+        self.director_token_expiry = hass.data[DOMAIN][self.entry.title][
             "director_token_expiry"
         ]
 
