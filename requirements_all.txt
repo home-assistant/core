@@ -475,7 +475,7 @@ defusedxml==0.6.0
 deluge-client==1.7.1
 
 # homeassistant.components.denonavr
-denonavr==0.9.3
+denonavr==0.9.4
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.11.0
