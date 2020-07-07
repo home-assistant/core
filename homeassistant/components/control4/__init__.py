@@ -1,35 +1,34 @@
 """The Control4 integration."""
 import asyncio
-import voluptuous as vol
 import datetime
+import json
 import logging
 import re
-import json
 
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
 from pyControl4.error_handling import Unauthorized
+import voluptuous as vol
 
-from homeassistant.helpers import entity
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
     CONF_HOST,
+    CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
-    DOMAIN,
-    DEFAULT_SCAN_INTERVAL,
-    MIN_SCAN_INTERVAL,
-    DEFAULT_LIGHT_TRANSITION_TIME,
-    CONF_LIGHT_TRANSITION_TIME,
     CONF_LIGHT_COLD_START_TRANSITION_TIME,
+    CONF_LIGHT_TRANSITION_TIME,
     DEFAULT_LIGHT_COLD_START_TRANSITION_TIME,
+    DEFAULT_LIGHT_TRANSITION_TIME,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    MIN_SCAN_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -248,4 +247,3 @@ class Control4Entity(entity.Entity):
             )
             await _refresh_tokens(self)
             await self._coordinator.async_request_refresh()
-

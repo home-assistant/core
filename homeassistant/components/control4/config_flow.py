@@ -1,30 +1,29 @@
 """Config flow for Control4 integration."""
 import logging
 
-import voluptuous as vol
-
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
 from pyControl4.error_handling import BadCredentials, Unauthorized
+import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.helpers import config_validation as cv
-from homeassistant.core import callback
 from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
     CONF_HOST,
+    CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
 )
+from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
-    DOMAIN,
-    DEFAULT_SCAN_INTERVAL,
-    MIN_SCAN_INTERVAL,
-    DEFAULT_LIGHT_TRANSITION_TIME,
-    CONF_LIGHT_TRANSITION_TIME,
     CONF_LIGHT_COLD_START_TRANSITION_TIME,
+    CONF_LIGHT_TRANSITION_TIME,
     DEFAULT_LIGHT_COLD_START_TRANSITION_TIME,
+    DEFAULT_LIGHT_TRANSITION_TIME,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    MIN_SCAN_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)

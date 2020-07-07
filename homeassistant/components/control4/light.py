@@ -1,14 +1,11 @@
 """Platform for Control4 Lights."""
-from datetime import timedelta
 import asyncio
+from datetime import timedelta
 import logging
 
-from pyControl4.light import C4Light
 from pyControl4.error_handling import C4Exception
+from pyControl4.light import C4Light
 
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
@@ -16,14 +13,17 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    DOMAIN,
-    CONF_LIGHT_TRANSITION_TIME,
-    CONF_LIGHT_COLD_START_TRANSITION_TIME,
-)
 from . import Control4Entity, get_items_of_category
+from .const import (
+    CONF_LIGHT_COLD_START_TRANSITION_TIME,
+    CONF_LIGHT_TRANSITION_TIME,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
