@@ -615,7 +615,8 @@ class ZHAGateway:
         if not group:
             _LOGGER.debug("Group: %s:0x%04x could not be found", group.name, group_id)
             return
-        if group and group.members:
+        group.deleting = True
+        if group.members:
             tasks = []
             for member in group.members:
                 tasks.append(member.async_remove_from_group())

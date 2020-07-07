@@ -216,17 +216,27 @@ class ZhaGroupEntity(BaseZhaEntity):
         """Initialize a light group."""
         super().__init__(unique_id, zha_device, **kwargs)
         self._available = False
-        self._name = (
-            f"{zha_device.gateway.groups.get(group_id).name}_zha_group_0x{group_id:04x}"
-        )
+        self._group = zha_device.gateway.groups.get(group_id)
+        self._name = f"{self._group.name}_zha_group_0x{group_id:04x}"
         self._group_id: int = group_id
         self._entity_ids: List[str] = entity_ids
         self._async_unsub_state_changed: Optional[CALLBACK_TYPE] = None
+        self._handled_group_membership = False
 
     @property
     def available(self) -> bool:
         """Return entity availability."""
         return self._available
+
+    async def _handle_group_membership_changed(self):
+        """Handle group membership changed."""
+        # Make sure we don't call remove twice if we're deleting the group or
+        # 2 members are removed at same time.
+        if self._group.deleting or self._handled_group_membership:
+            return
+
+        self._handled_group_membership = True
+        await self.async_remove()
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -235,7 +245,7 @@ class ZhaGroupEntity(BaseZhaEntity):
         self.async_accept_signal(
             None,
             f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{self._group_id:04x}",
-            self.async_remove,
+            self._handle_group_membership_changed,
             signal_override=True,
         )
 

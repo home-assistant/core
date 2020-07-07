@@ -528,9 +528,9 @@ class Entity(ABC):
         assert self.hass is not None
 
         if self.platform and not self._added:
-            # Can be converted to an error once ZHA groups have been updated
-            _LOGGER.warning("Entity %s async_remove called twice", self.entity_id)
-            return
+            raise HomeAssistantError(
+                f"Entity {self.entity_id} async_remove called twice"
+            )
 
         self._added = False
 
