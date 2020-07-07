@@ -64,7 +64,7 @@ class BondCover(CoverEntity):
     @property
     def device_info(self) -> Optional[Dict[str, Any]]:
         """Get a an HA device representing this cover."""
-        return {ATTR_NAME: self.name, "identifiers": {(DOMAIN, self.unique_id)}}
+        return {ATTR_NAME: self.name, "identifiers": {(DOMAIN, self._device.device_id)}}
 
     @property
     def is_closed(self):
