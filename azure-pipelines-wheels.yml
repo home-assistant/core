@@ -17,7 +17,7 @@ schedules:
     - dev
 variables:
   - name: versionWheels
-    value: '1.12.1-3.8-alpine3.12'
+    value: '1.12.2-3.8-alpine3.12'
 resources:
   repositories:
     - repository: azure
