@@ -12,3 +12,18 @@ remove_node:
   fields:
     instance_id:
       description: (Optional) The OZW Instance/Controller to use, defaults to 1.
+
+set_config_parameter:
+  description: Set a config parameter to a node on the Z-Wave network.
+  fields:
+    node_id:
+      description: Node id of the device to set config parameter to (integer).
+      example: 10
+    parameter:
+      description: Parameter number to set (integer).
+      example: 8
+    value:
+      description: Value to set for parameter. (String value for list and bool parameters, integer for others).
+      example: 50268673
+    instance_id:
+      description: (Optional) The OZW Instance/Controller to use, defaults to 1.
