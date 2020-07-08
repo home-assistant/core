@@ -16,7 +16,7 @@ async def async_process_integration_platforms(
     platform_name: str,
     # Any = platform.
     process_platform: Callable[[HomeAssistant, str, Any], Awaitable[None]],
-) -> None:
+) -> Callable[[], None]:
     """Process a specific platform for all current and future loaded integrations."""
 
     async def _process(component_name: str) -> None:
@@ -48,9 +48,11 @@ async def async_process_integration_platforms(
         """Handle a new component loaded."""
         await _process(event.data[ATTR_COMPONENT])
 
-    hass.bus.async_listen(EVENT_COMPONENT_LOADED, async_component_loaded)
+    unsub = hass.bus.async_listen(EVENT_COMPONENT_LOADED, async_component_loaded)
 
     tasks = [_process(comp) for comp in hass.config.components]
 
     if tasks:
         await asyncio.gather(*tasks)
+
+    return unsub
