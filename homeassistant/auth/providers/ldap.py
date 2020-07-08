@@ -121,7 +121,7 @@ class LdapAuthProvider(AuthProvider):
                 else conn.entries[0].uid.value
             )
             display_name = conn.entries[0].displayName.value
-            _LOGGER.info(f"Logged in as {display_name} ({uid})")
+            _LOGGER.info("Logged in as %s (%s)", display_name, uid)
 
             if self.config[CONF_ALLOWED_GROUP_DNS]:
                 _LOGGER.debug(
@@ -141,7 +141,7 @@ class LdapAuthProvider(AuthProvider):
                     )
 
         except ldap3.core.exceptions.LDAPBindError as exc:
-            _LOGGER.error(f"Bind failed: {exc}")
+            _LOGGER.error("Bind failed: %s", exc)
             raise InvalidAuthError
 
     async def async_get_or_create_credentials(
