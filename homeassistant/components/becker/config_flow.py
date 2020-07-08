@@ -7,11 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 
-from .const import (  # pylint:disable=unused-import; DEFAULT_CONF_USB_STICK_PATH,
-    CONF_DEVICE,
-    CONF_DEVICE_PATH,
-    DOMAIN,
-)
+from .const import CONF_DEVICE, CONF_DEVICE_PATH, DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 CONF_MANUAL_PATH = "Enter Manually"
@@ -38,35 +34,20 @@ class BeckerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             + (f" - {p.manufacturer}" if p.manufacturer else "")
             for p in ports
         ]
-        #     list_of_ports.append(CONF_MANUAL_PATH)
 
         if user_input is not None:
             user_selection = user_input[CONF_DEVICE_PATH]
-            #        if user_selection == CONF_MANUAL_PATH:
-            #            return await self.async_step_pick_radio()
 
             port = ports[list_of_ports.index(user_selection)]
             dev_path = await self.hass.async_add_executor_job(
                 get_serial_by_id, port.device
             )
 
-            # did not detect anything
             self._device_path = dev_path
-        #        return await self.async_step_pick_radio()
+            return await self.async_step_port_config()
 
         schema = vol.Schema({vol.Required(CONF_DEVICE_PATH): vol.In(list_of_ports)})
         return self.async_show_form(step_id="user", data_schema=schema)
-
-    #            return self.async_create_entry(
-    #                title="Becker", data={CONF_DEVICE: user_input[CONF_DEVICE]}
-    #            )
-
-    #        return self.async_show_form(
-    #            step_id="user",
-    #            data_schema=vol.Schema(
-    #                {vol.Required(CONF_DEVICE, default=DEFAULT_CONF_USB_STICK_PATH): str}
-    #            ),
-    #        )
 
     async def async_step_import(self, info):
         """Import existing configuration from Becker Cover."""
@@ -89,7 +70,7 @@ class BeckerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             user_input[CONF_DEVICE_PATH] = serial_by_id
             return self.async_create_entry(
-                title=user_input[CONF_DEVICE_PATH], data={CONF_DEVICE: user_input},
+                title=user_input[CONF_DEVICE_PATH], data=user_input,
             )
 
         schema = {
