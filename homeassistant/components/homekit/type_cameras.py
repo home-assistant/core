@@ -164,7 +164,12 @@ class Camera(HomeAccessory, PyhapCamera):
             },
             "resolutions": resolutions,
         }
-        audio_options = {"codecs": [{"type": "OPUS", "samplerate": 24}]}
+        audio_options = {
+            "codecs": [
+                {"type": "OPUS", "samplerate": 16},
+                {"type": "OPUS", "samplerate": 24},
+            ]
+        }
 
         stream_address = config.get(CONF_STREAM_ADDRESS, get_local_ip())
 
