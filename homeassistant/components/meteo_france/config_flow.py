@@ -52,18 +52,11 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         latitude = user_input.get(CONF_LATITUDE)
         longitude = user_input.get(CONF_LONGITUDE)
 
-        client = MeteoFranceClient()
-
-        try:
-            if not latitude:
-                places = await self.hass.async_add_executor_job(
-                    client.search_places, city
-                )
-                _LOGGER.debug("places search result: %s", places)
-                return await self.async_step_cities(places=places)
-        except Exception as exp:  # pylint: disable=broad-except
-            _LOGGER.error(exp)
-            return self.async_abort(reason="unknown")
+        if not latitude:
+            client = MeteoFranceClient()
+            places = await self.hass.async_add_executor_job(client.search_places, city)
+            _LOGGER.debug("places search result: %s", places)
+            return await self.async_step_cities(places=places)
 
         # Check if already configured
         await self.async_set_unique_id(f"{latitude}, {longitude}")
