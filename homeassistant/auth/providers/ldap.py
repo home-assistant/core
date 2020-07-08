@@ -19,7 +19,7 @@ CONF_ACTIVE_DIRECTORY = "active_directory"
 CONF_BASE_DN = "base_dn"
 CONF_DISABLE_CERT_VALIDATION = "disable_cert_validation"
 CONF_DISABLE_TLS = "disable_tls"
-CONF_GROUP_DNS = "group_dns"
+CONF_ALLOWED_GROUP_DNS = "allowed_group_dns"
 CONF_PORT = "port"
 CONF_SERVER = "server"
 CONF_TIMEOUT = "timeout"
@@ -33,7 +33,9 @@ CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
         vol.Required(CONF_PORT, default=636): int,
         vol.Required(CONF_SERVER): str,
         vol.Required(CONF_TIMEOUT, default=10): int,
-        vol.Optional(CONF_GROUP_DNS, default=[]): vol.All(cv.ensure_list, [str]),
+        vol.Optional(CONF_ALLOWED_GROUP_DNS, default=[]): vol.All(
+            cv.ensure_list, [str]
+        ),
     },
     extra=vol.PREVENT_EXTRA,
 )
@@ -122,15 +124,15 @@ class LdapAuthProvider(AuthProvider):
             display_name = conn.entries[0].displayName.value
             _LOGGER.info(f"Logged in as {display_name} ({uid})")
 
-            if self.config[CONF_GROUP_DNS]:
+            if self.config[CONF_ALLOWED_GROUP_DNS]:
                 _LOGGER.debug(
-                    f"Checking if user is a member of any of the following groups: {self.config[CONF_GROUP_DNS]}"
+                    f"Checking if user is a member of any of the following groups: {self.config[CONF_ALLOWED_GROUP_DNS]}"
                 )
                 user_groups = conn.entries[0].memberOf.value
                 _LOGGER.info(f"User {uid} is member of {user_groups}")
 
                 member = False
-                for group in self.config[CONF_GROUP_DNS]:
+                for group in self.config[CONF_ALLOWED_GROUP_DNS]:
                     if group.lower() in [g.lower() for g in user_groups]:
                         member = True
                 if not member:
