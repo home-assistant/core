@@ -83,9 +83,9 @@ class ZWaveConfigWriteView(HomeAssistantView):
         network = hass.data.get(const.DATA_NETWORK)
         if network is None:
             return self.json_message("No Z-Wave network data found", HTTP_NOT_FOUND)
-        _LOGGER.info("Z-Wave configuration written to file.")
+        _LOGGER.info("Z-Wave configuration written to file")
         network.write_config()
-        return self.json_message("Z-Wave configuration saved to file.", HTTP_OK)
+        return self.json_message("Z-Wave configuration saved to file", HTTP_OK)
 
 
 class ZWaveNodeValueView(HomeAssistantView):

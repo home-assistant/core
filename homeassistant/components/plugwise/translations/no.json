@@ -8,6 +8,7 @@
             "invalid_auth": "Ugyldig godkjenning, sjekk din 8-tegns Smile ID",
             "unknown": "Uventet feil"
         },
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {

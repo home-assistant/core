@@ -256,7 +256,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     _LOGGER.warning(
                         "Couldn't complete configuration.yaml import: '%s' key is "
                         "missing. Either provide '%s' key in configuration.yaml or "
-                        "finish setup by completing configuration via frontend.",
+                        "finish setup by completing configuration via frontend",
                         CONF_ACCESS_TOKEN,
                         CONF_ACCESS_TOKEN,
                     )

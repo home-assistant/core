@@ -57,21 +57,23 @@
         "step": {
             "broker": {
                 "data": {
-                    "broker": "Megler"
+                    "broker": "Megler",
+                    "port": "",
+                    "username": "Brukernavn"
                 },
                 "description": "Vennligst oppgi tilkoblingsinformasjonen for din MQTT megler."
             },
             "options": {
                 "data": {
-                    "birth_payload": "Birth message payload",
+                    "birth_payload": "F\u00f8dselsmelding nyttelast",
                     "birth_qos": "F\u00f8dselsmelding QoS",
-                    "birth_retain": "F\u00f8dselsmelding beholder",
-                    "birth_topic": "F\u00f8dselsmeldingsemne",
+                    "birth_retain": "F\u00f8dselsmelding behold",
+                    "birth_topic": "F\u00f8dselsmelding emne",
                     "discovery": "Aktiver oppdagelse",
-                    "will_payload": "Vil melde nyttelast",
-                    "will_qos": "Vil melding til QoS",
-                    "will_retain": "Vil meldingen beholde",
-                    "will_topic": "Vil melding emne"
+                    "will_payload": "Testament melding nyttelast",
+                    "will_qos": "Testament melding QoS",
+                    "will_retain": "Testament melding behold",
+                    "will_topic": "Testament melding emne"
                 },
                 "description": "Vennligst velg MQTT-alternativer."
             }

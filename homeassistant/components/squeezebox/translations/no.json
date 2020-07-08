@@ -6,8 +6,12 @@
         "error": {
             "no_server_found": "Kan ikke automatisk oppdage serveren."
         },
+        "flow_title": "",
         "step": {
             "edit": {
+                "data": {
+                    "port": ""
+                },
                 "title": "Redigere tilkoblingsinformasjon"
             },
             "user": {
@@ -15,5 +19,5 @@
             }
         }
     },
-    "title": "Logitech Squeezebox"
+    "title": ""
 }

@@ -1,19 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]"
+            "already_configured_account": "Account is already configured"
         },
         "error": {
-            "account_error": "[%key:common::config_flow::error::invalid_auth%]",
-            "session_error": "[%key:common::config_flow::error::cannot_connect%]",
-            "unknown": "[%key:common::config_flow::error::unknown%]"
+            "account_error": "Invalid authentication",
+            "session_error": "Failed to connect",
+            "unknown": "Unexpected error"
         },
         "step": {
             "user": {
                 "data": {
-                    "password": "[%key:common::config_flow::data::password%]",
+                    "password": "Password",
                     "server": "Server",
-                    "username": "[%key:common::config_flow::data::username%]"
+                    "username": "Username"
                 },
                 "description": "Enter Dexcom Share credentials",
                 "title": "Setup Dexcom integration"

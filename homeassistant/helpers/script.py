@@ -24,6 +24,8 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
+    CONF_MODE,
+    CONF_QUEUE_SIZE,
     CONF_SCENE,
     CONF_TIMEOUT,
     CONF_WAIT_TEMPLATE,
@@ -72,10 +74,41 @@ SCRIPT_MODE_CHOICES = [
 ]
 DEFAULT_SCRIPT_MODE = SCRIPT_MODE_LEGACY
 
-DEFAULT_QUEUE_MAX = 10
+DEFAULT_QUEUE_SIZE = 10
 
 _LOG_EXCEPTION = logging.ERROR + 1
 _TIMEOUT_MSG = "Timeout reached, abort script."
+
+SCRIPT_BASE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_MODE): vol.In(SCRIPT_MODE_CHOICES),
+        vol.Optional(CONF_QUEUE_SIZE): vol.All(vol.Coerce(int), vol.Range(min=2)),
+    }
+)
+
+
+def warn_deprecated_legacy(logger, msg):
+    """Warn about deprecated legacy mode."""
+    logger.warning(
+        "Script behavior has changed. "
+        "To continue using previous behavior, which is now deprecated, "
+        "add '%s: %s' to %s.",
+        CONF_MODE,
+        SCRIPT_MODE_LEGACY,
+        msg,
+    )
+
+
+def validate_queue_size(config):
+    """Validate queue_size option."""
+    mode = config.get(CONF_MODE, DEFAULT_SCRIPT_MODE)
+    queue_size = config.get(CONF_QUEUE_SIZE)
+    if mode == SCRIPT_MODE_QUEUE:
+        if queue_size is None:
+            config[CONF_QUEUE_SIZE] = DEFAULT_QUEUE_SIZE
+    elif queue_size is not None:
+        raise vol.Invalid(f"{CONF_QUEUE_SIZE} not valid with {mode} {CONF_MODE}")
+    return config
 
 
 async def async_validate_action_config(
@@ -673,7 +706,7 @@ class Script:
         name: Optional[str] = None,
         change_listener: Optional[Callable[..., Any]] = None,
         script_mode: str = DEFAULT_SCRIPT_MODE,
-        queue_max: int = DEFAULT_QUEUE_MAX,
+        queue_size: int = DEFAULT_QUEUE_SIZE,
         logger: Optional[logging.Logger] = None,
         log_exceptions: bool = True,
     ) -> None:
@@ -702,7 +735,7 @@ class Script:
 
         self._runs: List[_ScriptRunBase] = []
         if script_mode == SCRIPT_MODE_QUEUE:
-            self._queue_max = queue_max
+            self._queue_size = queue_size
             self._queue_len = 0
             self._queue_lck = asyncio.Lock()
         self._config_cache: Dict[Set[Tuple], Callable[..., bool]] = {}
@@ -806,7 +839,7 @@ class Script:
                     self._queue_len,
                     "s" if self._queue_len > 1 else "",
                 )
-                if self._queue_len >= self._queue_max:
+                if self._queue_len >= self._queue_size:
                     raise QueueFull
 
         if self.is_legacy:
