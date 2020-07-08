@@ -129,13 +129,13 @@ def hass(loop, hass_storage, request):
 
 
 @pytest.fixture
-async def stop_hass(loop):
+async def stop_hass():
     """Make sure all hass are stopped."""
     orig_hass = ha.HomeAssistant
 
     created = []
 
-    def mock_hass(loop=loop):
+    def mock_hass():
         hass_inst = orig_hass()
         created.append(hass_inst)
         return hass_inst
@@ -144,10 +144,12 @@ async def stop_hass(loop):
         yield
 
     for hass_inst in created:
-        with patch.object(loop, "stop"):
-            if hass_inst.is_running:
-                await hass_inst.async_block_till_done()
-                await hass_inst.async_stop(force=True)
+        if hass_inst.state == ha.CoreState.stopped:
+            continue
+
+        with patch.object(hass_inst.loop, "stop"):
+            await hass_inst.async_block_till_done()
+            await hass_inst.async_stop(force=True)
 
 
 @pytest.fixture
