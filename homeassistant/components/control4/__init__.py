@@ -77,15 +77,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     director_token_dict = await account.getDirectorBearerToken(controller_name)
     director = C4Director(config[CONF_HOST], director_token_dict[CONF_TOKEN])
     entry_data[CONF_DIRECTOR] = director
-    entry_data[
-        CONF_DIRECTOR_TOKEN_EXPIRATION
-    ] = director_token_dict["token_expiration"]
+    entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION] = director_token_dict["token_expiration"]
 
     # Add Control4 controller to device registry
     controller_href = (await account.getAccountControllers())["href"]
-    entry_data[
-        CONF_DIRECTOR_SW_VERSION
-    ] = await account.getControllerOSVersion(controller_href)
+    entry_data[CONF_DIRECTOR_SW_VERSION] = await account.getControllerOSVersion(
+        controller_href
+    )
 
     result = re.search("_(.*)_", controller_name)
     entry_data[CONF_DIRECTOR_MODEL] = result.group(1).upper()
@@ -96,31 +94,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         identifiers={(DOMAIN, controller_name)},
         manufacturer="Control4",
         name=controller_name,
-        model=hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR_MODEL],
-        sw_version=hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR_SW_VERSION],
+        model=entry_data[CONF_DIRECTOR_MODEL],
+        sw_version=entry_data[CONF_DIRECTOR_SW_VERSION],
     )
 
     # Store all items found on controller for platforms to use
     director_all_items = await director.getAllItemInfo()
     director_all_items = json.loads(director_all_items)
-    hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR_ALL_ITEMS] = director_all_items
+    entry_data[CONF_DIRECTOR_ALL_ITEMS] = director_all_items
 
     # Load options from config entry
-    hass.data[DOMAIN][entry.entry_id][CONF_SCAN_INTERVAL] = entry.options.get(
+    entry_data[CONF_SCAN_INTERVAL] = entry.options.get(
         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
     )
-    hass.data[DOMAIN][entry.entry_id][CONF_LIGHT_TRANSITION_TIME] = entry.options.get(
+    entry_data[CONF_LIGHT_TRANSITION_TIME] = entry.options.get(
         CONF_LIGHT_TRANSITION_TIME, DEFAULT_LIGHT_TRANSITION_TIME
     )
-    hass.data[DOMAIN][entry.entry_id][
-        CONF_LIGHT_COLD_START_TRANSITION_TIME
-    ] = entry.options.get(
+    entry_data[CONF_LIGHT_COLD_START_TRANSITION_TIME] = entry.options.get(
         CONF_LIGHT_COLD_START_TRANSITION_TIME, DEFAULT_LIGHT_COLD_START_TRANSITION_TIME
     )
 
-    hass.data[DOMAIN][entry.entry_id][CONF_CONFIG_LISTENER] = entry.add_update_listener(
-        update_listener
-    )
+    entry_data[CONF_CONFIG_LISTENER] = entry.add_update_listener(update_listener)
 
     for component in PLATFORMS:
         hass.async_create_task(
