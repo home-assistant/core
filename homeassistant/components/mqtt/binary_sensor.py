@@ -274,14 +274,6 @@ class MqttBinarySensor(
         return self._state
 
     @property
-    def state(self):
-        """Return the state of the binary sensor."""
-        if self._expired:
-            return None
-
-        return super().state
-
-    @property
     def device_class(self):
         """Return the class of this sensor."""
         return self._config.get(CONF_DEVICE_CLASS)
@@ -295,3 +287,12 @@ class MqttBinarySensor(
     def unique_id(self):
         """Return a unique ID."""
         return self._unique_id
+
+    @property
+    def available(self) -> bool:
+        """Return true if the device is available and value has not expired."""
+        expire_after = self._config.get(CONF_EXPIRE_AFTER)
+        # pylint: disable=no-member
+        return MqttAvailability.available.fget(self) and (
+            expire_after is None or not self._expired
+        )
