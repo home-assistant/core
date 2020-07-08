@@ -44,6 +44,7 @@ async def test_form(hass):
         "host": "1.1.1.1",
         "username": "test-username",
         "password": "test-password",
+        "controller_name": "Name of the device",
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
