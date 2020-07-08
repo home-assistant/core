@@ -27,9 +27,7 @@ async def test_entity_registry(hass):
 
     with patch(
         "homeassistant.components.bond.Bond.getDeviceIds", return_value=TEST_DEVICE_IDS
-    ), patch(
-        "homeassistant.components.bond.Bond.getDevice", return_value=TEST_DEVICE
-    ):
+    ), patch("homeassistant.components.bond.Bond.getDevice", return_value=TEST_DEVICE):
         await setup_platform(hass, COVER_DOMAIN)
 
     registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
@@ -41,9 +39,7 @@ async def test_open_cover(hass):
 
     with patch(
         "homeassistant.components.bond.Bond.getDeviceIds", return_value=TEST_DEVICE_IDS
-    ), patch(
-        "homeassistant.components.bond.Bond.getDevice", return_value=TEST_DEVICE
-    ):
+    ), patch("homeassistant.components.bond.Bond.getDevice", return_value=TEST_DEVICE):
         await setup_platform(hass, COVER_DOMAIN)
 
     with patch("homeassistant.components.bond.Bond.open") as mock_open:
@@ -62,9 +58,7 @@ async def test_close_cover(hass):
 
     with patch(
         "homeassistant.components.bond.Bond.getDeviceIds", return_value=TEST_DEVICE_IDS
-    ), patch(
-        "homeassistant.components.bond.Bond.getDevice", return_value=TEST_DEVICE
-    ):
+    ), patch("homeassistant.components.bond.Bond.getDevice", return_value=TEST_DEVICE):
         await setup_platform(hass, COVER_DOMAIN)
 
     with patch("homeassistant.components.bond.Bond.close") as mock_close:
@@ -83,9 +77,7 @@ async def test_stop_cover(hass):
 
     with patch(
         "homeassistant.components.bond.Bond.getDeviceIds", return_value=TEST_DEVICE_IDS
-    ), patch(
-        "homeassistant.components.bond.Bond.getDevice", return_value=TEST_DEVICE
-    ):
+    ), patch("homeassistant.components.bond.Bond.getDevice", return_value=TEST_DEVICE):
         await setup_platform(hass, COVER_DOMAIN)
 
     with patch("homeassistant.components.bond.Bond.hold") as mock_hold:
