@@ -1,7 +1,7 @@
 """The Validator integration."""
-import dataclasses as dc
 from typing import Any, Dict, List, Union
 
+import attr
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -21,7 +21,9 @@ from homeassistant.helpers.integration_platform import (
 
 DOMAIN = "validator"
 
+# pylint: disable=invalid-name
 ATTRIBUTE_VALIDATE_DICT = Dict[str, Any]
+# pylint: enable=invalid-name
 
 BASE_VALIDATOR: ATTRIBUTE_VALIDATE_DICT = {
     ATTR_FRIENDLY_NAME: vol.Maybe(str),
@@ -83,11 +85,11 @@ async def validate(hass: HomeAssistant, *, report_if_valid=True) -> None:
     persistent_notification.async_create(hass, "\n".join(parts), title, DOMAIN)
 
 
-@dc.dataclass
+@attr.s
 class Report:
     """Class to track warnings for entities."""
 
-    entities: Dict[str, List[str]] = dc.field(default_factory=dict, init=False)
+    entities: Dict[str, List[str]] = attr.ib(factory=dict, init=False)
 
     @callback
     def async_validate_base_attributes(self, state: State) -> None:
