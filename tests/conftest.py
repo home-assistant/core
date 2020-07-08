@@ -136,7 +136,7 @@ async def stop_hass(loop):
     created = []
 
     def mock_hass(loop=loop):
-        hass_inst = orig_hass(loop)
+        hass_inst = orig_hass()
         created.append(hass_inst)
         return hass_inst
 
@@ -148,8 +148,6 @@ async def stop_hass(loop):
             if hass_inst.is_running:
                 await hass_inst.async_block_till_done()
                 await hass_inst.async_stop(force=True)
-            else:
-                hass_inst.executor.shutdown(True)
 
 
 @pytest.fixture
