@@ -13,7 +13,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import MagicMock, Mock, patch
+from tests.async_mock import AsyncMock, MagicMock, Mock, patch
 from tests.common import MockConfigEntry
 
 
@@ -34,6 +34,9 @@ def cast_mock():
         "homeassistant.components.cast.discovery.pychromecast", pycast_mock
     ), patch(
         "homeassistant.components.cast.media_player.MultizoneManager", MagicMock()
+    ), patch(
+        "homeassistant.components.cast.media_player.zeroconf.async_get_instance",
+        AsyncMock(),
     ):
         yield
 
