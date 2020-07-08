@@ -81,7 +81,6 @@ class LdapAuthProvider(AuthProvider):
 
             # LDAP bind
             if self.config[CONF_ACTIVE_DIRECTORY]:
-                # TODO
                 attrs = ["sAMAccountName", "displayName", "memberOf"]
                 conn = ldap3.Connection(
                     server, user=username, password=password, authentication=ldap3.NTLM,
@@ -97,15 +96,15 @@ class LdapAuthProvider(AuthProvider):
 
             whoami = conn.extend.standard.who_am_i()
 
-            _LOGGER.debug(f"Server info: {server.info}")
-            _LOGGER.debug(f"Connection: {conn}")
-            _LOGGER.debug(f"whoami: {whoami}")
+            _LOGGER.debug("Server info: %s", server.info)
+            _LOGGER.debug("Connection: %s", conn)
+            _LOGGER.debug("whoami: %s", whoami)
 
             match = re.match("dn: (.+)", whoami, re.IGNORECASE)
             if not match:
                 raise LdapError("Unable to determine DN of bind user.")
             dn_self = match.group(1)
-            _LOGGER.debug(f"DN of the logged user: {dn_self}")
+            _LOGGER.debug("DN of the logged user: %s", dn_self)
 
             if not conn.search(
                 dn_self,
@@ -126,10 +125,11 @@ class LdapAuthProvider(AuthProvider):
 
             if self.config[CONF_ALLOWED_GROUP_DNS]:
                 _LOGGER.debug(
-                    f"Checking if user is a member of any of the following groups: {self.config[CONF_ALLOWED_GROUP_DNS]}"
+                    "Checking if user is a member of any of the following groups: %s",
+                    self.config[CONF_ALLOWED_GROUP_DNS],
                 )
                 user_groups = conn.entries[0].memberOf.value
-                _LOGGER.info(f"User {uid} is member of {user_groups}")
+                _LOGGER.info("User %s is member of %s", uid, user_groups)
 
                 member = False
                 for group in self.config[CONF_ALLOWED_GROUP_DNS]:
@@ -137,7 +137,7 @@ class LdapAuthProvider(AuthProvider):
                         member = True
                 if not member:
                     raise InvalidAuthError(
-                        f"User {uid} is not a member of any of the required groups"
+                        "User %s is not a member of any of the required groups", uid,
                     )
 
         except ldap3.core.exceptions.LDAPBindError as exc:
