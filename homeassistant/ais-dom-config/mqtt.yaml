@@ -1,5 +1,7 @@
 broker: 127.0.0.1
-#broker: ais-dom.local
+# broker: 147.135.209.212
+# username: kamil
+# password: xxxxx
 #port: 1883
 # client_id: Default is a random generated one.
 keepalive: 60
