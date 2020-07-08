@@ -95,7 +95,9 @@ class LdapAuthProvider(AuthProvider):
             _LOGGER.debug("Server info: %s", server.info)
             _LOGGER.debug("Connection: %s", conn)
 
+            # Determine the DN of the binding user
             if self.config[CONF_ACTIVE_DIRECTORY]:
+                # Get the username from the connection. It is stored there in the following form: 'domain\\user'.
                 username_no_domain = conn.user.split("\\")[1]
                 if not conn.search(
                     self.config[CONF_BASE_DN],
@@ -107,6 +109,8 @@ class LdapAuthProvider(AuthProvider):
                     raise LdapError
                 dn_self = conn.entries[0].distinguishedName.value
             else:
+                # On regular LDAP no search if necessary, we can simply extract the DN from the who_am_i response.
+                # Example: 'dn: uid=user01,cn=users,cn=accounts,dc=example,dc=com'
                 whoami = conn.extend.standard.who_am_i()
                 match = re.match("dn: (.+)", whoami, re.IGNORECASE)
                 if not match:
@@ -115,6 +119,7 @@ class LdapAuthProvider(AuthProvider):
                 dn_self = match.group(1)
             _LOGGER.debug("DN of the bind user: %s", dn_self)
 
+            # Get information about the binding user
             if not conn.search(
                 dn_self,
                 "(objectclass=person)",
@@ -126,14 +131,17 @@ class LdapAuthProvider(AuthProvider):
             ):
                 _LOGGER.error("LDAP self search returned no results.")
                 raise LdapError
+            # Get the account name from the directory.
             uid = (
                 conn.entries[0].sAMAccountName.value
                 if self.config[CONF_ACTIVE_DIRECTORY]
                 else conn.entries[0].uid.value
             )
+            # Full name: Firstname Lastname
             display_name = conn.entries[0].displayName.value
             _LOGGER.info("Logged in as %s (%s)", display_name, uid)
 
+            # Check group membership
             if self.config[CONF_ALLOWED_GROUP_DNS]:
                 _LOGGER.debug(
                     "Checking if user is a member of any of the following groups: %s",
