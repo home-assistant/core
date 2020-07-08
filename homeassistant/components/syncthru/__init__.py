@@ -16,3 +16,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         hass.config_entries.async_forward_entry_setup(entry, SENSOR_DOMAIN)
     )
     return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unload the config entry."""
+    return await hass.config_entries.async_forward_entry_unload(entry, SENSOR_DOMAIN)
