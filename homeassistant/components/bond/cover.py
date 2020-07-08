@@ -1,5 +1,4 @@
 """Support for Bond covers."""
-import asyncio
 import logging
 from typing import Any, Callable, Dict, List, Optional
 
@@ -23,19 +22,17 @@ async def async_setup_entry(
     async_add_entities: Callable[[List[Entity]], None],
 ) -> None:
     """Set up Bond cover devices."""
-
     bond: Bond = hass.data[DOMAIN][entry.entry_id]
 
-    async def discover():
-        devices = await get_bond_devices(hass, bond)
-        covers = [
-            BondCover(bond, device)
-            for device in devices
-            if device.type == BOND_DEVICE_TYPE_MOTORIZED_SHADES
-        ]
-        async_add_entities(covers)
+    devices = await hass.async_add_executor_job(get_bond_devices, hass, bond)
 
-    asyncio.create_task(discover())
+    covers = [
+        BondCover(bond, device)
+        for device in devices
+        if device.type == BOND_DEVICE_TYPE_MOTORIZED_SHADES
+    ]
+
+    async_add_entities(covers)
 
 
 class BondCover(CoverEntity):
