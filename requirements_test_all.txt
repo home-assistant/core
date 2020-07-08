@@ -16,9 +16,6 @@ PyFlick==0.0.2
 # homeassistant.components.owntracks
 PyNaCl==1.3.0
 
-# homeassistant.homeassistant.auth.providers.ldap
-ldap3==2.7
-
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.homekit
 PyQRCode==1.2.1
