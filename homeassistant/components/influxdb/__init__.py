@@ -282,6 +282,7 @@ def _generate_event_to_json(conf: Dict) -> Callable[[Dict], str]:
 class InfluxClient:
     """An InfluxDB client wrapper for V1 or V2."""
 
+    data_repositories: List[str]
     write: Callable[[str], None]
     query: Callable[[str, str], List[Any]]
     close: Callable[[], None]
@@ -330,20 +331,24 @@ def get_influx_connection(conf, test_write=False, test_read=False):
             """Close V2 influx client."""
             influx.close()
 
-        influx_client = InfluxClient(write_v2, query_v2, close_v2)
+        buckets = []
         if test_write:
             # Try to write [] to influx. If we can connect and creds are valid
             # Then invalid inputs is returned. Anything else is a broken config
             try:
-                influx_client.write([])
+                write_v2([])
             except ValueError:
                 pass
             write_api = influx.write_api(write_options=ASYNCHRONOUS)
 
         if test_read:
-            influx_client.query(TEST_QUERY_V2)
+            tables = query_v2(TEST_QUERY_V2)
+            if tables and tables[0].records:
+                buckets = [bucket.values["name"] for bucket in tables[0].records]
+            else:
+                buckets = []
 
-        return influx_client
+        return InfluxClient(buckets, write_v2, query_v2, close_v2)
 
     # Else it's a V1 client
     kwargs[CONF_VERIFY_SSL] = conf[CONF_VERIFY_SSL]
@@ -405,14 +410,14 @@ def get_influx_connection(conf, test_write=False, test_read=False):
         """Close the V1 Influx client."""
         influx.close()
 
-    influx_client = InfluxClient(write_v1, query_v1, close_v1)
+    databases = []
     if test_write:
-        influx_client.write([])
+        write_v1([])
 
     if test_read:
-        influx_client.query(TEST_QUERY_V1)
+        databases = [db["name"] for db in query_v1(TEST_QUERY_V1)]
 
-    return influx_client
+    return InfluxClient(databases, write_v1, query_v1, close_v1)
 
 
 def setup(hass, config):
