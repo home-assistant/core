@@ -16,13 +16,6 @@ TREND_SENSORS = {
         "total_power",
         DEVICE_CLASS_POWER,
     ],
-    "total_reactive_power": [
-        "Total consumption - Reactive power",
-        None,
-        POWER_WATT,
-        "total_reactive_power",
-        DEVICE_CLASS_POWER,
-    ],
     "alwayson": [
         "Always on - Active power",
         None,
@@ -58,6 +51,15 @@ TREND_SENSORS = {
         "alwayson_today",
         None,
     ],
+}
+REACTIVE_SENSORS = {
+    "total_reactive_power": [
+        "Total consumption - Reactive power",
+        None,
+        POWER_WATT,
+        "total_reactive_power",
+        DEVICE_CLASS_POWER,
+    ]
 }
 SOLAR_SENSORS = {
     "solar_power": [
@@ -151,6 +153,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 )
             )
 
+        if service_location.has_reactive_value:
+            for reactive_sensor in REACTIVE_SENSORS:
+                entities.append(
+                    SmappeeSensor(
+                        smappee_base=smappee_base,
+                        service_location=service_location,
+                        sensor=reactive_sensor,
+                        attributes=REACTIVE_SENSORS[reactive_sensor],
+                    )
+                )
+
         # Add solar sensors
         if service_location.has_solar_production:
             for sensor in SOLAR_SENSORS:
@@ -180,17 +193,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 )
             )
 
-        # Add phase- and line voltages
-        for sensor_name, sensor in VOLTAGE_SENSORS.items():
-            if service_location.phase_type in sensor[5]:
-                entities.append(
-                    SmappeeSensor(
-                        smappee_base=smappee_base,
-                        service_location=service_location,
-                        sensor=sensor_name,
-                        attributes=sensor,
+        # Add phase- and line voltages if available
+        if service_location.has_voltage_values:
+            for sensor_name, sensor in VOLTAGE_SENSORS.items():
+                if service_location.phase_type in sensor[5]:
+                    entities.append(
+                        SmappeeSensor(
+                            smappee_base=smappee_base,
+                            service_location=service_location,
+                            sensor=sensor_name,
+                            attributes=sensor,
+                        )
                     )
-                )
 
         # Add Gas and Water sensors
         for sensor_id, sensor in service_location.sensors.items():
