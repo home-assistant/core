@@ -54,10 +54,10 @@ class BroadlinkUpdateManager(ABC):
         try:
             data = await self.async_fetch_data()
 
-        except BroadlinkException as err:
+        except (BroadlinkException, OSError) as err:
             if self.available and (
                 dt.utcnow() - self.last_update > timedelta(minutes=3)
-                or isinstance(err, AuthorizationError)
+                or isinstance(err, (AuthorizationError, OSError))
             ):
                 self.available = False
                 _LOGGER.warning(

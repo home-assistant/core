@@ -172,7 +172,7 @@ class BroadlinkRMSwitch(BroadlinkSwitch):
 
         try:
             await self._device.async_request(self._device.api.send_data, packet)
-        except BroadlinkException as err:
+        except (BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
             return False
         return True
@@ -194,7 +194,7 @@ class BroadlinkSP1Switch(BroadlinkSwitch):
         """Send a packet to the device."""
         try:
             await self._device.async_request(self._device.api.set_power, packet)
-        except BroadlinkException as err:
+        except (BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
             return False
         return True
@@ -265,7 +265,7 @@ class BroadlinkMP1Slot(BroadlinkSwitch):
             await self._device.async_request(
                 self._device.api.set_power, self._slot, packet
             )
-        except BroadlinkException as err:
+        except (BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
             return False
         return True

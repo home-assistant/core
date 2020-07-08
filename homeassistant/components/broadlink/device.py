@@ -83,7 +83,7 @@ class BroadlinkDevice:
             self.hass.async_create_task(self._async_handle_auth_error())
             return False
 
-        except DeviceOfflineError:
+        except (DeviceOfflineError, OSError):
             raise ConfigEntryNotReady
 
         self.api = api
@@ -101,7 +101,7 @@ class BroadlinkDevice:
 
         try:
             self.fw_version = await self.hass.async_add_executor_job(api.get_fwversion)
-        except BroadlinkException:
+        except (BroadlinkException, OSError):
             pass
 
         # Forward entry setup to related domains.
@@ -135,7 +135,7 @@ class BroadlinkDevice:
         """Authenticate to the device."""
         try:
             await self.hass.async_add_executor_job(self.api.auth)
-        except BroadlinkException as err:
+        except (BroadlinkException, OSError) as err:
             _LOGGER.debug(
                 "Failed to authenticate to the device at %s: %s", self.api.host[0], err
             )

@@ -63,9 +63,12 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 if err.errno in {errno.EINVAL, socket.EAI_NONAME}:
                     errors["base"] = "invalid_host"
                     err_msg = "Invalid hostname or IP address"
+                elif err.errno == errno.ENETUNREACH:
+                    errors["base"] = "cannot_connect"
+                    err_msg = str(err)
                 else:
                     errors["base"] = "unknown"
-                    err_msg = f"{type(err).__name__}: {err}"
+                    err_msg = str(err)
 
             except IndexError:
                 errors["base"] = "cannot_connect"
@@ -123,6 +126,14 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
             err_msg = str(err)
 
+        except OSError as err:
+            if err.errno == errno.ENETUNREACH:
+                errors["base"] = "cannot_connect"
+                err_msg = str(err)
+            else:
+                errors["base"] = "unknown"
+                err_msg = str(err)
+
         else:
             if device.cloud:
                 return await self.async_step_unlock()
@@ -170,6 +181,14 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except BroadlinkException as err:
                 errors["base"] = "unknown"
                 err_msg = str(err)
+
+            except OSError as err:
+                if err.errno == errno.ENETUNREACH:
+                    errors["base"] = "cannot_connect"
+                    err_msg = str(err)
+                else:
+                    errors["base"] = "unknown"
+                    err_msg = str(err)
 
             else:
                 return await self.async_step_finish()

@@ -245,7 +245,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
             try:
                 await self._device.async_request(self._device.api.send_data, code)
 
-            except (AuthorizationError, DeviceOfflineError) as err:
+            except (AuthorizationError, DeviceOfflineError, OSError) as err:
                 _LOGGER.error("Failed to send '%s': %s", command, err)
                 break
 
@@ -278,11 +278,11 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
                 if toggle:
                     code = [code, await self._async_learn_command(command)]
 
-            except (AuthorizationError, DeviceOfflineError) as err:
+            except (AuthorizationError, DeviceOfflineError, OSError) as err:
                 _LOGGER.error("Failed to learn '%s': %s", command, err)
                 break
 
-            except (BroadlinkException, TimeoutError) as err:
+            except BroadlinkException as err:
                 _LOGGER.error("Failed to learn '%s': %s", command, err)
                 continue
 
@@ -297,7 +297,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
         try:
             await self._device.async_request(self._device.api.enter_learning)
 
-        except BroadlinkException as err:
+        except (BroadlinkException, OSError) as err:
             _LOGGER.debug("Failed to enter learning mode: %s", err)
             raise
 
