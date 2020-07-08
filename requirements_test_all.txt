@@ -368,7 +368,7 @@ huawei-lte-api==1.4.12
 iaqualink==0.3.4
 
 # homeassistant.components.influxdb
-influxdb-client==1.6.0
+influxdb-client==1.8.0
 
 # homeassistant.components.influxdb
 influxdb==5.2.3
