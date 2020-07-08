@@ -73,9 +73,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         initialise_templates(hass, templates)
         entity_ids = extract_entities(name, "cover", None, templates)
         covers.append(
-            BeckerEntity(
-                becker_connector, name, int(channel), state_template, entity_ids
-            )
+            BeckerEntity(becker_connector, name, channel, state_template, entity_ids)
         )
 
     async_add_entities(covers)
@@ -92,7 +90,7 @@ class BeckerEntity(CoverEntity, RestoreEntity):
         """Init the Becker device."""
         self._becker = becker
         self._name = name
-        self._channel = str(channel)
+        self._channel = channel
         self._template = state_template
         self._entities = entity_ids
         self._position = position
