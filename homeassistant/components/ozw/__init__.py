@@ -101,7 +101,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.debug("[INSTANCE EVENT]: %s - data: %s", event, event_data)
         # The actual removal action of a Z-Wave node is reported as instance event
         # Only when this event is detected we cleanup the device and entities from hass
-        if event == "removenode" and "Node" in event_data:
+        # Note: Find a more elegant way of doing this, e.g. a notification of this event from OZW
+        if event in ["removenode", "removefailednode"] and "Node" in event_data:
             removed_nodes.append(event_data["Node"])
 
     @callback
