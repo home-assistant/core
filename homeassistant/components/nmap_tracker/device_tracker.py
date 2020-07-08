@@ -23,6 +23,7 @@ CONF_EXCLUDE = "exclude"
 CONF_HOME_INTERVAL = "home_interval"
 CONF_OPTIONS = "scan_options"
 DEFAULT_OPTIONS = "-F --host-timeout 5s"
+CONF_SUDO = "sudo"
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -31,6 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_HOME_INTERVAL, default=0): cv.positive_int,
         vol.Optional(CONF_EXCLUDE, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_OPTIONS, default=DEFAULT_OPTIONS): cv.string,
+        vol.Optional(CONF_SUDO, default=False): cv.boolean,
     }
 )
 
@@ -56,6 +58,7 @@ class NmapDeviceScanner(DeviceScanner):
         self.exclude = config[CONF_EXCLUDE]
         minutes = config[CONF_HOME_INTERVAL]
         self._options = config[CONF_OPTIONS]
+        self._sudo = config[CONF_SUDO]
         self.home_interval = timedelta(minutes=minutes)
 
         _LOGGER.debug("Scanner initialized")
@@ -95,6 +98,7 @@ class NmapDeviceScanner(DeviceScanner):
         scanner = PortScanner()
 
         options = self._options
+        sudo = self._sudo
 
         if self.home_interval:
             boundary = dt_util.now() - self.home_interval
@@ -112,7 +116,7 @@ class NmapDeviceScanner(DeviceScanner):
             options += f" --exclude {','.join(exclude_hosts)}"
 
         try:
-            result = scanner.scan(hosts=" ".join(self.hosts), arguments=options)
+            result = scanner.scan(hosts=" ".join(self.hosts), arguments=options, sudo=sudo)
         except PortScannerError:
             return False
 
