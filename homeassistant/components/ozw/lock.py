@@ -48,12 +48,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
     platform.async_register_entity_service(
-        SERVICE_GET_USERCODE,
-        {vol.Required(ATTR_CODE_SLOT): vol.Coerce(int)},
-        "async_get_usercode",
-    )
-
-    platform.async_register_entity_service(
         SERVICE_CLEAR_USERCODE,
         {vol.Required(ATTR_CODE_SLOT): vol.Coerce(int)},
         "async_clear_usercode",
@@ -93,20 +87,7 @@ class ZWaveLock(ZWaveDeviceEntity, LockEntity):
                     )
                     break
                 value.send_value(usercode)
-                _LOGGER.debug("User code at slot %s set to: %s", code_slot, usercode)
-                break
-
-    @callback
-    def async_get_usercode(self, code_slot):
-        """Get a usercode at index X on the lock."""
-        lock_node = self.values.primary.node.values()
-
-        for value in lock_node:
-            if (
-                value.command_class == CommandClass.USER_CODE
-                and value.index == code_slot
-            ):
-                _LOGGER.info("User code at slot %s is: %s", code_slot, value.value)
+                _LOGGER.debug("User code at slot %s set", code_slot)
                 break
 
     @callback

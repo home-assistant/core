@@ -56,16 +56,6 @@ async def test_lock(hass, lock_data, sent_messages, lock_msg, caplog):
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {"Value": "123456", "ValueIDKey": 281475150299159}
 
-    # Test get_usercode
-    await hass.services.async_call(
-        "ozw",
-        "get_usercode",
-        {"entity_id": "lock.danalock_v3_btze_locked", "code_slot": 1},
-        blocking=True,
-    )
-    assert len(sent_messages) == 3
-    assert "User code at slot 1 is:" in caplog.text
-
     # Test clear_usercode
     await hass.services.async_call(
         "ozw",
