@@ -747,6 +747,9 @@ pyspcwebgw==0.4.0
 # homeassistant.components.squeezebox
 pysqueezebox==0.2.4
 
+# homeassistant.components.syncthru
+pysyncthru==0.5.0
+
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.7
 
@@ -929,6 +932,7 @@ twilio==6.32.0
 upb_lib==0.4.11
 
 # homeassistant.components.huawei_lte
+# homeassistant.components.syncthru
 url-normalize==1.4.1
 
 # homeassistant.components.uvc
