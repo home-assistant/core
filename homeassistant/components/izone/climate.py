@@ -268,6 +268,7 @@ class ControllerDevice(ClimateEntity):
                 self.temperature_unit,
                 self.precision,
             ),
+            "control_zone": self._controller.zone_ctrl,
         }
 
     @property
