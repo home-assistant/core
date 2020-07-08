@@ -48,10 +48,7 @@ def configured_instances(hass):
 
 
 class Control4Validator:
-    """Placeholder class to make tests pass.
-
-    TODO Remove this placeholder class and replace with things from your PyPI package.
-    """
+    """Validates that config details can be used to authenticate and communicate with Control4."""
 
     def __init__(self, host, username, password):
         """Initialize."""

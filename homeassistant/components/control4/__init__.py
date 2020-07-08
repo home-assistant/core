@@ -81,14 +81,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         CONF_DIRECTOR_TOKEN_EXPIRATION
     ] = director_token_dict["token_expiration"]
 
+    # Add Control4 controller to device registry
     controller_href = (await account.getAccountControllers())["href"]
     hass.data[DOMAIN][entry.entry_id][
         CONF_DIRECTOR_SW_VERSION
     ] = await account.getControllerOSVersion(controller_href)
 
-    # Add Control4 controller to device registry
     result = re.search("_(.*)_", controller_name)
     hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR_MODEL] = result.group(1).upper()
+
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
