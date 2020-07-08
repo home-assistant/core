@@ -1,9 +1,9 @@
 """Config flow for Bond integration."""
+from json import JSONDecodeError
 import logging
 
 from bond import Bond
 from requests.exceptions import ConnectionError as RequestConnectionError
-from simplejson import JSONDecodeError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
