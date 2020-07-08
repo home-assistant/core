@@ -109,6 +109,8 @@ class ControllerDevice(ClimateEntity):
 
         self._supported_features = SUPPORT_FAN_MODE
 
+        # If mode RAS, or mode master with CtrlZone 13 then can set master temperature,
+        # otherwise the unit determines which zone to use as target. See interface manual p. 8
         if (
             controller.ras_mode == "master" and controller.zone_ctrl == 13
         ) or controller.ras_mode == "RAS":
@@ -269,6 +271,7 @@ class ControllerDevice(ClimateEntity):
                 self.precision,
             ),
             "control_zone": self._controller.zone_ctrl,
+            "control_zone_name": self.control_zone_name,
         }
 
     @property
@@ -315,11 +318,18 @@ class ControllerDevice(ClimateEntity):
         return self._controller.temp_return
 
     @property
+    def control_zone_name(self):
+        """Return the zone that currently controls the AC unit."""
+        if not self._supported_features & SUPPORT_TARGET_TEMPERATURE:
+            return self.zones[self._controller.zone_ctrl].name
+        return ""
+
+    @property
     @_return_on_connection_error()
     def target_temperature(self) -> Optional[float]:
-        """Return the temperature we try to reach."""
+        """Return the temperature we try to reach (ether from control zone or master unit)."""
         if not self._supported_features & SUPPORT_TARGET_TEMPERATURE:
-            return None
+            return self.zones[self._controller.zone_ctrl].target_temperature
         return self._controller.temp_setpoint
 
     @property
