@@ -137,7 +137,9 @@ class LdapAuthProvider(AuthProvider):
                         member = True
                 if not member:
                     raise InvalidAuthError(
-                        "User %s is not a member of any of the required groups", uid,
+                        "User {} is not a member of any of the required groups".format(
+                            uid
+                        )
                     )
 
         except ldap3.core.exceptions.LDAPBindError as exc:
