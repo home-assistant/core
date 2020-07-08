@@ -116,7 +116,9 @@ class NmapDeviceScanner(DeviceScanner):
             options += f" --exclude {','.join(exclude_hosts)}"
 
         try:
-            result = scanner.scan(hosts=" ".join(self.hosts), arguments=options, sudo=sudo)
+            result = scanner.scan(
+                hosts=" ".join(self.hosts), arguments=options, sudo=sudo
+            )
         except PortScannerError:
             return False
 
