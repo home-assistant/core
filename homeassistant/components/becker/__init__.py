@@ -2,6 +2,7 @@
 import logging
 
 from pybecker.becker import Becker
+from pybecker.becker_helper import BeckerConnectionError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -64,8 +65,15 @@ async def async_setup_entry(hass, entry):
     if not stick_path:
         stick_path = hass.data[DOMAIN][CONF_DEVICE]
 
-    _LOGGER.debug("Setting Centronic stick on port {stick_path}")
-    becker = BeckerConnection(stick_path)
+    _LOGGER.info("Setting Centronic stick on port %s", stick_path)
+
+    try:
+        becker = BeckerConnection(stick_path)
+    except BeckerConnectionError:
+        _LOGGER.error("Fail to connect to becker device")
+    except Exception as e:
+        _LOGGER.error("Fail to connect to becker device %s", e)
+        raise ConfigEntryNotReady
 
     if not becker:
         raise ConfigEntryNotReady
@@ -93,7 +101,6 @@ class BeckerConnection:
         """Create a new instance of Becker Connection."""
         if not centronic_path:
             centronic_path = DEFAULT_CONF_USB_STICK_PATH
-
         self.connection = Becker(centronic_path, True)
 
     async def handle_pair(self, call):
