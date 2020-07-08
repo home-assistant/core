@@ -506,7 +506,7 @@ pyatag==0.2.19
 pyatmo==3.3.0
 
 # homeassistant.components.becker
-pybecker==1.0.3
+pybecker==1.0.4
 
 # homeassistant.components.blackbird
 pyblackbird==0.5

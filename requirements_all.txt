@@ -1212,7 +1212,7 @@ pyatv==0.3.13
 pybbox==0.0.5-alpha
 
 # homeassistant.components.becker
-pybecker==1.0.3
+pybecker==1.0.4
 
 # homeassistant.components.blackbird
 pyblackbird==0.5
