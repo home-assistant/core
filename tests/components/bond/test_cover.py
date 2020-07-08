@@ -3,7 +3,12 @@ import logging
 
 from bond import BOND_DEVICE_TYPE_MOTORIZED_SHADES
 
+from homeassistant import core
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
@@ -11,6 +16,7 @@ from homeassistant.const import (
     SERVICE_STOP_COVER,
 )
 from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.setup import async_setup_component
 
 from .common import setup_platform
 
@@ -19,27 +25,35 @@ from tests.async_mock import patch
 _LOGGER = logging.getLogger(__name__)
 
 TEST_DEVICE_IDS = ["device-1"]
-TEST_DEVICE = {"name": "name-1", "type": BOND_DEVICE_TYPE_MOTORIZED_SHADES}
+TEST_COVER_DEVICE = {"name": "name-1", "type": BOND_DEVICE_TYPE_MOTORIZED_SHADES}
 
 
-async def test_entity_registry(hass):
+async def test_entity_registry(hass: core.HomeAssistant):
     """Tests that the devices are registered in the entity registry."""
 
     with patch(
         "homeassistant.components.bond.Bond.getDeviceIds", return_value=TEST_DEVICE_IDS
-    ), patch("homeassistant.components.bond.Bond.getDevice", return_value=TEST_DEVICE):
+    ), patch(
+        "homeassistant.components.bond.Bond.getDevice", return_value=TEST_COVER_DEVICE
+    ), patch(
+        "homeassistant.components.bond.Bond.getDeviceState", return_value={}
+    ):
         await setup_platform(hass, COVER_DOMAIN)
 
     registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
     assert [key for key in registry.entities.keys()] == ["cover.name_1"]
 
 
-async def test_open_cover(hass):
+async def test_open_cover(hass: core.HomeAssistant):
     """Tests that open cover command delegates to API."""
 
     with patch(
         "homeassistant.components.bond.Bond.getDeviceIds", return_value=TEST_DEVICE_IDS
-    ), patch("homeassistant.components.bond.Bond.getDevice", return_value=TEST_DEVICE):
+    ), patch(
+        "homeassistant.components.bond.Bond.getDevice", return_value=TEST_COVER_DEVICE
+    ), patch(
+        "homeassistant.components.bond.Bond.getDeviceState", return_value={}
+    ):
         await setup_platform(hass, COVER_DOMAIN)
 
     with patch("homeassistant.components.bond.Bond.open") as mock_open:
@@ -53,12 +67,16 @@ async def test_open_cover(hass):
         mock_open.assert_called_once()
 
 
-async def test_close_cover(hass):
+async def test_close_cover(hass: core.HomeAssistant):
     """Tests that close cover command delegates to API."""
 
     with patch(
         "homeassistant.components.bond.Bond.getDeviceIds", return_value=TEST_DEVICE_IDS
-    ), patch("homeassistant.components.bond.Bond.getDevice", return_value=TEST_DEVICE):
+    ), patch(
+        "homeassistant.components.bond.Bond.getDevice", return_value=TEST_COVER_DEVICE
+    ), patch(
+        "homeassistant.components.bond.Bond.getDeviceState", return_value={}
+    ):
         await setup_platform(hass, COVER_DOMAIN)
 
     with patch("homeassistant.components.bond.Bond.close") as mock_close:
@@ -72,12 +90,16 @@ async def test_close_cover(hass):
         mock_close.assert_called_once()
 
 
-async def test_stop_cover(hass):
+async def test_stop_cover(hass: core.HomeAssistant):
     """Tests that stop cover command delegates to API."""
 
     with patch(
         "homeassistant.components.bond.Bond.getDeviceIds", return_value=TEST_DEVICE_IDS
-    ), patch("homeassistant.components.bond.Bond.getDevice", return_value=TEST_DEVICE):
+    ), patch(
+        "homeassistant.components.bond.Bond.getDevice", return_value=TEST_COVER_DEVICE
+    ), patch(
+        "homeassistant.components.bond.Bond.getDeviceState", return_value={}
+    ):
         await setup_platform(hass, COVER_DOMAIN)
 
     with patch("homeassistant.components.bond.Bond.hold") as mock_hold:
@@ -89,3 +111,57 @@ async def test_stop_cover(hass):
         )
         await hass.async_block_till_done()
         mock_hold.assert_called_once()
+
+
+async def test_update_reports_open_cover(hass: core.HomeAssistant):
+    """Tests that update command sets correct state when Bond API reports cover is open."""
+
+    await async_setup_component(hass, HA_DOMAIN, {})
+    with patch(
+        "homeassistant.components.bond.Bond.getDeviceIds", return_value=TEST_DEVICE_IDS
+    ), patch(
+        "homeassistant.components.bond.Bond.getDevice", return_value=TEST_COVER_DEVICE
+    ), patch(
+        "homeassistant.components.bond.Bond.getDeviceState", return_value={}
+    ):
+        await setup_platform(hass, COVER_DOMAIN)
+
+    with patch(
+        "homeassistant.components.bond.Bond.getDeviceState", return_value={"open": 1}
+    ):
+        await hass.services.async_call(
+            HA_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
+            {ATTR_ENTITY_ID: "cover.name_1"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert hass.states.get("cover.name_1").state == "open"
+
+
+async def test_update_reports_closed_cover(hass: core.HomeAssistant):
+    """Tests that update command sets correct state when Bond API reports cover is closed."""
+
+    await async_setup_component(hass, HA_DOMAIN, {})
+    with patch(
+        "homeassistant.components.bond.Bond.getDeviceIds", return_value=TEST_DEVICE_IDS
+    ), patch(
+        "homeassistant.components.bond.Bond.getDevice", return_value=TEST_COVER_DEVICE
+    ), patch(
+        "homeassistant.components.bond.Bond.getDeviceState", return_value={}
+    ):
+        await setup_platform(hass, COVER_DOMAIN)
+
+    with patch(
+        "homeassistant.components.bond.Bond.getDeviceState", return_value={"open": 0}
+    ):
+        await hass.services.async_call(
+            HA_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
+            {ATTR_ENTITY_ID: "cover.name_1"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert hass.states.get("cover.name_1").state == "closed"
