@@ -5,7 +5,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PROBLEM,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL
 
 from . import PoolSenseEntity
 from .const import DOMAIN
@@ -36,10 +36,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for binary_sensor in BINARY_SENSORS:
         binary_sensors_list.append(
             PoolSenseBinarySensor(
-                coordinator,
-                config_entry.data[CONF_EMAIL],
-                config_entry.data[CONF_PASSWORD],
-                binary_sensor,
+                coordinator, config_entry.data[CONF_EMAIL], binary_sensor
             )
         )
 
@@ -52,7 +49,7 @@ class PoolSenseBinarySensor(PoolSenseEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self.coordinator.data[self.info_type] == "green"
+        return self.coordinator.data[self.info_type] == "red"
 
     @property
     def icon(self):

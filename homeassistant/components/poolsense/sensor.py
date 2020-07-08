@@ -4,7 +4,6 @@ import logging
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_EMAIL,
-    CONF_PASSWORD,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
@@ -78,12 +77,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     sensors_list = []
     for sensor in SENSORS:
         sensors_list.append(
-            PoolSenseSensor(
-                coordinator,
-                config_entry.data[CONF_EMAIL],
-                config_entry.data[CONF_PASSWORD],
-                sensor,
-            )
+            PoolSenseSensor(coordinator, config_entry.data[CONF_EMAIL], sensor)
         )
 
     async_add_entities(sensors_list, False)

@@ -33,11 +33,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up PoolSense from a config entry."""
 
-    poolsense = PoolSense()
+    poolsense = PoolSense(entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD])
     auth_valid = await poolsense.test_poolsense_credentials(
-        aiohttp_client.async_get_clientsession(hass),
-        entry.data[CONF_EMAIL],
-        entry.data[CONF_PASSWORD],
+        aiohttp_client.async_get_clientsession(hass)
     )
 
     if not auth_valid:
@@ -81,10 +79,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class PoolSenseEntity(Entity):
     """Implements a common class elements representing the PoolSense component."""
 
-    def __init__(self, coordinator, email, password, info_type):
+    def __init__(self, coordinator, email, info_type):
         """Initialize poolsense sensor."""
-        self._email = email
-        self._password = password
         self._unique_id = f"{email}-{info_type}"
         self.coordinator = coordinator
         self.info_type = info_type
@@ -105,7 +101,7 @@ class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass, entry):
         """Initialize."""
-        self.poolsense = PoolSense()
+        self.poolsense = PoolSense(entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD])
         self.hass = hass
         self.entry = entry
 
@@ -117,9 +113,7 @@ class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator):
         with async_timeout.timeout(10):
             try:
                 data = await self.poolsense.get_poolsense_data(
-                    aiohttp_client.async_get_clientsession(self.hass),
-                    self.entry.data[CONF_EMAIL],
-                    self.entry.data[CONF_PASSWORD],
+                    aiohttp_client.async_get_clientsession(self.hass)
                 )
             except (PoolSenseError) as error:
                 _LOGGER.error("PoolSense query did not complete.")
