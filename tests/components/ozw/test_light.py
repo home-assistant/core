@@ -295,4 +295,4 @@ async def test_light(hass, light_data, light_msg, sent_messages):
 
     msg = sent_messages[-2]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
-    assert msg["payload"] == {"Value": "#ffbb37d700", "ValueIDKey": 659341335}
+    assert msg["payload"] == {"Value": "#000000d700", "ValueIDKey": 659341335}

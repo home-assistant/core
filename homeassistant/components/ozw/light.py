@@ -209,30 +209,31 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         self.async_set_duration(**kwargs)
 
         rgbw = None
+        white = None
+        hs = None
 
         if ATTR_WHITE_VALUE in kwargs:
-            self._white = kwargs[ATTR_WHITE_VALUE]
+            white = kwargs[ATTR_WHITE_VALUE]
 
         if ATTR_COLOR_TEMP in kwargs:
-            self._ct = TEMP_COLD_HASS
             rgbw = "#00000000ff"
 
         elif ATTR_HS_COLOR in kwargs:
-            self._hs = kwargs[ATTR_HS_COLOR]
+            hs = kwargs[ATTR_HS_COLOR]
             if ATTR_WHITE_VALUE not in kwargs:
                 # white LED must be off in order for color to work
-                self._white = 0
+                white = 0
 
-        if (
-            ATTR_WHITE_VALUE in kwargs or ATTR_HS_COLOR in kwargs
-        ) and self._hs is not None:
+        if (ATTR_WHITE_VALUE in kwargs or ATTR_HS_COLOR in kwargs) and hs is not None:
             rgbw = "#"
-            for colorval in color_util.color_hs_to_RGB(*self._hs):
+            for colorval in color_util.color_hs_to_RGB(*hs):
                 rgbw += format(colorval, "02x")
-            if self._white is not None:
-                rgbw += format(self._white, "02x") + "00"
+            if white is not None:
+                rgbw += format(white, "02x") + "00"
             else:
                 rgbw += "0000"
+        elif ATTR_WHITE_VALUE in kwargs and rgbw is None:
+            rgbw = "#000000" + format(white, "02x") + "00"
 
         if rgbw and self.values.color:
             self.values.color.send_value(rgbw)
