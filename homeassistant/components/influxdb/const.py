@@ -76,7 +76,7 @@ BATCH_BUFFER_SIZE = 100
 LANGUAGE_INFLUXQL = "influxQL"
 LANGUAGE_FLUX = "flux"
 TEST_QUERY_V1 = "SHOW DATABASES;"
-TEST_QUERY_V2 = f"buckets() {DEFAULT_FUNCTION_FLUX}"
+TEST_QUERY_V2 = "buckets()"
 CODE_INVALID_INPUTS = 400
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
@@ -98,6 +98,14 @@ CLIENT_ERROR_V1 = (
     "InfluxDB database is not accessible due to '%s'. "
     "Please check that the database, username and password are correct and "
     "that the specified user has the correct permissions set."
+)
+NO_BUCKET_ERROR = (
+    "InfluxDB bucket '%s' cannot be found. "
+    "Check the name is correct and the token has access to it."
+)
+NO_DATABASE_ERROR = (
+    "InfluxDB database '%s' cannot be found. "
+    "Check the name is correct and the user has access to it."
 )
 WRITE_ERROR = "Could not write '%s' to influx due to '%s'."
 QUERY_ERROR = (
