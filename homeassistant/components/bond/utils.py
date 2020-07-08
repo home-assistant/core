@@ -26,13 +26,10 @@ class BondDevice:
         return self._attrs["type"]
 
 
-async def get_bond_devices(hass: HomeAssistant, bond: Bond) -> List[BondDevice]:
+def get_bond_devices(hass: HomeAssistant, bond: Bond) -> List[BondDevice]:
     """Fetch all available devices using Bond API."""
-    device_ids = await hass.async_add_executor_job(bond.getDeviceIds)
+    device_ids = bond.getDeviceIds()
     devices = [
-        BondDevice(
-            device_id, await hass.async_add_executor_job(bond.getDevice, device_id)
-        )
-        for device_id in device_ids
+        BondDevice(device_id, bond.getDevice(device_id)) for device_id in device_ids
     ]
     return devices
