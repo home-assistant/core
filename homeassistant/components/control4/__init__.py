@@ -53,14 +53,14 @@ async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     Configuration through YAML is not supported at this time.
     """
+    hass.data.setdefault(DOMAIN, {})
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Control4 from a config entry."""
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(entry.entry_id, {})
+    entry_data = hass.data[DOMAIN].setdefault(entry.entry_id, {})
 
     config = entry.data
     account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD])
@@ -69,26 +69,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except client_exceptions.ClientError as exception:
         _LOGGER.error("Error connecting to Control4 account API: %s", exception)
         raise PlatformNotReady()
-    hass.data[DOMAIN][entry.entry_id][CONF_ACCOUNT] = account
+    entry_data[CONF_ACCOUNT] = account
 
     controller_name = config[CONF_CONTROLLER_NAME]
-    hass.data[DOMAIN][entry.entry_id][CONF_CONTROLLER_NAME] = controller_name
+    entry_data[CONF_CONTROLLER_NAME] = controller_name
 
     director_token_dict = await account.getDirectorBearerToken(controller_name)
     director = C4Director(config[CONF_HOST], director_token_dict[CONF_TOKEN])
-    hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR] = director
-    hass.data[DOMAIN][entry.entry_id][
+    entry_data[CONF_DIRECTOR] = director
+    entry_data[
         CONF_DIRECTOR_TOKEN_EXPIRATION
     ] = director_token_dict["token_expiration"]
 
     # Add Control4 controller to device registry
     controller_href = (await account.getAccountControllers())["href"]
-    hass.data[DOMAIN][entry.entry_id][
+    entry_data[
         CONF_DIRECTOR_SW_VERSION
     ] = await account.getControllerOSVersion(controller_href)
 
     result = re.search("_(.*)_", controller_name)
-    hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR_MODEL] = result.group(1).upper()
+    entry_data[CONF_DIRECTOR_MODEL] = result.group(1).upper()
 
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
