@@ -26,6 +26,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_EXCLUDE,
     PRECISION_HALVES,
+    PRECISION_TENTHS,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
@@ -250,6 +251,11 @@ class ControllerDevice(ClimateEntity):
     @property
     def precision(self) -> float:
         """Return the precision of the system."""
+        return PRECISION_TENTHS
+
+    @property
+    def setpoint_precision(self) -> float:
+        """Return the precision of setpoint values."""
         return PRECISION_HALVES
 
     @property
@@ -266,7 +272,7 @@ class ControllerDevice(ClimateEntity):
                 self.hass,
                 self._controller.temp_setpoint,
                 self.temperature_unit,
-                self.precision,
+                self.setpoint_precision,
             ),
         }
 
@@ -494,7 +500,7 @@ class ZoneDevice(ClimateEntity):
     @property
     def precision(self):
         """Return the precision of the system."""
-        return PRECISION_HALVES
+        return PRECISION_TENTHS
 
     @property
     def hvac_mode(self):
