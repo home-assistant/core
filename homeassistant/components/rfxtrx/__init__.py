@@ -270,7 +270,9 @@ def get_devices_from_config(config, device):
         fire_event = entity_info[ATTR_FIRE_EVENT]
         datas = {ATTR_STATE: False, ATTR_FIRE_EVENT: fire_event}
 
-        new_device = device(entity_info[ATTR_NAME], event, datas, signal_repetitions)
+        new_device = device(
+            entity_info[ATTR_NAME], event.device, datas, signal_repetitions
+        )
         RFX_DEVICES[device_id] = new_device
         devices.append(new_device)
     return devices
@@ -295,7 +297,7 @@ def get_new_device(event, config, device):
     )
     datas = {ATTR_STATE: False, ATTR_FIRE_EVENT: False}
     signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
-    new_device = device(pkt_id, event, datas, signal_repetitions)
+    new_device = device(pkt_id, event.device, datas, signal_repetitions, event=event)
     RFX_DEVICES[device_id] = new_device
     return new_device
 
@@ -321,14 +323,17 @@ class RfxtrxDevice(Entity):
     Contains the common logic for Rfxtrx lights and switches.
     """
 
-    def __init__(self, name, event, datas, signal_repetitions):
+    def __init__(self, name, device, datas, signal_repetitions, event=None):
         """Initialize the device."""
         self.signal_repetitions = signal_repetitions
         self._name = name
-        self._event = event
+        self._device = device
         self._state = datas[ATTR_STATE]
         self._should_fire_event = datas[ATTR_FIRE_EVENT]
-        self._unique_id = f"{event.device.packettype:x}_{event.device.subtype:x}_{event.device.id_string}"
+        self._unique_id = f"{device.packettype:x}_{device.subtype:x}_{device.id_string}"
+
+        if event:
+            self._apply_event(event)
 
     @property
     def should_poll(self):
@@ -364,38 +369,36 @@ class RfxtrxDevice(Entity):
         """Apply a received event."""
 
     def _send_command(self, command, brightness=0):
-        if not self._event:
-            return
         rfx_object = self.hass.data[DATA_RFXOBJECT]
 
         if command == "turn_on":
             for _ in range(self.signal_repetitions):
-                self._event.device.send_on(rfx_object.transport)
+                self._device.send_on(rfx_object.transport)
             self._state = True
 
         elif command == "dim":
             for _ in range(self.signal_repetitions):
-                self._event.device.send_dim(rfx_object.transport, brightness)
+                self._device.send_dim(rfx_object.transport, brightness)
             self._state = True
 
         elif command == "turn_off":
             for _ in range(self.signal_repetitions):
-                self._event.device.send_off(rfx_object.transport)
+                self._device.send_off(rfx_object.transport)
             self._state = False
 
         elif command == "roll_up":
             for _ in range(self.signal_repetitions):
-                self._event.device.send_open(rfx_object.transport)
+                self._device.send_open(rfx_object.transport)
             self._state = True
 
         elif command == "roll_down":
             for _ in range(self.signal_repetitions):
-                self._event.device.send_close(rfx_object.transport)
+                self._device.send_close(rfx_object.transport)
             self._state = False
 
         elif command == "stop_roll":
             for _ in range(self.signal_repetitions):
-                self._event.device.send_stop(rfx_object.transport)
+                self._device.send_stop(rfx_object.transport)
             self._state = True
 
         if self.hass:
