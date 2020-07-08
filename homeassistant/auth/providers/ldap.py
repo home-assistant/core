@@ -81,12 +81,10 @@ class LdapAuthProvider(AuthProvider):
 
             # LDAP bind
             if self.config[CONF_ACTIVE_DIRECTORY]:
-                user_attrs = ["sAMAccountName", "displayName", "memberOf"]
                 conn = ldap3.Connection(
                     server, user=username, password=password, authentication=ldap3.NTLM,
                 )
             else:
-                user_attrs = ["uid", "displayName", "memberOf"]
                 conn = ldap3.Connection(
                     server,
                     user=f"uid={username},{self.config[CONF_BASE_DN]}",
@@ -105,13 +103,15 @@ class LdapAuthProvider(AuthProvider):
                     attributes=["distinguishedName"],
                     size_limit=1,
                 ):
-                    raise LdapError("Unable to determine DN of bind user.")
+                    _LOGGER.error("Unable to determine the DN of the binding user")
+                    raise LdapError
                 dn_self = conn.entries[0].distinguishedName.value
             else:
                 whoami = conn.extend.standard.who_am_i()
                 match = re.match("dn: (.+)", whoami, re.IGNORECASE)
                 if not match:
-                    raise LdapError("Unable to determine DN of bind user.")
+                    _LOGGER.error("Unable to determine the DN of the binding user")
+                    raise LdapError
                 dn_self = match.group(1)
             _LOGGER.debug("DN of the bind user: %s", dn_self)
 
@@ -120,7 +120,9 @@ class LdapAuthProvider(AuthProvider):
                 "(objectclass=person)",
                 size_limit=1,
                 time_limit=self.config[CONF_TIMEOUT],
-                attributes=user_attrs,
+                attributes=["sAMAccountName", "displayName", "memberOf"]
+                if self.config[CONF_ACTIVE_DIRECTORY]
+                else ["uid", "displayName", "memberOf"],
             ):
                 _LOGGER.error("LDAP self search returned no results.")
                 raise LdapError
