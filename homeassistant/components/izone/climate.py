@@ -272,6 +272,8 @@ class ControllerDevice(ClimateEntity):
             ),
             "control_zone": self._controller.zone_ctrl,
             "control_zone_name": self.control_zone_name,
+            # Feature SUPPORT_TARGET_TEMPERATURE controls both displaying target temp & setting it
+            # As the feature is turned off for zone control, report target temp as extra state attribute
             "control_zone_setpoint": show_temp(
                 self.hass,
                 self.control_zone_setpoint,
