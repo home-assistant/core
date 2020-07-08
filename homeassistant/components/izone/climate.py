@@ -254,11 +254,6 @@ class ControllerDevice(ClimateEntity):
         return PRECISION_TENTHS
 
     @property
-    def setpoint_precision(self) -> float:
-        """Return the precision of setpoint values."""
-        return PRECISION_HALVES
-
-    @property
     def device_state_attributes(self):
         """Return the optional state attributes."""
         return {
@@ -272,7 +267,7 @@ class ControllerDevice(ClimateEntity):
                 self.hass,
                 self._controller.temp_setpoint,
                 self.temperature_unit,
-                self.setpoint_precision,
+                PRECISION_HALVES,
             ),
         }
 
