@@ -210,23 +210,25 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
 
         rgbw = None
         white = None
-        hs = None
+        hs_color = None
 
-        if ATTR_WHITE_VALUE in kwargs:
+        if kwargs.get(ATTR_WHITE_VALUE) is not None:
             white = kwargs[ATTR_WHITE_VALUE]
 
-        if ATTR_COLOR_TEMP in kwargs:
+        if kwargs.get(ATTR_COLOR_TEMP) is not None:
             rgbw = "#00000000ff"
 
-        elif ATTR_HS_COLOR in kwargs:
-            hs = kwargs[ATTR_HS_COLOR]
+        elif kwargs.get(ATTR_HS_COLOR) is not None:
+            hs_color = kwargs[ATTR_HS_COLOR]
             if ATTR_WHITE_VALUE not in kwargs:
                 # white LED must be off in order for color to work
                 white = 0
 
-        if (ATTR_WHITE_VALUE in kwargs or ATTR_HS_COLOR in kwargs) and hs is not None:
+        if (
+            kwargs.get(ATTR_WHITE_VALUE) or kwargs.get(ATTR_HS_COLOR)
+        ) and hs_color is not None:
             rgbw = "#"
-            for colorval in color_util.color_hs_to_RGB(*hs):
+            for colorval in color_util.color_hs_to_RGB(*hs_color):
                 rgbw += format(colorval, "02x")
             if white is not None:
                 rgbw += format(white, "02x") + "00"
