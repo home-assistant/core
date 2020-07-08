@@ -78,8 +78,6 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
     @callback
     def on_value_update(self):
         """Call when the underlying value(s) is added or updated."""
-        self._supported_features = SUPPORT_BRIGHTNESS
-
         if self.values.dimming_duration is not None:
             self._supported_features |= SUPPORT_TRANSITION
 
