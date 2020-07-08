@@ -2155,6 +2155,7 @@ upb_lib==0.4.11
 upcloud-api==0.4.5
 
 # homeassistant.components.huawei_lte
+# homeassistant.components.syncthru
 url-normalize==1.4.1
 
 # homeassistant.components.uscis
