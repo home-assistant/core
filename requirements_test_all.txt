@@ -652,7 +652,7 @@ pyatmo==4.2.1
 pyatv==0.7.5
 
 # homeassistant.components.becker
-pybecker==1.0.3
+pybecker==1.0.4
 
 # homeassistant.components.blackbird
 pyblackbird==0.5

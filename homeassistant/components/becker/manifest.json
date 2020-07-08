@@ -2,7 +2,7 @@
     "domain": "becker",
     "name": "Becker",
     "documentation": "https://www.home-assistant.io/integrations/becker",
-    "requirements": ["pybecker==1.0.3"],
+    "requirements": ["pybecker==1.0.4"],
     "dependencies": [],
     "codeowners": ["@nicolasberthel"],
     "config_flow": true
