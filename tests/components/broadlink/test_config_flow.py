@@ -146,7 +146,7 @@ async def test_flow_user_invalid_hostname(hass):
     assert result["errors"] == {"base": "invalid_host"}
 
 
-async def test_flow_user_cannot_connect(hass):
+async def test_flow_user_device_not_found(hass):
     """Test we handle a device not found."""
     device = pick_device(0)
 
@@ -157,6 +157,22 @@ async def test_flow_user_cannot_connect(hass):
     with patch("broadlink.discover", return_value=[]):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": device.host},
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_flow_user_network_unreachable(hass):
+    """Test we handle a network unreachable."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch("broadlink.discover", side_effect=OSError(errno.ENETUNREACH, None)):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "192.168.1.32"},
         )
 
     assert result["type"] == "form"
@@ -184,8 +200,8 @@ async def test_flow_auth_authentication_error(hass):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_flow_auth_cannot_connect(hass):
-    """Test we handle a timeout error during authentication."""
+async def test_flow_auth_device_offline(hass):
+    """Test we handle a device offline during authentication."""
     device = pick_device(0)
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.DeviceOfflineError()
@@ -222,6 +238,26 @@ async def test_flow_auth_firmware_error(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "auth"
     assert result["errors"] == {"base": "unknown"}
+
+
+async def test_flow_auth_network_unreachable(hass):
+    """Test we handle a network unreachable during authentication."""
+    device = pick_device(0)
+    mock_api = device.get_mock_api()
+    mock_api.auth.side_effect = OSError(errno.ENETUNREACH, None)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch("broadlink.discover", return_value=[mock_api]):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": device.host},
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "auth"
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_flow_reset_works(hass):
@@ -288,8 +324,8 @@ async def test_flow_unlock_works(hass):
     assert mock_api.set_lock.call_count == 1
 
 
-async def test_flow_unlock_cannot_connect(hass):
-    """Test we handle a timeout error during an unlock."""
+async def test_flow_unlock_device_offline(hass):
+    """Test we handle a device offline during an unlock."""
     device = pick_device(0)
     mock_api = device.get_mock_api()
     mock_api.cloud = True
@@ -336,6 +372,31 @@ async def test_flow_unlock_firmware_error(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "unlock"
     assert result["errors"] == {"base": "unknown"}
+
+
+async def test_flow_unlock_network_unreachable(hass):
+    """Test we handle a network unreachable during an unlock."""
+    device = pick_device(0)
+    mock_api = device.get_mock_api()
+    mock_api.cloud = True
+    mock_api.set_lock.side_effect = OSError(errno.ENETUNREACH, None)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch("broadlink.discover", return_value=[mock_api]):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": device.host, "timeout": device.timeout},
+        )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"unlock": True},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "unlock"
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_flow_do_not_unlock(hass):

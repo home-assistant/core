@@ -59,6 +59,10 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 hello = partial(blk.discover, discover_ip_address=host, timeout=timeout)
                 device = (await self.hass.async_add_executor_job(hello))[0]
 
+            except IndexError:
+                errors["base"] = "cannot_connect"
+                err_msg = "Device not found"
+
             except OSError as err:
                 if err.errno in {errno.EINVAL, socket.EAI_NONAME}:
                     errors["base"] = "invalid_host"
@@ -69,10 +73,6 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 else:
                     errors["base"] = "unknown"
                     err_msg = str(err)
-
-            except IndexError:
-                errors["base"] = "cannot_connect"
-                err_msg = "Device not found"
 
             else:
                 device.timeout = timeout
