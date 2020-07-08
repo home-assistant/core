@@ -181,7 +181,7 @@ class MqttBinarySensor(
                 expiration_at = dt_util.utcnow() + timedelta(seconds=expire_after)
 
                 self._expiration_trigger = async_track_point_in_utc_time(
-                    self.hass, self.value_is_expired, expiration_at
+                    self.hass, self._value_is_expired, expiration_at
                 )
 
             value_template = self._config.get(CONF_VALUE_TEMPLATE)
@@ -250,7 +250,7 @@ class MqttBinarySensor(
         await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
 
     @callback
-    def value_is_expired(self, *_):
+    def _value_is_expired(self, *_):
         """Triggered when value is expired."""
 
         self._expiration_trigger = None
