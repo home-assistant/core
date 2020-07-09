@@ -28,3 +28,9 @@ set_person_away:
     entity_id:
       description: Entity id of the camera.
       example: camera.netatmo_entrance
+
+register_webhook:
+  description: Register webhook
+
+unregister_webhook:
+  description: Unregister webhook
