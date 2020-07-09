@@ -141,6 +141,7 @@ async def async_setup_hass(
 
         safe_mode = True
         old_config = hass.config
+
         hass = core.HomeAssistant()
         hass.config.skip_pip = old_config.skip_pip
         hass.config.internal_url = old_config.internal_url

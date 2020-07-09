@@ -1119,7 +1119,7 @@ async def test_hass_start_starts_the_timer(loop):
 
     finally:
         await hass.async_stop()
-        assert hass.state == ha.CoreState.not_running
+        assert hass.state == ha.CoreState.stopped
 
 
 async def test_start_taking_too_long(loop, caplog):
@@ -1140,7 +1140,7 @@ async def test_start_taking_too_long(loop, caplog):
 
     finally:
         await hass.async_stop()
-        assert hass.state == ha.CoreState.not_running
+        assert hass.state == ha.CoreState.stopped
 
 
 async def test_track_task_functions(loop):
