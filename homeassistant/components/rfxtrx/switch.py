@@ -60,7 +60,6 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
 
         new_device = get_new_device(event, config, RfxtrxSwitch)
         if new_device:
-            new_device.apply_event(event)
             add_entities_callback([new_device])
 
     # Subscribe to main RFXtrx events
@@ -78,35 +77,36 @@ class RfxtrxSwitch(RfxtrxDevice, SwitchEntity, RestoreEntity):
         if old_state is not None:
             self._state = old_state.state == STATE_ON
 
-        def _handle_event(event):
-            """Check if event applies to me and update."""
-            if event.device.id_string != self._event.device.id_string:
-                return
-
-            self.apply_event(event)
-
         self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_EVENT, _handle_event
+                SIGNAL_EVENT, self._handle_event
             )
         )
 
-    def apply_event(self, event):
+    def _apply_event(self, event):
         """Apply command from rfxtrx."""
         if event.values["Command"] in COMMAND_ON_LIST:
             self._state = True
         elif event.values["Command"] in COMMAND_OFF_LIST:
             self._state = False
 
-        if self.hass:
-            self.schedule_update_ha_state()
-            if self.should_fire_event:
-                fire_command_event(self.hass, self.entity_id, event.values["Command"])
+    def _handle_event(self, event):
+        """Check if event applies to me and update."""
+        if event.device.id_string != self._device.id_string:
+            return
+
+        self._apply_event(event)
+
+        self.schedule_update_ha_state()
+        if self.should_fire_event:
+            fire_command_event(self.hass, self.entity_id, event.values["Command"])
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
         self._send_command("turn_on")
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         self._send_command("turn_off")
+        self.schedule_update_ha_state()
