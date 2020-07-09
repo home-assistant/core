@@ -220,6 +220,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     unique_id=unique_id, raise_on_progress=True
                 )
                 # If device was discovered, abort if existing entry found, otherwise display an error
+                # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
                 if self.context["source"] == SOURCE_ZEROCONF:
                     self._abort_if_unique_id_configured()
                 elif existing_entry:
