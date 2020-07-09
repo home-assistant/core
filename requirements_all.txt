@@ -200,7 +200,7 @@ aioimaplib==0.7.15
 aiokafka==0.5.1
 
 # homeassistant.components.kef
-aiokef==0.2.12
+aiokef==0.2.13
 
 # homeassistant.components.lifx
 aiolifx==0.6.7
@@ -475,7 +475,7 @@ defusedxml==0.6.0
 deluge-client==1.7.1
 
 # homeassistant.components.denonavr
-denonavr==0.9.3
+denonavr==0.9.4
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.11.0
@@ -1050,7 +1050,7 @@ panasonic_viera==0.3.5
 pcal9535a==0.7
 
 # homeassistant.components.dunehd
-pdunehd==1.3.1
+pdunehd==1.3.2
 
 # homeassistant.components.pencom
 pencompy==0.0.3
@@ -1610,7 +1610,7 @@ pysignalclirestapi==0.3.4
 pysma==0.3.5
 
 # homeassistant.components.smappee
-pysmappee==0.1.2
+pysmappee==0.1.4
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.2
@@ -2003,7 +2003,7 @@ somecomfort==0.5.2
 somfy-mylink-synergy==1.0.6
 
 # homeassistant.components.sonarr
-sonarr==0.2.2
+sonarr==0.2.3
 
 # homeassistant.components.marytts
 speak2mary==1.4.0
