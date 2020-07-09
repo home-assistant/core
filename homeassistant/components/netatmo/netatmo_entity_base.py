@@ -32,6 +32,16 @@ class NetatmoBase(Entity):
                     data_class["name"], home_id=data_class["home_id"]
                 )
                 signal_name = f"{data_class['name']}-{data_class['home_id']}"
+            elif data_class["name"] == "PublicData":
+                await self.data_handler.register_data_class(
+                    data_class["name"],
+                    LAT_NE=data_class["LAT_NE"],
+                    LON_NE=data_class["LON_NE"],
+                    LAT_SW=data_class["LAT_SW"],
+                    LON_SW=data_class["LON_SW"],
+                    area_name=data_class["area_name"],
+                )
+                signal_name = f"{data_class['name']}-{data_class['area_name']}"
             else:
                 await self.data_handler.register_data_class(data_class["name"])
                 signal_name = f"{data_class['name']}"
