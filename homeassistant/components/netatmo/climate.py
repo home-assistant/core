@@ -116,6 +116,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     await data_handler.register_data_class(data_class)
     home_data = data_handler.data.get(data_class)
 
+    if not home_data:
+        return
+
     async def get_entities():
         """Retrieve Netatmo entities."""
         entities = []
