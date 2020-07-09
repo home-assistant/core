@@ -180,14 +180,8 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._data = None
         self._apps = {}
 
-    async def _create_entry_if_unique(
-        self, input_dict: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """
-        Create entry if ID is unique.
-
-        If it is, create entry. If it isn't, abort config flow.
-        """
+    async def _create_entry(self, input_dict: Dict[str, Any]) -> Dict[str, Any]:
+        """Create vizio config entry."""
         # Remove extra keys that will not be used by entry setup
         input_dict.pop(CONF_APPS_TO_INCLUDE_OR_EXCLUDE, None)
         input_dict.pop(CONF_INCLUDE_OR_EXCLUDE, None)
@@ -245,7 +239,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         errors["base"] = "cannot_connect"
 
                     if not errors:
-                        return await self._create_entry_if_unique(user_input)
+                        return await self._create_entry(user_input)
                 # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
                 elif self._must_show_form and self.context["source"] == SOURCE_IMPORT:
                     # Import should always display the config form if CONF_ACCESS_TOKEN
@@ -431,7 +425,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _pairing_complete(self, step_id: str) -> Dict[str, Any]:
         """Handle config flow completion."""
         if not self._must_show_form:
-            return await self._create_entry_if_unique(self._data)
+            return await self._create_entry(self._data)
 
         self._must_show_form = False
         return self.async_show_form(
