@@ -1,0 +1,27 @@
+{
+  "title": "EnOcean",
+  "config": {
+    "flow_title": "ENOcean setup",
+    "step": {
+      "detect": {
+        "title": "Select the path to you ENOcean dongle",
+        "data": {
+          "path": "USB dongle path"
+        }
+      },
+      "manual": {
+        "title": "Enter the path to you ENOcean dongle",
+        "data": {
+          "path": "USB dongle path"
+        }
+      }
+    },
+    "error": {
+      "invalid_dongle_path": "No valid dongle found for this path"
+    },
+    "abort": {
+      "invalid_dongle_path": "Invalid dongle path",
+      "single_instance_allowed": "An instance is already configured"
+    }
+  }
+}

@@ -45,6 +45,7 @@ FLOWS = [
     "elgato",
     "elkm1",
     "emulated_roku",
+    "enocean",
     "esphome",
     "flick_electric",
     "flume",

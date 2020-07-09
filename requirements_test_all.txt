@@ -265,6 +265,9 @@ emoji==0.5.4
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
 
+# homeassistant.components.enocean
+enocean==0.50
+
 # homeassistant.components.season
 ephem==3.7.7.0
 
