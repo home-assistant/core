@@ -121,7 +121,16 @@ class NetatmoOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_public_weather(self, user_input=None):
         """Manage configuration of Netatmo public weather sensors."""
         if user_input is not None and CONF_NEW_AREA not in user_input:
-            self.options[CONF_WEATHER_AREAS][user_input[CONF_AREA_NAME]] = user_input
+
+            def fix_coordinates(user_input):
+                for coordinate in [CONF_LAT_NE, CONF_LAT_SW, CONF_LON_NE, CONF_LON_SW]:
+                    if len(str(user_input[coordinate]).split(".")[1]) < 7:
+                        user_input[coordinate] = user_input[coordinate] + 0.0000001
+                return user_input
+
+            self.options[CONF_WEATHER_AREAS][
+                user_input[CONF_AREA_NAME]
+            ] = fix_coordinates(user_input)
             return await self.async_step_public_weather_areas()
 
         orig_options = self.config_entry.options.get(CONF_WEATHER_AREAS, {}).get(
