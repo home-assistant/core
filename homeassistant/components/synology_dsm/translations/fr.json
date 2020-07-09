@@ -30,7 +30,7 @@
             },
             "user": {
                 "data": {
-                    "host": "H\u00f4te",
+                    "host": "Nom d'h\u00f4te ou adresse IP",
                     "password": "Mot de passe",
                     "port": "Port (facultatif)",
                     "ssl": "Utilisez SSL/TLS pour vous connecter \u00e0 votre NAS",

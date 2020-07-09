@@ -59,6 +59,7 @@
             "init": {
                 "data": {
                     "allow_how_groups": "\u5141\u8a31 Hue \u7fa4\u7d44",
+                    "allow_hue_groups": "\u5141\u8a31 Hue \u7fa4\u7d44",
                     "allow_unreachable": "\u5141\u8a31\u7121\u6cd5\u9023\u7dda\u7684\u71c8\u6ce1\u6b63\u78ba\u56de\u5831\u5176\u72c0\u614b"
                 }
             }
