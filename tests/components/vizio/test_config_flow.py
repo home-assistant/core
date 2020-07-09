@@ -853,3 +853,55 @@ async def test_zeroconf_abort_when_ignored(
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_zeroconf_flow_already_configured_hostname(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_setup: pytest.fixture,
+    vizio_hostname_check: pytest.fixture,
+) -> None:
+    """Test entity is already configured during zeroconf setup when existing entry uses hostname."""
+    config = MOCK_SPEAKER_CONFIG.copy()
+    config[CONF_HOST] = "hostname"
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=config, options={CONF_VOLUME_STEP: VOLUME_STEP}
+    )
+    entry.add_to_hass(hass)
+
+    # Try rediscovering same device
+    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+    )
+
+    # Flow should abort because device is already setup
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured_device"
+
+
+async def test_import_flow_already_configured_hostname(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_setup: pytest.fixture,
+    vizio_hostname_check: pytest.fixture,
+) -> None:
+    """Test entity is already configured during import setup when existing entry uses hostname."""
+    config = MOCK_SPEAKER_CONFIG.copy()
+    config[CONF_HOST] = "hostname"
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=config, options={CONF_VOLUME_STEP: VOLUME_STEP}
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG),
+    )
+
+    # Flow should abort because device was updated
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "updated_entry"
+
+    assert entry.data[CONF_HOST] == HOST

@@ -152,6 +152,7 @@ class CoreState(enum.Enum):
     running = "RUNNING"
     stopping = "STOPPING"
     final_write = "FINAL_WRITE"
+    stopped = "STOPPED"
 
     def __str__(self) -> str:
         """Return the event."""
@@ -443,6 +444,7 @@ class HomeAssistant:
         await self.loop.shutdown_default_executor()  # type: ignore
 
         self.exit_code = exit_code
+        self.state = CoreState.stopped
 
         if self._stopped is not None:
             self._stopped.set()

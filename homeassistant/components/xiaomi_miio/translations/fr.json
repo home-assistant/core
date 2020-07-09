@@ -11,7 +11,7 @@
         "step": {
             "gateway": {
                 "data": {
-                    "host": "adresse IP",
+                    "host": "Adresse IP",
                     "name": "Nom de la passerelle",
                     "token": "Jeton d'API"
                 },

@@ -793,7 +793,7 @@ ihcsdk==2.7.0
 incomfort-client==0.4.0
 
 # homeassistant.components.influxdb
-influxdb-client==1.6.0
+influxdb-client==1.8.0
 
 # homeassistant.components.influxdb
 influxdb==5.2.3
@@ -1620,7 +1620,7 @@ pysignalclirestapi==0.3.4
 pysma==0.3.5
 
 # homeassistant.components.smappee
-pysmappee==0.1.2
+pysmappee==0.1.5
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.2
@@ -1825,7 +1825,7 @@ pyversasense==0.0.6
 pyvesync==1.1.0
 
 # homeassistant.components.vizio
-pyvizio==0.1.48
+pyvizio==0.1.49
 
 # homeassistant.components.velux
 pyvlx==0.2.16
@@ -2155,6 +2155,7 @@ upb_lib==0.4.11
 upcloud-api==0.4.5
 
 # homeassistant.components.huawei_lte
+# homeassistant.components.syncthru
 url-normalize==1.4.1
 
 # homeassistant.components.uscis

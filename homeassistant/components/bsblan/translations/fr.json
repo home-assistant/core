@@ -6,7 +6,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "H\u00f4te ou adresse IP",
+                    "host": "Nom d'h\u00f4te ou adresse IP",
                     "passkey": "Cha\u00eene de cl\u00e9 d'acc\u00e8s",
                     "port": "Num\u00e9ro de port"
                 }

@@ -265,6 +265,9 @@ emoji==0.5.4
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
 
+# homeassistant.components.enocean
+enocean==0.50
+
 # homeassistant.components.season
 ephem==3.7.7.0
 
@@ -368,7 +371,7 @@ huawei-lte-api==1.4.12
 iaqualink==0.3.4
 
 # homeassistant.components.influxdb
-influxdb-client==1.6.0
+influxdb-client==1.8.0
 
 # homeassistant.components.influxdb
 influxdb==5.2.3
@@ -727,7 +730,7 @@ pysignalclirestapi==0.3.4
 pysma==0.3.5
 
 # homeassistant.components.smappee
-pysmappee==0.1.2
+pysmappee==0.1.5
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.2
@@ -746,6 +749,9 @@ pyspcwebgw==0.4.0
 
 # homeassistant.components.squeezebox
 pysqueezebox==0.2.4
+
+# homeassistant.components.syncthru
+pysyncthru==0.5.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.7
@@ -802,7 +808,7 @@ pyvera==0.3.9
 pyvesync==1.1.0
 
 # homeassistant.components.vizio
-pyvizio==0.1.48
+pyvizio==0.1.49
 
 # homeassistant.components.html5
 pywebpush==1.9.2
@@ -929,6 +935,7 @@ twilio==6.32.0
 upb_lib==0.4.11
 
 # homeassistant.components.huawei_lte
+# homeassistant.components.syncthru
 url-normalize==1.4.1
 
 # homeassistant.components.uvc
