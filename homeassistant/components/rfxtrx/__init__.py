@@ -75,8 +75,8 @@ DATA_TYPES = OrderedDict(
         ("Energy usage", ""),
         ("Voltage", ""),
         ("Current", ""),
-        ("Battery numeric", ""),
-        ("Rssi numeric", ""),
+        ("Battery numeric", UNIT_PERCENTAGE),
+        ("Rssi numeric", "dBm"),
     ]
 )
 
