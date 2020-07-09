@@ -5,8 +5,8 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import CONF_NAME
 
-from .pin import FirmataBinaryDigitalInput, FirmataPinUsedException
 from .const import CONF_NEGATE_STATE, CONF_PIN, CONF_PIN_MODE, DOMAIN
+from .pin import FirmataBinaryDigitalInput, FirmataPinUsedException
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -5,7 +5,6 @@ import logging
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_NAME
 
-from .pin import FirmataBinaryDigitalOutput, FirmataPinUsedException
 from .const import (
     CONF_INITIAL_STATE,
     CONF_NEGATE_STATE,
@@ -13,6 +12,7 @@ from .const import (
     CONF_PIN_MODE,
     DOMAIN,
 )
+from .pin import FirmataBinaryDigitalOutput, FirmataPinUsedException
 
 _LOGGER = logging.getLogger(__name__)
 
