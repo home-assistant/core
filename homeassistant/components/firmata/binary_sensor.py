@@ -3,10 +3,10 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.core import callback
+from homeassistant.const import CONF_NAME
 
-from .board import FirmataBoardPin
-from .const import CONF_NEGATE_STATE, DOMAIN, PIN_MODE_INPUT, PIN_MODE_PULLUP
+from .pin import FirmataBinaryDigitalInput, FirmataPinUsedException
+from .const import CONF_NEGATE_STATE, CONF_PIN, CONF_PIN_MODE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,86 +18,67 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     boards = hass.data[DOMAIN]
     board = boards[config_entry.entry_id]
     for binary_sensor in board.binary_sensors:
-        binary_sensor_entity = FirmataDigitalBinaryInput(
-            hass, config_entry, **binary_sensor
-        )
-        new_binary_sensor = await binary_sensor_entity.setup_pin()
-        if new_binary_sensor:
+        try:
+            binary_sensor_entity = FirmataBinarySensor(
+                board, config_entry, **binary_sensor
+            )
             new_entities.append(binary_sensor_entity)
-
+        except FirmataPinUsedException:
+            _LOGGER.error(
+                "Could not setup binary sensor on pin %s since pin already in use.",
+                binary_sensor[CONF_PIN],
+            )
     async_add_entities(new_entities)
 
 
-class FirmataDigitalBinaryInput(FirmataBoardPin, BinarySensorEntity):
-    """Representation of a Firmata Digital Input Pin."""
+class FirmataBinarySensor(BinarySensorEntity):
+    """Representation of a binary sensor on a Firmata board."""
 
-    async def setup_pin(self):
-        """Set up a digital input pin."""
-        _LOGGER.debug(
-            "Setting up binary sensor pin %s for board %s", self._name, self._board_name
-        )
-        if not self._mark_pin_used():
-            _LOGGER.warning(
-                "Pin %s already used! Cannot use for binary sensor %s",
-                self._pin,
-                self._name,
-            )
-            return False
-        api = self._board.api
-        if self._pin_mode == PIN_MODE_INPUT:
-            await api.set_pin_mode_digital_input(self._pin, self.latch_callback)
-        elif self._pin_mode == PIN_MODE_PULLUP:
-            await api.set_pin_mode_digital_input_pullup(self._pin, self.latch_callback)
+    def __init__(self, board, config_entry, **kwargs):
+        """Initialize the binary sensor."""
+        self._name = kwargs[CONF_NAME]
+        self._state = None
+        self._config_entry = config_entry
+        self._conf = kwargs
 
-        return True
+        pin = self._conf[CONF_PIN]
+        pin_mode = self._conf[CONF_PIN_MODE]
+        negate = self._conf[CONF_NEGATE_STATE]
+
+        self._location = (DOMAIN, self._config_entry.entry_id, "pin", pin)
+        self._unique_id = "_".join(str(i) for i in self._location)
+
+        self._api = FirmataBinaryDigitalInput(board, pin, pin_mode, negate)
 
     async def async_added_to_hass(self):
-        """Get initial state and start reporting a pin."""
-        _LOGGER.debug(
-            "Starting reporting updates for input pin %s on board %s",
-            self._pin,
-            self._board_name,
-        )
-        api = self._board.api
-        new_state = bool((await self._board.api.digital_read(self._firmata_pin))[0])
-        if self._conf[CONF_NEGATE_STATE]:
-            new_state = not new_state
-        self._state = new_state
-
-        await api.enable_digital_reporting(self._pin)
-        return True
+        """Set up a binary sensor."""
+        await self._api.start_pin(self.async_write_ha_state)
 
     async def async_will_remove_from_hass(self):
-        """Stop reporting a pin."""
-        _LOGGER.debug(
-            "Stopping reporting updates for input pin %s on board %s",
-            self._pin,
-            self._board_name,
-        )
-        api = self._board.api
-        await api.disable_digital_reporting(self._pin)
-        return True
-
-    @callback
-    async def latch_callback(self, data):
-        """Update pin state on callback."""
-        if data[1] != self._firmata_pin:
-            return
-        _LOGGER.debug(
-            "Received latch %d for pin %d on board %s",
-            data[2],
-            self._firmata_pin,
-            self._board_name,
-        )
-        new_state = bool(data[2])
-        if self._conf[CONF_NEGATE_STATE]:
-            new_state = not new_state
-        if self._state != new_state:
-            self._state = new_state
-            if self.entity_id is not None:
-                self.async_write_ha_state()
+        """Stop reporting a binary sensor."""
+        await self._api.stop_pin()
 
     @property
     def is_on(self) -> bool:
         """Return true if binary sensor is on."""
-        return self._state
+        return self._api.is_on
+
+    @property
+    def name(self) -> str:
+        """Get the name of the pin."""
+        return self._name
+
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed."""
+        return False
+
+    @property
+    def unique_id(self):
+        """Return a unique identifier for this device."""
+        return self._unique_id
+
+    @property
+    def device_info(self) -> dict:
+        """Return device info."""
+        return self._api.board_info

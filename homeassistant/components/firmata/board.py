@@ -4,14 +4,11 @@ import logging
 from pymata_express.pymata_express import PymataExpress
 
 from homeassistant.const import CONF_NAME
-from homeassistant.helpers.entity import Entity
 
 from .const import (
     CONF_ARDUINO_INSTANCE_ID,
     CONF_ARDUINO_WAIT,
     CONF_BINARY_SENSORS,
-    CONF_PIN,
-    CONF_PIN_MODE,
     CONF_SAMPLING_INTERVAL,
     CONF_SERIAL_BAUD_RATE,
     CONF_SERIAL_PORT,
@@ -39,6 +36,12 @@ class FirmataBoard:
         self.switches = []
         self.binary_sensors = []
         self.used_pins = []
+        self.board_info = {
+            "connections": {},
+            "identifiers": {(DOMAIN, self.name)},
+            "manufacturer": "Firmata",
+            "name": self.name,
+        }
 
     async def async_setup(self, tries=0):
         """Set up a Firmata instance."""
@@ -46,6 +49,7 @@ class FirmataBoard:
             _LOGGER.info("Connecting to Firmata %s", self.name)
             self.api = await get_board(self.config)
             self.firmware_version = await self.api.get_firmware_version()
+            self.board_info["sw_version"] = self.firmware_version
         except RuntimeError as err:
             _LOGGER.error("Error connecting to PyMata board %s: %s", self.name, err)
             return False
@@ -88,13 +92,26 @@ board %s: %s",
         """Update board registry."""
         device_registry = await self.hass.helpers.device_registry.async_get_registry()
         device_registry.async_get_or_create(
-            config_entry_id=self.config_entry.entry_id,
-            connections={},
-            identifiers={(DOMAIN, self.name)},
-            manufacturer="Firmata",
-            name=self.name,
-            sw_version=self.firmware_version,
+            config_entry_id=self.config_entry.entry_id, **self.board_info
         )
+
+    def mark_pin_used(self, pin):
+        """Test if a pin is used already on the board or mark as used."""
+        if pin in self.used_pins:
+            return False
+        self.used_pins.append(pin)
+        return True
+
+    def get_pin_type(self, pin):
+        """Return the type and Firmata location of a pin on the board."""
+        if isinstance(pin, str):
+            pin_type = "analog"
+            firmata_pin = int(pin[1:])
+            firmata_pin += self.api.first_analog_pin
+        else:
+            pin_type = "digital"
+            firmata_pin = pin
+        return (pin_type, firmata_pin)
 
 
 async def get_board(data: dict):
@@ -121,65 +138,3 @@ async def get_board(data: dict):
 
     await board.start_aio()
     return board
-
-
-class FirmataBoardPin(Entity):
-    """Manages a single Firmata board pin."""
-
-    def __init__(self, hass, config_entry, **kwargs):
-        """Initialize the pin."""
-        self.hass = hass
-        self._name = kwargs[CONF_NAME]
-        self._state = None
-        self._config_entry = config_entry
-        self._board = hass.data[DOMAIN][self._config_entry.entry_id]
-        self._board_name = self._board.name
-        self._conf = kwargs
-        self._pin = self._conf[CONF_PIN]
-        self._pin_mode = self._conf[CONF_PIN_MODE]
-        self._firmata_pin_mode = None
-        self._firmata_pin = self._pin
-        if isinstance(self._pin, str):
-            self._pin_type = "analog"
-            self._firmata_pin = int(self._firmata_pin[1:])
-            self._firmata_pin += self._board.api.first_analog_pin
-        else:
-            self._pin_type = "digital"
-        self._location = (DOMAIN, self._config_entry.entry_id, "pin", self._pin)
-        self._unique_id = "_".join(str(i) for i in self._location)
-        self._device_info = self._conf
-        self._device_info.update(
-            {
-                "config_entry_id": self._config_entry.entry_id,
-                "identifiers": {(DOMAIN, self._config_entry.entry_id)},
-                "name": self._board_name,
-                "manufacturer": "Firmata",
-            }
-        )
-
-    def _mark_pin_used(self):
-        """Test if a pin is used already on the board or mark as used."""
-        if self._location in self._board.used_pins:
-            return False
-        self._board.used_pins.append(self._location)
-        return True
-
-    @property
-    def name(self) -> str:
-        """Get the name of the pin."""
-        return self._name
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this device."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> dict:
-        """Return device info."""
-        return self._device_info

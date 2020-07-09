@@ -3,9 +3,16 @@
 import logging
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import CONF_NAME
 
-from .board import FirmataBoardPin
-from .const import CONF_INITIAL_STATE, CONF_NEGATE_STATE, DOMAIN, PIN_MODE_OUTPUT
+from .pin import FirmataBinaryDigitalOutput, FirmataPinUsedException
+from .const import (
+    CONF_INITIAL_STATE,
+    CONF_NEGATE_STATE,
+    CONF_PIN,
+    CONF_PIN_MODE,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,69 +24,74 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     boards = hass.data[DOMAIN]
     board = boards[config_entry.entry_id]
     for switch in board.switches:
-        switch_entity = FirmataDigitalOut(hass, config_entry, **switch)
-        new_switch = await switch_entity.setup_pin()
-        if new_switch:
+        try:
+            switch_entity = FirmataSwitch(board, config_entry, **switch)
             new_entities.append(switch_entity)
-
+        except FirmataPinUsedException:
+            _LOGGER.error(
+                "Could not setup switch on pin %s since pin already in use.",
+                switch[CONF_PIN],
+            )
     async_add_entities(new_entities)
 
 
-class FirmataDigitalOut(FirmataBoardPin, SwitchEntity):
-    """Representation of a Firmata Digital Output Pin."""
+class FirmataSwitch(SwitchEntity):
+    """Representation of a switch on a Firmata board."""
 
-    async def setup_pin(self):
-        """Set up a digital output pin."""
-        _LOGGER.debug(
-            "Setting up switch pin %s for board %s", self._name, self._board_name
-        )
-        if not self._mark_pin_used():
-            _LOGGER.warning(
-                "Pin %s already used! Cannot use for switch %s",
-                str(self._pin),
-                self._name,
-            )
-            return False
-        api = self._board.api
-        if self._pin_mode == PIN_MODE_OUTPUT:
-            await api.set_pin_mode_digital_output(self._firmata_pin)
+    def __init__(self, board, config_entry, **kwargs):
+        """Initialize the switch."""
+        self._name = kwargs[CONF_NAME]
+        self._config_entry = config_entry
+        self._conf = kwargs
 
-        return True
+        pin = self._conf[CONF_PIN]
+        pin_mode = self._conf[CONF_PIN_MODE]
+        initial = self._conf[CONF_INITIAL_STATE]
+        negate = self._conf[CONF_NEGATE_STATE]
+
+        self._location = (DOMAIN, self._config_entry.entry_id, "pin", pin)
+        self._unique_id = "_".join(str(i) for i in self._location)
+
+        self._api = FirmataBinaryDigitalOutput(board, pin, pin_mode, initial, negate)
 
     async def async_added_to_hass(self):
-        """Set initial state ona pin."""
-        _LOGGER.debug(
-            "Setting initial state for output pin %s on board %s",
-            self._pin,
-            self._board_name,
-        )
-        api = self._board.api
-        self._state = self._conf[CONF_INITIAL_STATE]
-        if self._conf[CONF_INITIAL_STATE]:
-            new_pin_state = not self._conf[CONF_NEGATE_STATE]
-        else:
-            new_pin_state = self._conf[CONF_NEGATE_STATE]
-
-        await api.digital_pin_write(self._firmata_pin, int(new_pin_state))
-        return True
+        """Set up a switch."""
+        await self._api.start_pin()
+        self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        return self._state
+        return self._api.is_on
 
     async def async_turn_on(self, **kwargs):
         """Turn on switch."""
         _LOGGER.debug("Turning switch %s on", self._name)
-        new_pin_state = not self._conf[CONF_NEGATE_STATE]
-        await self._board.api.digital_pin_write(self._firmata_pin, int(new_pin_state))
-        self._state = True
+        await self._api.turn_on()
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn off switch."""
         _LOGGER.debug("Turning switch %s off", self._name)
-        new_pin_state = self._conf[CONF_NEGATE_STATE]
-        await self._board.api.digital_pin_write(self._firmata_pin, int(new_pin_state))
-        self._state = False
+        await self._api.turn_off()
         self.async_write_ha_state()
+
+    @property
+    def name(self) -> str:
+        """Get the name of the pin."""
+        return self._name
+
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed."""
+        return False
+
+    @property
+    def unique_id(self):
+        """Return a unique identifier for this device."""
+        return self._unique_id
+
+    @property
+    def device_info(self) -> dict:
+        """Return device info."""
+        return self._api.board_info

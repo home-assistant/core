@@ -27,7 +27,6 @@ class FirmataFlowHandler(config_entries.ConfigFlow):
         """Import a firmata board as a config entry.
 
         This flow is triggered by `async_setup` for configured boards.
-        This flow is also triggered by `async_step_discovery`.
 
         This will execute for any board that does not have a
         config entry yet (based on entry_id).
