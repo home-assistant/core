@@ -116,6 +116,16 @@ async def test_option_flow(hass):
         "mode": "avg",
     }
 
+    expected_result = {
+        "lat_ne": 32.9133601,
+        "lon_sw": -117.26742990000001,
+        "show_on_map": False,
+        "area_name": "Home",
+        "lon_ne": -117.1874289,
+        "lat_sw": 32.8333601,
+        "mode": "avg",
+    }
+
     config_entry = MockConfigEntry(
         domain=DOMAIN, unique_id=DOMAIN, data=VALID_CONFIG, options={},
     )
@@ -145,4 +155,4 @@ async def test_option_flow(hass):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert config_entry.options == {CONF_WEATHER_AREAS: {"Home": valid_option}}
+    assert config_entry.options == {CONF_WEATHER_AREAS: {"Home": expected_result}}
