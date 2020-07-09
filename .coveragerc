@@ -214,7 +214,14 @@ omit =
     homeassistant/components/emoncms_history/*
     homeassistant/components/emulated_hue/upnp.py
     homeassistant/components/enigma2/media_player.py
-    homeassistant/components/enocean/*
+    homeassistant/components/enocean/__init__.py
+    homeassistant/components/enocean/binary_sensor.py
+    homeassistant/components/enocean/const.py
+    homeassistant/components/enocean/device.py
+    homeassistant/components/enocean/dongle.py
+    homeassistant/components/enocean/light.py
+    homeassistant/components/enocean/sensor.py
+    homeassistant/components/enocean/switch.py
     homeassistant/components/enphase_envoy/sensor.py
     homeassistant/components/entur_public_transport/*
     homeassistant/components/environment_canada/*
