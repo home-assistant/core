@@ -23,6 +23,7 @@ from .entity import ZWaveDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_VALUE = "Value"
 COLOR_CHANNEL_WARM_WHITE = 0x01
 COLOR_CHANNEL_COLD_WHITE = 0x02
 COLOR_CHANNEL_RED = 0x04
@@ -93,10 +94,10 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
             return
 
         # Color Channels
-        self._color_channels = self.values.color_channels.data["Value"]
+        self._color_channels = self.values.color_channels.data[ATTR_VALUE]
 
         # Color Data String
-        data = self.values.color.data["Value"]
+        data = self.values.color.data[ATTR_VALUE]
 
         # RGB is always present in the openzwave color data string.
         rgb = [int(data[1:3], 16), int(data[3:5], 16), int(data[5:7], 16)]
