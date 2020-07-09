@@ -632,6 +632,9 @@ class ConfigEntries:
         self._entries.remove(entry)
         self._async_schedule_save()
 
+        print(self.hass.helpers.device_registry.async_get_registry)
+        print(self.hass.helpers.entity_registry.async_get_registry)
+
         dev_reg, ent_reg = await asyncio.gather(
             self.hass.helpers.device_registry.async_get_registry(),
             self.hass.helpers.entity_registry.async_get_registry(),
