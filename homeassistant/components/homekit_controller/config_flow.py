@@ -6,6 +6,7 @@ import aiohomekit
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.core import callback
 
 from .connection import get_accessory_name, get_bridge_information
@@ -75,7 +76,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             )
             return await self.async_step_pair()
 
-        all_hosts = await self.controller.discover_ip()
+        zeroconf_instance = await zeroconf.async_get_instance(self.hass)
+        all_hosts = await self.controller.discover_ip(
+            zeroconf_instance=zeroconf_instance
+        )
 
         self.devices = {}
         for host in all_hosts:
@@ -101,7 +105,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         unique_id = user_input["unique_id"]
         await self.async_set_unique_id(unique_id)
 
-        devices = await self.controller.discover_ip(5)
+        zeroconf_instance = await zeroconf.async_get_instance(self.hass)
+        devices = await self.controller.discover_ip(
+            max_seconds=5, zeroconf_instance=zeroconf_instance
+        )
         for device in devices:
             if normalize_hkid(device.device_id) != unique_id:
                 continue
@@ -257,7 +264,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
                 errors["pairing_code"] = "pairing_failed"
 
-        discovery = await self.controller.find_ip_by_device_id(self.hkid)
+        zeroconf_instance = await zeroconf.async_get_instance(self.hass)
+        discovery = await self.controller.find_ip_by_device_id(
+            self.hkid, zeroconf_instance=zeroconf_instance
+        )
 
         try:
             self.finish_pairing = await discovery.start_pairing(self.hkid)
