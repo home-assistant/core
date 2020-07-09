@@ -565,8 +565,8 @@ class _ScriptRun(_ScriptRunBase):
             count = repeat[CONF_COUNT]
             if isinstance(count, template.Template):
                 try:
-                    count = vol.Coerce(int)(count.async_render(self._variables))
-                except (exceptions.TemplateError, vol.Invalid) as ex:
+                    count = int(count.async_render(self._variables))
+                except (exceptions.TemplateError, ValueError) as ex:
                     self._log(
                         "Error rendering %s repeat count template: %s",
                         self._script.name,
