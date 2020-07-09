@@ -66,6 +66,10 @@ class NetatmoFlowHandler(
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
         await self.async_set_unique_id(DOMAIN)
+
+        if self.hass.config_entries.async_entries(DOMAIN):
+            return self.async_abort(reason="already_setup")
+
         return await super().async_step_user(user_input)
 
     async def async_step_homekit(self, homekit_info):
