@@ -30,7 +30,7 @@
     "error": {
       "complete_pairing_failed": "Unable to complete pairing. Ensure the PIN you provided is correct and the TV is still powered and connected to the network before resubmitting.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "existing_config_entry_found": "An existing `vizio` config entry with the same serial number has already been configured. You must delete the existing entry in order to configure this one."
+      "existing_config_entry_found": "An existing [%key:component::vizio::config::step::user::title%] config entry with the same serial number has already been configured. You must delete the existing entry in order to configure this one."
     },
     "abort": {
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
