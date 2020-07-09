@@ -2,7 +2,7 @@
 from typing import Any, Dict
 from unittest.mock import MagicMock, patch
 
-from pyHS100 import SmartBulb, SmartDevice, SmartDeviceException, SmartPlug
+from kasa import SmartBulb, SmartDevice, SmartDeviceException, SmartPlug
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -55,10 +55,7 @@ async def test_configuring_tplink_causes_discovery(hass):
 
 @pytest.mark.parametrize(
     "name,cls,platform",
-    [
-        ("pyHS100.SmartPlug", SmartPlug, "switch"),
-        ("pyHS100.SmartBulb", SmartBulb, "light"),
-    ],
+    [("kasa.SmartPlug", SmartPlug, "switch"), ("kasa.SmartBulb", SmartBulb, "light")],
 )
 @pytest.mark.parametrize("count", [1, 2, 3])
 async def test_configuring_device_types(hass, name, cls, platform, count):

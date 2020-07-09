@@ -1,7 +1,7 @@
 """Common code tests."""
 from datetime import timedelta
 
-from pyHS100 import SmartDeviceException
+from kasa import SmartDeviceException
 
 from homeassistant.components.tplink.common import async_add_entities_retry
 from homeassistant.helpers.typing import HomeAssistantType
