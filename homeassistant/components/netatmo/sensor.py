@@ -132,11 +132,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entities = []
         for module in all_module_infos.values():
             if "_id" not in module:
-                _LOGGER.debug(
-                    "Skipping module %s %s",
-                    module.get("module_name"),
-                    module.get("_id"),
-                )
+                _LOGGER.debug("Skipping module %s", module.get("module_name"))
                 continue
 
             _LOGGER.debug(
