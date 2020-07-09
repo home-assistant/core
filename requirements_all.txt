@@ -578,6 +578,9 @@ faadelays==0.0.6
 # homeassistant.components.dlib_face_identify
 # face_recognition==1.2.3
 
+# homeassistant.components.rpi_fanshim
+fanshim==0.0.4
+
 # homeassistant.components.fastdotcom
 fastdotcom==0.0.3
 

@@ -1,0 +1,16 @@
+{
+  "domain": "rpi_fanshim",
+  "name": "RPi Pimoroni Fan Shim",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/rpi_fanshim",
+  "requirements": [
+    "fanshim==0.0.4"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@csseal"
+  ]
+}

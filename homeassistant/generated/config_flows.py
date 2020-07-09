@@ -191,6 +191,7 @@ FLOWS = [
     "roku",
     "roomba",
     "roon",
+    "rpi_fanshim",
     "rpi_power",
     "ruckus_unleashed",
     "samsungtv",
