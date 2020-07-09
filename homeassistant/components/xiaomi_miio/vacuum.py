@@ -481,10 +481,10 @@ class MiroboVacuum(StateVacuumEntity):
             self._timers = self._vacuum.timer()
 
             self._available = True
-        except OSError as exc:
-            _LOGGER.error("Got OSError while fetching the state: %s", exc)
-        except DeviceException as exc:
-            _LOGGER.warning("Got exception while fetching the state: %s", exc)
+        except (OSError, DeviceException) as exc:
+            if self._available:
+                self._available = False
+                _LOGGER.warning("Got exception while fetching the state: %s", exc)
 
     async def async_clean_zone(self, zone, repeats=1):
         """Clean selected area for the number of repeats indicated."""

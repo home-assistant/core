@@ -335,9 +335,10 @@ class XiaomiPhilipsAbstractLight(LightEntity):
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
-            return
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
+                return
 
         _LOGGER.debug("Got new state: %s", state)
         self._available = True
