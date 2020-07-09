@@ -15,10 +15,10 @@ from homeassistant.const import (
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
-from ...common import async_fire_time_changed
 from .common import setup_platform
 
 from tests.async_mock import patch
+from tests.common import async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 
