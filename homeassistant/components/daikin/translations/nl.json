@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparaat is al geconfigureerd",
-            "device_fail": "Onverwachte fout bij het aanmaken van een apparaat.",
-            "device_timeout": "Time-out voor verbinding met het apparaat."
+            "already_configured": "Apparaat is al geconfigureerd"
         },
         "step": {
             "user": {

@@ -120,7 +120,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Ensure anything to add. If not, silently abort.
         if not self._discoveries:
-            _LOGGER.info("No UPnP devices discovered, aborting.")
+            _LOGGER.info("No UPnP devices discovered, aborting")
             return self.async_abort(reason="no_devices_found")
 
         discovery = self._discoveries[0]
@@ -133,6 +133,14 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host is already configured and delegate to the import step if not.
         """
         _LOGGER.debug("async_step_ssdp: discovery_info: %s", discovery_info)
+
+        # Ensure complete discovery.
+        if (
+            ssdp.ATTR_UPNP_UDN not in discovery_info
+            or ssdp.ATTR_SSDP_ST not in discovery_info
+        ):
+            _LOGGER.debug("Incomplete discovery, ignoring")
+            return self.async_abort(reason="incomplete_discovery")
 
         # Ensure not already configuring/configured.
         udn = discovery_info[ssdp.ATTR_UPNP_UDN]
@@ -218,6 +226,7 @@ class UpnpOptionsFlowHandler(config_entries.OptionsFlow):
                 CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
             )
             update_interval = timedelta(seconds=update_interval_sec)
+            _LOGGER.debug("Updating coordinator, update_interval: %s", update_interval)
             coordinator.update_interval = update_interval
             return self.async_create_entry(title="", data=user_input)
 

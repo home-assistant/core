@@ -12,7 +12,7 @@
                     "password": "Passord",
                     "username": "Brukernavn / E-postadresse"
                 },
-                "description": "Vennligst skriv inn brukernavn og passord for iAqualink-kontoen din.",
+                "description": "Vennligst fyll inn brukernavn og passord for iAqualink-kontoen din.",
                 "title": "Koble til iAqualink"
             }
         }

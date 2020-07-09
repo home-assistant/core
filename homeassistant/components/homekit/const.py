@@ -27,6 +27,7 @@ ATTR_INTERGRATION = "platform"
 ATTR_MANUFACTURER = "manufacturer"
 ATTR_MODEL = "model"
 ATTR_SOFTWARE_VERSION = "sw_version"
+ATTR_KEY_NAME = "key_name"
 
 # #### Config ####
 CONF_ADVERTISE_IP = "advertise_ip"
@@ -40,6 +41,8 @@ CONF_FEATURE_LIST = "feature_list"
 CONF_FILTER = "filter"
 CONF_LINKED_BATTERY_SENSOR = "linked_battery_sensor"
 CONF_LINKED_BATTERY_CHARGING_SENSOR = "linked_battery_charging_sensor"
+CONF_LINKED_MOTION_SENSOR = "linked_motion_sensor"
+CONF_LINKED_HUMIDITY_SENSOR = "linked_humidity_sensor"
 CONF_LOW_BATTERY_THRESHOLD = "low_battery_threshold"
 CONF_MAX_FPS = "max_fps"
 CONF_MAX_HEIGHT = "max_height"
@@ -66,7 +69,6 @@ DEFAULT_MAX_WIDTH = 1920
 DEFAULT_PORT = 51827
 DEFAULT_CONFIG_FLOW_PORT = 51828
 DEFAULT_SAFE_MODE = False
-DEFAULT_ZEROCONF_DEFAULT_INTERFACE = False
 DEFAULT_VIDEO_CODEC = VIDEO_CODEC_LIBX264
 DEFAULT_VIDEO_MAP = "0:v:0"
 DEFAULT_VIDEO_PACKET_SIZE = 1316
@@ -79,6 +81,7 @@ FEATURE_TOGGLE_MUTE = "toggle_mute"
 
 # #### HomeKit Component Event ####
 EVENT_HOMEKIT_CHANGED = "homekit_state_change"
+EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED = "homekit_tv_remote_key_pressed"
 
 # #### HomeKit Component Services ####
 SERVICE_HOMEKIT_START = "start"
@@ -109,6 +112,7 @@ SERV_CARBON_MONOXIDE_SENSOR = "CarbonMonoxideSensor"
 SERV_CONTACT_SENSOR = "ContactSensor"
 SERV_FANV2 = "Fanv2"
 SERV_GARAGE_DOOR_OPENER = "GarageDoorOpener"
+SERV_HUMIDIFIER_DEHUMIDIFIER = "HumidifierDehumidifier"
 SERV_HUMIDITY_SENSOR = "HumiditySensor"
 SERV_INPUT_SOURCE = "InputSource"
 SERV_LEAK_SENSOR = "LeakSensor"
@@ -149,15 +153,18 @@ CHAR_COOLING_THRESHOLD_TEMPERATURE = "CoolingThresholdTemperature"
 CHAR_CURRENT_AMBIENT_LIGHT_LEVEL = "CurrentAmbientLightLevel"
 CHAR_CURRENT_DOOR_STATE = "CurrentDoorState"
 CHAR_CURRENT_HEATING_COOLING = "CurrentHeatingCoolingState"
+CHAR_CURRENT_HUMIDIFIER_DEHUMIDIFIER = "CurrentHumidifierDehumidifierState"
 CHAR_CURRENT_POSITION = "CurrentPosition"
 CHAR_CURRENT_HUMIDITY = "CurrentRelativeHumidity"
 CHAR_CURRENT_SECURITY_STATE = "SecuritySystemCurrentState"
 CHAR_CURRENT_TEMPERATURE = "CurrentTemperature"
 CHAR_CURRENT_TILT_ANGLE = "CurrentHorizontalTiltAngle"
 CHAR_CURRENT_VISIBILITY_STATE = "CurrentVisibilityState"
+CHAR_DEHUMIDIFIER_THRESHOLD_HUMIDITY = "RelativeHumidityDehumidifierThreshold"
 CHAR_FIRMWARE_REVISION = "FirmwareRevision"
 CHAR_HEATING_THRESHOLD_TEMPERATURE = "HeatingThresholdTemperature"
 CHAR_HUE = "Hue"
+CHAR_HUMIDIFIER_THRESHOLD_HUMIDITY = "RelativeHumidityHumidifierThreshold"
 CHAR_IDENTIFIER = "Identifier"
 CHAR_IN_USE = "InUse"
 CHAR_INPUT_SOURCE_TYPE = "InputSourceType"
@@ -188,6 +195,7 @@ CHAR_SWING_MODE = "SwingMode"
 CHAR_TARGET_DOOR_STATE = "TargetDoorState"
 CHAR_TARGET_HEATING_COOLING = "TargetHeatingCoolingState"
 CHAR_TARGET_POSITION = "TargetPosition"
+CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER = "TargetHumidifierDehumidifierState"
 CHAR_TARGET_HUMIDITY = "TargetRelativeHumidity"
 CHAR_TARGET_SECURITY_STATE = "SecuritySystemTargetState"
 CHAR_TARGET_TEMPERATURE = "TargetTemperature"
@@ -205,6 +213,7 @@ PROP_MAX_VALUE = "maxValue"
 PROP_MIN_VALUE = "minValue"
 PROP_MIN_STEP = "minStep"
 PROP_CELSIUS = {"minValue": -273, "maxValue": 999}
+PROP_VALID_VALUES = "ValidValues"
 
 # #### Device Classes ####
 DEVICE_CLASS_CO = "co"
@@ -228,6 +237,21 @@ THRESHOLD_CO2 = 1000
 DEFAULT_MIN_TEMP_WATER_HEATER = 40  # °C
 DEFAULT_MAX_TEMP_WATER_HEATER = 60  # °C
 
+# #### Media Player Key Names ####
+KEY_ARROW_DOWN = "arrow_down"
+KEY_ARROW_LEFT = "arrow_left"
+KEY_ARROW_RIGHT = "arrow_right"
+KEY_ARROW_UP = "arrow_up"
+KEY_BACK = "back"
+KEY_EXIT = "exit"
+KEY_FAST_FORWARD = "fast_forward"
+KEY_INFORMATION = "information"
+KEY_NEXT_TRACK = "next_track"
+KEY_PREVIOUS_TRACK = "previous_track"
+KEY_REWIND = "rewind"
+KEY_SELECT = "select"
+KEY_PLAY_PAUSE = "play_pause"
+
 # #### Door states ####
 HK_DOOR_OPEN = 0
 HK_DOOR_CLOSED = 1
@@ -249,7 +273,6 @@ HK_NOT_CHARGABLE = 2
 CONFIG_OPTIONS = [
     CONF_FILTER,
     CONF_AUTO_START,
-    CONF_ZEROCONF_DEFAULT_INTERFACE,
     CONF_SAFE_MODE,
     CONF_ENTITY_CONFIG,
 ]

@@ -36,14 +36,22 @@ SENSOR_DICT = {
     for sensor_id, sensor_spec in SENSOR_TYPES.items()
 }
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD): str,
-    }
-)
+
+def _base_schema(discovery_info):
+    """Generate base schema."""
+    base_schema = {}
+    if not discovery_info:
+        base_schema.update(
+            {
+                vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+            }
+        )
+    base_schema.update(
+        {vol.Optional(CONF_USERNAME): str, vol.Optional(CONF_PASSWORD): str}
+    )
+
+    return vol.Schema(base_schema)
 
 
 def _resource_schema_base(available_resources, selected_resources):
@@ -75,7 +83,7 @@ def _ups_schema(ups_list):
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
 
-    Data has the keys from DATA_SCHEMA with values provided by the user.
+    Data has the keys from _base_schema with values provided by the user.
     """
 
     host = data[CONF_HOST]
@@ -113,8 +121,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the nut config flow."""
         self.nut_config = {}
         self.available_resources = {}
+        self.discovery_info = {}
         self.ups_list = None
         self.title = None
+
+    async def async_step_zeroconf(self, discovery_info):
+        """Prepare configuration for a discovered nut device."""
+        self.discovery_info = discovery_info
+        await self._async_handle_discovery_without_unique_id()
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context["title_placeholders"] = {
+            CONF_PORT: discovery_info.get(CONF_PORT, DEFAULT_PORT),
+            CONF_HOST: discovery_info[CONF_HOST],
+        }
+        return await self.async_step_user()
 
     async def async_step_import(self, user_input=None):
         """Handle the import."""
@@ -129,13 +149,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=_base_schema({}), errors=errors
         )
 
     async def async_step_user(self, user_input=None):
         """Handle the user input."""
         errors = {}
         if user_input is not None:
+            if self.discovery_info:
+                user_input.update(
+                    {
+                        CONF_HOST: self.discovery_info[CONF_HOST],
+                        CONF_PORT: self.discovery_info.get(CONF_PORT, DEFAULT_PORT),
+                    }
+                )
             info, errors = await self._async_validate_or_error(user_input)
 
             if not errors:
@@ -150,7 +177,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_resources()
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=_base_schema(self.discovery_info), errors=errors
         )
 
     async def async_step_ups(self, user_input=None):

@@ -17,12 +17,12 @@
     "state": {
         "_": {
             "auto": "Autom\u00e0tic",
-            "cool": "Refredar",
-            "dry": "Assecar",
+            "cool": "Refreda",
+            "dry": "Asseca",
             "fan_only": "Nom\u00e9s ventilador",
-            "heat": "Escalfar",
-            "heat_cool": "Escalfar/Refredar",
-            "off": "Apagat"
+            "heat": "Escalfa",
+            "heat_cool": "Escalfa/Refreda",
+            "off": "OFF"
         }
     },
     "title": "Climatitzaci\u00f3"

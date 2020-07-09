@@ -18,8 +18,7 @@
                     "host": "Hostnaam of IP-adres",
                     "name": "Naam"
                 },
-                "description": "Voer uw Samsung TV informatie in. Als u nooit eerder Home Assistant hebt verbonden dan zou u een popup op uw TV moeten zien waarin u om toestemming wordt vraagt.",
-                "title": "Samsung TV"
+                "description": "Voer uw Samsung TV informatie in. Als u nooit eerder Home Assistant hebt verbonden dan zou u een popup op uw TV moeten zien waarin u om toestemming wordt vraagt."
             }
         }
     }

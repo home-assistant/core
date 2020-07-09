@@ -24,7 +24,7 @@
                 "data": {
                     "pairing_code": "\u914d\u5bf9\u4ee3\u7801"
                 },
-                "description": "\u8f93\u5165\u60a8\u7684HomeKit\u914d\u5bf9\u4ee3\u7801\uff08\u683c\u5f0f\u4e3aXXX-XX-XXX\uff09\u4ee5\u4f7f\u7528\u6b64\u914d\u4ef6",
+                "description": "\u8f93\u5165\u60a8\u7684 HomeKit \u914d\u5bf9\u4ee3\u7801\uff08\u683c\u5f0f\u4e3a XXX-XX-XXX\uff09\u4ee5\u4f7f\u7528\u6b64\u914d\u4ef6",
                 "title": "\u4e0e HomeKit \u914d\u4ef6\u914d\u5bf9"
             },
             "user": {
@@ -36,5 +36,5 @@
             }
         }
     },
-    "title": "HomeKit \u914d\u4ef6"
+    "title": "HomeKit \u63a7\u5236\u5668"
 }

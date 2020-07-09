@@ -23,8 +23,7 @@
                     "username": "Username",
                     "verify_ssl": "AdGuard Home uses a proper certificate"
                 },
-                "description": "Set up your AdGuard Home instance to allow monitoring and control.",
-                "title": "Link your AdGuard Home."
+                "description": "Set up your AdGuard Home instance to allow monitoring and control."
             }
         }
     }

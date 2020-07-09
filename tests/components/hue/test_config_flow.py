@@ -58,6 +58,13 @@ async def test_flow_works(hass):
         )
 
     assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"id": mock_bridge.id}
+    )
+
+    assert result["type"] == "form"
     assert result["step_id"] == "link"
 
     flow = next(
@@ -76,21 +83,104 @@ async def test_flow_works(hass):
     assert result["data"] == {
         "host": "1.2.3.4",
         "username": "home-assistant#test-home",
-        "allow_hue_groups": False,
     }
 
     assert len(mock_bridge.initialize.mock_calls) == 1
 
 
-async def test_flow_no_discovered_bridges(hass, aioclient_mock):
+async def test_manual_flow_works(hass, aioclient_mock):
+    """Test config flow discovers only already configured bridges."""
+    mock_bridge = get_mock_bridge()
+
+    with patch(
+        "homeassistant.components.hue.config_flow.discover_nupnp",
+        return_value=[mock_bridge],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN, context={"source": "user"}
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"id": "manual"}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "manual"
+
+    bridge = get_mock_bridge(
+        bridge_id="id-1234", host="2.2.2.2", username="username-abc"
+    )
+
+    with patch(
+        "aiohue.Bridge", return_value=bridge,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "2.2.2.2"}
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "link"
+
+    with patch("homeassistant.components.hue.config_flow.authenticate_bridge"), patch(
+        "homeassistant.components.hue.async_unload_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "Mock Bridge"
+    assert result["data"] == {
+        "host": "2.2.2.2",
+        "username": "username-abc",
+    }
+    entries = hass.config_entries.async_entries("hue")
+    assert len(entries) == 1
+    entry = entries[-1]
+    assert entry.unique_id == "id-1234"
+
+
+async def test_manual_flow_bridge_exist(hass, aioclient_mock):
+    """Test config flow discovers only already configured bridges."""
+    MockConfigEntry(
+        domain="hue", unique_id="id-1234", data={"host": "2.2.2.2"}
+    ).add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.hue.config_flow.discover_nupnp", return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN, context={"source": "user"}
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "manual"
+
+    bridge = get_mock_bridge(
+        bridge_id="id-1234", host="2.2.2.2", username="username-abc"
+    )
+
+    with patch(
+        "aiohue.Bridge", return_value=bridge,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "2.2.2.2"}
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+
+async def test_manual_flow_no_discovered_bridges(hass, aioclient_mock):
     """Test config flow discovers no bridges."""
     aioclient_mock.get(URL_NUPNP, json=[])
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": "user"}
     )
-    assert result["type"] == "abort"
-    assert result["reason"] == "no_bridges"
+    assert result["type"] == "form"
+    assert result["step_id"] == "manual"
 
 
 async def test_flow_all_discovered_bridges_exist(hass, aioclient_mock):
@@ -103,22 +193,12 @@ async def test_flow_all_discovered_bridges_exist(hass, aioclient_mock):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": "user"}
     )
-    assert result["type"] == "abort"
-    assert result["reason"] == "all_configured"
 
-
-async def test_flow_one_bridge_discovered(hass, aioclient_mock):
-    """Test config flow discovers one bridge."""
-    aioclient_mock.get(URL_NUPNP, json=[{"internalipaddress": "1.2.3.4", "id": "bla"}])
-
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": "user"}
-    )
     assert result["type"] == "form"
-    assert result["step_id"] == "link"
+    assert result["step_id"] == "manual"
 
 
-async def test_flow_two_bridges_discovered(hass, aioclient_mock):
+async def test_flow_bridges_discovered(hass, aioclient_mock):
     """Test config flow discovers two bridges."""
     # Add ignored config entry. Should still show up as option.
     MockConfigEntry(
@@ -144,6 +224,7 @@ async def test_flow_two_bridges_discovered(hass, aioclient_mock):
 
     result["data_schema"]({"id": "bla"})
     result["data_schema"]({"id": "beer"})
+    result["data_schema"]({"id": "manual"})
 
 
 async def test_flow_two_bridges_discovered_one_new(hass, aioclient_mock):
@@ -162,14 +243,13 @@ async def test_flow_two_bridges_discovered_one_new(hass, aioclient_mock):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": "user"}
     )
+
     assert result["type"] == "form"
-    assert result["step_id"] == "link"
-    flow = next(
-        flow
-        for flow in hass.config_entries.flow.async_progress()
-        if flow["flow_id"] == result["flow_id"]
-    )
-    assert flow["context"]["unique_id"] == "beer"
+    assert result["step_id"] == "init"
+    assert result["data_schema"]({"id": "beer"})
+    assert result["data_schema"]({"id": "manual"})
+    with pytest.raises(vol.error.MultipleInvalid):
+        assert not result["data_schema"]({"id": "bla"})
 
 
 async def test_flow_timeout_discovery(hass):
@@ -200,12 +280,15 @@ async def test_flow_link_timeout(hass):
         )
 
     result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"id": mock_bridge.id}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "link"
-    assert result["errors"] == {"base": "linking"}
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_flow_link_unknown_error(hass):
@@ -218,6 +301,10 @@ async def test_flow_link_unknown_error(hass):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN, context={"source": "user"}
         )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"id": mock_bridge.id}
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
@@ -242,6 +329,10 @@ async def test_flow_link_button_not_pressed(hass):
         )
 
     result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"id": mock_bridge.id}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
 
@@ -264,12 +355,15 @@ async def test_flow_link_unknown_host(hass):
         )
 
     result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"id": mock_bridge.id}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "link"
-    assert result["errors"] == {"base": "linking"}
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_bridge_ssdp(hass):
@@ -436,7 +530,6 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(hass):
     assert result["data"] == {
         "host": "2.2.2.2",
         "username": "username-abc",
-        "allow_hue_groups": False,
     }
     entries = hass.config_entries.async_entries("hue")
     assert len(entries) == 2
@@ -532,3 +625,30 @@ async def test_homekit_discovery_update_configuration(hass):
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "1.1.1.1"
+
+
+async def test_options_flow(hass):
+    """Test options config flow."""
+    entry = MockConfigEntry(
+        domain="hue", unique_id="aabbccddeeff", data={"host": "0.0.0.0"},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            const.CONF_ALLOW_HUE_GROUPS: True,
+            const.CONF_ALLOW_UNREACHABLE: True,
+        },
+    )
+
+    assert result["type"] == "create_entry"
+    assert result["data"] == {
+        const.CONF_ALLOW_HUE_GROUPS: True,
+        const.CONF_ALLOW_UNREACHABLE: True,
+    }

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Questo televisore \u00e8 gi\u00e0 configurato."
+            "already_configured": "Questo televisore \u00e8 gi\u00e0 configurato.",
+            "no_ip_control": "Il controllo IP \u00e8 disabilitato sulla TV o la TV non \u00e8 supportata."
         },
         "error": {
             "cannot_connect": "Connessione non riuscita, host o codice PIN non valido.",
@@ -18,7 +19,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Nome host TV o indirizzo IP"
+                    "host": "Host"
                 },
                 "description": "Configurare l'integrazione TV di Sony Bravia. In caso di problemi con la configurazione visitare: https://www.home-assistant.io/integrations/braviatv\n\nAssicurarsi che il televisore sia acceso.",
                 "title": "Sony Bravia TV"

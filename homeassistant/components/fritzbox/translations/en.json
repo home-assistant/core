@@ -16,17 +16,15 @@
                     "password": "Password",
                     "username": "Username"
                 },
-                "description": "Do you want to set up {name}?",
-                "title": "AVM FRITZ!Box"
+                "description": "Do you want to set up {name}?"
             },
             "user": {
                 "data": {
-                    "host": "Host or IP address",
+                    "host": "Host",
                     "password": "Password",
                     "username": "Username"
                 },
-                "description": "Enter your AVM FRITZ!Box information.",
-                "title": "AVM FRITZ!Box"
+                "description": "Enter your AVM FRITZ!Box information."
             }
         }
     }

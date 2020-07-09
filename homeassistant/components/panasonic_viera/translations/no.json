@@ -14,7 +14,7 @@
                 "data": {
                     "pin": ""
                 },
-                "description": "Skriv inn PIN-koden som vises p\u00e5 TV-en",
+                "description": "Angi PIN-koden som vises p\u00e5 TV-en",
                 "title": "Sammenkobling"
             },
             "user": {
@@ -22,7 +22,7 @@
                     "host": "IP adresse",
                     "name": "Navn"
                 },
-                "description": "Skriv inn IP-adressen til Panasonic Viera TV",
+                "description": "Fyll inn IP-adressen til Panasonic Viera TV",
                 "title": "Sett opp TV-en din"
             }
         }

@@ -15,6 +15,7 @@ ATTR_DISCOVER_DEVICES = "devices"
 ATTR_PARAM = "param"
 ATTR_CHANNEL = "channel"
 ATTR_ADDRESS = "address"
+ATTR_DEVICE_TYPE = "device_type"
 ATTR_VALUE = "value"
 ATTR_VALUE_TYPE = "value_type"
 ATTR_INTERFACE = "interface"
@@ -55,6 +56,7 @@ HM_DEVICE_TYPES = {
         "IPKeySwitch",
         "IPKeySwitchLevel",
         "IPMultiIO",
+        "IPWSwitch",
     ],
     DISCOVER_LIGHTS: [
         "Dimmer",
@@ -106,6 +108,8 @@ HM_DEVICE_TYPES = {
         "MotionIPV2",
         "IPMultiIO",
         "IPThermostatWall2",
+        "IPRemoteMotionV2",
+        "HBUNISenWEA",
     ],
     DISCOVER_CLIMATE: [
         "Thermostat",
@@ -145,8 +149,10 @@ HM_DEVICE_TYPES = {
         "TiltIP",
         "IPShutterContactSabotage",
         "IPContact",
+        "IPRemoteMotionV2",
+        "IPWInputDevice",
     ],
-    DISCOVER_COVER: ["Blind", "KeyBlind", "IPKeyBlind", "IPKeyBlindTilt"],
+    DISCOVER_COVER: ["Blind", "KeyBlind", "IPKeyBlind", "IPKeyBlindTilt", "IPGarage"],
     DISCOVER_LOCKS: ["KeyMatic"],
 }
 

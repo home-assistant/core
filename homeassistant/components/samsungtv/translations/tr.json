@@ -14,8 +14,7 @@
                     "host": "Host veya IP adresi",
                     "name": "Ad"
                 },
-                "description": "Samsung TV bilgilerini gir. Daha \u00f6nce hi\u00e7 Home Assistant'a ba\u011flamad\u0131ysan, TV'nde izin isteyen bir pencere g\u00f6receksindir.",
-                "title": "Samsung TV"
+                "description": "Samsung TV bilgilerini gir. Daha \u00f6nce hi\u00e7 Home Assistant'a ba\u011flamad\u0131ysan, TV'nde izin isteyen bir pencere g\u00f6receksindir."
             }
         }
     }

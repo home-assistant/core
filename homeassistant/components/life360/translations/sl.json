@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "invalid_credentials": "Napa\u010dno geslo",
-            "user_already_configured": "Ra\u010dun \u017ee nastavljen"
+            "user_already_configured": "Ra\u010dun je \u017ee nastavljen"
         },
         "create_entry": {
             "default": "\u010ce \u017eelite nastaviti napredne mo\u017enosti, glejte [Life360 dokumentacija]({docs_url})."

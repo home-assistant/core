@@ -54,11 +54,7 @@ async def test_setup_defined_hosts_known_auth(hass):
             hue.CONF_ALLOW_HUE_GROUPS: False,
             hue.CONF_ALLOW_UNREACHABLE: True,
         },
-        "1.1.1.1": {
-            hue.CONF_HOST: "1.1.1.1",
-            hue.CONF_ALLOW_HUE_GROUPS: True,
-            hue.CONF_ALLOW_UNREACHABLE: False,
-        },
+        "1.1.1.1": {hue.CONF_HOST: "1.1.1.1"},
     }
 
 
@@ -130,12 +126,10 @@ async def test_config_passed_to_config_entry(hass):
         )
 
     assert len(mock_bridge.mock_calls) == 2
-    p_hass, p_entry, p_allow_unreachable, p_allow_groups = mock_bridge.mock_calls[0][1]
+    p_hass, p_entry = mock_bridge.mock_calls[0][1]
 
     assert p_hass is hass
     assert p_entry is entry
-    assert p_allow_unreachable is True
-    assert p_allow_groups is False
 
     assert len(mock_registry.mock_calls) == 1
     assert mock_registry.mock_calls[0][2] == {

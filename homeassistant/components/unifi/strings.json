@@ -24,7 +24,6 @@
   },
   "options": {
     "step": {
-      "init": { "data": {} },
       "device_tracker": {
         "data": {
           "detection_time": "Time in seconds from last seen until considered away",

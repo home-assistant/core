@@ -12,6 +12,7 @@ from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
+    help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_payload,
@@ -58,6 +59,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
@@ -92,6 +94,7 @@ async def test_controlling_non_default_state_via_topic(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
@@ -127,6 +130,7 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
@@ -163,6 +167,7 @@ async def test_controlling_non_default_state_via_topic_and_json_message(
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
@@ -195,6 +200,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
@@ -240,6 +246,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
@@ -264,6 +271,13 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+
+async def test_availability_when_connection_lost(hass, mqtt_mock):
+    """Test availability after MQTT disconnection."""
+    await help_test_availability_when_connection_lost(
+        hass, mqtt_mock, LOCK_DOMAIN, DEFAULT_CONFIG
+    )
 
 
 async def test_availability_without_topic(hass, mqtt_mock):
@@ -322,7 +336,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     )
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass, mqtt_mock):
     """Test unique id option only creates one lock per unique_id."""
     config = {
         LOCK_DOMAIN: [
@@ -342,7 +356,7 @@ async def test_unique_id(hass):
             },
         ]
     }
-    await help_test_unique_id(hass, LOCK_DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, LOCK_DOMAIN, config)
 
 
 async def test_discovery_removal_lock(hass, mqtt_mock, caplog):

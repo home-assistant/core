@@ -36,6 +36,7 @@ class TestOpenAlprCloudSetup:
 
         with assert_setup_component(1, ip.DOMAIN):
             setup_component(self.hass, ip.DOMAIN, config)
+            self.hass.block_till_done()
 
         assert self.hass.states.get("image_processing.openalpr_demo_camera")
 
@@ -53,6 +54,7 @@ class TestOpenAlprCloudSetup:
 
         with assert_setup_component(1, ip.DOMAIN):
             setup_component(self.hass, ip.DOMAIN, config)
+            self.hass.block_till_done()
 
         assert self.hass.states.get("image_processing.test_local")
 
@@ -108,6 +110,7 @@ class TestOpenAlprCloud:
             new_callable=PropertyMock(return_value=False),
         ):
             setup_component(self.hass, ip.DOMAIN, config)
+            self.hass.block_till_done()
 
         self.alpr_events = []
 

@@ -81,7 +81,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 } & set(station_filter):
                     dev.append(waqi_sensor)
     except (aiohttp.client_exceptions.ClientConnectorError, asyncio.TimeoutError):
-        _LOGGER.exception("Failed to connect to WAQI servers.")
+        _LOGGER.exception("Failed to connect to WAQI servers")
         raise PlatformNotReady
     async_add_entities(dev, True)
 

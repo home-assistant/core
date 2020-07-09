@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ja hi ha un compte Tibber configurat."
+        },
+        "error": {
+            "connection_error": "S'ha produ\u00eft un error en connectar-se a Tibber",
+            "invalid_access_token": "[%key::common::config_flow::error::invalid_access_token%]",
+            "timeout": "S'ha acabat el temps d'espera durant la connexi\u00f3 a Tibber"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Token d'acc\u00e9s"
+                },
+                "description": "Introdueix el token d'acc\u00e9s de https://developer.tibber.com/settings/accesstoken",
+                "title": "Tibber"
+            }
+        }
+    },
+    "title": "Tibber"
+}

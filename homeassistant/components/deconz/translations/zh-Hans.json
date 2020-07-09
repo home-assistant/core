@@ -9,18 +9,9 @@
             "no_key": "\u65e0\u6cd5\u83b7\u53d6 API \u5bc6\u94a5"
         },
         "step": {
-            "init": {
-                "title": "\u5b9a\u4e49 deCONZ \u7f51\u5173"
-            },
             "link": {
                 "description": "\u89e3\u9501\u60a8\u7684 deCONZ \u7f51\u5173\u4ee5\u6ce8\u518c\u5230 Home Assistant\u3002 \n\n 1. \u524d\u5f80 deCONZ \u7cfb\u7edf\u8bbe\u7f6e\n 2. \u70b9\u51fb\u201c\u89e3\u9501\u7f51\u5173\u201d\u6309\u94ae",
                 "title": "\u8fde\u63a5 deCONZ"
-            },
-            "manual_confirm": {
-                "data": {
-                    "host": "\u4e3b\u673a",
-                    "port": "\u7aef\u53e3\uff08\u9ed8\u8ba4\u503c\uff1a'80'\uff09"
-                }
             }
         }
     },

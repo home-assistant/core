@@ -8,6 +8,9 @@ from homeassistant.components.forked_daapd.const import (
     CONF_TTS_PAUSE_TIME,
     CONF_TTS_VOLUME,
     DOMAIN,
+    SIGNAL_UPDATE_OUTPUTS,
+    SIGNAL_UPDATE_PLAYER,
+    SIGNAL_UPDATE_QUEUE,
     SOURCE_NAME_CLEAR,
     SOURCE_NAME_DEFAULT,
     SUPPORTED_FEATURES,
@@ -63,7 +66,7 @@ from homeassistant.const import (
 )
 
 from tests.async_mock import patch
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_mock_signal
 
 TEST_MASTER_ENTITY_NAME = "media_player.forked_daapd_server"
 TEST_ZONE_ENTITY_NAMES = [
@@ -111,7 +114,7 @@ SAMPLE_PLAYER_STOPPED = {
     "item_progress_ms": 5,
 }
 
-SAMPLE_TTS_QUEUE = {
+SAMPLE_QUEUE_TTS = {
     "version": 833,
     "count": 1,
     "items": [
@@ -127,7 +130,27 @@ SAMPLE_TTS_QUEUE = {
             "length_ms": 0,
             "track_number": 1,
             "media_kind": "music",
+            "data_kind": "url",
             "uri": "tts_proxy_somefile.mp3",
+        }
+    ],
+}
+
+SAMPLE_QUEUE_PIPE = {
+    "version": 833,
+    "count": 1,
+    "items": [
+        {
+            "id": 12322,
+            "title": "librespot-java",
+            "artist": "some artist",
+            "album": "some album",
+            "album_artist": "The xx",
+            "length_ms": 0,
+            "track_number": 1,
+            "media_kind": "music",
+            "data_kind": "pipe",
+            "uri": "pipeuri",
         }
     ],
 }
@@ -272,7 +295,7 @@ async def get_request_return_values_fixture():
         "config": SAMPLE_CONFIG,
         "outputs": SAMPLE_OUTPUTS_ON,
         "player": SAMPLE_PLAYER_PAUSED,
-        "queue": SAMPLE_TTS_QUEUE,
+        "queue": SAMPLE_QUEUE_TTS,
     }
 
 
@@ -341,12 +364,38 @@ def test_master_state(hass, mock_api_object):
     assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
     assert state.attributes[ATTR_MEDIA_DURATION] == 0.05
     assert state.attributes[ATTR_MEDIA_POSITION] == 0.005
-    assert state.attributes[ATTR_MEDIA_TITLE] == "Short TTS file"
+    assert state.attributes[ATTR_MEDIA_TITLE] == "No album"  # reversed for url
     assert state.attributes[ATTR_MEDIA_ARTIST] == "Google"
-    assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "No album"
+    assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "Short TTS file"  # reversed
     assert state.attributes[ATTR_MEDIA_ALBUM_ARTIST] == "The xx"
     assert state.attributes[ATTR_MEDIA_TRACK] == 1
     assert not state.attributes[ATTR_MEDIA_SHUFFLE]
+
+
+async def test_no_update_when_get_request_returns_none(
+    hass, config_entry, mock_api_object
+):
+    """Test when get request returns None."""
+
+    async def get_request_side_effect(update_type):
+        return None
+
+    mock_api_object.get_request.side_effect = get_request_side_effect
+    updater_update = mock_api_object.start_websocket_handler.call_args[0][2]
+    signal_output_call = async_mock_signal(
+        hass, SIGNAL_UPDATE_OUTPUTS.format(config_entry.entry_id)
+    )
+    signal_player_call = async_mock_signal(
+        hass, SIGNAL_UPDATE_PLAYER.format(config_entry.entry_id)
+    )
+    signal_queue_call = async_mock_signal(
+        hass, SIGNAL_UPDATE_QUEUE.format(config_entry.entry_id)
+    )
+    await updater_update(["outputs", "player", "queue"])
+    await hass.async_block_till_done()
+    assert len(signal_output_call) == 0
+    assert len(signal_player_call) == 0
+    assert len(signal_queue_call) == 0
 
 
 async def _service_call(
@@ -417,7 +466,7 @@ async def test_last_outputs_master(hass, mock_api_object):
     assert mock_api_object.set_enabled_outputs.call_count == 2
 
 
-async def test_bunch_of_stuff_master(hass, mock_api_object, get_request_return_values):
+async def test_bunch_of_stuff_master(hass, get_request_return_values, mock_api_object):
     """Run bunch of stuff."""
     await _service_call(hass, TEST_MASTER_ENTITY_NAME, SERVICE_TURN_ON)
     await _service_call(hass, TEST_MASTER_ENTITY_NAME, SERVICE_TURN_OFF)
@@ -630,7 +679,9 @@ async def pipe_control_api_object_fixture(
     return pipe_control_api.return_value
 
 
-async def test_librespot_java_stuff(hass, pipe_control_api_object):
+async def test_librespot_java_stuff(
+    hass, get_request_return_values, mock_api_object, pipe_control_api_object
+):
     """Test options update and librespot-java stuff."""
     state = hass.states.get(TEST_MASTER_ENTITY_NAME)
     assert state.attributes[ATTR_INPUT_SOURCE] == "librespot-java (pipe)"
@@ -652,6 +703,16 @@ async def test_librespot_java_stuff(hass, pipe_control_api_object):
     )
     state = hass.states.get(TEST_MASTER_ENTITY_NAME)
     assert state.attributes[ATTR_INPUT_SOURCE] == SOURCE_NAME_DEFAULT
+    # test pipe getting queued externally changes source
+    get_request_return_values["queue"] = SAMPLE_QUEUE_PIPE
+    updater_update = mock_api_object.start_websocket_handler.call_args[0][2]
+    await updater_update(["queue"])
+    await hass.async_block_till_done()
+    state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    assert state.attributes[ATTR_INPUT_SOURCE] == "librespot-java (pipe)"
+    # test title and album not reversed when data_kind not url
+    assert state.attributes[ATTR_MEDIA_TITLE] == "librespot-java"
+    assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "some album"
 
 
 async def test_librespot_java_play_media(hass, pipe_control_api_object):

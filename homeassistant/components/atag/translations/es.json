@@ -1,16 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "S\u00f3lo se puede a\u00f1adir un dispositivo Atag a Home Assistant"
+            "already_configured": "Este dispositivo ya ha sido a\u00f1adido a HomeAssistant"
         },
         "error": {
-            "connection_error": "No se pudo conectar, por favor, int\u00e9ntalo de nuevo"
+            "connection_error": "No se pudo conectar, por favor, int\u00e9ntalo de nuevo",
+            "unauthorized": "Emparejamiento denegado, comprobar el dispositivo para la solicitud de autorizaci\u00f3n"
         },
         "step": {
             "user": {
                 "data": {
+                    "email": "Correo electr\u00f3nico (Opcional)",
                     "host": "Host",
-                    "port": "Puerto (10000)"
+                    "port": "Puerto"
                 },
                 "title": "Conectarse al dispositivo"
             }

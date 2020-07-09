@@ -1,5 +1,5 @@
 """The exceptions used by Home Assistant."""
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import TYPE_CHECKING, Optional
 
 import jinja2
 
@@ -49,7 +49,7 @@ class Unauthorized(HomeAssistantError):
         entity_id: Optional[str] = None,
         config_entry_id: Optional[str] = None,
         perm_category: Optional[str] = None,
-        permission: Optional[Tuple[str]] = None,
+        permission: Optional[str] = None,
     ) -> None:
         """Unauthorized error."""
         super().__init__(self.__class__.__name__)

@@ -8,13 +8,10 @@ POWERWALL_API_CHANGED = "api_changed"
 
 UPDATE_INTERVAL = 30
 
-ATTR_REGION = "region"
-ATTR_GRID_CODE = "grid_code"
 ATTR_FREQUENCY = "frequency"
 ATTR_ENERGY_EXPORTED = "energy_exported_(in_kW)"
 ATTR_ENERGY_IMPORTED = "energy_imported_(in_kW)"
 ATTR_INSTANT_AVERAGE_VOLTAGE = "instant_average_voltage"
-ATTR_NOMINAL_SYSTEM_POWER = "nominal_system_power_kW"
 ATTR_IS_ACTIVE = "is_active"
 
 STATUS_VERSION = "version"

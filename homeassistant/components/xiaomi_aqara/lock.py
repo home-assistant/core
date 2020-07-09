@@ -6,7 +6,8 @@ from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 
-from . import PY_XIAOMI_GATEWAY, XiaomiDevice
+from . import XiaomiDevice
+from .const import DOMAIN, GATEWAYS_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,27 +21,26 @@ ATTR_VERIFIED_WRONG_TIMES = "verified_wrong_times"
 UNLOCK_MAINTAIN_TIME = 5
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Perform the setup for Xiaomi devices."""
-    devices = []
-
-    for gateway in hass.data[PY_XIAOMI_GATEWAY].gateways.values():
-        for device in gateway.devices["lock"]:
-            model = device["model"]
-            if model == "lock.aq1":
-                devices.append(XiaomiAqaraLock(device, "Lock", gateway))
-    async_add_entities(devices)
+    entities = []
+    gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
+    for device in gateway.devices["lock"]:
+        model = device["model"]
+        if model == "lock.aq1":
+            entities.append(XiaomiAqaraLock(device, "Lock", gateway, config_entry))
+    async_add_entities(entities)
 
 
 class XiaomiAqaraLock(LockEntity, XiaomiDevice):
     """Representation of a XiaomiAqaraLock."""
 
-    def __init__(self, device, name, xiaomi_hub):
+    def __init__(self, device, name, xiaomi_hub, config_entry):
         """Initialize the XiaomiAqaraLock."""
         self._changed_by = 0
         self._verified_wrong_times = 0
 
-        super().__init__(device, name, xiaomi_hub)
+        super().__init__(device, name, xiaomi_hub, config_entry)
 
     @property
     def is_locked(self) -> bool:

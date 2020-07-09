@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "D\u00ebse Smile ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun, iwwerpr\u00e9if d\u00e9i 8 Charakteren vun denger Smile ID",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Smile IP Adresse",
+                    "password": "Smile ID"
+                },
+                "description": "Detailler",
+                "title": "Mat Smile verbannen"
+            }
+        }
+    }
+}

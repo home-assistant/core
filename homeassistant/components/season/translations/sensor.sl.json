@@ -1,5 +1,11 @@
 {
     "state": {
+        "season__season": {
+            "autumn": "Jesen",
+            "spring": "Pomlad",
+            "summer": "Poletje",
+            "winter": "Zima"
+        },
         "season__season__": {
             "autumn": "Jesen",
             "spring": "Pomlad",

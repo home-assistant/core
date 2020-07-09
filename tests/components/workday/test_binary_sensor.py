@@ -109,6 +109,7 @@ class TestWorkdaySetup:
         """Set up workday component."""
         with assert_setup_component(1, "binary_sensor"):
             setup_component(self.hass, "binary_sensor", self.config_province)
+            self.hass.block_till_done()
 
         entity = self.hass.states.get("binary_sensor.workday_sensor")
         assert entity is not None
@@ -119,6 +120,7 @@ class TestWorkdaySetup:
         """Test if workdays are reported correctly."""
         with assert_setup_component(1, "binary_sensor"):
             setup_component(self.hass, "binary_sensor", self.config_province)
+            self.hass.block_till_done()
 
         self.hass.start()
 
@@ -131,6 +133,7 @@ class TestWorkdaySetup:
         """Test if weekends are reported correctly."""
         with assert_setup_component(1, "binary_sensor"):
             setup_component(self.hass, "binary_sensor", self.config_province)
+            self.hass.block_till_done()
 
         self.hass.start()
 
@@ -143,6 +146,7 @@ class TestWorkdaySetup:
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, "binary_sensor"):
             setup_component(self.hass, "binary_sensor", self.config_province)
+            self.hass.block_till_done()
 
         self.hass.start()
 
@@ -153,6 +157,7 @@ class TestWorkdaySetup:
         """Set up workday component."""
         with assert_setup_component(1, "binary_sensor"):
             setup_component(self.hass, "binary_sensor", self.config_noprovince)
+            self.hass.block_till_done()
 
         entity = self.hass.states.get("binary_sensor.workday_sensor")
         assert entity is not None
@@ -163,6 +168,7 @@ class TestWorkdaySetup:
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, "binary_sensor"):
             setup_component(self.hass, "binary_sensor", self.config_noprovince)
+            self.hass.block_till_done()
 
         self.hass.start()
 

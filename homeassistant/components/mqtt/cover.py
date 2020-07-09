@@ -530,7 +530,7 @@ class MqttCover(
 
     async def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
-        position = float(kwargs[ATTR_TILT_POSITION])
+        position = kwargs[ATTR_TILT_POSITION]
 
         # The position needs to be between min and max
         level = self.find_in_range_from_percent(position)
@@ -550,10 +550,7 @@ class MqttCover(
         percentage_position = position
         if set_position_template is not None:
             position = set_position_template.async_render(**kwargs)
-        elif (
-            self._config[CONF_POSITION_OPEN] != 100
-            and self._config[CONF_POSITION_CLOSED] != 0
-        ):
+        else:
             position = self.find_in_range_from_percent(position, COVER_PAYLOAD)
 
         mqtt.async_publish(

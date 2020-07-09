@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Soll Wemo konfigur\u00e9iert ginn?",
-                "title": "Wemo"
+                "description": "Soll Wemo konfigur\u00e9iert ginn?"
             }
         }
     }
