@@ -196,7 +196,7 @@ async def async_setup(hass, config):
     for env in ("HASSIO", "HASSIO_TOKEN"):
         if os.environ.get(env):
             continue
-        _LOGGER.error("Missing %s environment variable.", env)
+        _LOGGER.error("Missing %s environment variable", env)
         return False
 
     host = os.environ["HASSIO"]
@@ -325,7 +325,7 @@ async def async_setup(hass, config):
         if errors:
             _LOGGER.error(errors)
             hass.components.persistent_notification.async_create(
-                "Config error. See [the logs](/developer-tools/logs) for details.",
+                "Config error. See [the logs](/config/logs) for details.",
                 "Config validating",
                 f"{HASS_DOMAIN}.check_config",
             )

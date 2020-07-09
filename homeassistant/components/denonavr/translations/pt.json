@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "select": {
+                "data": {
+                    "select_host": "IP do receptor"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "endere\u00e7o de IP"
+                }
+            }
+        }
+    }
+}

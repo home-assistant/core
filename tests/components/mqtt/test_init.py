@@ -670,32 +670,6 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     assert mqtt_client_mock.subscribe.mock_calls == expected
 
 
-@pytest.fixture
-def mqtt_server_start_mock(hass):
-    """Mock embedded server start."""
-    client_config = ("localhost", 1883, "user", "pass", None, "3.1.1")
-
-    with patch(
-        "homeassistant.components.mqtt.server.async_start",
-        return_value=(True, client_config),
-    ) as _start:
-        yield _start
-
-
-@pytest.mark.parametrize("mqtt_config", [{}])
-async def test_setup_embedded_starts_with_no_config(
-    hass, mqtt_server_start_mock, mqtt_mock
-):
-    """Test setting up embedded server with no config."""
-    assert mqtt_server_start_mock.call_count == 1
-
-
-@pytest.mark.parametrize("mqtt_config", [{"embedded": None}])
-async def test_setup_embedded_with_embedded(hass, mqtt_server_start_mock, mqtt_mock):
-    """Test setting up embedded server with empty embedded config."""
-    assert mqtt_server_start_mock.call_count == 1
-
-
 async def test_setup_logs_error_if_no_connect_broker(hass, caplog):
     """Test for setup failure if connection to broker is missing."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
@@ -769,56 +743,6 @@ async def test_setup_without_tls_config_uses_tlsv1_under_python36(hass):
         assert calls[0][3] == expectedTlsVersion
 
 
-async def test_setup_with_tls_config_uses_tls_version1_2(hass):
-    """Test setup uses specified TLS version."""
-    calls = []
-
-    def mock_tls_set(certificate, certfile=None, keyfile=None, tls_version=None):
-        calls.append((certificate, certfile, keyfile, tls_version))
-
-    with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().tls_set = mock_tls_set
-        entry = MockConfigEntry(
-            domain=mqtt.DOMAIN,
-            data={
-                "certificate": "auto",
-                mqtt.CONF_BROKER: "test-broker",
-                "tls_version": "1.2",
-            },
-        )
-
-        assert await mqtt.async_setup_entry(hass, entry)
-
-        assert calls
-
-        assert calls[0][3] == ssl.PROTOCOL_TLSv1_2
-
-
-async def test_setup_with_tls_config_of_v1_under_python36_only_uses_v1(hass):
-    """Test setup uses TLSv1.0 if explicitly chosen."""
-    calls = []
-
-    def mock_tls_set(certificate, certfile=None, keyfile=None, tls_version=None):
-        calls.append((certificate, certfile, keyfile, tls_version))
-
-    with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().tls_set = mock_tls_set
-        entry = MockConfigEntry(
-            domain=mqtt.DOMAIN,
-            data={
-                "certificate": "auto",
-                mqtt.CONF_BROKER: "test-broker",
-                "tls_version": "1.0",
-            },
-        )
-
-        assert await mqtt.async_setup_entry(hass, entry)
-
-        assert calls
-
-        assert calls[0][3] == ssl.PROTOCOL_TLSv1
-
-
 @pytest.mark.parametrize(
     "mqtt_config",
     [
@@ -831,7 +755,7 @@ async def test_setup_with_tls_config_of_v1_under_python36_only_uses_v1(hass):
         }
     ],
 )
-async def test_birth_message(hass, mqtt_client_mock, mqtt_mock):
+async def test_custom_birth_message(hass, mqtt_client_mock, mqtt_mock):
     """Test sending birth message."""
     calls = []
     mqtt_client_mock.publish.side_effect = lambda *args: calls.append(args)
@@ -840,6 +764,62 @@ async def test_birth_message(hass, mqtt_client_mock, mqtt_mock):
     assert calls[-1] == ("birth", "birth", 0, False)
 
 
+async def test_default_birth_message(hass, mqtt_client_mock, mqtt_mock):
+    """Test sending birth message."""
+    calls = []
+    mqtt_client_mock.publish.side_effect = lambda *args: calls.append(args)
+    mqtt_mock._mqtt_on_connect(None, None, 0, 0)
+    await hass.async_block_till_done()
+    assert calls[-1] == ("homeassistant/status", "online", 0, False)
+
+
+@pytest.mark.parametrize(
+    "mqtt_config", [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}],
+)
+async def test_no_birth_message(hass, mqtt_client_mock, mqtt_mock):
+    """Test sending birth message."""
+    calls = []
+    mqtt_client_mock.publish.side_effect = lambda *args: calls.append(args)
+    mqtt_mock._mqtt_on_connect(None, None, 0, 0)
+    await hass.async_block_till_done()
+    assert not calls
+
+
+@pytest.mark.parametrize(
+    "mqtt_config",
+    [
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            mqtt.CONF_WILL_MESSAGE: {
+                mqtt.ATTR_TOPIC: "death",
+                mqtt.ATTR_PAYLOAD: "death",
+            },
+        }
+    ],
+)
+async def test_custom_will_message(hass, mqtt_client_mock, mqtt_mock):
+    """Test will message."""
+    mqtt_client_mock.will_set.assert_called_with("death", "death", 0, False, None)
+
+
+async def test_default_will_message(hass, mqtt_client_mock, mqtt_mock):
+    """Test will message."""
+    mqtt_client_mock.will_set.assert_called_with(
+        "homeassistant/status", "offline", 0, False, None
+    )
+
+
+@pytest.mark.parametrize(
+    "mqtt_config", [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_WILL_MESSAGE: {}}],
+)
+async def test_no_will_message(hass, mqtt_client_mock, mqtt_mock):
+    """Test will message."""
+    mqtt_client_mock.will_set.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "mqtt_config", [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}],
+)
 async def test_mqtt_subscribes_topics_on_connect(hass, mqtt_client_mock, mqtt_mock):
     """Test subscription to topic on connect."""
     await mqtt.async_subscribe(hass, "topic/test", None)

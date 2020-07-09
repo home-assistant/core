@@ -28,6 +28,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.components.roku.const import ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_MEDIA_NEXT_TRACK,
@@ -422,3 +423,19 @@ async def test_tv_services(
         )
 
         tune_mock.assert_called_once_with("55")
+
+
+async def test_integration_services(
+    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test integration services."""
+    await setup_integration(hass, aioclient_mock)
+
+    with patch("homeassistant.components.roku.Roku.search") as search_mock:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEARCH,
+            {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_KEYWORD: "Space Jam"},
+            blocking=True,
+        )
+        search_mock.assert_called_once_with("Space Jam")

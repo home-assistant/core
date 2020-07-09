@@ -3,6 +3,6 @@
   "name": "Gogogate2",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/gogogate2",
-  "requirements": ["gogogate2-api==1.0.3"],
+  "requirements": ["gogogate2-api==1.0.4"],
   "codeowners": ["@vangorra"]
 }

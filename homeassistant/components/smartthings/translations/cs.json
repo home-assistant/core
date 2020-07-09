@@ -6,6 +6,13 @@
             "token_invalid_format": "Token mus\u00ed b\u00fdt ve form\u00e1tu UID/GUID.",
             "token_unauthorized": "Token je neplatn\u00fd nebo ji\u017e nen\u00ed autorizov\u00e1n.",
             "webhook_error": "SmartThings nemohly ov\u011b\u0159it koncov\u00fd bod nakonfigurovan\u00fd v `base_url`. P\u0159e\u010dt\u011bte si pros\u00edm po\u017eadavky na komponenty."
+        },
+        "step": {
+            "pat": {
+                "data": {
+                    "access_token": "P\u0159\u00edstupov\u00fd token"
+                }
+            }
         }
     }
 }

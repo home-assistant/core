@@ -332,7 +332,7 @@ class TemplateVacuum(StateVacuumEntity):
             )
         else:
             _LOGGER.error(
-                "Received invalid fan speed: %s. Expected: %s.",
+                "Received invalid fan speed: %s. Expected: %s",
                 fan_speed,
                 self._fan_speed_list,
             )
@@ -378,7 +378,7 @@ class TemplateVacuum(StateVacuumEntity):
                 self._state = None
             else:
                 _LOGGER.error(
-                    "Received invalid vacuum state: %s. Expected: %s.",
+                    "Received invalid vacuum state: %s. Expected: %s",
                     state,
                     ", ".join(_VALID_STATES),
                 )
@@ -417,7 +417,7 @@ class TemplateVacuum(StateVacuumEntity):
                 self._fan_speed = None
             else:
                 _LOGGER.error(
-                    "Received invalid fan speed: %s. Expected: %s.",
+                    "Received invalid fan speed: %s. Expected: %s",
                     fan_speed,
                     self._fan_speed_list,
                 )

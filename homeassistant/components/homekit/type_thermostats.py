@@ -334,7 +334,7 @@ class Thermostat(HomeAccessory):
         if not hc_modes:
             # This cannot be none OR an empty list
             _LOGGER.error(
-                "%s: HVAC modes not yet available. Please disable auto start for homekit.",
+                "%s: HVAC modes not yet available. Please disable auto start for homekit",
                 self.entity_id,
             )
             hc_modes = (

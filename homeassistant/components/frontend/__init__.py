@@ -349,7 +349,7 @@ def _async_setup_themes(hass, themes):
             hass.data[DATA_DEFAULT_THEME] = name
             update_theme_and_fire_event()
         else:
-            _LOGGER.warning("Theme %s is not defined.", name)
+            _LOGGER.warning("Theme %s is not defined", name)
 
     async def reload_themes(_):
         """Reload themes."""

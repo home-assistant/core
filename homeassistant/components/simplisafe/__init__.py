@@ -524,7 +524,7 @@ class SimpliSafe:
             if isinstance(result, InvalidCredentialsError):
                 if self._emergency_refresh_token_used:
                     _LOGGER.error(
-                        "SimpliSafe authentication disconnected. Please restart HASS."
+                        "SimpliSafe authentication disconnected. Please restart HASS"
                     )
                     remove_listener = self._hass.data[DOMAIN][DATA_LISTENER].pop(
                         self._config_entry.entry_id
