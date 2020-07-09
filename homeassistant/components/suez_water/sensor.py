@@ -122,4 +122,4 @@ class SuezSensor(Entity):
     def update(self):
         """Return the latest collected data from Linky."""
         self._fetch_data()
-        _LOGGER.debug("Suez data state is: %s.", self._state)
+        _LOGGER.debug("Suez data state is: %s", self._state)

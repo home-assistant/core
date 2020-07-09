@@ -91,8 +91,8 @@
     },
     "state": {
         "_": {
-            "off": "Desactivat",
-            "on": "Activat"
+            "off": "OFF",
+            "on": "ON"
         },
         "battery": {
             "off": "Normal",
@@ -107,12 +107,12 @@
             "on": "Connectat"
         },
         "door": {
-            "off": "Tancada",
-            "on": "Oberta"
+            "off": "Tancat/da",
+            "on": "Obert/a"
         },
         "garage_door": {
-            "off": "Tancada",
-            "on": "Oberta"
+            "off": "Tancat/da",
+            "on": "Obert/a"
         },
         "gas": {
             "off": "Lliure",
@@ -139,15 +139,15 @@
             "on": "Detectat"
         },
         "opening": {
-            "off": "Tancat",
-            "on": "Obert"
+            "off": "Tancat/da",
+            "on": "Obert/a"
         },
         "presence": {
-            "off": "Lliure",
-            "on": "Detectat"
+            "off": "Fora",
+            "on": "A casa"
         },
         "problem": {
-            "off": "Correcte",
+            "off": "OK",
             "on": "Problema"
         },
         "safety": {
@@ -167,8 +167,8 @@
             "on": "Detectat"
         },
         "window": {
-            "off": "Tancada",
-            "on": "Oberta"
+            "off": "Tancat/da",
+            "on": "Obert/a"
         }
     },
     "title": "Sensor binari"

@@ -3,6 +3,12 @@ import requests.exceptions
 
 from homeassistant import config_entries, setup
 from homeassistant.components.flume.const import DOMAIN
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 
 from tests.async_mock import MagicMock, patch
 
@@ -37,20 +43,20 @@ async def test_form(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "test-username",
-                "password": "test-password",
-                "client_id": "client_id",
-                "client_secret": "client_secret",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_CLIENT_ID: "client_id",
+                CONF_CLIENT_SECRET: "client_secret",
             },
         )
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "test-username"
     assert result2["data"] == {
-        "username": "test-username",
-        "password": "test-password",
-        "client_id": "client_id",
-        "client_secret": "client_secret",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
+        CONF_CLIENT_ID: "client_id",
+        CONF_CLIENT_SECRET: "client_secret",
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -76,20 +82,20 @@ async def test_form_import(hass):
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
             data={
-                "username": "test-username",
-                "password": "test-password",
-                "client_id": "client_id",
-                "client_secret": "client_secret",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_CLIENT_ID: "client_id",
+                CONF_CLIENT_SECRET: "client_secret",
             },
         )
 
     assert result["type"] == "create_entry"
     assert result["title"] == "test-username"
     assert result["data"] == {
-        "username": "test-username",
-        "password": "test-password",
-        "client_id": "client_id",
-        "client_secret": "client_secret",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
+        CONF_CLIENT_ID: "client_id",
+        CONF_CLIENT_SECRET: "client_secret",
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -111,10 +117,10 @@ async def test_form_invalid_auth(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "test-username",
-                "password": "test-password",
-                "client_id": "client_id",
-                "client_secret": "client_secret",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_CLIENT_ID: "client_id",
+                CONF_CLIENT_SECRET: "client_secret",
             },
         )
 
@@ -136,10 +142,10 @@ async def test_form_cannot_connect(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "test-username",
-                "password": "test-password",
-                "client_id": "client_id",
-                "client_secret": "client_secret",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_CLIENT_ID: "client_id",
+                CONF_CLIENT_SECRET: "client_secret",
             },
         )
 

@@ -14,7 +14,7 @@
         },
         "step": {
             "auth": {
-                "description": "\u8acb\u4f7f\u7528\u6b64[\u9023\u7d50]\uff08{authorization_url}\uff09\u4e26\u9ede\u9078<b>\u5141\u8a31</b>\u4ee5\u5b58\u53d6 Ambiclimate \u5e33\u865f\uff0c\u7136\u5f8c\u8fd4\u56de\u6b64\u9801\u9762\u4e26\u9ede\u9078\u4e0b\u65b9\u7684<b>\u50b3\u9001</b>\u3002\n\uff08\u78ba\u5b9a Callback url \u70ba {cb_url}\uff09",
+                "description": "\u8acb\u4f7f\u7528\u6b64[\u9023\u7d50]\uff08{authorization_url}\uff09\u4e26\u9ede\u9078 **\u5141\u8a31** \u4ee5\u5b58\u53d6 Ambiclimate \u5e33\u865f\uff0c\u7136\u5f8c\u8fd4\u56de\u6b64\u9801\u9762\u4e26\u9ede\u9078\u4e0b\u65b9\u7684 **\u50b3\u9001**\u3002\n\uff08\u78ba\u5b9a Callback url \u70ba {cb_url}\uff09",
                 "title": "\u8a8d\u8b49 Ambiclimate"
             }
         }

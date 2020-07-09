@@ -15,11 +15,10 @@
             },
             "user": {
                 "data": {
-                    "host": "Hosztn\u00e9v vagy IP c\u00edm",
+                    "host": "Hoszt",
                     "name": "N\u00e9v"
                 },
-                "description": "\u00cdrd be a Samsung TV adatait. Ha m\u00e9g soha nem csatlakozott Home Assistant-hez, akkor meg kell jelennie egy felugr\u00f3 ablaknak a TV k\u00e9perny\u0151j\u00e9n, ahol hiteles\u00edt\u00e9st k\u00e9r.",
-                "title": "Samsung TV"
+                "description": "\u00cdrd be a Samsung TV adatait. Ha m\u00e9g soha nem csatlakozott Home Assistant-hez, akkor meg kell jelennie egy felugr\u00f3 ablaknak a TV k\u00e9perny\u0151j\u00e9n, ahol hiteles\u00edt\u00e9st k\u00e9r."
             }
         }
     }

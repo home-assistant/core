@@ -8,7 +8,6 @@ from aiohttp.client_exceptions import ClientConnectionError, ServerDisconnectedE
 import onvif
 from onvif import ONVIFCamera
 from onvif.exceptions import ONVIFError
-from zeep.asyncio import AsyncTransport
 from zeep.exceptions import Fault
 
 from homeassistant.config_entries import ConfigEntry
@@ -20,7 +19,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -53,6 +51,8 @@ class ONVIFDevice:
         self.capabilities: Capabilities = Capabilities()
         self.profiles: List[Profile] = []
         self.max_resolution: int = 0
+
+        self._dt_diff_seconds: int = 0
 
     @property
     def name(self) -> str:
@@ -129,15 +129,21 @@ class ONVIFDevice:
 
         return True
 
+    async def async_stop(self, event=None):
+        """Shut it all down."""
+        if self.events:
+            await self.events.async_stop()
+        await self.device.close()
+
     async def async_check_date_and_time(self) -> None:
         """Warns if device and system date not synced."""
         LOGGER.debug("Setting up the ONVIF device management service")
-        devicemgmt = self.device.create_devicemgmt_service()
+        device_mgmt = self.device.create_devicemgmt_service()
 
         LOGGER.debug("Retrieving current device date/time")
         try:
             system_date = dt_util.utcnow()
-            device_time = await devicemgmt.GetSystemDateAndTime()
+            device_time = await device_mgmt.GetSystemDateAndTime()
             if not device_time:
                 LOGGER.debug(
                     """Couldn't get device '%s' date/time.
@@ -179,9 +185,9 @@ class ONVIFDevice:
                 )
 
                 dt_diff = cam_date - system_date
-                dt_diff_seconds = dt_diff.total_seconds()
+                self._dt_diff_seconds = dt_diff.total_seconds()
 
-                if dt_diff_seconds > 5:
+                if self._dt_diff_seconds > 5:
                     LOGGER.warning(
                         "The date/time on the device (UTC) is '%s', "
                         "which is different from the system '%s', "
@@ -196,30 +202,60 @@ class ONVIFDevice:
 
     async def async_get_device_info(self) -> DeviceInfo:
         """Obtain information about this device."""
-        devicemgmt = self.device.create_devicemgmt_service()
-        device_info = await devicemgmt.GetDeviceInformation()
+        device_mgmt = self.device.create_devicemgmt_service()
+        device_info = await device_mgmt.GetDeviceInformation()
+
+        # Grab the last MAC address for backwards compatibility
+        mac = None
+        try:
+            network_interfaces = await device_mgmt.GetNetworkInterfaces()
+            for interface in network_interfaces:
+                if interface.Enabled:
+                    mac = interface.Info.HwAddress
+        except Fault as fault:
+            if "not implemented" not in fault.message:
+                raise fault
+
+            LOGGER.debug(
+                "Couldn't get network interfaces from ONVIF deivice '%s'. Error: %s",
+                self.name,
+                fault,
+            )
+
         return DeviceInfo(
             device_info.Manufacturer,
             device_info.Model,
             device_info.FirmwareVersion,
-            self.config_entry.unique_id,
+            device_info.SerialNumber,
+            mac,
         )
 
     async def async_get_capabilities(self):
         """Obtain information about the available services on the device."""
-        media_service = self.device.create_media_service()
-        media_capabilities = await media_service.GetServiceCapabilities()
-        event_service = self.device.create_events_service()
-        event_capabilities = await event_service.GetServiceCapabilities()
+        snapshot = False
+        try:
+            media_service = self.device.create_media_service()
+            media_capabilities = await media_service.GetServiceCapabilities()
+            snapshot = media_capabilities and media_capabilities.SnapshotUri
+        except (ONVIFError, Fault, ServerDisconnectedError):
+            pass
+
+        pullpoint = False
+        try:
+            event_service = self.device.create_events_service()
+            event_capabilities = await event_service.GetServiceCapabilities()
+            pullpoint = event_capabilities and event_capabilities.WSPullPointSupport
+        except (ONVIFError, Fault):
+            pass
+
         ptz = False
         try:
             self.device.get_definition("ptz")
             ptz = True
         except ONVIFError:
             pass
-        return Capabilities(
-            media_capabilities.SnapshotUri, event_capabilities.WSPullPointSupport, ptz
-        )
+
+        return Capabilities(snapshot, pullpoint, ptz)
 
     async def async_get_profiles(self) -> List[Profile]:
         """Obtain media profiles for this device."""
@@ -228,7 +264,10 @@ class ONVIFDevice:
         profiles = []
         for key, onvif_profile in enumerate(result):
             # Only add H264 profiles
-            if onvif_profile.VideoEncoderConfiguration.Encoding != "H264":
+            if (
+                not onvif_profile.VideoEncoderConfiguration
+                or onvif_profile.VideoEncoderConfiguration.Encoding != "H264"
+            ):
                 continue
 
             profile = Profile(
@@ -255,9 +294,13 @@ class ONVIFDevice:
                     is not None,
                 )
 
-                ptz_service = self.device.get_service("ptz")
-                presets = await ptz_service.GetPresets(profile.token)
-                profile.ptz.presets = [preset.token for preset in presets]
+                try:
+                    ptz_service = self.device.create_ptz_service()
+                    presets = await ptz_service.GetPresets(profile.token)
+                    profile.ptz.presets = [preset.token for preset in presets if preset]
+                except (Fault, ServerDisconnectedError):
+                    # It's OK if Presets aren't supported
+                    profile.ptz.presets = []
 
             profiles.append(profile)
 
@@ -303,7 +346,7 @@ class ONVIFDevice:
             LOGGER.warning("PTZ actions are not supported on device '%s'", self.name)
             return
 
-        ptz_service = self.device.get_service("ptz")
+        ptz_service = self.device.create_ptz_service()
 
         pan_val = distance * PAN_FACTOR.get(pan, 0)
         tilt_val = distance * TILT_FACTOR.get(tilt, 0)
@@ -381,7 +424,7 @@ class ONVIFDevice:
                         "PTZ preset '%s' does not exist on device '%s'. Available Presets: %s",
                         preset_val,
                         self.name,
-                        profile.ptz.presets.join(", "),
+                        ", ".join(profile.ptz.presets),
                     )
                     return
 
@@ -400,13 +443,11 @@ class ONVIFDevice:
 
 def get_device(hass, host, port, username, password) -> ONVIFCamera:
     """Get ONVIFCamera instance."""
-    session = async_get_clientsession(hass)
-    transport = AsyncTransport(None, session=session)
     return ONVIFCamera(
         host,
         port,
         username,
         password,
         f"{os.path.dirname(onvif.__file__)}/wsdl/",
-        transport=transport,
+        no_cache=True,
     )

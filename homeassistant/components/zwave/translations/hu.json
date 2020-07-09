@@ -11,7 +11,7 @@
             "user": {
                 "data": {
                     "network_key": "H\u00e1l\u00f3zati kulcs (hagyja \u00fcresen az automatikus gener\u00e1l\u00e1shoz)",
-                    "usb_path": "USB el\u00e9r\u00e9si \u00fat"
+                    "usb_path": "USB eszk\u00f6z el\u00e9r\u00e9si \u00fat"
                 },
                 "description": "A konfigur\u00e1ci\u00f3s v\u00e1ltoz\u00f3kr\u00f3l az inform\u00e1ci\u00f3kat l\u00e1sd a https://www.home-assistant.io/docs/z-wave/installation/ oldalon.",
                 "title": "Z-Wave be\u00e1ll\u00edt\u00e1sa"

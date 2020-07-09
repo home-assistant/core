@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Airly API-Schl\u00fcssel",
+                    "api_key": "API-Schl\u00fcssel",
                     "latitude": "Breitengrad",
                     "longitude": "L\u00e4ngengrad",
                     "name": "Name der Integration"

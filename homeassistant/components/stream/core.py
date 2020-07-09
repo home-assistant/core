@@ -79,8 +79,11 @@ class StreamOutput:
     @property
     def target_duration(self) -> int:
         """Return the average duration of the segments in seconds."""
+        segment_length = len(self._segments)
+        if not segment_length:
+            return 0
         durations = [s.duration for s in self._segments]
-        return round(sum(durations) // len(self._segments)) or 1
+        return round(sum(durations) // segment_length) or 1
 
     def get_segment(self, sequence: int = None) -> Any:
         """Retrieve a specific segment, or the whole list."""

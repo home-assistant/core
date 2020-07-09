@@ -22,9 +22,11 @@ class TestDemoRemote(unittest.TestCase):
         assert setup_component(
             self.hass, remote.DOMAIN, {"remote": {"platform": "demo"}}
         )
+        self.hass.block_till_done()
 
-    # pylint: disable=invalid-name
-    def tearDown(self):
+        self.addCleanup(self.tear_down_cleanup)
+
+    def tear_down_cleanup(self):
         """Stop down everything that was started."""
         self.hass.stop()
 

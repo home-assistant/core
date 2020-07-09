@@ -22,6 +22,7 @@ from .const import (
     KEY_MONITORING_TRAFFIC_STATISTICS,
     KEY_NET_CURRENT_PLMN,
     KEY_NET_NET_MODE,
+    KEY_SMS_SMS_COUNT,
     SENSOR_KEYS,
 )
 
@@ -194,6 +195,9 @@ SENSOR_META = {
             }.get(x, "Unknown"),
             None,
         ),
+    ),
+    (KEY_SMS_SMS_COUNT, "LocalUnread"): dict(
+        name="SMS unread", icon="mdi:email-receive",
     ),
 }
 

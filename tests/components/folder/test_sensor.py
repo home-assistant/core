@@ -48,6 +48,7 @@ class TestFolderSensor(unittest.TestCase):
         create_file(TEST_FILE)
         config = {"sensor": {"platform": "folder", CONF_FOLDER_PATHS: TEST_DIR}}
         assert setup_component(self.hass, "sensor", config)
+        self.hass.block_till_done()
         assert len(self.hass.states.entity_ids()) == 1
         state = self.hass.states.get("sensor.test_folder")
         assert state.state == "0.0"

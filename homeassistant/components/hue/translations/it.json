@@ -24,6 +24,12 @@
             "link": {
                 "description": "Premi il pulsante sul bridge per registrare Philips Hue con Home Assistant\n\n![Posizione del pulsante sul bridge](/static/images/config_philips_hue.jpg)",
                 "title": "Collega Hub"
+            },
+            "manual": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Configurazione manuale di un bridge Hue"
             }
         }
     },
@@ -46,6 +52,16 @@
             "remote_button_short_release": "Pulsante \"{subtype}\" rilasciato",
             "remote_double_button_long_press": "Entrambi i \"{subtype}\" rilasciati dopo una lunga pressione",
             "remote_double_button_short_press": "Entrambi i \"{subtype}\" rilasciati"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_how_groups": "Consenti gruppi Hue",
+                    "allow_unreachable": "Consentire alle lampadine irraggiungibili di segnalare correttamente il loro stato"
+                }
+            }
         }
     }
 }

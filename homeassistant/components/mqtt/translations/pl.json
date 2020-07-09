@@ -15,14 +15,13 @@
                     "port": "Port",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "description": "Wprowad\u017a informacje o po\u0142\u0105czeniu po\u015brednika MQTT.",
-                "title": "MQTT"
+                "description": "Wprowad\u017a informacje o po\u0142\u0105czeniu po\u015brednika MQTT."
             },
             "hassio_confirm": {
                 "data": {
                     "discovery": "W\u0142\u0105cz wykrywanie"
                 },
-                "description": "Czy chcesz skonfigurowa\u0107 Home Assistant'a, aby po\u0142\u0105czy\u0142 si\u0119 z po\u015brednikiem MQTT dostarczonym przez dodatek Hass.io {addon}?",
+                "description": "Czy chcesz skonfigurowa\u0107 Home Assistanta, aby po\u0142\u0105czy\u0142 si\u0119 z po\u015brednikiem MQTT dostarczonym przez dodatek Hass.io {addon}?",
                 "title": "Po\u015brednik MQTT za po\u015brednictwem dodatku Hass.io"
             }
         }
@@ -47,6 +46,38 @@
             "button_short_press": "\"{subtype}\" zostanie naci\u015bni\u0119ty",
             "button_short_release": "\"{subtype}\" zostanie zwolniony",
             "button_triple_press": "\"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty"
+        }
+    },
+    "options": {
+        "error": {
+            "bad_birth": "Nieprawid\u0142owy temat \"birth\".",
+            "bad_will": "Nieprawid\u0142owy temat \"will\".",
+            "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z po\u015brednikiem."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Po\u015brednik",
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "username": "U\u017cytkownik"
+                },
+                "description": "Wprowad\u017a informacje o po\u0142\u0105czeniu po\u015brednika MQTT"
+            },
+            "options": {
+                "data": {
+                    "birth_payload": "Warto\u015b\u0107 wiadomo\u015bci \"birth\"",
+                    "birth_qos": "QoS wiadomo\u015bci \"birth\"",
+                    "birth_retain": "Flaga \"retain\" wiadomo\u015bci \"birth\"",
+                    "birth_topic": "Temat wiadomo\u015bci \"birth\"",
+                    "discovery": "W\u0142\u0105cz wykrywanie",
+                    "will_payload": "Warto\u015b\u0107 wiadomo\u015bci \"will\"",
+                    "will_qos": "QoS wiadomo\u015bci \"will\"",
+                    "will_retain": "Flaga \"retain\" wiadomo\u015bci \"will\"",
+                    "will_topic": "Temat "
+                },
+                "description": "Opcje MQTT"
+            }
         }
     }
 }

@@ -6,18 +6,14 @@
             "not_doorbird_device": "Este dispositivo no es un DoorBird"
         },
         "error": {
-            "cannot_connect": "No se pudo conectar, intente nuevamente",
-            "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
-            "unknown": "Error inesperado"
+            "cannot_connect": "No se pudo conectar, intente nuevamente"
         },
         "flow_title": "DoorBird {name} ({host})",
         "step": {
             "user": {
                 "data": {
                     "host": "Host (direcci\u00f3n IP)",
-                    "name": "Nombre del dispositivo",
-                    "password": "Contrase\u00f1a",
-                    "username": "Nombre de usuario"
+                    "name": "Nombre del dispositivo"
                 },
                 "title": "Conectar con DoorBird"
             }

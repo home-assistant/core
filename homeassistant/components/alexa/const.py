@@ -18,9 +18,8 @@ CONF_DISPLAY_URL = "display_url"
 CONF_FILTER = "filter"
 CONF_ENTITY_CONFIG = "entity_config"
 CONF_ENDPOINT = "endpoint"
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 CONF_LOCALE = "locale"
+CONF_PASSWORD = "password"
 
 ATTR_UID = "uid"
 ATTR_UPDATE_DATE = "updateDate"
@@ -41,6 +40,7 @@ API_HEADER = "header"
 API_PAYLOAD = "payload"
 API_SCOPE = "scope"
 API_CHANGE = "change"
+API_PASSWORD = "password"
 
 CONF_DESCRIPTION = "description"
 CONF_DISPLAY_CATEGORIES = "display_categories"
@@ -126,6 +126,8 @@ class Inputs:
     """
 
     VALID_SOURCE_NAME_MAP = {
+        "antenna": "TUNER",
+        "antennatv": "TUNER",
         "aux": "AUX 1",
         "aux1": "AUX 1",
         "aux2": "AUX 2",
@@ -135,6 +137,7 @@ class Inputs:
         "aux6": "AUX 6",
         "aux7": "AUX 7",
         "bluray": "BLURAY",
+        "blurayplayer": "BLURAY",
         "cable": "CABLE",
         "cd": "CD",
         "coax": "COAX 1",
@@ -186,6 +189,7 @@ class Inputs:
         "playstation": "PLAYSTATION",
         "playstation3": "PLAYSTATION 3",
         "playstation4": "PLAYSTATION 4",
+        "rokumediaplayer": "MEDIA PLAYER",
         "satellite": "SATELLITE",
         "satellitetv": "SATELLITE",
         "smartcast": "SMARTCAST",

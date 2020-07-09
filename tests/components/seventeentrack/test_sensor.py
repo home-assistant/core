@@ -2,7 +2,6 @@
 import datetime
 from typing import Union
 
-import mock
 from py17track.package import Package
 import pytest
 
@@ -14,6 +13,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
 
+from tests.async_mock import MagicMock, patch
 from tests.common import async_fire_time_changed
 
 VALID_CONFIG_MINIMAL = {
@@ -113,7 +113,7 @@ class ProfileMock:
 @pytest.fixture(autouse=True, name="mock_client")
 def fixture_mock_client():
     """Mock py17track client."""
-    with mock.patch(
+    with patch(
         "homeassistant.components.seventeentrack.sensor.SeventeenTrackClient",
         new=ClientMock,
     ):
@@ -130,13 +130,14 @@ async def _setup_seventeentrack(hass, config=None, summary_data=None):
 
     ProfileMock.summary_data = summary_data
     assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
 
 
 async def _goto_future(hass, future=None):
     """Move to future."""
     if not future:
         future = utcnow() + datetime.timedelta(minutes=10)
-    with mock.patch("homeassistant.util.utcnow", return_value=future):
+    with patch("homeassistant.util.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
@@ -144,13 +145,14 @@ async def _goto_future(hass, future=None):
 async def test_full_valid_config(hass):
     """Ensure everything starts correctly."""
     assert await async_setup_component(hass, "sensor", VALID_CONFIG_FULL)
+    await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == len(ProfileMock.summary_data.keys())
 
 
 async def test_valid_config(hass):
     """Ensure everything starts correctly."""
     assert await async_setup_component(hass, "sensor", VALID_CONFIG_MINIMAL)
-
+    await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == len(ProfileMock.summary_data.keys())
 
 
@@ -243,7 +245,7 @@ async def test_delivered_not_shown(hass):
     )
     ProfileMock.package_list = [package]
 
-    hass.components.persistent_notification = mock.MagicMock()
+    hass.components.persistent_notification = MagicMock()
     await _setup_seventeentrack(hass, VALID_CONFIG_FULL_NO_DELIVERED)
     assert not hass.states.async_entity_ids()
     hass.components.persistent_notification.create.assert_called()
@@ -256,7 +258,7 @@ async def test_delivered_shown(hass):
     )
     ProfileMock.package_list = [package]
 
-    hass.components.persistent_notification = mock.MagicMock()
+    hass.components.persistent_notification = MagicMock()
     await _setup_seventeentrack(hass, VALID_CONFIG_FULL)
 
     assert hass.states.get("sensor.seventeentrack_package_456") is not None
@@ -281,7 +283,7 @@ async def test_becomes_delivered_not_shown_notification(hass):
     )
     ProfileMock.package_list = [package_delivered]
 
-    hass.components.persistent_notification = mock.MagicMock()
+    hass.components.persistent_notification = MagicMock()
     await _goto_future(hass)
 
     hass.components.persistent_notification.create.assert_called()

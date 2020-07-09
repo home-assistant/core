@@ -1,11 +1,19 @@
 """Support for ZHA covers."""
-from datetime import timedelta
+import asyncio
 import functools
 import logging
+from typing import List, Optional
 
 from zigpy.zcl.foundation import Status
 
-from homeassistant.components.cover import ATTR_POSITION, DOMAIN, CoverEntity
+from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    ATTR_POSITION,
+    DEVICE_CLASS_DAMPER,
+    DEVICE_CLASS_SHADE,
+    DOMAIN,
+    CoverEntity,
+)
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -13,17 +21,21 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .core import discovery
 from .core.const import (
     CHANNEL_COVER,
+    CHANNEL_LEVEL,
+    CHANNEL_ON_OFF,
+    CHANNEL_SHADE,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
+    SIGNAL_SET_LEVEL,
 )
 from .core.registries import ZHA_ENTITIES
+from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=60)
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 
@@ -158,3 +170,141 @@ class ZhaCover(ZhaEntity, CoverEntity):
             else:
                 self._current_position = None
                 self._state = None
+
+
+@STRICT_MATCH(channel_names={CHANNEL_LEVEL, CHANNEL_ON_OFF, CHANNEL_SHADE})
+class Shade(ZhaEntity, CoverEntity):
+    """ZHA Shade."""
+
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: List[ChannelType],
+        **kwargs,
+    ):
+        """Initialize the ZHA light."""
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        self._on_off_channel = self.cluster_channels[CHANNEL_ON_OFF]
+        self._level_channel = self.cluster_channels[CHANNEL_LEVEL]
+        self._position = None
+        self._is_open = None
+
+    @property
+    def current_cover_position(self):
+        """Return current position of cover.
+
+        None is unknown, 0 is closed, 100 is fully open.
+        """
+        return self._position
+
+    @property
+    def device_class(self) -> Optional[str]:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_SHADE
+
+    @property
+    def is_closed(self) -> Optional[bool]:
+        """Return True if shade is closed."""
+        if self._is_open is None:
+            return None
+        return not self._is_open
+
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+        await self.async_accept_signal(
+            self._on_off_channel, SIGNAL_ATTR_UPDATED, self.async_set_open_closed
+        )
+        await self.async_accept_signal(
+            self._level_channel, SIGNAL_SET_LEVEL, self.async_set_level
+        )
+
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+        self._is_open = last_state.state == STATE_OPEN
+        if ATTR_CURRENT_POSITION in last_state.attributes:
+            self._position = last_state.attributes[ATTR_CURRENT_POSITION]
+
+    @callback
+    def async_set_open_closed(self, attr_id: int, attr_name: str, value: bool) -> None:
+        """Set open/closed state."""
+        self._is_open = bool(value)
+        self.async_write_ha_state()
+
+    @callback
+    def async_set_level(self, value: int) -> None:
+        """Set the reported position."""
+        value = max(0, min(255, value))
+        self._position = int(value * 100 / 255)
+        self.async_write_ha_state()
+
+    async def async_open_cover(self, **kwargs):
+        """Open the window cover."""
+        res = await self._on_off_channel.on()
+        if not isinstance(res, list) or res[1] != Status.SUCCESS:
+            self.debug("couldn't open cover: %s", res)
+            return
+
+        self._is_open = True
+        self.async_write_ha_state()
+
+    async def async_close_cover(self, **kwargs):
+        """Close the window cover."""
+        res = await self._on_off_channel.off()
+        if not isinstance(res, list) or res[1] != Status.SUCCESS:
+            self.debug("couldn't open cover: %s", res)
+            return
+
+        self._is_open = False
+        self.async_write_ha_state()
+
+    async def async_set_cover_position(self, **kwargs):
+        """Move the roller shutter to a specific position."""
+        new_pos = kwargs[ATTR_POSITION]
+        res = await self._level_channel.move_to_level_with_on_off(
+            new_pos * 255 / 100, 1
+        )
+
+        if not isinstance(res, list) or res[1] != Status.SUCCESS:
+            self.debug("couldn't set cover's position: %s", res)
+            return
+
+        self._position = new_pos
+        self.async_write_ha_state()
+
+    async def async_stop_cover(self, **kwargs) -> None:
+        """Stop the cover."""
+        res = await self._level_channel.stop()
+        if not isinstance(res, list) or res[1] != Status.SUCCESS:
+            self.debug("couldn't stop cover: %s", res)
+            return
+
+
+@STRICT_MATCH(
+    channel_names={CHANNEL_LEVEL, CHANNEL_ON_OFF}, manufacturers="Keen Home Inc"
+)
+class KeenVent(Shade):
+    """Keen vent cover."""
+
+    @property
+    def device_class(self) -> Optional[str]:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_DAMPER
+
+    async def async_open_cover(self, **kwargs):
+        """Open the cover."""
+        position = self._position or 100
+        tasks = [
+            self._level_channel.move_to_level_with_on_off(position * 255 / 100, 1),
+            self._on_off_channel.on(),
+        ]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        if any([isinstance(result, Exception) for result in results]):
+            self.debug("couldn't open cover")
+            return
+
+        self._is_open = True
+        self._position = position
+        self.async_write_ha_state()

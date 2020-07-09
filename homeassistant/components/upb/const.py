@@ -13,7 +13,7 @@ ATTR_BRIGHTNESS_PCT = "brightness_pct"
 ATTR_COMMAND = "command"
 ATTR_RATE = "rate"
 CONF_NETWORK = "network"
-EVENT_UPB_LINK_CHANGED = "upb.link_changed"
+EVENT_UPB_SCENE_CHANGED = "upb.scene_changed"
 
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))

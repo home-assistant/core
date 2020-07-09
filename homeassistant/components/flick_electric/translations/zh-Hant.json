@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u6b64\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "\u5ba2\u6236\u7aef ID\uff08\u9078\u9805\uff09",
+                    "client_secret": "\u5ba2\u6236\u7aef\u5bc6\u9470\uff08\u9078\u9805\uff09",
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "title": "Flick \u767b\u5165\u6191\u8b49"
+            }
+        }
+    },
+    "title": "Flick Electric"
+}

@@ -14,7 +14,7 @@
         },
         "step": {
             "auth": {
-                "description": "Volg deze [link] ( {authorization_url} ) en <b> Toestaan </b> toegang tot uw Ambiclimate-account, kom dan terug en druk hieronder op <b> Verzenden </b> . \n (Zorg ervoor dat de opgegeven callback-URL {cb_url} )",
+                "description": "Volg deze [link]({authorization_url}) en klik op **Toestaan** om toegang te geven tot uw Ambiclimate-account, kom dan terug en druk hieronder op **Verzenden**. \n (Zorg ervoor dat de opgegeven callback-URL {cb_url})",
                 "title": "Authenticatie Ambiclimate"
             }
         }

@@ -103,6 +103,8 @@ class EmailReader:
 
         if message_data is None:
             return None
+        if message_data[0] is None:
+            return None
         raw_email = message_data[0][1]
         email_message = email.message_from_bytes(raw_email)
         return email_message
@@ -126,12 +128,21 @@ class EmailReader:
                     self._last_id = int(message_uid)
                     return self._fetch_message(message_uid)
 
+            return self._fetch_message(str(self._last_id))
+
         except imaplib.IMAP4.error:
             _LOGGER.info("Connection to %s lost, attempting to reconnect", self._server)
             try:
                 self.connect()
+                _LOGGER.info(
+                    "Reconnect to %s succeeded, trying last message", self._server
+                )
+                if self._last_id is not None:
+                    return self._fetch_message(str(self._last_id))
             except imaplib.IMAP4.error:
                 _LOGGER.error("Failed to reconnect")
+
+        return None
 
 
 class EmailContentSensor(Entity):

@@ -22,7 +22,8 @@
       "unsupported_model": "Your TV model is not supported."
     },
     "abort": {
-      "already_configured": "This TV is already configured."
+      "already_configured": "This TV is already configured.",
+      "no_ip_control": "IP Control is disabled on your TV or the TV is not supported."
     }
   },
   "options": {

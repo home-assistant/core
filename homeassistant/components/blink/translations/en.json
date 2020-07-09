@@ -12,16 +12,26 @@
                 "data": {
                     "2fa": "Two-factor code"
                 },
-                "title": "Two-factor authentication",
-                "description": "Enter the pin sent to your email. If the email does not contain a pin, leave blank"
+                "description": "Enter the pin sent to your email. If the email does not contain a pin, leave blank",
+                "title": "Two-factor authentication"
             },
             "user": {
                 "data": {
                     "password": "Password",
-                    "username": "Username",
-                    "scan_interval": "Scan Interval"
+                    "username": "Username"
                 },
                 "title": "Sign-in with Blink account"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "simple_options": {
+                "data": {
+                    "scan_interval": "Scan Interval (seconds)"
+                },
+                "description": "Configure Blink integration",
+                "title": "Blink options"
             }
         }
     }

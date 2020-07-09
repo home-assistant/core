@@ -123,15 +123,11 @@ class EntityComponent:
         self.config = config
 
         # Look in config for Domain, Domain 2, Domain 3 etc and load them
-        tasks = []
         for p_type, p_config in config_per_platform(config, self.domain):
-            tasks.append(self.async_setup_platform(p_type, p_config))
-
-        if tasks:
-            await asyncio.gather(*tasks)
+            self.hass.async_create_task(self.async_setup_platform(p_type, p_config))
 
         # Generic discovery listener for loading platform dynamically
-        # Refer to: homeassistant.components.discovery.load_platform()
+        # Refer to: homeassistant.helpers.discovery.async_load_platform()
         async def component_platform_discovered(
             platform: str, info: Optional[Dict[str, Any]]
         ) -> None:

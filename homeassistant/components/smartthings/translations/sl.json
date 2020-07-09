@@ -17,7 +17,7 @@
             },
             "pat": {
                 "data": {
-                    "access_token": "\u017deton za dostop"
+                    "access_token": "Dostopni \u017eeton"
                 },
                 "description": "Vnesite SmartThings [\u017deton osebnega dostopa] ({token_url}), ki je bil ustvarjen po [navodilih] ({component_url}). To bo uporabljeno za ustvarjanje integracije Home Assistant v va\u0161em ra\u010dunu SmartThings.",
                 "title": "Vnesite \u017eeton za osebni dostop"

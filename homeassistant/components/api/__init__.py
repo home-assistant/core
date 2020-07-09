@@ -35,14 +35,18 @@ import homeassistant.core as ha
 from homeassistant.exceptions import ServiceNotFound, TemplateError, Unauthorized
 from homeassistant.helpers import template
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.state import AsyncTrackStates
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_BASE_URL = "base_url"
+ATTR_EXTERNAL_URL = "external_url"
+ATTR_INTERNAL_URL = "internal_url"
 ATTR_LOCATION_NAME = "location_name"
 ATTR_REQUIRES_API_PASSWORD = "requires_api_password"
+ATTR_UUID = "uuid"
 ATTR_VERSION = "version"
 
 DOMAIN = "api"
@@ -173,19 +177,36 @@ class APIDiscoveryView(HomeAssistantView):
     url = URL_API_DISCOVERY_INFO
     name = "api:discovery"
 
-    @ha.callback
-    def get(self, request):
+    async def get(self, request):
         """Get discovery information."""
         hass = request.app["hass"]
-        return self.json(
-            {
-                ATTR_BASE_URL: hass.config.api.base_url,
-                ATTR_LOCATION_NAME: hass.config.location_name,
-                # always needs authentication
-                ATTR_REQUIRES_API_PASSWORD: True,
-                ATTR_VERSION: __version__,
-            }
-        )
+        uuid = await hass.helpers.instance_id.async_get()
+
+        data = {
+            ATTR_UUID: uuid,
+            ATTR_BASE_URL: None,
+            ATTR_EXTERNAL_URL: None,
+            ATTR_INTERNAL_URL: None,
+            ATTR_LOCATION_NAME: hass.config.location_name,
+            # always needs authentication
+            ATTR_REQUIRES_API_PASSWORD: True,
+            ATTR_VERSION: __version__,
+        }
+
+        try:
+            data["external_url"] = get_url(hass, allow_internal=False)
+        except NoURLAvailableError:
+            pass
+
+        try:
+            data["internal_url"] = get_url(hass, allow_external=False)
+        except NoURLAvailableError:
+            pass
+
+        # Set old base URL based on external or internal
+        data["base_url"] = data["external_url"] or data["internal_url"]
+
+        return self.json(data)
 
 
 class APIStatesView(HomeAssistantView):

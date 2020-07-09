@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "device": "Enhet"
+                },
+                "title": "Koble til modemet"
+            }
+        }
+    }
+}

@@ -46,7 +46,7 @@ def extract_entities(
                 "Template %s '%s' has no entity ids configured to track nor"
                 " were we able to extract the entities to track from the %s "
                 "template(s). This entity will only be able to be updated "
-                "manually.",
+                "manually",
                 device_type,
                 device_name,
                 ", ".join(invalid_templates),

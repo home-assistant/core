@@ -514,7 +514,7 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.info(
             "Z-Wave network is ready for use. All awake nodes "
             "have been queried. Sleeping nodes will be "
-            "queried when they awake."
+            "queried when they awake"
         )
         hass.bus.fire(const.EVENT_NETWORK_READY)
 
@@ -826,7 +826,7 @@ async def async_setup_entry(hass, config_entry):
             )
             return
         _LOGGER.info(
-            "Node %s on instance %s does not have resettable meters.", node_id, instance
+            "Node %s on instance %s does not have resettable meters", node_id, instance
         )
 
     def heal_node(service):
@@ -842,7 +842,7 @@ async def async_setup_entry(hass, config_entry):
         node_id = service.data.get(const.ATTR_NODE_ID)
         messages = service.data.get(const.ATTR_MESSAGES)
         node = network.nodes[node_id]
-        _LOGGER.info("Sending %s test-messages to node %s.", messages, node_id)
+        _LOGGER.info("Sending %s test-messages to node %s", messages, node_id)
         node.test(messages)
 
     def start_zwave(_service_or_event):
@@ -1079,7 +1079,7 @@ class ZWaveDeviceEntityValues:
         if workaround_component and workaround_component != component:
             if workaround_component == workaround.WORKAROUND_IGNORE:
                 _LOGGER.info(
-                    "Ignoring Node %d Value %d due to workaround.",
+                    "Ignoring Node %d Value %d due to workaround",
                     self.primary.node.node_id,
                     self.primary.value_id,
                 )

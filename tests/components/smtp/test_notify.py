@@ -34,8 +34,9 @@ class TestNotifySmtp(unittest.TestCase):
             "Home Assistant",
             0,
         )
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop down everything that was started."""
         self.hass.stop()
 

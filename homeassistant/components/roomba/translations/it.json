@@ -1,17 +1,15 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Impossibile connettersi, si prega di riprovare",
-            "unknown": "Errore imprevisto"
+            "cannot_connect": "Impossibile connettersi, si prega di riprovare"
         },
         "step": {
             "user": {
                 "data": {
                     "blid": "BLID",
-                    "certificate": "Certificato",
                     "continuous": "Continuo",
                     "delay": "Ritardo",
-                    "host": "Nome dell'host o indirizzo IP",
+                    "host": "Host",
                     "password": "Password"
                 },
                 "description": "Attualmente il recupero del BLID e della password \u00e8 un processo manuale. Si prega di seguire i passi descritti nella documentazione all'indirizzo: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",

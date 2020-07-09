@@ -17,7 +17,8 @@
     "abort": {
       "already_configured": "UPnP/IGD is already configured",
       "no_devices_discovered": "No UPnP/IGDs discovered",
-      "no_devices_found": "No UPnP/IGD devices found on the network."
+      "no_devices_found": "No UPnP/IGD devices found on the network.",
+      "incomplete_discovery": "Incomplete discovery"
     }
   }
 }

@@ -14,7 +14,7 @@
                     "access_token": "Tilgangstoken for Vilfo Router API",
                     "host": "Ruter vertsnavn eller IP"
                 },
-                "description": "Sett opp Vilfo Router-integreringen. Du trenger ditt Vilfo Router vertsnavn/IP og et API-tilgangstoken. Hvis du vil ha mer informasjon om denne integreringen og hvordan du f\u00e5r disse detaljene, kan du g\u00e5 til: https://www.home-assistant.io/integrations/vilfo",
+                "description": "Sett opp Vilfo Router-integrasjonen. Du trenger ditt Vilfo Router vertsnavn/IP og et API-tilgangstoken. For ytterligere informasjon om denne integrasjonen og hvordan du f\u00e5r disse detaljene, bes\u00f8k [https://www.home-assistant.io/integrations/vilfo](https://www.home-assistant.io/integrations/vilfo)",
                 "title": "Koble til Vilfo Ruteren"
             }
         }

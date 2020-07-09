@@ -12,9 +12,9 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "\u8a8d\u8b49\u4e3b\u6a5f\u7aef\u540d\u7a31",
+                    "host": "\u4e3b\u6a5f\u7aef",
                     "name": "\u8a8d\u8b49\u540d\u7a31",
-                    "port": "\u8a8d\u8b49\u901a\u8a0a\u57e0"
+                    "port": "\u901a\u8a0a\u57e0"
                 },
                 "title": "\u5b9a\u7fa9\u8a8d\u8b49\u9032\u884c\u6e2c\u8a66"
             }

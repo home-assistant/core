@@ -1,14 +1,12 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
-            "unknown": "Onverwachte fout"
+            "cannot_connect": "Verbinding mislukt, probeer het opnieuw"
         },
         "step": {
             "user": {
                 "data": {
                     "blid": "BLID",
-                    "certificate": "Certificaat",
                     "continuous": "Doorlopend",
                     "delay": "Vertraging",
                     "host": "Hostnaam of IP-adres",

@@ -1,11 +1,10 @@
 """Define tests for the OpenUV config flow."""
-from unittest.mock import patch
-
-from pyopenuv.errors import OpenUvError
+from pyopenuv.errors import InvalidApiKeyError
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components.openuv import DOMAIN, config_flow
+from homeassistant.components.openuv import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_ELEVATION,
@@ -13,21 +12,19 @@ from homeassistant.const import (
     CONF_LONGITUDE,
 )
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-def uv_index_response():
-    """Define a fixture for a successful /uv response."""
-    return mock_coro()
-
-
-@pytest.fixture
-def mock_pyopenuv(uv_index_response):
-    """Mock the pyopenuv library."""
-    with patch("homeassistant.components.openuv.config_flow.Client") as MockClient:
-        MockClient().uv_index.return_value = uv_index_response
-        yield MockClient
+@pytest.fixture(autouse=True)
+def mock_setup():
+    """Prevent setup."""
+    with patch(
+        "homeassistant.components.openuv.async_setup", return_value=True,
+    ), patch(
+        "homeassistant.components.openuv.async_setup_entry", return_value=True,
+    ):
+        yield
 
 
 async def test_duplicate_error(hass):
@@ -39,16 +36,19 @@ async def test_duplicate_error(hass):
         CONF_LONGITUDE: -104.9812612,
     }
 
-    MockConfigEntry(domain=DOMAIN, data=conf).add_to_hass(hass)
-    flow = config_flow.OpenUvFlowHandler()
-    flow.hass = hass
+    MockConfigEntry(
+        domain=DOMAIN, unique_id="39.128712, -104.9812612", data=conf
+    ).add_to_hass(hass)
 
-    result = await flow.async_step_user(user_input=conf)
-    assert result["errors"] == {CONF_LATITUDE: "identifier_exists"}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=conf
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
-@pytest.mark.parametrize("uv_index_response", [mock_coro(exception=OpenUvError)])
-async def test_invalid_api_key(hass, mock_pyopenuv):
+async def test_invalid_api_key(hass):
     """Test that an invalid API key throws an error."""
     conf = {
         CONF_API_KEY: "12345abcde",
@@ -57,48 +57,17 @@ async def test_invalid_api_key(hass, mock_pyopenuv):
         CONF_LONGITUDE: -104.9812612,
     }
 
-    flow = config_flow.OpenUvFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_user(user_input=conf)
-    assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
-
-
-async def test_show_form(hass):
-    """Test that the form is served with no input."""
-    flow = config_flow.OpenUvFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_user(user_input=None)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
+    with patch(
+        "pyopenuv.client.Client.uv_index", side_effect=InvalidApiKeyError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=conf
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
 
 
-async def test_step_import(hass, mock_pyopenuv):
-    """Test that the import step works."""
-    conf = {
-        CONF_API_KEY: "12345abcde",
-        CONF_ELEVATION: 59.1234,
-        CONF_LATITUDE: 39.128712,
-        CONF_LONGITUDE: -104.9812612,
-    }
-
-    flow = config_flow.OpenUvFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_import(import_config=conf)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "39.128712, -104.9812612"
-    assert result["data"] == {
-        CONF_API_KEY: "12345abcde",
-        CONF_ELEVATION: 59.1234,
-        CONF_LATITUDE: 39.128712,
-        CONF_LONGITUDE: -104.9812612,
-    }
-
-
-async def test_step_user(hass, mock_pyopenuv):
+async def test_step_user(hass):
     """Test that the user step works."""
     conf = {
         CONF_API_KEY: "12345abcde",
@@ -107,15 +76,23 @@ async def test_step_user(hass, mock_pyopenuv):
         CONF_LONGITUDE: -104.9812612,
     }
 
-    flow = config_flow.OpenUvFlowHandler()
-    flow.hass = hass
+    with patch(
+        "homeassistant.components.airvisual.async_setup_entry", return_value=True
+    ), patch("pyopenuv.client.Client.uv_index"):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
 
-    result = await flow.async_step_user(user_input=conf)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "39.128712, -104.9812612"
-    assert result["data"] == {
-        CONF_API_KEY: "12345abcde",
-        CONF_ELEVATION: 59.1234,
-        CONF_LATITUDE: 39.128712,
-        CONF_LONGITUDE: -104.9812612,
-    }
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=conf
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == "39.128712, -104.9812612"
+        assert result["data"] == {
+            CONF_API_KEY: "12345abcde",
+            CONF_ELEVATION: 59.1234,
+            CONF_LATITUDE: 39.128712,
+            CONF_LONGITUDE: -104.9812612,
+        }

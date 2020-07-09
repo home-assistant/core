@@ -31,16 +31,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     session = async_get_clientsession(hass)
 
     coordinator = AtagDataUpdateCoordinator(hass, session, entry)
-    try:
-        await coordinator.async_refresh()
-    except AtagException:
-        raise ConfigEntryNotReady
-
+    await coordinator.async_refresh()
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(entry, unique_id=coordinator.atag.id)
 
     for platform in PLATFORMS:
         hass.async_create_task(
@@ -65,9 +63,8 @@ class AtagDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via library."""
         with async_timeout.timeout(20):
             try:
-                await self.atag.update()
-                if not self.atag.report:
-                    raise UpdateFailed("No data")
+                if not await self.atag.update():
+                    raise UpdateFailed("No data received")
             except AtagException as error:
                 raise UpdateFailed(error)
         return self.atag.report
@@ -120,11 +117,6 @@ class AtagEntity(Entity):
     def should_poll(self) -> bool:
         """Return the polling requirement of the entity."""
         return False
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self.coordinator.atag.climate.temp_unit
 
     @property
     def available(self):

@@ -31,26 +31,25 @@ BRIDGE_CONFIG_SCHEMA = vol.Schema(
     {
         # Validate as IP address and then convert back to a string.
         vol.Required(CONF_HOST): vol.All(ipaddress.ip_address, cv.string),
-        vol.Optional(
-            CONF_ALLOW_UNREACHABLE, default=DEFAULT_ALLOW_UNREACHABLE
-        ): cv.boolean,
-        vol.Optional(
-            CONF_ALLOW_HUE_GROUPS, default=DEFAULT_ALLOW_HUE_GROUPS
-        ): cv.boolean,
+        vol.Optional(CONF_ALLOW_UNREACHABLE): cv.boolean,
+        vol.Optional(CONF_ALLOW_HUE_GROUPS): cv.boolean,
         vol.Optional("filename"): str,
     }
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_BRIDGES): vol.All(
-                    cv.ensure_list, [BRIDGE_CONFIG_SCHEMA],
-                )
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN, invalidation_version="0.115.0"),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Optional(CONF_BRIDGES): vol.All(
+                        cv.ensure_list, [BRIDGE_CONFIG_SCHEMA],
+                    )
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -64,7 +63,7 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = {}
     hass.data[DATA_CONFIGS] = {}
 
-    # User has configured bridges
+    # User has not configured bridges
     if CONF_BRIDGES not in conf:
         return True
 
@@ -105,16 +104,55 @@ async def async_setup_entry(
     host = entry.data["host"]
     config = hass.data[DATA_CONFIGS].get(host)
 
-    if config is None:
-        allow_unreachable = entry.data.get(
-            CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE
-        )
-        allow_groups = entry.data.get(CONF_ALLOW_HUE_GROUPS, DEFAULT_ALLOW_HUE_GROUPS)
-    else:
-        allow_unreachable = config[CONF_ALLOW_UNREACHABLE]
-        allow_groups = config[CONF_ALLOW_HUE_GROUPS]
+    # Migrate allow_unreachable from config entry data to config entry options
+    if (
+        CONF_ALLOW_UNREACHABLE not in entry.options
+        and CONF_ALLOW_UNREACHABLE in entry.data
+        and entry.data[CONF_ALLOW_UNREACHABLE] != DEFAULT_ALLOW_UNREACHABLE
+    ):
+        options = {
+            **entry.options,
+            CONF_ALLOW_UNREACHABLE: entry.data[CONF_ALLOW_UNREACHABLE],
+        }
+        data = entry.data.copy()
+        data.pop(CONF_ALLOW_UNREACHABLE)
+        hass.config_entries.async_update_entry(entry, data=data, options=options)
 
-    bridge = HueBridge(hass, entry, allow_unreachable, allow_groups)
+    # Migrate allow_hue_groups from config entry data to config entry options
+    if (
+        CONF_ALLOW_HUE_GROUPS not in entry.options
+        and CONF_ALLOW_HUE_GROUPS in entry.data
+        and entry.data[CONF_ALLOW_HUE_GROUPS] != DEFAULT_ALLOW_HUE_GROUPS
+    ):
+        options = {
+            **entry.options,
+            CONF_ALLOW_HUE_GROUPS: entry.data[CONF_ALLOW_HUE_GROUPS],
+        }
+        data = entry.data.copy()
+        data.pop(CONF_ALLOW_HUE_GROUPS)
+        hass.config_entries.async_update_entry(entry, data=data, options=options)
+
+    # Overwrite from YAML configuration
+    if config is not None:
+        options = {}
+        if CONF_ALLOW_HUE_GROUPS in config and (
+            CONF_ALLOW_HUE_GROUPS not in entry.options
+            or config[CONF_ALLOW_HUE_GROUPS] != entry.options[CONF_ALLOW_HUE_GROUPS]
+        ):
+            options[CONF_ALLOW_HUE_GROUPS] = config[CONF_ALLOW_HUE_GROUPS]
+
+        if CONF_ALLOW_UNREACHABLE in config and (
+            CONF_ALLOW_UNREACHABLE not in entry.options
+            or config[CONF_ALLOW_UNREACHABLE] != entry.options[CONF_ALLOW_UNREACHABLE]
+        ):
+            options[CONF_ALLOW_UNREACHABLE] = config[CONF_ALLOW_UNREACHABLE]
+
+        if options:
+            hass.config_entries.async_update_entry(
+                entry, options={**entry.options, **options},
+            )
+
+    bridge = HueBridge(hass, entry)
 
     if not await bridge.async_setup():
         return False

@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.const import (
+    ELECTRICAL_CURRENT_AMPERE,
     ENERGY_WATT_HOUR,
     POWER_WATT,
     TEMP_CELSIUS,
@@ -19,7 +20,7 @@ SENSOR_TYPES = {
     "status": ["Charging Status", None],
     "temperature": ["Temperature", TEMP_CELSIUS],
     "voltage": ["Voltage", VOLT],
-    "amps": ["Amps", "A"],
+    "amps": ["Amps", ELECTRICAL_CURRENT_AMPERE],
     "watts": ["Watts", POWER_WATT],
     "charge_time": ["Charge time", TIME_SECONDS],
     "energy_added": ["Energy added", ENERGY_WATT_HOUR],

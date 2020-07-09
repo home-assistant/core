@@ -11,7 +11,7 @@
                     "app_id": "Toepassings-ID",
                     "app_secret": "Geheime code"
                 },
-                "description": "Toepassings-ID en de geheime code van <a href=\"https://my.starline.ru/developer\" target=\"_blank\">StarLine developer account</a>",
+                "description": "Applicatie-ID en geheime code van [StarLine-ontwikkelaarsaccount] (https://my.starline.ru/developer)",
                 "title": "Inloggegevens van de applicatie"
             },
             "auth_captcha": {
