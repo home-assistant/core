@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+            "already_configured": "Device is already configured"
         },
         "error": {
             "invalid_url": "Invalid URL",
@@ -12,8 +12,8 @@
         "step": {
             "confirm": {
                 "data": {
-                    "name": "[%key:component::syncthru::config::step::user::data::name%]",
-                    "url": "[%key:component::syncthru::config::step::user::data::url%]"
+                    "name": "Name",
+                    "url": "Web interface URL"
                 }
             },
             "user": {
