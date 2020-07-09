@@ -3,6 +3,7 @@
         "abort": {
             "client_id": "L'ID client de la configuration n'est pas valide.",
             "client_secret": "Le client secret de la configuration n'est pas valide.",
+            "missing_configuration": "The composant n'est pas configur\u00e9. Veuillez vous r\u00e9f\u00e9rer \u00e0 la documentation.",
             "no_agreements": "Ce compte n'a pas d'affichages Toon.",
             "no_app": "Vous devez configurer Toon avant de pouvoir vous authentifier avec celui-ci. [Veuillez lire les instructions] (https://www.home-assistant.io/components/toon/).",
             "unknown_auth_fail": "Une erreur inattendue s'est produite lors de l'authentification."

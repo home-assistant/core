@@ -47,5 +47,15 @@
             "button_short_release": "\"{subtype}\" relach\u00e9",
             "button_triple_press": "\"{subtype}\" triple-cliqu\u00e9"
         }
+    },
+    "options": {
+        "step": {
+            "broker": {
+                "data": {
+                    "password": "Mot de passe",
+                    "port": "Port"
+                }
+            }
+        }
     }
 }
