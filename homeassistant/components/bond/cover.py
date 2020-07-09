@@ -66,15 +66,10 @@ class BondCover(CoverEntity):
         """Let HA know this entity relies on an assumed state tracked by Bond."""
         return True
 
-    @property
-    def should_poll(self) -> bool:
-        """Let HA know it should periodically poll this entity for state changes."""
-        return True
-
     def update(self):
         """Fetch assumed state of the cover from the hub using API."""
         state: dict = self._bond.getDeviceState(self._device.device_id)
-        cover_open = state.get("open", None)
+        cover_open = state.get("open")
         self._closed = True if cover_open == 0 else False if cover_open == 1 else None
 
     @property
