@@ -2,6 +2,7 @@
 import asyncio
 import functools
 import logging
+import threading
 
 import pytest
 import requests_mock as _requests_mock
@@ -78,6 +79,8 @@ util.get_local_ip = lambda: "127.0.0.1"
 @pytest.fixture(autouse=True)
 def verify_cleanup():
     """Verify that the test has cleaned up resources correctly."""
+    threads_before = frozenset(threading.enumerate())
+
     yield
 
     if len(INSTANCES) >= 2:
@@ -85,6 +88,9 @@ def verify_cleanup():
         for inst in INSTANCES:
             inst.stop()
         pytest.exit(f"Detected non stopped instances ({count}), aborting test run")
+
+    threads = frozenset(threading.enumerate()) - threads_before
+    assert not threads
 
 
 @pytest.fixture
@@ -120,6 +126,30 @@ def hass(loop, hass_storage, request):
         if isinstance(ex, ServiceNotFound):
             continue
         raise ex
+
+
+@pytest.fixture
+async def stop_hass():
+    """Make sure all hass are stopped."""
+    orig_hass = ha.HomeAssistant
+
+    created = []
+
+    def mock_hass():
+        hass_inst = orig_hass()
+        created.append(hass_inst)
+        return hass_inst
+
+    with patch("homeassistant.core.HomeAssistant", mock_hass):
+        yield
+
+    for hass_inst in created:
+        if hass_inst.state == ha.CoreState.stopped:
+            continue
+
+        with patch.object(hass_inst.loop, "stop"):
+            await hass_inst.async_block_till_done()
+            await hass_inst.async_stop(force=True)
 
 
 @pytest.fixture

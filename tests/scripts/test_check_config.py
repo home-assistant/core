@@ -1,6 +1,8 @@
 """Test check_config script."""
 import logging
 
+import pytest
+
 from homeassistant.config import YAML_CONFIG_FILE
 import homeassistant.scripts.check_config as check_config
 
@@ -21,6 +23,11 @@ BASE_CONFIG = (
 )
 
 BAD_CORE_CONFIG = "homeassistant:\n  unit_system: bad\n\n\n"
+
+
+@pytest.fixture(autouse=True)
+async def apply_stop_hass(stop_hass):
+    """Make sure all hass are stopped."""
 
 
 def normalize_yaml_files(check_dict):
