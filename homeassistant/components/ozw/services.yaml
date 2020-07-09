@@ -27,3 +27,26 @@ set_config_parameter:
       example: 50268673
     instance_id:
       description: (Optional) The OZW Instance/Controller to use, defaults to 1.
+
+clear_usercode:
+  description: Clear a usercode from lock.
+  fields:
+    entity_id:
+      description: Lock entity_id.
+      example: lock.front_door_locked
+    code_slot:
+      description: Code slot to clear code from.
+      example: 1
+
+set_usercode:
+  description: Set a usercode to lock.
+  fields:
+    entity_id:
+      description: Lock entity_id.
+      example: lock.front_door_locked
+    code_slot:
+      description: Code slot to set the code.
+      example: 1
+    usercode:
+      description: Code to set.
+      example: 1234
