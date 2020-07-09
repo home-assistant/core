@@ -2,16 +2,13 @@
 import logging
 
 import RFXtrx as rfxtrxmod
-import voluptuous as vol
 
-from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
-from homeassistant.const import ATTR_STATE, CONF_DEVICES, CONF_NAME, STATE_OPEN
-from homeassistant.helpers import config_validation as cv
+from homeassistant.components.cover import CoverEntity
+from homeassistant.const import CONF_COVERS, STATE_OPEN
+from homeassistant.core import callback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
-    CONF_AUTOMATIC_ADD,
-    CONF_FIRE_EVENT,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
     SIGNAL_EVENT,
@@ -21,32 +18,18 @@ from . import (
 )
 from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_DEVICES, default={}): {
-            cv.string: vol.Schema(
-                {
-                    vol.Required(CONF_NAME): cv.string,
-                    vol.Remove(CONF_FIRE_EVENT): cv.boolean,
-                }
-            )
-        },
-        vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
-        vol.Optional(
-            CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS
-        ): vol.Coerce(int),
-    }
-)
-
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the RFXtrx cover."""
+async def async_setup_entry(
+    hass, config_entry, async_add_entities,
+):
+    """Set up config entry."""
+    config = config_entry.data[CONF_COVERS]
     device_ids = set()
 
     entities = []
-    for packet_id, entity_info in config[CONF_DEVICES].items():
+    for packet_id, entity_info in config.items():
         event = get_rfx_object(packet_id)
         if event is None:
             _LOGGER.error("Invalid device: %s", packet_id)
@@ -57,14 +40,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             continue
         device_ids.add(device_id)
 
-        datas = {ATTR_STATE: None}
-        entity = RfxtrxCover(
-            entity_info[CONF_NAME], event.device, datas, config[CONF_SIGNAL_REPETITIONS]
-        )
+        entity = RfxtrxCover(event.device, entity_info[CONF_SIGNAL_REPETITIONS])
         entities.append(entity)
 
-    add_entities(entities)
+    async_add_entities(entities)
 
+    @callback
     def cover_update(event):
         """Handle cover updates from the RFXtrx gateway."""
         if (
@@ -86,16 +67,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             event.device.subtype,
         )
 
-        pkt_id = "".join(f"{x:02x}" for x in event.data)
-        datas = {ATTR_STATE: False}
-        entity = RfxtrxCover(
-            pkt_id, event.device, datas, DEFAULT_SIGNAL_REPETITIONS, event=event
-        )
-        add_entities([entity])
+        entity = RfxtrxCover(event.device, DEFAULT_SIGNAL_REPETITIONS, event=event)
+        async_add_entities([entity])
 
     # Subscribe to main RFXtrx events
-    if config[CONF_AUTOMATIC_ADD]:
-        hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, cover_update)
+    hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, cover_update)
 
 
 class RfxtrxCover(RfxtrxDevice, CoverEntity, RestoreEntity):
@@ -144,6 +120,7 @@ class RfxtrxCover(RfxtrxDevice, CoverEntity, RestoreEntity):
         elif event.values["Command"] in COMMAND_OFF_LIST:
             self._state = False
 
+    @callback
     def _handle_event(self, event):
         """Check if event applies to me and update."""
         if event.device.id_string != self._device.id_string:
@@ -151,4 +128,4 @@ class RfxtrxCover(RfxtrxDevice, CoverEntity, RestoreEntity):
 
         self._apply_event(event)
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()

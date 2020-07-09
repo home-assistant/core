@@ -6,11 +6,20 @@ import logging
 import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
+from homeassistant import config_entries
+from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
-    ATTR_STATE,
+    CONF_BINARY_SENSORS,
+    CONF_COMMAND_OFF,
+    CONF_COMMAND_ON,
+    CONF_COVERS,
     CONF_DEVICE,
+    CONF_DEVICE_CLASS,
     CONF_HOST,
+    CONF_LIGHTS,
     CONF_PORT,
+    CONF_SENSORS,
+    CONF_SWITCHES,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     POWER_WATT,
@@ -22,7 +31,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-from .const import DEVICE_PACKET_TYPE_LIGHTING4, EVENT_RFXTRX_EVENT
+from .const import ATTR_EVENT, DEVICE_PACKET_TYPE_LIGHTING4, EVENT_RFXTRX_EVENT
 
 DOMAIN = "rfxtrx"
 
@@ -80,10 +89,67 @@ DATA_TYPES = OrderedDict(
 _LOGGER = logging.getLogger(__name__)
 DATA_RFXOBJECT = "rfxobject"
 
+SWITCH_SCHEMA = vol.Schema(
+    {
+        vol.Optional(
+            CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS
+        ): vol.Coerce(int),
+    }
+)
+
+LIGHT_SCHEMA = vol.Schema(
+    {
+        vol.Optional(
+            CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS
+        ): vol.Coerce(int),
+    }
+)
+
+COVER_SCHEMA = vol.Schema(
+    {
+        vol.Optional(
+            CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS
+        ): vol.Coerce(int),
+    }
+)
+
+SENSOR_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_DATA_TYPE, default=[]): vol.All(
+            cv.ensure_list, [vol.In(DATA_TYPES.keys())]
+        ),
+    }
+)
+
+
+def get_seconds(delta):
+    """Covert a timedelta to total seconds."""
+    return delta.total_seconds()
+
+
+BINARY_SENSOR_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_OFF_DELAY): vol.All(
+            vol.Any(cv.time_period, cv.positive_timedelta), get_seconds
+        ),
+        vol.Optional(CONF_DATA_BITS): cv.positive_int,
+        vol.Optional(CONF_COMMAND_ON): cv.byte,
+        vol.Optional(CONF_COMMAND_OFF): cv.byte,
+    }
+)
+
 BASE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEBUG, default=False): cv.boolean,
         vol.Optional(CONF_DUMMY, default=False): cv.boolean,
+        vol.Optional(CONF_SWITCHES, default={}): {cv.string: SWITCH_SCHEMA},
+        vol.Optional(CONF_LIGHTS, default={}): {cv.string: LIGHT_SCHEMA},
+        vol.Optional(CONF_COVERS, default={}): {cv.string: COVER_SCHEMA},
+        vol.Optional(CONF_SENSORS, default={}): {cv.string: SENSOR_SCHEMA},
+        vol.Optional(CONF_BINARY_SENSORS, default={}): {
+            cv.string: BINARY_SENSOR_SCHEMA
+        },
     }
 )
 
@@ -97,8 +163,37 @@ CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Any(DEVICE_SCHEMA, PORT_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
 
+DATA_STORE = f"{DOMAIN}"
 
-def setup(hass, config):
+
+async def async_setup(hass, config):
+    """Set up the RFXtrx component."""
+    if DOMAIN not in config:
+        return True
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=config[DOMAIN],
+        )
+    )
+    return True
+
+
+async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
+    """Set up the RFXtrx component."""
+    await hass.async_add_executor_job(setup_internal, hass, entry.data)
+
+    for domain in ["switch", "sensor", "light", "binary_sensor", "cover"]:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, domain)
+        )
+
+    return True
+
+
+def setup_internal(hass, config):
     """Set up the RFXtrx component."""
     # Declare the Handle event
     def handle_receive(event):
@@ -124,11 +219,11 @@ def setup(hass, config):
         # Signal event to any other listeners
         hass.bus.fire(EVENT_RFXTRX_EVENT, event_data)
 
-    device = config[DOMAIN].get(ATTR_DEVICE)
-    host = config[DOMAIN].get(CONF_HOST)
-    port = config[DOMAIN].get(CONF_PORT)
-    debug = config[DOMAIN][ATTR_DEBUG]
-    dummy_connection = config[DOMAIN][ATTR_DUMMY]
+    device = config.get(ATTR_DEVICE)
+    host = config.get(CONF_HOST)
+    port = config.get(CONF_PORT)
+    debug = config[ATTR_DEBUG]
+    dummy_connection = config[ATTR_DUMMY]
 
     if dummy_connection:
         rfx_object = rfxtrxmod.Connect(
@@ -253,12 +348,14 @@ class RfxtrxDevice(Entity):
     Contains the common logic for Rfxtrx lights and switches.
     """
 
-    def __init__(self, name, device, datas, signal_repetitions, event=None):
+    def __init__(self, device, signal_repetitions, state=False, event=None):
         """Initialize the device."""
         self.signal_repetitions = signal_repetitions
-        self._name = name
+        self._name = f"{device.type_string} {device.id_string}"
         self._device = device
-        self._state = datas[ATTR_STATE]
+        self._event = None
+        self._state = state
+
         self._device_id = get_device_id(device)
         self._unique_id = "_".join(x for x in self._device_id)
 
@@ -289,6 +386,22 @@ class RfxtrxDevice(Entity):
     def unique_id(self):
         """Return unique identifier of remote device."""
         return self._unique_id
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        if not self._event:
+            return None
+        return {ATTR_EVENT: "".join(f"{x:02x}" for x in self._event.data)}
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, *self._device_id)},
+            "name": f"{self._device.type_string} {self._device.id_string}",
+            "model": self._device.type_string,
+        }
 
     def _apply_event(self, event):
         """Apply a received event."""

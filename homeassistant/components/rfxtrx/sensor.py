@@ -2,48 +2,28 @@
 import logging
 
 from RFXtrx import SensorEvent
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
-    PLATFORM_SCHEMA,
 )
-from homeassistant.const import CONF_DEVICES, CONF_NAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_SENSORS
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
 from . import (
-    CONF_AUTOMATIC_ADD,
     CONF_DATA_TYPE,
-    CONF_FIRE_EVENT,
     DATA_TYPES,
+    DOMAIN,
     SIGNAL_EVENT,
     get_device_id,
     get_rfx_object,
 )
+from .const import ATTR_EVENT
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_DEVICES, default={}): {
-            cv.string: vol.Schema(
-                {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Remove(CONF_FIRE_EVENT): cv.boolean,
-                    vol.Optional(CONF_DATA_TYPE, default=[]): vol.All(
-                        cv.ensure_list, [vol.In(DATA_TYPES.keys())]
-                    ),
-                }
-            )
-        },
-        vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 def _battery_convert(value):
@@ -74,12 +54,15 @@ CONVERT_FUNCTIONS = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the RFXtrx platform."""
+async def async_setup_entry(
+    hass, config_entry, async_add_entities,
+):
+    """Set up platform."""
+    config = config_entry.data[CONF_SENSORS]
     data_ids = set()
 
     entities = []
-    for packet_id, entity_info in config[CONF_DEVICES].items():
+    for packet_id, entity_info in config.items():
         event = get_rfx_object(packet_id)
         if event is None:
             _LOGGER.error("Invalid device: %s", packet_id)
@@ -97,17 +80,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 continue
             data_ids.add(data_id)
 
-            entity = RfxtrxSensor(event.device, entity_info[CONF_NAME], data_type)
+            entity = RfxtrxSensor(event.device, data_type)
             entities.append(entity)
 
-    add_entities(entities)
+    async_add_entities(entities)
 
+    @callback
     def sensor_update(event):
         """Handle sensor updates from the RFXtrx gateway."""
         if not isinstance(event, SensorEvent):
             return
 
-        pkt_id = "".join(f"{x:02x}" for x in event.data)
         device_id = get_device_id(event.device)
         for data_type in set(event.values) & set(DATA_TYPES):
             data_id = (*device_id, data_type)
@@ -122,22 +105,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 event.device.subtype,
             )
 
-            entity = RfxtrxSensor(event.device, pkt_id, data_type, event=event)
-            add_entities([entity])
+            entity = RfxtrxSensor(event.device, data_type, event=event)
+            async_add_entities([entity])
 
     # Subscribe to main RFXtrx events
-    if config[CONF_AUTOMATIC_ADD]:
-        hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, sensor_update)
+    hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, sensor_update)
 
 
 class RfxtrxSensor(Entity):
     """Representation of a RFXtrx sensor."""
 
-    def __init__(self, device, name, data_type, event=None):
+    def __init__(self, device, data_type, event=None):
         """Initialize the sensor."""
         self.event = None
         self._device = device
-        self._name = name
+        self._name = f"{device.type_string} {device.id_string} {data_type}"
         self.data_type = data_type
         self._unit_of_measurement = DATA_TYPES.get(data_type, "")
         self._device_id = get_device_id(device)
@@ -174,14 +156,14 @@ class RfxtrxSensor(Entity):
     @property
     def name(self):
         """Get the name of the sensor."""
-        return f"{self._name} {self.data_type}"
+        return self._name
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         if not self.event:
             return None
-        return self.event.values
+        return {ATTR_EVENT: "".join(f"{x:02x}" for x in self.event.data)}
 
     @property
     def unit_of_measurement(self):
@@ -198,10 +180,20 @@ class RfxtrxSensor(Entity):
         """Return unique identifier of remote device."""
         return self._unique_id
 
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, *self._device_id)},
+            "name": f"{self._device.type_string} {self._device.id_string}",
+            "model": self._device.type_string,
+        }
+
     def _apply_event(self, event):
         """Apply command from rfxtrx."""
         self.event = event
 
+    @callback
     def _handle_event(self, event):
         """Check if event applies to me and update."""
         if not isinstance(event, SensorEvent):
@@ -222,4 +214,4 @@ class RfxtrxSensor(Entity):
 
         self._apply_event(event)
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()

@@ -1,43 +1,8 @@
 """The tests for the Rfxtrx component."""
-# pylint: disable=protected-access
-import asyncio
-
-from async_timeout import timeout
 
 from homeassistant.components import rfxtrx
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
-
-from tests.common import assert_setup_component
-
-
-async def test_default_config(hass):
-    """Test configuration."""
-    assert await async_setup_component(
-        hass,
-        "rfxtrx",
-        {
-            "rfxtrx": {
-                "device": "/dev/serial/by-id/usb"
-                + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                "dummy": True,
-            }
-        },
-    )
-
-    with assert_setup_component(1, "sensor"):
-        await async_setup_component(
-            hass,
-            "sensor",
-            {"sensor": {"platform": "rfxtrx", "automatic_add": True, "devices": {}}},
-        )
-
-    # Dummy startup is slow
-    async with timeout(10):
-        while len(hass.data[rfxtrx.DATA_RFXOBJECT].sensors()) < 2:
-            await asyncio.sleep(0.1)
-
-    assert len(hass.data[rfxtrx.DATA_RFXOBJECT].sensors()) == 2
 
 
 async def test_valid_config(hass):
