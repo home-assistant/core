@@ -21,7 +21,7 @@ class BeckerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the Becker config flow."""
-        self.device = CONF_DEVICE
+        self._device_path = CONF_DEVICE
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
