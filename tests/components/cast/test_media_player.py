@@ -552,6 +552,7 @@ async def test_disconnect_on_stop(hass: HomeAssistantType):
 async def test_entry_setup_no_config(hass: HomeAssistantType):
     """Test setting up entry with no config.."""
     await async_setup_component(hass, "cast", {})
+    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.cast.media_player._async_setup_platform",
@@ -567,6 +568,7 @@ async def test_entry_setup_single_config(hass: HomeAssistantType):
     await async_setup_component(
         hass, "cast", {"cast": {"media_player": {"host": "bla"}}}
     )
+    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.cast.media_player._async_setup_platform",
@@ -582,6 +584,7 @@ async def test_entry_setup_list_config(hass: HomeAssistantType):
     await async_setup_component(
         hass, "cast", {"cast": {"media_player": [{"host": "bla"}, {"host": "blu"}]}}
     )
+    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.cast.media_player._async_setup_platform",
@@ -598,6 +601,7 @@ async def test_entry_setup_platform_not_ready(hass: HomeAssistantType):
     await async_setup_component(
         hass, "cast", {"cast": {"media_player": {"host": "bla"}}}
     )
+    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.cast.media_player._async_setup_platform",
