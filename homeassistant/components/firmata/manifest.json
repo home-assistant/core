@@ -6,7 +6,6 @@
   "requirements": [
     "pymata-express==1.13"
   ],
-  "dependencies": [],
   "codeowners": [
     "@DaAwesomeP"
   ]

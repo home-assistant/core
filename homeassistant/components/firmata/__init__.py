@@ -7,9 +7,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
-from . import config_flow  # noqa: F401
 from .board import FirmataBoard
 from .const import (
     CONF_ARDUINO_INSTANCE_ID,
@@ -25,6 +24,7 @@ from .const import (
     CONF_SLEEP_TUNE,
     CONF_SWITCHES,
     DOMAIN,
+    FIRMATA_MANUFACTURER,
     PIN_MODE_INPUT,
     PIN_MODE_OUTPUT,
     PIN_MODE_PULLUP,
@@ -46,7 +46,6 @@ SWITCH_SCHEMA = vol.Schema(
         vol.Optional(CONF_NEGATE_STATE, default=False): cv.boolean,
     },
     required=True,
-    extra=vol.ALLOW_EXTRA,
 )
 
 BINARY_SENSOR_SCHEMA = vol.Schema(
@@ -58,7 +57,6 @@ BINARY_SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_NEGATE_STATE, default=False): cv.boolean,
     },
     required=True,
-    extra=vol.ALLOW_EXTRA,
 )
 
 BOARD_CONFIG_SCHEMA = vol.Schema(
@@ -75,7 +73,6 @@ BOARD_CONFIG_SCHEMA = vol.Schema(
         vol.Optional(CONF_BINARY_SENSORS): [BINARY_SENSOR_SCHEMA],
     },
     required=True,
-    extra=vol.ALLOW_EXTRA,
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -145,7 +142,16 @@ async def async_setup_entry(hass, config_entry):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_shutdown)
 
-    await board.async_update_device_registry()
+    device_registry = await dr.async_get_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={},
+        identifiers={(DOMAIN, hass.data[DOMAIN][config_entry.entry_id].name)},
+        manufacturer=FIRMATA_MANUFACTURER,
+        name=hass.data[DOMAIN][config_entry.entry_id].name,
+        sw_version=hass.data[DOMAIN][config_entry.entry_id].firmware_version,
+    )
+
     if CONF_BINARY_SENSORS in config_entry.data:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, "binary_sensor")
@@ -159,12 +165,20 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry) -> None:
     """Shutdown and close a Firmata board for a config entry."""
-    _LOGGER.info("Closing Firmata board %s", config_entry.data[CONF_NAME])
+    _LOGGER.debug("Closing Firmata board %s", config_entry.data[CONF_NAME])
 
-    results = await asyncio.gather(
-        hass.config_entries.async_forward_entry_unload(config_entry, "binary_sensor"),
-        hass.config_entries.async_forward_entry_unload(config_entry, "switch"),
-    )
+    unload_entries = []
+    if CONF_BINARY_SENSORS in config_entry.data:
+        unload_entries.append(
+            hass.config_entries.async_forward_entry_unload(
+                config_entry, "binary_sensor"
+            )
+        )
+    if CONF_SWITCHES in config_entry.data:
+        unload_entries.append(
+            hass.config_entries.async_forward_entry_unload(config_entry, "switch")
+        )
+    results = await asyncio.gather(*unload_entries)
     results.append(await hass.data[DOMAIN].pop(config_entry.entry_id).async_reset())
 
     return False not in results

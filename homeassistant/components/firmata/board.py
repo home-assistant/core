@@ -14,7 +14,6 @@ from .const import (
     CONF_SERIAL_PORT,
     CONF_SLEEP_TUNE,
     CONF_SWITCHES,
-    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,22 +35,26 @@ class FirmataBoard:
         self.switches = []
         self.binary_sensors = []
         self.used_pins = []
-        self.board_info = {
-            "connections": {},
-            "identifiers": {(DOMAIN, self.name)},
-            "manufacturer": "Firmata",
-            "name": self.name,
-        }
+
+        if CONF_SWITCHES in self.config:
+            self.switches = self.config[CONF_SWITCHES]
+        if CONF_BINARY_SENSORS in self.config:
+            self.binary_sensors = self.config[CONF_BINARY_SENSORS]
 
     async def async_setup(self, tries=0):
         """Set up a Firmata instance."""
         try:
-            _LOGGER.info("Connecting to Firmata %s", self.name)
+            _LOGGER.debug("Connecting to Firmata %s", self.name)
             self.api = await get_board(self.config)
-            self.firmware_version = await self.api.get_firmware_version()
-            self.board_info["sw_version"] = self.firmware_version
         except RuntimeError as err:
             _LOGGER.error("Error connecting to PyMata board %s: %s", self.name, err)
+            return False
+
+        self.firmware_version = await self.api.get_firmware_version()
+        if not self.firmware_version:
+            _LOGGER.error(
+                "Error retrieving firmware version from Firmata board %s", self.name
+            )
             return False
 
         if CONF_SAMPLING_INTERVAL in self.config:
@@ -68,12 +71,7 @@ board %s: %s",
                 )
                 return False
 
-        if CONF_SWITCHES in self.config:
-            self.switches = self.config[CONF_SWITCHES]
-        if CONF_BINARY_SENSORS in self.config:
-            self.binary_sensors = self.config[CONF_BINARY_SENSORS]
-
-        _LOGGER.info("Firmata connection successful for %s", self.name)
+        _LOGGER.debug("Firmata connection successful for %s", self.name)
         return True
 
     async def async_reset(self):
@@ -87,13 +85,6 @@ board %s: %s",
         self.api = None
 
         return True
-
-    async def async_update_device_registry(self):
-        """Update board registry."""
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
-        device_registry.async_get_or_create(
-            config_entry_id=self.config_entry.entry_id, **self.board_info
-        )
 
     def mark_pin_used(self, pin):
         """Test if a pin is used already on the board or mark as used."""

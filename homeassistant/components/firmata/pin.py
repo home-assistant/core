@@ -17,19 +17,16 @@ class FirmataBoardPin:
 
     def __init__(self, board, pin, pin_mode):
         """Initialize the pin."""
-        self._board = board
+        self.board = board
         self._pin = pin
         self._pin_mode = pin_mode
-        self._pin_type, self._firmata_pin = self._board.get_pin_type(self._pin)
+        self._pin_type, self._firmata_pin = self.board.get_pin_type(self._pin)
         self._state = None
 
-        if not self._board.mark_pin_used(self._pin):
+    def setup(self):
+        """Set up a pin and make sure it is valid."""
+        if not self.board.mark_pin_used(self._pin):
             raise FirmataPinUsedException(f"Pin {self._pin} already used!")
-
-    @property
-    def board_info(self):
-        """Return board info."""
-        return self._board.board_info
 
 
 class FirmataBinaryDigitalOutput(FirmataBoardPin):
@@ -46,9 +43,9 @@ class FirmataBinaryDigitalOutput(FirmataBoardPin):
         _LOGGER.debug(
             "Setting initial state for digital output pin %s on board %s",
             self._pin,
-            self._board.name,
+            self.board.name,
         )
-        api = self._board.api
+        api = self.board.api
         # Only PIN_MODE_OUTPUT mode is supported as binary digital output
         await api.set_pin_mode_digital_output(self._firmata_pin)
 
@@ -68,14 +65,14 @@ class FirmataBinaryDigitalOutput(FirmataBoardPin):
         """Turn on digital output."""
         _LOGGER.debug("Turning digital output on pin %s on", self._pin)
         new_pin_state = not self._negate
-        await self._board.api.digital_pin_write(self._firmata_pin, int(new_pin_state))
+        await self.board.api.digital_pin_write(self._firmata_pin, int(new_pin_state))
         self._state = True
 
     async def turn_off(self):
         """Turn off digital output."""
         _LOGGER.debug("Turning digital output on pin %s off", self._pin)
         new_pin_state = self._negate
-        await self._board.api.digital_pin_write(self._firmata_pin, int(new_pin_state))
+        await self.board.api.digital_pin_write(self._firmata_pin, int(new_pin_state))
         self._state = False
 
 
@@ -93,16 +90,16 @@ class FirmataBinaryDigitalInput(FirmataBoardPin):
         _LOGGER.debug(
             "Starting reporting updates for input pin %s on board %s",
             self._pin,
-            self._board.name,
+            self.board.name,
         )
         self._forward_callback = forward_callback
-        api = self._board.api
+        api = self.board.api
         if self._pin_mode == PIN_MODE_INPUT:
             await api.set_pin_mode_digital_input(self._pin, self.latch_callback)
         elif self._pin_mode == PIN_MODE_PULLUP:
             await api.set_pin_mode_digital_input_pullup(self._pin, self.latch_callback)
 
-        new_state = bool((await self._board.api.digital_read(self._firmata_pin))[0])
+        new_state = bool((await self.board.api.digital_read(self._firmata_pin))[0])
         if self._negate:
             new_state = not new_state
         self._state = new_state
@@ -115,9 +112,9 @@ class FirmataBinaryDigitalInput(FirmataBoardPin):
         _LOGGER.debug(
             "Stopping reporting updates for digital input pin %s on board %s",
             self._pin,
-            self._board.name,
+            self.board.name,
         )
-        api = self._board.api
+        api = self.board.api
         await api.disable_digital_reporting(self._pin)
 
     @property
@@ -134,7 +131,7 @@ class FirmataBinaryDigitalInput(FirmataBoardPin):
             "Received latch %d for digital input pin %d on board %s",
             data[2],
             self._firmata_pin,
-            self._board.name,
+            self.board.name,
         )
         new_state = bool(data[2])
         if self._negate:
