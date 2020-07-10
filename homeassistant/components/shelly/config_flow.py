@@ -19,14 +19,17 @@ from .const import (
     CONF_TOPIC,
     MODEL_TITLE,
     MODELS,
+    ONLINE_SUFFIX,
     UPDATE_COMMAND,
 )
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_TIMEOUT = 5
 
-async def validate_input(hass: core.HomeAssistant, data, timeout=5):
+
+async def validate_input(hass: core.HomeAssistant, data, timeout=DEFAULT_TIMEOUT):
     """Validate the user input is a real device."""
     topic = data[CONF_TOPIC]
     mqtt = hass.components.mqtt
@@ -37,10 +40,10 @@ async def validate_input(hass: core.HomeAssistant, data, timeout=5):
         if not future.done():
             future.set_result(True)
 
-    unsubscribe = await mqtt.async_subscribe(topic + "online", message_received)
+    unsubscribe = await mqtt.async_subscribe(topic + ONLINE_SUFFIX, message_received)
     mqtt.async_publish(topic + COMMAND_SUFFIX, UPDATE_COMMAND)
 
-    # give device 5 seconds to respond
+    # give device time to respond
     try:
         await asyncio.wait_for(future, timeout)
         return future.done()
@@ -50,7 +53,7 @@ async def validate_input(hass: core.HomeAssistant, data, timeout=5):
         unsubscribe()
 
 
-async def async_discovery(hass, timeout=5):
+async def async_discovery(hass, timeout=DEFAULT_TIMEOUT):
     """Return Shelly devices connected to the MQTT broker."""
     _LOGGER.debug("Starting Shelly discovery...")
     mqtt = hass.components.mqtt
@@ -62,7 +65,7 @@ async def async_discovery(hass, timeout=5):
 
     unsubscribe = await mqtt.async_subscribe(COMMON_ANNOUNCE_TOPIC, message_received)
     mqtt.async_publish(COMMON_COMMAND_TOPIC, ANNOUNCE_COMMAND)
-    # give all devices 5 seconds to announce themselves
+    # give all devices time to announce themselves
     await asyncio.sleep(timeout)
     unsubscribe()
 

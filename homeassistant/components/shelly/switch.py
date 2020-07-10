@@ -27,7 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     title = MODELS[model][MODEL_TITLE]
     switches_count = MODELS[model][MODEL_SWITCHES]
     switches = []
-    for i in range(0, switches_count):
+    for i in range(switches_count):
         switch_topic = topic + f"relay/{i}"
         if i == 0:
             unique_id = device_id
