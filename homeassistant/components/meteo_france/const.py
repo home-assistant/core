@@ -51,7 +51,7 @@ SENSOR_TYPES = {
         ENTITY_UNIT: UNIT_PERCENTAGE,
         ENTITY_ICON: "mdi:weather-snowy",
         ENTITY_CLASS: None,
-        ENTITY_ENABLE: False,
+        ENTITY_ENABLE: True,
         ENTITY_API_DATA_PATH: "probability_forecast:snow:3h",
     },
     "freeze_chance": {
@@ -122,7 +122,7 @@ SENSOR_TYPES = {
 
 CONDITION_CLASSES = {
     "clear-night": ["Nuit Claire", "Nuit claire"],
-    "cloudy": ["Très nuageux"],
+    "cloudy": ["Très nuageux", "Couvert"],
     "fog": [
         "Brume ou bancs de brouillard",
         "Brume",
@@ -132,7 +132,13 @@ CONDITION_CLASSES = {
     "hail": ["Risque de grêle"],
     "lightning": ["Risque d'orages", "Orages"],
     "lightning-rainy": ["Pluie orageuses", "Pluies orageuses", "Averses orageuses"],
-    "partlycloudy": ["Ciel voilé", "Ciel voilé nuit", "Éclaircies", "Eclaircies"],
+    "partlycloudy": [
+        "Ciel voilé",
+        "Ciel voilé nuit",
+        "Éclaircies",
+        "Eclaircies",
+        "Peu nuageux",
+    ],
     "pouring": ["Pluie forte"],
     "rainy": [
         "Bruine / Pluie faible",

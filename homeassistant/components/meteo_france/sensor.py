@@ -51,13 +51,28 @@ async def async_setup_entry(
                     coordinator_forecast.data.position["name"],
                 )
 
-        elif sensor_type == "weather_alert" and coordinator_alert:
-            entities.append(MeteoFranceAlertSensor(sensor_type, coordinator_alert))
-            _LOGGER.debug(
-                "Weather alert sensor for department n°%s added with %s.",
-                coordinator_forecast.data.position["dept"],
-                coordinator_forecast.data.position["name"],
-            )
+        elif sensor_type == "weather_alert":
+            if coordinator_alert:
+                entities.append(MeteoFranceAlertSensor(sensor_type, coordinator_alert))
+                _LOGGER.debug(
+                    "Weather alert sensor for department n°%s added with %s.",
+                    coordinator_forecast.data.position["dept"],
+                    coordinator_forecast.data.position["name"],
+                )
+        elif sensor_type in ["rain_chance", "freeze_chance", "snow_chance"]:
+            if coordinator_forecast.data.probability_forecast:
+                entities.append(MeteoFranceSensor(sensor_type, coordinator_forecast))
+                _LOGGER.debug(
+                    "Sensor %s added for %s.",
+                    sensor_type,
+                    coordinator_forecast.data.position["name"],
+                )
+            else:
+                _LOGGER.info(
+                    "Sensor %s skipped for %s as data is missing in the API",
+                    sensor_type,
+                    coordinator_forecast.data.position["name"],
+                )
 
         else:
             entities.append(MeteoFranceSensor(sensor_type, coordinator_forecast))
@@ -99,14 +114,20 @@ class MeteoFranceSensor(Entity):
         path = SENSOR_TYPES[self._type][ENTITY_API_DATA_PATH].split(":")
         data = getattr(self.coordinator.data, path[0])
 
+        # Specific case for probability forecast
         if path[0] == "probability_forecast":
-            # TODO: return often 'null' with France cities. Need investigation
-            # TODO: "probability_forecast" not always available.
-            data = data[0]
+            if len(path) == 3:
+                # This is a fix compared to other entitty as first index is always null in API result for unknown reason
+                value = _find_first_probability_forecast_not_null(data, path)
+            else:
+                value = data[0][path[1]]
 
-        if len(path) == 3:
-            value = data[path[1]][path[2]]
-        value = data[path[1]]
+        # General case
+        else:
+            if len(path) == 3:
+                value = data[path[1]][path[2]]
+            else:
+                value = data[path[1]]
 
         if self._type == "wind_speed":
             # convert API wind speed from m/s to km/h
@@ -227,3 +248,15 @@ class MeteoFranceAlertSensor(MeteoFranceSensor):
             **readeable_phenomenoms_dict(self.coordinator.data.phenomenons_max_colors),
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
+
+
+def _find_first_probability_forecast_not_null(
+    probability_forecast: list, path: list
+) -> int:
+    """Search the first not None value in the first forecast elements."""
+    for forecast in probability_forecast[0:3]:
+        if forecast[path[1]][path[2]] is not None:
+            return forecast[path[1]][path[2]]
+
+    # Default return value if no value founded
+    return None
