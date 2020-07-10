@@ -39,6 +39,7 @@ class NiuSensor(Entity):
     def __init__(self, account, vehicle, attribute=""):
         """Initialize the sensor."""
         self._account = account
+        self._serial = vehicle.get_serial()
         self._vehicle = vehicle
         self._attribute = attribute
 
@@ -49,7 +50,7 @@ class NiuSensor(Entity):
     @property
     def unique_id(self) -> str:
         """Return the unique id for the sensor."""
-        return f"{self._vehicle.get_serial()}_{self._attribute}"
+        return f"{self._serial}_{self._attribute}"
 
     @property
     def should_poll(self) -> bool:
@@ -88,7 +89,7 @@ class NiuSensor(Entity):
     def device_info(self):
         """Return the device_info of the device."""
         return {
-            "identifiers": (DOMAIN, self._vehicle.get_serial()),
+            "identifiers": (DOMAIN, self._serial),
             "name": self._vehicle.get_name(),
             "manufacturer": "NIU",
             "model": self._vehicle.get_model(),
@@ -108,6 +109,18 @@ class NiuSensor(Entity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
+
+        self._vehicle = next(
+            (
+                veh
+                for veh in self._account.account.get_vehicles()
+                if veh.get_serial() == self._serial
+            ),
+            None,
+        )
+
+        if self._vehicle is None:
+            _LOGGER.error("Scooter %s has been removed from the cloud", self._serial)
 
         _LOGGER.debug("Updating %s", self.name)
 

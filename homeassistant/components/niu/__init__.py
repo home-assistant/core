@@ -9,6 +9,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.event import track_utc_time_change
+import homeassistant.util.dt as dt_util
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL, NIU_COMPONENTS
 
@@ -64,6 +66,16 @@ def setup_account(hass, conf: dict):
         _LOGGER.error("Error connecting to NIU Cloud")
         _LOGGER.exception(err)
         return False
+
+    now = dt_util.utcnow()
+    track_utc_time_change(
+        hass,
+        account.update,
+        minute=range(
+            now.minute % conf[CONF_SCAN_INTERVAL], 60, conf[CONF_SCAN_INTERVAL]
+        ),
+        second=now.second,
+    )
 
     return account
 
