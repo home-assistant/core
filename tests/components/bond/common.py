@@ -1,4 +1,7 @@
 """Common methods used across tests for Bond."""
+from typing import Any, Dict
+
+from homeassistant import core
 from homeassistant.components.bond.const import DOMAIN as BOND_DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.setup import async_setup_component
@@ -7,7 +10,9 @@ from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
-async def setup_platform(hass, platform):
+async def setup_platform(
+    hass: core.HomeAssistant, platform: str, discovered_device: Dict[str, Any]
+):
     """Set up the specified Bond platform."""
     mock_entry = MockConfigEntry(
         domain=BOND_DOMAIN,
@@ -15,8 +20,15 @@ async def setup_platform(hass, platform):
     )
     mock_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.bond.PLATFORMS", [platform]):
+    with patch("homeassistant.components.bond.PLATFORMS", [platform]), patch(
+        "homeassistant.components.bond.Bond.getDeviceIds",
+        return_value=["bond-device-id"],
+    ), patch(
+        "homeassistant.components.bond.Bond.getDevice", return_value=discovered_device
+    ), patch(
+        "homeassistant.components.bond.Bond.getDeviceState", return_value={}
+    ):
         assert await async_setup_component(hass, BOND_DOMAIN, {})
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     return mock_entry
