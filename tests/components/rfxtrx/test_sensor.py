@@ -80,13 +80,13 @@ async def test_one_sensor_no_datatype(hass, rfxtrx):
     assert state
     assert state.state == "unknown"
     assert state.attributes.get("friendly_name") == f"{base_name} Rssi numeric"
-    assert state.attributes.get("unit_of_measurement") == ""
+    assert state.attributes.get("unit_of_measurement") == "dBm"
 
     state = hass.states.get(f"{base_id}_battery_numeric")
     assert state
     assert state.state == "unknown"
     assert state.attributes.get("friendly_name") == f"{base_name} Battery numeric"
-    assert state.attributes.get("unit_of_measurement") == ""
+    assert state.attributes.get("unit_of_measurement") == UNIT_PERCENTAGE
 
 
 async def test_several_sensors(hass, rfxtrx):
@@ -156,8 +156,8 @@ async def test_discover_sensor(hass, rfxtrx):
 
     state = hass.states.get(f"{base_id}_rssi_numeric")
     assert state
-    assert state.state == "7"
-    assert state.attributes.get("unit_of_measurement") == ""
+    assert state.state == "-64"
+    assert state.attributes.get("unit_of_measurement") == "dBm"
 
     state = hass.states.get(f"{base_id}_temperature")
     assert state
@@ -166,8 +166,8 @@ async def test_discover_sensor(hass, rfxtrx):
 
     state = hass.states.get(f"{base_id}_battery_numeric")
     assert state
-    assert state.state == "9"
-    assert state.attributes.get("unit_of_measurement") == ""
+    assert state.state == "90"
+    assert state.attributes.get("unit_of_measurement") == UNIT_PERCENTAGE
 
     # 2
     await _signal_event(hass, "0a52080405020095240279")
@@ -185,8 +185,8 @@ async def test_discover_sensor(hass, rfxtrx):
 
     state = hass.states.get(f"{base_id}_rssi_numeric")
     assert state
-    assert state.state == "7"
-    assert state.attributes.get("unit_of_measurement") == ""
+    assert state.state == "-64"
+    assert state.attributes.get("unit_of_measurement") == "dBm"
 
     state = hass.states.get(f"{base_id}_temperature")
     assert state
@@ -195,8 +195,8 @@ async def test_discover_sensor(hass, rfxtrx):
 
     state = hass.states.get(f"{base_id}_battery_numeric")
     assert state
-    assert state.state == "9"
-    assert state.attributes.get("unit_of_measurement") == ""
+    assert state.state == "90"
+    assert state.attributes.get("unit_of_measurement") == UNIT_PERCENTAGE
 
     # 1 Update
     await _signal_event(hass, "0a52085e070100b31b0279")
@@ -214,8 +214,8 @@ async def test_discover_sensor(hass, rfxtrx):
 
     state = hass.states.get(f"{base_id}_rssi_numeric")
     assert state
-    assert state.state == "7"
-    assert state.attributes.get("unit_of_measurement") == ""
+    assert state.state == "-64"
+    assert state.attributes.get("unit_of_measurement") == "dBm"
 
     state = hass.states.get(f"{base_id}_temperature")
     assert state
@@ -224,8 +224,8 @@ async def test_discover_sensor(hass, rfxtrx):
 
     state = hass.states.get(f"{base_id}_battery_numeric")
     assert state
-    assert state.state == "9"
-    assert state.attributes.get("unit_of_measurement") == ""
+    assert state.state == "90"
+    assert state.attributes.get("unit_of_measurement") == UNIT_PERCENTAGE
 
     assert len(hass.states.async_all()) == 10
 
