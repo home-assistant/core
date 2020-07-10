@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostitel",
+                    "port": "Port"
+                },
+                "description": "Zadejte n\u00e1zev hostitele nebo IP adresu za\u0159\u00edzen\u00ed."
+            }
+        }
+    }
+}

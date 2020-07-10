@@ -298,10 +298,10 @@ async def async_send_message(
 
         async def upload_file_from_path(self, path, timeout=None):
             """Upload a file from a local file path via XEP_0363."""
-            _LOGGER.info("Uploading file from path, %s ...", path)
+            _LOGGER.info("Uploading file from path, %s", path)
 
             if not hass.config.is_allowed_path(path):
-                raise PermissionError("Could not access file. Not in whitelist.")
+                raise PermissionError("Could not access file. Not in whitelist")
 
             with open(path, "rb") as upfile:
                 _LOGGER.debug("Reading file %s", path)

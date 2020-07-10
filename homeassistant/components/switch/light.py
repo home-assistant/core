@@ -84,14 +84,22 @@ class LightSwitch(LightEntity):
         """Forward the turn_on command to the switch in this light switch."""
         data = {ATTR_ENTITY_ID: self._switch_entity_id}
         await self.hass.services.async_call(
-            switch.DOMAIN, switch.SERVICE_TURN_ON, data, blocking=True
+            switch.DOMAIN,
+            switch.SERVICE_TURN_ON,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     async def async_turn_off(self, **kwargs):
         """Forward the turn_off command to the switch in this light switch."""
         data = {ATTR_ENTITY_ID: self._switch_entity_id}
         await self.hass.services.async_call(
-            switch.DOMAIN, switch.SERVICE_TURN_OFF, data, blocking=True
+            switch.DOMAIN,
+            switch.SERVICE_TURN_OFF,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     async def async_update(self):

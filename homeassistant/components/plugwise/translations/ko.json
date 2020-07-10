@@ -8,6 +8,7 @@
             "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4. 8\uc790\uc758 Smile ID \ub97c \ud655\uc778\ud574\uc8fc\uc138\uc694",
             "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
         },
+        "flow_title": "Smile: {name}",
         "step": {
             "user": {
                 "data": {

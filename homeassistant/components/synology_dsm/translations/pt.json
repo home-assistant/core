@@ -12,6 +12,7 @@
             "link": {
                 "data": {
                     "password": "Palavra-passe",
+                    "port": "Porta",
                     "username": "Nome de Utilizador"
                 }
             },

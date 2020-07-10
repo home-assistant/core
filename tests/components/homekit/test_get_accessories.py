@@ -91,6 +91,7 @@ def test_customize_options(config, name):
             {ATTR_SUPPORTED_FEATURES: climate.SUPPORT_TARGET_TEMPERATURE_RANGE},
             {},
         ),
+        ("HumidifierDehumidifier", "humidifier.test", "auto", {}, {}),
         ("WaterHeater", "water_heater.test", "auto", {}, {}),
     ],
 )

@@ -202,7 +202,7 @@ class TadoConnector:
             elif sensor_type == "device":
                 devices_data = self.tado.getDevices()
                 if not devices_data:
-                    _LOGGER.info("There are no devices to setup on this tado account.")
+                    _LOGGER.info("There are no devices to setup on this tado account")
                     return
 
                 data = devices_data[0]

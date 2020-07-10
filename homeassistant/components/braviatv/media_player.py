@@ -148,33 +148,31 @@ class BraviaTVDevice(MediaPlayerEntity):
         self._device_info = device_info
         self._ignored_sources = ignored_sources
         self._state_lock = asyncio.Lock()
-        self._need_refresh = True
 
     async def async_update(self):
         """Update TV info."""
         if self._state_lock.locked():
             return
 
-        if self._state == STATE_OFF:
-            self._need_refresh = True
-
         power_status = await self.hass.async_add_executor_job(
             self._braviarc.get_power_status
         )
-        if power_status == "active":
-            if self._need_refresh:
+
+        if power_status != "off":
+            connected = await self.hass.async_add_executor_job(
+                self._braviarc.is_connected
+            )
+            if not connected:
                 try:
                     connected = await self.hass.async_add_executor_job(
                         self._braviarc.connect, self._pin, CLIENTID_PREFIX, NICKNAME
                     )
                 except NoIPControl:
                     _LOGGER.error("IP Control is disabled in the TV settings")
-                self._need_refresh = False
-            else:
-                connected = self._braviarc.is_connected()
             if not connected:
-                return
+                power_status = "off"
 
+        if power_status == "active":
             self._state = STATE_ON
             if (
                 await self._async_refresh_volume()

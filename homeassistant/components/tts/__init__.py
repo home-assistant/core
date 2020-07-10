@@ -1,6 +1,5 @@
 """Provide functionality for TTS."""
 import asyncio
-import ctypes
 import functools as ft
 import hashlib
 import io
@@ -8,7 +7,7 @@ import logging
 import mimetypes
 import os
 import re
-from typing import Optional
+from typing import Dict, Optional
 
 from aiohttp import web
 import mutagen
@@ -176,7 +175,11 @@ async def async_setup(hass, config):
             }
 
             await hass.services.async_call(
-                DOMAIN_MP, SERVICE_PLAY_MEDIA, data, blocking=True
+                DOMAIN_MP,
+                SERVICE_PLAY_MEDIA,
+                data,
+                blocking=True,
+                context=service.context,
             )
 
         service_name = p_config.get(CONF_SERVICE_NAME, f"{p_type}_{SERVICE_SAY}")
@@ -210,6 +213,16 @@ async def async_setup(hass, config):
     )
 
     return True
+
+
+def _hash_options(options: Dict) -> str:
+    """Hashes an options dictionary."""
+    opts_hash = hashlib.blake2s(digest_size=5)
+    for key, value in sorted(options.items()):
+        opts_hash.update(str(key).encode())
+        opts_hash.update(str(value).encode())
+
+    return opts_hash.hexdigest()
 
 
 class SpeechManager:
@@ -304,7 +317,7 @@ class SpeechManager:
             ]
             if invalid_opts:
                 raise HomeAssistantError(f"Invalid options found: {invalid_opts}")
-            options_key = ctypes.c_size_t(hash(frozenset(options))).value
+            options_key = _hash_options(options)
         else:
             options_key = "-"
 

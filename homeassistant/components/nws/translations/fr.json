@@ -14,7 +14,8 @@
                     "latitude": "Latitude",
                     "longitude": "Longitude",
                     "station": "Code de la station METAR"
-                }
+                },
+                "title": "Se connecter au National Weather Service"
             }
         }
     }
