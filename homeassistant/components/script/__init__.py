@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_MODE,
     CONF_QUEUE_SIZE,
+    CONF_SEQUENCE,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -27,6 +28,7 @@ from homeassistant.helpers.script import (
     SCRIPT_BASE_SCHEMA,
     SCRIPT_MODE_LEGACY,
     Script,
+    validate_legacy_mode_actions,
     validate_queue_size,
     warn_deprecated_legacy,
 )
@@ -44,7 +46,6 @@ ATTR_VARIABLES = "variables"
 CONF_DESCRIPTION = "description"
 CONF_EXAMPLE = "example"
 CONF_FIELDS = "fields"
-CONF_SEQUENCE = "sequence"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -60,6 +61,13 @@ def _deprecated_legacy_mode(config):
             cfg[CONF_MODE] = SCRIPT_MODE_LEGACY
     if legacy_scripts:
         warn_deprecated_legacy(_LOGGER, f"script(s): {', '.join(legacy_scripts)}")
+    return config
+
+
+def _not_supported_in_legacy_mode(config):
+    if config.get(CONF_MODE, SCRIPT_MODE_LEGACY) == SCRIPT_MODE_LEGACY:
+        validate_legacy_mode_actions(config[CONF_SEQUENCE])
+
     return config
 
 
@@ -79,6 +87,7 @@ SCRIPT_ENTRY_SCHEMA = vol.All(
         }
     ),
     validate_queue_size,
+    _not_supported_in_legacy_mode,
 )
 
 CONFIG_SCHEMA = vol.Schema(
