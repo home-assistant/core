@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PAYLOAD,
+    CONF_PROXY_URL,
     CONF_RESOURCE,
     CONF_RESOURCE_TEMPLATE,
     CONF_TIMEOUT,
