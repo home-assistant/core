@@ -21,7 +21,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         [
             ManualAlarm(
                 hass,
-                "Alarm",
+                "Security",
                 "1234",
                 None,
                 True,

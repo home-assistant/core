@@ -228,9 +228,10 @@ class DemoCover(CoverEntity):
     async def _time_changed_cover(self, now):
         """Track time changes."""
         if self._requested_closing:
-            self._position -= 10
+            self._position = 0
         else:
-            self._position += 10
+            self._position = 100
+        self._position = self._set_position
 
         if self._position in (100, 0, self._set_position):
             await self.async_stop_cover()
@@ -249,9 +250,9 @@ class DemoCover(CoverEntity):
     async def _time_changed_cover_tilt(self, now):
         """Track time changes."""
         if self._requested_closing_tilt:
-            self._tilt_position -= 10
+            self._tilt_position = 0
         else:
-            self._tilt_position += 10
+            self._tilt_position = 100
 
         if self._tilt_position in (100, 0, self._set_tilt_position):
             await self.async_stop_cover_tilt()

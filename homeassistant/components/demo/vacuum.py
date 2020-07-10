@@ -73,7 +73,7 @@ DEMO_VACUUM_MOST = "1_First_floor"
 DEMO_VACUUM_BASIC = "2_Second_floor"
 DEMO_VACUUM_MINIMAL = "3_Third_floor"
 DEMO_VACUUM_NONE = "4_Fourth_floor"
-DEMO_VACUUM_STATE = "5_Fifth_floor"
+DEMO_VACUUM_STATE = "vacuum"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -332,7 +332,7 @@ class StateDemoVacuum(StateVacuumEntity):
         self._state = STATE_RETURNING
         self.schedule_update_ha_state()
 
-        self.hass.loop.call_later(30, self.__set_state_to_dock)
+        self.hass.loop.call_later(1, self.__set_state_to_dock)
 
     def clean_spot(self, **kwargs):
         """Perform a spot clean-up."""
