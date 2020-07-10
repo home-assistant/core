@@ -282,7 +282,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
             _LOGGER.warning(
                 "Thermostat %s does not support setting a mode", self.entity_id
             )
-            return HVAC_MODE_HEAT
+            return
         hvac_mode_value = self._hvac_modes.get(hvac_mode)
         if hvac_mode_value is None:
             _LOGGER.warning("Received an invalid hvac mode: %s", hvac_mode)
