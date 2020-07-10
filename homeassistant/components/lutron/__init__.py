@@ -136,8 +136,7 @@ async def async_setup_entry(hass, entry):
         # connections={(dr.CONNECTION_NETWORK_MAC, config.mac)},
         identifiers={(DOMAIN, hass_data[LUTRON_CONTROLLER].guid)},
         manufacturer="Lutron",
-        # TODO: Use a getter once pylutron is updated
-        name=hass_data[LUTRON_CONTROLLER]._name,
+        name=hass_data[LUTRON_CONTROLLER].name,
         # model=config.modelid,
         # sw_version=config.swversion,
     )
