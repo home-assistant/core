@@ -200,6 +200,12 @@ invalid_configs = [
     {"test hello world": {"sequence": [{"event": "bla"}]}},
     {"test": {"sequence": {"event": "test_event", "service": "homeassistant.turn_on"}}},
     {"test": {"sequence": [], "mode": "parallel", "queue_size": 5}},
+    {
+        "test": {
+            "mode": "legacy",
+            "sequence": [{"repeat": {"count": 5, "sequence": []}}],
+        }
+    },
 ]
 
 
