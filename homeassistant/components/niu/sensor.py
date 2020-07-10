@@ -11,17 +11,17 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
-    vehicles = hass.data[DOMAIN][config.config_id].get_vehicles()
+    vehicles = hass.data[DOMAIN].account.get_vehicles()
 
     for vehicle in vehicles:
         # TODO: take different models into account (single battery).
         add_entities(
             [
-                NiuSensor(hass.data[DOMAIN][config.config_id], vehicle, "Level"),
-                NiuSensor(hass.data[DOMAIN][config.config_id], vehicle, "Level A"),
-                NiuSensor(hass.data[DOMAIN][config.config_id], vehicle, "Level B"),
-                NiuSensor(hass.data[DOMAIN][config.config_id], vehicle, "Temp A"),
-                NiuSensor(hass.data[DOMAIN][config.config_id], vehicle, "Temp B"),
+                NiuSensor(hass.data[DOMAIN], vehicle, "Level"),
+                NiuSensor(hass.data[DOMAIN], vehicle, "Level A"),
+                NiuSensor(hass.data[DOMAIN], vehicle, "Level B"),
+                NiuSensor(hass.data[DOMAIN], vehicle, "Temp A"),
+                NiuSensor(hass.data[DOMAIN], vehicle, "Temp B"),
             ],
             True,
         )

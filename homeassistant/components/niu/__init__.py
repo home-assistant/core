@@ -1,7 +1,7 @@
 """The NIU integration."""
 import logging
 
-from niu import NiuCloud
+from niu import NiuAPIException, NiuCloud, NiuNetException, NiuServerException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -32,16 +32,15 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass: HomeAssistant, entry: config_entries.ConfigEntry):
     """Set up NIU from a config entry."""
-
-    hass.data[DOMAIN][entry.entry_id] = setup_account(hass, entry[DOMAIN])
+    hass.data[DOMAIN] = setup_account(hass, entry[DOMAIN])
 
     def update_data():
         try:
-            hass.data[DOMAIN][entry.entry_id].update_vehicles()
+            hass.data[DOMAIN].update()
 
-            for listener in hass.data[DOMAIN][entry.entry_id]._update_listeners:
+            for listener in hass.data[DOMAIN].update_listeners:
                 listener()
-        except Exception as err:
+        except (NiuAPIException, NiuNetException, NiuServerException) as err:
             _LOGGER.error("Error communicating with NIU Cloud")
             _LOGGER.exception(err)
 
@@ -60,8 +59,8 @@ def setup_account(hass, conf: dict):
     account = NiuAccount(username, password)
 
     try:
-        account.connect()
-    except Exception as err:
+        account.account.connect()
+    except (NiuAPIException, NiuNetException, NiuServerException) as err:
         _LOGGER.error("Error connecting to NIU Cloud")
         _LOGGER.exception(err)
         return False
@@ -83,10 +82,15 @@ class NiuAccount:
             self.account.update_vehicles()
             for listener in self._update_listeners:
                 listener()
-        except Exception as err:
+        except (NiuAPIException, NiuNetException, NiuServerException) as err:
             _LOGGER.error("Could not update NIU data")
             _LOGGER.exception(err)
 
     def add_update_listener(self, listener):
         """Add a listener for update notifications."""
         self._update_listeners.append(listener)
+
+    @property
+    def update_listeners(self):
+        """Return list of subscribed listeners."""
+        return self._update_listeners
