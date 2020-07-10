@@ -982,7 +982,7 @@ niluclient==0.1.2
 # homeassistant.components.noaa_tides
 noaa-coops==0.1.8
 # homeassistant.components.niu
-niu==0.1.3
+niu==0.1.4
 
 # homeassistant.components.notify_events
 notify-events==1.0.4
