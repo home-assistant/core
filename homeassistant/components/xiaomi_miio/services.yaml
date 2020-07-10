@@ -343,3 +343,13 @@ vacuum_goto:
     y_coord:
       description: y-coordinate.
       example: 32000
+
+vacuum_clean_segment:
+  description: Start cleaning of the specified segment(s).
+  fields:
+    entity_id:
+      description: Name of the vacuum entity.
+      example: "vacuum.xiaomi_vacuum_cleaner"
+    segments:
+      description: Segments.
+      example: "[1,2]"

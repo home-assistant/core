@@ -211,7 +211,7 @@ def async_setup_services(hass: HomeAssistantType):
                 await hass.async_add_executor_job(command.run)
                 return
         _LOGGER.error(
-            "Could not run network resource command. Not found or enabled on the ISY."
+            "Could not run network resource command. Not found or enabled on the ISY"
         )
 
     async def async_send_program_command_service_handler(service):
@@ -233,9 +233,7 @@ def async_setup_services(hass: HomeAssistantType):
             if program is not None:
                 await hass.async_add_executor_job(getattr(program, command))
                 return
-        _LOGGER.error(
-            "Could not send program command. Not found or enabled on the ISY."
-        )
+        _LOGGER.error("Could not send program command. Not found or enabled on the ISY")
 
     async def async_set_variable_service_handler(service):
         """Handle a set variable service call."""
@@ -258,7 +256,7 @@ def async_setup_services(hass: HomeAssistantType):
             if variable is not None:
                 await hass.async_add_executor_job(variable.set_value, value, init)
                 return
-        _LOGGER.error("Could not set variable value. Not found or enabled on the ISY.")
+        _LOGGER.error("Could not set variable value. Not found or enabled on the ISY")
 
     async def async_cleanup_registry_entries(service) -> None:
         """Remove extra entities that are no longer part of the integration."""
@@ -369,7 +367,7 @@ def async_unload_services(hass: HomeAssistantType):
     ):
         return
 
-    _LOGGER.info("Unloading ISY994 Services.")
+    _LOGGER.info("Unloading ISY994 Services")
     hass.services.async_remove(domain=DOMAIN, service=SERVICE_SYSTEM_QUERY)
     hass.services.async_remove(domain=DOMAIN, service=SERVICE_RUN_NETWORK_RESOURCE)
     hass.services.async_remove(domain=DOMAIN, service=SERVICE_SEND_PROGRAM_COMMAND)

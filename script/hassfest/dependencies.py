@@ -122,6 +122,7 @@ ALLOWED_USED_COMPONENTS = {
     "cover",
     "device_tracker",
     "fan",
+    "humidifier",
     "image_processing",
     "light",
     "lock",

@@ -7,6 +7,7 @@
             "user": {
                 "data": {
                     "api_key": "Cl\u00e9 API (facultatif)",
+                    "host": "H\u00f4te",
                     "name": "Nom",
                     "ssl": "Utiliser SSL",
                     "verify_ssl": "V\u00e9rifier le certificat SSL"

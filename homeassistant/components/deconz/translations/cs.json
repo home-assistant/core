@@ -17,6 +17,12 @@
             "link": {
                 "description": "Odemkn\u011bte br\u00e1nu deCONZ, pro registraci v Home Assistant. \n\n 1. P\u0159ejd\u011bte do nastaven\u00ed syst\u00e9mu deCONZ \n 2. Stiskn\u011bte tla\u010d\u00edtko \"Unlock Gateway\"",
                 "title": "Propojit s deCONZ"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Hostitel",
+                    "port": "Port"
+                }
             }
         }
     }

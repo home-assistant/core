@@ -587,3 +587,13 @@ class ZenWithinThermostat(Thermostat):
         if self.hvac_mode != HVAC_MODE_OFF:
             return CURRENT_HVAC_IDLE
         return CURRENT_HVAC_OFF
+
+
+@STRICT_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    aux_channels=CHANNEL_FAN,
+    manufacturers="Centralite",
+    models="3157100",
+)
+class CentralitePearl(ZenWithinThermostat):
+    """Centralite Pearl Thermostat implementation."""

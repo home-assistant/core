@@ -7,7 +7,6 @@
         },
         "abort": {
             "authorize_url_timeout": "Timeout generating authorize url.",
-            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
             "missing_configuration": "The component is not configured. Please follow the documentation."
         }
     }

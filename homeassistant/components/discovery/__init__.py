@@ -14,6 +14,7 @@ from netdisco.discovery import NetworkDiscovery
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -47,6 +48,7 @@ SERVICE_XIAOMI_GW = "xiaomi_gw"
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_DAIKIN: "daikin",
     SERVICE_TELLDUSLIVE: "tellduslive",
+    "logitech_mediaserver": "squeezebox",
 }
 
 SERVICE_HANDLERS = {
@@ -57,15 +59,13 @@ SERVICE_HANDLERS = {
     SERVICE_APPLE_TV: ("apple_tv", None),
     SERVICE_ENIGMA2: ("media_player", "enigma2"),
     SERVICE_WINK: ("wink", None),
-    SERVICE_XIAOMI_GW: ("xiaomi_aqara", None),
     SERVICE_SABNZBD: ("sabnzbd", None),
-    SERVICE_SAMSUNG_PRINTER: ("sensor", "syncthru"),
+    SERVICE_SAMSUNG_PRINTER: ("sensor", None),
     SERVICE_KONNECTED: ("konnected", None),
     SERVICE_OCTOPRINT: ("octoprint", None),
     SERVICE_FREEBOX: ("freebox", None),
     SERVICE_YEELIGHT: ("yeelight", None),
     "yamaha": ("media_player", "yamaha"),
-    "logitech_mediaserver": ("media_player", "squeezebox"),
     "frontier_silicon": ("media_player", "frontier_silicon"),
     "openhome": ("media_player", "openhome"),
     "bose_soundtouch": ("media_player", "soundtouch"),
@@ -92,6 +92,7 @@ MIGRATED_SERVICE_HANDLERS = [
     "sonos",
     "songpal",
     SERVICE_WEMO,
+    SERVICE_XIAOMI_GW,
 ]
 
 DEFAULT_ENABLED = (
@@ -147,6 +148,8 @@ async def async_setup(hass, config):
                 platform,
             )
 
+    zeroconf_instance = await zeroconf.async_get_instance(hass)
+
     async def new_service_found(service, info):
         """Handle a new service if one is found."""
         if service in MIGRATED_SERVICE_HANDLERS:
@@ -178,7 +181,7 @@ async def async_setup(hass, config):
 
         # We do not know how to handle this service.
         if not comp_plat:
-            logger.info("Unknown service discovered: %s %s", service, info)
+            logger.debug("Unknown service discovered: %s %s", service, info)
             return
 
         logger.info("Found new service: %s %s", service, info)
@@ -193,7 +196,7 @@ async def async_setup(hass, config):
     async def scan_devices(now):
         """Scan for devices."""
         try:
-            results = await hass.async_add_job(_discover, netdisco)
+            results = await hass.async_add_job(_discover, netdisco, zeroconf_instance)
 
             for result in results:
                 hass.async_create_task(new_service_found(*result))
@@ -214,11 +217,11 @@ async def async_setup(hass, config):
     return True
 
 
-def _discover(netdisco):
+def _discover(netdisco, zeroconf_instance):
     """Discover devices."""
     results = []
     try:
-        netdisco.scan()
+        netdisco.scan(zeroconf_instance=zeroconf_instance)
 
         for disc in netdisco.discover():
             for service in netdisco.get_info(disc):

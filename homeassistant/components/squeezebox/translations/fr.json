@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "edit": {
+                "data": {
+                    "host": "H\u00f4te"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te"
+                }
+            }
+        }
+    }
+}

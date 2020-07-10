@@ -4,7 +4,7 @@ import ssl
 import time
 from urllib.parse import urlparse
 
-from plexapi.exceptions import NotFound, Unauthorized
+from plexapi.exceptions import BadRequest, NotFound, Unauthorized
 import plexapi.myplex
 import plexapi.playqueue
 import plexapi.server
@@ -32,6 +32,7 @@ from .const import (
     DEBOUNCE_TIMEOUT,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    PLAYER_SOURCE,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
@@ -75,6 +76,7 @@ class PlexServer:
         self._plextv_clients = None
         self._plextv_client_timestamp = 0
         self._plextv_device_cache = {}
+        self._use_plex_tv = self._token is not None
         self._version = None
         self.async_update_platforms = Debouncer(
             hass,
@@ -93,18 +95,27 @@ class PlexServer:
     @property
     def account(self):
         """Return a MyPlexAccount instance."""
-        if not self._plex_account:
-            self._plex_account = plexapi.myplex.MyPlexAccount(token=self._token)
+        if not self._plex_account and self._use_plex_tv:
+            try:
+                self._plex_account = plexapi.myplex.MyPlexAccount(token=self._token)
+            except (BadRequest, Unauthorized):
+                self._use_plex_tv = False
+                _LOGGER.error("Not authorized to access plex.tv with provided token")
+                raise
         return self._plex_account
 
     def plextv_clients(self):
         """Return available clients linked to Plex account."""
+        if self.account is None:
+            return []
+
         now = time.time()
         if now - self._plextv_client_timestamp > PLEXTV_THROTTLE:
             self._plextv_client_timestamp = now
-            resources = self.account.resources()
             self._plextv_clients = [
-                x for x in resources if "player" in x.provides and x.presence
+                x
+                for x in self.account.resources()
+                if "player" in x.provides and x.presence
             ]
             _LOGGER.debug(
                 "Current available clients from plex.tv: %s", self._plextv_clients
@@ -144,14 +155,18 @@ class PlexServer:
             )
 
         def _update_plexdirect_hostname():
-            matching_server = [
+            matching_servers = [
                 x.name
                 for x in self.account.resources()
                 if x.clientIdentifier == self._server_id
-            ][0]
-            self._plex_server = self.account.resource(matching_server).connect(
-                timeout=10
-            )
+            ]
+            if matching_servers:
+                self._plex_server = self.account.resource(matching_servers[0]).connect(
+                    timeout=10
+                )
+                return True
+            _LOGGER.error("Attempt to update plex.direct hostname failed")
+            return False
 
         if self._url:
             try:
@@ -165,10 +180,14 @@ class PlexServer:
                         f"hostname '{domain}' doesn't match"
                     ):
                         _LOGGER.warning(
-                            "Plex SSL certificate's hostname changed, updating."
+                            "Plex SSL certificate's hostname changed, updating"
                         )
-                        _update_plexdirect_hostname()
-                        config_entry_update_needed = True
+                        if _update_plexdirect_hostname():
+                            config_entry_update_needed = True
+                        else:
+                            raise Unauthorized(
+                                "New certificate cannot be validated with provided token"
+                            )
                     else:
                         raise
                 else:
@@ -180,7 +199,7 @@ class PlexServer:
             system_accounts = self._plex_server.systemAccounts()
         except Unauthorized:
             _LOGGER.warning(
-                "Plex account has limited permissions, shared account filtering will not be available."
+                "Plex account has limited permissions, shared account filtering will not be available"
             )
         else:
             self._accounts = [
@@ -257,6 +276,9 @@ class PlexServer:
         def process_device(source, device):
             self._known_idle.discard(device.machineIdentifier)
             available_clients.setdefault(device.machineIdentifier, {"device": device})
+            available_clients[device.machineIdentifier].setdefault(
+                PLAYER_SOURCE, source
+            )
 
             if device.machineIdentifier not in ignored_clients:
                 if self.option_ignore_plexweb_clients and device.product == "Plex Web":
@@ -275,11 +297,14 @@ class PlexServer:
             ):
                 new_clients.add(device.machineIdentifier)
                 _LOGGER.debug(
-                    "New %s %s: %s", device.product, source, device.machineIdentifier
+                    "New %s from %s: %s",
+                    device.product,
+                    source,
+                    device.machineIdentifier,
                 )
 
         for device in devices:
-            process_device("device", device)
+            process_device("PMS", device)
 
         def connect_to_resource(resource):
             """Connect to a plex.tv resource and return a Plex client."""
@@ -293,6 +318,8 @@ class PlexServer:
                 _LOGGER.debug("plex.tv resource connection successful: %s", client)
             except NotFound:
                 _LOGGER.error("plex.tv resource connection failed: %s", resource.name)
+            else:
+                client.proxyThroughServer(value=False, server=self._plex_server)
 
             self._plextv_device_cache[client_id] = client
             return client
@@ -303,7 +330,7 @@ class PlexServer:
                     connect_to_resource, plextv_client
                 )
                 if device:
-                    process_device("resource", device)
+                    process_device("plex.tv", device)
 
         for session in sessions:
             if session.TYPE == "photo":

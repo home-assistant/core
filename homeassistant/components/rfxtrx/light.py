@@ -20,12 +20,13 @@ from . import (
     CONF_FIRE_EVENT,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
-    RECEIVED_EVT_SUBSCRIBERS,
+    SIGNAL_EVENT,
     RfxtrxDevice,
-    apply_received_command,
+    fire_command_event,
     get_devices_from_config,
     get_new_device,
 )
+from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,15 +67,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if new_device:
             add_entities([new_device])
 
-        apply_received_command(event)
-
     # Subscribe to main RFXtrx events
-    if light_update not in RECEIVED_EVT_SUBSCRIBERS:
-        RECEIVED_EVT_SUBSCRIBERS.append(light_update)
+    hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, light_update)
 
 
 class RfxtrxLight(RfxtrxDevice, LightEntity, RestoreEntity):
     """Representation of a RFXtrx light."""
+
+    _brightness = 0
 
     async def async_added_to_hass(self):
         """Restore RFXtrx device state (ON/OFF)."""
@@ -90,6 +90,12 @@ class RfxtrxLight(RfxtrxDevice, LightEntity, RestoreEntity):
             and old_state.attributes.get(ATTR_BRIGHTNESS) is not None
         ):
             self._brightness = int(old_state.attributes[ATTR_BRIGHTNESS])
+
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_EVENT, self._handle_event
+            )
+        )
 
     @property
     def brightness(self):
@@ -111,3 +117,29 @@ class RfxtrxLight(RfxtrxDevice, LightEntity, RestoreEntity):
             self._brightness = brightness
             _brightness = brightness * 100 // 255
             self._send_command("dim", _brightness)
+
+    def turn_off(self, **kwargs):
+        """Turn the device off."""
+        self._brightness = 0
+        self._send_command("turn_off")
+
+    def _apply_event(self, event):
+        """Apply command from rfxtrx."""
+        if event.values["Command"] in COMMAND_ON_LIST:
+            self._state = True
+        elif event.values["Command"] in COMMAND_OFF_LIST:
+            self._state = False
+        elif event.values["Command"] == "Set level":
+            self._brightness = event.values["Dim level"] * 255 // 100
+            self._state = self._brightness > 0
+
+    def _handle_event(self, event):
+        """Check if event applies to me and update."""
+        if event.device.id_string != self._device.id_string:
+            return
+
+        self._apply_event(event)
+
+        self.schedule_update_ha_state()
+        if self.should_fire_event:
+            fire_command_event(self.hass, self.entity_id, event.values["Command"])

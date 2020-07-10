@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/guardian",
   "requirements": [
-    "aioguardian==0.2.3"
+    "aioguardian==1.0.0"
   ],
   "ssdp": [],
   "zeroconf": [
