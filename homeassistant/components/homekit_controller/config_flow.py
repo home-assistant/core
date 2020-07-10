@@ -60,8 +60,13 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         self.model = None
         self.hkid = None
         self.devices = {}
-        self.controller = aiohomekit.Controller()
+        self.controller = None
         self.finish_pairing = None
+
+    async def _async_setup(self):
+        """Create the controller."""
+        zeroconf_instance = await zeroconf.async_get_instance(self.hass)
+        self.controller = aiohomekit.Controller(zeroconf_instance=zeroconf_instance)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
@@ -76,10 +81,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             )
             return await self.async_step_pair()
 
-        zeroconf_instance = await zeroconf.async_get_instance(self.hass)
-        all_hosts = await self.controller.discover_ip(
-            zeroconf_instance=zeroconf_instance
-        )
+        if self.controller is None:
+            await self._async_setup()
+
+        all_hosts = await self.controller.discover_ip()
 
         self.devices = {}
         for host in all_hosts:
@@ -105,10 +110,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         unique_id = user_input["unique_id"]
         await self.async_set_unique_id(unique_id)
 
-        zeroconf_instance = await zeroconf.async_get_instance(self.hass)
-        devices = await self.controller.discover_ip(
-            max_seconds=5, zeroconf_instance=zeroconf_instance
-        )
+        if self.controller is None:
+            await self._async_setup()
+
+        devices = await self.controller.discover_ip(max_seconds=5)
         for device in devices:
             if normalize_hkid(device.device_id) != unique_id:
                 continue
@@ -233,6 +238,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         # in.
 
         errors = {}
+        if self.controller is None:
+            await self._async_setup()
 
         if pair_info:
             code = pair_info["pairing_code"]
@@ -264,10 +271,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
                 errors["pairing_code"] = "pairing_failed"
 
-        zeroconf_instance = await zeroconf.async_get_instance(self.hass)
-        discovery = await self.controller.find_ip_by_device_id(
-            self.hkid, zeroconf_instance=zeroconf_instance
-        )
+        discovery = await self.controller.find_ip_by_device_id(self.hkid)
 
         try:
             self.finish_pairing = await discovery.start_pairing(self.hkid)
