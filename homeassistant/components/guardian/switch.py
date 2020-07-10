@@ -2,11 +2,6 @@
 from typing import Callable, Dict
 
 from aioguardian import Client
-from aioguardian.commands.system import (
-    DEFAULT_FIRMWARE_UPGRADE_FILENAME,
-    DEFAULT_FIRMWARE_UPGRADE_PORT,
-    DEFAULT_FIRMWARE_UPGRADE_URL,
-)
 from aioguardian.errors import GuardianError
 import voluptuous as vol
 
@@ -46,11 +41,9 @@ async def async_setup_entry(
         (
             SERVICE_UPGRADE_FIRMWARE,
             {
-                vol.Optional(CONF_URL, default=DEFAULT_FIRMWARE_UPGRADE_URL): cv.url,
-                vol.Optional(CONF_PORT, default=DEFAULT_FIRMWARE_UPGRADE_PORT): cv.port,
-                vol.Optional(
-                    CONF_FILENAME, default=DEFAULT_FIRMWARE_UPGRADE_FILENAME
-                ): cv.string,
+                vol.Optional(CONF_URL): cv.url,
+                vol.Optional(CONF_PORT): cv.port,
+                vol.Optional(CONF_FILENAME): cv.string,
             },
             "async_upgrade_firmware",
         ),
