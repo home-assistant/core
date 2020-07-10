@@ -106,6 +106,7 @@ class BondFan(FanEntity):
 
     def set_direction(self, direction: str) -> None:
         """Set the direction for the fan."""
+        # not yet supported in upstream
         raise NotImplementedError
 
     def turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
