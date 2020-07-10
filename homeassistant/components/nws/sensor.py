@@ -59,6 +59,8 @@ class NWSAlertSensor(Entity):
         self._zones = sorted(nws.all_zones)
         self._name = f"{' '.join(self._zones)} Alerts"
 
+        self._alerts = None
+
     @property
     def unique_id(self):
         """Sensor Unique id."""
