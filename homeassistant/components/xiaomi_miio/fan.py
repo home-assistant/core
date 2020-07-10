@@ -655,8 +655,10 @@ class XiaomiGenericDevice(FanEntity):
 
             return result == SUCCESS
         except DeviceException as exc:
-            _LOGGER.error(mask_error, exc)
-            self._available = False
+            if self._available:
+                _LOGGER.error(mask_error, exc)
+                self._available = False
+
             return False
 
     async def async_turn_on(self, speed: str = None, **kwargs) -> None:
