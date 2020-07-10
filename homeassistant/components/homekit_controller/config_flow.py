@@ -63,7 +63,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         self.controller = None
         self.finish_pairing = None
 
-    async def _async_setup(self):
+    async def _async_setup_controller(self):
         """Create the controller."""
         zeroconf_instance = await zeroconf.async_get_instance(self.hass)
         self.controller = aiohomekit.Controller(zeroconf_instance=zeroconf_instance)
@@ -82,7 +82,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             return await self.async_step_pair()
 
         if self.controller is None:
-            await self._async_setup()
+            await self._async_setup_controller()
 
         all_hosts = await self.controller.discover_ip()
 
@@ -111,7 +111,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         await self.async_set_unique_id(unique_id)
 
         if self.controller is None:
-            await self._async_setup()
+            await self._async_setup_controller()
 
         devices = await self.controller.discover_ip(max_seconds=5)
         for device in devices:
@@ -239,7 +239,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
         errors = {}
         if self.controller is None:
-            await self._async_setup()
+            await self._async_setup_controller()
 
         if pair_info:
             code = pair_info["pairing_code"]
