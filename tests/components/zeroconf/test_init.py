@@ -225,7 +225,7 @@ async def test_homekit_not_paired(hass, mock_zeroconf):
         zeroconf, "HaServiceBrowser", side_effect=service_update_mock
     ) as mock_service_browser:
         mock_zeroconf.get_service_info.side_effect = get_homekit_info_mock(
-            "this_will_not_match_any_integration", HOMEKIT_STATUS_PAIRED
+            "this_will_not_match_any_integration", HOMEKIT_STATUS_UNPAIRED
         )
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
 
