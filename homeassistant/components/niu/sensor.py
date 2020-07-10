@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+import logging
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
@@ -11,49 +12,53 @@ from homeassistant.util.distance import convert
 
 from . import DOMAIN, NiuDevice
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
-    vehicles = hass.data[DOMAIN]["controller"].get_vehicles()
+    vehicles = hass.data[DOMAIN][config.config_id].get_vehicles()
 
     for vehicle in vehicles:
+        # TODO: take different models into account (single battery).
         add_entities(
             [
-                NiuSensor(vehicle, hass.data[DOMAIN]["controller"], "Level"),
-                NiuSensor(vehicle, hass.data[DOMAIN]["controller"], "Level A"),
-                NiuSensor(vehicle, hass.data[DOMAIN]["controller"], "Level B"),
-                NiuSensor(vehicle, hass.data[DOMAIN]["controller"], "Temp A"),
-                NiuSensor(vehicle, hass.data[DOMAIN]["controller"], "Temp B"),
-            ]
+                NiuSensor(hass.data[DOMAIN][config.config_id], vehicle, "Level"),
+                NiuSensor(hass.data[DOMAIN][config.config_id], vehicle, "Level A"),
+                NiuSensor(hass.data[DOMAIN][config.config_id], vehicle, "Level B"),
+                NiuSensor(hass.data[DOMAIN][config.config_id], vehicle, "Temp A"),
+                NiuSensor(hass.data[DOMAIN][config.config_id], vehicle, "Temp B"),
+            ],
+            True,
         )
 
 
-class NiuSensor(NiuDevice, Entity):
+class NiuSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, niu_device, controller, type=""):
+    def __init__(self, account, vehicle, type=""):
         """Initialize the sensor."""
-        self._niu_device = niu_device
+        self._account = account
+        self._vehicle = vehicle
         self._type = type
 
         self._unit = None
         self._icon = None
         self._state = None
 
-        super().__init__(niu_device, controller)
-
     @property
     def unique_id(self) -> str:
-        return f"{super().unique_id}_{self._type}"
+        return f"{self._vehicle.get_serial()}_{self._type}"
 
     @property
     def should_poll(self) -> bool:
-        return True
+        """Data update is centralized in NiuAccount"""
+        return False
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._niu_device.get_name()} {self._type}"
+        return f"{self._vehicle.get_name()} {self._type}"
 
     @property
     def state(self):
@@ -69,23 +74,50 @@ class NiuSensor(NiuDevice, Entity):
     def icon(self):
         return self._icon
 
-    def update(self):
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        return {
+            ATTR_BATTERY_LEVEL: self._vehicle.get_soc(),
+            ATTR_BATTERY_CHARGING: self._vehicle.is_charging(),
+        }
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": (DOMAIN, self._vehicle.get_serial()),
+            "name": self._vehicle.get_name(),
+            "manufacturer": "NIU",
+            "model": self._vehicle.get_model(),
+        }
+
+    def update_callback(self):
+        """Schedule a state update."""
+        self.schedule_update_ha_state(True)
+
+    async def async_added_to_hass(self):
+        """Register state update callback."""
+
+        self._account.add_update_listener(self.update_callback)
+
+    def update(self) -> None:
         """Fetch new state data for the sensor.
         This is the only method that should fetch new data for Home Assistant.
         """
-        super().update()
+        _LOGGER.debug("Updating %s", self.name)
 
         if self._type == "Level":
-            self._state = self._niu_device.get_soc()
+            self._state = self._vehicle.get_soc()
         elif self._type == "Level A":
-            self._state = self._niu_device.get_soc(0)
+            self._state = self._vehicle.get_soc(0)
         elif self._type == "Level B":
-            self._state = self._niu_device.get_soc(1)
+            self._state = self._vehicle.get_soc(1)
 
         elif self._type == "Temp A":
-            self._state = self._niu_device.get_battery_temp(0)
+            self._state = self._vehicle.get_battery_temp(0)
         elif self._type == "Temp B":
-            self._state = self._niu_device.get_battery_temp(1)
+            self._state = self._vehicle.get_battery_temp(1)
 
         if "Level" in self._type:
             self._unit = "%"
