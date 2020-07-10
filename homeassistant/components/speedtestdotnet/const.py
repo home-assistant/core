@@ -5,6 +5,7 @@ DOMAIN = "speedtestdotnet"
 
 SPEED_TEST_SERVICE = "speedtest"
 DATA_UPDATED = f"{DOMAIN}_data_updated"
+MANUAL_INTERVAL = 10080
 
 SENSOR_TYPES = {
     "ping": ["Ping", TIME_MILLISECONDS],
