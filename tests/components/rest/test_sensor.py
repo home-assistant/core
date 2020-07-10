@@ -25,10 +25,7 @@ class TestRestSensorSetup(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_setup_missing_config(self):
         """Test setup with configuration missing required entries."""
@@ -237,10 +234,7 @@ class TestRestSensor(unittest.TestCase):
             self.resource_template,
             self.json_attrs_path,
         )
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def update_side_effect(self, data, headers):
         """Side effect function for mocking RestData.update()."""

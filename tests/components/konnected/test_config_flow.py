@@ -69,7 +69,9 @@ async def test_pro_flow_works(hass, mock_panel):
     assert result["type"] == "form"
     assert result["step_id"] == "user"
 
+    # pro uses chipId instead of MAC as unique id
     mock_panel.get_status.return_value = {
+        "chipId": "1234567",
         "mac": "11:22:33:44:55:66",
         "model": "Konnected Pro",
     }
@@ -80,7 +82,7 @@ async def test_pro_flow_works(hass, mock_panel):
     assert result["step_id"] == "confirm"
     assert result["description_placeholders"] == {
         "model": "Konnected Alarm Panel Pro",
-        "id": "112233445566",
+        "id": "1234567",
         "host": "1.2.3.4",
         "port": 1234,
     }
@@ -192,8 +194,9 @@ async def test_import_no_host_user_finish(hass, mock_panel):
 
 
 async def test_import_ssdp_host_user_finish(hass, mock_panel):
-    """Test importing a panel with no host info which ssdp discovers."""
+    """Test importing a pro panel with no host info which ssdp discovers."""
     mock_panel.get_status.return_value = {
+        "chipId": "somechipid",
         "mac": "11:22:33:44:55:66",
         "model": "Konnected Pro",
     }
@@ -224,12 +227,12 @@ async def test_import_ssdp_host_user_finish(hass, mock_panel):
                     "out1": "Disabled",
                 },
             },
-            "id": "112233445566",
+            "id": "somechipid",
         },
     )
     assert result["type"] == "form"
     assert result["step_id"] == "import_confirm"
-    assert result["description_placeholders"]["id"] == "112233445566"
+    assert result["description_placeholders"]["id"] == "somechipid"
 
     # discover the panel via ssdp
     ssdp_result = await hass.config_entries.flow.async_init(
@@ -251,7 +254,7 @@ async def test_import_ssdp_host_user_finish(hass, mock_panel):
     assert result["step_id"] == "confirm"
     assert result["description_placeholders"] == {
         "model": "Konnected Alarm Panel Pro",
-        "id": "112233445566",
+        "id": "somechipid",
         "host": "0.0.0.0",
         "port": 1234,
     }

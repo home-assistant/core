@@ -222,19 +222,6 @@ async def async_setup(hass, config):
         hass, DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
     )
 
-    @callback
-    def async_describe_logbook_event(event):
-        """Describe a logbook event."""
-        return {
-            "name": event.data.get(ATTR_NAME),
-            "message": "has been triggered",
-            "entity_id": event.data.get(ATTR_ENTITY_ID),
-        }
-
-    hass.components.logbook.async_describe_event(
-        DOMAIN, EVENT_AUTOMATION_TRIGGERED, async_describe_logbook_event
-    )
-
     return True
 
 

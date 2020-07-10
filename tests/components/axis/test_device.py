@@ -7,6 +7,7 @@ import axis as axislib
 from axis.api_discovery import URL as API_DISCOVERY_URL
 from axis.basic_device_info import URL as BASIC_DEVICE_INFO_URL
 from axis.event_stream import OPERATION_INITIALIZED
+from axis.light_control import URL as LIGHT_CONTROL_URL
 from axis.mqtt import URL_CLIENT as MQTT_CLIENT_URL
 from axis.param_cgi import (
     BRAND as BRAND_URL,
@@ -22,7 +23,6 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components import axis
 from homeassistant.components.axis.const import (
-    CONF_CAMERA,
     CONF_EVENTS,
     CONF_MODEL,
     DOMAIN as AXIS_DOMAIN,
@@ -38,17 +38,13 @@ from homeassistant.const import (
 )
 
 from tests.async_mock import Mock, patch
-from tests.common import (
-    MockConfigEntry,
-    async_fire_mqtt_message,
-    async_mock_mqtt_component,
-)
+from tests.common import MockConfigEntry, async_fire_mqtt_message
 
 MAC = "00408C12345"
 MODEL = "model"
 NAME = "name"
 
-ENTRY_OPTIONS = {CONF_CAMERA: True, CONF_EVENTS: True}
+ENTRY_OPTIONS = {CONF_EVENTS: True}
 
 ENTRY_CONFIG = {
     CONF_HOST: "1.2.3.4",
@@ -83,7 +79,6 @@ API_DISCOVERY_PORT_MANAGEMENT = {
     "name": "IO Port Management",
 }
 
-
 BASIC_DEVICE_INFO_RESPONSE = {
     "apiVersion": "1.1",
     "data": {
@@ -93,6 +88,27 @@ BASIC_DEVICE_INFO_RESPONSE = {
             "SerialNumber": "00408C12345",
             "Version": "9.80.1",
         }
+    },
+}
+
+LIGHT_CONTROL_RESPONSE = {
+    "apiVersion": "1.1",
+    "method": "getLightInformation",
+    "data": {
+        "items": [
+            {
+                "lightID": "led0",
+                "lightType": "IR",
+                "enabled": True,
+                "synchronizeDayNightMode": True,
+                "lightState": False,
+                "automaticIntensityMode": False,
+                "automaticAngleOfIlluminationMode": False,
+                "nrOfLEDs": 1,
+                "error": False,
+                "errorInfo": "",
+            }
+        ]
     },
 }
 
@@ -168,6 +184,8 @@ def vapix_session_request(session, url, **kwargs):
         return json.dumps(API_DISCOVERY_RESPONSE)
     if BASIC_DEVICE_INFO_URL in url:
         return json.dumps(BASIC_DEVICE_INFO_RESPONSE)
+    if LIGHT_CONTROL_URL in url:
+        return json.dumps(LIGHT_CONTROL_RESPONSE)
     if MQTT_CLIENT_URL in url:
         return json.dumps(MQTT_CLIENT_RESPONSE)
     if PORT_MANAGEMENT_URL in url:
@@ -218,10 +236,11 @@ async def test_device_setup(hass):
 
     entry = device.config_entry
 
-    assert len(forward_entry_setup.mock_calls) == 3
+    assert len(forward_entry_setup.mock_calls) == 4
     assert forward_entry_setup.mock_calls[0][1] == (entry, "binary_sensor")
     assert forward_entry_setup.mock_calls[1][1] == (entry, "camera")
-    assert forward_entry_setup.mock_calls[2][1] == (entry, "switch")
+    assert forward_entry_setup.mock_calls[2][1] == (entry, "light")
+    assert forward_entry_setup.mock_calls[3][1] == (entry, "switch")
 
     assert device.host == ENTRY_CONFIG[CONF_HOST]
     assert device.model == ENTRY_CONFIG[CONF_MODEL]
@@ -243,17 +262,15 @@ async def test_device_info(hass):
     assert device.api.vapix.serial_number == "00408C12345"
 
 
-async def test_device_support_mqtt(hass):
+async def test_device_support_mqtt(hass, mqtt_mock):
     """Successful setup."""
     api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
     api_discovery["data"]["apiList"].append(API_DISCOVERY_MQTT)
 
-    mock_mqtt = await async_mock_mqtt_component(hass)
-
     with patch.dict(API_DISCOVERY_RESPONSE, api_discovery):
         await setup_axis_integration(hass)
 
-    mock_mqtt.async_subscribe.assert_called_with(f"{MAC}/#", mock.ANY, 0, "utf-8")
+    mqtt_mock.async_subscribe.assert_called_with(f"{MAC}/#", mock.ANY, 0, "utf-8")
 
     topic = f"{MAC}/event/tns:onvif/Device/tns:axis/Sensor/PIR/$source/sensor/0"
     message = b'{"timestamp": 1590258472044, "topic": "onvif:Device/axis:Sensor/PIR", "message": {"source": {"sensor": "0"}, "key": {}, "data": {"state": "1"}}}'

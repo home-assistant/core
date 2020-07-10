@@ -21,7 +21,6 @@ from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
-    ATTR_SERVICE,
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PORT,
@@ -33,14 +32,7 @@ from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, Unauthorized
 from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entityfilter import (
-    BASE_FILTER_SCHEMA,
-    CONF_EXCLUDE_DOMAINS,
-    CONF_EXCLUDE_ENTITIES,
-    CONF_INCLUDE_DOMAINS,
-    CONF_INCLUDE_ENTITIES,
-    convert_filter,
-)
+from homeassistant.helpers.entityfilter import BASE_FILTER_SCHEMA, FILTER_SCHEMA
 from homeassistant.loader import async_get_integration
 from homeassistant.util import get_local_ip
 
@@ -48,12 +40,10 @@ from .accessories import get_accessory
 from .aidmanager import AccessoryAidStorage
 from .const import (
     AID_STORAGE,
-    ATTR_DISPLAY_NAME,
     ATTR_INTERGRATION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SOFTWARE_VERSION,
-    ATTR_VALUE,
     BRIDGE_NAME,
     BRIDGE_SERIAL_NUMBER,
     CONF_ADVERTISE_IP,
@@ -71,7 +61,6 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_SAFE_MODE,
     DOMAIN,
-    EVENT_HOMEKIT_CHANGED,
     HOMEKIT,
     HOMEKIT_PAIRING_QR,
     HOMEKIT_PAIRING_QR_SECRET,
@@ -144,7 +133,6 @@ RESET_ACCESSORY_SERVICE_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the HomeKit from yaml."""
-
     hass.data.setdefault(DOMAIN, {})
 
     _async_register_events_and_services(hass)
@@ -221,17 +209,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     entity_config = options.get(CONF_ENTITY_CONFIG, {}).copy()
     auto_start = options.get(CONF_AUTO_START, DEFAULT_AUTO_START)
     safe_mode = options.get(CONF_SAFE_MODE, DEFAULT_SAFE_MODE)
-    entity_filter = convert_filter(
-        options.get(
-            CONF_FILTER,
-            {
-                CONF_INCLUDE_DOMAINS: [],
-                CONF_EXCLUDE_DOMAINS: [],
-                CONF_INCLUDE_ENTITIES: [],
-                CONF_EXCLUDE_ENTITIES: [],
-            },
-        )
-    )
+    entity_filter = FILTER_SCHEMA(options.get(CONF_FILTER, {}))
 
     homekit = HomeKit(
         hass,
@@ -272,7 +250,6 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-
     dismiss_setup_message(hass, entry.entry_id)
 
     hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
@@ -319,7 +296,6 @@ def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: Confi
 @callback
 def _async_register_events_and_services(hass: HomeAssistant):
     """Register events and services for HomeKit."""
-
     hass.http.register_view(HomeKitPairingQRView)
 
     def handle_homekit_reset_accessory(service):
@@ -343,26 +319,6 @@ def _async_register_events_and_services(hass: HomeAssistant):
         SERVICE_HOMEKIT_RESET_ACCESSORY,
         handle_homekit_reset_accessory,
         schema=RESET_ACCESSORY_SERVICE_SCHEMA,
-    )
-
-    @callback
-    def async_describe_logbook_event(event):
-        """Describe a logbook event."""
-        data = event.data
-        entity_id = data.get(ATTR_ENTITY_ID)
-        value = data.get(ATTR_VALUE)
-
-        value_msg = f" to {value}" if value else ""
-        message = f"send command {data[ATTR_SERVICE]}{value_msg} for {data[ATTR_DISPLAY_NAME]}"
-
-        return {
-            "name": "HomeKit",
-            "message": message,
-            "entity_id": entity_id,
-        }
-
-    hass.components.logbook.async_describe_event(
-        DOMAIN, EVENT_HOMEKIT_CHANGED, async_describe_logbook_event
     )
 
     async def async_handle_homekit_service_start(service):
@@ -504,7 +460,6 @@ class HomeKit:
 
     async def async_start(self, *args):
         """Start the accessory driver."""
-
         if self.status != STATUS_READY:
             return
         self.status = STATUS_WAIT

@@ -6,3 +6,4 @@ PLATFORMS = ["remote"]
 UNIQUE_ID = "unique_id"
 ACTIVITY_POWER_OFF = "PowerOff"
 HARMONY_OPTIONS_UPDATE = "harmony_options_update"
+ATTR_ACTIVITY_NOTIFY = "activity_notify"

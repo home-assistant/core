@@ -133,7 +133,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         supports_on,
         sources,
         speaker_type,
-        ioloop=hass.loop,
+        loop=hass.loop,
         unique_id=unique_id,
     )
 
@@ -191,7 +191,7 @@ class KefMediaPlayer(MediaPlayerEntity):
         supports_on,
         sources,
         speaker_type,
-        ioloop,
+        loop,
         unique_id,
     ):
         """Initialize the media player."""
@@ -204,7 +204,7 @@ class KefMediaPlayer(MediaPlayerEntity):
             maximum_volume,
             standby_time,
             inverse_speaker_mode,
-            ioloop=ioloop,
+            loop=loop,
         )
         self._unique_id = unique_id
         self._supports_on = supports_on
