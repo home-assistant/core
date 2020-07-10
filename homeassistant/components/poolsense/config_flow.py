@@ -35,10 +35,12 @@ class PoolSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "Configuring user: %s - Password hidden", user_input[CONF_EMAIL]
             )
 
-            poolsense = PoolSense(user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
-            api_key_valid = await poolsense.test_poolsense_credentials(
-                aiohttp_client.async_get_clientsession(self.hass)
+            poolsense = PoolSense(
+                aiohttp_client.async_get_clientsession(self.hass),
+                user_input[CONF_EMAIL],
+                user_input[CONF_PASSWORD],
             )
+            api_key_valid = await poolsense.test_poolsense_credentials()
 
             if not api_key_valid:
                 self._errors["base"] = "invalid_auth"

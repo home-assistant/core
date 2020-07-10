@@ -33,10 +33,12 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up PoolSense from a config entry."""
 
-    poolsense = PoolSense(entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD])
-    auth_valid = await poolsense.test_poolsense_credentials(
-        aiohttp_client.async_get_clientsession(hass)
+    poolsense = PoolSense(
+        aiohttp_client.async_get_clientsession(hass),
+        entry.data[CONF_EMAIL],
+        entry.data[CONF_PASSWORD],
     )
+    auth_valid = await poolsense.test_poolsense_credentials()
 
     if not auth_valid:
         _LOGGER.error("Invalid authentication")
@@ -101,7 +103,11 @@ class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass, entry):
         """Initialize."""
-        self.poolsense = PoolSense(entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD])
+        self.poolsense = PoolSense(
+            aiohttp_client.async_get_clientsession(hass),
+            entry.data[CONF_EMAIL],
+            entry.data[CONF_PASSWORD],
+        )
         self.hass = hass
         self.entry = entry
 
@@ -112,9 +118,7 @@ class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator):
         data = {}
         with async_timeout.timeout(10):
             try:
-                data = await self.poolsense.get_poolsense_data(
-                    aiohttp_client.async_get_clientsession(self.hass)
-                )
+                data = await self.poolsense.get_poolsense_data()
             except (PoolSenseError) as error:
                 _LOGGER.error("PoolSense query did not complete.")
                 raise UpdateFailed(error)
