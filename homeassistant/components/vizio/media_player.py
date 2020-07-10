@@ -296,7 +296,7 @@ class VizioDevice(MediaPlayerEntity):
             new_value,
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added."""
         # Register callback for when config entry is updated.
         self._async_unsub_listeners.append(
@@ -312,7 +312,7 @@ class VizioDevice(MediaPlayerEntity):
             )
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect callbacks when entity is removed."""
         for listener in self._async_unsub_listeners:
             listener()
@@ -325,7 +325,7 @@ class VizioDevice(MediaPlayerEntity):
         return self._available
 
     @property
-    def state(self) -> str:
+    def state(self) -> Optional[str]:
         """Return the state of the device."""
         return self._state
 
@@ -340,7 +340,7 @@ class VizioDevice(MediaPlayerEntity):
         return self._icon
 
     @property
-    def volume_level(self) -> float:
+    def volume_level(self) -> Optional[float]:
         """Return the volume level of the device."""
         return self._volume_level
 
@@ -350,7 +350,7 @@ class VizioDevice(MediaPlayerEntity):
         return self._is_volume_muted
 
     @property
-    def source(self) -> str:
+    def source(self) -> Optional[str]:
         """Return current input of the device."""
         if self._current_app is not None and self._current_input in INPUT_APPS:
             return self._current_app
