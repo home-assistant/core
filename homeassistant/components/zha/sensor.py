@@ -162,10 +162,8 @@ class Battery(Sensor):
     @staticmethod
     def formatter(value):
         """Return the state of the entity."""
-        # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
         if not isinstance(value, numbers.Number) or value == -1:
             return value
-        value = round(value / 2)
         return value
 
     async def async_state_attr_provider(self):
