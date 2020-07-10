@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Only a single instance is necessary."
+        },
+        "error": {
+            "cannot_connect": "Unable to connect to SRP",
+            "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+            "unknown": "Something went wrong configuring SRP."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "Account Id",
+                    "password": "Password",
+                    "username": "Username"
+                }
+            }
+        }
+    },
+    "title": "SRP Energy"
+}
