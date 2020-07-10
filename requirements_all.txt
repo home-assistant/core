@@ -603,7 +603,7 @@ flux_led==0.22
 fnvhash==0.1.0
 
 # homeassistant.components.foobot
-foobot_async==0.3.1
+foobot_async==0.3.2
 
 # homeassistant.components.fortios
 fortiosapi==0.10.8
