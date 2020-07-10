@@ -216,7 +216,7 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
         data = {}
         try:
             data[CURRENT] = await self._api.realtime(
-                self._api.availabile_fields(REALTIME)
+                self._api.available_fields(REALTIME)
             )
 
             if self._forecast_type == HOURLY:
