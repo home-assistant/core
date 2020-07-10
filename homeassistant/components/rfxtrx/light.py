@@ -10,21 +10,21 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     LightEntity,
 )
-from homeassistant.const import CONF_NAME, STATE_ON
+from homeassistant.const import ATTR_STATE, CONF_DEVICES, CONF_NAME, STATE_ON
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
+    ATTR_FIRE_EVENT,
     CONF_AUTOMATIC_ADD,
-    CONF_DEVICES,
     CONF_FIRE_EVENT,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
     SIGNAL_EVENT,
     RfxtrxDevice,
     fire_command_event,
-    get_devices_from_config,
-    get_new_device,
+    get_device_id,
+    get_rfx_object,
 )
 from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
 
@@ -52,8 +52,29 @@ SUPPORT_RFXTRX = SUPPORT_BRIGHTNESS
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RFXtrx platform."""
-    lights = get_devices_from_config(config, RfxtrxLight)
-    add_entities(lights)
+    device_ids = set()
+
+    # Add switch from config file
+    entities = []
+    for packet_id, entity_info in config[CONF_DEVICES].items():
+        event = get_rfx_object(packet_id)
+        if event is None:
+            _LOGGER.error("Invalid device: %s", packet_id)
+            continue
+
+        device_id = get_device_id(event.device)
+        if device_id in device_ids:
+            continue
+        device_ids.add(device_id)
+
+        datas = {ATTR_STATE: None, ATTR_FIRE_EVENT: entity_info[CONF_FIRE_EVENT]}
+        entity = RfxtrxLight(
+            entity_info[CONF_NAME], event.device, datas, config[CONF_SIGNAL_REPETITIONS]
+        )
+
+        entities.append(entity)
+
+    add_entities(entities)
 
     def light_update(event):
         """Handle light updates from the RFXtrx gateway."""
@@ -63,12 +84,29 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ):
             return
 
-        new_device = get_new_device(event, config, RfxtrxLight)
-        if new_device:
-            add_entities([new_device])
+        device_id = get_device_id(event.device)
+        if device_id in device_ids:
+            return
+        device_ids.add(device_id)
+
+        _LOGGER.debug(
+            "Added light (Device ID: %s Class: %s Sub: %s)",
+            event.device.id_string.lower(),
+            event.device.__class__.__name__,
+            event.device.subtype,
+        )
+
+        pkt_id = "".join(f"{x:02x}" for x in event.data)
+        datas = {ATTR_STATE: None, ATTR_FIRE_EVENT: False}
+        entity = RfxtrxLight(
+            pkt_id, event.device, datas, DEFAULT_SIGNAL_REPETITIONS, event=event
+        )
+
+        add_entities([entity])
 
     # Subscribe to main RFXtrx events
-    hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, light_update)
+    if config[CONF_AUTOMATIC_ADD]:
+        hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, light_update)
 
 
 class RfxtrxLight(RfxtrxDevice, LightEntity, RestoreEntity):

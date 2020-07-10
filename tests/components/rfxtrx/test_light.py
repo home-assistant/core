@@ -57,7 +57,7 @@ async def test_default_config(hass, rfxtrx):
         )
         await hass.async_block_till_done()
 
-    assert 0 == len(rfxtrx_core.RFX_DEVICES)
+    assert len(hass.states.async_all()) == 0
 
 
 async def test_one_light(hass, rfxtrx):
