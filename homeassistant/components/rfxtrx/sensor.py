@@ -155,7 +155,7 @@ class RfxtrxSensor(Entity):
             f"{device.packettype:x}_{device.subtype:x}_{device.id_string}_{data_type}"
         )
 
-        self._device_class = DEVICE_CLASSES.get(data_type, None)
+        self._device_class = DEVICE_CLASSES.get(data_type)
         self._convert_fun = CONVERT_FUNCTIONS.get(data_type, lambda x: x)
 
         if event:
