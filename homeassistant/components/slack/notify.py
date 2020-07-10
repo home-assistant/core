@@ -158,7 +158,7 @@ class SlackNotificationService(BaseNotificationService):
 
         Note that we bypass the python-slackclient WebClient and use aiohttp directly,
         as the former would require us to download the entire remote file into memory
-        first before uploadint it to Slack.
+        first before uploading it to Slack.
         """
         if not self._hass.config.is_allowed_external_url(url):
             _LOGGER.error("URL is not allowed: %s", url)
