@@ -46,6 +46,8 @@ from .const import (
     LANGUAGE_FLUX,
     LANGUAGE_INFLUXQL,
     MIN_TIME_BETWEEN_UPDATES,
+    NO_BUCKET_ERROR,
+    NO_DATABASE_ERROR,
     QUERY_MULTIPLE_RESULTS_MESSAGE,
     QUERY_NO_RESULTS_MESSAGE,
     RENDERING_QUERY_ERROR_MESSAGE,
@@ -147,8 +149,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error(exc)
         raise PlatformNotReady()
 
-    queries = config[CONF_QUERIES_FLUX if CONF_QUERIES_FLUX in config else CONF_QUERIES]
-    entities = [InfluxSensor(hass, influx, query) for query in queries]
+    entities = []
+    if CONF_QUERIES_FLUX in config:
+        for query in config[CONF_QUERIES_FLUX]:
+            if query[CONF_BUCKET] in influx.data_repositories:
+                entities.append(InfluxSensor(hass, influx, query))
+            else:
+                _LOGGER.error(NO_BUCKET_ERROR, query[CONF_BUCKET])
+    else:
+        for query in config[CONF_QUERIES]:
+            if query[CONF_DB_NAME] in influx.data_repositories:
+                entities.append(InfluxSensor(hass, influx, query))
+            else:
+                _LOGGER.error(NO_DATABASE_ERROR, query[CONF_DB_NAME])
+
     add_entities(entities, update_before_add=True)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda _: influx.close())

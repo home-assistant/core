@@ -134,7 +134,7 @@ class TestDatadog(unittest.TestCase):
 
         valid = {"1": 1, "1.0": 1.0, STATE_ON: 1, STATE_OFF: 0}
 
-        attributes = {"elevation": 3.2, "temperature": 5.0}
+        attributes = {"elevation": 3.2, "temperature": 5.0, "up": True, "down": False}
 
         for in_, out in valid.items():
             state = mock.MagicMock(
@@ -145,9 +145,10 @@ class TestDatadog(unittest.TestCase):
             )
             handler_method(mock.MagicMock(data={"new_state": state}))
 
-            assert mock_client.gauge.call_count == 3
+            assert mock_client.gauge.call_count == 5
 
             for attribute, value in attributes.items():
+                value = int(value) if isinstance(value, bool) else value
                 mock_client.gauge.assert_has_calls(
                     [
                         mock.call(

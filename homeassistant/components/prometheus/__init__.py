@@ -13,6 +13,11 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_ACTIONS,
 )
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.humidifier.const import (
+    ATTR_AVAILABLE_MODES,
+    ATTR_HUMIDITY,
+    ATTR_MODE,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_TEMPERATURE,
@@ -316,6 +321,41 @@ class PrometheusMetrics:
             for action in CURRENT_HVAC_ACTIONS:
                 metric.labels(**dict(self._labels(state), action=action)).set(
                     float(action == current_action)
+                )
+
+    def _handle_humidifier(self, state):
+        humidifier_target_humidity_percent = state.attributes.get(ATTR_HUMIDITY)
+        if humidifier_target_humidity_percent:
+            metric = self._metric(
+                "humidifier_target_humidity_percent",
+                self.prometheus_cli.Gauge,
+                "Target Relative Humidity",
+            )
+            metric.labels(**self._labels(state)).set(humidifier_target_humidity_percent)
+
+        metric = self._metric(
+            "humidifier_state",
+            self.prometheus_cli.Gauge,
+            "State of the humidifier (0/1)",
+        )
+        try:
+            value = self.state_as_number(state)
+            metric.labels(**self._labels(state)).set(value)
+        except ValueError:
+            pass
+
+        current_mode = state.attributes.get(ATTR_MODE)
+        available_modes = state.attributes.get(ATTR_AVAILABLE_MODES)
+        if current_mode and available_modes:
+            metric = self._metric(
+                "humidifier_mode",
+                self.prometheus_cli.Gauge,
+                "Humidifier Mode",
+                ["mode"],
+            )
+            for mode in available_modes:
+                metric.labels(**dict(self._labels(state), mode=mode)).set(
+                    float(mode == current_mode)
                 )
 
     def _handle_sensor(self, state):

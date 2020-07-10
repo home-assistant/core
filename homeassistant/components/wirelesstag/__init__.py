@@ -92,7 +92,7 @@ class WirelessTagPlatform:
 
     def make_notifications(self, binary_sensors, mac):
         """Create configurations for push notifications."""
-        _LOGGER.info("Creating configurations for push notifications.")
+        _LOGGER.info("Creating configurations for push notifications")
         configs = []
 
         bi_url = self.binary_event_callback_url
@@ -108,7 +108,7 @@ class WirelessTagPlatform:
 
     def install_push_notifications(self, binary_sensors):
         """Register local push notification from tag manager."""
-        _LOGGER.info("Registering local push notifications.")
+        _LOGGER.info("Registering local push notifications")
         for mac in self.tag_manager_macs:
             configs = self.make_notifications(binary_sensors, mac)
             # install notifications for all tags in tag manager
@@ -122,9 +122,7 @@ class WirelessTagPlatform:
                 )
             else:
                 _LOGGER.info(
-                    "Installed push notifications for all\
-                             tags in %s.",
-                    mac,
+                    "Installed push notifications for all tags in %s", mac,
                 )
 
     @property

@@ -61,7 +61,7 @@ class TestComponentHistory(unittest.TestCase):
 
     def test_get_states(self):
         """Test getting states at a specific point in time."""
-        self.init_recorder()
+        self.test_setup()
         states = []
 
         now = dt_util.utcnow()
@@ -115,7 +115,7 @@ class TestComponentHistory(unittest.TestCase):
 
     def test_state_changes_during_period(self):
         """Test state change during period."""
-        self.init_recorder()
+        self.test_setup()
         entity_id = "media_player.test"
 
         def set_state(state):
@@ -156,7 +156,7 @@ class TestComponentHistory(unittest.TestCase):
 
     def test_get_last_state_changes(self):
         """Test number of state changes."""
-        self.init_recorder()
+        self.test_setup()
         entity_id = "sensor.test"
 
         def set_state(state):
@@ -195,7 +195,7 @@ class TestComponentHistory(unittest.TestCase):
         The filter integration uses copy() on states
         from history.
         """
-        self.init_recorder()
+        self.test_setup()
         entity_id = "sensor.test"
 
         def set_state(state):
@@ -608,7 +608,7 @@ class TestComponentHistory(unittest.TestCase):
 
     def test_get_significant_states_only(self):
         """Test significant states when significant_states_only is set."""
-        self.init_recorder()
+        self.test_setup()
         entity_id = "sensor.test"
 
         def set_state(state, **kwargs):
@@ -683,7 +683,7 @@ class TestComponentHistory(unittest.TestCase):
         We inject a bunch of state updates from media player, zone and
         thermostat.
         """
-        self.init_recorder()
+        self.test_setup()
         mp = "media_player.test"
         mp2 = "media_player.test2"
         mp3 = "media_player.test3"

@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "L\u2019acord seleccionat ja est\u00e0 configurat.",
             "authorize_url_fail": "S'ha produ\u00eft un error desconegut al generar l'URL d'autoritzaci\u00f3.",
-            "authorize_url_timeout": "S'ha acabat el temps d'espera durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
+            "authorize_url_timeout": "Temps d'espera durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3 esgotat.",
             "client_id": "L'identificador de client de la configuraci\u00f3 no \u00e9s v\u00e0lid.",
             "client_secret": "El codi secret de client de la configuraci\u00f3 no \u00e9s v\u00e0lid.",
             "missing_configuration": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3.",
