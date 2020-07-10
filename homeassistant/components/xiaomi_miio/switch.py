@@ -287,7 +287,8 @@ class XiaomiPlugGenericSwitch(SwitchEntity):
             if self._available:
                 _LOGGER.error(mask_error, exc)
                 self._available = False
-                return False
+
+            return False
 
     async def async_turn_on(self, **kwargs):
         """Turn the plug on."""

@@ -126,7 +126,8 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
             if self._available:
                 self._available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
-                return
+
+            return
 
         _LOGGER.debug("Got new state: %s", state)
 

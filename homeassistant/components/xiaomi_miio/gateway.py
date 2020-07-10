@@ -65,7 +65,7 @@ class XiaomiGatewayDevice(Entity):
         self._entry = entry
         self._unique_id = sub_device.sid
         self._name = f"{sub_device.name} ({sub_device.sid})"
-        self._available = None
+        self._available = False
 
     @property
     def unique_id(self):
