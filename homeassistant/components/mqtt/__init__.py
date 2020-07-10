@@ -1045,10 +1045,13 @@ class MqttAvailability(Entity):
         """Subscribe MQTT events."""
         await super().async_added_to_hass()
         await self._availability_subscribe_topics()
-        async_dispatcher_connect(self.hass, MQTT_CONNECTED, self.async_mqtt_connect)
-        async_dispatcher_connect(self.hass, MQTT_DISCONNECTED, self.async_mqtt_connect)
         self.async_on_remove(
             async_dispatcher_connect(self.hass, MQTT_CONNECTED, self.async_mqtt_connect)
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, MQTT_DISCONNECTED, self.async_mqtt_connect
+            )
         )
 
     async def availability_discovery_update(self, config: dict):
@@ -1116,7 +1119,7 @@ class MqttAvailability(Entity):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        if not self.hass.data[DATA_MQTT].connected:
+        if not self.hass.data[DATA_MQTT].connected and not self.hass.is_stopping:
             return False
         return not self._avail_topics or self._available
 
