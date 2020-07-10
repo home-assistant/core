@@ -221,21 +221,21 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
 
             if self._forecast_type == HOURLY:
                 data[FORECASTS] = await self._api.forecast_hourly(
-                    self._api.availabile_fields(FORECAST_HOURLY),
+                    self._api.available_fields(FORECAST_HOURLY),
                     None,
                     timedelta(hours=24),
                 )
 
             if self._forecast_type == DAILY:
                 data[FORECASTS] = await self._api.forecast_daily(
-                    self._api.availabile_fields(FORECAST_DAILY),
+                    self._api.available_fields(FORECAST_DAILY),
                     None,
                     timedelta(days=14),
                 )
 
             if self._forecast_type == NOWCAST:
                 data[FORECASTS] = await self._api.forecast_nowcast(
-                    self._api.availabile_fields(FORECAST_NOWCAST),
+                    self._api.available_fields(FORECAST_NOWCAST),
                     None,
                     timedelta(
                         minutes=min(300, self._config_entry.options[CONF_TIMESTEP] * 30)
