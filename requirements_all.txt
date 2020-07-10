@@ -179,13 +179,13 @@ aiofreepybox==0.0.8
 aioftp==0.12.0
 
 # homeassistant.components.guardian
-aioguardian==1.0.0
+aioguardian==1.0.1
 
 # homeassistant.components.harmony
 aioharmony==0.2.5
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.43
+aiohomekit[IP]==0.2.44
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -603,7 +603,7 @@ flux_led==0.22
 fnvhash==0.1.0
 
 # homeassistant.components.foobot
-foobot_async==0.3.1
+foobot_async==0.3.2
 
 # homeassistant.components.fortios
 fortiosapi==0.10.8
@@ -2134,7 +2134,7 @@ tp-connected==0.0.4
 transmissionrpc==0.11
 
 # homeassistant.components.tuya
-tuyaha==0.0.6
+tuyaha==0.0.7
 
 # homeassistant.components.twentemilieu
 twentemilieu==0.3.0
