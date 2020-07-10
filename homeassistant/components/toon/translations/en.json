@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "The selected agreement is already configured.",
             "authorize_url_fail": "Unknown error generating an authorize url.",
-            "authorize_url_timeout": "Timeout generating authorize url.",
+            "authorize_url_timeout": "Timeout generating authorize URL.",
             "client_id": "The client ID from the configuration is invalid.",
             "client_secret": "The client secret from the configuration is invalid.",
             "missing_configuration": "The component is not configured. Please follow the documentation.",

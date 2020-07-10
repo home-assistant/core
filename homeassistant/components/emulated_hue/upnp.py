@@ -168,6 +168,6 @@ USN: {unique_service_name}
 
 def clean_socket_close(sock):
     """Close a socket connection and logs its closure."""
-    _LOGGER.info("UPNP responder shutting down.")
+    _LOGGER.info("UPNP responder shutting down")
 
     sock.close()

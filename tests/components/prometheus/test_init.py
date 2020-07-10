@@ -1,10 +1,10 @@
 """The tests for the Prometheus exporter."""
-from collections import namedtuple
+from dataclasses import dataclass
 
 import pytest
 
 from homeassistant import setup
-from homeassistant.components import climate, sensor
+from homeassistant.components import climate, humidifier, sensor
 from homeassistant.components.demo.sensor import DemoSensor
 import homeassistant.components.prometheus as prometheus
 from homeassistant.const import (
@@ -22,6 +22,14 @@ import tests.async_mock as mock
 PROMETHEUS_PATH = "homeassistant.components.prometheus"
 
 
+@dataclass
+class FilterTest:
+    """Class for capturing a filter test."""
+
+    id: str
+    should_pass: bool
+
+
 @pytest.fixture
 async def prometheus_client(loop, hass, hass_client):
     """Initialize an hass_client with Prometheus component."""
@@ -35,6 +43,10 @@ async def prometheus_client(loop, hass, hass_client):
         hass, climate.DOMAIN, {"climate": [{"platform": "demo"}]}
     )
     await hass.async_block_till_done()
+
+    await setup.async_setup_component(
+        hass, humidifier.DOMAIN, {"humidifier": [{"platform": "demo"}]}
+    )
 
     sensor1 = DemoSensor(
         None, "Television Energy", 74, None, ENERGY_KILO_WATT_HOUR, None
@@ -110,6 +122,31 @@ async def test_view(prometheus_client):  # pylint: disable=redefined-outer-name
         'current_temperature_c{domain="climate",'
         'entity="climate.heatpump",'
         'friendly_name="HeatPump"} 25.0' in body
+    )
+
+    assert (
+        'humidifier_target_humidity_percent{domain="humidifier",'
+        'entity="humidifier.humidifier",'
+        'friendly_name="Humidifier"} 68.0' in body
+    )
+
+    assert (
+        'humidifier_state{domain="humidifier",'
+        'entity="humidifier.dehumidifier",'
+        'friendly_name="Dehumidifier"} 1.0' in body
+    )
+
+    assert (
+        'humidifier_mode{domain="humidifier",'
+        'entity="humidifier.hygrostat",'
+        'friendly_name="Hygrostat",'
+        'mode="home"} 1.0' in body
+    )
+    assert (
+        'humidifier_mode{domain="humidifier",'
+        'entity="humidifier.hygrostat",'
+        'friendly_name="Hygrostat",'
+        'mode="eco"} 0.0' in body
     )
 
     assert (
@@ -200,9 +237,6 @@ async def test_full_config(hass, mock_client):
     await hass.async_block_till_done()
     assert hass.bus.listen.called
     assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
-
-
-FilterTest = namedtuple("FilterTest", "id should_pass")
 
 
 def make_event(entity_id):

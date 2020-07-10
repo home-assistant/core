@@ -13,5 +13,30 @@
                 "title": "Selecciona un m\u00e9todo de autenticaci\u00f3n"
             }
         }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Nombre del \u00e1rea",
+                    "lat_ne": "Latitud esquina Noreste",
+                    "lat_sw": "Latitud esquina Suroeste",
+                    "lon_ne": "Longitud esquina Noreste",
+                    "lon_sw": "Longitud esquina Suroeste",
+                    "mode": "C\u00e1lculo",
+                    "show_on_map": "Mostrar en el mapa"
+                },
+                "description": "Configura un sensor de clima p\u00fablico para un \u00e1rea.",
+                "title": "Sensor de clima p\u00fablico Netatmo"
+            },
+            "public_weather_areas": {
+                "data": {
+                    "new_area": "Nombre del \u00e1rea",
+                    "weather_areas": "Zonas meteorol\u00f3gicas"
+                },
+                "description": "Configurar sensores de clima p\u00fablicos.",
+                "title": "Sensor de clima p\u00fablico Netatmo"
+            }
+        }
     }
 }
