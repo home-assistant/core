@@ -284,7 +284,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
             )
             return HVAC_MODE_HEAT
         hvac_mode_value = self._hvac_modes.get(hvac_mode)
-        if not hvac_mode_value:
+        if hvac_mode_value is None:
             _LOGGER.warning("Received an invalid hvac mode: %s", hvac_mode)
             return
         self.values.mode.send_value(hvac_mode_value)
