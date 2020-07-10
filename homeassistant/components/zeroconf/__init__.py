@@ -215,10 +215,12 @@ def setup(hass, config):
                 try:
                     # 0 means paired and not discoverable by iOS clients)
                     if int(info[HOMEKIT_PROPERTIES][HOMEKIT_PAIRED_STATUS_FLAG]):
+                        _LOGGER.warning("Skipping: %s", info)
                         return
                 except ValueError:
                     # HomeKit pairing status unknown
                     # likely bad homekit data
+                    _LOGGER.exception("Bad pairing data")
                     return
 
         for domain in ZEROCONF[service_type]:
