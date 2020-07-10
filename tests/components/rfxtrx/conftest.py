@@ -59,8 +59,6 @@ async def rfxtrx_cleanup():
     ):
         yield
 
-    rfxtrx_core.RFX_DEVICES.clear()
-
 
 @pytest.fixture(name="rfxtrx")
 async def rfxtrx_fixture(hass):

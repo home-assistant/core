@@ -5,21 +5,21 @@ import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
-from homeassistant.const import CONF_NAME, STATE_ON
+from homeassistant.const import ATTR_STATE, CONF_DEVICES, CONF_NAME, STATE_ON
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
+    ATTR_FIRE_EVENT,
     CONF_AUTOMATIC_ADD,
-    CONF_DEVICES,
     CONF_FIRE_EVENT,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
     SIGNAL_EVENT,
     RfxtrxDevice,
     fire_command_event,
-    get_devices_from_config,
-    get_new_device,
+    get_device_id,
+    get_rfx_object,
 )
 from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
 
@@ -45,9 +45,28 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the RFXtrx platform."""
+    device_ids = set()
+
     # Add switch from config file
-    switches = get_devices_from_config(config, RfxtrxSwitch)
-    add_entities_callback(switches)
+    entities = []
+    for packet_id, entity_info in config[CONF_DEVICES].items():
+        event = get_rfx_object(packet_id)
+        if event is None:
+            _LOGGER.error("Invalid device: %s", packet_id)
+            continue
+
+        device_id = get_device_id(event.device)
+        if device_id in device_ids:
+            continue
+        device_ids.add(device_id)
+
+        datas = {ATTR_STATE: None, ATTR_FIRE_EVENT: entity_info[CONF_FIRE_EVENT]}
+        entity = RfxtrxSwitch(
+            entity_info[CONF_NAME], event.device, datas, config[CONF_SIGNAL_REPETITIONS]
+        )
+        entities.append(entity)
+
+    add_entities_callback(entities)
 
     def switch_update(event):
         """Handle sensor updates from the RFXtrx gateway."""
@@ -58,12 +77,28 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
         ):
             return
 
-        new_device = get_new_device(event, config, RfxtrxSwitch)
-        if new_device:
-            add_entities_callback([new_device])
+        device_id = get_device_id(event.device)
+        if device_id in device_ids:
+            return
+        device_ids.add(device_id)
+
+        _LOGGER.info(
+            "Added switch (Device ID: %s Class: %s Sub: %s)",
+            event.device.id_string.lower(),
+            event.device.__class__.__name__,
+            event.device.subtype,
+        )
+
+        pkt_id = "".join(f"{x:02x}" for x in event.data)
+        datas = {ATTR_STATE: None, ATTR_FIRE_EVENT: False}
+        entity = RfxtrxSwitch(
+            pkt_id, event.device, datas, DEFAULT_SIGNAL_REPETITIONS, event=event
+        )
+        add_entities_callback([entity])
 
     # Subscribe to main RFXtrx events
-    hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, switch_update)
+    if config[CONF_AUTOMATIC_ADD]:
+        hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, switch_update)
 
 
 class RfxtrxSwitch(RfxtrxDevice, SwitchEntity, RestoreEntity):
