@@ -31,16 +31,6 @@ SERVICE_REBOOT = "reboot"
 SERVICE_RESET_VALVE_DIAGNOSTICS = "reset_valve_diagnostics"
 SERVICE_UPGRADE_FIRMWARE = "upgrade_firmware"
 
-SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_URL, default=DEFAULT_FIRMWARE_UPGRADE_URL): cv.url,
-        vol.Optional(CONF_PORT, default=DEFAULT_FIRMWARE_UPGRADE_PORT): cv.port,
-        vol.Optional(
-            CONF_FILENAME, default=DEFAULT_FIRMWARE_UPGRADE_FILENAME
-        ): cv.string,
-    }
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
@@ -49,13 +39,19 @@ async def async_setup_entry(
     platform = entity_platform.current_platform.get()
 
     for service_name, schema, method in [
-        (SERVICE_DISABLE_AP, None, "async_disable_ap"),
-        (SERVICE_ENABLE_AP, None, "async_enable_ap"),
-        (SERVICE_REBOOT, None, "async_reboot"),
-        (SERVICE_RESET_VALVE_DIAGNOSTICS, None, "async_reset_valve_diagnostics"),
+        (SERVICE_DISABLE_AP, {}, "async_disable_ap"),
+        (SERVICE_ENABLE_AP, {}, "async_enable_ap"),
+        (SERVICE_REBOOT, {}, "async_reboot"),
+        (SERVICE_RESET_VALVE_DIAGNOSTICS, {}, "async_reset_valve_diagnostics"),
         (
             SERVICE_UPGRADE_FIRMWARE,
-            SERVICE_UPGRADE_FIRMWARE_SCHEMA,
+            {
+                vol.Optional(CONF_URL, default=DEFAULT_FIRMWARE_UPGRADE_URL): cv.url,
+                vol.Optional(CONF_PORT, default=DEFAULT_FIRMWARE_UPGRADE_PORT): cv.port,
+                vol.Optional(
+                    CONF_FILENAME, default=DEFAULT_FIRMWARE_UPGRADE_FILENAME
+                ): cv.string,
+            },
             "async_upgrade_firmware",
         ),
     ]:
