@@ -46,7 +46,6 @@ DEFAULT_TIMEOUT = 10
 
 CONF_JSON_ATTRS = "json_attributes"
 CONF_JSON_ATTRS_PATH = "json_attributes_path"
-CONF_PROXY_URL = "proxy_url"
 METHODS = ["POST", "GET"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -289,7 +288,7 @@ class RestData:
         self._timeout = timeout
         self._http_session = Session()
 
-        if proxy_url is not None:
+        if proxy_url:
             self._proxies = {"http": proxy_url, "https": proxy_url}
         else:
             self._proxies = None
