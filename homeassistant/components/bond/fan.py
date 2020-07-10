@@ -25,7 +25,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
-    """Set up Bond cover devices."""
+    """Set up Bond fan devices."""
     bond: Bond = hass.data[DOMAIN][entry.entry_id]
 
     devices = await hass.async_add_executor_job(get_bond_devices, hass, bond)
@@ -43,7 +43,7 @@ class BondFan(FanEntity):
     """Representation of a Bond fan."""
 
     def __init__(self, bond: Bond, device: BondDevice):
-        """Create HA entity representing Bond cover."""
+        """Create HA entity representing Bond fan."""
         self._bond = bond
         self._device = device
 
