@@ -40,7 +40,7 @@ async def async_setup_entry(
 
 
 class BondFan(FanEntity):
-    """Representation of a Bond cover."""
+    """Representation of a Bond fan."""
 
     def __init__(self, bond: Bond, device: BondDevice):
         """Create HA entity representing Bond cover."""
@@ -62,7 +62,7 @@ class BondFan(FanEntity):
 
     @property
     def device_info(self) -> Optional[Dict[str, Any]]:
-        """Get a an HA device representing this cover."""
+        """Get a an HA device representing this fan."""
         return {ATTR_NAME: self.name, "identifiers": {(DOMAIN, self._device.device_id)}}
 
     @property
@@ -94,7 +94,7 @@ class BondFan(FanEntity):
         return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
     def update(self):
-        """Fetch assumed state of the cover from the hub using API."""
+        """Fetch assumed state of the fan from the hub using API."""
         state: dict = self._bond.getDeviceState(self._device.device_id)
         self._power = state.get("power")
         self._speed = state.get("speed")
@@ -103,11 +103,6 @@ class BondFan(FanEntity):
         """Set the desired speed for the fan."""
         speed_index = self.speed_list.index(speed)
         self._bond.setSpeed(self._device.device_id, speed=speed_index)
-
-    def set_direction(self, direction: str) -> None:
-        """Set the direction for the fan."""
-        # not yet supported in upstream
-        raise NotImplementedError
 
     def turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
         """Turn on the fan."""
