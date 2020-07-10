@@ -13,30 +13,28 @@ from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     CONF_DEVICE_CLASS,
+    CONF_DEVICES,
     CONF_NAME,
 )
 from homeassistant.helpers import config_validation as cv, event as evt
-from homeassistant.util import slugify
 
 from . import (
-    ATTR_NAME,
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
-    CONF_DEVICES,
     CONF_FIRE_EVENT,
     CONF_OFF_DELAY,
-    RFX_DEVICES,
     SIGNAL_EVENT,
     find_possible_pt2262_device,
     fire_command_event,
+    get_device_id,
     get_pt2262_cmd,
-    get_pt2262_device,
     get_pt2262_deviceid,
     get_rfx_object,
 )
-from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
+from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST, DEVICE_PACKET_TYPE_LIGHTING4
 
 _LOGGER = logging.getLogger(__name__)
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -61,28 +59,40 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+def _get_device_data_bits(device, device_bits):
+    """Deduce data bits for device based on a cache of device bits."""
+    data_bits = None
+    if device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
+        for id_masked, bits in device_bits.items():
+            if get_pt2262_deviceid(device.id_string, bits) == id_masked:
+                data_bits = bits
+                break
+    return data_bits
+
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Binary Sensor platform to RFXtrx."""
     sensors = []
 
+    device_ids = set()
+    device_bits = {}
+
+    pt2262_devices = []
+
     for packet_id, entity in config[CONF_DEVICES].items():
         event = get_rfx_object(packet_id)
-        device_id = slugify(event.device.id_string.lower())
-
-        if device_id in RFX_DEVICES:
+        if event is None:
+            _LOGGER.error("Invalid device: %s", packet_id)
             continue
 
-        if entity.get(CONF_DATA_BITS) is not None:
-            _LOGGER.debug(
-                "Masked device id: %s",
-                get_pt2262_deviceid(device_id, entity.get(CONF_DATA_BITS)),
-            )
+        device_id = get_device_id(event.device, data_bits=entity.get(CONF_DATA_BITS))
+        if device_id in device_ids:
+            continue
+        device_ids.add(device_id)
 
-        _LOGGER.debug(
-            "Add %s rfxtrx.binary_sensor (class %s)",
-            entity[ATTR_NAME],
-            entity.get(CONF_DEVICE_CLASS),
-        )
+        if event.device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
+            find_possible_pt2262_device(pt2262_devices, event.device.id_string)
+            pt2262_devices.append(event.device.id_string)
 
         device = RfxtrxBinarySensor(
             event.device,
@@ -95,7 +105,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             entity.get(CONF_COMMAND_OFF),
         )
         sensors.append(device)
-        RFX_DEVICES[device_id] = device
 
     add_entities(sensors)
 
@@ -104,35 +113,28 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if not isinstance(event, rfxtrxmod.ControlEvent):
             return
 
-        device_id = slugify(event.device.id_string.lower())
+        data_bits = _get_device_data_bits(event.device, device_bits)
 
-        sensor = RFX_DEVICES.get(device_id, get_pt2262_device(device_id))
+        device_id = get_device_id(event.device, data_bits=data_bits)
+        if device_id in device_ids:
+            return
+        device_ids.add(device_id)
 
-        if sensor is None:
-            # Add the entity if not exists and automatic_add is True
-            if not config[CONF_AUTOMATIC_ADD]:
-                return
-
-            if event.device.packettype == 0x13:
-                poss_dev = find_possible_pt2262_device(device_id)
-                if poss_dev is not None:
-                    poss_id = slugify(poss_dev.event.device.id_string.lower())
-                    _LOGGER.debug("Found possible matching device ID: %s", poss_id)
-
-            pkt_id = "".join(f"{x:02x}" for x in event.data)
-            sensor = RfxtrxBinarySensor(event.device, pkt_id, event=event)
-            RFX_DEVICES[device_id] = sensor
-            add_entities([sensor])
-            _LOGGER.info(
-                "Added binary sensor %s (Device ID: %s Class: %s Sub: %s)",
-                pkt_id,
-                slugify(event.device.id_string.lower()),
-                event.device.__class__.__name__,
-                event.device.subtype,
-            )
+        _LOGGER.info(
+            "Added binary sensor (Device ID: %s Class: %s Sub: %s)",
+            event.device.id_string.lower(),
+            event.device.__class__.__name__,
+            event.device.subtype,
+        )
+        pkt_id = "".join(f"{x:02x}" for x in event.data)
+        sensor = RfxtrxBinarySensor(
+            event.device, pkt_id, data_bits=data_bits, event=event
+        )
+        add_entities([sensor])
 
     # Subscribe to main RFXtrx events
-    hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, binary_sensor_update)
+    if config[CONF_AUTOMATIC_ADD]:
+        hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, binary_sensor_update)
 
 
 class RfxtrxBinarySensor(BinarySensorEntity):
@@ -158,22 +160,13 @@ class RfxtrxBinarySensor(BinarySensorEntity):
         self._device_class = device_class
         self._off_delay = off_delay
         self._state = False
-        self.is_lighting4 = device.packettype == 0x13
         self.delay_listener = None
         self._data_bits = data_bits
         self._cmd_on = cmd_on
         self._cmd_off = cmd_off
 
-        if data_bits is not None:
-            self._masked_id = get_pt2262_deviceid(device.id_string.lower(), data_bits)
-            self._unique_id = (
-                f"{device.packettype:x}_{device.subtype:x}_{self._masked_id}"
-            )
-        else:
-            self._masked_id = None
-            self._unique_id = (
-                f"{device.packettype:x}_{device.subtype:x}_{device.id_string}"
-            )
+        self._device_id = get_device_id(device, data_bits=data_bits)
+        self._unique_id = "_".join(x for x in self._device_id)
 
         if event:
             self._apply_event(event)
@@ -192,11 +185,6 @@ class RfxtrxBinarySensor(BinarySensorEntity):
     def name(self):
         """Return the device name."""
         return self._name
-
-    @property
-    def masked_id(self):
-        """Return the masked device id (isolated address bits)."""
-        return self._masked_id
 
     @property
     def data_bits(self):
@@ -263,20 +251,15 @@ class RfxtrxBinarySensor(BinarySensorEntity):
 
     def _apply_event(self, event):
         """Apply command from rfxtrx."""
-        if self.is_lighting4:
+        if event.device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
             self._apply_event_lighting4(event)
         else:
             self._apply_event_standard(event)
 
     def _handle_event(self, event):
         """Check if event applies to me and update."""
-        if self._masked_id:
-            masked_id = get_pt2262_deviceid(event.device.id_string, self._data_bits)
-            if masked_id != self._masked_id:
-                return
-        else:
-            if event.device.id_string != self._device.id_string:
-                return
+        if get_device_id(event.device, data_bits=self._data_bits) != self._device_id:
+            return
 
         _LOGGER.debug(
             "Binary sensor update (Device ID: %s Class: %s Sub: %s)",

@@ -1072,20 +1072,27 @@ async def test_logbook_humanify_automation_triggered_event(hass):
     assert event2["entity_id"] == "automation.bye"
 
 
-async def test_invalid_config(hass):
-    """Test invalid config."""
+invalid_configs = [
+    {
+        "mode": "parallel",
+        "queue_size": 5,
+        "trigger": {"platform": "event", "event_type": "test_event"},
+        "action": [],
+    },
+    {
+        "mode": "legacy",
+        "trigger": {"platform": "event", "event_type": "test_event"},
+        "action": [{"repeat": {"count": 5, "sequence": []}}],
+    },
+]
+
+
+@pytest.mark.parametrize("value", invalid_configs)
+async def test_invalid_configs(hass, value):
+    """Test invalid configurations."""
     with assert_setup_component(0, automation.DOMAIN):
         assert await async_setup_component(
-            hass,
-            automation.DOMAIN,
-            {
-                automation.DOMAIN: {
-                    "mode": "parallel",
-                    "queue_size": 5,
-                    "trigger": {"platform": "event", "event_type": "test_event"},
-                    "action": [],
-                }
-            },
+            hass, automation.DOMAIN, {automation.DOMAIN: value}
         )
 
 

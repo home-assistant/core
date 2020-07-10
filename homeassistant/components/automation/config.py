@@ -15,6 +15,7 @@ from homeassistant.helpers import condition, config_per_platform
 from homeassistant.helpers.script import (
     SCRIPT_MODE_LEGACY,
     async_validate_action_config,
+    validate_legacy_mode_actions,
     warn_deprecated_legacy,
 )
 from homeassistant.loader import IntegrationNotFound
@@ -54,6 +55,9 @@ async def async_validate_config_item(hass, config, full_config=None):
     config[CONF_ACTION] = await asyncio.gather(
         *[async_validate_action_config(hass, action) for action in config[CONF_ACTION]]
     )
+
+    if config.get(CONF_MODE, SCRIPT_MODE_LEGACY) == SCRIPT_MODE_LEGACY:
+        validate_legacy_mode_actions(config[CONF_ACTION])
 
     return config
 

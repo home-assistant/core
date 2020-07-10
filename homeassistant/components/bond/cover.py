@@ -1,5 +1,4 @@
 """Support for Bond covers."""
-import logging
 from typing import Any, Callable, Dict, List, Optional
 
 from bond import BOND_DEVICE_TYPE_MOTORIZED_SHADES, Bond
@@ -13,13 +12,11 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 from .utils import BondDevice, get_bond_devices
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity]], None],
+    async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
     """Set up Bond cover devices."""
     bond: Bond = hass.data[DOMAIN][entry.entry_id]
@@ -32,7 +29,7 @@ async def async_setup_entry(
         if device.type == BOND_DEVICE_TYPE_MOTORIZED_SHADES
     ]
 
-    async_add_entities(covers)
+    async_add_entities(covers, True)
 
 
 class BondCover(CoverEntity):
@@ -42,6 +39,7 @@ class BondCover(CoverEntity):
         """Create HA entity representing Bond cover."""
         self._bond = bond
         self._device = device
+        self._closed: Optional[bool] = None
 
     @property
     def device_class(self) -> Optional[str]:
@@ -64,9 +62,20 @@ class BondCover(CoverEntity):
         return {ATTR_NAME: self.name, "identifiers": {(DOMAIN, self._device.device_id)}}
 
     @property
+    def assumed_state(self) -> bool:
+        """Let HA know this entity relies on an assumed state tracked by Bond."""
+        return True
+
+    def update(self):
+        """Fetch assumed state of the cover from the hub using API."""
+        state: dict = self._bond.getDeviceState(self._device.device_id)
+        cover_open = state.get("open")
+        self._closed = True if cover_open == 0 else False if cover_open == 1 else None
+
+    @property
     def is_closed(self):
         """Return if the cover is closed or not."""
-        return None
+        return self._closed
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""

@@ -161,10 +161,36 @@ async def async_setup_entry(
     config = bridge.api.config
 
     # For backwards compat
+    unique_id = normalize_bridge_id(config.bridgeid)
     if entry.unique_id is None:
-        hass.config_entries.async_update_entry(
-            entry, unique_id=normalize_bridge_id(config.bridgeid)
+        hass.config_entries.async_update_entry(entry, unique_id=unique_id)
+
+    # For recovering from bug where we incorrectly assumed homekit ID = bridge ID
+    elif entry.unique_id != unique_id:
+        # Find entries with this unique ID
+        other_entry = next(
+            (
+                entry
+                for entry in hass.config_entries.async_entries(DOMAIN)
+                if entry.unique_id == unique_id
+            ),
+            None,
         )
+
+        if other_entry is None:
+            # If no other entry, update unique ID of this entry ID.
+            hass.config_entries.async_update_entry(entry, unique_id=unique_id)
+
+        elif other_entry.source == config_entries.SOURCE_IGNORE:
+            # There is another entry but it is ignored, delete that one and update this one
+            hass.async_create_task(
+                hass.config_entries.async_remove(other_entry.entry_id)
+            )
+            hass.config_entries.async_update_entry(entry, unique_id=unique_id)
+        else:
+            # There is another entry that already has the right unique ID. Delete this entry
+            hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
+            return False
 
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(

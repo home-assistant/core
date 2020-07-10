@@ -538,8 +538,10 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(hass):
     assert new_entry.unique_id == "id-1234"
 
 
-async def test_bridge_homekit(hass):
+async def test_bridge_homekit(hass, aioclient_mock):
     """Test a bridge being discovered via HomeKit."""
+    aioclient_mock.get(URL_NUPNP, json=[{"internalipaddress": "1.2.3.4", "id": "bla"}])
+
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": "homekit"},
@@ -552,7 +554,7 @@ async def test_bridge_homekit(hass):
     )
 
     assert result["type"] == "form"
-    assert result["step_id"] == "link"
+    assert result["step_id"] == "init"
 
 
 async def test_bridge_import_already_configured(hass):
@@ -602,24 +604,6 @@ async def test_ssdp_discovery_update_configuration(hass):
             ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
             ssdp.ATTR_UPNP_SERIAL: "aabbccddeeff",
         },
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
-    assert entry.data["host"] == "1.1.1.1"
-
-
-async def test_homekit_discovery_update_configuration(hass):
-    """Test if a discovered bridge is configured and updated with new host."""
-    entry = MockConfigEntry(
-        domain="hue", unique_id="aabbccddeeff", data={"host": "0.0.0.0"}
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN,
-        context={"source": "homekit"},
-        data={"host": "1.1.1.1", "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
     )
 
     assert result["type"] == "abort"
