@@ -141,7 +141,7 @@ async def test_fire_event(hass):
     assert state
     assert state.state == "on"
 
-    assert 1 == len(calls)
+    assert len(calls) == 1
     assert calls[0].data == {"entity_id": "switch.test", "state": "on"}
 
 
@@ -187,5 +187,5 @@ async def test_fire_event_sensor(hass):
     hass.bus.async_listen("signal_received", record_event)
 
     await _signal_event(hass, "0a520802060101ff0f0269")
-    assert 1 == len(calls)
-    assert calls[0].data == {"entity_id": "sensor.test_temperature"}
+    assert len(calls) == 5
+    assert any(call.data == {"entity_id": "sensor.test_temperature"} for call in calls)
