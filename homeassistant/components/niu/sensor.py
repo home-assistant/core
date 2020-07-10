@@ -172,7 +172,7 @@ class NiuSensor(Entity):
             else:
                 self._icon = "mdi:battery-alert"
 
-        if "lemp" in self._attribute:
+        if "temp" in self._attribute:
             self._unit = TEMP_CELSIUS
 
             if desc == "low":
