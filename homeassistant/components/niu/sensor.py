@@ -1,16 +1,10 @@
 """Platform for sensor integration."""
 import logging
-from homeassistant.const import (
-    ATTR_BATTERY_CHARGING,
-    ATTR_BATTERY_LEVEL,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-    TEMP_CELSIUS,
-)
-from homeassistant.helpers.entity import Entity
-from homeassistant.util.distance import convert
 
-from . import DOMAIN, NiuDevice
+from homeassistant.const import ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL, TEMP_CELSIUS
+from homeassistant.helpers.entity import Entity
+
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,11 +42,12 @@ class NiuSensor(Entity):
 
     @property
     def unique_id(self) -> str:
+        """Return the unique id for the sensor."""
         return f"{self._vehicle.get_serial()}_{self._type}"
 
     @property
     def should_poll(self) -> bool:
-        """Data update is centralized in NiuAccount"""
+        """Return false since data update is centralized in NiuAccount."""
         return False
 
     @property
@@ -72,6 +67,7 @@ class NiuSensor(Entity):
 
     @property
     def icon(self):
+        """Return the icon of the sensor."""
         return self._icon
 
     @property
@@ -103,8 +99,10 @@ class NiuSensor(Entity):
 
     def update(self) -> None:
         """Fetch new state data for the sensor.
+
         This is the only method that should fetch new data for Home Assistant.
         """
+
         _LOGGER.debug("Updating %s", self.name)
 
         if self._type == "Level":
