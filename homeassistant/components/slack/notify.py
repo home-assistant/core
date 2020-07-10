@@ -177,26 +177,19 @@ class SlackNotificationService(BaseNotificationService):
         data = FormData(
             {
                 "channels": ",".join(targets),
-                "file": resp.content,
                 "filename": filename,
                 "initial_comment": message,
                 "title": title or filename,
-                "token": "acb",
-            }
+                "token": self._client.token,
+            },
+            charset="utf-8",
         )
+        data.add_field("file", resp.content, filename=filename)
 
-        resp = await session.post("https://slack.com/api/files.upload", data=data,)
-        _LOGGER.debug(await resp.text())
-        # try:
-        #     await self._client.files_upload(
-        #         channels=",".join(targets),
-        #         file=resp.content,
-        #         filename=filename,
-        #         initial_comment=message,
-        #         title=title or filename,
-        #     )
-        # except SlackApiError as err:
-        #     _LOGGER.error("Error while uploading file-based message: %s", err)
+        try:
+            await session.post("https://slack.com/api/files.upload", data=data)
+        except ClientError as err:
+            _LOGGER.error("Error while uploading file message: %s", err)
 
     async def _async_send_text_only_message(
         self, targets, message, title, attachments, blocks
