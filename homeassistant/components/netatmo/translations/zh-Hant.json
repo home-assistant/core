@@ -13,5 +13,30 @@
                 "title": "\u9078\u64c7\u9a57\u8b49\u6a21\u5f0f"
             }
         }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "\u5340\u57df\u540d\u7a31",
+                    "lat_ne": "\u7def\u5ea6\u6771\u5317\u89d2",
+                    "lat_sw": "\u7def\u5ea6\u897f\u5357\u89d2",
+                    "lon_ne": "\u7d93\u5ea6\u6771\u5317\u89d2",
+                    "lon_sw": "\u7d93\u5ea6\u897f\u5357\u89d2",
+                    "mode": "\u8a08\u7b97\u65b9\u5f0f",
+                    "show_on_map": "\u65bc\u5730\u5716\u986f\u793a"
+                },
+                "description": "\u8a2d\u5b9a\u5340\u57df\u516c\u773e\u6c23\u8c61\u50b3\u611f\u5668\u3002",
+                "title": "Netatmo \u516c\u773e\u6c23\u8c61\u50b3\u611f\u5668"
+            },
+            "public_weather_areas": {
+                "data": {
+                    "new_area": "\u5340\u57df\u540d\u7a31",
+                    "weather_areas": "\u6c23\u8c61\u5340\u57df"
+                },
+                "description": "\u8a2d\u5b9a\u516c\u773e\u6c23\u8c61\u50b3\u611f\u5668\u3002",
+                "title": "Netatmo \u516c\u773e\u6c23\u8c61\u50b3\u611f\u5668"
+            }
+        }
     }
 }
