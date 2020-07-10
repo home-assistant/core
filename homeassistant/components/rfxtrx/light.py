@@ -52,7 +52,7 @@ SUPPORT_RFXTRX = SUPPORT_BRIGHTNESS
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RFXtrx platform."""
-    device_ids = []
+    device_ids = set()
 
     # Add switch from config file
     entities = []
@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         device_id = get_device_id(event.device)
         if device_id in device_ids:
             continue
-        device_ids.append(device_id)
+        device_ids.add(device_id)
 
         datas = {ATTR_STATE: None, ATTR_FIRE_EVENT: entity_info[CONF_FIRE_EVENT]}
         entity = RfxtrxLight(
@@ -87,7 +87,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         device_id = get_device_id(event.device)
         if device_id in device_ids:
             return
-        device_ids.append(device_id)
+        device_ids.add(device_id)
 
         _LOGGER.debug(
             "Added light (Device ID: %s Class: %s Sub: %s)",

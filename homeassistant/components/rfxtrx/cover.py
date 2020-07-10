@@ -45,7 +45,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RFXtrx cover."""
-    device_ids = []
+    device_ids = set()
 
     entities = []
     for packet_id, entity_info in config[CONF_DEVICES].items():
@@ -57,7 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         device_id = get_device_id(event.device)
         if device_id in device_ids:
             continue
-        device_ids.append(device_id)
+        device_ids.add(device_id)
 
         datas = {ATTR_STATE: None, ATTR_FIRE_EVENT: entity_info[CONF_FIRE_EVENT]}
         entity = RfxtrxCover(
@@ -79,7 +79,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         device_id = get_device_id(event.device)
         if device_id in device_ids:
             return
-        device_ids.append(device_id)
+        device_ids.add(device_id)
 
         _LOGGER.info(
             "Added cover (Device ID: %s Class: %s Sub: %s)",

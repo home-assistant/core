@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RFXtrx platform."""
-    data_ids = []
+    data_ids = set()
 
     entities = []
     for packet_id, entity_info in config[CONF_DEVICES].items():
@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             data_id = (*device_id, data_type)
             if data_id in data_ids:
                 continue
-            data_ids.append(data_id)
+            data_ids.add(data_id)
 
             entity = RfxtrxSensor(
                 event.device,
@@ -84,7 +84,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             data_id = (*device_id, data_type)
             if data_id in data_ids:
                 continue
-            data_ids.append(data_id)
+            data_ids.add(data_id)
 
             _LOGGER.debug(
                 "Added sensor (Device ID: %s Class: %s Sub: %s)",

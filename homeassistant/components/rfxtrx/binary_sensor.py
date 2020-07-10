@@ -74,7 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Binary Sensor platform to RFXtrx."""
     sensors = []
 
-    device_ids = []
+    device_ids = set()
     device_bits = {}
 
     pt2262_devices = []
@@ -88,7 +88,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         device_id = get_device_id(event.device, data_bits=entity.get(CONF_DATA_BITS))
         if device_id in device_ids:
             continue
-        device_ids.append(device_id)
+        device_ids.add(device_id)
 
         if event.device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
             find_possible_pt2262_device(pt2262_devices, event.device.id_string)
@@ -118,7 +118,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         device_id = get_device_id(event.device, data_bits=data_bits)
         if device_id in device_ids:
             return
-        device_ids.append(device_id)
+        device_ids.add(device_id)
 
         _LOGGER.info(
             "Added binary sensor (Device ID: %s Class: %s Sub: %s)",
