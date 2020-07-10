@@ -125,8 +125,8 @@ class Thermostat(HomeAccessory):
         # Homekit only supports 10-38, overwriting
         # the max to appears to work, but less than 0 causes
         # a crash on the home app
-        hc_min_temp = max(min_temp, 0)
-        hc_max_temp = max_temp
+        self.hc_min_temp = max(min_temp, 0)
+        self.hc_max_temp = max_temp
 
         min_humidity = self.hass.states.get(self.entity_id).attributes.get(
             ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY
@@ -175,7 +175,10 @@ class Thermostat(HomeAccessory):
             # We do not set PROP_MIN_STEP here and instead use the HomeKit
             # default of 0.1 in order to have enough precision to convert
             # temperature units and avoid setting to 73F will result in 74F
-            properties={PROP_MIN_VALUE: hc_min_temp, PROP_MAX_VALUE: hc_max_temp},
+            properties={
+                PROP_MIN_VALUE: self.hc_min_temp,
+                PROP_MAX_VALUE: self.hc_max_temp,
+            },
         )
 
         # Display units characteristic
@@ -193,7 +196,10 @@ class Thermostat(HomeAccessory):
                 # We do not set PROP_MIN_STEP here and instead use the HomeKit
                 # default of 0.1 in order to have enough precision to convert
                 # temperature units and avoid setting to 73F will result in 74F
-                properties={PROP_MIN_VALUE: hc_min_temp, PROP_MAX_VALUE: hc_max_temp},
+                properties={
+                    PROP_MIN_VALUE: self.hc_min_temp,
+                    PROP_MAX_VALUE: self.hc_max_temp,
+                },
             )
         if CHAR_HEATING_THRESHOLD_TEMPERATURE in self.chars:
             self.char_heating_thresh_temp = serv_thermostat.configure_char(
@@ -202,7 +208,10 @@ class Thermostat(HomeAccessory):
                 # We do not set PROP_MIN_STEP here and instead use the HomeKit
                 # default of 0.1 in order to have enough precision to convert
                 # temperature units and avoid setting to 73F will result in 74F
-                properties={PROP_MIN_VALUE: hc_min_temp, PROP_MAX_VALUE: hc_max_temp},
+                properties={
+                    PROP_MIN_VALUE: self.hc_min_temp,
+                    PROP_MAX_VALUE: self.hc_max_temp,
+                },
             )
         self.char_target_humidity = None
         self.char_current_humidity = None
@@ -226,7 +235,8 @@ class Thermostat(HomeAccessory):
         serv_thermostat.setter_callback = self._set_chars
 
     def _temperature_to_homekit(self, temp):
-        return temperature_to_homekit(temp, self._unit)
+        temp = temperature_to_homekit(temp, self._unit)
+        return min(max(temp, self.hc_min_temp), self.hc_max_temp)
 
     def _temperature_to_states(self, temp):
         return temperature_to_states(temp, self._unit)
