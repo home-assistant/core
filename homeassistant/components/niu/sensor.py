@@ -8,27 +8,31 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+SENSORS_SINGLE = [
+    ("level", "Battery Level"),
+    ("temp", "Battery Temperature"),
+]
+
+SENSORS_DUAL = [
+    ("level", "Battery Level"),
+    ("level a", "Battery A Level"),
+    ("level b", "Battery B Level"),
+    ("temp a", "Battery A Temperature"),
+    ("temp b", "Battery B Temperature"),
+]
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
     vehicles = hass.data[DOMAIN].account.get_vehicles()
 
     for vehicle in vehicles:
-        entities = [
-            NiuSensor(hass.data[DOMAIN], vehicle, "Level"),
-        ]
+        entities = []
 
-        if vehicle.get_battery_count() == 1:
-            entities.append(NiuSensor(hass.data[DOMAIN], vehicle, "Temp"))
-        else:
-            entities.extend(
-                [
-                    NiuSensor(hass.data[DOMAIN], vehicle, "Level A"),
-                    NiuSensor(hass.data[DOMAIN], vehicle, "Level B"),
-                    NiuSensor(hass.data[DOMAIN], vehicle, "Temp A"),
-                    NiuSensor(hass.data[DOMAIN], vehicle, "Temp B"),
-                ]
-            )
+        for sensor in (
+            SENSORS_SINGLE if vehicle.get_battery_count() == 1 else SENSORS_DUAL
+        ):
+            entities.append(NiuSensor(hass.data[DOMAIN], vehicle, sensor[0], sensor[1]))
 
         add_entities(entities, True)
 
@@ -36,12 +40,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class NiuSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, account, vehicle, attribute=""):
+    def __init__(self, account, vehicle, attribute, name):
         """Initialize the sensor."""
         self._account = account
         self._serial = vehicle.get_serial()
         self._vehicle = vehicle
         self._attribute = attribute
+        self._name = name
 
         self._unit = None
         self._icon = None
@@ -60,7 +65,7 @@ class NiuSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._vehicle.get_name()} {self._attribute}"
+        return f"{self._vehicle.get_name()} {self._name}"
 
     @property
     def state(self):
@@ -124,23 +129,22 @@ class NiuSensor(Entity):
 
         _LOGGER.debug("Updating %s", self.name)
 
-        desc = ""
-
-        if self._attribute == "Level":
+        if self._attribute == "level":
             self._state = self._vehicle.get_soc()
-        elif self._attribute == "Level A":
+        if self._attribute == "level a":
             self._state = self._vehicle.get_soc(0)
-        elif self._attribute == "Level B":
+        if self._attribute == "level b":
             self._state = self._vehicle.get_soc(1)
 
-        elif self._attribute == "Temp" or self._attribute == "Temp A":
+        desc = ""
+        if self._attribute == "temp" or self._attribute == "temp a":
             self._state = self._vehicle.get_battery_temp(0)
             desc = self._vehicle.get_battery_temp_desc(0)
-        elif self._attribute == "Temp B":
+        if self._attribute == "temp b":
             self._state = self._vehicle.get_battery_temp(1)
             desc = self._vehicle.get_battery_temp_desc(1)
 
-        if "Level" in self._attribute:
+        if "level" in self._attribute:
             self._unit = "%"
 
             if self._state < 5:
@@ -168,7 +172,7 @@ class NiuSensor(Entity):
             else:
                 self._icon = "mdi:battery-alert"
 
-        if "Temp" in self._attribute:
+        if "lemp" in self._attribute:
             self._unit = TEMP_CELSIUS
 
             if desc == "low":

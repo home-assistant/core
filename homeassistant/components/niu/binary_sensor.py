@@ -1,6 +1,7 @@
 """Platform for binary sensor integration."""
 
 import logging
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL
 
