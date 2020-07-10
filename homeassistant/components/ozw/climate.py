@@ -198,7 +198,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        if self.values.temperature and self.values.temperature.units == "F":
+        if self.values.temperature is not None and self.values.temperature.units == "F":
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
 
