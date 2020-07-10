@@ -1023,6 +1023,9 @@ twilio==6.32.0
 # homeassistant.components.upb
 upb_lib==0.4.11
 
+# homeassistant.components.upcloud
+upcloud-api==0.4.5
+
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
 url-normalize==1.4.1
