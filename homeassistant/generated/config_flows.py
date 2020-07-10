@@ -146,6 +146,7 @@ FLOWS = [
     "shopping_list",
     "simplisafe",
     "smappee",
+    "smart_meter_texas",
     "smarthab",
     "smartthings",
     "smhi",
