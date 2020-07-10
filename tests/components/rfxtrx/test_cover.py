@@ -1,7 +1,6 @@
 """The tests for the Rfxtrx cover platform."""
 from unittest.mock import call
 
-from homeassistant.components import rfxtrx as rfxtrx_core
 from homeassistant.setup import async_setup_component
 
 from . import _signal_event
@@ -19,12 +18,7 @@ async def test_valid_config(hass, rfxtrx):
                 "cover": {
                     "platform": "rfxtrx",
                     "automatic_add": True,
-                    "devices": {
-                        "0b1100cd0213c7f210010f51": {
-                            "name": "Test",
-                            rfxtrx_core.ATTR_FIRE_EVENT: True,
-                        }
-                    },
+                    "devices": {"0b1100cd0213c7f210010f51": {"name": "Test"}},
                 }
             },
         )

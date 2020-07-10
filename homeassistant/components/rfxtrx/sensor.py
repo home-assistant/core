@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_TEMPERATURE,
     PLATFORM_SCHEMA,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_DEVICES, CONF_NAME
+from homeassistant.const import CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             cv.string: vol.Schema(
                 {
                     vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+                    vol.Remove(CONF_FIRE_EVENT): cv.boolean,
                     vol.Optional(CONF_DATA_TYPE, default=[]): vol.All(
                         cv.ensure_list, [vol.In(DATA_TYPES.keys())]
                     ),
@@ -97,12 +97,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 continue
             data_ids.add(data_id)
 
-            entity = RfxtrxSensor(
-                event.device,
-                entity_info[CONF_NAME],
-                data_type,
-                entity_info[CONF_FIRE_EVENT],
-            )
+            entity = RfxtrxSensor(event.device, entity_info[CONF_NAME], data_type,)
             entities.append(entity)
 
     add_entities(entities)
@@ -138,12 +133,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class RfxtrxSensor(Entity):
     """Representation of a RFXtrx sensor."""
 
-    def __init__(self, device, name, data_type, should_fire_event=False, event=None):
+    def __init__(self, device, name, data_type, event=None):
         """Initialize the sensor."""
         self.event = None
         self._device = device
         self._name = name
-        self.should_fire_event = should_fire_event
         self.data_type = data_type
         self._unit_of_measurement = DATA_TYPES.get(data_type, "")
         self._device_id = get_device_id(device)
@@ -229,5 +223,3 @@ class RfxtrxSensor(Entity):
         self._apply_event(event)
 
         self.schedule_update_ha_state()
-        if self.should_fire_event:
-            self.hass.bus.fire("signal_received", {ATTR_ENTITY_ID: self.entity_id})

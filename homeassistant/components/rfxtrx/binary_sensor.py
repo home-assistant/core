@@ -25,7 +25,6 @@ from . import (
     CONF_OFF_DELAY,
     SIGNAL_EVENT,
     find_possible_pt2262_device,
-    fire_command_event,
     get_device_id,
     get_pt2262_cmd,
     get_pt2262_deviceid,
@@ -43,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 {
                     vol.Optional(CONF_NAME): cv.string,
                     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-                    vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+                    vol.Remove(CONF_FIRE_EVENT): cv.boolean,
                     vol.Optional(CONF_OFF_DELAY): vol.Any(
                         cv.time_period, cv.positive_timedelta
                     ),
@@ -98,7 +97,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             event.device,
             entity.get(CONF_NAME),
             entity.get(CONF_DEVICE_CLASS),
-            entity[CONF_FIRE_EVENT],
             entity.get(CONF_OFF_DELAY),
             entity.get(CONF_DATA_BITS),
             entity.get(CONF_COMMAND_ON),
@@ -145,7 +143,6 @@ class RfxtrxBinarySensor(BinarySensorEntity):
         device,
         name,
         device_class=None,
-        should_fire=False,
         off_delay=None,
         data_bits=None,
         cmd_on=None,
@@ -156,7 +153,6 @@ class RfxtrxBinarySensor(BinarySensorEntity):
         self.event = None
         self._device = device
         self._name = name
-        self._should_fire_event = should_fire
         self._device_class = device_class
         self._off_delay = off_delay
         self._state = False
@@ -205,11 +201,6 @@ class RfxtrxBinarySensor(BinarySensorEntity):
     def should_poll(self):
         """No polling needed."""
         return False
-
-    @property
-    def should_fire_event(self):
-        """Return is the device must fire event."""
-        return self._should_fire_event
 
     @property
     def device_class(self):
@@ -271,8 +262,6 @@ class RfxtrxBinarySensor(BinarySensorEntity):
         self._apply_event(event)
 
         self.schedule_update_ha_state()
-        if self.should_fire_event:
-            fire_command_event(self.hass, self.entity_id, event.values["Command"])
 
         if self.is_on and self.off_delay is not None and self.delay_listener is None:
 
