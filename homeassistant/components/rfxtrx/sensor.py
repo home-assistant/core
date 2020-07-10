@@ -97,11 +97,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 continue
             data_ids.add(data_id)
 
-            entity = RfxtrxSensor(
-                event.device,
-                entity_info[CONF_NAME],
-                data_type,
-            )
+            entity = RfxtrxSensor(event.device, entity_info[CONF_NAME], data_type,)
             entities.append(entity)
 
     add_entities(entities)
