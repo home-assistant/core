@@ -64,3 +64,5 @@ COORDINATOR_ALERTS = "coordinator_alerts"
 COORDINATOR_OBSERVATION = "coordinator_observation"
 COORDINATOR_FORECAST = "coordinator_forecast"
 COORDINATOR_FORECAST_HOURLY = "coordinator_forecast_hourly"
+
+EVENT_ALERTS = "nws"

@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.dt import utcnow
@@ -14,6 +15,7 @@ from .const import (
     ATTRIBUTION,
     COORDINATOR_ALERTS,
     DOMAIN,
+    EVENT_ALERTS,
     NWS_DATA,
 )
 
@@ -38,10 +40,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(
         [
             NWSAlertSensor(
-                f"{base_unique_id(latitude, longitude)}_alerts",
-                coordinator,
-                sorted(nws.all_zones),
-                nws.alerts_all_zones,
+                f"{base_unique_id(latitude, longitude)}_alerts", coordinator, nws,
             ),
         ],
         False,
@@ -51,13 +50,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class NWSAlertSensor(Entity):
     """Representation of a sensor entity for NWS alert values."""
 
-    def __init__(self, unique_id, coordinator, zones, alerts):
+    def __init__(self, unique_id, coordinator, nws):
         """Initialize the sensor."""
         self._unique_id = unique_id
         self._coordinator = coordinator
-        self._zones = zones
-        self._name = f"{' '.join(zones)} Alerts"
-        self._alerts = alerts
+        self._nws = nws
+
+        self._zones = sorted(nws.all_zones)
+        self._name = f"{' '.join(self._zones)} Alerts"
 
     @property
     def unique_id(self):
@@ -116,8 +116,17 @@ class NWSAlertSensor(Entity):
         """
         await self._coordinator.async_request_refresh()
 
+    @callback
+    def _update_state(self):
+        if self._coordinator.data:
+            self.hass.bus.fire(
+                EVENT_ALERTS,
+                {ATTR_ALERTS: self._coordinator.data, ATTR_ZONES: self._zones},
+            )
+        self._alerts = self._nws.alerts_all_zones
+        self.async_write_ha_state()
+
     async def async_added_to_hass(self):
         """When entity is added to hass."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )
+        self.async_on_remove(self._coordinator.async_add_listener(self._update_state))
+        self._update_state()

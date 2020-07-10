@@ -13,7 +13,7 @@ def mock_simple_nws():
         instance.get_points = AsyncMock(return_value=None)
         instance.set_station = AsyncMock(return_value=None)
 
-        instance.update_alerts_all_zones = AsyncMock(return_value=None)
+        instance.update_alerts_all_zones = AsyncMock(return_value=[{"alert": "data"}])
         instance.update_observation = AsyncMock(return_value=None)
         instance.update_forecast = AsyncMock(return_value=None)
         instance.update_forecast_hourly = AsyncMock(return_value=None)
