@@ -154,7 +154,12 @@ class SlackNotificationService(BaseNotificationService):
     async def _async_send_remote_file_message(
         self, url, targets, message, title, *, username=None, password=None
     ):
-        """Upload a remote file (with message) to Slack."""
+        """Upload a remote file (with message) to Slack.
+
+        Note that we bypass the python-slackclient WebClient and use aiohttp directly,
+        as the former would require us to download the entire remote file into memory
+        first before uploadint it to Slack.
+        """
         if not self._hass.config.is_allowed_external_url(url):
             _LOGGER.error("URL is not allowed: %s", url)
             return
