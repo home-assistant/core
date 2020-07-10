@@ -1107,7 +1107,7 @@ class MqttAvailability(Entity):
     @callback
     def async_mqtt_connect(self):
         """Update state on connection/disconnection to MQTT broker."""
-        if self.hass.is_running:
+        if not self.hass.is_stopping:
             self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self):
