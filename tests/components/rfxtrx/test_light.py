@@ -17,7 +17,7 @@ async def test_one_light(hass, rfxtrx):
             "rfxtrx": {
                 "device": "abcd",
                 "dummy": True,
-                "lights": {"devices": {"0b1100cd0213c7f210010f51": {}}},
+                "devices": {"0b1100cd0213c7f210020f51": {}},
             }
         },
     )
@@ -98,19 +98,15 @@ async def test_several_lights(hass, rfxtrx):
             "rfxtrx": {
                 "device": "abcd",
                 "dummy": True,
-                "lights": {
-                    "devices": {
-                        "0b1100cd0213c7f230010f71": {},
-                        "0b1100100118cdea02010f70": {},
-                        "0b1100101118cdea02010f70": {},
-                    }
+                "devices": {
+                    "0b1100cd0213c7f230020f71": {},
+                    "0b1100100118cdea02020f70": {},
+                    "0b1100101118cdea02050f70": {},
                 },
             }
         },
     )
     await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 3
 
     state = hass.states.get("light.ac_213c7f2_48")
     assert state
@@ -127,8 +123,6 @@ async def test_several_lights(hass, rfxtrx):
     assert state.state == "off"
     assert state.attributes.get("friendly_name") == "AC 1118cdea:2"
 
-    assert len(hass.states.async_all()) == 3
-
 
 @pytest.mark.parametrize("repetitions", [1, 3])
 async def test_repetitions(hass, rfxtrx, repetitions):
@@ -140,9 +134,8 @@ async def test_repetitions(hass, rfxtrx, repetitions):
             "rfxtrx": {
                 "device": "abcd",
                 "dummy": True,
-                "lights": {
-                    "signal_repetitions": repetitions,
-                    "devices": {"0b1100cd0213c7f230010f71": {}},
+                "devices": {
+                    "0b1100cd0213c7f230020f71": {"signal_repetitions": repetitions}
                 },
             }
         },
@@ -162,13 +155,7 @@ async def test_discover_light(hass, rfxtrx):
     assert await async_setup_component(
         hass,
         "rfxtrx",
-        {
-            "rfxtrx": {
-                "device": "abcd",
-                "dummy": True,
-                "lights": {"automatic_add": True},
-            }
-        },
+        {"rfxtrx": {"device": "abcd", "dummy": True, "automatic_add": True}},
     )
     await hass.async_block_till_done()
 

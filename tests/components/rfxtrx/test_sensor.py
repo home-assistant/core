@@ -24,9 +24,7 @@ async def test_one_sensor(hass, rfxtrx):
             "rfxtrx": {
                 "device": "abcd",
                 "dummy": True,
-                "sensors": {
-                    "devices": {"0a52080705020095220269": {"data_type": "Temperature"}}
-                },
+                "devices": {"0a52080705020095220269": {"data_type": "Temperature"}},
             }
         },
     )
@@ -51,7 +49,7 @@ async def test_one_sensor_no_datatype(hass, rfxtrx):
             "rfxtrx": {
                 "device": "abcd",
                 "dummy": True,
-                "sensors": {"devices": {"0a52080705020095220269": {}}},
+                "devices": {"0a52080705020095220269": {}},
             }
         },
     )
@@ -100,12 +98,10 @@ async def test_several_sensors(hass, rfxtrx):
             "rfxtrx": {
                 "device": "abcd",
                 "dummy": True,
-                "sensors": {
-                    "devices": {
-                        "0a52080705020095220269": {"data_type": "Temperature"},
-                        "0a520802060100ff0e0269": {
-                            "data_type": ["Temperature", "Humidity"]
-                        },
+                "devices": {
+                    "0a52080705020095220269": {"data_type": "Temperature"},
+                    "0a520802060100ff0e0269": {
+                        "data_type": ["Temperature", "Humidity"]
                     },
                 },
             }
@@ -147,13 +143,7 @@ async def test_discover_sensor(hass, rfxtrx):
     assert await async_setup_component(
         hass,
         "rfxtrx",
-        {
-            "rfxtrx": {
-                "device": "abcd",
-                "dummy": True,
-                "sensors": {"automatic_add": True},
-            }
-        },
+        {"rfxtrx": {"device": "abcd", "dummy": True, "automatic_add": True}},
     )
     await hass.async_block_till_done()
 
@@ -256,13 +246,11 @@ async def test_update_of_sensors(hass, rfxtrx):
             "rfxtrx": {
                 "device": "abcd",
                 "dummy": True,
-                "sensors": {
-                    "devices": {
-                        "0a52080705020095220269": {"data_type": "Temperature"},
-                        "0a520802060100ff0e0269": {
-                            "data_type": ["Temperature", "Humidity"]
-                        },
-                    }
+                "devices": {
+                    "0a52080705020095220269": {"data_type": "Temperature"},
+                    "0a520802060100ff0e0269": {
+                        "data_type": ["Temperature", "Humidity"]
+                    },
                 },
             }
         },

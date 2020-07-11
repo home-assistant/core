@@ -101,6 +101,7 @@ DEVICE_SCHEMA = vol.Schema(
         vol.Optional(CONF_DATA_TYPE, default=[]): vol.All(
             cv.ensure_list, [vol.In(DATA_TYPES.keys())]
         ),
+        vol.Optional(CONF_SIGNAL_REPETITIONS, default=1): cv.positive_int,
     }
 )
 

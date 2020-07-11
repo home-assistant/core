@@ -65,12 +65,8 @@ async def test_fire_event(hass):
                 "device": "/dev/serial/by-id/usb"
                 + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
                 "dummy": True,
-                "switches": {
-                    "automatic_add": True,
-                    "devices": {
-                        "0b1100cd0213c7f210010f51": {rfxtrx.ATTR_FIRE_EVENT: True}
-                    },
-                },
+                "automatic_add": True,
+                "devices": {"0b1100cd0213c7f210010f51": {rfxtrx.ATTR_FIRE_EVENT: True}},
             }
         },
     )
@@ -95,8 +91,10 @@ async def test_fire_event(hass):
     assert state
     assert state.state == "on"
 
-    assert len(calls) == 1
-    assert calls[0].data == {"entity_id": "switch.ac_213c7f2_16", "state": "on"}
+    assert any(
+        call.data == {"entity_id": "switch.ac_213c7f2_16", "state": "on"}
+        for call in calls
+    )
 
 
 async def test_fire_event_sensor(hass):
@@ -109,12 +107,8 @@ async def test_fire_event_sensor(hass):
                 "device": "/dev/serial/by-id/usb"
                 + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
                 "dummy": True,
-                "sensors": {
-                    "automatic_add": True,
-                    "devices": {
-                        "0a520802060100ff0e0269": {rfxtrx.ATTR_FIRE_EVENT: True}
-                    },
-                },
+                "automatic_add": True,
+                "devices": {"0a520802060100ff0e0269": {rfxtrx.ATTR_FIRE_EVENT: True}},
             }
         },
     )

@@ -18,19 +18,16 @@ async def test_one(hass, rfxtrx):
             "rfxtrx": {
                 "device": "abcd",
                 "dummy": True,
-                "binary_sensors": {"devices": {"0a52080705020095220269": {}}},
+                "devices": {"0b1100cd0213c7f230010f71": {}},
             }
         },
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.wt260_wt260h_wt440h_wt450_wt450h_05_02")
+    state = hass.states.get("binary_sensor.ac_213c7f2_48")
     assert state
     assert state.state == "off"
-    assert (
-        state.attributes.get("friendly_name")
-        == "WT260,WT260H,WT440H,WT450,WT450H 05:02"
-    )
+    assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
 
 
 async def test_one_pt2262(hass, rfxtrx):
@@ -42,13 +39,11 @@ async def test_one_pt2262(hass, rfxtrx):
             "rfxtrx": {
                 "device": "abcd",
                 "dummy": True,
-                "binary_sensors": {
-                    "devices": {
-                        "0913000022670e013970": {
-                            "data_bits": 4,
-                            "command_on": 0xE,
-                            "command_off": 0x7,
-                        }
+                "devices": {
+                    "0913000022670e013970": {
+                        "data_bits": 4,
+                        "command_on": 0xE,
+                        "command_off": 0x7,
                     }
                 },
             }
@@ -79,12 +74,10 @@ async def test_several(hass, rfxtrx):
             "rfxtrx": {
                 "device": "abcd",
                 "dummy": True,
-                "binary_sensors": {
-                    "devices": {
-                        "0b1100cd0213c7f230010f71": {},
-                        "0b1100100118cdea02010f70": {},
-                        "0b1100101118cdea02010f70": {},
-                    }
+                "devices": {
+                    "0b1100cd0213c7f230010f71": {},
+                    "0b1100100118cdea02010f70": {},
+                    "0b1100101118cdea02010f70": {},
                 },
             }
         },
@@ -116,13 +109,11 @@ async def test_discover(hass, rfxtrx):
             "rfxtrx": {
                 "device": "abcd",
                 "dummy": True,
-                "binary_sensors": {
-                    "devices": {
-                        "0b1100cd0213c7f230010f71": {},
-                        "0b1100100118cdea02010f70": {},
-                        "0b1100101118cdea02010f70": {},
-                    },
-                    "automatic_add": True,
+                "automatic_add": True,
+                "devices": {
+                    "0b1100cd0213c7f230010f71": {},
+                    "0b1100100118cdea02010f70": {},
+                    "0b1100101118cdea02010f70": {},
                 },
             }
         },
@@ -149,9 +140,7 @@ async def test_off_delay(hass, rfxtrx):
             "rfxtrx": {
                 "device": "abcd",
                 "dummy": True,
-                "binary_sensors": {
-                    "devices": {"0b1100100118cdea02010f70": {"off_delay": 5}}
-                },
+                "devices": {"0b1100100118cdea02010f70": {"off_delay": 5}},
             }
         },
     )

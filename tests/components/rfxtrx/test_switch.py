@@ -17,7 +17,7 @@ async def test_one_switch(hass, rfxtrx):
             "rfxtrx": {
                 "device": "abcd",
                 "dummy": True,
-                "switches": {"devices": {"0b1100cd0213c7f210010f51": {}}},
+                "devices": {"0b1100cd0213c7f210010f51": {}},
             }
         },
     )
@@ -57,12 +57,10 @@ async def test_several_switches(hass, rfxtrx):
             "rfxtrx": {
                 "device": "abcd",
                 "dummy": True,
-                "switches": {
-                    "devices": {
-                        "0b1100cd0213c7f230010f71": {},
-                        "0b1100100118cdea02010f70": {},
-                        "0b1100101118cdea02010f70": {},
-                    }
+                "devices": {
+                    "0b1100cd0213c7f230010f71": {},
+                    "0b1100100118cdea02010f70": {},
+                    "0b1100101118cdea02010f70": {},
                 },
             }
         },
@@ -95,9 +93,8 @@ async def test_repetitions(hass, rfxtrx, repetitions):
             "rfxtrx": {
                 "device": "abcd",
                 "dummy": True,
-                "switches": {
-                    "signal_repetitions": repetitions,
-                    "devices": {"0b1100cd0213c7f230010f71": {}},
+                "devices": {
+                    "0b1100cd0213c7f230010f71": {"signal_repetitions": repetitions}
                 },
             }
         },
@@ -117,13 +114,7 @@ async def test_discover_switch(hass, rfxtrx):
     assert await async_setup_component(
         hass,
         "rfxtrx",
-        {
-            "rfxtrx": {
-                "device": "abcd",
-                "dummy": True,
-                "switches": {"automatic_add": True},
-            }
-        },
+        {"rfxtrx": {"device": "abcd", "dummy": True, "automatic_add": True}},
     )
     await hass.async_block_till_done()
 

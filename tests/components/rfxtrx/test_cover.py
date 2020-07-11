@@ -15,13 +15,14 @@ async def test_one_cover(hass, rfxtrx):
             "rfxtrx": {
                 "device": "abcd",
                 "dummy": True,
-                "covers": {"devices": {"0b1400cd0213c7f210010f51": {}}},
+                "devices": {"0b1400cd0213c7f20d010f51": {}},
             }
         },
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 1
+    state = hass.states.get("cover.lightwaverf_siemens_0213c7_242")
+    assert state
 
     await hass.services.async_call(
         "cover",
@@ -60,34 +61,30 @@ async def test_several_covers(hass, rfxtrx):
             "rfxtrx": {
                 "device": "abcd",
                 "dummy": True,
-                "covers": {
-                    "devices": {
-                        "0b1100cd0213c7f230010f71": {},
-                        "0b1100100118cdea02010f70": {},
-                        "0b1100101118cdea02010f70": {},
-                    }
+                "devices": {
+                    "0b1400cd0213c7f20d010f51": {},
+                    "0A1400ADF394AB010D0060": {},
+                    "09190000009ba8010100": {},
                 },
             }
         },
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("cover.ac_213c7f2_48")
+    state = hass.states.get("cover.lightwaverf_siemens_0213c7_242")
     assert state
     assert state.state == "closed"
-    assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
+    assert state.attributes.get("friendly_name") == "LightwaveRF, Siemens 0213c7:242"
 
-    state = hass.states.get("cover.ac_118cdea_2")
+    state = hass.states.get("cover.lightwaverf_siemens_f394ab_1")
     assert state
     assert state.state == "closed"
-    assert state.attributes.get("friendly_name") == "AC 118cdea:2"
+    assert state.attributes.get("friendly_name") == "LightwaveRF, Siemens f394ab:1"
 
-    state = hass.states.get("cover.ac_1118cdea_2")
+    state = hass.states.get("cover.rollertrol_009ba8_1")
     assert state
     assert state.state == "closed"
-    assert state.attributes.get("friendly_name") == "AC 1118cdea:2"
-
-    assert len(hass.states.async_all()) == 3
+    assert state.attributes.get("friendly_name") == "RollerTrol 009ba8:1"
 
 
 async def test_discover_covers(hass, rfxtrx):
@@ -95,13 +92,7 @@ async def test_discover_covers(hass, rfxtrx):
     assert await async_setup_component(
         hass,
         "rfxtrx",
-        {
-            "rfxtrx": {
-                "device": "abcd",
-                "dummy": True,
-                "covers": {"automatic_add": True},
-            }
-        },
+        {"rfxtrx": {"device": "abcd", "dummy": True, "automatic_add": True}},
     )
     await hass.async_block_till_done()
 

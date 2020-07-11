@@ -60,7 +60,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         device_ids.add(device_id)
 
         datas = {ATTR_STATE: None, ATTR_FIRE_EVENT: entity_info[CONF_FIRE_EVENT]}
-        entity = RfxtrxLight(event.device, datas, config[CONF_SIGNAL_REPETITIONS])
+        entity = RfxtrxLight(event.device, datas, entity_info[CONF_SIGNAL_REPETITIONS])
 
         entities.append(entity)
 
