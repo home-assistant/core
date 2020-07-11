@@ -24,6 +24,8 @@ async def director_update_data(
     hass: HomeAssistant, entry: ConfigEntry, var: str
 ) -> dict:
     """Retrieve data from the Control4 director for update_coordinator."""
+    # TODO: possibly implement usage of director_token_expiration to start
+    # token refresh without waiting for error to occur
     try:
         director = hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR]
         data = await director.getAllItemVariableValue(var)
