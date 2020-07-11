@@ -3,6 +3,11 @@ from copy import deepcopy
 
 from homeassistant.components import deconz
 import homeassistant.components.sensor as sensor
+from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_POWER,
+)
 from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
@@ -112,6 +117,7 @@ async def test_sensors(hass):
 
     light_level_sensor = hass.states.get("sensor.light_level_sensor")
     assert light_level_sensor.state == "999.8"
+    assert light_level_sensor.attributes["device_class"] == DEVICE_CLASS_ILLUMINANCE
 
     presence_sensor = hass.states.get("sensor.presence_sensor")
     assert presence_sensor is None
@@ -127,15 +133,18 @@ async def test_sensors(hass):
 
     switch_2_battery_level = hass.states.get("sensor.switch_2_battery_level")
     assert switch_2_battery_level.state == "100"
+    assert switch_2_battery_level.attributes["device_class"] == DEVICE_CLASS_BATTERY
 
     daylight_sensor = hass.states.get("sensor.daylight_sensor")
     assert daylight_sensor is None
 
     power_sensor = hass.states.get("sensor.power_sensor")
     assert power_sensor.state == "6"
+    assert power_sensor.attributes["device_class"] == DEVICE_CLASS_POWER
 
     consumption_sensor = hass.states.get("sensor.consumption_sensor")
     assert consumption_sensor.state == "0.002"
+    assert "device_class" not in consumption_sensor.attributes
 
     state_changed_event = {
         "t": "event",

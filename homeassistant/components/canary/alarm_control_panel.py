@@ -24,10 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Canary alarms."""
     data = hass.data[DATA_CANARY]
-    devices = []
-
-    for location in data.locations:
-        devices.append(CanaryAlarm(data, location.location_id))
+    devices = [CanaryAlarm(data, location.location_id) for location in data.locations]
 
     add_entities(devices, True)
 

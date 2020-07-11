@@ -20,9 +20,8 @@
             },
             "link": {
                 "data": {
-                    "api_version": "DSM version",
                     "password": "Password",
-                    "port": "Port (Optional)",
+                    "port": "Port",
                     "ssl": "Use SSL/TLS to connect to your NAS",
                     "username": "Username"
                 },
@@ -31,14 +30,22 @@
             },
             "user": {
                 "data": {
-                    "api_version": "DSM version",
                     "host": "Host",
                     "password": "Password",
-                    "port": "Port (Optional)",
+                    "port": "Port",
                     "ssl": "Use SSL/TLS to connect to your NAS",
                     "username": "Username"
                 },
                 "title": "Synology DSM"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Minutes between scans"
+                }
             }
         }
     }

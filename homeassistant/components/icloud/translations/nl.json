@@ -20,7 +20,6 @@
             "user": {
                 "data": {
                     "password": "Wachtwoord",
-                    "username": "E-mail",
                     "with_family": "Met gezin"
                 },
                 "description": "Voer uw gegevens in",

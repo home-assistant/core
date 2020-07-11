@@ -6,8 +6,10 @@
         "step": {
             "user": {
                 "data": {
-                    "name": "Nom du capteur"
-                }
+                    "name": "Nom du capteur",
+                    "tariff": "Tarif souscrit (1, 2, ou 3 p\u00e9riodes)"
+                },
+                "title": "S\u00e9lection tarifaire"
             }
         }
     }

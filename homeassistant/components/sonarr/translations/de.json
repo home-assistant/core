@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Unerwateter Fehler"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "flow_title": "Sonarr: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Schl\u00fcssel",
+                    "base_path": "Pfad zur API",
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "title": "Mit Sonarr verbinden"
+            }
+        }
+    },
+    "title": "Sonarr"
+}

@@ -125,11 +125,11 @@ class IslamicPrayerClient:
         """
         _LOGGER.debug("Scheduling next update for Islamic prayer times")
 
-        now = dt_util.as_local(dt_util.now())
+        now = dt_util.utcnow()
 
         midnight_dt = self.prayer_times_info["Midnight"]
 
-        if now > dt_util.as_local(midnight_dt):
+        if now > dt_util.as_utc(midnight_dt):
             next_update_at = midnight_dt + timedelta(days=1, minutes=1)
             _LOGGER.debug(
                 "Midnight is after day the changes so schedule update for after Midnight the next day"
@@ -155,7 +155,7 @@ class IslamicPrayerClient:
             self.available = True
         except (exceptions.InvalidResponseError, ConnError):
             self.available = False
-            _LOGGER.debug("Error retrieving prayer times.")
+            _LOGGER.debug("Error retrieving prayer times")
             async_call_later(self.hass, 60, self.async_update)
             return
 
@@ -165,7 +165,7 @@ class IslamicPrayerClient:
             )
         await self.async_schedule_future_update()
 
-        _LOGGER.debug("New prayer times retrieved. Updating sensors.")
+        _LOGGER.debug("New prayer times retrieved. Updating sensors")
         async_dispatcher_send(self.hass, DATA_UPDATED)
 
     async def async_setup(self):

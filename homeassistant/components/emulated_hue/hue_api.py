@@ -1,4 +1,5 @@
 """Support for a Hue API to control Home Assistant."""
+import asyncio
 import hashlib
 import logging
 
@@ -7,6 +8,7 @@ from homeassistant.components import (
     climate,
     cover,
     fan,
+    humidifier,
     light,
     media_player,
     scene,
@@ -32,6 +34,10 @@ from homeassistant.components.fan import (
 )
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_REAL_IP
+from homeassistant.components.humidifier.const import (
+    ATTR_HUMIDITY,
+    SERVICE_SET_HUMIDITY,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -89,7 +95,7 @@ HUE_API_STATE_SAT_MAX = 254
 HUE_API_STATE_CT_MIN = 153  # Color temp
 HUE_API_STATE_CT_MAX = 500
 
-HUE_API_USERNAME = "12345678901234567890"
+HUE_API_USERNAME = "nouser"
 UNAUTHORIZED_USER = [
     {"error": {"address": "/", "description": "unauthorized user", "type": "1"}}
 ]
@@ -223,13 +229,32 @@ class HueFullStateView(HomeAssistantView):
 
         json_response = {
             "lights": create_list_of_entities(self.config, request),
-            "config": {
-                "mac": "00:00:00:00:00:00",
-                "swversion": "01003542",
-                "whitelist": {HUE_API_USERNAME: {"name": "HASS BRIDGE"}},
-                "ipaddress": f"{self.config.advertise_ip}:{self.config.advertise_port}",
-            },
+            "config": create_config_model(self.config, request),
         }
+
+        return self.json(json_response)
+
+
+class HueConfigView(HomeAssistantView):
+    """Return config view of emulated hue."""
+
+    url = "/api/{username}/config"
+    name = "emulated_hue:username:config"
+    requires_auth = False
+
+    def __init__(self, config):
+        """Initialize the instance of the view."""
+        self.config = config
+
+    @core.callback
+    def get(self, request, username):
+        """Process a request to get the configuration."""
+        if not is_local(request[KEY_REAL_IP]):
+            return self.json_message("only local IPs allowed", HTTP_UNAUTHORIZED)
+        if username != HUE_API_USERNAME:
+            return self.json(UNAUTHORIZED_USER)
+
+        json_response = create_config_model(self.config, request)
 
         return self.json(json_response)
 
@@ -366,6 +391,7 @@ class HueOneLightChangeView(HomeAssistantView):
                 fan.DOMAIN,
                 cover.DOMAIN,
                 climate.DOMAIN,
+                humidifier.DOMAIN,
             ]:
                 # Convert 0-254 to 0-100
                 level = (parsed[STATE_BRIGHTNESS] / HUE_API_STATE_BRI_MAX) * 100
@@ -437,6 +463,14 @@ class HueOneLightChangeView(HomeAssistantView):
                     service = SERVICE_SET_TEMPERATURE
                     data[ATTR_TEMPERATURE] = parsed[STATE_BRIGHTNESS]
 
+        # If the requested entity is a humidifier, set the humidity
+        elif entity.domain == humidifier.DOMAIN:
+            if parsed[STATE_BRIGHTNESS] is not None:
+                turn_on_needed = True
+                domain = entity.domain
+                service = SERVICE_SET_HUMIDITY
+                data[ATTR_HUMIDITY] = parsed[STATE_BRIGHTNESS]
+
         # If the requested entity is a media player, convert to volume
         elif entity.domain == media_player.DOMAIN:
             if entity_features & SUPPORT_VOLUME_SET:
@@ -506,7 +540,9 @@ class HueOneLightChangeView(HomeAssistantView):
 
         # Create success responses for all received keys
         json_response = [
-            create_hue_success_response(entity_id, HUE_API_STATE_ON, parsed[STATE_ON])
+            create_hue_success_response(
+                entity_number, HUE_API_STATE_ON, parsed[STATE_ON]
+            )
         ]
 
         for (key, val) in (
@@ -517,8 +553,12 @@ class HueOneLightChangeView(HomeAssistantView):
         ):
             if parsed[key] is not None:
                 json_response.append(
-                    create_hue_success_response(entity_id, val, parsed[key])
+                    create_hue_success_response(entity_number, val, parsed[key])
                 )
+
+        # Echo fetches the state immediately after the PUT method returns.
+        # Waiting for a short time allows the changes to propagate.
+        await asyncio.sleep(0.25)
 
         return self.json(json_response)
 
@@ -569,6 +609,10 @@ def get_entity_state(config, entity):
             temperature = entity.attributes.get(ATTR_TEMPERATURE, 0)
             # Convert 0-100 to 0-254
             data[STATE_BRIGHTNESS] = round(temperature * HUE_API_STATE_BRI_MAX / 100)
+        elif entity.domain == humidifier.DOMAIN:
+            humidity = entity.attributes.get(ATTR_HUMIDITY, 0)
+            # Convert 0-100 to 0-254
+            data[STATE_BRIGHTNESS] = round(humidity * HUE_API_STATE_BRI_MAX / 100)
         elif entity.domain == media_player.DOMAIN:
             level = entity.attributes.get(
                 ATTR_MEDIA_VOLUME_LEVEL, 1.0 if data[STATE_ON] else 0.0
@@ -710,10 +754,22 @@ def entity_to_json(config, entity):
     return retval
 
 
-def create_hue_success_response(entity_id, attr, value):
+def create_hue_success_response(entity_number, attr, value):
     """Create a success response for an attribute set on a light."""
-    success_key = f"/lights/{entity_id}/state/{attr}"
+    success_key = f"/lights/{entity_number}/state/{attr}"
     return {"success": {success_key: value}}
+
+
+def create_config_model(config, request):
+    """Create a config resource."""
+    return {
+        "mac": "00:00:00:00:00:00",
+        "swversion": "01003542",
+        "apiversion": "1.17.0",
+        "whitelist": {HUE_API_USERNAME: {"name": "HASS BRIDGE"}},
+        "ipaddress": f"{config.advertise_ip}:{config.advertise_port}",
+        "linkbutton": True,
+    }
 
 
 def create_list_of_entities(config, request):
@@ -721,10 +777,9 @@ def create_list_of_entities(config, request):
     hass = request.app["hass"]
     json_response = {}
 
-    for entity in hass.states.async_all():
-        if config.is_entity_exposed(entity):
-            number = config.entity_id_to_number(entity.entity_id)
-            json_response[number] = entity_to_json(config, entity)
+    for entity in config.filter_exposed_entities(hass.states.async_all()):
+        number = config.entity_id_to_number(entity.entity_id)
+        json_response[number] = entity_to_json(config, entity)
 
     return json_response
 

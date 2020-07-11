@@ -8,32 +8,67 @@ from homeassistant.const import CONF_URL
 
 from .const import DEFAULT_DATA, MOCK_SERVERS, MOCK_USERS
 
+GDM_PAYLOAD = [
+    {
+        "data": {
+            "Content-Type": "plex/media-server",
+            "Name": "plextest",
+            "Port": "32400",
+            "Resource-Identifier": "1234567890123456789012345678901234567890",
+            "Updated-At": "157762684800",
+            "Version": "1.0",
+        },
+        "from": ("1.2.3.4", 32414),
+    }
+]
+
+
+class MockGDM:
+    """Mock a GDM instance."""
+
+    def __init__(self):
+        """Initialize the object."""
+        self.entries = GDM_PAYLOAD
+
+    def scan(self):
+        """Mock the scan call."""
+        pass
+
 
 class MockResource:
     """Mock a PlexAccount resource."""
 
-    def __init__(self, index):
+    def __init__(self, index, kind="server"):
         """Initialize the object."""
-        self.name = MOCK_SERVERS[index][CONF_SERVER]
-        self.clientIdentifier = MOCK_SERVERS[index][  # pylint: disable=invalid-name
-            CONF_SERVER_IDENTIFIER
-        ]
-        self.provides = ["server"]
-        self._mock_plex_server = MockPlexServer(index)
+        if kind == "server":
+            self.name = MOCK_SERVERS[index][CONF_SERVER]
+            self.clientIdentifier = MOCK_SERVERS[index][  # pylint: disable=invalid-name
+                CONF_SERVER_IDENTIFIER
+            ]
+            self.provides = ["server"]
+            self.device = MockPlexServer(index)
+        else:
+            self.name = f"plex.tv Resource Player {index+10}"
+            self.clientIdentifier = f"client-{index+10}"
+            self.provides = ["player"]
+            self.device = MockPlexClient(f"http://192.168.0.1{index}:32500", index + 10)
+            self.presence = index == 0
 
     def connect(self, timeout):
         """Mock the resource connect method."""
-        return self._mock_plex_server
+        return self.device
 
 
 class MockPlexAccount:
     """Mock a PlexAccount instance."""
 
-    def __init__(self, servers=1):
+    def __init__(self, servers=1, players=3):
         """Initialize the object."""
         self._resources = []
         for index in range(servers):
             self._resources.append(MockResource(index))
+        for index in range(players):
+            self._resources.append(MockResource(index, kind="player"))
 
     def resource(self, name):
         """Mock the PlexAccount resource lookup method."""
@@ -42,6 +77,10 @@ class MockPlexAccount:
     def resources(self):
         """Mock the PlexAccount resources listing method."""
         return self._resources
+
+    def sonos_speaker_by_id(self, machine_identifier):
+        """Mock the PlexAccount Sonos lookup method."""
+        return MockPlexSonosClient(machine_identifier)
 
 
 class MockPlexSystemAccount:
@@ -126,6 +165,19 @@ class MockPlexServer:
         """Mock version of PlexServer."""
         return "1.0"
 
+    @property
+    def library(self):
+        """Mock library object of PlexServer."""
+        return MockPlexLibrary()
+
+    def playlist(self, playlist):
+        """Mock the playlist lookup method."""
+        return MockPlexMediaItem(playlist, mediatype="playlist")
+
+    def fetchItem(self, item):
+        """Mock the fetchItem method."""
+        return MockPlexMediaItem("Item Name")
+
 
 class MockPlexClient:
     """Mock a PlexClient instance."""
@@ -134,6 +186,7 @@ class MockPlexClient:
         """Initialize the object."""
         self.machineIdentifier = f"client-{index+1}"
         self._baseurl = url
+        self._index = index
 
     def url(self, key):
         """Mock the url method."""
@@ -152,12 +205,14 @@ class MockPlexClient:
     @property
     def product(self):
         """Mock the product attribute."""
+        if self._index == 1:
+            return "Plex Web"
         return "PRODUCT"
 
     @property
     def protocolCapabilities(self):
         """Mock the protocolCapabilities attribute."""
-        return ["player"]
+        return ["playback"]
 
     @property
     def state(self):
@@ -174,6 +229,14 @@ class MockPlexClient:
         """Mock the version attribute."""
         return "1.0"
 
+    def proxyThroughServer(self, value=True, server=None):
+        """Mock the proxyThroughServer method."""
+        pass
+
+    def playMedia(self, item):
+        """Mock the playMedia method."""
+        pass
+
 
 class MockPlexSession:
     """Mock a PlexServer.sessions() instance."""
@@ -189,6 +252,11 @@ class MockPlexSession:
     def duration(self):
         """Mock the duration attribute."""
         return 10000000
+
+    @property
+    def librarySectionID(self):
+        """Mock the librarySectionID attribute."""
+        return 1
 
     @property
     def ratingKey(self):
@@ -230,9 +298,90 @@ class MockPlexSession:
         return 2020
 
 
+class MockPlexLibrary:
+    """Mock a Plex Library instance."""
+
+    def __init__(self):
+        """Initialize the object."""
+
+    def section(self, library_name):
+        """Mock the LibrarySection lookup."""
+        return MockPlexLibrarySection(library_name)
+
+
 class MockPlexLibrarySection:
     """Mock a Plex LibrarySection instance."""
 
     def __init__(self, library="Movies"):
         """Initialize the object."""
         self.title = library
+
+    def get(self, query):
+        """Mock the get lookup method."""
+        if self.title == "Music":
+            return MockPlexArtist(query)
+        return MockPlexMediaItem(query)
+
+
+class MockPlexMediaItem:
+    """Mock a Plex Media instance."""
+
+    def __init__(self, title, mediatype="video"):
+        """Initialize the object."""
+        self.title = str(title)
+        self.type = mediatype
+
+    def album(self, album):
+        """Mock the album lookup method."""
+        return MockPlexMediaItem(album, mediatype="album")
+
+    def track(self, track):
+        """Mock the track lookup method."""
+        return MockPlexMediaTrack()
+
+    def tracks(self):
+        """Mock the tracks lookup method."""
+        for index in range(1, 10):
+            yield MockPlexMediaTrack(index)
+
+    def episode(self, episode):
+        """Mock the episode lookup method."""
+        return MockPlexMediaItem(episode, mediatype="episode")
+
+    def season(self, season):
+        """Mock the season lookup method."""
+        return MockPlexMediaItem(season, mediatype="season")
+
+
+class MockPlexArtist(MockPlexMediaItem):
+    """Mock a Plex Artist instance."""
+
+    def __init__(self, artist):
+        """Initialize the object."""
+        super().__init__(artist)
+        self.type = "artist"
+
+    def get(self, track):
+        """Mock the track lookup method."""
+        return MockPlexMediaTrack()
+
+
+class MockPlexMediaTrack(MockPlexMediaItem):
+    """Mock a Plex Track instance."""
+
+    def __init__(self, index=1):
+        """Initialize the object."""
+        super().__init__(f"Track {index}", "track")
+        self.index = index
+
+
+class MockPlexSonosClient:
+    """Mock a PlexSonosClient instance."""
+
+    def __init__(self, machine_identifier):
+        """Initialize the object."""
+        self.machineIdentifier = machine_identifier
+
+    def playMedia(self, item):
+        """Mock the playMedia method."""
+        pass

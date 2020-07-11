@@ -188,6 +188,7 @@ class ModbusHub:
                 bytesize=self._config_bytesize,
                 parity=self._config_parity,
                 timeout=self._config_timeout,
+                retry_on_empty=True,
             )
         elif self._config_type == "rtuovertcp":
             self._client = ModbusTcpClient(

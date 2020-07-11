@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Clau API DataPoint de Met Office",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud"
+                },
+                "description": "La latitud i la longitud s'utilitzaran per trobar l'estaci\u00f3 meteorol\u00f2gica m\u00e9s propera.",
+                "title": "Connecta't amb Met Office (UK)"
+            }
+        }
+    }
+}

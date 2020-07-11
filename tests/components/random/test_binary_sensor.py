@@ -1,9 +1,9 @@
 """The test for the Random binary sensor platform."""
 import unittest
-from unittest.mock import patch
 
 from homeassistant.setup import setup_component
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 
@@ -24,6 +24,7 @@ class TestRandomSensor(unittest.TestCase):
         config = {"binary_sensor": {"platform": "random", "name": "test"}}
 
         assert setup_component(self.hass, "binary_sensor", config)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("binary_sensor.test")
 
@@ -37,6 +38,7 @@ class TestRandomSensor(unittest.TestCase):
         config = {"binary_sensor": {"platform": "random", "name": "test"}}
 
         assert setup_component(self.hass, "binary_sensor", config)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("binary_sensor.test")
 

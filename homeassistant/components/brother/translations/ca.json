@@ -13,11 +13,10 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Nom de l'amfitri\u00f3 o adre\u00e7a IP de la impressora",
+                    "host": "Amfitri\u00f3",
                     "type": "Tipus d'impressora"
                 },
-                "description": "Configura la integraci\u00f3 d'impressora Brother. Si tens problemes amb la configuraci\u00f3, visita: https://www.home-assistant.io/integrations/brother",
-                "title": "Impressora Brother"
+                "description": "Configura la integraci\u00f3 d'impressora Brother. Si tens problemes amb la configuraci\u00f3, visita: https://www.home-assistant.io/integrations/brother"
             },
             "zeroconf_confirm": {
                 "data": {

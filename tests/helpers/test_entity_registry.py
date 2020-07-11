@@ -1,6 +1,5 @@
 """Tests for the Entity Registry."""
 import asyncio
-from unittest.mock import patch
 
 import pytest
 
@@ -9,6 +8,7 @@ from homeassistant.core import CoreState, callback, valid_entity_id
 from homeassistant.helpers import entity_registry
 
 import tests.async_mock
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, flush_store, mock_registry
 
 YAML__OPEN_PATH = "homeassistant.util.yaml.loader.open"
@@ -241,11 +241,19 @@ async def test_loading_extra_values(hass, hass_storage):
                     "unique_id": "disabled-hass",
                     "disabled_by": "hass",
                 },
+                {
+                    "entity_id": "test.invalid__entity",
+                    "platform": "super_platform",
+                    "unique_id": "invalid-hass",
+                    "disabled_by": "hass",
+                },
             ]
         },
     }
 
     registry = await entity_registry.async_get_registry(hass)
+
+    assert len(registry.entities) == 4
 
     entry_with_name = registry.async_get_or_create(
         "test", "super_platform", "with-name"

@@ -1,6 +1,8 @@
 """Test dispatcher helpers."""
 from functools import partial
 
+import pytest
+
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -128,6 +130,7 @@ async def test_simple_function_multiargs(hass):
     assert calls == [3, 2, "bla"]
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_callback_exception_gets_logged(hass, caplog):
     """Test exception raised by signal handler."""
 

@@ -5,7 +5,7 @@
             "one_instance_allowed": "\u00c8 necessaria solo una singola istanza."
         },
         "create_entry": {
-            "default": "Per inviare eventi a Home Assistant, dovrai impostare la funzione webhook in Plaato Airlock. \n\n Inserisci le seguenti informazioni: \n\n - URL: ` {webhook_url} ` \n - Metodo: POST \n\n Vedi [la documentazione]({docs_url}) per ulteriori dettagli."
+            "default": "Per inviare eventi a Home Assistant, dovrai impostare la funzione webhook in Plaato Airlock. \n\n Inserisci le seguenti informazioni: \n\n - URL: `{webhook_url}` \n - Metodo: POST \n\n Vedi [la documentazione]({docs_url}) per ulteriori dettagli."
         },
         "step": {
             "user": {

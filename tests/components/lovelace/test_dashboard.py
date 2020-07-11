@@ -1,12 +1,11 @@
 """Test the Lovelace initialization."""
-from unittest.mock import patch
-
 import pytest
 
 from homeassistant.components import frontend
 from homeassistant.components.lovelace import const, dashboard
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import (
     assert_setup_component,
     async_capture_events,

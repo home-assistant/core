@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Este nombre de usuario ya est\u00e1 en uso."
+        },
         "error": {
             "invalid_credentials": "Nombre de usuario o contrase\u00f1a inv\u00e1lidos",
             "no_devices": "No se han encontrado dispositivos en la cuenta."

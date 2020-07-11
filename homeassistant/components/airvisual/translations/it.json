@@ -21,17 +21,14 @@
             "node_pro": {
                 "data": {
                     "ip_address": "Indirizzo IP/Nome host dell'unit\u00e0",
-                    "password": "Password dell'unit\u00e0"
+                    "password": "Password"
                 },
                 "description": "Monitorare un'unit\u00e0 AirVisual personale. La password pu\u00f2 essere recuperata dall'interfaccia utente dell'unit\u00e0.",
                 "title": "Configurare un AirVisual Node/Pro"
             },
             "user": {
                 "data": {
-                    "api_key": "Chiave API",
                     "cloud_api": "Posizione geografica",
-                    "latitude": "Latitudine",
-                    "longitude": "Logitudine",
                     "node_pro": "AirVisual Node Pro",
                     "type": "Tipo di integrazione"
                 },
@@ -46,7 +43,6 @@
                 "data": {
                     "show_on_map": "Mostra l'area geografica monitorata sulla mappa"
                 },
-                "description": "Impostare varie opzioni per l'integrazione AirVisual.",
                 "title": "Configurare AirVisual"
             }
         }

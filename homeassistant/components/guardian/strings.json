@@ -1,0 +1,22 @@
+{
+  "title": "Elexa Guardian",
+  "config": {
+    "step": {
+      "user": {
+        "description": "Configure a local Elexa Guardian device.",
+        "data": {
+          "ip_address": "IP Address",
+          "port": "Port"
+        }
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to set up this Guardian device?"
+      }
+    },
+    "abort": {
+      "already_configured": "This Guardian device has already been configured.",
+      "already_in_progress": "Guardian device configuration is already in process.",
+      "connection_error": "Failed to connect to the Guardian device."
+    }
+  }
+}

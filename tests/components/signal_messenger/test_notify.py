@@ -3,13 +3,14 @@
 import os
 import tempfile
 import unittest
-from unittest.mock import patch
 
 from pysignalclirestapi import SignalCliRestApi
 import requests_mock
 
 import homeassistant.components.signal_messenger.notify as signalmessenger
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import patch
 
 BASE_COMPONENT = "notify"
 
@@ -90,7 +91,7 @@ class TestSignalMesssenger(unittest.TestCase):
                 data = {"data": {"attachment": tf.name}}
                 self._signalmessenger.send_message(message, **data)
         self.assertIn(
-            "The 'attachment' option is deprecated, please replace it with 'attachments'. This option will become invalid in version 0.108.",
+            "The 'attachment' option is deprecated, please replace it with 'attachments'. This option will become invalid in version 0.108",
             context.output[0],
         )
         self.assertTrue(mock.called)

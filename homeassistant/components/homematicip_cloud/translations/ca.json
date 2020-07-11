@@ -21,7 +21,7 @@
                 "title": "Tria el punt d'acc\u00e9s HomematicIP"
             },
             "link": {
-                "description": "Prem el bot\u00f3 blau del punt d'acc\u00e9s i el bot\u00f3 Envia per registrar HomematicIP amb Home Assistent. \n\n![Ubicaci\u00f3 del bot\u00f3 al pont](/static/images/config_flows/config_homematicip_cloud.png)",
+                "description": "Prem el bot\u00f3 blau del punt d'acc\u00e9s i el bot\u00f3 Envia per registrar HomematicIP amb Home Assistent. \n\n![Ubicaci\u00f3 del bot\u00f3 a l'element d'enlla\u00e7](/static/images/config_flows/config_homematicip_cloud.png)",
                 "title": "Enlla\u00e7 amb punt d'acc\u00e9s"
             }
         }

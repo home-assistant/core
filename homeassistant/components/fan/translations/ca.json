@@ -15,9 +15,9 @@
     },
     "state": {
         "_": {
-            "off": "Apagat",
-            "on": "Enc\u00e8s"
+            "off": "OFF",
+            "on": "ON"
         }
     },
-    "title": "Ventiladors"
+    "title": "Ventilador"
 }

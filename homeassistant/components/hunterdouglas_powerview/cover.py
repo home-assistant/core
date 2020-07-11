@@ -28,6 +28,7 @@ from .const import (
     DEVICE_INFO,
     DEVICE_MODEL,
     DOMAIN,
+    LEGACY_DEVICE_MODEL,
     PV_API,
     PV_ROOM_DATA,
     PV_SHADE_DATA,
@@ -43,6 +44,8 @@ _LOGGER = logging.getLogger(__name__)
 # Estimated time it takes to complete a transition
 # from one state to another
 TRANSITION_COMPLETE_DURATION = 30
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -68,6 +71,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
         except asyncio.TimeoutError:
             # Forced refresh is not required for setup
             pass
+        if ATTR_POSITION_DATA not in shade.raw_data:
+            _LOGGER.info(
+                "The %s shade was skipped because it is missing position data",
+                name_before_refresh,
+            )
+            continue
         entities.append(
             PowerViewShade(
                 shade, name_before_refresh, room_data, coordinator, device_info
@@ -112,7 +121,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
     def supported_features(self):
         """Flag supported features."""
         supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
-        if self._device_info[DEVICE_MODEL] != "1":
+        if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
             supported_features |= SUPPORT_STOP
         return supported_features
 
@@ -161,7 +170,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
         self._async_update_from_command(await self._shade.stop())
         await self._async_force_refresh_state()
 
-    async def set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs):
         """Move the shade to a specific position."""
         if ATTR_POSITION not in kwargs:
             return

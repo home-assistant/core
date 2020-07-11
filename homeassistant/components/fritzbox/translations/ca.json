@@ -16,17 +16,15 @@
                     "password": "Contrasenya",
                     "username": "Nom d'usuari"
                 },
-                "description": "Vols configurar {name}?",
-                "title": "AVM FRITZ!Box"
+                "description": "Vols configurar {name}?"
             },
             "user": {
                 "data": {
-                    "host": "Amfitri\u00f3 o adre\u00e7a IP",
+                    "host": "Amfitri\u00f3",
                     "password": "Contrasenya",
                     "username": "Nom d'usuari"
                 },
-                "description": "Introdueix la teva informaci\u00f3 de AVM FRITZ!Box.",
-                "title": "AVM FRITZ!Box"
+                "description": "Introdueix la teva informaci\u00f3 de AVM FRITZ!Box."
             }
         }
     }

@@ -69,18 +69,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors, False)
 
 
-def round_state(func):
-    """Round state."""
-
-    def _decorator(self):
-        res = func(self)
-        if isinstance(res, float):
-            return round(res)
-        return res
-
-    return _decorator
-
-
 class AirlySensor(Entity):
     """Define an Airly sensor."""
 

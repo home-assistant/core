@@ -61,8 +61,7 @@ class CommandLineAuthProvider(AuthProvider):
         """Validate a username and password."""
         env = {"username": username, "password": password}
         try:
-            # pylint: disable=no-member
-            process = await asyncio.subprocess.create_subprocess_exec(
+            process = await asyncio.subprocess.create_subprocess_exec(  # pylint: disable=no-member
                 self.config[CONF_COMMAND],
                 *self.config[CONF_ARGS],
                 env=env,
@@ -76,7 +75,7 @@ class CommandLineAuthProvider(AuthProvider):
 
         if process.returncode != 0:
             _LOGGER.error(
-                "User %r failed to authenticate, command exited with code %d.",
+                "User %r failed to authenticate, command exited with code %d",
                 username,
                 process.returncode,
             )

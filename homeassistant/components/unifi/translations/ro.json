@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "user_privilege": "Utilizatorul trebuie s\u0103 fie administrator"
-        },
         "error": {
             "faulty_credentials": "Credentiale utilizator invalide",
             "service_unavailable": "Nici un serviciu disponibil"

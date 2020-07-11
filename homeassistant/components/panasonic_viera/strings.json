@@ -6,7 +6,7 @@
         "title": "Setup your TV",
         "description": "Enter your Panasonic Viera TV's IP address",
         "data": {
-          "host": "IP address",
+          "host": "[%key:common::config_flow::data::ip%]",
           "name": "Name"
         }
       },

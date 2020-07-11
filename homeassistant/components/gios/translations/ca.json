@@ -14,7 +14,7 @@
                     "name": "Nom de la integraci\u00f3",
                     "station_id": "ID de l'estaci\u00f3 de mesura"
                 },
-                "description": "Integraci\u00f3 de mesura de qualitat de l\u2019aire GIO\u015a (Polish Chief Inspectorate Of Environmental Protection). Si necessites ajuda amb la configuraci\u00f3, fes un cop d'ull a: https://www.home-assistant.io/integrations/gios",
+                "description": "Integraci\u00f3 de mesura de qualitat de l'aire GIO\u015a (Polish Chief Inspectorate Of Environmental Protection). Si necessites ajuda amb la configuraci\u00f3, fes un cop d'ull a: https://www.home-assistant.io/integrations/gios",
                 "title": "GIO\u015a (Polish Chief Inspectorate Of Environmental Protection)"
             }
         }

@@ -3,7 +3,6 @@ import asyncio
 from collections import OrderedDict
 from datetime import datetime
 import unittest
-from unittest.mock import MagicMock, patch
 
 import pytest
 from pytz import utc
@@ -23,7 +22,7 @@ from homeassistant.helpers.device_registry import async_get_registry as get_dev_
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.setup import setup_component
 
-from tests.async_mock import AsyncMock
+from tests.async_mock import AsyncMock, MagicMock, patch
 from tests.common import async_fire_time_changed, get_test_home_assistant, mock_registry
 from tests.mock.zwave import MockEntityValues, MockNetwork, MockNode, MockValue
 
@@ -860,8 +859,9 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         self.entity_id = "mock_component.mock_node_mock_value"
         self.zwave_config = {"zwave": {}}
         self.device_config = {self.entity_id: {}}
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -1205,8 +1205,9 @@ class TestZWaveServices(unittest.TestCase):
         self.zwave_network.state = MockNetwork.STATE_READY
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         self.hass.block_till_done()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.services.call("zwave", "stop_network", {})
         self.hass.block_till_done()

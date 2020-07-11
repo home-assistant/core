@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "A csatlakoz\u00e1s nem siker\u00fclt, pr\u00f3b\u00e1lkozzon \u00fajra",
+            "invalid_thermostat": "A termoszt\u00e1t sorozatsz\u00e1ma \u00e9rv\u00e9nytelen."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "serial_number": "A termoszt\u00e1t sorozatsz\u00e1ma.",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                }
+            }
+        }
+    }
+}

@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Soll Sonos konfigur\u00e9iert ginn?",
-                "title": "Sonos"
+                "description": "Soll Sonos konfigur\u00e9iert ginn?"
             }
         }
     }

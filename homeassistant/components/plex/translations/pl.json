@@ -11,10 +11,23 @@
         },
         "error": {
             "faulty_credentials": "Autoryzacja nie powiod\u0142a si\u0119",
+            "host_or_token": "Nalezy wprowadzi\u0107 przynajmniej jeden host lub token.",
             "no_servers": "Brak serwer\u00f3w po\u0142\u0105czonych z kontem",
-            "not_found": "Nie znaleziono serwera Plex"
+            "not_found": "Nie znaleziono serwera Plex",
+            "ssl_error": "Problem z certyfikatem SSL."
         },
+        "flow_title": "{name} ({host})",
         "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port",
+                    "ssl": "U\u017cyj SSL",
+                    "token": "Token dost\u0119pu (opcjonalnie)",
+                    "verify_ssl": "Weryfikacja certyfikatu SSL"
+                },
+                "title": "Manualna konfiguracja Plex"
+            },
             "select_server": {
                 "data": {
                     "server": "Serwer"
@@ -22,9 +35,15 @@
                 "description": "Dost\u0119pnych jest wiele serwer\u00f3w, wybierz jeden:",
                 "title": "Wybierz serwer Plex"
             },
-            "start_website_auth": {
-                "description": "Kontynuuj, by dokona\u0107 autoryzacji w plex.tv.",
-                "title": "Po\u0142\u0105cz z serwerem Plex"
+            "user": {
+                "description": "Przejd\u017a do [plex.tv](https://plex.tv), aby po\u0142\u0105czy\u0107 serwer Plex.",
+                "title": "Serwer medi\u00f3w Plex"
+            },
+            "user_advanced": {
+                "data": {
+                    "setup_method": "Metoda konfiguracji"
+                },
+                "title": "Serwer medi\u00f3w Plex"
             }
         }
     },
@@ -33,6 +52,7 @@
             "plex_mp_settings": {
                 "data": {
                     "ignore_new_shared_users": "Ignoruj nowych zarz\u0105dzanych/wsp\u00f3\u0142dzielonych u\u017cytkownik\u00f3w",
+                    "ignore_plex_web_clients": "Zignoruj klient\u00f3w Plex Web",
                     "monitored_users": "Monitorowani u\u017cytkownicy",
                     "use_episode_art": "U\u017cyj grafiki odcinka"
                 },

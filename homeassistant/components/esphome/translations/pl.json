@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "ESP jest ju\u017c skonfigurowane."
+            "already_configured": "ESP jest ju\u017c skonfigurowane.",
+            "already_in_progress": "Konfiguracja ESP jest ju\u017c w toku."
         },
         "error": {
             "connection_error": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z ESP. Upewnij si\u0119, \u017ce Tw\u00f3j plik YAML zawiera lini\u0119 'api:'.",
@@ -14,8 +15,7 @@
                 "data": {
                     "password": "Has\u0142o"
                 },
-                "description": "Wprowad\u017a has\u0142o ustawione w konfiguracji dla {name}.",
-                "title": "Wprowad\u017a has\u0142o"
+                "description": "Wprowad\u017a has\u0142o ustawione w konfiguracji dla {name}."
             },
             "discovery_confirm": {
                 "description": "Czy chcesz doda\u0107 w\u0119ze\u0142 ESPHome `{name}` do Home Assistant?",
@@ -26,8 +26,7 @@
                     "host": "Nazwa hosta lub adres IP",
                     "port": "Port"
                 },
-                "description": "Wprowad\u017a ustawienia po\u0142\u0105czenia [ESPHome](https://esphomelib.com/) w\u0119z\u0142a.",
-                "title": "[%key:component::esphome::title%]"
+                "description": "Wprowad\u017a ustawienia po\u0142\u0105czenia [ESPHome](https://esphomelib.com/) w\u0119z\u0142a."
             }
         }
     }

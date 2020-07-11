@@ -12,7 +12,7 @@
                 "data": {
                     "ip_address": "Vertsnavn eller IP-adresse",
                     "password": "Passord",
-                    "port": ""
+                    "port": "Port"
                 },
                 "title": "Fyll ut informasjonen din"
             }

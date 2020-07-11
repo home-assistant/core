@@ -1,10 +1,4 @@
 """Tests for the Roku integration."""
-from socket import gaierror as SocketGIAError
-
-from requests.exceptions import RequestException
-from requests_mock import Mocker
-from roku import RokuException
-
 from homeassistant.components.roku.const import DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
@@ -15,46 +9,20 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.async_mock import patch
 from tests.components.roku import setup_integration
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_config_entry_not_ready(
-    hass: HomeAssistantType, requests_mock: Mocker
+    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the Roku configuration entry not ready."""
-    with patch(
-        "homeassistant.components.roku.Roku._call", side_effect=RokuException,
-    ):
-        entry = await setup_integration(hass, requests_mock)
-
-    assert entry.state == ENTRY_STATE_SETUP_RETRY
-
-
-async def test_config_entry_not_ready_request(
-    hass: HomeAssistantType, requests_mock: Mocker
-) -> None:
-    """Test the Roku configuration entry not ready."""
-    with patch(
-        "homeassistant.components.roku.Roku._call", side_effect=RequestException,
-    ):
-        entry = await setup_integration(hass, requests_mock)
-
-    assert entry.state == ENTRY_STATE_SETUP_RETRY
-
-
-async def test_config_entry_not_ready_socket(
-    hass: HomeAssistantType, requests_mock: Mocker
-) -> None:
-    """Test the Roku configuration entry not ready."""
-    with patch(
-        "homeassistant.components.roku.Roku._call", side_effect=SocketGIAError,
-    ):
-        entry = await setup_integration(hass, requests_mock)
+    entry = await setup_integration(hass, aioclient_mock, error=True)
 
     assert entry.state == ENTRY_STATE_SETUP_RETRY
 
 
 async def test_unload_config_entry(
-    hass: HomeAssistantType, requests_mock: Mocker
+    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the Roku configuration entry unloading."""
     with patch(
@@ -63,7 +31,7 @@ async def test_unload_config_entry(
     ), patch(
         "homeassistant.components.roku.remote.async_setup_entry", return_value=True,
     ):
-        entry = await setup_integration(hass, requests_mock)
+        entry = await setup_integration(hass, aioclient_mock)
 
     assert hass.data[DOMAIN][entry.entry_id]
     assert entry.state == ENTRY_STATE_LOADED

@@ -146,7 +146,10 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await client.node.from_samba(
-                user_input[CONF_IP_ADDRESS], user_input[CONF_PASSWORD]
+                user_input[CONF_IP_ADDRESS],
+                user_input[CONF_PASSWORD],
+                include_history=False,
+                include_trends=False,
             )
         except NodeProError as err:
             LOGGER.error("Error connecting to Node/Pro unit: %s", err)

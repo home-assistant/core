@@ -1,8 +1,4 @@
 """Test the Panasonic Viera setup process."""
-from unittest.mock import Mock
-
-from asynctest import patch
-
 from homeassistant.components.panasonic_viera.const import (
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
@@ -15,6 +11,7 @@ from homeassistant.config_entries import ENTRY_STATE_NOT_LOADED
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 MOCK_CONFIG_DATA = {

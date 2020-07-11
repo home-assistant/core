@@ -6,7 +6,6 @@
             "not_doorbird_device": "Denne enheten er ikke en DoorBird"
         },
         "error": {
-            "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
@@ -14,7 +13,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Vert (IP-adresse)",
+                    "host": "Vert",
                     "name": "Enhetsnavn",
                     "password": "Passord",
                     "username": "Brukernavn"

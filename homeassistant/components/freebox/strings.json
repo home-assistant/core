@@ -3,7 +3,10 @@
     "step": {
       "user": {
         "title": "Freebox",
-        "data": { "host": "Host", "port": "Port" }
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
       },
       "link": {
         "title": "Link Freebox router",
@@ -15,6 +18,8 @@
       "connection_failed": "Failed to connect, please try again",
       "unknown": "Unknown error: please retry later"
     },
-    "abort": { "already_configured": "Host already configured" }
+    "abort": {
+      "already_configured": "Host already configured"
+    }
   }
 }

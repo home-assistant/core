@@ -37,6 +37,7 @@ async def test_async_setup(hass):
                                 "1": {
                                     CONF_NAME: "Name1",
                                     dynalite.CONF_CHANNEL: {"4": {}},
+                                    dynalite.CONF_PRESET: {"7": {}},
                                     dynalite.CONF_NO_DEFAULT: True,
                                 },
                                 "2": {CONF_NAME: "Name2"},

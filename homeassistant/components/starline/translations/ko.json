@@ -11,7 +11,7 @@
                     "app_id": "\uc560\ud50c\ub9ac\ucf00\uc774\uc158 ID",
                     "app_secret": "\ubcf4\uc548\ud0a4"
                 },
-                "description": "<a href=\"https://my.starline.ru/developer\" target=\"_blank\">StarLine \uac1c\ubc1c\uc790 \uacc4\uc815</a>\uc758 \uc560\ud50c\ub9ac\ucf00\uc774\uc158 ID \ubc0f \ube44\ubc00\ubc88\ud638",
+                "description": "[StarLine \uac1c\ubc1c\uc790 \uacc4\uc815](https://my.starline.ru/developer) \uc758 \uc560\ud50c\ub9ac\ucf00\uc774\uc158 ID \ubc0f \ubcf4\uc548\ud0a4 \ucf54\ub4dc",
                 "title": "\uc560\ud50c\ub9ac\ucf00\uc774\uc158 \uc790\uaca9 \uc99d\uba85"
             },
             "auth_captcha": {
@@ -25,7 +25,7 @@
                 "data": {
                     "mfa_code": "SMS \ucf54\ub4dc"
                 },
-                "description": "{phone_number} \uc804\ud654\ub85c \uc804\uc1a1\ub41c \ucf54\ub4dc\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694",
+                "description": "{phone_number} \ubc88\ud638\ub85c \ubcf4\ub0b4\ub4dc\ub9b0 \ucf54\ub4dc\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694",
                 "title": "2\ub2e8\uacc4 \uc778\uc99d"
             },
             "auth_user": {

@@ -10,6 +10,7 @@ from homeassistant.const import (
     STATE_ON,
     TEMP_CELSIUS,
 )
+from homeassistant.core import callback
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -89,9 +90,10 @@ class TemperatureSensor(HomeAccessory):
         )
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
-        self.update_state(state)
+        self.async_update_state(state)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update temperature after state changed."""
         unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
         temperature = convert_to_float(new_state.state)
@@ -118,9 +120,10 @@ class HumiditySensor(HomeAccessory):
         )
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
-        self.update_state(state)
+        self.async_update_state(state)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update accessory after state change."""
         humidity = convert_to_float(new_state.state)
         if humidity and self.char_humidity.value != humidity:
@@ -145,9 +148,10 @@ class AirQualitySensor(HomeAccessory):
         )
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
-        self.update_state(state)
+        self.async_update_state(state)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update accessory after state change."""
         density = convert_to_float(new_state.state)
         if density:
@@ -181,9 +185,10 @@ class CarbonMonoxideSensor(HomeAccessory):
         )
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
-        self.update_state(state)
+        self.async_update_state(state)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update accessory after state change."""
         value = convert_to_float(new_state.state)
         if value:
@@ -218,9 +223,10 @@ class CarbonDioxideSensor(HomeAccessory):
         )
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
-        self.update_state(state)
+        self.async_update_state(state)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update accessory after state change."""
         value = convert_to_float(new_state.state)
         if value:
@@ -248,9 +254,10 @@ class LightSensor(HomeAccessory):
         )
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
-        self.update_state(state)
+        self.async_update_state(state)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update accessory after state change."""
         luminance = convert_to_float(new_state.state)
         if luminance and self.char_light.value != luminance:
@@ -281,9 +288,10 @@ class BinarySensor(HomeAccessory):
         )
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
-        self.update_state(state)
+        self.async_update_state(state)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update accessory after state change."""
         state = new_state.state
         detected = self.format(state in (STATE_ON, STATE_HOME))

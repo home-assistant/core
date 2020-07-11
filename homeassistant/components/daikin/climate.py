@@ -1,7 +1,6 @@
 """Support for the Daikin HVAC."""
 import logging
 
-from pydaikin import appliance
 import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
@@ -96,12 +95,7 @@ class DaikinClimate(ClimateEntity):
         self._list = {
             ATTR_HVAC_MODE: list(HA_STATE_TO_DAIKIN),
             ATTR_FAN_MODE: self._api.device.fan_rate,
-            ATTR_SWING_MODE: list(
-                map(
-                    str.title,
-                    appliance.daikin_values(HA_ATTR_TO_DAIKIN[ATTR_SWING_MODE]),
-                )
-            ),
+            ATTR_SWING_MODE: self._api.device.swing_modes,
         }
 
         self._supported_features = SUPPORT_TARGET_TEMPERATURE
@@ -156,7 +150,7 @@ class DaikinClimate(ClimateEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._api.mac
+        return self._api.device.mac
 
     @property
     def temperature_unit(self):

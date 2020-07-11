@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API Schl\u00ebssel fir den Racchio Kont."
+                    "api_key": "API Schl\u00ebssel"
                 },
                 "description": "Du brauchs een API Schl\u00ebssel vun https://app.rach.io/. Wiel 'Account Settings', a klick dann op 'GET API KEY'.",
                 "title": "Mam Rachio Apparat verbannen"

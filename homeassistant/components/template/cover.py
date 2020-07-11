@@ -297,7 +297,7 @@ class CoverTemplate(CoverEntity):
         if self._position_script is not None:
             supported_features |= SUPPORT_SET_POSITION
 
-        if self.current_cover_tilt_position is not None:
+        if self._tilt_script is not None:
             supported_features |= TILT_FEATURES
 
         return supported_features
@@ -447,7 +447,7 @@ class CoverTemplate(CoverEntity):
                 ):
                     # Common during HA startup - so just a warning
                     _LOGGER.warning(
-                        "Could not render %s template %s, the state is unknown.",
+                        "Could not render %s template %s, the state is unknown",
                         friendly_property_name,
                         self._name,
                     )

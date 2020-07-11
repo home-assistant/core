@@ -36,9 +36,11 @@ from homeassistant.const import (
     STATE_STANDBY,
     STATE_UNKNOWN,
 )
+from homeassistant.core import callback
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
+    ATTR_KEY_NAME,
     CHAR_ACTIVE,
     CHAR_ACTIVE_IDENTIFIER,
     CHAR_CONFIGURED_NAME,
@@ -55,40 +57,64 @@ from .const import (
     CHAR_VOLUME_CONTROL_TYPE,
     CHAR_VOLUME_SELECTOR,
     CONF_FEATURE_LIST,
+    EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
+    KEY_ARROW_DOWN,
+    KEY_ARROW_LEFT,
+    KEY_ARROW_RIGHT,
+    KEY_ARROW_UP,
+    KEY_BACK,
+    KEY_EXIT,
+    KEY_FAST_FORWARD,
+    KEY_INFORMATION,
+    KEY_NEXT_TRACK,
+    KEY_PLAY_PAUSE,
+    KEY_PREVIOUS_TRACK,
+    KEY_REWIND,
+    KEY_SELECT,
     SERV_INPUT_SOURCE,
     SERV_SWITCH,
     SERV_TELEVISION,
     SERV_TELEVISION_SPEAKER,
 )
+from .util import get_media_player_features
 
 _LOGGER = logging.getLogger(__name__)
 
 MEDIA_PLAYER_KEYS = {
-    # 0: "Rewind",
-    # 1: "FastForward",
-    # 2: "NextTrack",
-    # 3: "PreviousTrack",
-    # 4: "ArrowUp",
-    # 5: "ArrowDown",
-    # 6: "ArrowLeft",
-    # 7: "ArrowRight",
-    # 8: "Select",
-    # 9: "Back",
-    # 10: "Exit",
-    11: SERVICE_MEDIA_PLAY_PAUSE,
-    # 15: "Information",
+    0: KEY_REWIND,
+    1: KEY_FAST_FORWARD,
+    2: KEY_NEXT_TRACK,
+    3: KEY_PREVIOUS_TRACK,
+    4: KEY_ARROW_UP,
+    5: KEY_ARROW_DOWN,
+    6: KEY_ARROW_LEFT,
+    7: KEY_ARROW_RIGHT,
+    8: KEY_SELECT,
+    9: KEY_BACK,
+    10: KEY_EXIT,
+    11: KEY_PLAY_PAUSE,
+    15: KEY_INFORMATION,
 }
 
+# Names may not contain special characters
+# or emjoi (/ is a special character for Apple)
 MODE_FRIENDLY_NAME = {
     FEATURE_ON_OFF: "Power",
-    FEATURE_PLAY_PAUSE: "Play/Pause",
-    FEATURE_PLAY_STOP: "Play/Stop",
+    FEATURE_PLAY_PAUSE: "Play-Pause",
+    FEATURE_PLAY_STOP: "Play-Stop",
     FEATURE_TOGGLE_MUTE: "Mute",
 }
+
+MEDIA_PLAYER_OFF_STATES = (
+    STATE_OFF,
+    STATE_UNKNOWN,
+    STATE_STANDBY,
+    "None",
+)
 
 
 @TYPES.register("MediaPlayer")
@@ -105,7 +131,9 @@ class MediaPlayer(HomeAccessory):
             FEATURE_PLAY_STOP: None,
             FEATURE_TOGGLE_MUTE: None,
         }
-        feature_list = self.config[CONF_FEATURE_LIST]
+        feature_list = self.config.get(
+            CONF_FEATURE_LIST, get_media_player_features(state)
+        )
 
         if FEATURE_ON_OFF in feature_list:
             name = self.generate_service_name(FEATURE_ON_OFF)
@@ -138,7 +166,7 @@ class MediaPlayer(HomeAccessory):
             self.chars[FEATURE_TOGGLE_MUTE] = serv_toggle_mute.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_toggle_mute
             )
-        self.update_state(state)
+        self.async_update_state(state)
 
     def generate_service_name(self, mode):
         """Generate name for individual service."""
@@ -177,17 +205,13 @@ class MediaPlayer(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_MEDIA_VOLUME_MUTED: value}
         self.call_service(DOMAIN, SERVICE_VOLUME_MUTE, params)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update switch state after state changed."""
         current_state = new_state.state
 
         if self.chars[FEATURE_ON_OFF]:
-            hk_state = current_state not in (
-                STATE_OFF,
-                STATE_UNKNOWN,
-                STATE_STANDBY,
-                "None",
-            )
+            hk_state = current_state not in MEDIA_PLAYER_OFF_STATES
             _LOGGER.debug(
                 '%s: Set current state for "on_off" to %s', self.entity_id, hk_state
             )
@@ -213,7 +237,7 @@ class MediaPlayer(HomeAccessory):
                 self.chars[FEATURE_PLAY_STOP].set_value(hk_state)
 
         if self.chars[FEATURE_TOGGLE_MUTE]:
-            current_state = new_state.attributes.get(ATTR_MEDIA_VOLUME_MUTED)
+            current_state = bool(new_state.attributes.get(ATTR_MEDIA_VOLUME_MUTED))
             _LOGGER.debug(
                 '%s: Set current state for "toggle_mute" to %s',
                 self.entity_id,
@@ -239,9 +263,7 @@ class TelevisionMediaPlayer(HomeAccessory):
         # Add additional characteristics if volume or input selection supported
         self.chars_tv = []
         self.chars_speaker = []
-        features = self.hass.states.get(self.entity_id).attributes.get(
-            ATTR_SUPPORTED_FEATURES, 0
-        )
+        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if features & (SUPPORT_PLAY | SUPPORT_PAUSE):
             self.chars_tv.append(CHAR_REMOTE_KEY)
@@ -252,12 +274,12 @@ class TelevisionMediaPlayer(HomeAccessory):
             if features & SUPPORT_VOLUME_SET:
                 self.chars_speaker.append(CHAR_VOLUME)
 
-        if features & SUPPORT_SELECT_SOURCE:
+        source_list = state.attributes.get(ATTR_INPUT_SOURCE_LIST, [])
+        if source_list and features & SUPPORT_SELECT_SOURCE:
             self.support_select_source = True
 
         serv_tv = self.add_preload_service(SERV_TELEVISION, self.chars_tv)
         self.set_primary_service(serv_tv)
-        serv_tv.configure_char(CHAR_CONFIGURED_NAME, value=self.display_name)
         serv_tv.configure_char(CHAR_SLEEP_DISCOVER_MODE, value=True)
         self.char_active = serv_tv.configure_char(
             CHAR_ACTIVE, setter_callback=self.set_on_off
@@ -297,9 +319,7 @@ class TelevisionMediaPlayer(HomeAccessory):
                 )
 
         if self.support_select_source:
-            self.sources = self.hass.states.get(self.entity_id).attributes.get(
-                ATTR_INPUT_SOURCE_LIST, []
-            )
+            self.sources = source_list
             self.char_input_source = serv_tv.configure_char(
                 CHAR_ACTIVE_IDENTIFIER, setter_callback=self.set_input_source
             )
@@ -315,9 +335,9 @@ class TelevisionMediaPlayer(HomeAccessory):
                 input_type = 3 if "hdmi" in source.lower() else 0
                 serv_input.configure_char(CHAR_INPUT_SOURCE_TYPE, value=input_type)
                 serv_input.configure_char(CHAR_CURRENT_VISIBILITY_STATE, value=False)
-                _LOGGER.debug("%s: Added source %s.", self.entity_id, source)
+                _LOGGER.debug("%s: Added source %s", self.entity_id, source)
 
-        self.update_state(state)
+        self.async_update_state(state)
 
     def set_on_off(self, value):
         """Move switch state to value if call came from HomeKit."""
@@ -357,36 +377,45 @@ class TelevisionMediaPlayer(HomeAccessory):
     def set_remote_key(self, value):
         """Send remote key value if call came from HomeKit."""
         _LOGGER.debug("%s: Set remote key to %s", self.entity_id, value)
-        service = MEDIA_PLAYER_KEYS.get(value)
-        if service:
-            # Handle Play Pause
-            if service == SERVICE_MEDIA_PLAY_PAUSE:
-                state = self.hass.states.get(self.entity_id).state
-                if state in (STATE_PLAYING, STATE_PAUSED):
-                    service = (
-                        SERVICE_MEDIA_PLAY
-                        if state == STATE_PAUSED
-                        else SERVICE_MEDIA_PAUSE
-                    )
+        key_name = MEDIA_PLAYER_KEYS.get(value)
+        if key_name is None:
+            _LOGGER.warning("%s: Unhandled key press for %s", self.entity_id, value)
+            return
+
+        if key_name == KEY_PLAY_PAUSE:
+            # Handle Play Pause by directly updating the media player entity.
+            state = self.hass.states.get(self.entity_id).state
+            if state in (STATE_PLAYING, STATE_PAUSED):
+                service = (
+                    SERVICE_MEDIA_PLAY if state == STATE_PAUSED else SERVICE_MEDIA_PAUSE
+                )
+            else:
+                service = SERVICE_MEDIA_PLAY_PAUSE
             params = {ATTR_ENTITY_ID: self.entity_id}
             self.call_service(DOMAIN, service, params)
+        else:
+            # Other keys can be handled by listening to the event bus
+            self.hass.bus.fire(
+                EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
+                {ATTR_KEY_NAME: key_name, ATTR_ENTITY_ID: self.entity_id},
+            )
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update Television state after state changed."""
         current_state = new_state.state
 
         # Power state television
         hk_state = 0
-        if current_state not in ("None", STATE_OFF, STATE_UNKNOWN):
+        if current_state not in MEDIA_PLAYER_OFF_STATES:
             hk_state = 1
-
         _LOGGER.debug("%s: Set current active state to %s", self.entity_id, hk_state)
         if self.char_active.value != hk_state:
             self.char_active.set_value(hk_state)
 
         # Set mute state
         if CHAR_VOLUME_SELECTOR in self.chars_speaker:
-            current_mute_state = new_state.attributes.get(ATTR_MEDIA_VOLUME_MUTED)
+            current_mute_state = bool(new_state.attributes.get(ATTR_MEDIA_VOLUME_MUTED))
             _LOGGER.debug(
                 "%s: Set current mute state to %s", self.entity_id, current_mute_state,
             )
@@ -394,20 +423,16 @@ class TelevisionMediaPlayer(HomeAccessory):
                 self.char_mute.set_value(current_mute_state)
 
         # Set active input
-        if self.support_select_source:
+        if self.support_select_source and self.sources:
             source_name = new_state.attributes.get(ATTR_INPUT_SOURCE)
-            if self.sources:
-                _LOGGER.debug(
-                    "%s: Set current input to %s", self.entity_id, source_name
+            _LOGGER.debug("%s: Set current input to %s", self.entity_id, source_name)
+            if source_name in self.sources:
+                index = self.sources.index(source_name)
+                if self.char_input_source.value != index:
+                    self.char_input_source.set_value(index)
+            elif hk_state:
+                _LOGGER.warning(
+                    "%s: Sources out of sync. Restart Home Assistant", self.entity_id,
                 )
-                if source_name in self.sources:
-                    index = self.sources.index(source_name)
-                    if self.char_input_source.value != index:
-                        self.char_input_source.set_value(index)
-                else:
-                    _LOGGER.warning(
-                        "%s: Sources out of sync. Restart Home Assistant",
-                        self.entity_id,
-                    )
-                    if self.char_input_source.value != 0:
-                        self.char_input_source.set_value(0)
+                if self.char_input_source.value != 0:
+                    self.char_input_source.set_value(0)

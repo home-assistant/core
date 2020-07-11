@@ -1,6 +1,4 @@
 """Test Z-Wave lights."""
-from unittest.mock import MagicMock, patch
-
 from homeassistant.components import zwave
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -16,6 +14,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.components.zwave import const, light
 
+from tests.async_mock import MagicMock, patch
 from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
 
 
@@ -234,7 +233,7 @@ def test_dimmer_refresh_value(mock_openzwave):
 
     assert not device.is_on
 
-    with patch.object(light, "Timer", MagicMock()) as mock_timer:
+    with patch.object(light, "Timer") as mock_timer:
         value.data = 46
         value_changed(value)
 
@@ -246,7 +245,7 @@ def test_dimmer_refresh_value(mock_openzwave):
         assert mock_timer().start.called
         assert len(mock_timer().start.mock_calls) == 1
 
-        with patch.object(light, "Timer", MagicMock()) as mock_timer_2:
+        with patch.object(light, "Timer") as mock_timer_2:
             value_changed(value)
             assert not device.is_on
             assert mock_timer().cancel.called

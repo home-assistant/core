@@ -6,8 +6,7 @@
         "step": {
             "user": {
                 "data": {
-                    "password": "Kata sandi",
-                    "port": "Port"
+                    "password": "Kata sandi"
                 }
             }
         }

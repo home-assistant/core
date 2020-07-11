@@ -144,11 +144,7 @@ class Volumio(MediaPlayerEntity):
             )
             return False
 
-        try:
-            return data
-        except AttributeError:
-            _LOGGER.error("Received invalid response: %s", data)
-            return False
+        return data
 
     async def async_update(self):
         """Update state."""
@@ -267,6 +263,10 @@ class Volumio(MediaPlayerEntity):
             await self.send_volumio_msg("commands", params={"cmd": "stop"})
         else:
             await self.send_volumio_msg("commands", params={"cmd": "pause"})
+
+    async def async_media_stop(self):
+        """Send media_stop command to media player."""
+        await self.send_volumio_msg("commands", params={"cmd": "stop"})
 
     async def async_set_volume_level(self, volume):
         """Send volume_up command to media player."""

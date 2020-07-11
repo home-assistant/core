@@ -111,8 +111,11 @@ async def test_migration(hass):
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    with patch("pyairvisual.api.API.nearest_city"):
+    with patch("pyairvisual.api.API.nearest_city"), patch.object(
+        hass.config_entries, "async_forward_entry_setup"
+    ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: conf})
+        await hass.async_block_till_done()
 
     config_entries = hass.config_entries.async_entries(DOMAIN)
 

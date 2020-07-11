@@ -1,0 +1,22 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "PoolSense",
+                "description": "Set up PoolSense integration. Register on the dedicated app to get your username and password. Serial is optional.",
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Can't connect to PoolSense.",
+            "invalid_auth": "Invalid authorisation details.",
+            "unknown": "Unknown Error."
+        },
+        "abort": {
+            "already_configured": "Device already configured."
+        }
+    }
+}

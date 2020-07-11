@@ -10,7 +10,7 @@
             "user": {
                 "data": {
                     "password": "Password",
-                    "username": "Indirizzo E-mail"
+                    "username": "E-mail"
                 },
                 "title": "Immettere nome utente e password"
             }

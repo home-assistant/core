@@ -74,6 +74,17 @@ class ShadeEntity(HDEntity):
     @property
     def device_info(self):
         """Return the device_info of the device."""
+
+        device_info = {
+            "identifiers": {(DOMAIN, self._shade.id)},
+            "name": self._shade_name,
+            "manufacturer": MANUFACTURER,
+            "via_device": (DOMAIN, self._device_info[DEVICE_SERIAL_NUMBER]),
+        }
+
+        if FIRMWARE_IN_SHADE not in self._shade.raw_data:
+            return device_info
+
         firmware = self._shade.raw_data[FIRMWARE_IN_SHADE]
         sw_version = f"{firmware[FIRMWARE_REVISION]}.{firmware[FIRMWARE_SUB_REVISION]}.{firmware[FIRMWARE_BUILD]}"
         model = self._shade.raw_data[ATTR_TYPE]
@@ -82,11 +93,6 @@ class ShadeEntity(HDEntity):
                 model = shade.description
                 break
 
-        return {
-            "identifiers": {(DOMAIN, self._shade.id)},
-            "name": self._shade_name,
-            "model": str(model),
-            "sw_version": sw_version,
-            "manufacturer": MANUFACTURER,
-            "via_device": (DOMAIN, self._device_info[DEVICE_SERIAL_NUMBER]),
-        }
+        device_info["sw_version"] = sw_version
+        device_info["model"] = model
+        return device_info

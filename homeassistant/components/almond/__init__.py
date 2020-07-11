@@ -13,7 +13,13 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import conversation
-from homeassistant.const import CONF_HOST, CONF_TYPE, EVENT_HOMEASSISTANT_START
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_HOST,
+    CONF_TYPE,
+    EVENT_HOMEASSISTANT_START,
+)
 from homeassistant.core import Context, CoreState, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -28,9 +34,6 @@ from homeassistant.helpers import (
 
 from . import config_flow
 from .const import DOMAIN, TYPE_LOCAL, TYPE_OAUTH2
-
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 
 STORAGE_VERSION = 1
 STORAGE_KEY = DOMAIN
@@ -147,16 +150,15 @@ async def _configure_almond_for_ha(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, api: WebAlmondAPI
 ):
     """Configure Almond to connect to HA."""
-
-    if entry.data["type"] == TYPE_OAUTH2:
-        # If we're connecting over OAuth2, we will only set up connection
-        # with Home Assistant if we're remotely accessible.
-        hass_url = network.async_get_external_url(hass)
-    else:
-        hass_url = hass.config.api.base_url
-
-    # If hass_url is None, we're not going to configure Almond to connect to HA.
-    if hass_url is None:
+    try:
+        if entry.data["type"] == TYPE_OAUTH2:
+            # If we're connecting over OAuth2, we will only set up connection
+            # with Home Assistant if we're remotely accessible.
+            hass_url = network.get_url(hass, allow_internal=False, prefer_cloud=True)
+        else:
+            hass_url = network.get_url(hass)
+    except network.NoURLAvailableError:
+        # If no URL is available, we're not going to configure Almond to connect to HA.
         return
 
     _LOGGER.debug("Configuring Almond to connect to Home Assistant at %s", hass_url)

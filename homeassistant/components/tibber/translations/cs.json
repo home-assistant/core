@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "invalid_access_token": "Neplatn\u00fd p\u0159\u00edstupov\u00fd token"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "P\u0159\u00edstupov\u00fd token"
+                }
+            }
+        }
+    }
+}

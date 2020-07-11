@@ -1,6 +1,5 @@
 """The test for state automation."""
 from datetime import timedelta
-from unittest.mock import patch
 
 import pytest
 
@@ -9,6 +8,7 @@ from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
@@ -704,7 +704,6 @@ async def test_wait_template_with_trigger(hass, calls):
     await hass.async_block_till_done()
 
     hass.states.async_set("test.entity", "world")
-    await hass.async_block_till_done()
     hass.states.async_set("test.entity", "hello")
     await hass.async_block_till_done()
     assert len(calls) == 1
