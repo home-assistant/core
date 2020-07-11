@@ -537,7 +537,7 @@ py-melissa-climate==2.0.0
 py17track==2.2.2
 
 # homeassistant.components.tplink
-pyHS100==0.3.5
+pyHS100==0.3.5.1
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
