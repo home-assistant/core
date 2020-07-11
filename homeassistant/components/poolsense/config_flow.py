@@ -19,12 +19,8 @@ class PoolSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    _options = None
-
     def __init__(self):
         """Initialize PoolSense config flow."""
-        self._email = None
-        self._password = None
         self._errors = {}
 
     async def async_step_user(self, user_input=None):
@@ -35,37 +31,33 @@ class PoolSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_EMAIL])
             self._abort_if_unique_id_configured()
 
-            self._email = user_input[CONF_EMAIL]
-            self._password = user_input[CONF_PASSWORD]
-            _LOGGER.debug("Configuring user: %s - Password hidden", self._email)
-
-            poolsense = PoolSense()
-            api_key_valid = await poolsense.test_poolsense_credentials(
-                aiohttp_client.async_get_clientsession(self.hass),
-                self._email,
-                self._password,
+            _LOGGER.debug(
+                "Configuring user: %s - Password hidden", user_input[CONF_EMAIL]
             )
+
+            poolsense = PoolSense(
+                aiohttp_client.async_get_clientsession(self.hass),
+                user_input[CONF_EMAIL],
+                user_input[CONF_PASSWORD],
+            )
+            api_key_valid = await poolsense.test_poolsense_credentials()
 
             if not api_key_valid:
                 self._errors["base"] = "invalid_auth"
 
             if not self._errors:
                 return self.async_create_entry(
-                    title=self._email,
-                    data={CONF_EMAIL: self._email, CONF_PASSWORD: self._password},
+                    title=user_input[CONF_EMAIL],
+                    data={
+                        CONF_EMAIL: user_input[CONF_EMAIL],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
                 )
-
-        return await self._show_setup_form(user_input, self._errors)
-
-    async def _show_setup_form(self, user_input=None, errors=None):
-        """Show the setup form to the user."""
-        if user_input is None:
-            user_input = {}
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
             ),
-            errors=errors or {},
+            errors=self._errors or {},
         )
