@@ -26,6 +26,7 @@ from .const import (
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
     CONF_CONSIDER_HOME,
+    CONF_LOCATION_NAME,
     CONF_NEW_DEVICE_DEFAULTS,
     CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
@@ -61,7 +62,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
             cv.time_period, cv.positive_timedelta
         ),
         vol.Optional(CONF_NEW_DEVICE_DEFAULTS, default={}): NEW_DEVICE_DEFAULTS_SCHEMA,
-        vol.Optional("location_name"): cv.string,
+        vol.Optional(CONF_LOCATION_NAME): cv.string,
     }
 )
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
