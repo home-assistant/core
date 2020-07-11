@@ -52,12 +52,12 @@ from homeassistant.util.dt import utcnow
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 SCRIPT_MODE_PARALLEL = "parallel"
-SCRIPT_MODE_QUEUE = "queue"
+SCRIPT_MODE_QUEUED = "queued"
 SCRIPT_MODE_RESTART = "restart"
 SCRIPT_MODE_SINGLE = "single"
 SCRIPT_MODE_CHOICES = [
     SCRIPT_MODE_PARALLEL,
-    SCRIPT_MODE_QUEUE,
+    SCRIPT_MODE_QUEUED,
     SCRIPT_MODE_RESTART,
     SCRIPT_MODE_SINGLE,
 ]
@@ -580,7 +580,7 @@ class Script:
 
         self._runs: List[_ScriptRun] = []
         self._max_runs = max_runs
-        if script_mode == SCRIPT_MODE_QUEUE:
+        if script_mode == SCRIPT_MODE_QUEUED:
             self._queue_lck = asyncio.Lock()
         self._config_cache: Dict[Set[Tuple], Callable[..., bool]] = {}
         self._referenced_entities: Optional[Set[str]] = None
@@ -677,7 +677,7 @@ class Script:
                 self._log("Maximum number of runs exceeded", level=logging.WARNING)
                 return
 
-        if self._script_mode != SCRIPT_MODE_QUEUE:
+        if self._script_mode != SCRIPT_MODE_QUEUED:
             cls = _ScriptRun
         else:
             cls = _QueuedScriptRun
