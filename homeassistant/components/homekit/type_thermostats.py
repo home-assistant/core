@@ -241,12 +241,10 @@ class Thermostat(HomeAccessory):
 
         serv_thermostat.setter_callback = self._set_chars
 
-    def _temperature_to_homekit(self, temp):
-        return temperature_to_homekit(temp, self._unit)
-
     def _clamped_temperature_to_homekit(self, temp):
         return min(
-            max(self._temperature_to_homekit(temp), self.hc_min_temp), self.hc_max_temp
+            max(temperature_to_homekit(temp, self._unit), self.hc_min_temp),
+            self.hc_max_temp,
         )
 
     def _temperature_to_states(self, temp):
@@ -391,23 +389,12 @@ class Thermostat(HomeAccessory):
 
     def get_temperature_range(self):
         """Return min and max temperature range."""
-        state_attributes = self.hass.states.get(self.entity_id).attributes
-        _LOGGER.warning("State_attributes: %s", state_attributes)
-        max_temp = state_attributes.get(ATTR_MAX_TEMP)
-        if max_temp:
-            max_temp = round(self._temperature_to_homekit(max_temp) * 2) / 2
-        else:
-            max_temp = DEFAULT_MAX_TEMP
-
-        min_temp = state_attributes.get(ATTR_MIN_TEMP)
-        if min_temp:
-            min_temp = round(self._temperature_to_homekit(min_temp) * 2) / 2
-        else:
-            min_temp = DEFAULT_MIN_TEMP
-
-        _LOGGER.warning("min_temp, max_temp: %s %s", min_temp, max_temp)
-
-        return min_temp, max_temp
+        return _get_temperature_range_from_state(
+            self.hass.states.get(self.entity_id),
+            self._unit,
+            DEFAULT_MIN_TEMP,
+            DEFAULT_MAX_TEMP,
+        )
 
     def set_target_humidity(self, value):
         """Set target humidity to value if call came from HomeKit."""
@@ -584,23 +571,12 @@ class WaterHeater(HomeAccessory):
 
     def get_temperature_range(self):
         """Return min and max temperature range."""
-        max_temp = self.hass.states.get(self.entity_id).attributes.get(ATTR_MAX_TEMP)
-        max_temp = (
-            temperature_to_homekit(max_temp, self._unit)
-            if max_temp
-            else DEFAULT_MAX_TEMP_WATER_HEATER
+        return _get_temperature_range_from_state(
+            self.hass.states.get(self.entity_id),
+            self._unit,
+            DEFAULT_MIN_TEMP_WATER_HEATER,
+            DEFAULT_MAX_TEMP_WATER_HEATER,
         )
-        max_temp = round(max_temp * 2) / 2
-
-        min_temp = self.hass.states.get(self.entity_id).attributes.get(ATTR_MIN_TEMP)
-        min_temp = (
-            temperature_to_homekit(min_temp, self._unit)
-            if min_temp
-            else DEFAULT_MIN_TEMP_WATER_HEATER
-        )
-        min_temp = round(min_temp * 2) / 2
-
-        return min_temp, max_temp
 
     def set_heat_cool(self, value):
         """Change operation mode to value if call came from HomeKit."""
@@ -642,3 +618,23 @@ class WaterHeater(HomeAccessory):
         operation_mode = new_state.state
         if operation_mode and self.char_target_heat_cool.value != 1:
             self.char_target_heat_cool.set_value(1)  # Heat
+
+
+def _get_temperature_range_from_state(state, unit, default_min, default_max):
+    """Calculate the temperature range from a state."""
+
+    min_temp = state.attributes.get(ATTR_MIN_TEMP)
+    if min_temp:
+        min_temp = round(temperature_to_homekit(min_temp, unit) * 2) / 2
+    else:
+        min_temp = default_min
+
+    max_temp = state.attributes.get(ATTR_MAX_TEMP)
+    if max_temp:
+        max_temp = round(temperature_to_homekit(max_temp, unit) * 2) / 2
+    else:
+        max_temp = default_max
+
+    _LOGGER.warning("min_temp, max_temp: %s %s", min_temp, max_temp)
+
+    return min_temp, max_temp
