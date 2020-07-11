@@ -1,5 +1,5 @@
 """Support for Bond fans."""
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, List, Optional
 
 from bond import BOND_DEVICE_TYPE_CEILING_FAN, Bond
 
@@ -15,8 +15,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
-from ...const import ATTR_NAME
 from .const import DOMAIN
+from .entity import BondEntity
 from .utils import BondDevice, get_bond_devices
 
 
@@ -39,36 +39,15 @@ async def async_setup_entry(
     async_add_entities(fans, True)
 
 
-class BondFan(FanEntity):
+class BondFan(BondEntity, FanEntity):
     """Representation of a Bond fan."""
 
     def __init__(self, bond: Bond, device: BondDevice):
         """Create HA entity representing Bond fan."""
-        self._bond = bond
-        self._device = device
+        super().__init__(bond, device)
 
         self._power: Optional[bool] = None
         self._speed: Optional[int] = None
-
-    @property
-    def unique_id(self) -> Optional[str]:
-        """Get unique ID for the entity."""
-        return self._device.device_id
-
-    @property
-    def name(self) -> Optional[str]:
-        """Get entity name."""
-        return self._device.name
-
-    @property
-    def device_info(self) -> Optional[Dict[str, Any]]:
-        """Get a an HA device representing this fan."""
-        return {ATTR_NAME: self.name, "identifiers": {(DOMAIN, self._device.device_id)}}
-
-    @property
-    def assumed_state(self) -> bool:
-        """Let HA know this entity relies on an assumed state tracked by Bond."""
-        return True
 
     @property
     def supported_features(self) -> int:
