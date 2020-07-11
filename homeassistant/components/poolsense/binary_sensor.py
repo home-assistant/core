@@ -20,7 +20,7 @@ BINARY_SENSORS = {
         "device_class": DEVICE_CLASS_PROBLEM,
     },
     "Chlorine Status": {
-        "unit": "",
+        "unit": None,
         "icon": "mdi:pool",
         "name": "Chlorine Status",
         "device_class": DEVICE_CLASS_PROBLEM,

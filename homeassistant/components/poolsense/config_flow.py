@@ -31,7 +31,7 @@ class PoolSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_EMAIL])
             self._abort_if_unique_id_configured()
 
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Configuring user: %s - Password hidden", user_input[CONF_EMAIL]
             )
 
