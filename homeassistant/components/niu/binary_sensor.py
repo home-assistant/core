@@ -2,18 +2,25 @@
 
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY_CHARGING,
+    DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_LOCK,
+    DEVICE_CLASS_POWER,
+    BinarySensorEntity,
+)
 from homeassistant.const import ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL
 
 from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
 SENSORS = [
-    ("Charging", "battery_charging", "mdi:ev-station"),
-    ("Connected", "connectivity", "mdi:car-connected"),
-    ("Power", "power", "mdi:power"),
-    ("Lock", "lock", "mdi:lock"),
+    ("charging", "Charging Status", DEVICE_CLASS_BATTERY_CHARGING, "mdi:ev-station"),
+    ("connection", "Connection Status", DEVICE_CLASS_CONNECTIVITY, "mdi:car-connected"),
+    ("power", "Power Status", DEVICE_CLASS_POWER, "mdi:power"),
+    ("lock", "Lock Status", DEVICE_CLASS_LOCK, "mdi:lock"),
 ]
 
 
@@ -24,7 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for vehicle in hass.data[DOMAIN].account.get_vehicles():
         for sensor in SENSORS:
             device = NiuBinarySensor(
-                hass.data[DOMAIN], vehicle, sensor[0], sensor[1], sensor[2]
+                hass.data[DOMAIN], vehicle, sensor[0], sensor[1], sensor[2], sensor[3]
             )
             entities.append(device)
 
@@ -34,13 +41,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class NiuBinarySensor(BinarySensorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, account, vehicle, attribute, device_class, icon):
+    def __init__(self, account, vehicle, attribute, name, device_class, icon):
         """Initialize the sensor."""
         self._account = account
         self._serial = vehicle.get_serial()
         self._vehicle = vehicle
 
         self._attribute = attribute
+        self._name = name
         self._device_class = device_class
         self._icon = icon
 
@@ -59,7 +67,12 @@ class NiuBinarySensor(BinarySensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._vehicle.get_name()} {self._attribute}"
+        return f"{self._vehicle.get_name()} {self._name}"
+
+    @property
+    def device_class(self):
+        """Return the class of this sensor."""
+        return self._device_class
 
     @property
     def is_on(self):
@@ -119,14 +132,18 @@ class NiuBinarySensor(BinarySensorEntity):
 
         _LOGGER.debug("Updating %s", self.name)
 
-        if self._attribute == "Charging":
+        if self._attribute == "charging":
             self._state = self._vehicle.is_charging()
 
-        if self._attribute == "Connected":
+        if self._attribute == "connection":
             self._state = self._vehicle.is_connected()
 
-        if self._attribute == "Power":
+        if self._attribute == "power":
             self._state = self._vehicle.is_on()
 
-        if self._attribute == "Lock":
+        if self._attribute == "lock":
             self._state = not self._vehicle.is_locked()
+            if self._state:
+                self._icon = "mdi:lock-open"
+            else:
+                self._icon = "mdi:lock"
