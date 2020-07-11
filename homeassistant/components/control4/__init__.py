@@ -1,6 +1,5 @@
 """The Control4 integration."""
 import asyncio
-import datetime
 import json
 import logging
 import re
@@ -233,37 +232,4 @@ class Control4Entity(entity.Entity):
 
     async def async_update(self):
         """Update the state of the device."""
-
-        async def _refresh_tokens(self):
-            config = self.entry.data
-            self.account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD])
-            director_token_dict = await self.account.getDirectorBearerToken(
-                self._controller_name
-            )
-            self.director = C4Director(
-                config[CONF_HOST], director_token_dict[CONF_TOKEN]
-            )
-            self.director_token_expiry = director_token_dict["token_expiration"]
-
-            _LOGGER.debug("Saving new tokens in config_entry")
-            self.hass.data[DOMAIN][self.entry.entry_id][CONF_ACCOUNT] = self.account
-            self.hass.data[DOMAIN][self.entry.entry_id][CONF_DIRECTOR] = self.director
-            self.hass.data[DOMAIN][self.entry.entry_id][
-                CONF_DIRECTOR_TOKEN_EXPIRATION
-            ] = self.director_token_expiry
-
-        if (
-            self.director_token_expiry is not None
-            and datetime.datetime.now() < self.director_token_expiry
-        ):
-            _LOGGER.debug("Old director token is still valid. Not getting a new one.")
-        else:
-            await _refresh_tokens(self)
-        try:
-            await self._coordinator.async_request_refresh()
-        except Unauthorized:
-            _LOGGER.warning(
-                "Got Unauthorized response from Control4 controller, attempting to refresh tokens."
-            )
-            await _refresh_tokens(self)
-            await self._coordinator.async_request_refresh()
+        await self._coordinator.async_request_refresh()

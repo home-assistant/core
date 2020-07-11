@@ -25,6 +25,7 @@ from .const import (
     CONF_LIGHT_TRANSITION_TIME,
     DOMAIN,
 )
+from .director_utils import director_update_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +38,6 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
     """Set up Control4 lights from a config entry."""
-    director = hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR]
     scan_interval = hass.data[DOMAIN][entry.entry_id][CONF_SCAN_INTERVAL]
     light_transition_time = hass.data[DOMAIN][entry.entry_id][
         CONF_LIGHT_TRANSITION_TIME
@@ -52,24 +52,17 @@ async def async_setup_entry(
         light_cold_start_transition_time,
     )
 
-    async def director_update_data(var: str) -> dict:
-        data = await director.getAllItemVariableValue(var)
-        return_dict = {}
-        for key in data:
-            return_dict[key["id"]] = key
-        return return_dict
-
     async def async_update_data_non_dimmer():
         """Fetch data from Control4 director for non-dimmer lights."""
         try:
-            return await director_update_data(CONTROL4_NON_DIMMER_VAR)
+            return await director_update_data(hass, entry, CONTROL4_NON_DIMMER_VAR)
         except C4Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}")
 
     async def async_update_data_dimmer():
         """Fetch data from Control4 director for dimmer lights."""
         try:
-            return await director_update_data(CONTROL4_DIMMER_VAR)
+            return await director_update_data(hass, entry, CONTROL4_DIMMER_VAR)
         except C4Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}")
 
