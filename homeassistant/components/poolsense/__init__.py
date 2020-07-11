@@ -97,6 +97,21 @@ class PoolSenseEntity(Entity):
         """Return if sensor is available."""
         return self.coordinator.last_update_success
 
+    @property
+    def should_poll(self) -> bool:
+        """Return the polling requirement of the entity."""
+        return False
+
+    async def async_added_to_hass(self) -> None:
+        """Connect to dispatcher listening for entity data notifications."""
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
+
+    async def async_update(self) -> None:
+        """Request an update of the coordinator for entity."""
+        await self.coordinator.async_request_refresh()
+
 
 class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator):
     """Define an object to hold PoolSense data."""
