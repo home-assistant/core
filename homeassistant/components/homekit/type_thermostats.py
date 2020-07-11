@@ -120,13 +120,7 @@ class Thermostat(HomeAccessory):
         self._state_updates = 0
         self.hc_homekit_to_hass = None
         self.hc_hass_to_homekit = None
-        min_temp, max_temp = self.get_temperature_range()
-
-        # Homekit only supports 10-38, overwriting
-        # the max to appears to work, but less than 0 causes
-        # a crash on the home app
-        self.hc_min_temp = max(min_temp, 0)
-        self.hc_max_temp = max_temp
+        self.hc_min_temp, self.hc_max_temp = self.get_temperature_range()
 
         _LOGGER.warning(
             "name: %s, hc_min_step: %s hc_max_temp %s",
@@ -527,12 +521,7 @@ class WaterHeater(HomeAccessory):
         """Initialize a WaterHeater accessory object."""
         super().__init__(*args, category=CATEGORY_THERMOSTAT)
         self._unit = self.hass.config.units.temperature_unit
-        min_temp, max_temp = self.get_temperature_range()
-        # Homekit only supports 10-38, overwriting
-        # the max to appears to work, but less than 0 causes
-        # a crash on the home app
-        self.hc_min_temp = max(min_temp, 0)
-        self.hc_max_temp = max_temp
+        self.hc_min_temp, self.hc_max_temp = self.get_temperature_range()
 
         serv_thermostat = self.add_preload_service(SERV_THERMOSTAT)
 
@@ -636,5 +625,12 @@ def _get_temperature_range_from_state(state, unit, default_min, default_max):
         max_temp = default_max
 
     _LOGGER.warning("min_temp, max_temp: %s %s", min_temp, max_temp)
+
+    # Homekit only supports 10-38, overwriting
+    # the max to appears to work, but less than 0 causes
+    # a crash on the home app
+    min_temp = max(min_temp, 0)
+    if min_temp > max_temp:
+        max_temp = min_temp
 
     return min_temp, max_temp
