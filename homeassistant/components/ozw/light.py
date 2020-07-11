@@ -3,7 +3,6 @@ import logging
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_WHITE_VALUE,
@@ -88,9 +87,7 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         if self.values.color_channels is not None:
             self._supported_features |= SUPPORT_WHITE_VALUE
 
-        if self.values.color is None:
-            return
-        if self.values.color_channels is None:
+        if self.values.color is None and self.values.color_channels is None:
             return
 
         # Color Channels
@@ -141,15 +138,11 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
 
         Zwave multilevel switches use a range of [0, 99] to control brightness.
         """
-        if "target" in self.values:
-            return round((self.values.target.value / 99) * 255)
         return round((self.values.primary.value / 99) * 255)
 
     @property
     def is_on(self):
         """Return true if device is on (brightness above 0)."""
-        if "target" in self.values:
-            return self.values.target.value > 0
         return self.values.primary.value > 0
 
     @property
@@ -167,11 +160,6 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         """Return the white value of this light between 0..255."""
         return self._white
 
-    @property
-    def color_temp(self):
-        """Return the color temperature."""
-        return self._ct
-
     @callback
     def async_set_duration(self, **kwargs):
         """Set the transition time for the brightness value.
@@ -182,9 +170,6 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         128-254 = 1 minute to 127 minutes
         255     = factory default
         """
-        if self.values.dimming_duration is None:
-            return
-
         if ATTR_TRANSITION not in kwargs:
             # no transition specified by user, use defaults
             new_value = 255
@@ -213,23 +198,14 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         white = kwargs.get(ATTR_WHITE_VALUE)
         hs_color = kwargs.get(ATTR_HS_COLOR)
 
-        if kwargs.get(ATTR_COLOR_TEMP) is not None:
-            rgbw = "#00000000ff"
-
-        elif hs_color is not None:
+        if hs_color is not None:
             hs_color = kwargs[ATTR_HS_COLOR]
-            if white is None:
-                # white LED must be off in order for color to work
-                white = 0
-
-        if (white or hs_color) and hs_color is not None:
             rgbw = "#"
             for colorval in color_util.color_hs_to_RGB(*hs_color):
                 rgbw += f"{colorval:02x}"
-            if white is not None:
-                rgbw += f"{white:02x}" + "00"
-            else:
-                rgbw += "0000"
+            rgbw += "0000"
+            # white LED must be off in order for color to work
+
         elif white is not None and rgbw is None:
             rgbw = "#000000" + f"{white:02x}" + "00"
 
