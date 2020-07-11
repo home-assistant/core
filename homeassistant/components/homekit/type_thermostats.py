@@ -405,6 +405,8 @@ class Thermostat(HomeAccessory):
         else:
             min_temp = DEFAULT_MIN_TEMP
 
+        _LOGGER.warning("min_temp, max_temp: %s %s", min_temp, max_temp)
+
         return min_temp, max_temp
 
     def set_target_humidity(self, value):
