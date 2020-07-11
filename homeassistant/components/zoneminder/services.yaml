@@ -2,7 +2,7 @@ set_run_state:
   description: "Set the ZoneMinder run state"
   fields:
     id:
-      description: "The host name of the ZoneMinder instance."
+      description: "The host name or IP address of the ZoneMinder instance."
       example: "10.10.0.2"
     name:
       description: "The string name of the ZoneMinder run state to set as active."
