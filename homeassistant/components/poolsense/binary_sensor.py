@@ -15,13 +15,13 @@ _LOGGER = logging.getLogger(__name__)
 BINARY_SENSORS = {
     "pH Status": {
         "unit": None,
-        "icon": "mdi:pool",
+        "icon": None,
         "name": "pH Status",
         "device_class": DEVICE_CLASS_PROBLEM,
     },
     "Chlorine Status": {
         "unit": None,
-        "icon": "mdi:pool",
+        "icon": None,
         "name": "Chlorine Status",
         "device_class": DEVICE_CLASS_PROBLEM,
     },
@@ -54,8 +54,6 @@ class PoolSenseBinarySensor(PoolSenseEntity, BinarySensorEntity):
     @property
     def icon(self):
         """Return the icon."""
-        if self.info_type in ("pH Status", "Chlorine Status"):
-            return None
         return BINARY_SENSORS[self.info_type]["icon"]
 
     @property
