@@ -503,7 +503,7 @@ plumlightpad==0.0.11
 pmsensor==0.4
 
 # homeassistant.components.poolsense
-poolsense==0.0.5
+poolsense==0.0.8
 
 # homeassistant.components.reddit
 praw==6.5.1

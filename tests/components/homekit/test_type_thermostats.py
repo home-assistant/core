@@ -1623,7 +1623,6 @@ async def test_thermostat_with_temp_clamps(hass, hk_driver, cls, events):
     """Test that tempatures are clamped to valid values to prevent homekit crash."""
     entity_id = "climate.test"
 
-    # support_auto = True
     hass.states.async_set(
         entity_id,
         HVAC_MODE_COOL,
