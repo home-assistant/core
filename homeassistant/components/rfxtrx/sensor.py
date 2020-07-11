@@ -57,7 +57,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RFXtrx platform."""
     if discovery_info is None:
         return
-    config = discovery_info
 
     data_ids = set()
 
@@ -115,7 +114,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             add_entities([entity])
 
     # Subscribe to main RFXtrx events
-    if config[CONF_AUTOMATIC_ADD]:
+    if discovery_info[CONF_AUTOMATIC_ADD]:
         hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, sensor_update)
 
 

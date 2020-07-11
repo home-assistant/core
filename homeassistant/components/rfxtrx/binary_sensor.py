@@ -45,7 +45,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Binary Sensor platform to RFXtrx."""
     if discovery_info is None:
         return
-    config = discovery_info
 
     sensors = []
 
@@ -57,7 +56,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     def supported(event):
         return isinstance(event, rfxtrxmod.ControlEvent)
 
-    for packet_id, entity in config[CONF_DEVICES].items():
+    for packet_id, entity in discovery_info[CONF_DEVICES].items():
         event = get_rfx_object(packet_id)
         if event is None:
             _LOGGER.error("Invalid device: %s", packet_id)
