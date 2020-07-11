@@ -1880,3 +1880,11 @@ def test_urlencode(hass):
         ("{% set dict = {'foo': 'x', 'bar': 42} %}" "{{ dict | urlencode }}"), hass,
     )
     assert tpl.async_render() == "foo=x&bar=42"
+    tpl = template.Template(
+        ("{% set string = 'xyzzy' %}" "{{ string | urlencode }}"), hass,
+    )
+    assert tpl.async_render() == "xyzzy"
+    tpl = template.Template(
+        ("{% set integer = 42 %}" "{{ integer | urlencode }}"), hass,
+    )
+    assert tpl.async_render() == "42"
