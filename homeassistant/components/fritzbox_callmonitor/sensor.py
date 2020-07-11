@@ -160,6 +160,7 @@ class FritzBoxCallMonitor:
         self.sock = None
         self._sensor = sensor
         self.stopped = threading.Event()
+        self.callstack = {}
 
     def connect(self):
         """Connect to the Fritz!Box."""
@@ -208,6 +209,7 @@ class FritzBoxCallMonitor:
         df_out = "%Y-%m-%dT%H:%M:%S"
         isotime = datetime.datetime.strptime(line[0], df_in).strftime(df_out)
         if line[1] == "RING":
+            self.callstack[line[2]] = ["RING"]
             self._sensor.set_state(VALUE_RING)
             att = {
                 "type": "incoming",
@@ -219,6 +221,7 @@ class FritzBoxCallMonitor:
             att["from_name"] = self._sensor.number_to_name(att["from"])
             self._sensor.set_attributes(att)
         elif line[1] == "CALL":
+            self.callstack[line[2]] = ["CALL"]
             self._sensor.set_state(VALUE_CALL)
             att = {
                 "type": "outgoing",
@@ -230,12 +233,21 @@ class FritzBoxCallMonitor:
             att["to_name"] = self._sensor.number_to_name(att["to"])
             self._sensor.set_attributes(att)
         elif line[1] == "CONNECT":
+            self.callstack[line[2]].append("CONNECT")
             self._sensor.set_state(VALUE_CONNECT)
             att = {"with": line[4], "device": line[3], "accepted": isotime}
             att["with_name"] = self._sensor.number_to_name(att["with"])
             self._sensor.set_attributes(att)
         elif line[1] == "DISCONNECT":
-            self._sensor.set_state(VALUE_DISCONNECT)
+            try:
+                self.callstack.pop(line[2])
+            except KeyError:
+                pass  # stack is out of sync
+            if len(self.callstack) == 0:
+                self._sensor.set_state(VALUE_DISCONNECT)
+            else:
+                # there is still a call ongoing
+                self._sensor.set_state(VALUE_CONNECT)
             att = {"duration": line[3], "closed": isotime}
             self._sensor.set_attributes(att)
         self._sensor.schedule_update_ha_state()
