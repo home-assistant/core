@@ -391,17 +391,19 @@ class Thermostat(HomeAccessory):
 
     def get_temperature_range(self):
         """Return min and max temperature range."""
-        max_temp = self.hass.states.get(self.entity_id).attributes.get(ATTR_MAX_TEMP)
-        max_temp = (
-            self._temperature_to_homekit(max_temp) if max_temp else DEFAULT_MAX_TEMP
-        )
-        max_temp = round(max_temp * 2) / 2
+        state_attributes = self.hass.states.get(self.entity_id).attributes
+        _LOGGER.warning("State_attributes: %s", state_attributes)
+        max_temp = state_attributes.get(ATTR_MAX_TEMP)
+        if max_temp:
+            max_temp = round(self._temperature_to_homekit(max_temp) * 2) / 2
+        else:
+            max_temp = DEFAULT_MAX_TEMP
 
-        min_temp = self.hass.states.get(self.entity_id).attributes.get(ATTR_MIN_TEMP)
-        min_temp = (
-            self._temperature_to_homekit(min_temp) if min_temp else DEFAULT_MIN_TEMP
-        )
-        min_temp = round(min_temp * 2) / 2
+        min_temp = state_attributes.get(ATTR_MIN_TEMP)
+        if min_temp:
+            min_temp = round(self._temperature_to_homekit(min_temp) * 2) / 2
+        else:
+            min_temp = DEFAULT_MIN_TEMP
 
         return min_temp, max_temp
 
