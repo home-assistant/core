@@ -81,16 +81,16 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         if self.values.dimming_duration is not None:
             self._supported_features |= SUPPORT_TRANSITION
 
+        if self.values.color is None and self.values.color_channels is None:
+            return
+
         if self.values.color is not None:
             self._supported_features |= SUPPORT_COLOR
 
         if self.values.color_channels is not None:
             self._supported_features |= SUPPORT_WHITE_VALUE
 
-        if self.values.color is None and self.values.color_channels is None:
-            return
-
-        self.__calculate_rgb_values()
+        self._calculate_rgb_values()
 
     @property
     def brightness(self):
@@ -130,6 +130,9 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         128-254 = 1 minute to 127 minutes
         255     = factory default
         """
+        if self.values.dimming_duration is None:
+            return
+
         if ATTR_TRANSITION not in kwargs:
             # no transition specified by user, use defaults
             new_value = 255
@@ -188,7 +191,7 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
 
         self.values.primary.send_value(0)
 
-    def __calculate_rgb_values(self):
+    def _calculate_rgb_values(self):
         # Color Channels
         self._color_channels = self.values.color_channels.data[ATTR_VALUE]
 
