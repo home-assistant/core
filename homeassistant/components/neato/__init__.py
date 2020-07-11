@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
 
@@ -103,6 +104,7 @@ async def async_setup_entry(hass, entry):
         await hass.async_add_executor_job(hub.update_robots)
     except NeatoRobotException:
         _LOGGER.debug("Failed to connect to Neato API")
+        raise ConfigEntryNotReady
         return False
 
     for component in ("camera", "vacuum", "switch", "sensor"):
@@ -154,6 +156,7 @@ class NeatoHub:
                 _LOGGER.error("Invalid credentials")
             else:
                 _LOGGER.error("Unable to connect to Neato API")
+                raise ConfigEntryNotReady
             self.logged_in = False
             return
 

@@ -241,14 +241,32 @@ class NeatoConnectedVacuum(StateVacuumEntity):
             and self._robot_maps[self._robot_serial]
         ):
             allmaps = self._robot_maps[self._robot_serial]
+            _LOGGER.debug("Found the following maps for '%s': %s", self._name, allmaps)
+            self._robot_boundaries = {}  # Reset boundaries before refreshing boundaries
             for maps in allmaps:
                 try:
-                    self._robot_boundaries = self.robot.get_map_boundaries(
-                        maps["id"]
-                    ).json()
+                    robot_boundaries = self.robot.get_map_boundaries(maps["id"]).json()
                 except NeatoRobotException as ex:
                     _LOGGER.error("Could not fetch map boundaries: %s", ex)
-                    self._robot_boundaries = {}
+                    return
+
+                _LOGGER.debug(
+                    "Boundaries for robot '%s' in map '%s': %s",
+                    self._name,
+                    maps["name"],
+                    robot_boundaries,
+                )
+                if self._robot_boundaries == {}:
+                    self._robot_boundaries = robot_boundaries
+                else:
+                    self._robot_boundaries["data"]["boundaries"] += robot_boundaries[
+                        "data"
+                    ]["boundaries"]
+                _LOGGER.debug(
+                    "List of boundaries for '%s': %s",
+                    self._name,
+                    self._robot_boundaries,
+                )
 
     @property
     def name(self):
