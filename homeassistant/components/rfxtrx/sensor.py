@@ -4,7 +4,13 @@ import logging
 from RFXtrx import SensorEvent
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_TEMPERATURE,
+    PLATFORM_SCHEMA,
+)
 from homeassistant.const import ATTR_ENTITY_ID, CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -38,6 +44,34 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+
+def _battery_convert(value):
+    """Battery is given as a value between 0 and 9."""
+    if value is None:
+        return None
+    return value * 10
+
+
+def _rssi_convert(value):
+    """Rssi is given as dBm value."""
+    if value is None:
+        return None
+    return f"{value*8-120}"
+
+
+DEVICE_CLASSES = {
+    "Battery numeric": DEVICE_CLASS_BATTERY,
+    "Rssi numeric": DEVICE_CLASS_SIGNAL_STRENGTH,
+    "Humidity": DEVICE_CLASS_HUMIDITY,
+    "Temperature": DEVICE_CLASS_TEMPERATURE,
+}
+
+
+CONVERT_FUNCTIONS = {
+    "Battery numeric": _battery_convert,
+    "Rssi numeric": _rssi_convert,
+}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -115,6 +149,9 @@ class RfxtrxSensor(Entity):
         self._device_id = get_device_id(device)
         self._unique_id = "_".join(x for x in (*self._device_id, data_type))
 
+        self._device_class = DEVICE_CLASSES.get(data_type)
+        self._convert_fun = CONVERT_FUNCTIONS.get(data_type, lambda x: x)
+
         if event:
             self._apply_event(event)
 
@@ -137,7 +174,8 @@ class RfxtrxSensor(Entity):
         """Return the state of the sensor."""
         if not self.event:
             return None
-        return self.event.values.get(self.data_type)
+        value = self.event.values.get(self.data_type)
+        return self._convert_fun(value)
 
     @property
     def name(self):
@@ -155,6 +193,11 @@ class RfxtrxSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
+
+    @property
+    def device_class(self):
+        """Return a device class for sensor."""
+        return self._device_class
 
     @property
     def unique_id(self):
