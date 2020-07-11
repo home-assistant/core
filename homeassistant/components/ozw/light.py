@@ -28,11 +28,6 @@ COLOR_CHANNEL_COLD_WHITE = 0x02
 COLOR_CHANNEL_RED = 0x04
 COLOR_CHANNEL_GREEN = 0x08
 COLOR_CHANNEL_BLUE = 0x10
-TEMP_COLOR_MAX = 500  # mireds (inverted)
-TEMP_COLOR_MIN = 154
-TEMP_MID_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 2 + TEMP_COLOR_MIN
-TEMP_WARM_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 * 2 + TEMP_COLOR_MIN
-TEMP_COLD_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 + TEMP_COLOR_MIN
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -60,7 +55,6 @@ def byte_to_zwave_brightness(value):
     return 0
 
 
-# Create ZwaveLight class and combine them
 class ZwaveLight(ZWaveDeviceEntity, LightEntity):
     """Representation of a Z-Wave light."""
 
@@ -69,7 +63,6 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         super().__init__(values)
         self._color_channels = None
         self._hs = None
-        self._ct = None
         self._white = None
         self._supported_features = SUPPORT_BRIGHTNESS
         # make sure that supported features is correctly set
@@ -210,16 +203,11 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
             warm_white = int(data[index : index + 2], 16)
             self._white = warm_white
             index += 2
-        else:
-            warm_white = 0
 
         # Cold white
         if self._color_channels & COLOR_CHANNEL_COLD_WHITE:
             cold_white = int(data[index : index + 2], 16)
             self._white = cold_white
-            index += 2
-        else:
-            cold_white = 0
 
         # If no rgb channels supported, report None.
         if not (
