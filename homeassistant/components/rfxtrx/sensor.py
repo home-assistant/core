@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     data_ids = set()
 
     def supported(event):
-        return isinstance(event, SensorEvent) or isinstance(event, ControlEvent)
+        return isinstance(event, (ControlEvent, SensorEvent))
 
     entities = []
     for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
