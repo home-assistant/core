@@ -25,9 +25,7 @@
             },
             "user": {
                 "data": {
-                    "path": "Percorso del dispositivo seriale",
-                    "radio_type": "Tipo di Radio",
-                    "usb_path": "Percorso del dispositivo USB"
+                    "path": "Percorso del dispositivo seriale"
                 },
                 "description": "Selezionare la porta seriale per la radio Zigbee",
                 "title": "ZHA"

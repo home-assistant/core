@@ -15,10 +15,11 @@
             "not_found": "Serveur Plex introuvable",
             "ssl_error": "Probl\u00e8me de certificat SSL"
         },
+        "flow_title": "{name} ( {host} )",
         "step": {
             "manual_setup": {
                 "data": {
-                    "host": "H\u00f4te (facultatif si un jeton est fourni)",
+                    "host": "Nom d'h\u00f4te ou adresse IP",
                     "port": "Port",
                     "ssl": "Utiliser SSL",
                     "token": "Jeton (facultatif)",
@@ -32,10 +33,6 @@
                 },
                 "description": "Plusieurs serveurs disponibles, s\u00e9lectionnez-en un:",
                 "title": "S\u00e9lectionnez le serveur Plex"
-            },
-            "start_website_auth": {
-                "description": "Continuer d'autoriser sur plex.tv.",
-                "title": "Connecter un serveur Plex"
             },
             "user": {
                 "title": "Plex Media Server"

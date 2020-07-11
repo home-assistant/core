@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Este televisor ya est\u00e1 configurado."
+            "already_configured": "Este televisor ya est\u00e1 configurado.",
+            "no_ip_control": "El Control de IP est\u00e1 desactivado en tu televisor o el televisor no es compatible."
         },
         "error": {
             "cannot_connect": "No se pudo conectar, host o c\u00f3digo PIN no v\u00e1lido.",

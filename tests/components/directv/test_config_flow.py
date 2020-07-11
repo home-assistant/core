@@ -205,9 +205,12 @@ async def test_full_import_flow_implementation(
     mock_connection(aioclient_mock)
 
     user_input = MOCK_USER_INPUT.copy()
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=user_input,
-    )
+    with patch(
+        "homeassistant.components.directv.async_setup_entry", return_value=True
+    ), patch("homeassistant.components.directv.async_setup", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=user_input,
+        )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == HOST
@@ -231,9 +234,12 @@ async def test_full_user_flow_implementation(
     assert result["step_id"] == "user"
 
     user_input = MOCK_USER_INPUT.copy()
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=user_input,
-    )
+    with patch(
+        "homeassistant.components.directv.async_setup_entry", return_value=True
+    ), patch("homeassistant.components.directv.async_setup", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=user_input,
+        )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == HOST

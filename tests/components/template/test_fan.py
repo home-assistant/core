@@ -63,6 +63,7 @@ async def test_missing_optional_config(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -88,6 +89,7 @@ async def test_missing_value_template_config(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -113,6 +115,7 @@ async def test_missing_turn_on_config(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -138,6 +141,7 @@ async def test_missing_turn_off_config(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -161,6 +165,7 @@ async def test_invalid_config(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -202,6 +207,7 @@ async def test_templates_with_entities(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -241,6 +247,7 @@ async def test_availability_template_with_entities(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -282,6 +289,7 @@ async def test_templates_with_valid_values(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -311,6 +319,7 @@ async def test_templates_invalid_values(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -342,6 +351,7 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -687,5 +697,6 @@ async def _register_components(hass, speed_list=None):
             {"fan": {"platform": "template", "fans": {"test_fan": test_fan_config}}},
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()

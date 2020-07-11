@@ -17,6 +17,7 @@ from . import (
     mock_connection,
 )
 
+from tests.async_mock import patch
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -264,10 +265,27 @@ async def test_zeroconf_with_uuid_device_exists_abort(
     assert result["reason"] == "already_configured"
 
 
-async def test_zeroconf_unique_id_required_abort(
+async def test_zeroconf_empty_unique_id(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test we abort zeroconf flow if printer lacks unique identification."""
+    """Test zeroconf flow if printer lacks (empty) unique identification."""
+    mock_connection(aioclient_mock, no_unique_id=True)
+
+    discovery_info = {
+        **MOCK_ZEROCONF_IPP_SERVICE_INFO,
+        "properties": {**MOCK_ZEROCONF_IPP_SERVICE_INFO["properties"], "UUID": ""},
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+
+
+async def test_zeroconf_no_unique_id(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test zeroconf flow if printer lacks unique identification."""
     mock_connection(aioclient_mock, no_unique_id=True)
 
     discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
@@ -275,8 +293,7 @@ async def test_zeroconf_unique_id_required_abort(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "unique_id_required"
+    assert result["type"] == RESULT_TYPE_FORM
 
 
 async def test_full_user_flow_implementation(
@@ -292,10 +309,13 @@ async def test_full_user_flow_implementation(
     assert result["step_id"] == "user"
     assert result["type"] == RESULT_TYPE_FORM
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_HOST: "192.168.1.31", CONF_BASE_PATH: "/ipp/print"},
-    )
+    with patch(
+        "homeassistant.components.ipp.async_setup_entry", return_value=True
+    ), patch("homeassistant.components.ipp.async_setup", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "192.168.1.31", CONF_BASE_PATH: "/ipp/print"},
+        )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "192.168.1.31"
@@ -322,9 +342,12 @@ async def test_full_zeroconf_flow_implementation(
     assert result["step_id"] == "zeroconf_confirm"
     assert result["type"] == RESULT_TYPE_FORM
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
+    with patch(
+        "homeassistant.components.ipp.async_setup_entry", return_value=True
+    ), patch("homeassistant.components.ipp.async_setup", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "EPSON XP-6000 Series"
@@ -354,9 +377,12 @@ async def test_full_zeroconf_tls_flow_implementation(
     assert result["type"] == RESULT_TYPE_FORM
     assert result["description_placeholders"] == {CONF_NAME: "EPSON XP-6000 Series"}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
+    with patch(
+        "homeassistant.components.ipp.async_setup_entry", return_value=True
+    ), patch("homeassistant.components.ipp.async_setup", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "EPSON XP-6000 Series"

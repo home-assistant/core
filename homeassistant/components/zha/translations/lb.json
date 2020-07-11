@@ -25,9 +25,7 @@
             },
             "user": {
                 "data": {
-                    "path": "Pad zum seriellen Apparat",
-                    "radio_type": "Typ vun Radio",
-                    "usb_path": "Pad zum USB Apparat"
+                    "path": "Pad zum seriellen Apparat"
                 },
                 "description": "Serielle Port fir Zigbee Radio auswielen",
                 "title": "ZHA"

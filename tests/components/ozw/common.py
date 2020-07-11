@@ -32,7 +32,10 @@ async def setup_ozw(hass, entry=None, fixture=None):
 
     if fixture is not None:
         for line in fixture.split("\n"):
-            topic, payload = line.strip().split(",", 1)
+            line = line.strip()
+            if not line:
+                continue
+            topic, payload = line.split(",", 1)
             receive_message(Mock(topic=topic, payload=payload))
 
         await hass.async_block_till_done()

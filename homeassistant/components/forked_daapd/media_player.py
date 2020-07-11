@@ -435,7 +435,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         """Pause player and store outputs state."""
         await self.async_media_pause()
         self._last_outputs = self._outputs
-        if any([output["selected"] for output in self._outputs]):
+        if any(output["selected"] for output in self._outputs):
             await self._api.set_enabled_outputs([])
 
     async def async_toggle(self):
@@ -461,7 +461,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             return STATE_PLAYING
         if self._player["state"] == "pause":
             return STATE_PAUSED
-        if not any([output["selected"] for output in self._outputs]):
+        if not any(output["selected"] for output in self._outputs):
             return STATE_OFF
         if self._player["state"] == "stop":  # this should catch all remaining cases
             return STATE_IDLE
@@ -504,6 +504,10 @@ class ForkedDaapdMaster(MediaPlayerEntity):
     @property
     def media_title(self):
         """Title of current playing media."""
+        # Use album field when data_kind is url
+        # https://github.com/ejurgensen/forked-daapd/issues/351
+        if self._track_info["data_kind"] == "url":
+            return self._track_info["album"]
         return self._track_info["title"]
 
     @property
@@ -514,6 +518,10 @@ class ForkedDaapdMaster(MediaPlayerEntity):
     @property
     def media_album_name(self):
         """Album name of current playing media, music track only."""
+        # Use title field when data_kind is url
+        # https://github.com/ejurgensen/forked-daapd/issues/351
+        if self._track_info["data_kind"] == "url":
+            return self._track_info["title"]
         return self._track_info["album"]
 
     @property
@@ -712,27 +720,25 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         else:
             _LOGGER.debug("Media type '%s' not supported", media_type)
 
-    async def select_source(self, source):
+    async def async_select_source(self, source):
         """Change source.
 
         Source name reflects whether in default mode or pipe mode.
         Selecting playlists/clear sets the playlists/clears but ends up in default mode.
         """
-        if source != self._source:
-            if (
-                self._use_pipe_control()
-            ):  # if pipe was playing, we need to stop it first
-                await self._pause_and_wait_for_callback()
-            self._source = source
-            if not self._use_pipe_control():  # playlist or clear ends up at default
-                self._source = SOURCE_NAME_DEFAULT
-            if self._sources_uris.get(source):  # load uris for pipes or playlists
-                await self._api.add_to_queue(
-                    uris=self._sources_uris[source], clear=True
-                )
-            elif source == SOURCE_NAME_CLEAR:  # clear playlist
-                await self._api.clear_queue()
-            self.async_write_ha_state()
+        if source == self._source:
+            return
+
+        if self._use_pipe_control():  # if pipe was playing, we need to stop it first
+            await self._pause_and_wait_for_callback()
+        self._source = source
+        if not self._use_pipe_control():  # playlist or clear ends up at default
+            self._source = SOURCE_NAME_DEFAULT
+        if self._sources_uris.get(source):  # load uris for pipes or playlists
+            await self._api.add_to_queue(uris=self._sources_uris[source], clear=True)
+        elif source == SOURCE_NAME_CLEAR:  # clear playlist
+            await self._api.clear_queue()
+        self.async_write_ha_state()
 
     def _use_pipe_control(self):
         """Return which pipe control from KNOWN_PIPES to use."""
@@ -794,26 +800,29 @@ class ForkedDaapdUpdater:
             "queue" in update_types
         ):  # update queue, queue before player for async_play_media
             queue = await self._api.get_request("queue")
-            update_events["queue"] = asyncio.Event()
-            async_dispatcher_send(
-                self.hass,
-                SIGNAL_UPDATE_QUEUE.format(self._entry_id),
-                queue,
-                update_events["queue"],
-            )
+            if queue:
+                update_events["queue"] = asyncio.Event()
+                async_dispatcher_send(
+                    self.hass,
+                    SIGNAL_UPDATE_QUEUE.format(self._entry_id),
+                    queue,
+                    update_events["queue"],
+                )
         # order of below don't matter
         if not {"outputs", "volume"}.isdisjoint(update_types):  # update outputs
-            outputs = (await self._api.get_request("outputs"))["outputs"]
-            update_events[
-                "outputs"
-            ] = asyncio.Event()  # only for master, zones should ignore
-            async_dispatcher_send(
-                self.hass,
-                SIGNAL_UPDATE_OUTPUTS.format(self._entry_id),
-                outputs,
-                update_events["outputs"],
-            )
-            self._add_zones(outputs)
+            outputs = await self._api.get_request("outputs")
+            if outputs:
+                outputs = outputs["outputs"]
+                update_events[
+                    "outputs"
+                ] = asyncio.Event()  # only for master, zones should ignore
+                async_dispatcher_send(
+                    self.hass,
+                    SIGNAL_UPDATE_OUTPUTS.format(self._entry_id),
+                    outputs,
+                    update_events["outputs"],
+                )
+                self._add_zones(outputs)
         if not {"database"}.isdisjoint(update_types):
             pipes, playlists = await asyncio.gather(
                 self._api.get_pipes(), self._api.get_playlists()
@@ -832,17 +841,18 @@ class ForkedDaapdUpdater:
             update_types
         ):  # update player
             player = await self._api.get_request("player")
-            update_events["player"] = asyncio.Event()
-            if update_events.get("queue"):
-                await update_events[
-                    "queue"
-                ].wait()  # make sure queue done before player for async_play_media
-            async_dispatcher_send(
-                self.hass,
-                SIGNAL_UPDATE_PLAYER.format(self._entry_id),
-                player,
-                update_events["player"],
-            )
+            if player:
+                update_events["player"] = asyncio.Event()
+                if update_events.get("queue"):
+                    await update_events[
+                        "queue"
+                    ].wait()  # make sure queue done before player for async_play_media
+                async_dispatcher_send(
+                    self.hass,
+                    SIGNAL_UPDATE_PLAYER.format(self._entry_id),
+                    player,
+                    update_events["player"],
+                )
         if update_events:
             await asyncio.wait(
                 [event.wait() for event in update_events.values()]

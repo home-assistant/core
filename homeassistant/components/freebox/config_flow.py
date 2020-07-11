@@ -105,6 +105,6 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry."""
         return await self.async_step_user(user_input)
 
-    async def async_step_discovery(self, user_input=None):
+    async def async_step_discovery(self, discovery_info):
         """Initialize step from discovery."""
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(discovery_info)

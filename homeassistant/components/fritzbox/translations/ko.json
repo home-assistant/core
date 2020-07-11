@@ -16,8 +16,7 @@
                     "password": "\ube44\ubc00\ubc88\ud638",
                     "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
                 },
-                "description": "{name} \uc744(\ub97c) \uc124\uc815\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
-                "title": "AVM FRITZ!Box"
+                "description": "{name} \uc744(\ub97c) \uc124\uc815\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?"
             },
             "user": {
                 "data": {
@@ -25,8 +24,7 @@
                     "password": "\ube44\ubc00\ubc88\ud638",
                     "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
                 },
-                "description": "AVM FRITZ!Box \uc815\ubcf4\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694.",
-                "title": "AVM FRITZ!Box"
+                "description": "AVM FRITZ!Box \uc815\ubcf4\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694."
             }
         }
     }

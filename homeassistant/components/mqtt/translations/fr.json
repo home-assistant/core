@@ -15,8 +15,7 @@
                     "port": "Port",
                     "username": "Nom d'utilisateur"
                 },
-                "description": "Veuillez entrer les informations de connexion de votre broker MQTT.",
-                "title": "MQTT"
+                "description": "Veuillez entrer les informations de connexion de votre broker MQTT."
             },
             "hassio_confirm": {
                 "data": {
@@ -47,6 +46,16 @@
             "button_short_press": "\" {subtype} \" press\u00e9",
             "button_short_release": "\"{subtype}\" relach\u00e9",
             "button_triple_press": "\"{subtype}\" triple-cliqu\u00e9"
+        }
+    },
+    "options": {
+        "step": {
+            "broker": {
+                "data": {
+                    "password": "Mot de passe",
+                    "port": "Port"
+                }
+            }
         }
     }
 }

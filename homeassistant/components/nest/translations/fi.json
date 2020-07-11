@@ -11,7 +11,8 @@
             "init": {
                 "data": {
                     "flow_impl": "Tarjoaja"
-                }
+                },
+                "title": "Todentamisen tarjoaja"
             },
             "link": {
                 "data": {

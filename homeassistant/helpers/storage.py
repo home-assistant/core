@@ -200,14 +200,19 @@ class Store:
 
     async def _async_handle_write_data(self, *_args):
         """Handle writing the config."""
-        data = self._data
-
-        if "data_func" in data:
-            data["data"] = data.pop("data_func")()
-
-        self._data = None
 
         async with self._write_lock:
+            if self._data is None:
+                # Another write already consumed the data
+                return
+
+            data = self._data
+
+            if "data_func" in data:
+                data["data"] = data.pop("data_func")()
+
+            self._data = None
+
             try:
                 await self.hass.async_add_executor_job(
                     self._write_data, self.path, data

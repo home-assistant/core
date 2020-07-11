@@ -12,6 +12,7 @@ from homeassistant.const import HTTP_OK
 from homeassistant.core import callback
 from homeassistant.helpers.network import get_url
 from homeassistant.loader import bind_hass
+from homeassistant.util.aiohttp import MockRequest
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,9 +77,15 @@ async def async_handle_webhook(hass, webhook_id, request):
 
     # Always respond successfully to not give away if a hook exists or not.
     if webhook is None:
-        peer_ip = request[KEY_REAL_IP]
+        if isinstance(request, MockRequest):
+            received_from = request.mock_source
+        else:
+            received_from = request[KEY_REAL_IP]
+
         _LOGGER.warning(
-            "Received message for unregistered webhook %s from %s", webhook_id, peer_ip
+            "Received message for unregistered webhook %s from %s",
+            webhook_id,
+            received_from,
         )
         # Look at content to provide some context for received webhook
         # Limit to 64 chars to avoid flooding the log

@@ -7,10 +7,11 @@
             "connect_error": "Impossible de se connecter, veuillez r\u00e9essayer",
             "no_device_selected": "Aucun appareil s\u00e9lectionn\u00e9, veuillez s\u00e9lectionner un appareil."
         },
+        "flow_title": "Xiaomi Miio: {name}",
         "step": {
             "gateway": {
                 "data": {
-                    "host": "adresse IP",
+                    "host": "Adresse IP",
                     "name": "Nom de la passerelle",
                     "token": "Jeton d'API"
                 },

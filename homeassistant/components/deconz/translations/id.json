@@ -9,18 +9,9 @@
             "no_key": "Tidak bisa mendapatkan kunci API"
         },
         "step": {
-            "init": {
-                "title": "Tentukan deCONZ gateway"
-            },
             "link": {
                 "description": "Buka gerbang deCONZ Anda untuk mendaftar dengan Home Assistant. \n\n 1. Pergi ke pengaturan sistem deCONZ \n 2. Tekan tombol \"Buka Kunci Gateway\"",
                 "title": "Tautan dengan deCONZ"
-            },
-            "manual_confirm": {
-                "data": {
-                    "host": "Host",
-                    "port": "Port (nilai default: '80')"
-                }
             }
         }
     }

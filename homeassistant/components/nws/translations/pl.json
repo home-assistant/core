@@ -16,7 +16,7 @@
                     "station": "Kod stacji METAR"
                 },
                 "description": "Je\u015bli nie podasz kodu stacji METAR, do znalezienia najbli\u017cszej stacji zostan\u0105 u\u017cyte wsp\u00f3\u0142rz\u0119dne geograficzne.",
-                "title": "Po\u0142\u0105cz z National Weather Service"
+                "title": "Po\u0142\u0105czenie z National Weather Service"
             }
         }
     }

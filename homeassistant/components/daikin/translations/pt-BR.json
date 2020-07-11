@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado",
-            "device_fail": "Erro inesperado ao criar dispositivo.",
-            "device_timeout": "Excedido tempo limite conectando ao dispositivo"
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado"
         },
         "error": {
             "device_fail": "Erro inesperado",

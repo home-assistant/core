@@ -15,8 +15,7 @@
                     "port": "Poort",
                     "username": "Gebruikersnaam"
                 },
-                "description": "MQTT",
-                "title": "MQTT"
+                "description": "MQTT"
             },
             "hassio_confirm": {
                 "data": {

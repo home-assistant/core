@@ -813,7 +813,7 @@ DEVICES = [
                 "entity_id": "sensor.ikea_of_sweden_tradfri_on_off_switch_77665544_power",
             }
         },
-        "event_channels": ["1:0x0006", "1:0x0008", "1:0x0019"],
+        "event_channels": ["1:0x0006", "1:0x0008", "1:0x0019", "1:0x0102"],
         "manufacturer": "IKEA of Sweden",
         "model": "TRADFRI on/off switch",
         "node_descriptor": b"\x02@\x80|\x11RR\x00\x00,R\x00\x00",
@@ -1036,16 +1036,16 @@ DEVICES = [
             }
         },
         "entities": [
-            "light.keen_home_inc_sv02_610_mp_1_3_77665544_level_on_off",
+            "cover.keen_home_inc_sv02_610_mp_1_3_77665544_level_on_off",
             "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_power",
             "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_pressure",
             "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_temperature",
         ],
         "entity_map": {
-            ("light", "00:11:22:33:44:55:66:77-1"): {
+            ("cover", "00:11:22:33:44:55:66:77-1"): {
                 "channels": ["level", "on_off"],
-                "entity_class": "Light",
-                "entity_id": "light.keen_home_inc_sv02_610_mp_1_3_77665544_level_on_off",
+                "entity_class": "KeenVent",
+                "entity_id": "cover.keen_home_inc_sv02_610_mp_1_3_77665544_level_on_off",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
@@ -1094,16 +1094,16 @@ DEVICES = [
             }
         },
         "entities": [
-            "light.keen_home_inc_sv02_612_mp_1_2_77665544_level_on_off",
+            "cover.keen_home_inc_sv02_612_mp_1_2_77665544_level_on_off",
             "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_power",
             "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_pressure",
             "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_temperature",
         ],
         "entity_map": {
-            ("light", "00:11:22:33:44:55:66:77-1"): {
+            ("cover", "00:11:22:33:44:55:66:77-1"): {
                 "channels": ["level", "on_off"],
-                "entity_class": "Light",
-                "entity_id": "light.keen_home_inc_sv02_612_mp_1_2_77665544_level_on_off",
+                "entity_class": "KeenVent",
+                "entity_id": "cover.keen_home_inc_sv02_612_mp_1_2_77665544_level_on_off",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
@@ -1152,16 +1152,16 @@ DEVICES = [
             }
         },
         "entities": [
-            "light.keen_home_inc_sv02_612_mp_1_3_77665544_level_on_off",
+            "cover.keen_home_inc_sv02_612_mp_1_3_77665544_level_on_off",
             "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_power",
             "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_pressure",
             "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_temperature",
         ],
         "entity_map": {
-            ("light", "00:11:22:33:44:55:66:77-1"): {
+            ("cover", "00:11:22:33:44:55:66:77-1"): {
                 "channels": ["level", "on_off"],
-                "entity_class": "Light",
-                "entity_id": "light.keen_home_inc_sv02_612_mp_1_3_77665544_level_on_off",
+                "entity_class": "KeenVent",
+                "entity_id": "cover.keen_home_inc_sv02_612_mp_1_3_77665544_level_on_off",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
@@ -1372,8 +1372,6 @@ DEVICES = [
             },
         },
         "entities": [
-            "sensor.lumi_lumi_plug_maus01_77665544_analog_input",
-            "sensor.lumi_lumi_plug_maus01_77665544_analog_input_2",
             "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement",
             "switch.lumi_lumi_plug_maus01_77665544_on_off",
         ],
@@ -1387,16 +1385,6 @@ DEVICES = [
                 "channels": ["electrical_measurement"],
                 "entity_class": "ElectricalMeasurement",
                 "entity_id": "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-2-12"): {
-                "channels": ["analog_input"],
-                "entity_class": "AnalogInput",
-                "entity_id": "sensor.lumi_lumi_plug_maus01_77665544_analog_input",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-3-12"): {
-                "channels": ["analog_input"],
-                "entity_class": "AnalogInput",
-                "entity_id": "sensor.lumi_lumi_plug_maus01_77665544_analog_input_2",
             },
         },
         "event_channels": ["1:0x0019"],
@@ -1426,7 +1414,6 @@ DEVICES = [
         "entities": [
             "light.lumi_lumi_relay_c2acn01_77665544_on_off",
             "light.lumi_lumi_relay_c2acn01_77665544_on_off_2",
-            "sensor.lumi_lumi_relay_c2acn01_77665544_analog_input",
             "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement",
         ],
         "entity_map": {
@@ -1434,11 +1421,6 @@ DEVICES = [
                 "channels": ["on_off"],
                 "entity_class": "Light",
                 "entity_id": "light.lumi_lumi_relay_c2acn01_77665544_on_off",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-12"): {
-                "channels": ["analog_input"],
-                "entity_class": "AnalogInput",
-                "entity_id": "sensor.lumi_lumi_relay_c2acn01_77665544_analog_input",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 "channels": ["electrical_measurement"],
@@ -1482,32 +1464,12 @@ DEVICES = [
                 "profile_id": 260,
             },
         },
-        "entities": [
-            "sensor.lumi_lumi_remote_b186acn01_77665544_multistate_input",
-            "sensor.lumi_lumi_remote_b186acn01_77665544_multistate_input_2",
-            "sensor.lumi_lumi_remote_b186acn01_77665544_multistate_input_3",
-            "sensor.lumi_lumi_remote_b186acn01_77665544_power",
-        ],
+        "entities": ["sensor.lumi_lumi_remote_b186acn01_77665544_power"],
         "entity_map": {
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
                 "entity_class": "Battery",
                 "entity_id": "sensor.lumi_lumi_remote_b186acn01_77665544_power",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_remote_b186acn01_77665544_multistate_input_2",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-2-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_remote_b186acn01_77665544_multistate_input_3",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-3-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_remote_b186acn01_77665544_multistate_input",
             },
         },
         "event_channels": ["1:0x0005", "1:0x0019", "2:0x0005", "3:0x0005"],
@@ -1541,32 +1503,12 @@ DEVICES = [
                 "profile_id": 260,
             },
         },
-        "entities": [
-            "sensor.lumi_lumi_remote_b286acn01_77665544_multistate_input",
-            "sensor.lumi_lumi_remote_b286acn01_77665544_multistate_input_2",
-            "sensor.lumi_lumi_remote_b286acn01_77665544_multistate_input_3",
-            "sensor.lumi_lumi_remote_b286acn01_77665544_power",
-        ],
+        "entities": ["sensor.lumi_lumi_remote_b286acn01_77665544_power"],
         "entity_map": {
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
                 "entity_class": "Battery",
                 "entity_id": "sensor.lumi_lumi_remote_b286acn01_77665544_power",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_remote_b286acn01_77665544_multistate_input_3",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-2-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_remote_b286acn01_77665544_multistate_input_2",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-3-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_remote_b286acn01_77665544_multistate_input",
             },
         },
         "event_channels": ["1:0x0005", "1:0x0019", "2:0x0005", "3:0x0005"],
@@ -1897,32 +1839,12 @@ DEVICES = [
                 "profile_id": 260,
             },
         },
-        "entities": [
-            "sensor.lumi_lumi_sensor_86sw1_77665544_multistate_input",
-            "sensor.lumi_lumi_sensor_86sw1_77665544_multistate_input_2",
-            "sensor.lumi_lumi_sensor_86sw1_77665544_multistate_input_3",
-            "sensor.lumi_lumi_sensor_86sw1_77665544_power",
-        ],
+        "entities": ["sensor.lumi_lumi_sensor_86sw1_77665544_power"],
         "entity_map": {
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
                 "entity_class": "Battery",
                 "entity_id": "sensor.lumi_lumi_sensor_86sw1_77665544_power",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_sensor_86sw1_77665544_multistate_input_3",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-2-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_sensor_86sw1_77665544_multistate_input_2",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-3-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_sensor_86sw1_77665544_multistate_input",
             },
         },
         "event_channels": ["1:0x0005", "1:0x0019", "2:0x0005", "3:0x0005"],
@@ -1956,26 +1878,12 @@ DEVICES = [
                 "profile_id": 260,
             },
         },
-        "entities": [
-            "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_analog_input",
-            "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_multistate_input",
-            "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_power",
-        ],
+        "entities": ["sensor.lumi_lumi_sensor_cube_aqgl01_77665544_power"],
         "entity_map": {
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
                 "entity_class": "Battery",
                 "entity_id": "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_power",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-2-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_multistate_input",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-3-12"): {
-                "channels": ["analog_input"],
-                "entity_class": "AnalogInput",
-                "entity_id": "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_analog_input",
             },
         },
         "event_channels": ["1:0x0005", "1:0x0019", "2:0x0005", "3:0x0005"],
@@ -2161,8 +2069,6 @@ DEVICES = [
         },
         "entities": [
             "binary_sensor.lumi_lumi_sensor_smoke_77665544_ias_zone",
-            "sensor.lumi_lumi_sensor_smoke_77665544_analog_input",
-            "sensor.lumi_lumi_sensor_smoke_77665544_multistate_input",
             "sensor.lumi_lumi_sensor_smoke_77665544_power",
         ],
         "entity_map": {
@@ -2170,16 +2076,6 @@ DEVICES = [
                 "channels": ["power"],
                 "entity_class": "Battery",
                 "entity_id": "sensor.lumi_lumi_sensor_smoke_77665544_power",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-12"): {
-                "channels": ["analog_input"],
-                "entity_class": "AnalogInput",
-                "entity_id": "sensor.lumi_lumi_sensor_smoke_77665544_analog_input",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_sensor_smoke_77665544_multistate_input",
             },
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 "channels": ["ias_zone"],
@@ -2254,20 +2150,12 @@ DEVICES = [
                 "profile_id": 260,
             }
         },
-        "entities": [
-            "sensor.lumi_lumi_sensor_switch_aq3_77665544_multistate_input",
-            "sensor.lumi_lumi_sensor_switch_aq3_77665544_power",
-        ],
+        "entities": ["sensor.lumi_lumi_sensor_switch_aq3_77665544_power"],
         "entity_map": {
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
                 "entity_class": "Battery",
                 "entity_id": "sensor.lumi_lumi_sensor_switch_aq3_77665544_power",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_sensor_switch_aq3_77665544_multistate_input",
             },
         },
         "event_channels": ["1:0x0006"],
@@ -3100,10 +2988,16 @@ DEVICES = [
             },
         },
         "entities": [
+            "climate.sinope_technologies_th1123zb_77665544_thermostat",
             "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement",
             "sensor.sinope_technologies_th1123zb_77665544_temperature",
         ],
         "entity_map": {
+            ("climate", "00:11:22:33:44:55:66:77-1"): {
+                "channels": ["thermostat"],
+                "entity_class": "Thermostat",
+                "entity_id": "climate.sinope_technologies_th1123zb_77665544_thermostat",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-1026"): {
                 "channels": ["temperature"],
                 "entity_class": "Temperature",
@@ -3142,8 +3036,14 @@ DEVICES = [
         "entities": [
             "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement",
             "sensor.sinope_technologies_th1124zb_77665544_temperature",
+            "climate.sinope_technologies_th1124zb_77665544_thermostat",
         ],
         "entity_map": {
+            ("climate", "00:11:22:33:44:55:66:77-1"): {
+                "channels": ["thermostat"],
+                "entity_class": "Thermostat",
+                "entity_id": "climate.sinope_technologies_th1124zb_77665544_thermostat",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-1026"): {
                 "channels": ["temperature"],
                 "entity_class": "Temperature",
@@ -3326,7 +3226,7 @@ DEVICES = [
             }
         },
         "entities": [
-            "fan.zen_within_zen_01_77665544_fan",
+            "climate.zen_within_zen_01_77665544_fan_thermostat",
             "sensor.zen_within_zen_01_77665544_power",
         ],
         "entity_map": {
@@ -3335,10 +3235,10 @@ DEVICES = [
                 "entity_class": "Battery",
                 "entity_id": "sensor.zen_within_zen_01_77665544_power",
             },
-            ("fan", "00:11:22:33:44:55:66:77-1-514"): {
-                "channels": ["fan"],
-                "entity_class": "ZhaFan",
-                "entity_id": "fan.zen_within_zen_01_77665544_fan",
+            ("climate", "00:11:22:33:44:55:66:77-1"): {
+                "channels": ["thermostat", "fan"],
+                "entity_class": "ZenWithinThermostat",
+                "entity_id": "climate.zen_within_zen_01_77665544_fan_thermostat",
             },
         },
         "event_channels": ["1:0x0019"],
@@ -3539,5 +3439,29 @@ DEVICES = [
         "manufacturer": "sengled",
         "model": "Z01-A19NAE26",
         "node_descriptor": b"\x02@\x8c`\x11RR\x00\x00\x00R\x00\x00",
+    },
+    {
+        "device_no": 97,
+        "endpoints": {
+            1: {
+                "device_type": 512,
+                "endpoint_id": 1,
+                "in_clusters": [0, 3, 4, 5, 6, 8, 10, 21, 256, 64544, 64545],
+                "out_clusters": [3, 64544],
+                "profile_id": 260,
+            }
+        },
+        "entities": ["cover.unk_manufacturer_unk_model_77665544_level_on_off_shade"],
+        "entity_map": {
+            ("cover", "00:11:22:33:44:55:66:77-1"): {
+                "channels": ["level", "on_off", "shade"],
+                "entity_class": "Shade",
+                "entity_id": "cover.unk_manufacturer_unk_model_77665544_level_on_off_shade",
+            }
+        },
+        "event_channels": [],
+        "manufacturer": "unk_manufacturer",
+        "model": "unk_model",
+        "node_descriptor": b"\x01@\x8e\x10\x11RR\x00\x00\x00R\x00\x00",
     },
 ]

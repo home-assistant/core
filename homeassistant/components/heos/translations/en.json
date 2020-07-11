@@ -9,7 +9,6 @@
         "step": {
             "user": {
                 "data": {
-                    "access_token": "Host",
                     "host": "Host"
                 },
                 "description": "Please enter the host name or IP address of a Heos device (preferably one connected via wire to the network).",

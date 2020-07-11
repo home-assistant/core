@@ -12,5 +12,14 @@
                 "title": "Configurar servidor TCP para dispositivos WIFFI"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Tiempo de espera (minutos)"
+                }
+            }
+        }
     }
 }

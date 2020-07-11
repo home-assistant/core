@@ -14,7 +14,7 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API Key"
+                    "api_key": "Chiave API"
                 },
                 "description": "Inserisci la chiave API ottenuta da ecobee.com.",
                 "title": "chiave API ecobee"

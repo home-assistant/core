@@ -1,11 +1,10 @@
 """Test the HomeKit config flow."""
-from asynctest import patch
-
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.homekit.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_PORT
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -18,6 +17,7 @@ def _mock_config_entry_with_options_populated():
             "filter": {
                 "include_domains": [
                     "fan",
+                    "humidifier",
                     "vacuum",
                     "media_player",
                     "climate",
@@ -27,7 +27,6 @@ def _mock_config_entry_with_options_populated():
             },
             "auto_start": False,
             "safe_mode": False,
-            "zeroconf_default_interface": True,
         },
     )
 
@@ -135,7 +134,8 @@ async def test_options_flow_advanced(hass):
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"include_domains": ["fan", "vacuum", "climate"]},
+        result["flow_id"],
+        user_input={"include_domains": ["fan", "vacuum", "climate", "humidifier"]},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -149,12 +149,7 @@ async def test_options_flow_advanced(hass):
 
     with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
         result3 = await hass.config_entries.options.async_configure(
-            result2["flow_id"],
-            user_input={
-                "auto_start": True,
-                "safe_mode": True,
-                "zeroconf_default_interface": False,
-            },
+            result2["flow_id"], user_input={"auto_start": True, "safe_mode": True},
         )
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -163,11 +158,10 @@ async def test_options_flow_advanced(hass):
         "filter": {
             "exclude_domains": [],
             "exclude_entities": ["climate.old"],
-            "include_domains": ["fan", "vacuum", "climate"],
+            "include_domains": ["fan", "vacuum", "climate", "humidifier"],
             "include_entities": [],
         },
         "safe_mode": True,
-        "zeroconf_default_interface": False,
     }
 
 
@@ -202,8 +196,7 @@ async def test_options_flow_basic(hass):
 
     with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
         result3 = await hass.config_entries.options.async_configure(
-            result2["flow_id"],
-            user_input={"safe_mode": True, "zeroconf_default_interface": False},
+            result2["flow_id"], user_input={"safe_mode": True},
         )
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -216,7 +209,6 @@ async def test_options_flow_basic(hass):
             "include_entities": [],
         },
         "safe_mode": True,
-        "zeroconf_default_interface": False,
     }
 
 
@@ -264,8 +256,7 @@ async def test_options_flow_with_cameras(hass):
 
     with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
         result4 = await hass.config_entries.options.async_configure(
-            result3["flow_id"],
-            user_input={"safe_mode": True, "zeroconf_default_interface": False},
+            result3["flow_id"], user_input={"safe_mode": True},
         )
 
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -279,7 +270,6 @@ async def test_options_flow_with_cameras(hass):
         },
         "entity_config": {"camera.native_h264": {"video_codec": "copy"}},
         "safe_mode": True,
-        "zeroconf_default_interface": False,
     }
 
     # Now run though again and verify we can turn off copy
@@ -315,8 +305,7 @@ async def test_options_flow_with_cameras(hass):
 
     with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
         result4 = await hass.config_entries.options.async_configure(
-            result3["flow_id"],
-            user_input={"safe_mode": True, "zeroconf_default_interface": False},
+            result3["flow_id"], user_input={"safe_mode": True},
         )
 
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -330,7 +319,6 @@ async def test_options_flow_with_cameras(hass):
         },
         "entity_config": {"camera.native_h264": {}},
         "safe_mode": True,
-        "zeroconf_default_interface": False,
     }
 
 
@@ -345,6 +333,7 @@ async def test_options_flow_blocked_when_from_yaml(hass):
             "filter": {
                 "include_domains": [
                     "fan",
+                    "humidifier",
                     "vacuum",
                     "media_player",
                     "climate",
@@ -353,7 +342,6 @@ async def test_options_flow_blocked_when_from_yaml(hass):
                 "exclude_entities": ["climate.front_gate"],
             },
             "safe_mode": False,
-            "zeroconf_default_interface": True,
         },
         source=SOURCE_IMPORT,
     )

@@ -5,6 +5,8 @@ from homeassistant.const import (
     PRESSURE_BAR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    TIME_HOURS,
+    UNIT_PERCENTAGE,
 )
 
 from . import DOMAIN, AtagEntity
@@ -65,6 +67,8 @@ class AtagSensor(AtagEntity):
             PRESSURE_BAR,
             TEMP_CELSIUS,
             TEMP_FAHRENHEIT,
+            UNIT_PERCENTAGE,
+            TIME_HOURS,
         ]:
             return self.coordinator.data[self._id].measure
         return None

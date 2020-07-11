@@ -114,6 +114,11 @@ class LGDevice(MediaPlayerEntity):
         self._device.get_settings()
         self._device.get_product_info()
 
+        # Temporary fix until handling of unknown equaliser settings is integrated in the temescal library
+        for equaliser in self._equalisers:
+            if equaliser >= len(temescal.equalisers):
+                temescal.equalisers.append("unknown " + str(equaliser))
+
     @property
     def name(self):
         """Return the name of the device."""
@@ -139,9 +144,8 @@ class LGDevice(MediaPlayerEntity):
     @property
     def sound_mode(self):
         """Return the current sound mode."""
-
-        if self._equaliser == -1:
-            return ""
+        if self._equaliser == -1 or self._equaliser >= len(temescal.equalisers):
+            return None
         return temescal.equalisers[self._equaliser]
 
     @property
@@ -156,7 +160,7 @@ class LGDevice(MediaPlayerEntity):
     def source(self):
         """Return the current input source."""
         if self._function == -1:
-            return ""
+            return None
         return temescal.functions[self._function]
 
     @property

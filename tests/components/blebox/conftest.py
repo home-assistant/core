@@ -71,7 +71,7 @@ def config_fixture():
 
 
 @pytest.fixture(name="feature")
-def feature(request):
+def feature_fixture(request):
     """Return an entity wrapper from given fixture name."""
     return request.getfixturevalue(request.param)
 

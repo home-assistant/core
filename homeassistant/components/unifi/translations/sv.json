@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Controller-platsen \u00e4r redan konfigurerad",
-            "user_privilege": "Anv\u00e4ndaren m\u00e5ste vara administrat\u00f6r"
+            "already_configured": "Controller-platsen \u00e4r redan konfigurerad"
         },
         "error": {
             "faulty_credentials": "Felaktiga anv\u00e4ndaruppgifter",

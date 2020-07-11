@@ -8,7 +8,7 @@ from .const import (
     CONF_INTEGRATION_TYPE,
     DATA_COORDINATOR,
     DOMAIN,
-    INTEGRATION_TYPE_GEOGRAPHY,
+    INTEGRATION_TYPE_NODE_PRO,
 )
 
 ATTR_HUMIDITY = "humidity"
@@ -18,11 +18,11 @@ ATTR_VOC = "voc"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AirVisual air quality entities based on a config entry."""
-    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
-
     # Geography-based AirVisual integrations don't utilize this platform:
-    if config_entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_GEOGRAPHY:
+    if config_entry.data[CONF_INTEGRATION_TYPE] != INTEGRATION_TYPE_NODE_PRO:
         return
+
+    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
 
     async_add_entities([AirVisualNodeProSensor(coordinator)], True)
 

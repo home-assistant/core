@@ -2,6 +2,8 @@
 import logging
 
 from pyinsteon.device_types import (
+    ClimateControl_Thermostat,
+    ClimateControl_WirelessThermostat,
     DimmableLightingControl,
     DimmableLightingControl_DinRail,
     DimmableLightingControl_FanLinc,
@@ -40,6 +42,7 @@ from pyinsteon.device_types import (
 )
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.climate import DOMAIN as CLIMATE
 from homeassistant.components.cover import DOMAIN as COVER
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
@@ -77,7 +80,7 @@ DEVICE_PLATFORM = {
     SecurityHealthSafety_LeakSensor: {BINARY_SENSOR: [2, 4]},
     SecurityHealthSafety_MotionSensor: {BINARY_SENSOR: [1, 2, 3], ON_OFF_EVENTS: [1]},
     SecurityHealthSafety_OpenCloseSensor: {BINARY_SENSOR: [1]},
-    SecurityHealthSafety_Smokebridge: {BINARY_SENSOR: [1]},
+    SecurityHealthSafety_Smokebridge: {BINARY_SENSOR: [1, 2, 3, 4, 6, 7]},
     SensorsActuators_IOLink: {SWITCH: [1], BINARY_SENSOR: [2], ON_OFF_EVENTS: [1, 2]},
     SwitchedLightingControl: {SWITCH: [1], ON_OFF_EVENTS: [1]},
     SwitchedLightingControl_ApplianceLinc: {SWITCH: [1], ON_OFF_EVENTS: [1]},
@@ -95,6 +98,8 @@ DEVICE_PLATFORM = {
     SwitchedLightingControl_OutletLinc: {SWITCH: [1], ON_OFF_EVENTS: [1]},
     SwitchedLightingControl_SwitchLinc: {SWITCH: [1], ON_OFF_EVENTS: [1]},
     SwitchedLightingControl_ToggleLinc: {SWITCH: [1], ON_OFF_EVENTS: [1]},
+    ClimateControl_Thermostat: {CLIMATE: [1]},
+    ClimateControl_WirelessThermostat: {CLIMATE: [1]},
     WindowCovering: {COVER: [1]},
     X10Dimmable: {LIGHT: [1]},
     X10OnOff: {SWITCH: [1]},

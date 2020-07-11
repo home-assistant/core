@@ -15,8 +15,7 @@
                     "port": "Porta",
                     "username": "Nome de usu\u00e1rio"
                 },
-                "description": "Por favor, insira as informa\u00e7\u00f5es de conex\u00e3o do seu agente MQTT.",
-                "title": "MQTT"
+                "description": "Por favor, insira as informa\u00e7\u00f5es de conex\u00e3o do seu agente MQTT."
             },
             "hassio_confirm": {
                 "data": {

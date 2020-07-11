@@ -2,7 +2,10 @@
   "domain": "lutron_caseta",
   "name": "Lutron Caséta",
   "documentation": "https://www.home-assistant.io/integrations/lutron_caseta",
-  "requirements": ["pylutron-caseta==0.6.1"],
-  "codeowners": ["@swails"],
-  "config_flow": true
+  "requirements": [
+    "pylutron-caseta==0.6.1"
+  ],
+  "codeowners": [
+    "@swails"
+  ]
 }

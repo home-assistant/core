@@ -3,14 +3,17 @@ import logging
 
 import pytest
 
+from homeassistant.components.camera import SUPPORT_STREAM as CAMERA_SUPPORT_STREAM
 from homeassistant.components.mobile_app.const import CONF_SECRET
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
+from tests.async_mock import patch
 from tests.common import async_mock_service
 
 _LOGGER = logging.getLogger(__name__)
@@ -303,3 +306,103 @@ async def test_webhook_enable_encryption(hass, webhook_client, create_registrati
     decrypted_data = decrypt_payload(key, enc_json["encrypted_data"])
 
     assert decrypted_data == {"one": "Hello world"}
+
+
+async def test_webhook_camera_stream_non_existent(
+    hass, create_registrations, webhook_client
+):
+    """Test fetching camera stream URLs for a non-existent camera."""
+    webhook_id = create_registrations[1]["webhook_id"]
+
+    resp = await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "stream_camera",
+            "data": {"camera_entity_id": "camera.doesnt_exist"},
+        },
+    )
+
+    assert resp.status == 400
+    webhook_json = await resp.json()
+    assert webhook_json["success"] is False
+
+
+async def test_webhook_camera_stream_non_hls(
+    hass, create_registrations, webhook_client
+):
+    """Test fetching camera stream URLs for a non-HLS/stream-supporting camera."""
+    hass.states.async_set("camera.non_stream_camera", "idle", {"supported_features": 0})
+
+    webhook_id = create_registrations[1]["webhook_id"]
+
+    resp = await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "stream_camera",
+            "data": {"camera_entity_id": "camera.non_stream_camera"},
+        },
+    )
+
+    assert resp.status == 200
+    webhook_json = await resp.json()
+    assert webhook_json["hls_path"] is None
+    assert (
+        webhook_json["mjpeg_path"]
+        == "/api/camera_proxy_stream/camera.non_stream_camera"
+    )
+
+
+async def test_webhook_camera_stream_stream_available(
+    hass, create_registrations, webhook_client
+):
+    """Test fetching camera stream URLs for an HLS/stream-supporting camera."""
+    hass.states.async_set(
+        "camera.stream_camera", "idle", {"supported_features": CAMERA_SUPPORT_STREAM}
+    )
+
+    webhook_id = create_registrations[1]["webhook_id"]
+
+    with patch(
+        "homeassistant.components.camera.async_request_stream",
+        return_value="/api/streams/some_hls_stream",
+    ):
+        resp = await webhook_client.post(
+            f"/api/webhook/{webhook_id}",
+            json={
+                "type": "stream_camera",
+                "data": {"camera_entity_id": "camera.stream_camera"},
+            },
+        )
+
+    assert resp.status == 200
+    webhook_json = await resp.json()
+    assert webhook_json["hls_path"] == "/api/streams/some_hls_stream"
+    assert webhook_json["mjpeg_path"] == "/api/camera_proxy_stream/camera.stream_camera"
+
+
+async def test_webhook_camera_stream_stream_available_but_errors(
+    hass, create_registrations, webhook_client
+):
+    """Test fetching camera stream URLs for an HLS/stream-supporting camera but that streaming errors."""
+    hass.states.async_set(
+        "camera.stream_camera", "idle", {"supported_features": CAMERA_SUPPORT_STREAM}
+    )
+
+    webhook_id = create_registrations[1]["webhook_id"]
+
+    with patch(
+        "homeassistant.components.camera.async_request_stream",
+        side_effect=HomeAssistantError(),
+    ):
+        resp = await webhook_client.post(
+            f"/api/webhook/{webhook_id}",
+            json={
+                "type": "stream_camera",
+                "data": {"camera_entity_id": "camera.stream_camera"},
+            },
+        )
+
+    assert resp.status == 200
+    webhook_json = await resp.json()
+    assert webhook_json["hls_path"] is None
+    assert webhook_json["mjpeg_path"] == "/api/camera_proxy_stream/camera.stream_camera"

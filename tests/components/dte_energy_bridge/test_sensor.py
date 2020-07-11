@@ -17,10 +17,7 @@ class TestDteEnergyBridgeSetup(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_setup_with_config(self):
         """Test the platform setup with configuration."""
@@ -38,6 +35,7 @@ class TestDteEnergyBridgeSetup(unittest.TestCase):
         assert setup_component(
             self.hass, "sensor", {"sensor": DTE_ENERGY_BRIDGE_CONFIG}
         )
+        self.hass.block_till_done()
         assert "0.411" == self.hass.states.get("sensor.current_energy_usage").state
 
     @requests_mock.Mocker()
@@ -50,6 +48,7 @@ class TestDteEnergyBridgeSetup(unittest.TestCase):
         assert setup_component(
             self.hass, "sensor", {"sensor": DTE_ENERGY_BRIDGE_CONFIG}
         )
+        self.hass.block_till_done()
         assert "0.411" == self.hass.states.get("sensor.current_energy_usage").state
 
     @requests_mock.Mocker()
@@ -62,4 +61,5 @@ class TestDteEnergyBridgeSetup(unittest.TestCase):
         assert setup_component(
             self.hass, "sensor", {"sensor": DTE_ENERGY_BRIDGE_CONFIG}
         )
+        self.hass.block_till_done()
         assert "unknown" == self.hass.states.get("sensor.current_energy_usage").state

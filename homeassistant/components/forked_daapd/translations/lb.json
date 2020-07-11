@@ -8,7 +8,8 @@
             "unknown_error": "Onbekannten Feeler.",
             "websocket_not_enabled": "forked-daapd server websocket net aktiv.",
             "wrong_host_or_port": "Feeler beim verbannen, iwwerpr\u00e9if w.e.g d'Adresse a Port.",
-            "wrong_password": "Ong\u00ebltegt Passwuert."
+            "wrong_password": "Ong\u00ebltegt Passwuert.",
+            "wrong_server_type": "D'forked-daapd Integratioun ben\u00e9idegt een forked-daapd server mat Versioun >= 27.0."
         },
         "flow_title": "forked-daapd server: {name} ({host})",
         "step": {
@@ -20,6 +21,20 @@
                     "port": "API Port"
                 },
                 "title": "forked-daapd Apparat ariichten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "librespot_java_port": "Port fir librespot-java pipe Kontroll (falls benotzt)",
+                    "max_playlists": "Maximal Unzuel vun Playlists d\u00e9i als Quell benotzt ginn",
+                    "tts_pause_time": "Pause an sekonnen vir an no dem TTS",
+                    "tts_volume": "TTS Lautst\u00e4erkt (float an der range [0,1])"
+                },
+                "description": "Verschidden Optioune fir forked-daapd Integratioun d\u00e9fin\u00e9ieren.",
+                "title": "Optioune fir forked-daapd konfigur\u00e9ieren"
             }
         }
     }

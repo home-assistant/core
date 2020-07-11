@@ -6,7 +6,7 @@
             "already_in_progress": "El flux de dades de configuraci\u00f3 pel dispositiu ja est\u00e0 en curs.",
             "already_paired": "Aquest accessori ja est\u00e0 vinculat amb un altre dispositiu. Reinicia l'accessori i torna-ho a provar.",
             "ignored_model": "La disponibilitat de HomeKit per aquest model est\u00e0 bloquejada ja que, de moment, no hi ha una integraci\u00f3 nativa completa.",
-            "invalid_config_entry": "Aquest dispositiu s'est\u00e0 mostrant com a llest per a ser vinculat per\u00f2, hi ha una entrada de configuraci\u00f3 conflictiva a Home Assistant que s'ha d'eliminar primer.",
+            "invalid_config_entry": "Aquest dispositiu s'est\u00e0 mostrant com a llest per a ser vinculat per\u00f2 ja hi ha una entrada de configuraci\u00f3 conflictiva a Home Assistant que s'ha d'eliminar primer.",
             "no_devices": "No s'han trobat dispositius desvinculats."
         },
         "error": {
@@ -14,7 +14,7 @@
             "busy_error": "El dispositiu ha refusat la vinculaci\u00f3 perqu\u00e8 actualment ho est\u00e0 intentant amb un altre controlador diferent.",
             "max_peers_error": "El dispositiu ha refusat la vinculaci\u00f3 perqu\u00e8 no t\u00e9 suficient espai lliure.",
             "max_tries_error": "El dispositiu ha refusat la vinculaci\u00f3 perqu\u00e8 ha rebut m\u00e9s de 100 intents d'autenticaci\u00f3 fallits.",
-            "pairing_failed": "S'ha produ\u00eft un error mentre s'intentava la vinculaci\u00f3 amb el dispositiu. Pot ser que sigui un error temporal o pot ser que el teu dispositiu encara no estigui suportat.",
+            "pairing_failed": "S'ha produ\u00eft un error mentre s'intentava la vinculaci\u00f3 amb aquest dispositiu. Pot ser que sigui un error temporal o pot ser que el teu dispositiu encara no sigui compatible.",
             "unable_to_pair": "No s'ha pogut vincular, torna-ho a provar.",
             "unknown_error": "El dispositiu ha em\u00e8s un error desconegut. Vinculaci\u00f3 fallida."
         },
@@ -36,5 +36,5 @@
             }
         }
     },
-    "title": "Accessori HomeKit"
+    "title": "Controlador HomeKit"
 }

@@ -40,9 +40,8 @@ class AtagWaterHeater(AtagEntity, WaterHeaterEntity):
     @property
     def current_operation(self):
         """Return current operation."""
-        if self.coordinator.atag.dhw.status:
-            return STATE_PERFORMANCE
-        return STATE_OFF
+        operation = self.coordinator.atag.dhw.current_operation
+        return operation if operation in self.operation_list else STATE_OFF
 
     @property
     def operation_list(self):

@@ -14,8 +14,7 @@
                 "data": {
                     "password": "L\u00f6senord"
                 },
-                "description": "Ange det l\u00f6senord du angett i din konfiguration f\u00f6r {name}.",
-                "title": "Ange l\u00f6senord"
+                "description": "Ange det l\u00f6senord du angett i din konfiguration f\u00f6r {name}."
             },
             "discovery_confirm": {
                 "description": "Vill du l\u00e4gga till ESPHome noden ` {name} ` till Home Assistant?",
@@ -26,8 +25,7 @@
                     "host": "V\u00e4rddatorn",
                     "port": "Port"
                 },
-                "description": "Ange anslutningsinst\u00e4llningarna f\u00f6r noden [ESPHome](https://esphomelib.com/).",
-                "title": "[%key:component::esphome::title%]"
+                "description": "Ange anslutningsinst\u00e4llningarna f\u00f6r noden [ESPHome](https://esphomelib.com/)."
             }
         }
     }

@@ -54,6 +54,7 @@ async def test_update_not_playing(hass, lastfm_network):
         sensor.DOMAIN,
         {"sensor": {"platform": "lastfm", "api_key": "secret-key", "users": ["test"]}},
     )
+    await hass.async_block_till_done()
 
     entity_id = "sensor.test"
 
@@ -74,6 +75,7 @@ async def test_update_playing(hass, lastfm_network):
         sensor.DOMAIN,
         {"sensor": {"platform": "lastfm", "api_key": "secret-key", "users": ["test"]}},
     )
+    await hass.async_block_till_done()
 
     entity_id = "sensor.test"
 
