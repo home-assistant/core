@@ -54,14 +54,8 @@ class PoolSenseBinarySensor(PoolSenseEntity, BinarySensorEntity):
     @property
     def icon(self):
         """Return the icon."""
-        if self.info_type == "pH Status":
-            if self.coordinator.data[self.info_type] == "red":
-                return "mdi:thumb-down"
-            return "mdi:thumb-up"
-        if self.info_type == "Chlorine Status":
-            if self.coordinator.data[self.info_type] == "red":
-                return "mdi:thumb-down"
-            return "mdi:thumb-up"
+        if self.info_type in ("pH Status", "Chlorine Status"):
+            return None
         return BINARY_SENSORS[self.info_type]["icon"]
 
     @property
