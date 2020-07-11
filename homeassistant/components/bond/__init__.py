@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
-PLATFORMS = ["cover"]
+PLATFORMS = ["cover", "fan"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
