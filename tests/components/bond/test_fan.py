@@ -1,7 +1,7 @@
 """Tests for the Bond fan device."""
 from datetime import timedelta
 
-from bond import BOND_DEVICE_TYPE_CEILING_FAN
+from bond import DeviceTypes
 
 from homeassistant import core
 from homeassistant.components import fan
@@ -20,7 +20,7 @@ def ceiling_fan(name: str):
     """Create a ceiling fan with given name."""
     return {
         "name": name,
-        "type": BOND_DEVICE_TYPE_CEILING_FAN,
+        "type": DeviceTypes.CEILING_FAN,
         "actions": ["SetSpeed"],
     }
 

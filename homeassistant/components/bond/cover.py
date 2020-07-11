@@ -1,7 +1,7 @@
 """Support for Bond covers."""
 from typing import Any, Callable, List, Optional
 
-from bond import BOND_DEVICE_TYPE_MOTORIZED_SHADES, Bond
+from bond import Bond, DeviceTypes
 
 from homeassistant.components.cover import DEVICE_CLASS_SHADE, CoverEntity
 from homeassistant.config_entries import ConfigEntry
@@ -26,7 +26,7 @@ async def async_setup_entry(
     covers = [
         BondCover(bond, device)
         for device in devices
-        if device.type == BOND_DEVICE_TYPE_MOTORIZED_SHADES
+        if device.type == DeviceTypes.MOTORIZED_SHADES
     ]
 
     async_add_entities(covers, True)
