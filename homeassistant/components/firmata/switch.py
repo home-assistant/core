@@ -12,7 +12,7 @@ from .const import (
     CONF_PIN_MODE,
     DOMAIN,
 )
-from .entity import FirmataEntity
+from .entity import FirmataPinEntity
 from .pin import FirmataBinaryDigitalOutput, FirmataPinUsedException
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,21 +36,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 "Could not setup switch on pin %s since pin already in use.",
                 switch[CONF_PIN],
             )
-        switch_entity = FirmataSwitch(api, config_entry, **switch)
+            continue
+        name = switch[CONF_NAME]
+        switch_entity = FirmataSwitch(api, config_entry, name, pin)
         new_entities.append(switch_entity)
-    async_add_entities(new_entities)
+
+    if (new_entities):
+        async_add_entities(new_entities)
 
 
-class FirmataSwitch(FirmataEntity, SwitchEntity):
+class FirmataSwitch(FirmataPinEntity, SwitchEntity):
     """Representation of a switch on a Firmata board."""
-
-    def __init__(self, api, config_entry, **kwargs):
-        """Initialize the switch."""
-        super().__init__(api)
-        self._name = kwargs[CONF_NAME]
-
-        location = (config_entry.entry_id, "pin", kwargs[CONF_PIN])
-        self._unique_id = "_".join(str(i) for i in location)
 
     async def async_added_to_hass(self):
         """Set up a switch."""
@@ -73,18 +69,3 @@ class FirmataSwitch(FirmataEntity, SwitchEntity):
         _LOGGER.debug("Turning switch %s off", self._name)
         await self._api.turn_off()
         self.async_write_ha_state()
-
-    @property
-    def name(self) -> str:
-        """Get the name of the pin."""
-        return self._name
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this device."""
-        return self._unique_id

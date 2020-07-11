@@ -127,7 +127,7 @@ async def async_setup_entry(hass, config_entry):
         config_entry.data,
     )
 
-    board = FirmataBoard(hass, config_entry)
+    board = FirmataBoard(config_entry.data)
 
     if not await board.async_setup():
         return False
@@ -135,10 +135,10 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DOMAIN][config_entry.entry_id] = board
 
     async def handle_shutdown(event):
-        """Handle shutdown of baord when Home Assistant shuts down."""
+        """Handle shutdown of board when Home Assistant shuts down."""
         # Ensure board was not already removed previously before shutdown
         if config_entry.entry_id in hass.data[DOMAIN]:
-            await hass.data[DOMAIN][config_entry.entry_id].async_reset()
+            await board.async_reset()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_shutdown)
 
@@ -146,10 +146,10 @@ async def async_setup_entry(hass, config_entry):
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={},
-        identifiers={(DOMAIN, hass.data[DOMAIN][config_entry.entry_id].name)},
+        identifiers={(DOMAIN, board.name)},
         manufacturer=FIRMATA_MANUFACTURER,
-        name=hass.data[DOMAIN][config_entry.entry_id].name,
-        sw_version=hass.data[DOMAIN][config_entry.entry_id].firmware_version,
+        name=board.name,
+        sw_version=board.firmware_version,
     )
 
     if CONF_BINARY_SENSORS in config_entry.data:
@@ -178,7 +178,9 @@ async def async_unload_entry(hass, config_entry) -> None:
         unload_entries.append(
             hass.config_entries.async_forward_entry_unload(config_entry, "switch")
         )
-    results = await asyncio.gather(*unload_entries)
+    results = []
+    if unload_entries:
+        results = await asyncio.gather(*unload_entries)
     results.append(await hass.data[DOMAIN].pop(config_entry.entry_id).async_reset())
 
     return False not in results

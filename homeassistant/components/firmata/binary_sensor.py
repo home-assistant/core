@@ -6,7 +6,7 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import CONF_NAME
 
 from .const import CONF_NEGATE_STATE, CONF_PIN, CONF_PIN_MODE, DOMAIN
-from .entity import FirmataEntity
+from .entity import FirmataPinEntity
 from .pin import FirmataBinaryDigitalInput, FirmataPinUsedException
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,21 +29,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 "Could not setup binary sensor on pin %s since pin already in use.",
                 binary_sensor[CONF_PIN],
             )
-        binary_sensor_entity = FirmataBinarySensor(api, config_entry, **binary_sensor)
+            continue
+        name = binary_sensor[CONF_NAME]
+        binary_sensor_entity = FirmataBinarySensor(api, config_entry, name, pin)
         new_entities.append(binary_sensor_entity)
-    async_add_entities(new_entities)
+
+    if (new_entities):
+        async_add_entities(new_entities)
 
 
-class FirmataBinarySensor(FirmataEntity, BinarySensorEntity):
+class FirmataBinarySensor(FirmataPinEntity, BinarySensorEntity):
     """Representation of a binary sensor on a Firmata board."""
-
-    def __init__(self, api, config_entry, **kwargs):
-        """Initialize the binary sensor."""
-        super().__init__(api)
-        self._name = kwargs[CONF_NAME]
-
-        location = (config_entry.entry_id, "pin", kwargs[CONF_PIN])
-        self._unique_id = "_".join(str(i) for i in location)
 
     async def async_added_to_hass(self):
         """Set up a binary sensor."""
@@ -57,18 +53,3 @@ class FirmataBinarySensor(FirmataEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return true if binary sensor is on."""
         return self._api.is_on
-
-    @property
-    def name(self) -> str:
-        """Get the name of the pin."""
-        return self._name
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this device."""
-        return self._unique_id

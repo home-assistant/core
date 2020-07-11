@@ -22,12 +22,9 @@ _LOGGER = logging.getLogger(__name__)
 class FirmataBoard:
     """Manages a single Firmata board."""
 
-    def __init__(self, hass, config_entry):
+    def __init__(self, config):
         """Initialize the board."""
-        self.config_entry = config_entry
-        self.config = self.config_entry.data
-        self.hass = hass
-        self.available = True
+        self.config = config
         self.api = None
         self.firmware_version = None
         self.protocol_version = None
