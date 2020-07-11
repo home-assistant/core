@@ -28,6 +28,7 @@ CONF_COMPONENT_CONFIG = "component_config"
 CONF_COMPONENT_CONFIG_GLOB = "component_config_glob"
 CONF_COMPONENT_CONFIG_DOMAIN = "component_config_domain"
 CONF_RETRY_COUNT = "max_retries"
+CONF_IGNORE_ATTRIBUTES = "ignore_attributes"
 
 CONF_LANGUAGE = "language"
 CONF_QUERIES = "queries"
