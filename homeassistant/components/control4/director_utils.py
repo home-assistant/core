@@ -1,3 +1,4 @@
+"""Provides data updates from the Control4 controller for platforms."""
 import logging
 
 from pyControl4.account import C4Account
