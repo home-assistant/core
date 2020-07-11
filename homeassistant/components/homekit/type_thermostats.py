@@ -129,7 +129,10 @@ class Thermostat(HomeAccessory):
         self.hc_max_temp = max_temp
 
         _LOGGER.warning(
-            "hc_min_step: %s hc_max_temp %s", self.hc_min_temp, self.hc_max_temp
+            "name: %s, hc_min_step: %s hc_max_temp %s",
+            self.name,
+            self.hc_min_temp,
+            self.hc_max_temp,
         )
 
         min_humidity = self.hass.states.get(self.entity_id).attributes.get(
