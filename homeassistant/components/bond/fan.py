@@ -1,7 +1,7 @@
 """Support for Bond fans."""
 from typing import Any, Callable, List, Optional
 
-from bond import Bond, DeviceTypes
+from bond import DeviceTypes
 
 from homeassistant.components.fan import (
     SPEED_HIGH,
@@ -17,7 +17,7 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 from .entity import BondEntity
-from .utils import BondDevice, get_bond_devices
+from .utils import BondDevice, BondHub
 
 
 async def async_setup_entry(
@@ -26,12 +26,12 @@ async def async_setup_entry(
     async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
     """Set up Bond fan devices."""
-    bond: Bond = hass.data[DOMAIN][entry.entry_id]
+    hub: BondHub = hass.data[DOMAIN][entry.entry_id]
 
-    devices = await hass.async_add_executor_job(get_bond_devices, hass, bond)
+    devices = await hass.async_add_executor_job(hub.get_bond_devices)
 
     fans = [
-        BondFan(bond, device)
+        BondFan(hub, device)
         for device in devices
         if device.type == DeviceTypes.CEILING_FAN
     ]
@@ -42,9 +42,9 @@ async def async_setup_entry(
 class BondFan(BondEntity, FanEntity):
     """Representation of a Bond fan."""
 
-    def __init__(self, bond: Bond, device: BondDevice):
+    def __init__(self, hub: BondHub, device: BondDevice):
         """Create HA entity representing Bond fan."""
-        super().__init__(bond, device)
+        super().__init__(hub, device)
 
         self._power: Optional[bool] = None
         self._speed: Optional[int] = None
@@ -74,21 +74,21 @@ class BondFan(BondEntity, FanEntity):
 
     def update(self):
         """Fetch assumed state of the fan from the hub using API."""
-        state: dict = self._bond.getDeviceState(self._device.device_id)
+        state: dict = self._hub.bond.getDeviceState(self._device.device_id)
         self._power = state.get("power")
         self._speed = state.get("speed")
 
     def set_speed(self, speed: str) -> None:
         """Set the desired speed for the fan."""
         speed_index = self.speed_list.index(speed)
-        self._bond.setSpeed(self._device.device_id, speed=speed_index)
+        self._hub.bond.setSpeed(self._device.device_id, speed=speed_index)
 
     def turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
         """Turn on the fan."""
         if speed is not None:
             self.set_speed(speed)
-        self._bond.turnOn(self._device.device_id)
+        self._hub.bond.turnOn(self._device.device_id)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        self._bond.turnOff(self._device.device_id)
+        self._hub.bond.turnOff(self._device.device_id)

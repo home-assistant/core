@@ -4,8 +4,6 @@ from typing import List
 
 from bond import Bond
 
-from homeassistant.core import HomeAssistant
-
 
 class BondDevice:
     """Helper device class to hold ID and attributes together."""
@@ -31,10 +29,18 @@ class BondDevice:
         return command in actions
 
 
-def get_bond_devices(hass: HomeAssistant, bond: Bond) -> List[BondDevice]:
-    """Fetch all available devices using Bond API."""
-    device_ids = bond.getDeviceIds()
-    devices = [
-        BondDevice(device_id, bond.getDevice(device_id)) for device_id in device_ids
-    ]
-    return devices
+class BondHub:
+    """Hub device representing Bond Bridge."""
+
+    def __init__(self, bond: Bond):
+        """Initialize Bond Hub."""
+        self.bond = bond
+
+    def get_bond_devices(self) -> List[BondDevice]:
+        """Fetch all available devices using Bond API."""
+        device_ids = self.bond.getDeviceIds()
+        devices = [
+            BondDevice(device_id, self.bond.getDevice(device_id))
+            for device_id in device_ids
+        ]
+        return devices

@@ -8,6 +8,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
+from .utils import BondHub
 
 PLATFORMS = ["cover", "fan"]
 
@@ -23,7 +24,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_ACCESS_TOKEN]
 
-    hass.data[DOMAIN][entry.entry_id] = Bond(bondIp=host, bondToken=token)
+    bond = Bond(bondIp=host, bondToken=token)
+    hub = BondHub(bond)
+    hass.data[DOMAIN][entry.entry_id] = hub
 
     for component in PLATFORMS:
         hass.async_create_task(
