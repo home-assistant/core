@@ -704,7 +704,6 @@ async def test_wait_template_with_trigger(hass, calls):
     await hass.async_block_till_done()
 
     hass.states.async_set("test.entity", "world")
-    await hass.async_block_till_done()
     hass.states.async_set("test.entity", "hello")
     await hass.async_block_till_done()
     assert len(calls) == 1
