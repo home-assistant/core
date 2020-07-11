@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def shades(name: str):
-    """Create a motorized share with given name."""
+    """Create motorized shades with given name."""
     return {"name": name, "type": BOND_DEVICE_TYPE_MOTORIZED_SHADES}
 
 
