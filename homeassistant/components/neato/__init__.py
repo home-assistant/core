@@ -105,7 +105,6 @@ async def async_setup_entry(hass, entry):
     except NeatoRobotException:
         _LOGGER.debug("Failed to connect to Neato API")
         raise ConfigEntryNotReady
-        return False
 
     for component in ("camera", "vacuum", "switch", "sensor"):
         hass.async_create_task(
