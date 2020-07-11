@@ -101,7 +101,10 @@ RESPONSE_DISARM_FAILURE = {
     "ResultCode": TotalConnectClient.TotalConnectClient.COMMAND_FAILED,
     "ResultData": "Command Failed",
 }
-
+RESPONSE_USER_CODE_INVALID = {
+    "ResultCode": "-4106",
+    "ResultData": "testing user code invalid",
+}
 
 async def setup_platform(hass, platform):
     """Set up the TotalConnect platform."""
