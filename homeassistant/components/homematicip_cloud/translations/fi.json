@@ -1,0 +1,11 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Tapahtui tuntematon virhe."
+        },
+        "error": {
+            "invalid_pin": "Virheellinen PIN-koodi, yrit\u00e4 uudelleen.",
+            "press_the_button": "Paina sinist\u00e4 painiketta."
+        }
+    }
+}

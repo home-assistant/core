@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "zip_code": "Kode Pos"
+                }
+            }
+        }
+    }
+}

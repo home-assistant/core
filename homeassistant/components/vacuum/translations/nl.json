@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "action_type": {
+            "clean": "Laat {entity_name} schoonmaken",
+            "dock": "Laat {entity_name} terugkeren naar het basisstation"
+        },
+        "condition_type": {
+            "is_cleaning": "{entity_name} is aan het schoonmaken",
+            "is_docked": "{entity_name} is bij basisstation"
+        },
+        "trigger_type": {
+            "cleaning": "{entity_name} begon met schoonmaken",
+            "docked": "{entity_name} is bij basisstation"
+        }
+    },
+    "state": {
+        "_": {
+            "cleaning": "Reinigen",
+            "docked": "Gedockt",
+            "error": "Fout",
+            "idle": "Inactief",
+            "off": "Uit",
+            "on": "Aan",
+            "paused": "Gepauzeerd",
+            "returning": "Terugkeren naar dock"
+        }
+    },
+    "title": "Stofzuigen"
+}

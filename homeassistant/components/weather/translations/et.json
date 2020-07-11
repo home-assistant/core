@@ -1,0 +1,21 @@
+{
+    "state": {
+        "_": {
+            "clear-night": "Selge \u00f6\u00f6",
+            "cloudy": "Pilves",
+            "exceptional": "Erakordne",
+            "fog": "Udu",
+            "hail": "Rahe",
+            "lightning": "\u00c4ikeseline",
+            "lightning-rainy": "\u00c4ikeseline, vihmane",
+            "partlycloudy": "Osaliselt pilves",
+            "pouring": "Kallab",
+            "rainy": "Vihmane",
+            "snowy": "Lumine",
+            "snowy-rainy": "L\u00f6rtsine",
+            "sunny": "P\u00e4ikeseline",
+            "windy": "Tuuline",
+            "windy-variant": "Tuuline"
+        }
+    }
+}

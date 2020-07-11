@@ -5,8 +5,6 @@ from homeassistant.components.device_tracker import DeviceScanner
 
 from . import DATA_ASUSWRT
 
-DEPENDENCIES = ['asuswrt']
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -26,6 +24,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
         self.last_results = {}
         self.success_init = False
         self.connection = api
+        self._connect_error = False
 
     async def async_connect(self):
         """Initialize connection to the router."""
@@ -49,6 +48,17 @@ class AsusWrtDeviceScanner(DeviceScanner):
 
         Return boolean if scanning successful.
         """
-        _LOGGER.info('Checking Devices')
+        _LOGGER.debug("Checking Devices")
 
-        self.last_results = await self.connection.async_get_connected_devices()
+        try:
+            self.last_results = await self.connection.async_get_connected_devices()
+            if self._connect_error:
+                self._connect_error = False
+                _LOGGER.info("Reconnected to ASUS router for device update")
+
+        except OSError as err:
+            if not self._connect_error:
+                self._connect_error = True
+                _LOGGER.error(
+                    "Error connecting to ASUS router for device update: %s", err
+                )

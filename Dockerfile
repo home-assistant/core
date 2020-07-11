@@ -1,35 +1,22 @@
-# Notice:
-# When updating this file, please also update virtualization/Docker/Dockerfile.dev
-# This way, the development image and the production image are kept in sync.
+ARG BUILD_FROM
+FROM ${BUILD_FROM}
 
-FROM python:3.7
-LABEL maintainer="Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>"
+ENV \
+    S6_SERVICES_GRACETIME=60000
 
-# Uncomment any of the following lines to disable the installation.
-#ENV INSTALL_TELLSTICK no
-#ENV INSTALL_OPENALPR no
-#ENV INSTALL_FFMPEG no
-#ENV INSTALL_LIBCEC no
-#ENV INSTALL_SSOCR no
-#ENV INSTALL_DLIB no
-#ENV INSTALL_IPERF3 no
+WORKDIR /usr/src
 
-VOLUME /config
+## Setup Home Assistant
+COPY . homeassistant/
+RUN \
+    pip3 install --no-cache-dir --no-index --only-binary=:all: --find-links "${WHEELS_LINKS}" \
+    -r homeassistant/requirements_all.txt -c homeassistant/homeassistant/package_constraints.txt \
+    && pip3 uninstall -y typing \
+    && pip3 install --no-cache-dir --no-index --only-binary=:all: --find-links "${WHEELS_LINKS}" \
+    -e ./homeassistant \
+    && python3 -m compileall homeassistant/homeassistant
 
-WORKDIR /usr/src/app
+# Home Assistant S6-Overlay
+COPY rootfs /
 
-# Copy build scripts
-COPY virtualization/Docker/ virtualization/Docker/
-RUN virtualization/Docker/setup_docker_prereqs
-
-# Install hass component dependencies
-COPY requirements_all.txt requirements_all.txt
-# Uninstall enum34 because some dependencies install it but breaks Python 3.4+.
-# See PR #8103 for more info.
-RUN pip3 install --no-cache-dir -r requirements_all.txt && \
-    pip3 install --no-cache-dir mysqlclient psycopg2 uvloop==0.11.3 cchardet cython tensorflow
-
-# Copy source
-COPY . .
-
-CMD [ "python", "-m", "homeassistant", "--config", "/config" ]
+WORKDIR /config

@@ -1,0 +1,22 @@
+add_torrent:
+  description: Add a new torrent to download (URL, magnet link or Base64 encoded).
+  fields:
+    name:
+      description: Instance name as entered during entry config
+      example: Transmission
+    torrent:
+      description: URL, magnet link or Base64 encoded file.
+      example: http://releases.ubuntu.com/19.04/ubuntu-19.04-desktop-amd64.iso.torrent
+
+remove_torrent:
+  description: Remove a torrent
+  fields:
+    name:
+      description: Instance name as entered during entry config
+      example: Transmission
+    id:
+      description: ID of a torrent
+      example: 123
+    delete_data:
+      description: Delete torrent data
+      example: false

@@ -1,0 +1,12 @@
+{
+  "domain": "poolsense",
+  "name": "PoolSense",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/poolsense",
+  "requirements": [
+    "poolsense==0.0.8"
+  ],
+  "codeowners": [
+    "@haemishkyd"
+  ]
+}

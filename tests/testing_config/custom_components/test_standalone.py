@@ -1,5 +1,5 @@
 """Provide a mock standalone component."""
-DOMAIN = 'test_standalone'
+DOMAIN = "test_standalone"
 
 
 async def async_setup(hass, config):

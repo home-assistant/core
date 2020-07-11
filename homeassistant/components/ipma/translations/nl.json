@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "Naam bestaat al"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "mode": "Mode",
+                    "name": "Naam"
+                },
+                "description": "Instituto Portugu\u00eas do Mar e Atmosfera",
+                "title": "Locatie"
+            }
+        }
+    }
+}

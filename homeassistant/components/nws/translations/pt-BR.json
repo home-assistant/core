@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar, tente novamente",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "station": "C\u00f3digo da esta\u00e7\u00e3o METAR"
+                },
+                "description": "Se um c\u00f3digo de esta\u00e7\u00e3o METAR n\u00e3o for especificado, a latitude e a longitude ser\u00e3o usadas para encontrar a esta\u00e7\u00e3o mais pr\u00f3xima.",
+                "title": "Conecte-se ao Servi\u00e7o Nacional de Meteorologia"
+            }
+        }
+    }
+}

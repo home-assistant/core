@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "accessory_not_found_error": "N\u00e3o \u00e9 poss\u00edvel adicionar o emparelhamento, pois o dispositivo n\u00e3o pode mais ser encontrado.",
+            "already_configured": "O acess\u00f3rio j\u00e1 est\u00e1 configurado com este controlador.",
+            "already_in_progress": "O fluxo de configura\u00e7\u00e3o para o dispositivo j\u00e1 est\u00e1 em andamento.",
+            "already_paired": "Este acess\u00f3rio j\u00e1 est\u00e1 pareado com outro dispositivo. Por favor, redefina o acess\u00f3rio e tente novamente.",
+            "ignored_model": "O suporte do HomeKit para este modelo est\u00e1 bloqueado, j\u00e1 que uma integra\u00e7\u00e3o nativa mais completa est\u00e1 dispon\u00edvel.",
+            "invalid_config_entry": "Este dispositivo est\u00e1 mostrando como pronto para parear, mas existe um conflito na configura\u00e7\u00e3o de entrada para ele no Home Assistant que deve ser removida primeiro.",
+            "no_devices": "N\u00e3o foi poss\u00edvel encontrar dispositivos n\u00e3o pareados"
+        },
+        "error": {
+            "authentication_error": "C\u00f3digo HomeKit incorreto. Por favor verifique e tente novamente.",
+            "busy_error": "O dispositivo recusou-se a adicionar o emparelhamento, uma vez que j\u00e1 est\u00e1 emparelhando com outro controlador.",
+            "max_peers_error": "O dispositivo recusou-se a adicionar o emparelhamento, pois n\u00e3o tem armazenamento de emparelhamento gratuito.",
+            "max_tries_error": "O dispositivo recusou-se a adicionar o emparelhamento, uma vez que recebeu mais de 100 tentativas de autentica\u00e7\u00e3o malsucedidas.",
+            "pairing_failed": "Ocorreu um erro sem tratamento ao tentar emparelhar com este dispositivo. Isso pode ser uma falha tempor\u00e1ria ou o dispositivo pode n\u00e3o ser suportado no momento.",
+            "unable_to_pair": "N\u00e3o \u00e9 poss\u00edvel parear, tente novamente.",
+            "unknown_error": "O dispositivo relatou um erro desconhecido. O pareamento falhou."
+        },
+        "flow_title": "Acess\u00f3rio HomeKit: {name}",
+        "step": {
+            "pair": {
+                "data": {
+                    "pairing_code": "C\u00f3digo de pareamento"
+                },
+                "description": "Digite seu c\u00f3digo de pareamento do HomeKit (no formato XXX-XX-XXX) para usar este acess\u00f3rio",
+                "title": "Parear com o acess\u00f3rio HomeKit"
+            },
+            "user": {
+                "data": {
+                    "device": "Dispositivo"
+                },
+                "description": "Selecione o dispositivo com o qual voc\u00ea deseja parear",
+                "title": "Parear com o acess\u00f3rio HomeKit"
+            }
+        }
+    },
+    "title": "Acess\u00f3rio HomeKit"
+}

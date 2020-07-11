@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "ZIP code already registered",
+            "invalid_zip_code": "ZIP code is invalid"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "zip_code": "ZIP Code"
+                },
+                "description": "Fill out your U.S. or Canadian ZIP code.",
+                "title": "IQVIA"
+            }
+        }
+    }
+}

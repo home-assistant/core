@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u4f4d\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3002"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mmi": "MMI",
+                    "radius": "\u534a\u5f91"
+                },
+                "title": "\u586b\u5beb\u904e\u6ffe\u5668\u8cc7\u8a0a\u3002"
+            }
+        }
+    }
+}

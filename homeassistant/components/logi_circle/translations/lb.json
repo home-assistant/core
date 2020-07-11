@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Dir k\u00ebnnt n\u00ebmmen een eenzegen Logi Circle Kont konfigur\u00e9ieren.",
+            "external_error": "Ausnam vun engem anere Floss.",
+            "external_setup": "Logi Circle gouf vun engem anere Floss erfollegr\u00e4ich konfigur\u00e9iert.",
+            "no_flows": "Dir musst Logi Circle konfigur\u00e9ieren, ier Dir d\u00ebs Authentifiz\u00e9ierung k\u00ebnnt benotzen.[Liest w.e.g. d'Instruktioune](https://www.home-assistant.io/components/logi_circle/)."
+        },
+        "create_entry": {
+            "default": "Erfollegr\u00e4ich mat Logi Circle authentifiz\u00e9iert."
+        },
+        "error": {
+            "auth_error": "Feeler bei der API Autorisatioun.",
+            "auth_timeout": "Z\u00e4it Iwwerschreidung vun der Autorisatioun beim ufroe vum Acc\u00e8s Jeton.",
+            "follow_link": "Follegt w.e.g dem Link an authentifiz\u00e9iert iech ier de op Ofsch\u00e9cken dr\u00e9ckt."
+        },
+        "step": {
+            "auth": {
+                "description": "Follegt dem Link \u00ebnnendr\u00ebnner an **accept\u00e9iert** den Acc\u00e8s zu \u00e4rem Logi Circle Kont , a kommt dann zer\u00e9ck heihin an dr\u00e9ck op **ofsch\u00e9cken** hei \u00ebnnen.\n\n[Link]({authorization_url})",
+                "title": "Mat Logi Circle authentifiz\u00e9ieren"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Ubidder"
+                },
+                "description": "Wielt den Authentifikatioun Ubidder deen sech mat Logi Circle verbanne soll.",
+                "title": "Authentifikatioun Ubidder"
+            }
+        }
+    }
+}

@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "manual": {
+                "data": {
+                    "path": "USB-donglebane"
+                },
+                "title": "Angi banen til din ENOcean dongle"
+            }
+        }
+    },
+    "title": ""
+}

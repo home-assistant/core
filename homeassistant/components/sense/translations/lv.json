@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Neparedz\u0113ta k\u013c\u016bda"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-pasta adrese",
+                    "password": "Parole"
+                }
+            }
+        }
+    }
+}

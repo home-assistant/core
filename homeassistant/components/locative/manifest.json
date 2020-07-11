@@ -1,10 +1,8 @@
 {
   "domain": "locative",
   "name": "Locative",
-  "documentation": "https://www.home-assistant.io/components/locative",
-  "requirements": [],
-  "dependencies": [
-    "webhook"
-  ],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/locative",
+  "dependencies": ["webhook"],
   "codeowners": []
 }

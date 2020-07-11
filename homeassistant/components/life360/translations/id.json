@@ -1,0 +1,7 @@
+{
+    "config": {
+        "error": {
+            "invalid_username": "Nama pengguna tidak valid"
+        }
+    }
+}

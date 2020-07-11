@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Questo dispositivo \u00e8 gi\u00e0 stato aggiunto a HomeAssistant"
+        },
+        "error": {
+            "connection_error": "Impossibile connettersi, si prega di riprovare",
+            "unauthorized": "Associazione negata, controllare il dispositivo per la richiesta di autenticazione"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-mail (Opzionale)",
+                    "host": "Host",
+                    "port": "Porta"
+                },
+                "title": "Connettersi al dispositivo"
+            }
+        }
+    },
+    "title": "Atag"
+}

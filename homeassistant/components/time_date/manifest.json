@@ -1,10 +1,7 @@
 {
   "domain": "time_date",
-  "name": "Time date",
-  "documentation": "https://www.home-assistant.io/components/time_date",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": [
-    "@fabaff"
-  ]
+  "name": "Time & Date",
+  "documentation": "https://www.home-assistant.io/integrations/time_date",
+  "codeowners": ["@fabaff"],
+  "quality_scale": "internal"
 }

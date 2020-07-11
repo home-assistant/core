@@ -1,197 +1,162 @@
 """Support for Toon van Eneco devices."""
+import asyncio
 import logging
-from typing import Any, Dict
-from functools import partial
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import (config_validation as cv,
-                                   device_registry as dr)
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_STARTED,
+)
+from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
+from homeassistant.helpers.typing import ConfigType
 
-from . import config_flow  # noqa  pylint_disable=unused-import
-from .const import (
-    CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_DISPLAY, CONF_TENANT,
-    DATA_TOON_CLIENT, DATA_TOON_CONFIG, DOMAIN)
+from .const import CONF_AGREEMENT_ID, CONF_MIGRATE, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .coordinator import ToonDataUpdateCoordinator
+from .oauth2 import register_oauth2_implementations
 
-REQUIREMENTS = ['toonapilib==3.2.2']
+ENTITY_COMPONENTS = {
+    BINARY_SENSOR_DOMAIN,
+    CLIMATE_DOMAIN,
+    SENSOR_DOMAIN,
+    SWITCH_DOMAIN,
+}
 
 _LOGGER = logging.getLogger(__name__)
 
 # Validation of the user's configuration
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_CLIENT_SECRET): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.All(
+            cv.deprecated(CONF_SCAN_INTERVAL),
+            vol.Schema(
+                {
+                    vol.Required(CONF_CLIENT_ID): cv.string,
+                    vol.Required(CONF_CLIENT_SECRET): cv.string,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                    ): vol.All(cv.time_period, cv.positive_timedelta),
+                }
+            ),
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Toon components."""
     if DOMAIN not in config:
         return True
 
-    conf = config[DOMAIN]
+    register_oauth2_implementations(
+        hass, config[DOMAIN][CONF_CLIENT_ID], config[DOMAIN][CONF_CLIENT_SECRET]
+    )
 
-    # Store config to be used during entry setup
-    hass.data[DATA_TOON_CONFIG] = conf
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_IMPORT})
+    )
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType,
-                            entry: ConfigType) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Handle migration of a previous version config entry."""
+    if entry.version == 1:
+        # There is no usable data in version 1 anymore.
+        # The integration switched to OAuth and because of this, uses
+        # different unique identifiers as well.
+        # Force this by removing the existing entry and trigger a new flow.
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={CONF_MIGRATE: entry.entry_id},
+            )
+        )
+        return False
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Toon from a config entry."""
-    from toonapilib import Toon
+    implementation = await async_get_config_entry_implementation(hass, entry)
+    session = OAuth2Session(hass, entry, implementation)
 
-    conf = hass.data.get(DATA_TOON_CONFIG)
+    coordinator = ToonDataUpdateCoordinator(hass, entry=entry, session=session)
+    await coordinator.toon.activate_agreement(
+        agreement_id=entry.data[CONF_AGREEMENT_ID]
+    )
+    await coordinator.async_refresh()
 
-    toon = await hass.async_add_executor_job(partial(
-        Toon, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD],
-        conf[CONF_CLIENT_ID], conf[CONF_CLIENT_SECRET],
-        tenant_id=entry.data[CONF_TENANT],
-        display_common_name=entry.data[CONF_DISPLAY]))
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady
 
-    hass.data.setdefault(DATA_TOON_CLIENT, {})[entry.entry_id] = toon
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Register device for the Meter Adapter, since it will have no entities.
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={
-            (DOMAIN, toon.agreement.id, 'meter_adapter'),
+            (DOMAIN, coordinator.data.agreement.agreement_id, "meter_adapter")
         },
-        manufacturer='Eneco',
+        manufacturer="Eneco",
         name="Meter Adapter",
-        via_hub=(DOMAIN, toon.agreement.id)
+        via_device=(DOMAIN, coordinator.data.agreement.agreement_id),
     )
 
-    for component in 'binary_sensor', 'climate', 'sensor':
+    # Spin up the platforms
+    for component in ENTITY_COMPONENTS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component))
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
+
+    # If Home Assistant is already in a running state, register the webhook
+    # immediately, else trigger it after Home Assistant has finished starting.
+    if hass.state == CoreState.running:
+        await coordinator.register_webhook()
+    else:
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STARTED, coordinator.register_webhook
+        )
 
     return True
 
 
-class ToonEntity(Entity):
-    """Defines a base Toon entity."""
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload Toon config entry."""
 
-    def __init__(self, toon, name: str, icon: str) -> None:
-        """Initialize the Toon entity."""
-        self._name = name
-        self._state = None
-        self._icon = icon
-        self.toon = toon
+    # Remove webhooks registration
+    await hass.data[DOMAIN][entry.entry_id].unregister_webhook()
 
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
+    # Unload entities for this entry/device.
+    unload_ok = all(
+        await asyncio.gather(
+            *(
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in ENTITY_COMPONENTS
+            )
+        )
+    )
 
-    @property
-    def icon(self) -> str:
-        """Return the mdi icon of the entity."""
-        return self._icon
+    # Cleanup
+    if unload_ok:
+        del hass.data[DOMAIN][entry.entry_id]
 
-
-class ToonDisplayDeviceEntity(ToonEntity):
-    """Defines a Toon display device entity."""
-
-    @property
-    def device_info(self) -> Dict[str, Any]:
-        """Return device information about this thermostat."""
-        agreement = self.toon.agreement
-        model = agreement.display_hardware_version.rpartition('/')[0]
-        sw_version = agreement.display_software_version.rpartition('/')[-1]
-        return {
-            'identifiers': {
-                (DOMAIN, agreement.id),
-            },
-            'name': 'Toon Display',
-            'manufacturer': 'Eneco',
-            'model': model,
-            'sw_version': sw_version,
-        }
-
-
-class ToonElectricityMeterDeviceEntity(ToonEntity):
-    """Defines a Electricity Meter device entity."""
-
-    @property
-    def device_info(self) -> Dict[str, Any]:
-        """Return device information about this entity."""
-        return {
-            'name': 'Electricity Meter',
-            'identifiers': {
-                (DOMAIN, self.toon.agreement.id, 'electricity'),
-            },
-            'via_hub': (DOMAIN, self.toon.agreement.id, 'meter_adapter'),
-        }
-
-
-class ToonGasMeterDeviceEntity(ToonEntity):
-    """Defines a Gas Meter device entity."""
-
-    @property
-    def device_info(self) -> Dict[str, Any]:
-        """Return device information about this entity."""
-        via_hub = 'meter_adapter'
-        if self.toon.gas.is_smart:
-            via_hub = 'electricity'
-
-        return {
-            'name': 'Gas Meter',
-            'identifiers': {
-                (DOMAIN, self.toon.agreement.id, 'gas'),
-            },
-            'via_hub': (DOMAIN, self.toon.agreement.id, via_hub),
-        }
-
-
-class ToonSolarDeviceEntity(ToonEntity):
-    """Defines a Solar Device device entity."""
-
-    @property
-    def device_info(self) -> Dict[str, Any]:
-        """Return device information about this entity."""
-        return {
-            'name': 'Solar Panels',
-            'identifiers': {
-                (DOMAIN, self.toon.agreement.id, 'solar'),
-            },
-            'via_hub': (DOMAIN, self.toon.agreement.id, 'meter_adapter'),
-        }
-
-
-class ToonBoilerModuleDeviceEntity(ToonEntity):
-    """Defines a Boiler Module device entity."""
-
-    @property
-    def device_info(self) -> Dict[str, Any]:
-        """Return device information about this entity."""
-        return {
-            'name': 'Boiler Module',
-            'manufacturer': 'Eneco',
-            'identifiers': {
-                (DOMAIN, self.toon.agreement.id, 'boiler_module'),
-            },
-            'via_hub': (DOMAIN, self.toon.agreement.id),
-        }
-
-
-class ToonBoilerDeviceEntity(ToonEntity):
-    """Defines a Boiler device entity."""
-
-    @property
-    def device_info(self) -> Dict[str, Any]:
-        """Return device information about this entity."""
-        return {
-            'name': 'Boiler',
-            'identifiers': {
-                (DOMAIN, self.toon.agreement.id, 'boiler'),
-            },
-            'via_hub': (DOMAIN, self.toon.agreement.id, 'boiler_module'),
-        }
+    return unload_ok

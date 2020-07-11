@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ce t\u00e9l\u00e9viseur est d\u00e9j\u00e0 configur\u00e9.",
+            "no_ip_control": "Le contr\u00f4le IP est d\u00e9sactiv\u00e9 sur votre t\u00e9l\u00e9viseur ou le t\u00e9l\u00e9viseur n'est pas pris en charge."
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion, h\u00f4te ou code PIN non valide.",
+            "invalid_host": "Nom d'h\u00f4te ou adresse IP invalide.",
+            "unsupported_model": "Votre mod\u00e8le de t\u00e9l\u00e9viseur n'est pas pris en charge."
+        },
+        "step": {
+            "authorize": {
+                "data": {
+                    "pin": "Code PIN"
+                },
+                "description": "Saisissez le code PIN affich\u00e9 sur le t\u00e9l\u00e9viseur Sony Bravia. \n\nSi le code PIN n'est pas affich\u00e9, vous devez d\u00e9senregistrer Home Assistant de votre t\u00e9l\u00e9viseur, allez dans: Param\u00e8tres - > R\u00e9seau - > Param\u00e8tres de l'appareil distant - > Annuler l'enregistrement de l'appareil distant.",
+                "title": "Autoriser Sony Bravia TV"
+            },
+            "user": {
+                "data": {
+                    "host": "Nom d'h\u00f4te ou adresse IP"
+                },
+                "description": "Configurez l'int\u00e9gration du t\u00e9l\u00e9viseur Sony Bravia. Si vous rencontrez des probl\u00e8mes de configuration, rendez-vous sur: https://www.home-assistant.io/integrations/braviatv \n\n Assurez-vous que votre t\u00e9l\u00e9viseur est allum\u00e9.",
+                "title": "Sony Bravia TV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "ignored_sources": "Liste des sources ignor\u00e9es"
+                },
+                "title": "Options pour Sony Bravia TV"
+            }
+        }
+    }
+}

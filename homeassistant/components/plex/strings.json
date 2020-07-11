@@ -1,0 +1,61 @@
+{
+  "config": {
+    "flow_title": "{name} ({host})",
+    "step": {
+      "user": {
+        "title": "Plex Media Server",
+        "description": "Continue to [plex.tv](https://plex.tv) to link a Plex server."
+      },
+      "user_advanced": {
+        "title": "Plex Media Server",
+        "data": {
+          "setup_method": "Setup method"
+        }
+      },
+      "manual_setup": {
+        "title": "Manual Plex Configuration",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "Use SSL",
+          "verify_ssl": "Verify SSL certificate",
+          "token": "Token (Optional)"
+        }
+      },
+      "select_server": {
+        "title": "Select Plex server",
+        "description": "Multiple servers available, select one:",
+        "data": {
+          "server": "Server"
+        }
+      }
+    },
+    "error": {
+      "faulty_credentials": "Authorization failed, verify Token",
+      "host_or_token": "Must provide at least one of Host or Token",
+      "no_servers": "No servers linked to Plex account",
+      "not_found": "Plex server not found",
+      "ssl_error": "SSL certificate issue"
+    },
+    "abort": {
+      "all_configured": "All linked servers already configured",
+      "already_configured": "This Plex server is already configured",
+      "already_in_progress": "Plex is being configured",
+      "token_request_timeout": "Timed out obtaining token",
+      "unknown": "Failed for unknown reason"
+    }
+  },
+  "options": {
+    "step": {
+      "plex_mp_settings": {
+        "description": "Options for Plex Media Players",
+        "data": {
+          "use_episode_art": "Use episode art",
+          "ignore_new_shared_users": "Ignore new managed/shared users",
+          "monitored_users": "Monitored users",
+          "ignore_plex_web_clients": "Ignore Plex Web clients"
+        }
+      }
+    }
+  }
+}

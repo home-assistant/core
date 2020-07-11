@@ -1,0 +1,15 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_off": "{entity_name} est\u00e1 desligado",
+            "is_on": "{entity_name} est\u00e1 ligado"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Desligado",
+            "on": "Ligado"
+        }
+    },
+    "title": "Ventilador"
+}

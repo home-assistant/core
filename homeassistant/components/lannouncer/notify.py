@@ -5,22 +5,26 @@ from urllib.parse import urlencode
 
 import voluptuous as vol
 
+from homeassistant.components.notify import (
+    ATTR_DATA,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.components.notify import (ATTR_DATA, PLATFORM_SCHEMA,
-                                             BaseNotificationService)
-
-ATTR_METHOD = 'method'
-ATTR_METHOD_DEFAULT = 'speak'
-ATTR_METHOD_ALLOWED = ['speak', 'alarm']
+ATTR_METHOD = "method"
+ATTR_METHOD_DEFAULT = "speak"
+ATTR_METHOD_ALLOWED = ["speak", "alarm"]
 
 DEFAULT_PORT = 1035
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,17 +69,16 @@ class LannouncerNotificationService(BaseNotificationService):
             # Send message
             _LOGGER.debug("Sending message: %s", cmd)
             sock.sendall(cmd.encode())
-            sock.sendall("&@DONE@\n".encode())
+            sock.sendall(b"&@DONE@\n")
 
             # Check response
             buffer = sock.recv(1024)
-            if buffer != b'LANnouncer: OK':
-                _LOGGER.error("Error sending data to Lannnouncer: %s",
-                              buffer.decode())
+            if buffer != b"LANnouncer: OK":
+                _LOGGER.error("Error sending data to Lannnouncer: %s", buffer.decode())
 
             # Close socket
             sock.close()
         except socket.gaierror:
             _LOGGER.error("Unable to connect to host %s", self._host)
-        except socket.error:
+        except OSError:
             _LOGGER.exception("Failed to send data to Lannnouncer")

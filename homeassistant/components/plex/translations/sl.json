@@ -1,0 +1,61 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Vsi povezani stre\u017eniki so \u017ee konfigurirani",
+            "already_configured": "Ta stre\u017enik Plex je \u017ee konfiguriran",
+            "already_in_progress": "Plex se konfigurira",
+            "invalid_import": "Uvo\u017eena konfiguracija ni veljavna",
+            "non-interactive": "Neinteraktivni uvoz",
+            "token_request_timeout": "Potekla \u010dasovna omejitev za pridobitev \u017eetona",
+            "unknown": "Ni uspelo iz neznanega razloga"
+        },
+        "error": {
+            "faulty_credentials": "Avtorizacija ni uspela",
+            "host_or_token": "Zagotoviti morate vsaj enega gostitelja ali \u017eeton",
+            "no_servers": "Ni stre\u017enikov povezanih z ra\u010dunom",
+            "not_found": "Plex stre\u017enika ni mogo\u010de najti",
+            "ssl_error": "Te\u017eava s SSL certifikatom"
+        },
+        "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Gostitelj (izbirno, \u010de je vnesen \u017eeton)",
+                    "port": "Vrata",
+                    "ssl": "Uporaba SSL",
+                    "token": "\u017deton (izbirno)",
+                    "verify_ssl": "Preverite SSL potrdilo"
+                },
+                "title": "Ro\u010dna konfiguracija Plex"
+            },
+            "select_server": {
+                "data": {
+                    "server": "Stre\u017enik"
+                },
+                "description": "Na voljo je ve\u010d stre\u017enikov, izberite enega:",
+                "title": "Izberite stre\u017enik Plex"
+            },
+            "user": {
+                "description": "Nadaljujte do [plex.tv] (https://plex.tv), da pove\u017eete stre\u017enik Plex.",
+                "title": "Plex medijski stre\u017enik"
+            },
+            "user_advanced": {
+                "data": {
+                    "setup_method": "Na\u010din nastavitve"
+                },
+                "title": "Plex medijski stre\u017enik"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "ignore_new_shared_users": "Ignorirajte nove upravljane/deljene uporabnike",
+                    "monitored_users": "Nadzorovani uporabniki",
+                    "use_episode_art": "Uporabi naslovno sliko epizode"
+                },
+                "description": "Mo\u017enosti za predvajalnike Plex"
+            }
+        }
+    }
+}

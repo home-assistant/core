@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up Wemo?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Only a single configuration of Wemo is possible.",
+      "no_devices_found": "No Wemo devices found on the network."
+    }
+  }
+}

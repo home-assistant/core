@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Sie k\u00f6nnen nur ein Spotify-Konto konfigurieren.",
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
+            "missing_configuration": "Die Spotify-Integration ist nicht konfiguriert. Bitte folgen Sie der Dokumentation."
+        },
+        "create_entry": {
+            "default": "Erfolgreich mit Spotify authentifiziert."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Authentifizierungsmethode ausw\u00e4hlen"
+            }
+        }
+    }
+}

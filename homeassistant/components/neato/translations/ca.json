@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ja configurat",
+            "invalid_credentials": "Credencials inv\u00e0lides"
+        },
+        "create_entry": {
+            "default": "Consulta la [documentaci\u00f3 de Neato]({docs_url})."
+        },
+        "error": {
+            "invalid_credentials": "Credencials inv\u00e0lides",
+            "unexpected_error": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari",
+                    "vendor": "Venedor"
+                },
+                "description": "Consulta la [documentaci\u00f3 de Neato]({docs_url}).",
+                "title": "Informaci\u00f3 del compte Neato"
+            }
+        }
+    }
+}

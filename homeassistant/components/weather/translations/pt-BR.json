@@ -1,0 +1,21 @@
+{
+    "state": {
+        "_": {
+            "clear-night": "Noite clara",
+            "cloudy": "Nublado",
+            "exceptional": "Excepcional",
+            "fog": "Nevoeiro",
+            "hail": "Granizo",
+            "lightning": "Raios",
+            "lightning-rainy": "Raios, chuvoso",
+            "partlycloudy": "Parcialmente nublado",
+            "pouring": "Torrencial",
+            "rainy": "Chuvoso",
+            "snowy": "Neve",
+            "snowy-rainy": "Neve, chuva",
+            "sunny": "Ensolarado",
+            "windy": "Ventoso",
+            "windy-variant": "Ventoso"
+        }
+    }
+}

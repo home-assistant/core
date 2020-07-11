@@ -1,0 +1,24 @@
+{
+  "callsign": "HALLHD",
+  "date": "2013",
+  "duration": 7200,
+  "isOffAir": false,
+  "isPclocked": 3,
+  "isPpv": false,
+  "isRecording": false,
+  "isVod": false,
+  "major": 312,
+  "minor": 65535,
+  "offset": 4437,
+  "programId": "17016356",
+  "rating": "TV-G",
+  "startTime": 1584795600,
+  "stationId": 6580971,
+  "title": "Snow Bride",
+  "status": {
+    "code": 200,
+    "commandResult": 0,
+    "msg": "OK.",
+    "query": "/tv/getTuned"
+  }
+}

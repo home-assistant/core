@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Z-Wave este deja configurat",
+            "one_instance_only": "Componenta accept\u0103 numai o instan\u021b\u0103 Z-Wave"
+        },
+        "error": {
+            "option_error": "Validarea Z-Wave a e\u0219uat. Este corect\u0103 calea c\u0103tre stick-ul USB?"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "network_key": "Cheie de re\u021bea (l\u0103sa\u021bi necompletat pentru a genera automat)",
+                    "usb_path": "Cale USB"
+                },
+                "description": "Vede\u021bi https://www.home-assistant.io/docs/z-wave/installation/ pentru informa\u021bii despre variabilele de configurare",
+                "title": "Configura\u021bi Z-Wave"
+            }
+        }
+    },
+    "state": {
+        "_": {
+            "dead": "Inactiv",
+            "initializing": "Se ini\u021bializeaz\u0103",
+            "ready": "Disponibil",
+            "sleeping": "Adormit"
+        },
+        "query_stage": {
+            "dead": "Inactiv ({query_stage})",
+            "initializing": "Se ini\u021bializeaz\u0103 ({query_stage})"
+        }
+    }
+}

@@ -1,1 +1,1 @@
-"""Support for Honeywell Round Connected and Honeywell Evohome thermostats."""
+"""Support for Honeywell (US) Total Connect Comfort climate systems."""

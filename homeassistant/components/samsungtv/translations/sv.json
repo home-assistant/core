@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Denna Samsung TV \u00e4r redan konfigurerad.",
+            "already_in_progress": "Samsung TV-konfiguration p\u00e5g\u00e5r redan.",
+            "auth_missing": "Home Assistant har inte beh\u00f6righet att ansluta till denna Samsung TV. Kontrollera tv:ns inst\u00e4llningar f\u00f6r att godk\u00e4nna Home Assistant.",
+            "not_successful": "Det g\u00e5r inte att ansluta till denna Samsung TV-enhet.",
+            "not_supported": "Denna Samsung TV-enhet st\u00f6ds f\u00f6r n\u00e4rvarande inte."
+        },
+        "flow_title": "Samsung TV: {model}",
+        "step": {
+            "confirm": {
+                "description": "Vill du st\u00e4lla in Samsung TV {model}? Om du aldrig har anslutit Home Assistant innan du ska se ett popup-f\u00f6nster p\u00e5 tv:n och be om auktorisering. Manuella konfigurationer f\u00f6r den h\u00e4r TV:n skrivs \u00f6ver.",
+                "title": "Samsung TV"
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4rdnamn eller IP-adress",
+                    "name": "Namn"
+                },
+                "description": "Ange informationen f\u00f6r din Samsung TV. Om du aldrig har anslutit denna till Home Assistant tidigare borde du se en popup om autentisering p\u00e5 din TV."
+            }
+        }
+    }
+}

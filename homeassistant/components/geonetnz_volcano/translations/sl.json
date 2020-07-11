@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Lokacija je \u017ee registrirana"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radius": "Radij"
+                },
+                "title": "Izpolnite podrobnosti filtra."
+            }
+        }
+    }
+}

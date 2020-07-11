@@ -1,0 +1,8 @@
+{
+  "domain": "plaato",
+  "name": "Plaato Airlock",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/plaato",
+  "dependencies": ["webhook"],
+  "codeowners": ["@JohNan"]
+}

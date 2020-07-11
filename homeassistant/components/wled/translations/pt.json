@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nome servidor ou endere\u00e7o IP"
+                }
+            }
+        }
+    }
+}

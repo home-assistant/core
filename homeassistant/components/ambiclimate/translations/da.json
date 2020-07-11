@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "access_token": "Ukendt fejl ved generering af et adgangstoken.",
+            "already_setup": "Ambiclimate kontoen er konfigureret.",
+            "no_config": "Du skal konfigurere Ambiclimate f\u00f8r du kan godkende med det. [L\u00e6s venligst vejledningen](https://www.home-assistant.io/components/ambiclimate/)."
+        },
+        "create_entry": {
+            "default": "Godkendt med Ambiclimate"
+        },
+        "error": {
+            "follow_link": "F\u00f8lg linket og godkend f\u00f8r du trykker p\u00e5 send",
+            "no_token": "Ikke godkendt med Ambiclimate"
+        },
+        "step": {
+            "auth": {
+                "description": "F\u00f8lg dette [link]({authorization_url}) og <b>Tillad</b> adgang til din Ambiclimate-konto, vend s\u00e5 tilbage og tryk p\u00e5 <b>Indsend</b> nedenfor.\n(Kontroll\u00e9r den angivne callback url er {cb_url})",
+                "title": "Godkend Ambiclimate"
+            }
+        }
+    }
+}

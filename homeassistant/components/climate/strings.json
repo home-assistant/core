@@ -1,0 +1,29 @@
+{
+  "title": "Climate",
+  "device_automation": {
+    "condition_type": {
+      "is_hvac_mode": "{entity_name} is set to a specific HVAC mode",
+      "is_preset_mode": "{entity_name} is set to a specific preset mode"
+    },
+    "trigger_type": {
+      "current_temperature_changed": "{entity_name} measured temperature changed",
+      "current_humidity_changed": "{entity_name} measured humidity changed",
+      "hvac_mode_changed": "{entity_name} HVAC mode changed"
+    },
+    "action_type": {
+      "set_hvac_mode": "Change HVAC mode on {entity_name}",
+      "set_preset_mode": "Change preset on {entity_name}"
+    }
+  },
+  "state": {
+    "_": {
+      "off": "[%key:common::state::off%]",
+      "heat": "Heat",
+      "cool": "Cool",
+      "heat_cool": "Heat/Cool",
+      "auto": "Auto",
+      "dry": "Dry",
+      "fan_only": "Fan only"
+    }
+  }
+}

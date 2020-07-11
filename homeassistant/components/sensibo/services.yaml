@@ -1,0 +1,9 @@
+assume_state:
+  description: Set Sensibo device to external state.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: "climate.kitchen"
+    state:
+      description: State to set.
+      example: "idle"

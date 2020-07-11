@@ -1,10 +1,7 @@
 {
   "domain": "rflink",
-  "name": "Rflink",
-  "documentation": "https://www.home-assistant.io/components/rflink",
-  "requirements": [
-    "rflink==0.0.37"
-  ],
-  "dependencies": [],
+  "name": "RFLink",
+  "documentation": "https://www.home-assistant.io/integrations/rflink",
+  "requirements": ["rflink==0.0.52"],
   "codeowners": []
 }

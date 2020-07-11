@@ -3,4 +3,4 @@ speedtest:
   fields:
     host:
       description: The host name of the iperf3 server (already configured) to run a test with.
-      example: 'iperf.he.net'
+      example: "iperf.he.net"

@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API n\u00f8kkel"
+                },
+                "description": "Du trenger API-n\u00f8kkelen fra https://app.rach.io/. Velg 'Kontoinnstillinger' og klikk deretter p\u00e5 'F\u00e5 API n\u00f8kkel'.",
+                "title": "Koble til Rachio-enheten din"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "manual_run_mins": "Hvor lenge, i minutter, for \u00e5 sl\u00e5 p\u00e5 en stasjon n\u00e5r bryteren er aktivert."
+                }
+            }
+        }
+    }
+}

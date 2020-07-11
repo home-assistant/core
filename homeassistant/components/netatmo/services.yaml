@@ -1,8 +1,10 @@
-addwebhook:
-  description: Add webhook during runtime (e.g. if it has been banned).
+# Describes the format for available Netatmo services
+set_schedule:
+  description: Set the heating schedule.
   fields:
-    url:
-      description: URL for which to add the webhook.
-      example: https://yourdomain.com:443/api/webhook/webhook_id
-dropwebhook:
-  description: Drop active webhooks.
+    schedule_name:
+      description: Schedule name.
+      example: Standard
+    home_name:
+      description: Home name.
+      example: MyHome

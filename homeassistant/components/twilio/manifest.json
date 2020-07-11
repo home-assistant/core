@@ -1,12 +1,9 @@
 {
   "domain": "twilio",
   "name": "Twilio",
-  "documentation": "https://www.home-assistant.io/components/twilio",
-  "requirements": [
-    "twilio==6.19.1"
-  ],
-  "dependencies": [
-    "webhook"
-  ],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/twilio",
+  "requirements": ["twilio==6.32.0"],
+  "dependencies": ["webhook"],
   "codeowners": []
 }

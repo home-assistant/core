@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Nie znaleziono w sieci urz\u0105dze\u0144 Google Cast.",
+            "single_instance_allowed": "Wymagana jest tylko jedna konfiguracja Google Cast."
+        },
+        "step": {
+            "confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 Google Cast?"
+            }
+        }
+    }
+}

@@ -1,0 +1,30 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "blid": "BLID",
+                    "continuous": "Ci\u0105g\u0142y",
+                    "delay": "Op\u00f3\u017anienie",
+                    "host": "Nazwa hosta lub adres IP",
+                    "password": "Has\u0142o"
+                },
+                "description": "Obecnie pobieranie BLID i has\u0142a jest procesem r\u0119cznym. Prosz\u0119 post\u0119powa\u0107 zgodnie z instrukcjami zawartymi w dokumentacji pod adresem: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials.",
+                "title": "Po\u0142\u0105czenie z urz\u0105dzeniem"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "Ci\u0105g\u0142y",
+                    "delay": "Op\u00f3\u017anienie"
+                }
+            }
+        }
+    }
+}

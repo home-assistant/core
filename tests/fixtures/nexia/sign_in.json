@@ -1,0 +1,10 @@
+{
+	"success": true,
+	"error": null,
+	"result": {
+		"mobile_id": 1,
+		"api_key": "mock",
+		"setup_step": "done",
+		"locale": "en_us"
+	}
+}

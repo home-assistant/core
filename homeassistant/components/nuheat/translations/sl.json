@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Termostat je \u017ee konfiguriran"
+        },
+        "error": {
+            "cannot_connect": "Povezava ni uspela, poskusite znova",
+            "invalid_auth": "Neveljavna avtentikacija",
+            "invalid_thermostat": "Serijska \u0161tevilka termostata ni veljavna.",
+            "unknown": "Nepri\u010dakovana napaka"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Geslo",
+                    "serial_number": "Serijska \u0161tevilka termostata.",
+                    "username": "Uporabni\u0161ko ime"
+                },
+                "description": "\u0160tevil\u010dno serijsko \u0161tevilko ali ID termostata boste morali pridobiti tako, da se prijavite na https://MyNuHeat.com in izberete svoje termostate.",
+                "title": "Pove\u017eite se z NuHeat-om"
+            }
+        }
+    }
+}

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u57ce\u5e02\u5df2\u8a2d\u5b9a\u5b8c\u6210",
+            "unknown": "\u672a\u77e5\u932f\u8aa4\uff1a\u8acb\u7a0d\u5f8c\u518d\u8a66"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "city": "\u57ce\u5e02\u540d\u7a31"
+                },
+                "description": "\u8f38\u5165\u90f5\u905e\u5340\u865f\uff08\u50c5\u652f\u63f4\u6cd5\u570b\uff09\u6216\u57ce\u5e02\u540d\u7a31",
+                "title": "M\u00e9t\u00e9o-France"
+            }
+        }
+    }
+}

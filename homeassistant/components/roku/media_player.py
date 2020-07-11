@@ -1,92 +1,107 @@
 """Support for the Roku media player."""
 import logging
-import requests.exceptions
+from typing import List
 
-from homeassistant.components.media_player import MediaPlayerDevice
+import voluptuous as vol
+
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK, SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
-from homeassistant.const import (CONF_HOST, STATE_HOME, STATE_IDLE,
-                                 STATE_PLAYING)
+    MEDIA_TYPE_APP,
+    MEDIA_TYPE_CHANNEL,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_STEP,
+)
+from homeassistant.const import (
+    STATE_HOME,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_PLAYING,
+    STATE_STANDBY,
+)
+from homeassistant.helpers import entity_platform
 
-DEPENDENCIES = ['roku']
-
-DEFAULT_PORT = 8060
+from . import RokuDataUpdateCoordinator, RokuEntity, roku_exception_handler
+from .const import ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_ROKU = SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK |\
-    SUPPORT_PLAY_MEDIA | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
-    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
+SUPPORT_ROKU = (
+    SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_VOLUME_STEP
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_SELECT_SOURCE
+    | SUPPORT_PAUSE
+    | SUPPORT_PLAY
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+)
+
+SEARCH_SCHEMA = {vol.Required(ATTR_KEYWORD): str}
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
-    """Set up the Roku platform."""
-    if not discovery_info:
-        return
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up the Roku config entry."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    unique_id = coordinator.data.info.serial_number
+    async_add_entities([RokuMediaPlayer(unique_id, coordinator)], True)
 
-    host = discovery_info[CONF_HOST]
-    async_add_entities([RokuDevice(host)], True)
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_SEARCH, SEARCH_SCHEMA, "search",
+    )
 
 
-class RokuDevice(MediaPlayerDevice):
-    """Representation of a Roku device on the network."""
+class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
+    """Representation of a Roku media player on the network."""
 
-    def __init__(self, host):
+    def __init__(self, unique_id: str, coordinator: RokuDataUpdateCoordinator) -> None:
         """Initialize the Roku device."""
-        from roku import Roku
+        super().__init__(
+            coordinator=coordinator,
+            name=coordinator.data.info.name,
+            device_id=unique_id,
+        )
 
-        self.roku = Roku(host)
-        self.ip_address = host
-        self.channels = []
-        self.current_app = None
-        self._device_info = {}
-
-    def update(self):
-        """Retrieve latest state."""
-        try:
-            self._device_info = self.roku.device_info
-            self.ip_address = self.roku.host
-            self.channels = self.get_source_list()
-
-            if self.roku.current_app is not None:
-                self.current_app = self.roku.current_app
-            else:
-                self.current_app = None
-        except (requests.exceptions.ConnectionError,
-                requests.exceptions.ReadTimeout):
-            pass
-
-    def get_source_list(self):
-        """Get the list of applications to be used as sources."""
-        return ["Home"] + sorted(channel.name for channel in self.roku.apps)
+        self._unique_id = unique_id
 
     @property
-    def should_poll(self):
-        """Device should be polled."""
-        return True
+    def unique_id(self) -> str:
+        """Return the unique ID for this entity."""
+        return self._unique_id
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        if self._device_info.userdevicename:
-            return self._device_info.userdevicename
-        return "Roku {}".format(self._device_info.sernum)
-
-    @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the device."""
-        if self.current_app is None:
+        if self.coordinator.data.state.standby:
+            return STATE_STANDBY
+
+        if self.coordinator.data.app is None:
             return None
 
-        if (self.current_app.name == "Power Saver" or
-                self.current_app.is_screensaver):
+        if (
+            self.coordinator.data.app.name == "Power Saver"
+            or self.coordinator.data.app.screensaver
+        ):
             return STATE_IDLE
-        if self.current_app.name == "Roku":
+
+        if self.coordinator.data.app.name == "Roku":
             return STATE_HOME
-        if self.current_app.name is not None:
+
+        if self.coordinator.data.media and self.coordinator.data.media.paused:
+            return STATE_PAUSED
+
+        if self.coordinator.data.app.name:
             return STATE_PLAYING
 
         return None
@@ -97,94 +112,160 @@ class RokuDevice(MediaPlayerDevice):
         return SUPPORT_ROKU
 
     @property
-    def unique_id(self):
-        """Return a unique, HASS-friendly identifier for this entity."""
-        return self._device_info.sernum
-
-    @property
-    def media_content_type(self):
+    def media_content_type(self) -> str:
         """Content type of current playing media."""
-        if self.current_app is None:
+        if self.app_id is None or self.app_name in ("Power Saver", "Roku"):
             return None
-        if self.current_app.name == "Power Saver":
-            return None
-        if self.current_app.name == "Roku":
-            return None
-        return MEDIA_TYPE_MOVIE
+
+        if self.app_id == "tvinput.dtv" and self.coordinator.data.channel is not None:
+            return MEDIA_TYPE_CHANNEL
+
+        return MEDIA_TYPE_APP
 
     @property
-    def media_image_url(self):
+    def media_image_url(self) -> str:
         """Image url of current playing media."""
-        if self.current_app is None:
-            return None
-        if self.current_app.name == "Roku":
-            return None
-        if self.current_app.name == "Power Saver":
-            return None
-        if self.current_app.id is None:
+        if self.app_id is None or self.app_name in ("Power Saver", "Roku"):
             return None
 
-        return 'http://{0}:{1}/query/icon/{2}'.format(
-            self.ip_address, DEFAULT_PORT, self.current_app.id)
+        return self.coordinator.roku.app_icon_url(self.app_id)
 
     @property
-    def app_name(self):
+    def app_name(self) -> str:
         """Name of the current running app."""
-        if self.current_app is not None:
-            return self.current_app.name
+        if self.coordinator.data.app is not None:
+            return self.coordinator.data.app.name
+
+        return None
 
     @property
-    def app_id(self):
+    def app_id(self) -> str:
         """Return the ID of the current running app."""
-        if self.current_app is not None:
-            return self.current_app.id
+        if self.coordinator.data.app is not None:
+            return self.coordinator.data.app.app_id
+
+        return None
 
     @property
-    def source(self):
+    def media_channel(self):
+        """Return the TV channel currently tuned."""
+        if self.app_id != "tvinput.dtv" or self.coordinator.data.channel is None:
+            return None
+
+        if self.coordinator.data.channel.name is not None:
+            return f"{self.coordinator.data.channel.name} ({self.coordinator.data.channel.number})"
+
+        return self.coordinator.data.channel.number
+
+    @property
+    def media_title(self):
+        """Return the title of current playing media."""
+        if self.app_id != "tvinput.dtv" or self.coordinator.data.channel is None:
+            return None
+
+        if self.coordinator.data.channel.program_title is not None:
+            return self.coordinator.data.channel.program_title
+
+        return None
+
+    @property
+    def source(self) -> str:
         """Return the current input source."""
-        if self.current_app is not None:
-            return self.current_app.name
+        if self.coordinator.data.app is not None:
+            return self.coordinator.data.app.name
+
+        return None
 
     @property
-    def source_list(self):
+    def source_list(self) -> List:
         """List of available input sources."""
-        return self.channels
+        return ["Home"] + sorted(app.name for app in self.coordinator.data.apps)
 
-    def media_play_pause(self):
+    @roku_exception_handler
+    async def search(self, keyword):
+        """Emulate opening the search screen and entering the search keyword."""
+        await self.coordinator.roku.search(keyword)
+
+    @roku_exception_handler
+    async def async_turn_on(self) -> None:
+        """Turn on the Roku."""
+        await self.coordinator.roku.remote("poweron")
+
+    @roku_exception_handler
+    async def async_turn_off(self) -> None:
+        """Turn off the Roku."""
+        await self.coordinator.roku.remote("poweroff")
+
+    @roku_exception_handler
+    async def async_media_pause(self) -> None:
+        """Send pause command."""
+        if self.state not in (STATE_STANDBY, STATE_PAUSED):
+            await self.coordinator.roku.remote("play")
+
+    @roku_exception_handler
+    async def async_media_play(self) -> None:
+        """Send play command."""
+        if self.state not in (STATE_STANDBY, STATE_PLAYING):
+            await self.coordinator.roku.remote("play")
+
+    @roku_exception_handler
+    async def async_media_play_pause(self) -> None:
         """Send play/pause command."""
-        if self.current_app is not None:
-            self.roku.play()
+        if self.state != STATE_STANDBY:
+            await self.coordinator.roku.remote("play")
 
-    def media_previous_track(self):
+    @roku_exception_handler
+    async def async_media_previous_track(self) -> None:
         """Send previous track command."""
-        if self.current_app is not None:
-            self.roku.reverse()
+        await self.coordinator.roku.remote("reverse")
 
-    def media_next_track(self):
+    @roku_exception_handler
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
-        if self.current_app is not None:
-            self.roku.forward()
+        await self.coordinator.roku.remote("forward")
 
-    def mute_volume(self, mute):
+    @roku_exception_handler
+    async def async_mute_volume(self, mute) -> None:
         """Mute the volume."""
-        if self.current_app is not None:
-            self.roku.volume_mute()
+        await self.coordinator.roku.remote("volume_mute")
 
-    def volume_up(self):
+    @roku_exception_handler
+    async def async_volume_up(self) -> None:
         """Volume up media player."""
-        if self.current_app is not None:
-            self.roku.volume_up()
+        await self.coordinator.roku.remote("volume_up")
 
-    def volume_down(self):
+    @roku_exception_handler
+    async def async_volume_down(self) -> None:
         """Volume down media player."""
-        if self.current_app is not None:
-            self.roku.volume_down()
+        await self.coordinator.roku.remote("volume_down")
 
-    def select_source(self, source):
+    @roku_exception_handler
+    async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
+        """Tune to channel."""
+        if media_type != MEDIA_TYPE_CHANNEL:
+            _LOGGER.error(
+                "Invalid media type %s. Only %s is supported",
+                media_type,
+                MEDIA_TYPE_CHANNEL,
+            )
+            return
+
+        await self.coordinator.roku.tune(media_id)
+
+    @roku_exception_handler
+    async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        if self.current_app is not None:
-            if source == "Home":
-                self.roku.home()
-            else:
-                channel = self.roku[source]
-                channel.launch()
+        if source == "Home":
+            await self.coordinator.roku.remote("home")
+
+        appl = next(
+            (
+                app
+                for app in self.coordinator.data.apps
+                if source in (app.name, app.app_id)
+            ),
+            None,
+        )
+
+        if appl is not None:
+            await self.coordinator.roku.launch(appl.app_id)

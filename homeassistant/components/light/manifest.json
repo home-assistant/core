@@ -1,10 +1,7 @@
 {
   "domain": "light",
   "name": "Light",
-  "documentation": "https://www.home-assistant.io/components/light",
-  "requirements": [],
-  "dependencies": [
-    "group"
-  ],
-  "codeowners": []
+  "documentation": "https://www.home-assistant.io/integrations/light",
+  "codeowners": [],
+  "quality_scale": "internal"
 }

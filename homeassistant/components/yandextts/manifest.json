@@ -1,8 +1,6 @@
 {
   "domain": "yandextts",
-  "name": "Yandextts",
-  "documentation": "https://www.home-assistant.io/components/yandextts",
-  "requirements": [],
-  "dependencies": [],
+  "name": "Yandex TTS",
+  "documentation": "https://www.home-assistant.io/integrations/yandextts",
   "codeowners": []
 }

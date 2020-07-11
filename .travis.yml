@@ -1,0 +1,35 @@
+sudo: false
+dist: bionic
+addons:
+  apt:
+    packages:
+      - libudev-dev
+      - libavformat-dev
+      - libavcodec-dev
+      - libavdevice-dev
+      - libavutil-dev
+      - libswscale-dev
+      - libswresample-dev
+      - libavfilter-dev
+    sources:
+      - sourceline: ppa:savoury1/ffmpeg4
+
+matrix:
+  fast_finish: true
+  include:
+    - python: "3.7.0"
+      env: TOXENV=lint
+    - python: "3.7.0"
+      env: TOXENV=pylint PYLINT_ARGS=--jobs=0 TRAVIS_WAIT=30
+    - python: "3.7.0"
+      env: TOXENV=typing
+    - python: "3.7.0"
+      env: TOXENV=py37
+
+cache:
+  pip: true
+  directories:
+    - $HOME/.cache/pre-commit
+install: pip install -U tox
+language: python
+script: ${TRAVIS_WAIT:+travis_wait $TRAVIS_WAIT} tox --develop

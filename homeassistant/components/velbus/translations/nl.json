@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "port_exists": "Deze poort is al geconfigureerd"
+        },
+        "error": {
+            "connection_failed": "De velbus verbinding is mislukt.",
+            "port_exists": "Deze poort is al geconfigureerd"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "De naam voor deze velbus-verbinding",
+                    "port": "Verbindingsreeks"
+                },
+                "title": "Definieer de velbus-verbindingstype"
+            }
+        }
+    }
+}

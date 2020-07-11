@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Nie znaleziono w sieci urz\u0105dze\u0144 Wemo.",
+            "single_instance_allowed": "Dozwolona jest tylko jedna konfiguracja Wemo."
+        },
+        "step": {
+            "confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 Wemo?"
+            }
+        }
+    }
+}

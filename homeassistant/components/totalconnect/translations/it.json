@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account gi\u00e0 configurato"
+        },
+        "error": {
+            "login": "Errore di accesso: si prega di controllare il nome utente e la password"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "title": "Total Connect"
+            }
+        }
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "options": {
+        "step": {
+            "options_1": {
+                "data": {
+                    "bool": "Booleano opcional",
+                    "int": "Entrada num\u00e9rica"
+                }
+            },
+            "options_2": {
+                "data": {
+                    "multi": "Selecci\u00f3n m\u00faltiple",
+                    "select": "Seleccione una opci\u00f3n",
+                    "string": "Valor de cadena"
+                }
+            }
+        }
+    },
+    "title": "Demo"
+}

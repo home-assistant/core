@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Bereits konfiguriert",
+            "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen"
+        },
+        "create_entry": {
+            "default": "Siehe [Neato-Dokumentation]({docs_url})."
+        },
+        "error": {
+            "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen",
+            "unexpected_error": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername",
+                    "vendor": "Hersteller"
+                },
+                "description": "Siehe [Neato-Dokumentation]({docs_url}).",
+                "title": "Neato-Kontoinformationen"
+            }
+        }
+    }
+}

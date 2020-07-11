@@ -24,3 +24,14 @@ publish:
       description: If message should have the retain flag set.
       example: true
       default: false
+
+dump:
+  description: Dump messages on a topic selector to the 'mqtt_dump.txt' file in your config folder.
+  fields:
+    topic:
+      description: topic to listen to
+      example: "OpenZWave/#"
+    duration:
+      description: how long we should listen for messages in seconds
+      example: 5
+      default: 5

@@ -1,8 +1,6 @@
 {
   "domain": "aurora",
   "name": "Aurora",
-  "documentation": "https://www.home-assistant.io/components/aurora",
-  "requirements": [],
-  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/aurora",
   "codeowners": []
 }

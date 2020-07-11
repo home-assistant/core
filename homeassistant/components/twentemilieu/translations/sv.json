@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "address_exists": "Adressen har redan st\u00e4llts in."
+        },
+        "error": {
+            "connection_error": "Det gick inte att ansluta.",
+            "invalid_address": "Adress hittades inte i serviceomr\u00e5det Twente Milieu."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "house_letter": "Husbrev/till\u00e4gg",
+                    "house_number": "Husnummer",
+                    "post_code": "Postnummer"
+                },
+                "description": "St\u00e4ll in Twente Milieu som ger information om avfallshantering p\u00e5 din adress.",
+                "title": "Twente Milieu"
+            }
+        }
+    }
+}

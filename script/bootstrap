@@ -6,5 +6,6 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-echo "Installing test dependencies..."
-python3 -m pip install tox colorlog
+echo "Installing development dependencies..."
+python3 -m pip install wheel --constraint homeassistant/package_constraints.txt
+python3 -m pip install tox colorlog pre-commit $(grep mypy requirements_test.txt) --constraint homeassistant/package_constraints.txt

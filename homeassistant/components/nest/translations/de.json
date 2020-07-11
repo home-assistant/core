@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Du kannst nur ein einziges Nest-Konto konfigurieren.",
+            "authorize_url_fail": "Unbekannter Fehler beim Erstellen der Authorisierungs-URL",
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL",
+            "no_flows": "Du musst Nest konfigurieren, bevor du dich authentifizieren kannst. [Bitte lese die Anweisungen] (https://www.home-assistant.io/components/nest/)."
+        },
+        "error": {
+            "internal_error": "Ein interner Fehler ist aufgetreten",
+            "invalid_code": "Ung\u00fcltiger Code",
+            "timeout": "Ein zeit\u00fcberschreitungs Fehler ist aufgetreten",
+            "unknown": "Ein unbekannter Fehler ist aufgetreten"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Anbieter"
+                },
+                "description": "W\u00e4hlen, \u00fcber welchen Authentifizierungsanbieter du dich bei Nest authentifizieren m\u00f6chtest.",
+                "title": "Authentifizierungsanbieter"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN Code"
+                },
+                "description": "[Autorisiere dein Konto] ( {url} ), um deinen Nest-Account zu verkn\u00fcpfen.\n\n F\u00fcge anschlie\u00dfend den erhaltenen PIN Code hier ein.",
+                "title": "Nest-Konto verkn\u00fcpfen"
+            }
+        }
+    }
+}

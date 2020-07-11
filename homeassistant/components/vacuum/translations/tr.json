@@ -1,0 +1,15 @@
+{
+    "state": {
+        "_": {
+            "cleaning": "Temizleniyor",
+            "docked": "Dock'da",
+            "error": "Hata",
+            "idle": "Bo\u015fta",
+            "off": "Kapal\u0131",
+            "on": "A\u00e7\u0131k",
+            "paused": "Durduruldu",
+            "returning": "Dock'a geri d\u00f6n\u00fc\u015f"
+        }
+    },
+    "title": "Elektrikli s\u00fcp\u00fcrge"
+}

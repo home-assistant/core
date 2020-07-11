@@ -1,10 +1,7 @@
 {
   "domain": "sensehat",
-  "name": "Sensehat",
-  "documentation": "https://www.home-assistant.io/components/sensehat",
-  "requirements": [
-    "sense-hat==2.2.0"
-  ],
-  "dependencies": [],
+  "name": "Sense HAT",
+  "documentation": "https://www.home-assistant.io/integrations/sensehat",
+  "requirements": ["sense-hat==2.2.0"],
   "codeowners": []
 }

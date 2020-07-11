@@ -1,12 +1,10 @@
 {
   "domain": "axis",
   "name": "Axis",
-  "documentation": "https://www.home-assistant.io/components/axis",
-  "requirements": [
-    "axis==19"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@kane610"
-  ]
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/axis",
+  "requirements": ["axis==33"],
+  "zeroconf": ["_axis-video._tcp.local."],
+  "after_dependencies": ["mqtt"],
+  "codeowners": ["@Kane610"]
 }

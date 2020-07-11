@@ -1,0 +1,7 @@
+{
+  "domain": "doods",
+  "name": "DOODS - Distributed Outside Object Detection Service",
+  "documentation": "https://www.home-assistant.io/integrations/doods",
+  "requirements": ["pydoods==1.0.2", "pillow==7.1.2"],
+  "codeowners": []
+}

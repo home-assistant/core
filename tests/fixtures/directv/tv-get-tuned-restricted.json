@@ -1,0 +1,8 @@
+{
+  "status": {
+    "code": 403,
+    "commandResult": 1,
+    "msg": "Forbidden.",
+    "query": "/tv/getTuned"
+  }
+}

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Codi postal ja registrat",
+            "invalid_zip_code": "Codi postal incorrecte"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "zip_code": "Codi postal"
+                },
+                "description": "Introdueix el teu codi postal d'Estats Units o Canad\u00e0.",
+                "title": "IQVIA"
+            }
+        }
+    }
+}

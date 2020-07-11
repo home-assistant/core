@@ -1,0 +1,115 @@
+# Describes the ISY994-specific services available
+
+# Note: controlling many entity_ids with one call is not recommended since it may result in
+# flooding the ISY with requests. To control multiple devices with a service call
+# the recommendation is to add a scene in the ISY and control that scene.
+send_raw_node_command:
+  description: Send a "raw" ISY REST Device Command to a Node using its Home Assistant Entity ID.
+  fields:
+    entity_id:
+      description: Name of an entity to send command.
+      example: "light.front_door"
+    command:
+      description: The ISY REST Command to be sent to the device
+      example: "DON"
+    value:
+      description: (Optional) The integer value to be sent with the command.
+      example: 255
+    parameters:
+      description: (Optional) A dict of parameters to be sent in the query string (e.g. for controlling colored bulbs).
+      example: { GV2: 0, GV3: 0, GV4: 255 }
+    unit_of_measurement:
+      description: (Optional) The ISY Unit of Measurement (UOM) to send with the command, if required.
+      example: 67
+send_node_command:
+  description: >-
+    Send a command to an ISY Device using its Home Assistant entity ID. Valid commands are: beep, brighten, dim, disable,
+    enable, fade_down, fade_stop, fade_up, fast_off, fast_on, and query.
+  fields:
+    entity_id:
+      description: Name of an entity to send command.
+      example: "light.front_door"
+    command:
+      description: The command to be sent to the device.
+      example: "fast_on"
+set_on_level:
+  description: Send a ISY set_on_level command to a Node.
+  fields:
+    entity_id:
+      description: Name of an entity to send command.
+      example: "light.front_door"
+    value:
+      description: integer value to set (0-255).
+      example: 255
+set_ramp_rate:
+  description: Send a ISY set_ramp_rate command to a Node.
+  fields:
+    entity_id:
+      description: Name of an entity to send command.
+      example: "light.front_door"
+    value:
+      description: Integer value to set (0-31), see PyISY/ISY documentation for values to actual ramp times.
+      example: 30
+system_query:
+  description: Request the ISY Query the connected devices.
+  fields:
+    address:
+      description: (Optional) ISY Address to Query. Omitting this requests a system-wide scan (typically scheduled once per day).
+      example: "1A 2B 3C 1"
+    isy:
+      description: (Optional) If you have more than one ISY connected, provide the name of the ISY to query (as shown on the Device Registry or as the top-first node in the ISY Admin Console). Omitting this will cause all ISYs to be queried.
+      example: "ISY"
+set_variable:
+  description: Set an ISY variable's current or initial value. Variables can be set by either type/address or by name.
+  fields:
+    address:
+      description: The address of the variable for which to set the value.
+      example: 5
+    type:
+      description: The variable type, 1 = Integer, 2 = State.
+      example: 2
+    name:
+      description: (Optional) The name of the variable to set (use instead of type/address).
+      example: "my_variable_name"
+    init:
+      description: (Optional) If True, the initial (init) value will be updated instead of the current value.
+      example: false
+    value:
+      description: The integer value to be sent.
+      example: 255
+    isy:
+      description: (Optional) If you have more than one ISY connected, provide the name of the ISY to query (as shown on the Device Registry or as the top-first node in the ISY Admin Console).  If you have the same variable name or address on multiple ISYs, omitting this will run the command on them all.
+      example: "ISY"
+send_program_command:
+  description: >-
+    Send a command to control an ISY program or folder. Valid commands are run, run_then, run_else, stop, enable, disable,
+    enable_run_at_startup, and disable_run_at_startup.
+  fields:
+    address:
+      description: The address of the program to control (optional, use either address or name).
+      example: "04B1"
+    name:
+      description: The name of the program to control (optional, use either address or name).
+      example: "My Program"
+    command:
+      description: The ISY Program Command to be sent.
+      example: "run"
+    isy:
+      description: (Optional) If you have more than one ISY connected, provide the name of the ISY to query (as shown on the Device Registry or as the top-first node in the ISY Admin Console).  If you have the same program name or address on multiple ISYs, omitting this will run the command on them all.
+      example: "ISY"
+run_network_resource:
+  description: Run a network resource on the ISY.
+  fields:
+    address:
+      description: The address of the network resource to execute (optional, use either address or name).
+      example: 121
+    name:
+      description: The name of the network resource to execute (optional, use either address or name).
+      example: "Network Resource 1"
+    isy:
+      description: (Optional) If you have more than one ISY connected, provide the name of the ISY to query (as shown on the Device Registry or as the top-first node in the ISY Admin Console).  If you have the same resource name or address on multiple ISYs, omitting this will run the command on them all.
+      example: "ISY"
+reload:
+  description: Reload the ISY994 connection(s) without restarting Home Assistant. Use to pick up new devices that have been added or changed on the ISY.
+cleanup_entities:
+  description: Cleanup old entities and devices no longer used by the ISY994 integrations. Useful if you've removed devices from the ISY or changed the options in the configuration to exclude additional items.

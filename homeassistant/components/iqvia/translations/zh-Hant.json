@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "\u90f5\u905e\u5340\u865f\u5df2\u8a3b\u518a",
+            "invalid_zip_code": "\u90f5\u905e\u5340\u865f\u7121\u6548"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "zip_code": "\u90f5\u905e\u5340\u865f"
+                },
+                "description": "\u586b\u5beb\u7f8e\u570b\u6216\u52a0\u62ff\u5927\u90f5\u905e\u5340\u865f\u3002",
+                "title": "IQVIA"
+            }
+        }
+    }
+}

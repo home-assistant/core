@@ -1,12 +1,18 @@
 toggle:
   description: Toggle alert's notifications.
   fields:
-    entity_id: {description: Name of the alert to toggle., example: alert.garage_door_open}
+    entity_id:
+      description: Name of the alert to toggle.
+      example: alert.garage_door_open
 turn_off:
   description: Silence alert's notifications.
   fields:
-    entity_id: {description: Name of the alert to silence., example: alert.garage_door_open}
+    entity_id:
+      description: Name of the alert to silence.
+      example: alert.garage_door_open
 turn_on:
   description: Reset alert's notifications.
   fields:
-    entity_id: {description: Name of the alert to reset., example: alert.garage_door_open}
+    entity_id:
+      description: Name of the alert to reset.
+      example: alert.garage_door_open
