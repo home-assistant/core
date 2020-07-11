@@ -27,7 +27,7 @@ SENSORS = {
     "pH": {"unit": None, "icon": "mdi:pool", "name": "pH", "device_class": None},
     "Battery": {
         "unit": UNIT_PERCENTAGE,
-        "icon": "mdi:battery",
+        "icon": None,
         "name": "Battery",
         "device_class": DEVICE_CLASS_BATTERY,
     },
@@ -92,11 +92,6 @@ class PoolSenseSensor(PoolSenseEntity, Entity):
         return f"PoolSense {SENSORS[self.info_type]['name']}"
 
     @property
-    def should_poll(self):
-        """Return False, updates are controlled via coordinator."""
-        return False
-
-    @property
     def state(self):
         """State of the sensor."""
         return self.coordinator.data[self.info_type]
@@ -120,13 +115,3 @@ class PoolSenseSensor(PoolSenseEntity, Entity):
     def device_state_attributes(self):
         """Return device attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    async def async_update(self):
-        """Update status of sensor."""
-        await self.coordinator.async_request_refresh()
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
