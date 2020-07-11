@@ -1,7 +1,7 @@
 """Support for RFXtrx sensors."""
 import logging
 
-from RFXtrx import SensorEvent
+from RFXtrx import ControlEvent, SensorEvent
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     data_ids = set()
 
     def supported(event):
-        return isinstance(event, SensorEvent)
+        return isinstance(event, SensorEvent) or isinstance(event, ControlEvent)
 
     entities = []
     for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
