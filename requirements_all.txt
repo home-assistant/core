@@ -1211,7 +1211,7 @@ py_nextbusnext==0.1.4
 # py_noaa==0.3.0
 
 # homeassistant.components.ads
-pyads==3.0.7
+pyads==3.1.3
 
 # homeassistant.components.hisense_aehw4a1
 pyaehw4a1==0.3.5
