@@ -235,11 +235,8 @@ class Thermostat(HomeAccessory):
 
         serv_thermostat.setter_callback = self._set_chars
 
-    def _clamped_temperature_to_homekit(self, temp):
-        return min(
-            max(temperature_to_homekit(temp, self._unit), self.hc_min_temp),
-            self.hc_max_temp,
-        )
+    def _temperature_to_homekit(self, temp):
+        return temperature_to_homekit(temp, self._unit)
 
     def _temperature_to_states(self, temp):
         return temperature_to_states(temp, self._unit)
@@ -453,7 +450,7 @@ class Thermostat(HomeAccessory):
         # Update current temperature
         current_temp = new_state.attributes.get(ATTR_CURRENT_TEMPERATURE)
         if isinstance(current_temp, (int, float)):
-            current_temp = self._clamped_temperature_to_homekit(current_temp)
+            current_temp = self._temperature_to_homekit(current_temp)
             if self.char_current_temp.value != current_temp:
                 self.char_current_temp.set_value(current_temp)
 
@@ -475,7 +472,7 @@ class Thermostat(HomeAccessory):
         if self.char_cooling_thresh_temp:
             cooling_thresh = new_state.attributes.get(ATTR_TARGET_TEMP_HIGH)
             if isinstance(cooling_thresh, (int, float)):
-                cooling_thresh = self._clamped_temperature_to_homekit(cooling_thresh)
+                cooling_thresh = self._temperature_to_homekit(cooling_thresh)
                 if self.char_heating_thresh_temp.value != cooling_thresh:
                     self.char_cooling_thresh_temp.set_value(cooling_thresh)
 
@@ -483,14 +480,14 @@ class Thermostat(HomeAccessory):
         if self.char_heating_thresh_temp:
             heating_thresh = new_state.attributes.get(ATTR_TARGET_TEMP_LOW)
             if isinstance(heating_thresh, (int, float)):
-                heating_thresh = self._clamped_temperature_to_homekit(heating_thresh)
+                heating_thresh = self._temperature_to_homekit(heating_thresh)
                 if self.char_heating_thresh_temp.value != heating_thresh:
                     self.char_heating_thresh_temp.set_value(heating_thresh)
 
         # Update target temperature
         target_temp = new_state.attributes.get(ATTR_TEMPERATURE)
         if isinstance(target_temp, (int, float)):
-            target_temp = self._clamped_temperature_to_homekit(target_temp)
+            target_temp = self._temperature_to_homekit(target_temp)
         elif features & SUPPORT_TARGET_TEMPERATURE_RANGE:
             # Homekit expects a target temperature
             # even if the device does not support it
@@ -498,11 +495,11 @@ class Thermostat(HomeAccessory):
             if hc_hvac_mode == HC_HEAT_COOL_HEAT:
                 temp_low = new_state.attributes.get(ATTR_TARGET_TEMP_LOW)
                 if isinstance(temp_low, (int, float)):
-                    target_temp = self._clamped_temperature_to_homekit(temp_low)
+                    target_temp = self._temperature_to_homekit(temp_low)
             elif hc_hvac_mode == HC_HEAT_COOL_COOL:
                 temp_high = new_state.attributes.get(ATTR_TARGET_TEMP_HIGH)
                 if isinstance(temp_high, (int, float)):
-                    target_temp = self._clamped_temperature_to_homekit(temp_high)
+                    target_temp = self._temperature_to_homekit(temp_high)
         if target_temp and self.char_target_temp.value != target_temp:
             self.char_target_temp.set_value(target_temp)
 
@@ -611,7 +608,6 @@ class WaterHeater(HomeAccessory):
 
 def _get_temperature_range_from_state(state, unit, default_min, default_max):
     """Calculate the temperature range from a state."""
-
     min_temp = state.attributes.get(ATTR_MIN_TEMP)
     if min_temp:
         min_temp = round(temperature_to_homekit(min_temp, unit) * 2) / 2
@@ -623,8 +619,6 @@ def _get_temperature_range_from_state(state, unit, default_min, default_max):
         max_temp = round(temperature_to_homekit(max_temp, unit) * 2) / 2
     else:
         max_temp = default_max
-
-    _LOGGER.warning("min_temp, max_temp: %s %s", min_temp, max_temp)
 
     # Homekit only supports 10-38, overwriting
     # the max to appears to work, but less than 0 causes
