@@ -43,7 +43,13 @@ def xiaomi_aqara_fixture():
         yield
 
 
-def get_mock_discovery(host_list, invalid_interface=False, invalid_key=False):
+def get_mock_discovery(
+    host_list,
+    invalid_interface=False,
+    invalid_key=False,
+    invalid_host=False,
+    invalid_mac=False,
+):
     """Return a mock gateway info instance."""
     gateway_discovery = Mock()
 
@@ -55,6 +61,8 @@ def get_mock_discovery(host_list, invalid_interface=False, invalid_key=False):
         gateway.port = TEST_PORT
         gateway.sid = TEST_SID
         gateway.proto = TEST_PROTOCOL
+        gateway.connection_error = invalid_host
+        gateway.mac_error = invalid_mac
 
         if invalid_key:
             gateway.write_to_hub = Mock(return_value=False)
@@ -282,6 +290,66 @@ async def test_config_flow_user_invalid_interface(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "user"
     assert result["errors"] == {const.CONF_INTERFACE: "invalid_interface"}
+
+
+async def test_config_flow_user_invalid_host(hass):
+    """Test a failed config flow initialized by the user with an invalid host."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    mock_gateway_discovery = get_mock_discovery([TEST_HOST], invalid_host=True)
+
+    with patch(
+        "homeassistant.components.xiaomi_aqara.config_flow.XiaomiGateway",
+        return_value=mock_gateway_discovery.gateways[TEST_HOST],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE,
+                CONF_HOST: "0.0.0.0",
+                CONF_MAC: TEST_MAC,
+            },
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"host": "invalid_host"}
+
+
+async def test_config_flow_user_invalid_mac(hass):
+    """Test a failed config flow initialized by the user with an invalid mac."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    mock_gateway_discovery = get_mock_discovery([TEST_HOST], invalid_mac=True)
+
+    with patch(
+        "homeassistant.components.xiaomi_aqara.config_flow.XiaomiGateway",
+        return_value=mock_gateway_discovery.gateways[TEST_HOST],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE,
+                CONF_HOST: TEST_HOST,
+                CONF_MAC: "in:va:li:d0:0m:ac",
+            },
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"mac": "invalid_mac"}
 
 
 async def test_config_flow_user_invalid_key(hass):
