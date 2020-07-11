@@ -111,6 +111,7 @@ RESPONSE_USER_CODE_INVALID = {
     "ResultCode": "-4106",
     "ResultData": "testing user code invalid",
 }
+<<<<<<< HEAD
 RESPONSE_SUCCESS = {"ResultCode": TotalConnectClient.TotalConnectClient.SUCCESS}
 
 USERNAME = "username@me.com"
@@ -123,6 +124,8 @@ CONFIG_DATA = {
 }
 CONFIG_DATA_NO_USERCODES = {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
 
+=======
+>>>>>>> Add test for invalid usercode
 
 async def setup_platform(hass, platform):
     """Set up the TotalConnect platform."""

@@ -101,6 +101,25 @@ async def test_arm_home_invalid_usercode(hass):
         assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
 
 
+async def test_arm_home_invalid_usercode(hass):
+    """Test arm home method with invalid usercode."""
+    responses = [RESPONSE_DISARMED, RESPONSE_USER_CODE_INVALID, RESPONSE_DISARMED]
+    with patch(
+        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        side_effect=responses,
+    ):
+        await setup_platform(hass, ALARM_DOMAIN)
+        assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
+
+        with pytest.raises(Exception) as e:
+            await hass.services.async_call(
+                ALARM_DOMAIN, SERVICE_ALARM_ARM_HOME, DATA, blocking=True
+            )
+            await hass.async_block_till_done()
+        assert f"{e.value}" == "TotalConnect failed to arm home test."
+        assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
+
+
 async def test_arm_away_success(hass):
     """Test arm away method success."""
     responses = [RESPONSE_DISARMED, RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_AWAY]
