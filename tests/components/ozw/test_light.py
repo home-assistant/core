@@ -267,3 +267,33 @@ async def test_no_rgb_light(hass, light_no_rgb_data, light_msg, sent_messages):
     state = hass.states.get("light.master_bedroom_l_level")
     assert state is not None
     assert state.state == "off"
+
+
+async def test_no_ww_light(hass, light_no_ww_data, light_msg, sent_messages):
+    """Test setting up config entry."""
+    await setup_ozw(hass, fixture=light_no_ww_data)
+
+    # Test loaded no white level support
+    state = hass.states.get("light.led_bulb_6_multi_colour_level")
+    assert state is not None
+    assert state.state == "off"
+
+
+async def test_no_cw_light(hass, light_no_cw_data, light_msg, sent_messages):
+    """Test setting up config entry."""
+    await setup_ozw(hass, fixture=light_no_cw_data)
+
+    # Test loaded no white level support
+    state = hass.states.get("light.led_bulb_6_multi_colour_level")
+    assert state is not None
+    assert state.state == "off"
+
+
+async def test_wc_light(hass, light_wc_data, light_msg, sent_messages):
+    """Test setting up config entry."""
+    await setup_ozw(hass, fixture=light_wc_data)
+
+    # Test loaded no white level support
+    state = hass.states.get("light.led_bulb_6_multi_colour_level")
+    assert state is not None
+    assert state.state == "off"
