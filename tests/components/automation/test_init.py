@@ -1,6 +1,4 @@
 """The tests for the automation component."""
-from datetime import timedelta
-
 import pytest
 
 from homeassistant.components import logbook
@@ -23,12 +21,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.async_mock import Mock, patch
-from tests.common import (
-    assert_setup_component,
-    async_fire_time_changed,
-    async_mock_service,
-    mock_restore_cache,
-)
+from tests.common import assert_setup_component, async_mock_service, mock_restore_cache
 from tests.components.automation import common
 from tests.components.logbook.test_init import MockLazyEventPartialState
 
@@ -82,57 +75,6 @@ async def test_service_specify_data(hass, calls):
 
     assert len(calls) == 1
     assert calls[0].data["some"] == "event - test_event"
-    state = hass.states.get("automation.hello")
-    assert state is not None
-    assert state.attributes.get("last_triggered") == time
-
-
-async def test_action_delay(hass, calls):
-    """Test action delay."""
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "alias": "hello",
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "action": [
-                    {
-                        "service": "test.automation",
-                        "data_template": {
-                            "some": "{{ trigger.platform }} - "
-                            "{{ trigger.event.event_type }}"
-                        },
-                    },
-                    {"delay": {"minutes": "10"}},
-                    {
-                        "service": "test.automation",
-                        "data_template": {
-                            "some": "{{ trigger.platform }} - "
-                            "{{ trigger.event.event_type }}"
-                        },
-                    },
-                ],
-            }
-        },
-    )
-
-    time = dt_util.utcnow()
-
-    with patch("homeassistant.components.automation.utcnow", return_value=time):
-        hass.bus.async_fire("test_event")
-        await hass.async_block_till_done()
-
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "event - test_event"
-
-    future = dt_util.utcnow() + timedelta(minutes=10)
-    async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
-
-    assert len(calls) == 2
-    assert calls[1].data["some"] == "event - test_event"
-
     state = hass.states.get("automation.hello")
     assert state is not None
     assert state.attributes.get("last_triggered") == time
@@ -1070,42 +1012,3 @@ async def test_logbook_humanify_automation_triggered_event(hass):
     assert event2["domain"] == "automation"
     assert event2["message"] == "has been triggered"
     assert event2["entity_id"] == "automation.bye"
-
-
-invalid_configs = [
-    {
-        "mode": "parallel",
-        "queue_size": 5,
-        "trigger": {"platform": "event", "event_type": "test_event"},
-        "action": [],
-    },
-    {
-        "mode": "legacy",
-        "trigger": {"platform": "event", "event_type": "test_event"},
-        "action": [{"repeat": {"count": 5, "sequence": []}}],
-    },
-]
-
-
-@pytest.mark.parametrize("value", invalid_configs)
-async def test_invalid_configs(hass, value):
-    """Test invalid configurations."""
-    with assert_setup_component(0, automation.DOMAIN):
-        assert await async_setup_component(
-            hass, automation.DOMAIN, {automation.DOMAIN: value}
-        )
-
-
-async def test_config_legacy(hass, caplog):
-    """Test config defaulting to legacy mode."""
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "action": [],
-            }
-        },
-    )
-    assert "To continue using previous behavior, which is now deprecated" in caplog.text
