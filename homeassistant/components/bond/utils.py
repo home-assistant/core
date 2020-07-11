@@ -16,14 +16,19 @@ class BondDevice:
         self._attrs = attrs
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Get the name of this device."""
         return self._attrs["name"]
 
     @property
-    def type(self):
+    def type(self) -> str:
         """Get the type of this device."""
         return self._attrs["type"]
+
+    def supports_command(self, command: str) -> bool:
+        """Return True if this device supports specified command."""
+        actions: List[str] = self._attrs["actions"]
+        return command in actions
 
 
 def get_bond_devices(hass: HomeAssistant, bond: Bond) -> List[BondDevice]:
