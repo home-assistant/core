@@ -1112,8 +1112,8 @@ async def test_script_mode_2(hass, caplog, script_mode, messages, last_events):
             assert events[idx].data["value"] == value
 
 
-async def test_script_mode_queue(hass):
-    """Test overlapping runs with script_mode = 'queue' & max_runs > 1."""
+async def test_script_mode_queued(hass):
+    """Test overlapping runs with script_mode = 'queued' & max_runs > 1."""
     event = "test_event"
     events = async_capture_events(hass, event)
     sequence = cv.SCRIPT_SCHEMA(
@@ -1126,7 +1126,7 @@ async def test_script_mode_queue(hass):
     )
     logger = logging.getLogger("TEST")
     script_obj = script.Script(
-        hass, sequence, script_mode="queue", max_runs=2, logger=logger
+        hass, sequence, script_mode="queued", max_runs=2, logger=logger
     )
     wait_started_flag = async_watch_for_action(script_obj, "wait")
 
