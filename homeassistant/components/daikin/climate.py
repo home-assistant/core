@@ -222,7 +222,9 @@ class DaikinClimate(ClimateEntity):
     @property
     def preset_mode(self):
         """Return the preset_mode."""
-        device_preset_mode = self._api.device.represent(HA_ATTR_TO_DAIKIN[ATTR_PRESET_MODE])[1]
+        device_preset_mode = self._api.device.represent(
+            HA_ATTR_TO_DAIKIN[ATTR_PRESET_MODE]
+        )[1]
         if device_preset_mode == HA_PRESET_TO_DAIKIN[PRESET_AWAY]:
             return PRESET_AWAY
         return PRESET_NONE
