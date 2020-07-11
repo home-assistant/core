@@ -85,28 +85,33 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     None,
                 )
 
-                return await self.async_step_settings()
-
-            # Discover Xiaomi Aqara Gateways in the netwerk to get required SIDs.
-            xiaomi = XiaomiGatewayDiscovery(self.hass.add_job, [], self.interface)
-            try:
-                await self.hass.async_add_executor_job(xiaomi.discover_gateways)
-            except gaierror:
-                errors[CONF_INTERFACE] = "invalid_interface"
-
-            if not errors:
-                self.gateways = xiaomi.gateways
-
-                if len(self.gateways) == 1:
-                    self.selected_gateway = list(self.gateways.values())[0]
-                    self.sid = self.selected_gateway.sid
+                if self.selected_gateway.connection_error:
+                    errors[CONF_HOST] = "invalid_host"
+                elif self.selected_gateway.mac_error:
+                    errors[CONF_MAC] = "invalid_mac"
+                else:
                     return await self.async_step_settings()
-                if len(self.gateways) > 1:
-                    return await self.async_step_select()
+            else:
+                # Discover Xiaomi Aqara Gateways in the netwerk to get required SIDs.
+                xiaomi = XiaomiGatewayDiscovery(self.hass.add_job, [], self.interface)
+                try:
+                    await self.hass.async_add_executor_job(xiaomi.discover_gateways)
+                except gaierror:
+                    errors[CONF_INTERFACE] = "invalid_interface"
 
-                errors["base"] = "discovery_error"
+                if not errors:
+                    self.gateways = xiaomi.gateways
 
-        if self.host is None and self.sid is None:
+                    if len(self.gateways) == 1:
+                        self.selected_gateway = list(self.gateways.values())[0]
+                        self.sid = self.selected_gateway.sid
+                        return await self.async_step_settings()
+                    if len(self.gateways) > 1:
+                        return await self.async_step_select()
+
+                    errors["base"] = "discovery_error"
+
+        if (self.host is None and self.sid is None) or errors:
             schema = GATEWAY_CONFIG_HOST
         else:
             schema = GATEWAY_CONFIG

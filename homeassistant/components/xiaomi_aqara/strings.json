@@ -30,7 +30,9 @@
     "error": {
       "discovery_error": "Failed to discover a Xiaomi Aqara Gateway, try using the IP of the device running HomeAssistant as interface",
       "invalid_interface": "Invalid network interface",
-      "invalid_key": "Invalid gateway key"
+      "invalid_key": "Invalid gateway key",
+      "invalid_host": "Invalid [%key:common::config_flow::data::ip%]",
+      "invalid_mac": "Invalid Mac Address"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
