@@ -1872,3 +1872,11 @@ def test_render_complex_handling_non_template_values(hass):
     assert template.render_complex(
         {True: 1, False: template.Template("{{ hello }}", hass)}, {"hello": 2}
     ) == {True: 1, False: "2"}
+
+
+def test_urlencode(hass):
+    """Test the urlencode method."""
+    tpl = template.Template(
+        ("{% set dict = {'foo': 'x', 'bar': 42} %}" "{{ dict | urlencode }}"), hass,
+    )
+    assert tpl.async_render() == "foo=x&bar=42"
