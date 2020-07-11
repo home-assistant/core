@@ -162,15 +162,14 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         hs_color = kwargs.get(ATTR_HS_COLOR)
 
         if hs_color is not None:
-            hs_color = kwargs[ATTR_HS_COLOR]
             rgbw = "#"
             for colorval in color_util.color_hs_to_RGB(*hs_color):
                 rgbw += f"{colorval:02x}"
             rgbw += "0000"
             # white LED must be off in order for color to work
 
-        elif white is not None and rgbw is None:
-            rgbw = "#000000" + f"{white:02x}" + "00"
+        elif white is not None:
+            rgbw = f"#000000{white:02x}00"
 
         if rgbw and self.values.color:
             self.values.color.send_value(rgbw)
@@ -209,6 +208,7 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         # Warm white
         if self._color_channels & COLOR_CHANNEL_WARM_WHITE:
             warm_white = int(data[index : index + 2], 16)
+            self._white = warm_white
             index += 2
         else:
             warm_white = 0
@@ -216,15 +216,10 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         # Cold white
         if self._color_channels & COLOR_CHANNEL_COLD_WHITE:
             cold_white = int(data[index : index + 2], 16)
+            self._white = cold_white
             index += 2
         else:
             cold_white = 0
-
-        if self._color_channels & COLOR_CHANNEL_WARM_WHITE:
-            self._white = warm_white
-
-        elif self._color_channels & COLOR_CHANNEL_COLD_WHITE:
-            self._white = cold_white
 
         # If no rgb channels supported, report None.
         if not (
