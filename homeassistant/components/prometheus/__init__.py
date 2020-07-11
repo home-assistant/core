@@ -25,6 +25,7 @@ from homeassistant.const import (
     CONTENT_TYPE_TEXT_PLAIN,
     EVENT_STATE_CHANGED,
     STATE_ON,
+    STATE_UNAVAILABLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     UNIT_PERCENTAGE,
@@ -160,6 +161,15 @@ class PrometheusMetrics:
             "state_change", self.prometheus_cli.Counter, "The number of state changes"
         )
         metric.labels(**self._labels(state)).inc()
+
+        available_metric = self._metric(
+            "entity_available", self.prometheus_cli.Gauge, "Indicates if the entity is available (1=available,0=unavailable)"
+        )
+        if state.state == STATE_UNAVAILABLE:
+            available_value = 0
+        else:
+            available_value = 1
+        available_metric.labels(**self._labels(state)).set(available_value)
 
     def _handle_attributes(self, state):
         for key, value in state.attributes.items():
