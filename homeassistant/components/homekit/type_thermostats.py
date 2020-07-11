@@ -120,21 +120,12 @@ class Thermostat(HomeAccessory):
         self._state_updates = 0
         self.hc_homekit_to_hass = None
         self.hc_hass_to_homekit = None
-        min_temp, max_temp = self.get_temperature_range()
-
-        # Homekit only supports 10-38, overwriting
-        # the max to appears to work, but less than 0 causes
-        # a crash on the home app
-        hc_min_temp = max(min_temp, 0)
-        hc_max_temp = max_temp
-
-        min_humidity = self.hass.states.get(self.entity_id).attributes.get(
-            ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY
-        )
+        hc_min_temp, hc_max_temp = self.get_temperature_range()
 
         # Add additional characteristics if auto mode is supported
         self.chars = []
         state = self.hass.states.get(self.entity_id)
+        min_humidity = state.attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY)
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if features & SUPPORT_TARGET_TEMPERATURE_RANGE:
@@ -370,19 +361,12 @@ class Thermostat(HomeAccessory):
 
     def get_temperature_range(self):
         """Return min and max temperature range."""
-        max_temp = self.hass.states.get(self.entity_id).attributes.get(ATTR_MAX_TEMP)
-        max_temp = (
-            self._temperature_to_homekit(max_temp) if max_temp else DEFAULT_MAX_TEMP
+        return _get_temperature_range_from_state(
+            self.hass.states.get(self.entity_id),
+            self._unit,
+            DEFAULT_MIN_TEMP,
+            DEFAULT_MAX_TEMP,
         )
-        max_temp = round(max_temp * 2) / 2
-
-        min_temp = self.hass.states.get(self.entity_id).attributes.get(ATTR_MIN_TEMP)
-        min_temp = (
-            self._temperature_to_homekit(min_temp) if min_temp else DEFAULT_MIN_TEMP
-        )
-        min_temp = round(min_temp * 2) / 2
-
-        return min_temp, max_temp
 
     def set_target_humidity(self, value):
         """Set target humidity to value if call came from HomeKit."""
@@ -551,23 +535,12 @@ class WaterHeater(HomeAccessory):
 
     def get_temperature_range(self):
         """Return min and max temperature range."""
-        max_temp = self.hass.states.get(self.entity_id).attributes.get(ATTR_MAX_TEMP)
-        max_temp = (
-            temperature_to_homekit(max_temp, self._unit)
-            if max_temp
-            else DEFAULT_MAX_TEMP_WATER_HEATER
+        return _get_temperature_range_from_state(
+            self.hass.states.get(self.entity_id),
+            self._unit,
+            DEFAULT_MIN_TEMP_WATER_HEATER,
+            DEFAULT_MAX_TEMP_WATER_HEATER,
         )
-        max_temp = round(max_temp * 2) / 2
-
-        min_temp = self.hass.states.get(self.entity_id).attributes.get(ATTR_MIN_TEMP)
-        min_temp = (
-            temperature_to_homekit(min_temp, self._unit)
-            if min_temp
-            else DEFAULT_MIN_TEMP_WATER_HEATER
-        )
-        min_temp = round(min_temp * 2) / 2
-
-        return min_temp, max_temp
 
     def set_heat_cool(self, value):
         """Change operation mode to value if call came from HomeKit."""
@@ -609,3 +582,27 @@ class WaterHeater(HomeAccessory):
         operation_mode = new_state.state
         if operation_mode and self.char_target_heat_cool.value != 1:
             self.char_target_heat_cool.set_value(1)  # Heat
+
+
+def _get_temperature_range_from_state(state, unit, default_min, default_max):
+    """Calculate the temperature range from a state."""
+    min_temp = state.attributes.get(ATTR_MIN_TEMP)
+    if min_temp:
+        min_temp = round(temperature_to_homekit(min_temp, unit) * 2) / 2
+    else:
+        min_temp = default_min
+
+    max_temp = state.attributes.get(ATTR_MAX_TEMP)
+    if max_temp:
+        max_temp = round(temperature_to_homekit(max_temp, unit) * 2) / 2
+    else:
+        max_temp = default_max
+
+    # Homekit only supports 10-38, overwriting
+    # the max to appears to work, but less than 0 causes
+    # a crash on the home app
+    min_temp = max(min_temp, 0)
+    if min_temp > max_temp:
+        max_temp = min_temp
+
+    return min_temp, max_temp
