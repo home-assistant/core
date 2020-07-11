@@ -29,6 +29,11 @@ DEFAULT_INTERFACE = "any"
 GATEWAY_CONFIG = vol.Schema(
     {vol.Optional(CONF_INTERFACE, default=DEFAULT_INTERFACE): str}
 )
+CONFIG_HOST = {
+    vol.Optional(CONF_HOST): str,
+    vol.Optional(CONF_MAC): str,
+}
+GATEWAY_CONFIG_HOST = GATEWAY_CONFIG.extend(CONFIG_HOST)
 GATEWAY_SETTINGS = vol.Schema(
     {
         vol.Optional(CONF_KEY): vol.All(str, vol.Length(min=16, max=16)),
@@ -56,8 +61,17 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             self.interface = user_input[CONF_INTERFACE]
+            
+            # allow optional manual setting of host and mac
+            if self.host is None and self.sid is None: 
+                self.host = user_input.get(CONF_HOST)
+                mac_address = user_input.get(CONF_MAC)
+            
+                # format sid from mac_address
+                if mac_address is not None:
+                    self.sid = mac_address.replace(":", "").lower()
 
-            # if host is already known by zeroconf discovery
+            # if host is already known by zeroconf discovery or manual optional settings
             if self.host is not None and self.sid is not None:
                 # Connect to Xiaomi Aqara Gateway
                 self.selected_gateway = await self.hass.async_add_executor_job(
@@ -92,8 +106,13 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
                 errors["base"] = "discovery_error"
 
+        if self.host is None and self.sid is None:
+            schema = GATEWAY_CONFIG_HOST
+        else:
+            schema = GATEWAY_CONFIG
+
         return self.async_show_form(
-            step_id="user", data_schema=GATEWAY_CONFIG, errors=errors
+            step_id="user", data_schema=schema, errors=errors
         )
 
     async def async_step_select(self, user_input=None):
