@@ -61,11 +61,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     data_ids = set()
 
+    def supported(event):
+        return isinstance(event, SensorEvent)
+
     entities = []
     for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
         event = get_rfx_object(packet_id)
         if event is None:
             _LOGGER.error("Invalid device: %s", packet_id)
+            continue
+        if not supported(event):
             continue
 
         if entity_info[CONF_DATA_TYPE]:
@@ -89,7 +94,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     def sensor_update(event):
         """Handle sensor updates from the RFXtrx gateway."""
-        if not isinstance(event, SensorEvent):
+        if not supported(event):
             return
 
         device_id = get_device_id(event.device)

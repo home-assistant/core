@@ -10,18 +10,13 @@ from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_STATE,
-    CONF_BINARY_SENSORS,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
-    CONF_COVERS,
     CONF_DEVICE,
     CONF_DEVICE_CLASS,
     CONF_DEVICES,
     CONF_HOST,
-    CONF_LIGHTS,
     CONF_PORT,
-    CONF_SENSORS,
-    CONF_SWITCHES,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     POWER_WATT,
@@ -95,75 +90,26 @@ _LOGGER = logging.getLogger(__name__)
 DATA_RFXOBJECT = "rfxobject"
 
 
-STANDARD_PLATFORM_SCHEMA = vol.Schema(
+DEVICE_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_DEVICES, default={}): {
-            cv.string: vol.Schema(
-                {vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean}
-            )
-        },
-        vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
-        vol.Optional(
-            CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS
-        ): vol.Coerce(int),
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+        vol.Optional(CONF_OFF_DELAY): vol.Any(cv.time_period, cv.positive_timedelta),
+        vol.Optional(CONF_DATA_BITS): cv.positive_int,
+        vol.Optional(CONF_COMMAND_ON): cv.byte,
+        vol.Optional(CONF_COMMAND_OFF): cv.byte,
+        vol.Optional(CONF_DATA_TYPE, default=[]): vol.All(
+            cv.ensure_list, [vol.In(DATA_TYPES.keys())]
+        ),
     }
-)
-
-SENSOR_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_DEVICES, default={}): {
-            cv.string: vol.Schema(
-                {
-                    vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-                    vol.Optional(CONF_DATA_TYPE, default=[]): vol.All(
-                        cv.ensure_list, [vol.In(DATA_TYPES.keys())]
-                    ),
-                }
-            )
-        },
-        vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-BINARY_SENSOR_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_DEVICES, default={}): {
-            cv.string: vol.Schema(
-                {
-                    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-                    vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-                    vol.Optional(CONF_OFF_DELAY): vol.Any(
-                        cv.time_period, cv.positive_timedelta
-                    ),
-                    vol.Optional(CONF_DATA_BITS): cv.positive_int,
-                    vol.Optional(CONF_COMMAND_ON): cv.byte,
-                    vol.Optional(CONF_COMMAND_OFF): cv.byte,
-                }
-            )
-        },
-        vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
-    },
-    extra=vol.ALLOW_EXTRA,
 )
 
 BASE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEBUG, default=False): cv.boolean,
         vol.Optional(CONF_DUMMY, default=False): cv.boolean,
-        vol.Optional(
-            CONF_SWITCHES, default=STANDARD_PLATFORM_SCHEMA({})
-        ): STANDARD_PLATFORM_SCHEMA,
-        vol.Optional(
-            CONF_LIGHTS, default=STANDARD_PLATFORM_SCHEMA({})
-        ): STANDARD_PLATFORM_SCHEMA,
-        vol.Optional(
-            CONF_COVERS, default=STANDARD_PLATFORM_SCHEMA({})
-        ): STANDARD_PLATFORM_SCHEMA,
-        vol.Optional(CONF_SENSORS, default=SENSOR_SCHEMA({})): SENSOR_SCHEMA,
-        vol.Optional(
-            CONF_BINARY_SENSORS, default=BINARY_SENSOR_SCHEMA({})
-        ): BINARY_SENSOR_SCHEMA,
+        vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
+        vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
     }
 )
 
@@ -232,13 +178,11 @@ def setup(hass, config):
 
     hass.data[DATA_RFXOBJECT] = rfx_object
 
-    load_platform(hass, "switch", DOMAIN, config[DOMAIN][CONF_SWITCHES], config)
-    load_platform(hass, "light", DOMAIN, config[DOMAIN][CONF_LIGHTS], config)
-    load_platform(hass, "cover", DOMAIN, config[DOMAIN][CONF_COVERS], config)
-    load_platform(
-        hass, "binary_sensor", DOMAIN, config[DOMAIN][CONF_BINARY_SENSORS], config
-    )
-    load_platform(hass, "sensor", DOMAIN, config[DOMAIN][CONF_SENSORS], config)
+    load_platform(hass, "switch", DOMAIN, config[DOMAIN], config)
+    load_platform(hass, "light", DOMAIN, config[DOMAIN], config)
+    load_platform(hass, "cover", DOMAIN, config[DOMAIN], config)
+    load_platform(hass, "binary_sensor", DOMAIN, config[DOMAIN], config)
+    load_platform(hass, "sensor", DOMAIN, config[DOMAIN], config)
 
     return True
 

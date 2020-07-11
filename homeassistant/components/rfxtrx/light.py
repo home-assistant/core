@@ -38,6 +38,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     device_ids = set()
 
+    def supported(event):
+        return (
+            isinstance(event.device, rfxtrxmod.LightingDevice)
+            and event.device.known_to_be_dimmable
+        )
+
     # Add switch from config file
     entities = []
     for packet_id, entity_info in config[CONF_DEVICES].items():
@@ -45,6 +51,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if event is None:
             _LOGGER.error("Invalid device: %s", packet_id)
             continue
+        if not supported(event):
+            return
 
         device_id = get_device_id(event.device)
         if device_id in device_ids:
@@ -60,10 +68,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     def light_update(event):
         """Handle light updates from the RFXtrx gateway."""
-        if (
-            not isinstance(event.device, rfxtrxmod.LightingDevice)
-            or not event.device.known_to_be_dimmable
-        ):
+        if not supported(event):
             return
 
         device_id = get_device_id(event.device)

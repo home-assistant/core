@@ -54,11 +54,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     pt2262_devices = []
 
+    def supported(event):
+        return isinstance(event, rfxtrxmod.ControlEvent)
+
     for packet_id, entity in config[CONF_DEVICES].items():
         event = get_rfx_object(packet_id)
         if event is None:
             _LOGGER.error("Invalid device: %s", packet_id)
             continue
+        if not supported(event):
+            return
 
         device_id = get_device_id(event.device, data_bits=entity.get(CONF_DATA_BITS))
         if device_id in device_ids:
@@ -84,7 +89,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     def binary_sensor_update(event):
         """Call for control updates from the RFXtrx gateway."""
-        if not isinstance(event, rfxtrxmod.ControlEvent):
+        if not supported(event):
             return
 
         data_bits = _get_device_data_bits(event.device, device_bits)

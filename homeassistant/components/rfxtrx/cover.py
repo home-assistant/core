@@ -32,11 +32,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     device_ids = set()
 
+    def supported(event):
+        return (
+            isinstance(event.device, rfxtrxmod.LightingDevice)
+            and not event.device.known_to_be_dimmable
+            and event.device.known_to_be_rollershutter
+        )
+
     entities = []
     for packet_id, entity_info in config[CONF_DEVICES].items():
         event = get_rfx_object(packet_id)
         if event is None:
             _LOGGER.error("Invalid device: %s", packet_id)
+            continue
+        if not supported(event):
             continue
 
         device_id = get_device_id(event.device)
@@ -52,11 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     def cover_update(event):
         """Handle cover updates from the RFXtrx gateway."""
-        if (
-            not isinstance(event.device, rfxtrxmod.LightingDevice)
-            or event.device.known_to_be_dimmable
-            or not event.device.known_to_be_rollershutter
-        ):
+        if not supported(event):
             return
 
         device_id = get_device_id(event.device)
