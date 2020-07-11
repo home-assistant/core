@@ -204,7 +204,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Create the buienradar sensor."""
-
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     timeframe = config[CONF_TIMEFRAME]
@@ -236,7 +235,6 @@ class BrSensor(Entity):
 
     def __init__(self, sensor_type, client_name, coordinates):
         """Initialize the sensor."""
-
         self.client_name = client_name
         self._name = SENSOR_TYPES[sensor_type][0]
         self.type = sensor_type
@@ -428,7 +426,6 @@ class BrSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-
         if self.type.startswith(PRECIPITATION_FORECAST):
             result = {ATTR_ATTRIBUTION: self._attribution}
             if self._timeframe is not None:
