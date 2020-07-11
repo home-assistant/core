@@ -130,7 +130,7 @@ class Thermostat(HomeAccessory):
 
         _LOGGER.warning(
             "name: %s, hc_min_step: %s hc_max_temp %s",
-            self.name,
+            self.entity_id,
             self.hc_min_temp,
             self.hc_max_temp,
         )
