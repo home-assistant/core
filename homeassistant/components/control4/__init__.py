@@ -7,7 +7,6 @@ import re
 from aiohttp import client_exceptions
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
-from pyControl4.error_handling import Unauthorized
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -58,7 +57,6 @@ async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Control4 from a config entry."""
-
     entry_data = hass.data[DOMAIN].setdefault(entry.entry_id, {})
 
     config = entry.data

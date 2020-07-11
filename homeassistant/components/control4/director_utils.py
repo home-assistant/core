@@ -22,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 async def director_update_data(
     hass: HomeAssistant, entry: ConfigEntry, var: str
 ) -> dict:
+    """Retrieve data from the Control4 director for update_coordinator."""
     try:
         director = hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR]
         data = await director.getAllItemVariableValue(var)
@@ -37,6 +38,7 @@ async def director_update_data(
 
 
 async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
+    """Store updated authentication and director tokens in hass.data."""
     config = entry.data
     account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD])
     controller_name = config[CONF_CONTROLLER_NAME]

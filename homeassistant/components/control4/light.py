@@ -20,7 +20,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from . import Control4Entity, get_items_of_category
 from .const import (
-    CONF_DIRECTOR,
     CONF_LIGHT_COLD_START_TRANSITION_TIME,
     CONF_LIGHT_TRANSITION_TIME,
     DOMAIN,
