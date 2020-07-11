@@ -25,6 +25,8 @@ DEFAULT_CONSIDER_HOME = timedelta(seconds=180)
 
 CONF_NEW_DEVICE_DEFAULTS = "new_device_defaults"
 
+CONF_LOCATION_NAME = "location_name"
+
 ATTR_ATTRIBUTES = "attributes"
 ATTR_BATTERY = "battery"
 ATTR_DEV_ID = "dev_id"

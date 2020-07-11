@@ -15,6 +15,7 @@ from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_LOCATION_NAME,
     CONF_SCAN_INTERVAL,
     DOMAIN,
     LOGGER,
@@ -140,7 +141,7 @@ def async_setup_scanner_platform(
     This method must be run in the event loop.
     """
     interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
-    location_name = config.get("location_name", None)
+    location_name = config.get(CONF_LOCATION_NAME, None)
     update_lock = asyncio.Lock()
     scanner.hass = hass
 
