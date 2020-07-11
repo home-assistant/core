@@ -1,3 +1,5 @@
+-c homeassistant/package_constraints.txt
+
 # Home Assistant Core
 aiohttp==3.6.1
 astral==1.10.1
