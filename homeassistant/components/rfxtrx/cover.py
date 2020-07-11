@@ -1,8 +1,6 @@
 """Support for RFXtrx covers."""
 import logging
 
-import RFXtrx as rfxtrxmod
-
 from homeassistant.components.cover import CoverEntity
 from homeassistant.const import ATTR_STATE, CONF_DEVICES, STATE_OPEN
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -33,11 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     device_ids = set()
 
     def supported(event):
-        return (
-            isinstance(event.device, rfxtrxmod.LightingDevice)
-            and not event.device.known_to_be_dimmable
-            and event.device.known_to_be_rollershutter
-        )
+        return event.device.known_to_be_rollershutter
 
     entities = []
     for packet_id, entity_info in config[CONF_DEVICES].items():
