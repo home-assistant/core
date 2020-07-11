@@ -39,11 +39,9 @@ ATTR_AUTOMATIC_ADD = "automatic_add"
 ATTR_DEVICE = "device"
 ATTR_DEBUG = "debug"
 ATTR_FIRE_EVENT = "fire_event"
-ATTR_DATA_TYPE = "data_type"
 ATTR_DUMMY = "dummy"
 CONF_DATA_BITS = "data_bits"
 CONF_AUTOMATIC_ADD = "automatic_add"
-CONF_DATA_TYPE = "data_type"
 CONF_SIGNAL_REPETITIONS = "signal_repetitions"
 CONF_FIRE_EVENT = "fire_event"
 CONF_DUMMY = "dummy"
@@ -98,9 +96,6 @@ DEVICE_SCHEMA = vol.Schema(
         vol.Optional(CONF_DATA_BITS): cv.positive_int,
         vol.Optional(CONF_COMMAND_ON): cv.byte,
         vol.Optional(CONF_COMMAND_OFF): cv.byte,
-        vol.Optional(CONF_DATA_TYPE, default=[]): vol.All(
-            cv.ensure_list, [vol.In(DATA_TYPES.keys())]
-        ),
         vol.Optional(CONF_SIGNAL_REPETITIONS, default=1): cv.positive_int,
     }
 )

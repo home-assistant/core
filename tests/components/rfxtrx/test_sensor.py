@@ -24,7 +24,7 @@ async def test_one_sensor(hass, rfxtrx):
             "rfxtrx": {
                 "device": "abcd",
                 "dummy": True,
-                "devices": {"0a52080705020095220269": {"data_type": "Temperature"}},
+                "devices": {"0a52080705020095220269": {}},
             }
         },
     )
@@ -99,10 +99,8 @@ async def test_several_sensors(hass, rfxtrx):
                 "device": "abcd",
                 "dummy": True,
                 "devices": {
-                    "0a52080705020095220269": {"data_type": "Temperature"},
-                    "0a520802060100ff0e0269": {
-                        "data_type": ["Temperature", "Humidity"]
-                    },
+                    "0a52080705020095220269": {},
+                    "0a520802060100ff0e0269": {},
                 },
             }
         },
@@ -247,10 +245,8 @@ async def test_update_of_sensors(hass, rfxtrx):
                 "device": "abcd",
                 "dummy": True,
                 "devices": {
-                    "0a52080705020095220269": {"data_type": "Temperature"},
-                    "0a520802060100ff0e0269": {
-                        "data_type": ["Temperature", "Humidity"]
-                    },
+                    "0a52080705020095220269": {},
+                    "0a520802060100ff0e0269": {},
                 },
             }
         },
@@ -268,8 +264,6 @@ async def test_update_of_sensors(hass, rfxtrx):
     state = hass.states.get("sensor.wt260_wt260h_wt440h_wt450_wt450h_06_01_humidity")
     assert state
     assert state.state == "unknown"
-
-    assert len(hass.states.async_all()) == 3
 
     await _signal_event(hass, "0a520802060101ff0f0269")
     await _signal_event(hass, "0a52080705020085220269")

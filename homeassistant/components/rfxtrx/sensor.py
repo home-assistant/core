@@ -14,7 +14,6 @@ from homeassistant.helpers.entity import Entity
 
 from . import (
     CONF_AUTOMATIC_ADD,
-    CONF_DATA_TYPE,
     CONF_FIRE_EVENT,
     DATA_TYPES,
     SIGNAL_EVENT,
@@ -72,13 +71,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if not supported(event):
             continue
 
-        if entity_info[CONF_DATA_TYPE]:
-            data_types = entity_info[CONF_DATA_TYPE]
-        else:
-            data_types = list(set(event.values) & set(DATA_TYPES))
-
         device_id = get_device_id(event.device)
-        for data_type in data_types:
+        for data_type in set(event.values) & set(DATA_TYPES):
             data_id = (*device_id, data_type)
             if data_id in data_ids:
                 continue
