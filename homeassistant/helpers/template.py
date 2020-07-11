@@ -947,7 +947,7 @@ def relative_time(value):
 
 
 def urlencode(value):
-    """urlencode dictionary and return as UTF-8 string."""
+    """Urlencode dictionary and return as UTF-8 string."""
     return urllib_urlencode(value).encode("utf-8")
 
 
