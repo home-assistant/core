@@ -35,11 +35,7 @@ DOMAIN = "rfxtrx"
 
 DEFAULT_SIGNAL_REPETITIONS = 1
 
-ATTR_AUTOMATIC_ADD = "automatic_add"
-ATTR_DEVICE = "device"
-ATTR_DEBUG = "debug"
 ATTR_FIRE_EVENT = "fire_event"
-ATTR_DUMMY = "dummy"
 CONF_DATA_BITS = "data_bits"
 CONF_AUTOMATIC_ADD = "automatic_add"
 CONF_SIGNAL_REPETITIONS = "signal_repetitions"
@@ -140,11 +136,11 @@ def setup(hass, config):
         # Callback to HA registered components.
         hass.helpers.dispatcher.dispatcher_send(SIGNAL_EVENT, event)
 
-    device = config[DOMAIN].get(ATTR_DEVICE)
+    device = config[DOMAIN].get(CONF_DEVICE)
     host = config[DOMAIN].get(CONF_HOST)
     port = config[DOMAIN].get(CONF_PORT)
-    debug = config[DOMAIN][ATTR_DEBUG]
-    dummy_connection = config[DOMAIN][ATTR_DUMMY]
+    debug = config[DOMAIN][CONF_DEBUG]
+    dummy_connection = config[DOMAIN][CONF_DUMMY]
 
     if dummy_connection:
         rfx_object = rfxtrxmod.Connect(
