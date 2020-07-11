@@ -90,47 +90,7 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         if self.values.color is None and self.values.color_channels is None:
             return
 
-        # Color Channels
-        self._color_channels = self.values.color_channels.data[ATTR_VALUE]
-
-        # Color Data String
-        data = self.values.color.data[ATTR_VALUE]
-
-        # RGB is always present in the openzwave color data string.
-        rgb = [int(data[1:3], 16), int(data[3:5], 16), int(data[5:7], 16)]
-        self._hs = color_util.color_RGB_to_hs(*rgb)
-
-        # Parse remaining color channels. Openzwave appends white channels
-        # that are present.
-        index = 7
-
-        # Warm white
-        if self._color_channels & COLOR_CHANNEL_WARM_WHITE:
-            warm_white = int(data[index : index + 2], 16)
-            index += 2
-        else:
-            warm_white = 0
-
-        # Cold white
-        if self._color_channels & COLOR_CHANNEL_COLD_WHITE:
-            cold_white = int(data[index : index + 2], 16)
-            index += 2
-        else:
-            cold_white = 0
-
-        if self._color_channels & COLOR_CHANNEL_WARM_WHITE:
-            self._white = warm_white
-
-        elif self._color_channels & COLOR_CHANNEL_COLD_WHITE:
-            self._white = cold_white
-
-        # If no rgb channels supported, report None.
-        if not (
-            self._color_channels & COLOR_CHANNEL_RED
-            or self._color_channels & COLOR_CHANNEL_GREEN
-            or self._color_channels & COLOR_CHANNEL_BLUE
-        ):
-            self._hs = None
+        self.__calculate_rgb_values()
 
     @property
     def brightness(self):
@@ -227,3 +187,46 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         self.async_set_duration(**kwargs)
 
         self.values.primary.send_value(0)
+
+    def __calculate_rgb_values(self):
+        # Color Channels
+        self._color_channels = self.values.color_channels.data[ATTR_VALUE]
+
+        # Color Data String
+        data = self.values.color.data[ATTR_VALUE]
+
+        # RGB is always present in the openzwave color data string.
+        rgb = [int(data[1:3], 16), int(data[3:5], 16), int(data[5:7], 16)]
+        self._hs = color_util.color_RGB_to_hs(*rgb)
+
+        # Parse remaining color channels. Openzwave appends white channels
+        # that are present.
+        index = 7
+
+        # Warm white
+        if self._color_channels & COLOR_CHANNEL_WARM_WHITE:
+            warm_white = int(data[index : index + 2], 16)
+            index += 2
+        else:
+            warm_white = 0
+
+        # Cold white
+        if self._color_channels & COLOR_CHANNEL_COLD_WHITE:
+            cold_white = int(data[index : index + 2], 16)
+            index += 2
+        else:
+            cold_white = 0
+
+        if self._color_channels & COLOR_CHANNEL_WARM_WHITE:
+            self._white = warm_white
+
+        elif self._color_channels & COLOR_CHANNEL_COLD_WHITE:
+            self._white = cold_white
+
+        # If no rgb channels supported, report None.
+        if not (
+            self._color_channels & COLOR_CHANNEL_RED
+            or self._color_channels & COLOR_CHANNEL_GREEN
+            or self._color_channels & COLOR_CHANNEL_BLUE
+        ):
+            self._hs = None
