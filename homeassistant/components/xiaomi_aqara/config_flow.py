@@ -61,12 +61,12 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             self.interface = user_input[CONF_INTERFACE]
-            
+
             # allow optional manual setting of host and mac
-            if self.host is None and self.sid is None: 
+            if self.host is None and self.sid is None:
                 self.host = user_input.get(CONF_HOST)
                 mac_address = user_input.get(CONF_MAC)
-            
+
                 # format sid from mac_address
                 if mac_address is not None:
                     self.sid = mac_address.replace(":", "").lower()
@@ -111,9 +111,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             schema = GATEWAY_CONFIG
 
-        return self.async_show_form(
-            step_id="user", data_schema=schema, errors=errors
-        )
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_select(self, user_input=None):
         """Handle multiple aqara gateways found."""
