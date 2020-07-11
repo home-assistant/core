@@ -15,25 +15,19 @@ from .common import setup_platform
 
 from tests.async_mock import patch
 
-TEST_DEVICE_IDS = ["device-1"]
-TEST_FAN_DEVICE = {
-    "name": "name-1",
-    "type": BOND_DEVICE_TYPE_CEILING_FAN,
-    "actions": ["SetSpeed"],
-}
+
+def ceiling_fan(name: str):
+    """Create a ceiling fan with given name."""
+    return {
+        "name": name,
+        "type": BOND_DEVICE_TYPE_CEILING_FAN,
+        "actions": ["SetSpeed"],
+    }
 
 
 async def test_entity_registry(hass: core.HomeAssistant):
     """Tests that the devices are registered in the entity registry."""
-
-    with patch(
-        "homeassistant.components.bond.Bond.getDeviceIds", return_value=TEST_DEVICE_IDS
-    ), patch(
-        "homeassistant.components.bond.Bond.getDevice", return_value=TEST_FAN_DEVICE
-    ), patch(
-        "homeassistant.components.bond.Bond.getDeviceState", return_value={}
-    ):
-        await setup_platform(hass, FAN_DOMAIN)
+    await setup_platform(hass, FAN_DOMAIN, ceiling_fan("name-1"))
 
     registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
     assert [key for key in registry.entities.keys()] == ["fan.name_1"]
@@ -41,15 +35,7 @@ async def test_entity_registry(hass: core.HomeAssistant):
 
 async def test_turn_on_fan(hass: core.HomeAssistant):
     """Tests that turn on command delegates to API."""
-
-    with patch(
-        "homeassistant.components.bond.Bond.getDeviceIds", return_value=TEST_DEVICE_IDS
-    ), patch(
-        "homeassistant.components.bond.Bond.getDevice", return_value=TEST_FAN_DEVICE
-    ), patch(
-        "homeassistant.components.bond.Bond.getDeviceState", return_value={}
-    ):
-        await setup_platform(hass, FAN_DOMAIN)
+    await setup_platform(hass, FAN_DOMAIN, ceiling_fan("name-1"))
 
     with patch("homeassistant.components.bond.Bond.turnOn") as mock_turn_on, patch(
         "homeassistant.components.bond.Bond.setSpeed"
@@ -68,15 +54,7 @@ async def test_turn_on_fan(hass: core.HomeAssistant):
 
 async def test_turn_off_fan(hass: core.HomeAssistant):
     """Tests that turn off command delegates to API."""
-
-    with patch(
-        "homeassistant.components.bond.Bond.getDeviceIds", return_value=TEST_DEVICE_IDS
-    ), patch(
-        "homeassistant.components.bond.Bond.getDevice", return_value=TEST_FAN_DEVICE
-    ), patch(
-        "homeassistant.components.bond.Bond.getDeviceState", return_value={}
-    ):
-        await setup_platform(hass, FAN_DOMAIN)
+    await setup_platform(hass, FAN_DOMAIN, ceiling_fan("name-1"))
 
     with patch("homeassistant.components.bond.Bond.turnOff") as mock_turn_off:
         await hass.services.async_call(
@@ -88,15 +66,7 @@ async def test_turn_off_fan(hass: core.HomeAssistant):
 
 async def test_update_reports_fan_on(hass: core.HomeAssistant):
     """Tests that update command sets correct state when Bond API reports fan power is on."""
-
-    with patch(
-        "homeassistant.components.bond.Bond.getDeviceIds", return_value=TEST_DEVICE_IDS
-    ), patch(
-        "homeassistant.components.bond.Bond.getDevice", return_value=TEST_FAN_DEVICE
-    ), patch(
-        "homeassistant.components.bond.Bond.getDeviceState", return_value={}
-    ):
-        await setup_platform(hass, FAN_DOMAIN)
+    await setup_platform(hass, FAN_DOMAIN, ceiling_fan("name-1"))
 
     with patch(
         "homeassistant.components.bond.Bond.getDeviceState",
@@ -110,15 +80,7 @@ async def test_update_reports_fan_on(hass: core.HomeAssistant):
 
 async def test_update_reports_fan_off(hass: core.HomeAssistant):
     """Tests that update command sets correct state when Bond API reports fan power is off."""
-
-    with patch(
-        "homeassistant.components.bond.Bond.getDeviceIds", return_value=TEST_DEVICE_IDS
-    ), patch(
-        "homeassistant.components.bond.Bond.getDevice", return_value=TEST_FAN_DEVICE
-    ), patch(
-        "homeassistant.components.bond.Bond.getDeviceState", return_value={}
-    ):
-        await setup_platform(hass, FAN_DOMAIN)
+    await setup_platform(hass, FAN_DOMAIN, ceiling_fan("name-1"))
 
     with patch(
         "homeassistant.components.bond.Bond.getDeviceState",
