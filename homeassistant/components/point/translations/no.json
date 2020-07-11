@@ -23,8 +23,8 @@
                 "data": {
                     "flow_impl": "Tilbyder"
                 },
-                "description": "Velg fra hvilken godkjenningsleverand\u00f8r du vil godkjenne med Point.",
-                "title": "Godkjenningsleverand\u00f8r"
+                "description": "\u00d8nsker du \u00e5 starte oppsettet?",
+                "title": "Velg godkjenningsleverand\u00f8r"
             }
         }
     }
