@@ -14,4 +14,9 @@ COMMAND_OFF_LIST = [
     "Down",
     "Close (inline relay)",
 ]
+
+ATTR_EVENT = "event"
+
+SERVICE_SEND = "send"
+
 DEVICE_PACKET_TYPE_LIGHTING4 = 0x13

@@ -29,7 +29,7 @@ from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-from .const import DEVICE_PACKET_TYPE_LIGHTING4
+from .const import ATTR_EVENT, DEVICE_PACKET_TYPE_LIGHTING4, SERVICE_SEND
 
 DOMAIN = "rfxtrx"
 
@@ -83,6 +83,16 @@ DATA_TYPES = OrderedDict(
 _LOGGER = logging.getLogger(__name__)
 DATA_RFXOBJECT = "rfxobject"
 
+
+def _bytearray_string(data):
+    val = cv.string(data)
+    try:
+        return bytearray.fromhex(val)
+    except ValueError:
+        raise vol.Invalid("Data must be a hex string with multiple of two characters")
+
+
+SERVICE_SEND_SCHEMA = vol.Schema({ATTR_EVENT: _bytearray_string})
 
 DEVICE_SCHEMA = vol.Schema(
     {
@@ -175,6 +185,12 @@ def setup(hass, config):
     load_platform(hass, "cover", DOMAIN, config[DOMAIN], config)
     load_platform(hass, "binary_sensor", DOMAIN, config[DOMAIN], config)
     load_platform(hass, "sensor", DOMAIN, config[DOMAIN], config)
+
+    def send(call):
+        event = call.data[ATTR_EVENT]
+        rfx_object.transport.send(event)
+
+    hass.services.async_register(DOMAIN, SERVICE_SEND, send, schema=SERVICE_SEND_SCHEMA)
 
     return True
 
