@@ -152,7 +152,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
         self._clean_error_time = None
         self._launched_from = None
         self._battery_level = None
-        self._robot_boundaries = {}
+        self._robot_boundaries = []
         self._robot_stats = None
 
     def update(self):
@@ -242,7 +242,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
         ):
             allmaps = self._robot_maps[self._robot_serial]
             _LOGGER.debug("Found the following maps for '%s': %s", self._name, allmaps)
-            self._robot_boundaries = {}  # Reset boundaries before refreshing boundaries
+            self._robot_boundaries = []  # Reset boundaries before refreshing boundaries
             for maps in allmaps:
                 try:
                     robot_boundaries = self.robot.get_map_boundaries(maps["id"]).json()
@@ -256,12 +256,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
                     maps["name"],
                     robot_boundaries,
                 )
-                if self._robot_boundaries == {}:
-                    self._robot_boundaries = robot_boundaries
-                else:
-                    self._robot_boundaries["data"]["boundaries"] += robot_boundaries[
-                        "data"
-                    ]["boundaries"]
+                self._robot_boundaries += robot_boundaries["data"]["boundaries"]
                 _LOGGER.debug(
                     "List of boundaries for '%s': %s",
                     self._name,
@@ -395,7 +390,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
         """Zone cleaning service call."""
         boundary_id = None
         if zone is not None:
-            for boundary in self._robot_boundaries["data"]["boundaries"]:
+            for boundary in self._robot_boundaries:
                 if zone in boundary["name"]:
                     boundary_id = boundary["id"]
             if boundary_id is None:
