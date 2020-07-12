@@ -127,9 +127,6 @@ async def async_setup(hass, config):
     netdisco = NetworkDiscovery()
     already_discovered = set()
 
-    # Disable zeroconf logging, it spams
-    logging.getLogger("zeroconf").setLevel(logging.CRITICAL)
-
     if DOMAIN in config:
         # Platforms ignore by config
         ignored_platforms = config[DOMAIN][CONF_IGNORE]

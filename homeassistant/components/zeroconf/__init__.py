@@ -14,7 +14,6 @@ from zeroconf import (
     ServiceInfo,
     ServiceStateChange,
     Zeroconf,
-    log as zeroconf_log,
 )
 
 from homeassistant import util
@@ -26,6 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.logging import restore_log_level, set_default_log_level
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.singleton import singleton
 
@@ -115,11 +115,14 @@ class HaZeroconf(Zeroconf):
 
 def setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
-    # Zeroconf sets its log level to WARNING, reset it to allow filtering by the logger component.
-    zeroconf_log.setLevel(logging.NOTSET)
     zeroconf = hass.data[DOMAIN] = _get_instance(
         hass, config.get(DOMAIN, {}).get(CONF_DEFAULT_INTERFACE)
     )
+    # Zeroconf sets its log level to WARNING, restore it to allow filtering by the logger component.
+    restore_log_level(hass, "zeroconf")
+
+    # ..and if we are not filtering in logger make sure it is set to warning
+    set_default_log_level(hass, "zeroconf", logging.WARNING)
 
     # Get instance UUID
     uuid = asyncio.run_coroutine_threadsafe(

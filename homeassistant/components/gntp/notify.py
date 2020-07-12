@@ -14,12 +14,9 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_PORT
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.logging import set_default_log_level
 
 _LOGGER = logging.getLogger(__name__)
-
-_GNTP_LOGGER = logging.getLogger("gntp")
-_GNTP_LOGGER.setLevel(logging.ERROR)
-
 
 CONF_APP_NAME = "app_name"
 CONF_APP_ICON = "app_icon"
@@ -42,6 +39,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_service(hass, config, discovery_info=None):
     """Get the GNTP notification service."""
+
+    set_default_log_level(hass, "gntp", logging.ERROR)
+
     if config.get(CONF_APP_ICON) is None:
         icon_file = os.path.join(
             os.path.dirname(__file__),
