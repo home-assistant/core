@@ -79,9 +79,9 @@ class SmartTubAPI:
         data = defaultdict(dict)
         try:
             for spa_id, spa in self._spas.items():
-                data[spa.id]["status"] = await spa.get_status()
-        except smarttub.APIError as e:
-            raise UpdateFailed(e)
+                data[spa_id]["status"] = await spa.get_status()
+        except smarttub.APIError as err:
+            raise UpdateFailed(err)
 
         return data
 
@@ -135,9 +135,9 @@ class SmartTubAPI:
 
 async def validate_credentials(hass, email, password):
     """Check if the specified credentials are valid for authenticating to SmartTub."""
-    st = smarttub.SmartTub(async_get_clientsession(hass))
+    api = smarttub.SmartTub(async_get_clientsession(hass))
     try:
-        await st.login(email, password)
+        await api.login(email, password)
     except smarttub.LoginFailed:
         return False
     return True

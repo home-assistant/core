@@ -10,7 +10,6 @@ from .const import DOMAIN, SMARTTUB_API
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO: light, switch, ...
 PLATFORMS = ["sensor"]
 
 
@@ -33,13 +32,13 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Set up a smarttub config entry."""
 
-    st = SmartTubAPI(hass, entry)
+    api = SmartTubAPI(hass, entry)
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.unique_id] = {
-        SMARTTUB_API: st,
+        SMARTTUB_API: api,
     }
 
-    await st.async_setup()
+    await api.async_setup()
 
     for platform in PLATFORMS:
         hass.async_create_task(
