@@ -30,6 +30,7 @@ class MockAioSession:
         )
 
     def set_credentials(self, access_key, secret_key):
+        """Mock setting session credentials."""
         return True
 
 
