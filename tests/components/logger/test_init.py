@@ -37,6 +37,8 @@ async def test_logger_test_filters(hass):
     """Test resulting filter operation."""
     log_filter = await async_setup_logger(hass, TEST_CONFIG)
 
+    assert logging.getLogger("").isEnabledFor(logging.DEBUG) is True
+
     # Blocked default record
     assert not log_filter.filter(RECORD("asdf", logging.DEBUG))
 
@@ -66,12 +68,26 @@ async def test_set_filter_empty_config(hass):
     """Test change log level from empty configuration."""
     log_filter = await async_setup_logger(hass, NO_LOGS_CONFIG)
 
+    assert logging.getLogger("").isEnabledFor(logging.DEBUG) is False
+
     assert not log_filter.filter(RECORD("test", logging.DEBUG))
+
+    await hass.services.async_call(
+        logger.DOMAIN, "set_default_level", {"level": "warning"}
+    )
+    await hass.async_block_till_done()
+
+    assert not log_filter.filter(RECORD("test", logging.DEBUG))
+
+    assert logging.getLogger("").isEnabledFor(logging.DEBUG) is False
+    assert logging.getLogger("").isEnabledFor(logging.WARNING) is True
 
     await hass.services.async_call(logger.DOMAIN, "set_level", {"test": "debug"})
     await hass.async_block_till_done()
 
     assert log_filter.filter(RECORD("test", logging.DEBUG))
+
+    assert logging.getLogger("").isEnabledFor(logging.DEBUG) is True
 
 
 async def test_set_filter(hass):
@@ -94,6 +110,9 @@ async def test_set_default_filter_empty_config(hass):
     """Test change default log level from empty configuration."""
     log_filter = await async_setup_logger(hass, NO_DEFAULT_CONFIG)
 
+    assert logging.getLogger("").isEnabledFor(logging.DEBUG) is True
+    assert logging.getLogger("").isEnabledFor(logging.WARNING) is True
+
     assert log_filter.filter(RECORD("test", logging.DEBUG))
 
     await hass.services.async_call(
@@ -102,6 +121,10 @@ async def test_set_default_filter_empty_config(hass):
     await hass.async_block_till_done()
 
     assert not log_filter.filter(RECORD("test", logging.DEBUG))
+
+    assert logging.getLogger("").isEnabledFor(logging.DEBUG) is False
+    assert logging.getLogger("").isEnabledFor(logging.INFO) is False
+    assert logging.getLogger("").isEnabledFor(logging.WARNING) is True
 
 
 async def test_set_default_filter(hass):

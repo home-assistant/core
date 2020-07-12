@@ -141,6 +141,7 @@ async def async_setup_hass(
 
         safe_mode = True
         old_config = hass.config
+
         hass = core.HomeAssistant()
         hass.config.skip_pip = old_config.skip_pip
         hass.config.internal_url = old_config.internal_url
@@ -378,7 +379,7 @@ async def _async_log_pending_setups(
         remaining = [domain for domain in domains if domain in setup_started]
 
         if remaining:
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Waiting on integrations to complete setup: %s", ", ".join(remaining),
             )
 

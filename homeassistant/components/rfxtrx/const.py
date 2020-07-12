@@ -14,3 +14,4 @@ COMMAND_OFF_LIST = [
     "Down",
     "Close (inline relay)",
 ]
+DEVICE_PACKET_TYPE_LIGHTING4 = 0x13

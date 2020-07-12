@@ -13,5 +13,26 @@
                 "title": "Wybierz metod\u0119 uwierzytelniania"
             }
         }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Nazwa obszaru",
+                    "mode": "Obliczenia",
+                    "show_on_map": "Poka\u017c na mapie"
+                },
+                "description": "Skonfiguruj publiczny czujnik pogody dla obszaru.",
+                "title": "Netatmo publiczny czujnik pogody"
+            },
+            "public_weather_areas": {
+                "data": {
+                    "new_area": "Nazwa obszaru",
+                    "weather_areas": "Obszary pogodowe"
+                },
+                "description": "Skonfiguruj publiczne czujniki pogody.",
+                "title": "Netatmo publiczny czujnik pogody"
+            }
+        }
     }
 }

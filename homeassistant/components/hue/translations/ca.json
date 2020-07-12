@@ -59,6 +59,7 @@
             "init": {
                 "data": {
                     "allow_how_groups": "Permet grups Hue",
+                    "allow_hue_groups": "Permet grups Hue",
                     "allow_unreachable": "Permet que bombetes no accessibles puguin informar del seu estat correctament"
                 }
             }

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "service": "B\u0142\u0105d podczas pr\u00f3by osi\u0105gni\u0119cia SmartHab. Us\u0142uga mo\u017ce by\u0107 wy\u0142\u0105czna. Sprawd\u017a po\u0142\u0105czenie.",
+            "unknown_error": "Niespodziewany b\u0142\u0105d",
+            "wrong_login": "Niepoprawna autoryzacja"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Has\u0142o"
+                },
+                "title": "Konfiguracja SmartHab"
+            }
+        }
+    }
+}

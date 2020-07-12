@@ -19,7 +19,7 @@
         "step": {
             "manual_setup": {
                 "data": {
-                    "host": "H\u00f4te (facultatif si un jeton est fourni)",
+                    "host": "Nom d'h\u00f4te ou adresse IP",
                     "port": "Port",
                     "ssl": "Utiliser SSL",
                     "token": "Jeton (facultatif)",

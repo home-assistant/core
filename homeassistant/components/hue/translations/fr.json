@@ -17,7 +17,7 @@
         "step": {
             "init": {
                 "data": {
-                    "host": "H\u00f4te"
+                    "host": "Nom d'h\u00f4te ou adresse IP"
                 },
                 "title": "Choisissez le pont Philips Hue"
             },

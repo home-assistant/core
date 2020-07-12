@@ -60,7 +60,7 @@ SERVICE_HANDLERS = {
     SERVICE_ENIGMA2: ("media_player", "enigma2"),
     SERVICE_WINK: ("wink", None),
     SERVICE_SABNZBD: ("sabnzbd", None),
-    SERVICE_SAMSUNG_PRINTER: ("sensor", "syncthru"),
+    SERVICE_SAMSUNG_PRINTER: ("sensor", None),
     SERVICE_KONNECTED: ("konnected", None),
     SERVICE_OCTOPRINT: ("octoprint", None),
     SERVICE_FREEBOX: ("freebox", None),
@@ -181,7 +181,7 @@ async def async_setup(hass, config):
 
         # We do not know how to handle this service.
         if not comp_plat:
-            logger.info("Unknown service discovered: %s %s", service, info)
+            logger.debug("Unknown service discovered: %s %s", service, info)
             return
 
         logger.info("Found new service: %s %s", service, info)

@@ -114,14 +114,16 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                     template.render_complex(data_template, service.variables)
                 )
             except TemplateError as ex:
-                _LOGGER.error("Error rendering data template: %s", ex)
+                _LOGGER.error("Error rendering data template for %s: %s", host, ex)
                 return
 
         if service.is_event:
             # ESPHome uses servicecall packet for both events and service calls
             # Ensure the user can only send events of form 'esphome.xyz'
             if domain != "esphome":
-                _LOGGER.error("Can only generate events under esphome domain!")
+                _LOGGER.error(
+                    "Can only generate events under esphome domain! (%s)", host
+                )
                 return
             hass.bus.async_fire(service.service, service_data)
         else:
@@ -166,7 +168,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
             hass.async_create_task(entry_data.async_save_to_store())
         except APIConnectionError as err:
-            _LOGGER.warning("Error getting initial data: %s", err)
+            _LOGGER.warning("Error getting initial data for %s: %s", host, err)
             # Re-connection logic will trigger after this
             await cli.disconnect()
 
@@ -223,7 +225,7 @@ async def _setup_auto_reconnect_logic(
             # really short reconnect interval.
             tries = min(tries, 10)  # prevent OverflowError
             wait_time = int(round(min(1.8 ** tries, 60.0)))
-            _LOGGER.info("Trying to reconnect in %s seconds", wait_time)
+            _LOGGER.info("Trying to reconnect to %s in %s seconds", host, wait_time)
             await asyncio.sleep(wait_time)
 
         try:
