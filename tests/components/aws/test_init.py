@@ -29,6 +29,10 @@ class MockAioSession:
             __aexit__=AsyncMock(),
         )
 
+    def set_credentials(self, access_key, secret_key):
+        """Mock setting session credentials."""
+        return True
+
 
 async def test_empty_config(hass):
     """Test a default config will be create for empty config."""
@@ -193,6 +197,38 @@ async def test_notify_credential(hass):
     await hass.services.async_call(
         "notify", "sqs_test", {"message": "test", "target": "ARN"}, blocking=True
     )
+
+
+async def test_image_processing_credential(hass):
+    """Test image processing can use access key directly."""
+    with async_patch("aiobotocore.AioSession", new=MockAioSession):
+        await async_setup_component(
+            hass,
+            "aws",
+            {
+                "aws": {
+                    "image_processing": [
+                        {
+                            "service": "rekognition",
+                            "platform": "object",
+                            "credential_name": "test",
+                            "region_name": "us-east-1",
+                            "aws_access_key_id": "some-key",
+                            "aws_secret_access_key": "some-secret",
+                            "source": [{"entity_id": "camera.test"}],
+                        }
+                    ]
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    sessions = hass.data[aws.DATA_SESSIONS]
+    assert sessions is not None
+    assert len(sessions) == 1
+    assert isinstance(sessions.get("default"), MockAioSession)
+
+    assert hass.states.get("image_processing.rekognition_object_test")
 
 
 async def test_notify_credential_profile(hass):

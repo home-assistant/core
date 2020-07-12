@@ -7,6 +7,9 @@ import aiobotocore
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.image_processing import (
+    PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
+)
 from homeassistant.const import ATTR_CREDENTIALS, CONF_NAME, CONF_PROFILE_NAME
 from homeassistant.helpers import config_validation as cv, discovery
 
@@ -14,11 +17,17 @@ from homeassistant.helpers import config_validation as cv, discovery
 from . import config_flow  # noqa: F401
 from .const import (
     CONF_ACCESS_KEY_ID,
+    CONF_COLLECTION_ID,
     CONF_CONTEXT,
     CONF_CREDENTIAL_NAME,
     CONF_CREDENTIALS,
+    CONF_DETECTION_ATTRIBUTES,
+    CONF_IDENTIFY_FACES,
+    CONF_IMAGE_PROCESSING,
     CONF_NOTIFY,
     CONF_REGION,
+    CONF_SAVE_FILE_FOLDER,
+    CONF_SAVE_FILE_TIMESTAMP,
     CONF_SECRET_ACCESS_KEY,
     CONF_SERVICE,
     CONF_VALIDATE,
@@ -44,7 +53,7 @@ DEFAULT_CREDENTIAL = [
     {CONF_NAME: "default", CONF_PROFILE_NAME: "default", CONF_VALIDATE: False}
 ]
 
-SUPPORTED_SERVICES = ["lambda", "sns", "sqs"]
+SUPPORTED_SERVICES = ["lambda", "sns", "sqs", "rekognition"]
 
 NOTIFY_PLATFORM_SCHEMA = vol.Schema(
     {
@@ -61,6 +70,27 @@ NOTIFY_PLATFORM_SCHEMA = vol.Schema(
     }
 )
 
+
+IMAGE_PROCESSING_PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Required(CONF_SERVICE): vol.All(
+            cv.string, vol.Lower, vol.In(SUPPORTED_SERVICES)
+        ),
+        vol.Required(CONF_REGION): vol.All(cv.string, vol.Lower),
+        vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
+        vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
+        vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
+        vol.Exclusive(CONF_CREDENTIAL_NAME, ATTR_CREDENTIALS): cv.string,
+        vol.Required(CONF_REGION): vol.All(cv.string, vol.Lower),
+        vol.Optional(CONF_COLLECTION_ID): cv.string,
+        vol.Optional(CONF_IDENTIFY_FACES): cv.boolean,
+        vol.Optional(CONF_DETECTION_ATTRIBUTES): cv.string,
+        vol.Optional(CONF_SAVE_FILE_TIMESTAMP): cv.boolean,
+        vol.Optional(CONF_SAVE_FILE_FOLDER): cv.string,
+    }
+)
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -70,6 +100,9 @@ CONFIG_SCHEMA = vol.Schema(
                 ),
                 vol.Optional(CONF_NOTIFY, default=[]): vol.All(
                     cv.ensure_list, [NOTIFY_PLATFORM_SCHEMA]
+                ),
+                vol.Optional(CONF_IMAGE_PROCESSING, default=[]): vol.All(
+                    cv.ensure_list, [IMAGE_PROCESSING_PLATFORM_SCHEMA]
                 ),
             }
         )
@@ -146,6 +179,12 @@ async def async_setup_entry(hass, entry):
         hass.async_create_task(
             discovery.async_load_platform(hass, "notify", DOMAIN, notify_config, config)
         )
+    for image_processing_config in conf[CONF_IMAGE_PROCESSING]:
+        hass.async_create_task(
+            discovery.async_load_platform(
+                hass, "image_processing", DOMAIN, image_processing_config, config
+            )
+        )
 
     return validation
 
@@ -162,12 +201,16 @@ async def _validate_aws_credentials(hass, credential):
     if profile is not None:
         session = aiobotocore.AioSession(profile=profile)
         del aws_config[CONF_PROFILE_NAME]
-        if CONF_ACCESS_KEY_ID in aws_config:
-            del aws_config[CONF_ACCESS_KEY_ID]
-        if CONF_SECRET_ACCESS_KEY in aws_config:
-            del aws_config[CONF_SECRET_ACCESS_KEY]
     else:
         session = aiobotocore.AioSession()
+
+    if CONF_SECRET_ACCESS_KEY in aws_config:
+        session.set_credentials(
+            aws_config[CONF_ACCESS_KEY_ID], aws_config[CONF_SECRET_ACCESS_KEY]
+        )
+        del aws_config[CONF_SECRET_ACCESS_KEY]
+    if CONF_ACCESS_KEY_ID in aws_config:
+        del aws_config[CONF_ACCESS_KEY_ID]
 
     if credential[CONF_VALIDATE]:
         async with session.create_client("iam", **aws_config) as client:
