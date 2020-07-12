@@ -116,8 +116,9 @@ class PlexSensor(Entity):
                 # "picture_of_last_summer_camp (2015)"
                 # "The Incredible Hulk (2008)"
                 now_playing_title = sess.title
-                if sess.year is not None:
-                    now_playing_title += f" ({sess.year})"
+                year = await self.hass.async_add_executor_job(getattr, sess, "year")
+                if year is not None:
+                    now_playing_title += f" ({year})"
 
             now_playing.append((now_playing_user, now_playing_title))
         self._state = len(self.sessions)
