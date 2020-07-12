@@ -14,6 +14,7 @@
                     "email": "Correu electr\u00f2nic",
                     "password": "Contrasenya"
                 },
+                "description": "[%key:common::config_flow::description%]",
                 "title": "PoolSense"
             }
         }
