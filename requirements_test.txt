@@ -2,6 +2,7 @@
 # make new things fail. Manually update these pins when pulling in a
 # new version
 
+-c homeassistant/package_constraints.txt
 -r requirements_test_pre_commit.txt
 asynctest==0.13.0
 codecov==2.1.0

@@ -48,7 +48,7 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           pip install -U pip setuptools
-          pip install -r requirements.txt -r requirements_test.txt -c homeassistant/package_constraints.txt
+          pip install -r requirements.txt -r requirements_test.txt
           # Uninstalling typing as a workaround. Eventually we should make sure
           # all our dependencies drop typing.
           # Find offending deps with `pipdeptree -r -p typing`
@@ -583,8 +583,7 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name:
-          Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -598,15 +597,14 @@ jobs:
             ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('requirements_test.txt') }}-${{ hashFiles('requirements_all.txt') }}
             ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('requirements_test.txt') }}
             ${{ runner.os }}-venv-${{ matrix.python-version }}-
-      - name:
-          Create full Python ${{ matrix.python-version }} virtual environment
+      - name: Create full Python ${{ matrix.python-version }} virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
           python -m venv venv
           . venv/bin/activate
           pip install -U pip setuptools wheel
-          pip install -r requirements_all.txt -c homeassistant/package_constraints.txt
-          pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
+          pip install -r requirements_all.txt
+          pip install -r requirements_test.txt
           # Uninstalling typing as a workaround. Eventually we should make sure
           # all our dependencies drop typing.
           # Find offending deps with `pipdeptree -r -p typing`
@@ -624,8 +622,7 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name:
-          Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -659,8 +656,7 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name:
-          Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -696,8 +692,7 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name:
-          Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -757,8 +752,7 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name:
-          Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
