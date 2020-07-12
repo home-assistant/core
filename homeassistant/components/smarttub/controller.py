@@ -90,7 +90,11 @@ class SmartTubController:
 
     async def async_update_entity(self, entity):
         """Request a state update on behalf of entity."""
-        self._coordinator.async_request_refresh()
+        await self._coordinator.async_request_refresh()
+
+    def entity_is_available(self, entity):
+        """Indicate whether the entity has state available."""
+        return self._coordinator.last_update_success
 
     async def validate_credentials(self, email, password):
         """Check if the specified credentials are valid for authenticating to SmartTub."""
@@ -100,10 +104,6 @@ class SmartTubController:
         except LoginFailed:
             return False
         return True
-
-    def entity_is_available(self, entity):
-        """Indicate whether the entity has state available."""
-        return self._coordinator.last_update_success
 
     def get_spa_name(self, spa_id):
         """Retrieve the name of the specified spa."""
