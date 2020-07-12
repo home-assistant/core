@@ -158,6 +158,7 @@ async def test_discover_light(hass, rfxtrx):
         {"rfxtrx": {"device": "abcd", "dummy": True, "automatic_add": True}},
     )
     await hass.async_block_till_done()
+    await hass.async_start()
 
     await _signal_event(hass, "0b11009e00e6116202020070")
     state = hass.states.get("light.ac_0e61162_2")

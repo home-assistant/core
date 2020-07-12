@@ -117,6 +117,7 @@ async def test_discover_switch(hass, rfxtrx):
         {"rfxtrx": {"device": "abcd", "dummy": True, "automatic_add": True}},
     )
     await hass.async_block_till_done()
+    await hass.async_start()
 
     await _signal_event(hass, "0b1100100118cdea02010f70")
     state = hass.states.get("switch.ac_118cdea_2")
