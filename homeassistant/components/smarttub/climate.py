@@ -45,7 +45,7 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
         heater_status = self.controller.get_heater_status(self.spa_id)
         if heater_status == "ON":
             return CURRENT_HVAC_HEAT
-        elif heater_status == "OFF":
+        if heater_status == "OFF":
             return CURRENT_HVAC_IDLE
         raise ValueError(f"unknown heater status: {heater_status}")
 

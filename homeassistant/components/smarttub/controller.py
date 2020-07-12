@@ -142,10 +142,12 @@ class SmartTubController:
         """Return the status of the heater (e.g. 'OFF')."""
         return self._get_status_value(spa_id, "heater")
 
-    def get_maximum_target_water_temperature(self, spa_id) -> float:
+    @staticmethod
+    def get_maximum_target_water_temperature(spa_id) -> float:
         """Return the maximum target water temperature in Celsius."""
         return 40
 
-    def get_minimum_target_water_temperature(self, spa_id) -> float:
+    @staticmethod
+    def get_minimum_target_water_temperature(spa_id) -> float:
         """Return the minimum target water temperature in Celsius."""
         return 18.5
