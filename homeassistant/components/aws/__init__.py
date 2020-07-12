@@ -13,14 +13,6 @@ from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
 )
 
-from homeassistant.components.image_processing import (
-    ATTR_CONFIDENCE,
-    CONF_CONFIDENCE,
-    CONF_ENTITY_ID,
-    CONF_SOURCE,
-    ImageProcessingFaceEntity,
-)
-
 # Loading the config flow file will register the flow
 from . import config_flow  # noqa: F401
 from .const import (

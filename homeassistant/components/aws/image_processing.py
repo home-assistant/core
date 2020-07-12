@@ -49,12 +49,12 @@ SCAN_INTERVAL = dt_util.dt.timedelta(weeks=52)
 
 
 def get_valid_filename(name: str) -> str:
-    """Parses input to ensure valid filename characters."""
+    """Parse input to ensure valid filename characters."""
     return re.sub(r"(?u)[^-\w.]", "", str(name).strip().replace(" ", "_"))
 
 
 def save_image(self, image, entity_name, objects, directory, save_timestamp=False):
-    """Draws the actual bounding box of the detected objects."""
+    """Draw the bounding boxes and save the image."""
     try:
         img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
     except UnidentifiedImageError:
@@ -380,7 +380,7 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
         return self._name
 
     async def compute_faces(self, client, image):
-        """Detect faces in image and parse response"""
+        """Detect faces in image and parse response."""
         index_faces = await client.index_faces(
             CollectionId=self.collection_id,
             Image={"Bytes": image},
@@ -417,7 +417,7 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
                 )
                 for face_match in search_faces["FaceMatches"]:
                     image_id = face_match["Face"]["ExternalImageId"]
-                    # Dont accidentally match against comparison images
+                    # Don't accidentally match against comparison images
                     if image_id == self.camera:
                         continue
                     known_face[ATTR_NAME] = image_id
