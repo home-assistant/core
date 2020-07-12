@@ -13,6 +13,8 @@ DATA_LOGGER = "logger"
 SERVICE_SET_DEFAULT_LEVEL = "set_default_level"
 SERVICE_SET_LEVEL = "set_level"
 
+HIGHEST_LOG_LEVEL = logging.CRITICAL
+
 LOGSEVERITY = {
     "CRITICAL": 50,
     "FATAL": 50,
@@ -55,7 +57,7 @@ class HomeAssistantLogFilter(logging.Filter):
         super().__init__()
 
         self._default = None
-        self._logs = None
+        self._logs = {}
         self._log_rx = None
 
     def update_default_level(self, default_level):
@@ -76,6 +78,23 @@ class HomeAssistantLogFilter(logging.Filter):
         names_by_len = sorted(list(logs), key=len, reverse=True)
         self._log_rx = re.compile("".join(["^(?:", "|".join(names_by_len), ")"]))
         self._logs = logs
+
+    def set_logger_level(self):
+        """Find the lowest log level set to allow logger to pre-filter log messages."""
+        #
+        # We set the root logger level to lowest log level
+        # specified in default or for in the log filter so
+        # logger.isEnabledFor function will work as designed
+        # to avoid making logger records that will always be
+        # discarded.
+        #
+        # This can make the logger performance significantly
+        # faster if no integrations are requesting debug logs
+        # because we can avoid the record creation and filtering
+        # overhead.
+        #
+        logger = logging.getLogger("")
+        logger.setLevel(min(HIGHEST_LOG_LEVEL, self._default, *self._logs.values()))
 
     def filter(self, record):
         """Filter the log entries."""
@@ -121,9 +140,6 @@ async def async_setup(hass, config):
     else:
         set_default_log_level("DEBUG")
 
-    logger = logging.getLogger("")
-    logger.setLevel(logging.NOTSET)
-
     # Set log filter for all log handler
     for handler in logging.root.handlers:
         handler.setLevel(logging.NOTSET)
@@ -132,12 +148,15 @@ async def async_setup(hass, config):
     if LOGGER_LOGS in config.get(DOMAIN):
         set_log_levels(config.get(DOMAIN)[LOGGER_LOGS])
 
+    hass_filter.set_logger_level()
+
     async def async_service_handler(service):
         """Handle logger services."""
         if service.service == SERVICE_SET_DEFAULT_LEVEL:
             set_default_log_level(service.data.get(ATTR_LEVEL))
         else:
             set_log_levels(service.data)
+        hass_filter.set_logger_level()
 
     hass.services.async_register(
         DOMAIN,
