@@ -171,10 +171,7 @@ async def async_setup_entry(hass, entry):
                 )
                 validation = False
             else:
-                if CONF_SECRET_ACCESS_KEY in conf[ATTR_CREDENTIALS]:
-                    hass.data[DATA_SESSIONS][name] = conf[ATTR_CREDENTIALS][index]
-                else:
-                    hass.data[DATA_SESSIONS][name] = result
+                hass.data[DATA_SESSIONS][name] = result
 
     # set up notify platform, no entry support for notify component yet,
     # have to use discovery to load platform.
@@ -206,15 +203,14 @@ async def _validate_aws_credentials(hass, credential):
         del aws_config[CONF_PROFILE_NAME]
     else:
         session = aiobotocore.AioSession()
-        if CONF_SECRET_ACCESS_KEY in aws_config:
-            session.set_credentials(
-                aws_config[CONF_ACCESS_KEY_ID], aws_config[CONF_SECRET_ACCESS_KEY]
-            )
 
+    if CONF_SECRET_ACCESS_KEY in aws_config:
+        session.set_credentials(
+            aws_config[CONF_ACCESS_KEY_ID], aws_config[CONF_SECRET_ACCESS_KEY]
+        )
+        del aws_config[CONF_SECRET_ACCESS_KEY]
     if CONF_ACCESS_KEY_ID in aws_config:
         del aws_config[CONF_ACCESS_KEY_ID]
-    if CONF_SECRET_ACCESS_KEY in aws_config:
-        del aws_config[CONF_SECRET_ACCESS_KEY]
 
     if credential[CONF_VALIDATE]:
         async with session.create_client("iam", **aws_config) as client:
