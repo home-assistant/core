@@ -198,16 +198,6 @@ class LogbookView(HomeAssistantView):
 
         hass = request.app["hass"]
 
-        import cProfile
-        import asyncio
-
-        pr = cProfile.Profile()
-        pr.enable()
-        await asyncio.sleep(60)
-        pr.disable()
-        pr.create_stats()
-        pr.dump_stats("sixty.cprof")
-
         def json_events():
             """Fetch events and generate JSON."""
             return self.json(
