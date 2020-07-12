@@ -144,6 +144,7 @@ FLOWS = [
     "smappee",
     "smarthab",
     "smartthings",
+    "smarttub",
     "smhi",
     "sms",
     "solaredge",

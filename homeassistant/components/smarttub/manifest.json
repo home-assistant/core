@@ -1,0 +1,11 @@
+{
+  "domain": "smarttub",
+  "name": "SmartTub",
+  "config_flow": true,
+  "documentation": "https://github.com/home-assistant/example-custom-config/tree/master/custom_components/example_sensor/",
+  "dependencies": [],
+  "codeowners": ["@mdz"],
+  "requirements": [
+      "python-smarttub==0.0.5"
+  ]
+}
