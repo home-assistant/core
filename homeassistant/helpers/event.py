@@ -328,14 +328,11 @@ def async_track_point_in_utc_time(
     # Ensure point_in_time is UTC
     point_in_time = dt_util.as_utc(point_in_time)
 
-    @callback
-    def point_in_time_listener() -> None:
-        """Listen for matching time_changed events."""
-        hass.async_run_job(action, point_in_time)
-
     cancel_callback = hass.loop.call_at(
         hass.loop.time() + point_in_time.timestamp() - time.time(),
-        point_in_time_listener,
+        hass.async_run_job,
+        action,
+        point_in_time,
     )
 
     @callback
