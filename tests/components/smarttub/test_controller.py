@@ -6,6 +6,7 @@ import smarttub
 from homeassistant.components.smarttub.const import DOMAIN
 from homeassistant.components.smarttub.controller import SmartTubController
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.async_mock import create_autospec, patch
 from tests.common import MockConfigEntry, MockEntity
@@ -71,6 +72,10 @@ async def test_update(controller, spa):
     """Test data updates from API."""
     data = await controller.async_update_data()
     assert data[spa.id] == {"status": spa.get_status.return_value}
+
+    spa.get_status.side_effect = smarttub.APIError
+    with pytest.raises(UpdateFailed):
+        data = await controller.async_update_data()
 
 
 async def test_entity(hass, controller):
