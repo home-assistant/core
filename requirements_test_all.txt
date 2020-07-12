@@ -576,7 +576,7 @@ pycountry==19.8.18
 pydaikin==2.2.0
 
 # homeassistant.components.deconz
-pydeconz==71
+pydeconz==72
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
