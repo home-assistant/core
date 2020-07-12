@@ -31,6 +31,7 @@ async def test_thermostat(controller):
     assert thermostat.min_temp
     assert thermostat.max_temp
     assert thermostat.supported_features
+    assert thermostat.current_temperature
     assert thermostat.target_temperature
     await thermostat.async_set_temperature(**{ATTR_TEMPERATURE: 30})
     controller.set_target_water_temperature.assert_called_with("spaid1", 30)

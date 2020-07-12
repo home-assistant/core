@@ -106,7 +106,7 @@ def test_spa_metadata(controller):
     assert name == "mockbrand1 mockmodel1"
 
 
-def test_spa_temperatures(controller):
+async def test_spa_temperatures(controller, spa):
     """Test temperature methods."""
     set_temp = controller.get_target_water_temperature("mockspa1")
     assert set_temp == "settemp1"
@@ -116,3 +116,6 @@ def test_spa_temperatures(controller):
 
     heater_status = controller.get_heater_status("mockspa1")
     assert heater_status == "heaterstatus1"
+
+    await controller.set_target_water_temperature("mockspa1", 38.3)
+    spa.set_temperature.assert_called_with(38.3)
