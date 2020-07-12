@@ -202,7 +202,8 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         if self._color_channels & COLOR_CHANNEL_WARM_WHITE:
             warm_white = int(data[index : index + 2], 16)
             self._white = warm_white
-            index += 2
+
+        index += 2
 
         # Cold white
         if self._color_channels & COLOR_CHANNEL_COLD_WHITE:
