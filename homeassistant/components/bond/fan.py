@@ -1,7 +1,7 @@
 """Support for Bond fans."""
 from typing import Any, Callable, List, Optional
 
-from bond import BOND_DEVICE_TYPE_CEILING_FAN, Bond
+from bond import Bond, DeviceTypes
 
 from homeassistant.components.fan import (
     SPEED_HIGH,
@@ -33,7 +33,7 @@ async def async_setup_entry(
     fans = [
         BondFan(bond, device)
         for device in devices
-        if device.type == BOND_DEVICE_TYPE_CEILING_FAN
+        if device.type == DeviceTypes.CEILING_FAN
     ]
 
     async_add_entities(fans, True)
