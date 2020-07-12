@@ -230,7 +230,7 @@ aiopylgtv==0.3.3
 aioswitcher==1.2.0
 
 # homeassistant.components.unifi
-aiounifi==22
+aiounifi==23
 
 # homeassistant.components.airly
 airly==0.0.2
