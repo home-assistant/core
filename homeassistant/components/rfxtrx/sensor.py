@@ -97,11 +97,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 continue
             data_ids.add(data_id)
 
-            _LOGGER.debug(
-                "Added sensor (Device ID: %s Class: %s Sub: %s)",
+            _LOGGER.info(
+                "Added sensor (Device ID: %s Class: %s Sub: %s, Event: %s)",
                 event.device.id_string.lower(),
                 event.device.__class__.__name__,
                 event.device.subtype,
+                "".join(f"{x:02x}" for x in event.data),
             )
 
             entity = RfxtrxSensor(event.device, data_type, event=event)

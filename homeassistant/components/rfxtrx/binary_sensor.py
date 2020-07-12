@@ -99,10 +99,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         device_ids.add(device_id)
 
         _LOGGER.info(
-            "Added binary sensor (Device ID: %s Class: %s Sub: %s)",
+            "Added binary sensor (Device ID: %s Class: %s Sub: %s Event: %s)",
             event.device.id_string.lower(),
             event.device.__class__.__name__,
             event.device.subtype,
+            "".join(f"{x:02x}" for x in event.data),
         )
         sensor = RfxtrxBinarySensor(event.device, data_bits=data_bits, event=event)
         add_entities([sensor])
