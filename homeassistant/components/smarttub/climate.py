@@ -26,6 +26,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         [SmartTubThermostat(controller, spa_id) for spa_id in controller.spa_ids]
     )
 
+    return True
+
 
 class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     """The target water temperature for the spa."""

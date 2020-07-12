@@ -1,13 +1,19 @@
 """Test the SmartTub climate platform."""
+from unittest.mock import Mock
 
 import pytest
 
 from homeassistant.components.climate.const import HVAC_MODE_HEAT
-from homeassistant.components.smarttub.climate import SmartTubThermostat
+from homeassistant.components.smarttub.climate import (
+    SmartTubThermostat,
+    async_setup_entry,
+)
+from homeassistant.components.smarttub.const import DOMAIN, SMARTTUB_CONTROLLER
 from homeassistant.components.smarttub.controller import SmartTubController
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from tests.async_mock import create_autospec
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="controller")
@@ -17,6 +23,22 @@ async def mock_controller(hass):
     controller = create_autospec(SmartTubController, instance=True)
     controller.get_heater_status.return_value = "ON"
     return controller
+
+
+async def test_async_setup_entry(hass, controller):
+    """Test async_setup_entry."""
+
+    entry = MockConfigEntry(unique_id="ceid1")
+    async_add_entities = Mock()
+    hass.data[DOMAIN] = {
+        entry.unique_id: {SMARTTUB_CONTROLLER: controller},
+    }
+    controller.spa_ids = [1]
+
+    ret = await async_setup_entry(hass, entry, async_add_entities)
+
+    assert ret is True
+    async_add_entities.assert_called()
 
 
 async def test_thermostat(controller):
