@@ -5,6 +5,8 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from .common import setup_bond_entity
+
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
@@ -21,17 +23,21 @@ async def test_async_setup_entry_sets_up_supported_domains(hass: HomeAssistant):
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "1.1.1.1", CONF_ACCESS_TOKEN: "test-token"},
     )
-    config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.bond.cover.async_setup_entry"
-    ) as mock_cover_async_setup_entry:
-        result = await hass.config_entries.async_setup(config_entry.entry_id)
+    ) as mock_cover_async_setup_entry, patch(
+        "homeassistant.components.bond.fan.async_setup_entry"
+    ) as mock_fan_async_setup_entry:
+        result = await setup_bond_entity(hass, config_entry)
         assert result is True
-
         await hass.async_block_till_done()
 
+    assert config_entry.entry_id in hass.data[DOMAIN]
+    assert config_entry.state == ENTRY_STATE_LOADED
+
     assert len(mock_cover_async_setup_entry.mock_calls) == 1
+    assert len(mock_fan_async_setup_entry.mock_calls) == 1
 
 
 async def test_unload_config_entry(hass: HomeAssistant):
@@ -39,15 +45,13 @@ async def test_unload_config_entry(hass: HomeAssistant):
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "1.1.1.1", CONF_ACCESS_TOKEN: "test-token"},
     )
-    config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.bond.cover.async_setup_entry", return_value=True
+
+    with patch("homeassistant.components.bond.cover.async_setup_entry"), patch(
+        "homeassistant.components.bond.fan.async_setup_entry"
     ):
-        result = await hass.config_entries.async_setup(config_entry.entry_id)
+        result = await setup_bond_entity(hass, config_entry)
         assert result is True
         await hass.async_block_till_done()
-    assert config_entry.entry_id in hass.data[DOMAIN]
-    assert config_entry.state == ENTRY_STATE_LOADED
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()

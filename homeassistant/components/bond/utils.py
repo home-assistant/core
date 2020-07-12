@@ -1,6 +1,6 @@
 """Reusable utilities for the Bond component."""
 
-from typing import List
+from typing import List, Optional
 
 from bond import Bond
 
@@ -34,7 +34,12 @@ class BondHub:
 
     def __init__(self, bond: Bond):
         """Initialize Bond Hub."""
-        self.bond = bond
+        self.bond: Bond = bond
+        self._version: Optional[dict] = None
+
+    def setup(self):
+        """Read hub version information."""
+        self._version = self.bond.getVersion()
 
     def get_bond_devices(self) -> List[BondDevice]:
         """Fetch all available devices using Bond API."""

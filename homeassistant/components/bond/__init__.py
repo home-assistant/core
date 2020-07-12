@@ -26,6 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     bond = Bond(bondIp=host, bondToken=token)
     hub = BondHub(bond)
+    await hass.async_add_executor_job(hub.setup)
     hass.data[DOMAIN][entry.entry_id] = hub
 
     for component in PLATFORMS:
