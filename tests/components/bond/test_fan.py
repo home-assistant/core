@@ -127,7 +127,7 @@ async def test_update_reports_direction_reverse(hass: core.HomeAssistant):
 
 
 async def test_set_fan_direction(hass: core.HomeAssistant):
-    """Tests that turn off command delegates to API."""
+    """Tests that set direction command delegates to API."""
     await setup_platform(hass, FAN_DOMAIN, ceiling_fan("name-1"))
 
     with patch("homeassistant.components.bond.Bond.setDirection") as mock_set_direction:
