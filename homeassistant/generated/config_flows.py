@@ -38,6 +38,7 @@ FLOWS = [
     "brother",
     "bsblan",
     "canary",
+    "buienradar",
     "cast",
     "cert_expiry",
     "climacell",

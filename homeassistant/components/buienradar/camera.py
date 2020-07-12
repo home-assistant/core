@@ -6,46 +6,29 @@ from datetime import datetime, timedelta
 import logging
 
 import aiohttp
-import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.components.camera import Camera
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
-CONF_DIMENSION = "dimension"
-CONF_DELTA = "delta"
-CONF_COUNTRY = "country_code"
+from .const import CONF_CAMERA, CONF_COUNTRY, CONF_DELTA, CONF_DIMENSION
 
 _LOGGER = logging.getLogger(__name__)
 
-# Maximum range according to docs
-DIM_RANGE = vol.All(vol.Coerce(int), vol.Range(min=120, max=700))
 
-# Multiple choice for available Radar Map URL
-SUPPORTED_COUNTRY_CODES = ["NL", "BE"]
-
-PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Optional(CONF_DIMENSION, default=512): DIM_RANGE,
-            vol.Optional(CONF_DELTA, default=600.0): cv.positive_float,
-            vol.Optional(CONF_NAME, default="Buienradar loop"): cv.string,
-            vol.Optional(CONF_COUNTRY, default="NL"): vol.All(
-                vol.Coerce(str), vol.In(SUPPORTED_COUNTRY_CODES)
-            ),
-        }
-    )
-)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up buienradar radar-loop camera component."""
-    dimension = config[CONF_DIMENSION]
-    delta = config[CONF_DELTA]
+    config = entry.data
+
+    dimension = config[CONF_CAMERA][CONF_DIMENSION]
+    delta = config[CONF_CAMERA][CONF_DELTA]
     name = config[CONF_NAME]
-    country = config[CONF_COUNTRY]
+    country = config[CONF_CAMERA][CONF_COUNTRY]
 
     async_add_entities([BuienradarCam(name, dimension, delta, country)])
 

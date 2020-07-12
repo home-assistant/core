@@ -18,14 +18,13 @@ from buienradar.constants import (
     WINDGUST,
     WINDSPEED,
 )
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     DEGREE,
     IRRADIATION_WATTS_PER_SQUARE_METER,
@@ -37,11 +36,12 @@ from homeassistant.const import (
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
 )
+
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
-from .const import DEFAULT_TIMEFRAME
+from .const import CONF_SENSOR, CONF_TIMEFRAME
 from .util import BrData
 
 _LOGGER = logging.getLogger(__name__)
@@ -186,32 +186,16 @@ SENSOR_TYPES = {
     "symbol_5d": ["Symbol 5d", None, None],
 }
 
-CONF_TIMEFRAME = "timeframe"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(
-            CONF_MONITORED_CONDITIONS, default=["symbol", "temperature"]
-        ): vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES.keys())]),
-        vol.Inclusive(
-            CONF_LATITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.latitude,
-        vol.Inclusive(
-            CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.longitude,
-        vol.Optional(CONF_TIMEFRAME, default=DEFAULT_TIMEFRAME): vol.All(
-            vol.Coerce(int), vol.Range(min=5, max=120)
-        ),
-        vol.Optional(CONF_NAME, default="br"): cv.string,
-    }
-)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
     """Create the buienradar sensor."""
+    config = entry.data
+
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    timeframe = config[CONF_TIMEFRAME]
+    timeframe = config[CONF_SENSOR][CONF_TIMEFRAME]
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
@@ -226,7 +210,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
     dev = []
-    for sensor_type in config[CONF_MONITORED_CONDITIONS]:
+    for sensor_type in SENSOR_TYPES:
         dev.append(BrSensor(sensor_type, config.get(CONF_NAME), coordinates))
     async_add_entities(dev)
 

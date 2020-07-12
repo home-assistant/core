@@ -11,7 +11,6 @@ from buienradar.constants import (
     WINDAZIMUTH,
     WINDSPEED,
 )
-import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
@@ -35,14 +34,14 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
-    PLATFORM_SCHEMA,
     WeatherEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
 
 # Reuse data and API logic from the sensor implementation
-from .const import DEFAULT_TIMEFRAME
+from .const import CONF_WEATHER, DEFAULT_TIMEFRAME
 from .util import BrData
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,18 +69,13 @@ CONDITION_CLASSES = {
     ATTR_CONDITION_EXCEPTIONAL: [],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_FORECAST, default=True): cv.boolean,
-    }
-)
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up the buienradar platform."""
+    config = entry.data
+
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
 
@@ -116,7 +110,7 @@ class BrWeather(WeatherEntity):
     def __init__(self, data, config, coordinates):
         """Initialise the platform with a data instance and station name."""
         self._stationname = config.get(CONF_NAME)
-        self._forecast = config[CONF_FORECAST]
+        self._forecast = config[CONF_WEATHER][CONF_FORECAST]
         self._data = data
 
         self._unique_id = "{:2.6f}{:2.6f}".format(
