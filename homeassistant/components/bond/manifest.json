@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bond",
   "requirements": [
-    "bond-home==0.0.8"
+    "bond-home==0.0.9"
   ],
   "codeowners": [
     "@prystupa"
