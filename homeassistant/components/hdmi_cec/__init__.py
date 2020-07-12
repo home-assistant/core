@@ -397,7 +397,11 @@ class CecEntity(Entity):
         """
         Return false.
 
+<<<<<<< HEAD
         CecEntity.update() is called by the HDMI network when there is new data.
+=======
+        CecDevice.update() is called by the HDMI network when there is new data.
+>>>>>>> Only update CecDevice state when there is new data
         """
         return False
 
