@@ -17,9 +17,7 @@ from homeassistant.components.image_processing import (
     ATTR_CONFIDENCE,
     CONF_CONFIDENCE,
     CONF_ENTITY_ID,
-    CONF_NAME,
     CONF_SOURCE,
-    PLATFORM_SCHEMA,
     ImageProcessingFaceEntity,
 )
 

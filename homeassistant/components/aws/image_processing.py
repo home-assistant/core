@@ -1,74 +1,55 @@
 """AWS platform for notify component."""
-import asyncio
-import base64
-import json
-import logging
-import time
-import re
 import io
-from pathlib import Path
-
-import aiobotocore
-import botocore.exceptions
+import logging
+import re
 
 from PIL import Image, ImageDraw, UnidentifiedImageError
+import aiobotocore
 
 from homeassistant.components.image_processing import (
+    ATTR_AGE,
+    ATTR_CONFIDENCE,
+    ATTR_GENDER,
+    ATTR_GLASSES,
+    ATTR_MOTION,
+    ATTR_NAME,
     CONF_CONFIDENCE,
     CONF_ENTITY_ID,
     CONF_NAME,
     CONF_SOURCE,
-    ATTR_CONFIDENCE,
-    ATTR_NAME,
-    ATTR_FACES,
-    ATTR_TOTAL_FACES,
-    ATTR_CONFIDENCE,
-    ATTR_NAME,
-    ATTR_AGE,
-    ATTR_GENDER,
-    ATTR_MOTION,
-    ATTR_GLASSES,
-    PLATFORM_SCHEMA,
     ImageProcessingEntity,
     ImageProcessingFaceEntity,
 )
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_PLATFORM,
-    ATTR_ENTITY_ID,
-    CONF_SCAN_INTERVAL,
-)
-from homeassistant.helpers.json import JSONEncoder
-import homeassistant.util.dt as dt_util
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.core import split_entity_id
+import homeassistant.util.dt as dt_util
 from homeassistant.util.pil import draw_box
 
 from .const import (
-    DATA_SESSIONS,
-    CONF_CONTEXT,
+    ATTR_LABELS,
+    ATTR_OBJECTS,
+    CONF_COLLECTION_ID,
     CONF_CREDENTIAL_NAME,
+    CONF_DETECTION_ATTRIBUTES,
+    CONF_IDENTIFY_FACES,
     CONF_PROFILE_NAME,
     CONF_REGION,
-    CONF_SERVICE,
-    CONF_COLLECTION_ID,
-    CONF_IDENTIFY_FACES,
-    CONF_DETECTION_ATTRIBUTES,
     CONF_SAVE_FILE_FOLDER,
     CONF_SAVE_FILE_TIMESTAMP,
-    EVENT_OBJECT_DETECTED,
+    CONF_SERVICE,
+    DATA_SESSIONS,
     EVENT_LABEL_DETECTED,
-    ATTR_OBJECTS,
-    ATTR_LABELS,
+    EVENT_OBJECT_DETECTED,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 DATETIME_FORMAT = "%Y-%m-%d_%H:%M:%S"
-
-SCAN_INTERVAL = dt_util.dt.timedelta(seconds=30)
+SCAN_INTERVAL = dt_util.dt.timedelta(weeks=52)
 
 
 def get_valid_filename(name: str) -> str:
+    """Parses input to ensure valid filename characters."""
     return re.sub(r"(?u)[^-\w.]", "", str(name).strip().replace(" ", "_"))
 
 
@@ -112,6 +93,7 @@ def save_image(self, image, entity_name, objects, directory, save_timestamp=Fals
 
 
 def compute_box(box, decimal_places):
+    """Compute AWS BoundingBox coordinates to be PIL compatible."""
     box_data = {}
     # Get bounding box
     x_min, y_min, width, height = (
@@ -200,7 +182,6 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     region_name = conf[CONF_REGION]
     session_config = {CONF_REGION: conf[CONF_REGION]}
     platform = conf[CONF_PLATFORM]
-    # SCAN_INTERVAL = conf.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
 
     available_regions = await get_available_regions(hass, service)
     if region_name not in available_regions:
@@ -263,14 +244,14 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class RekognitionObjectEntity(ImageProcessingEntity):
-    """Representation of the Microsoft Face API entity for identify."""
+    """Rekognition Object Detection capabilities."""
 
     _service = "rekognition"
 
     def __init__(
         self, camera_entity, session, session_config, entity_config, name=None,
     ):
-        """Initialize the Microsoft Face API."""
+        """Initialize the Rekognition service."""
         super().__init__()
         self._objects = []
         self._labels = []
@@ -313,7 +294,7 @@ class RekognitionObjectEntity(ImageProcessingEntity):
         """Return the name of the entity."""
         return self._name
 
-    async def async_process_objects(self, objects=[], labels=[]):
+    async def async_process_objects(self, objects, labels):
         """Send events with detected objects/labels and store data."""
         # Send events
         for target in objects:
@@ -329,6 +310,7 @@ class RekognitionObjectEntity(ImageProcessingEntity):
         self._labels = labels
 
     async def compute_objects(self, client, image):
+        """Detect labels in image and parse response."""
         detect_labels = await client.detect_labels(Image={"Bytes": image})
         objects, labels = get_objects(detect_labels, self.confidence)
         return objects, labels
@@ -338,7 +320,6 @@ class RekognitionObjectEntity(ImageProcessingEntity):
 
         This method is a coroutine.
         """
-        _LOGGER.error("Scanning Image %s", self.name)
         async with self.session.create_client(
             self._service, **self.session_config
         ) as client:
@@ -356,14 +337,14 @@ class RekognitionObjectEntity(ImageProcessingEntity):
 
 
 class RekognitionFaceEntity(ImageProcessingFaceEntity):
-    """Representation of the Microsoft Face API entity for identify."""
+    """Rekognition Face Detection/Identification capabilities."""
 
     _service = "rekognition"
 
     def __init__(
         self, camera_entity, session, session_config, entity_config, name=None,
     ):
-        """Initialize the Microsoft Face API."""
+        """Initialize the Rekognition service."""
         super().__init__()
         self.session = session
         self.session_config = session_config
@@ -399,6 +380,7 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
         return self._name
 
     async def compute_faces(self, client, image):
+        """Detect faces in image and parse response"""
         index_faces = await client.index_faces(
             CollectionId=self.collection_id,
             Image={"Bytes": image},
@@ -415,6 +397,7 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
             known_face["bounding_box"] = box["bounding_box"]
             known_face["centroid"] = box["centroid"]
             face_id = face_record["Face"]["FaceId"]
+            # Add extra attributes
             if self.detection_attributes == "ALL":
                 face_detail = face_record["FaceDetail"]
                 age_range = face_detail["AgeRange"]
@@ -424,6 +407,7 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
                 known_face[ATTR_AGE] = (
                     float(age_range["High"]) + float(age_range["Low"])
                 ) / 2
+            # Run identification against existing collection
             if self.identify_faces:
                 search_faces = await client.search_faces(
                     CollectionId=self.collection_id,
@@ -446,7 +430,6 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
 
         This method is a coroutine.
         """
-        _LOGGER.error("Scanning Image %s", self.name)
         async with self.session.create_client(
             self._service, **self.session_config
         ) as client:
@@ -461,4 +444,3 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
                     self.conf_save_file_timestamp,
                 )
             self.async_process_faces(known_faces, len(known_faces))
-
