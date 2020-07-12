@@ -83,7 +83,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         default=self.config_entry.options.get(
                             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL,
                         ),
-                    ): bool,
+                    ): int,
                 }
             ),
         )
