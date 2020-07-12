@@ -11,7 +11,7 @@ from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN
 from .utils import BondHub
 
-PLATFORMS = ["cover", "fan"]
+PLATFORMS = ["cover", "fan", "light"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
