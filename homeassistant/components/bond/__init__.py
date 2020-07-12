@@ -6,8 +6,10 @@ from bond import Bond
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
+from .utils import BondHub
 
 PLATFORMS = ["cover", "fan"]
 
@@ -23,7 +25,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_ACCESS_TOKEN]
 
-    hass.data[DOMAIN][entry.entry_id] = Bond(bondIp=host, bondToken=token)
+    bond = Bond(bondIp=host, bondToken=token)
+    hub = BondHub(bond)
+    await hass.async_add_executor_job(hub.setup)
+    hass.data[DOMAIN][entry.entry_id] = hub
+
+    device_registry = await dr.async_get_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, hub.bond_id)},
+        manufacturer="Olibra",
+        name=hub.bond_id,
+        model=hub.target,
+        sw_version=hub.fw_ver,
+    )
 
     for component in PLATFORMS:
         hass.async_create_task(
