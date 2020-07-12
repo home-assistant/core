@@ -341,6 +341,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
             info["manufacturer"] = self._robot_stats["battery"]["vendor"]
             info["model"] = self._robot_stats["model"]
             info["sw_version"] = self._robot_stats["firmware"]
+        return info
 
     def start(self):
         """Start cleaning or resume cleaning."""
