@@ -44,6 +44,7 @@ async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
     """Store updated authentication and director tokens in hass.data."""
     config = entry.data
     account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD])
+    await account.getAccountBearerToken()
     controller_name = config[CONF_CONTROLLER_NAME]
     director_token_dict = await account.getDirectorBearerToken(controller_name)
     director = C4Director(config[CONF_HOST], director_token_dict[CONF_TOKEN])
