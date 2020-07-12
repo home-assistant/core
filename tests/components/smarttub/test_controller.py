@@ -83,10 +83,16 @@ async def test_entity(hass, controller):
 
     entity = MockEntity(entity_id="entity.id1", unique_id="mockentity1")
     entity.hass = hass
+    entity.spa_id = "mockspa1"
     await controller.async_register_entity(entity)
-    await controller.async_update_entity(entity)
-    available = controller.entity_is_available(entity)
-    assert available
+    await controller._coordinator.async_refresh()
+    assert controller.entity_is_available(entity)
+
+    entity = MockEntity(entity_id="entity.id1", unique_id="mockentity1")
+    entity.hass = hass
+    entity.spa_id = "notmockspa1"
+    await controller.async_register_entity(entity)
+    assert not controller.entity_is_available(entity)
 
 
 async def test_validate_credentials(controller, smarttub_api):

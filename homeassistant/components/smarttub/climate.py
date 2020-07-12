@@ -9,6 +9,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util.temperature import convert as convert_temperature
 
 from . import SmartTubEntity
@@ -22,9 +23,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     controller = hass.data[DOMAIN][entry.unique_id][SMARTTUB_CONTROLLER]
 
-    async_add_entities(
-        [SmartTubThermostat(controller, spa_id) for spa_id in controller.spa_ids]
-    )
+    entities = [SmartTubThermostat(controller, spa_id) for spa_id in controller.spa_ids]
+    if not any(entity.available for entity in entities):
+        raise PlatformNotReady
+
+    async_add_entities(entities)
 
     return True
 

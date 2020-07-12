@@ -94,7 +94,10 @@ class SmartTubController:
 
     def entity_is_available(self, entity):
         """Indicate whether the entity has state available."""
-        return self._coordinator.last_update_success
+        return (
+            self._coordinator.last_update_success
+            and entity.spa_id in self._coordinator.data
+        )
 
     async def validate_credentials(self, email, password):
         """Check if the specified credentials are valid for authenticating to SmartTub."""

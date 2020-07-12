@@ -11,6 +11,7 @@ from homeassistant.components.smarttub.climate import (
 from homeassistant.components.smarttub.const import DOMAIN, SMARTTUB_CONTROLLER
 from homeassistant.components.smarttub.controller import SmartTubController
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.exceptions import PlatformNotReady
 
 from tests.async_mock import create_autospec
 from tests.common import MockConfigEntry
@@ -39,6 +40,14 @@ async def test_async_setup_entry(hass, controller):
 
     assert ret is True
     async_add_entities.assert_called()
+
+    async_add_entities.reset_mock()
+    # simulate not ready
+    controller.entity_is_available.return_value = False
+
+    with pytest.raises(PlatformNotReady):
+        await async_setup_entry(hass, entry, async_add_entities)
+    async_add_entities.assert_not_called()
 
 
 async def test_thermostat(controller):
