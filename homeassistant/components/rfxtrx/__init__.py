@@ -338,6 +338,13 @@ class RfxtrxDevice(Entity):
         return self._name
 
     @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        if not self._event:
+            return None
+        return {ATTR_EVENT: "".join(f"{x:02x}" for x in self._event.data)}
+
+    @property
     def is_on(self):
         """Return true if device is on."""
         return self._state
@@ -354,6 +361,7 @@ class RfxtrxDevice(Entity):
 
     def _apply_event(self, event):
         """Apply a received event."""
+        self._event = event
 
     def _send_command(self, command, brightness=0):
         rfx_object = self.hass.data[DATA_RFXOBJECT]

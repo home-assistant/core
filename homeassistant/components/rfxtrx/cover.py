@@ -118,6 +118,7 @@ class RfxtrxCover(RfxtrxDevice, CoverEntity, RestoreEntity):
 
     def _apply_event(self, event):
         """Apply command from rfxtrx."""
+        super()._apply_event(event)
         if event.values["Command"] in COMMAND_ON_LIST:
             self._state = True
         elif event.values["Command"] in COMMAND_OFF_LIST:

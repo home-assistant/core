@@ -22,7 +22,12 @@ from . import (
     get_pt2262_cmd,
     get_rfx_object,
 )
-from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST, DEVICE_PACKET_TYPE_LIGHTING4
+from .const import (
+    ATTR_EVENT,
+    COMMAND_OFF_LIST,
+    COMMAND_ON_LIST,
+    DEVICE_PACKET_TYPE_LIGHTING4,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -141,6 +146,13 @@ class RfxtrxBinarySensor(BinarySensorEntity):
     def name(self):
         """Return the device name."""
         return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        if not self.event:
+            return None
+        return {ATTR_EVENT: "".join(f"{x:02x}" for x in self.event.data)}
 
     @property
     def data_bits(self):

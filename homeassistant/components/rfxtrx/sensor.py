@@ -19,6 +19,7 @@ from . import (
     get_device_id,
     get_rfx_object,
 )
+from .const import ATTR_EVENT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -160,7 +161,7 @@ class RfxtrxSensor(Entity):
         """Return the device state attributes."""
         if not self.event:
             return None
-        return self.event.values
+        return {ATTR_EVENT: "".join(f"{x:02x}" for x in self.event.data)}
 
     @property
     def unit_of_measurement(self):
