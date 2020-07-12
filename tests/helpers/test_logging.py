@@ -13,9 +13,7 @@ async def test_set_default_log_level(hass):
     logging.getLogger("randomns").level == logging.DEBUG
 
     assert await async_setup_component(
-        hass,
-        "logger",
-        {"logger": {"default": "critical", "logs": {"randomns": "info"}}},
+        hass, "logger", {"logger": {"logs": {"randomns": "info"}}},
     )
     await hass.async_block_till_done()
 
@@ -28,14 +26,13 @@ async def test_set_default_log_level(hass):
     hass.helpers.logging.set_default_log_level("randomns", logging.DEBUG)
     assert logging.getLogger("randomns").isEnabledFor(logging.DEBUG) is False
     logging.getLogger("randomns").level == logging.INFO
+    logging.getLogger("").setLevel(logging.NOTSET)
 
 
 async def test_restore_log_level(hass):
     """Setting the restore log level respects logger."""
     assert await async_setup_component(
-        hass,
-        "logger",
-        {"logger": {"default": "critical", "logs": {"randomns": "info"}}},
+        hass, "logger", {"logger": {"logs": {"randomns": "info"}}},
     )
     await hass.async_block_till_done()
 
@@ -50,3 +47,4 @@ async def test_restore_log_level(hass):
     hass.helpers.logging.restore_log_level("randomns")
     assert logging.getLogger("randomns").isEnabledFor(logging.DEBUG) is False
     logging.getLogger("randomns").level == logging.INFO
+    logging.getLogger("").setLevel(logging.NOTSET)
