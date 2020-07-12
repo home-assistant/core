@@ -115,8 +115,6 @@ CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Any(DEVICE_SCHEMA, PORT_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
 
-DATA_STORE = f"{DOMAIN}"
-
 
 async def async_setup(hass, config):
     """Set up the RFXtrx component."""
