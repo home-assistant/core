@@ -27,7 +27,6 @@ from homeassistant.components.image_processing import (
 from . import config_flow  # noqa: F401
 from .const import (
     CONF_ACCESS_KEY_ID,
-    CONF_COLLECTION_ID,
     CONF_CONTEXT,
     CONF_CREDENTIAL_NAME,
     CONF_CREDENTIALS,
@@ -37,6 +36,11 @@ from .const import (
     CONF_SECRET_ACCESS_KEY,
     CONF_SERVICE,
     CONF_VALIDATE,
+    CONF_COLLECTION_ID,
+    CONF_IDENTIFY_FACES,
+    CONF_DETECTION_ATTRIBUTES,
+    CONF_SAVE_FILE_FOLDER,
+    CONF_SAVE_FILE_TIMESTAMP,
     DATA_CONFIG,
     DATA_HASS_CONFIG,
     DATA_SESSIONS,
@@ -89,7 +93,11 @@ IMAGE_PROCESSING_PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
         vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
         vol.Exclusive(CONF_CREDENTIAL_NAME, ATTR_CREDENTIALS): cv.string,
         vol.Required(CONF_REGION): vol.All(cv.string, vol.Lower),
-        vol.Required(CONF_COLLECTION_ID): cv.string,
+        vol.Optional(CONF_COLLECTION_ID): cv.string,
+        vol.Optional(CONF_IDENTIFY_FACES): cv.boolean,
+        vol.Optional(CONF_DETECTION_ATTRIBUTES): cv.string,
+        vol.Optional(CONF_SAVE_FILE_TIMESTAMP): cv.boolean,
+        vol.Optional(CONF_SAVE_FILE_FOLDER): cv.string,
     }
 )
 
@@ -141,8 +149,6 @@ async def async_setup_entry(hass, entry):
     """
     config = hass.data.get(DATA_HASS_CONFIG)
     conf = hass.data.get(DATA_CONFIG)
-    _LOGGER.error("CONFIG: %s", config)
-    _LOGGER.error("CONF: %s", conf)
 
     if entry.source == config_entries.SOURCE_IMPORT:
         if conf is None:
@@ -209,11 +215,11 @@ async def _validate_aws_credentials(hass, credential):
         session = aiobotocore.AioSession(profile=profile)
         del aws_config[CONF_PROFILE_NAME]
     else:
-        _LOGGER.error("Setting Session")
         session = aiobotocore.AioSession()
-        session.set_credentials(
-            aws_config[CONF_ACCESS_KEY_ID], aws_config[CONF_SECRET_ACCESS_KEY]
-        )
+        if CONF_SECRET_ACCESS_KEY in aws_config:
+            session.set_credentials(
+                aws_config[CONF_ACCESS_KEY_ID], aws_config[CONF_SECRET_ACCESS_KEY]
+            )
 
     if CONF_ACCESS_KEY_ID in aws_config:
         del aws_config[CONF_ACCESS_KEY_ID]
