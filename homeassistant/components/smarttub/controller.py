@@ -16,14 +16,13 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class SmartTubAPI:
+class SmartTubController:
     """Interface between Home Assistant and the SmartTub API."""
 
-    def __init__(self, hass, entry):
-        """Initialize an interface to SmartTub based on a config entry."""
+    def __init__(self, hass, smarttub_api=smarttub.SmartTub):
+        """Initialize an interface to SmartTub."""
         self._hass = hass
-        self._st = smarttub.SmartTub(async_get_clientsession(hass))
-        self._entry = entry
+        self._api = smarttub_api(async_get_clientsession(hass))
         self._account = None
         self._spas = {}
         self._stop_polling = None
@@ -31,18 +30,16 @@ class SmartTubAPI:
         self._coordinator = None
         self.spa_ids = set()
 
-    async def async_setup(self):
+    async def async_setup(self, entry):
         """Perform initial setup.
 
         Authenticate, query static state, set up polling, and otherwise make
         ready for normal operations .
         """
 
-        await self._st.login(
-            self._entry.data[CONF_EMAIL], self._entry.data[CONF_PASSWORD]
-        )
+        await self._api.login(entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD])
 
-        self._account = await self._st.get_account()
+        self._account = await self._api.get_account()
 
         self._spas = {spa.id: spa for spa in await self._account.get_spas()}
         self.spa_ids = set(self._spas)
@@ -53,9 +50,7 @@ class SmartTubAPI:
             name=DOMAIN,
             update_method=self.async_update_data,
             update_interval=timedelta(
-                seconds=self._entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                )
+                seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
             ),
         )
 
@@ -64,7 +59,7 @@ class SmartTubAPI:
         device_registry = await dr.async_get_registry(self._hass)
         for spa in self._spas.values():
             device_registry.async_get_or_create(
-                config_entry_id=self._entry.entry_id,
+                config_entry_id=entry.entry_id,
                 connections={(DOMAIN, self._account.id)},
                 identifiers={(DOMAIN, spa.id)},
                 manufacturer=spa.brand,

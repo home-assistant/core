@@ -4,7 +4,7 @@ import logging
 from homeassistant.const import TEMP_CELSIUS
 
 from . import SmartTubEntity
-from .const import DOMAIN, SMARTTUB_API
+from .const import DOMAIN, SMARTTUB_CONTROLLER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -12,15 +12,15 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up SmartTub sensors."""
 
-    api = hass.data[DOMAIN][entry.unique_id][SMARTTUB_API]
+    controller = hass.data[DOMAIN][entry.unique_id][SMARTTUB_CONTROLLER]
 
     entities = []
-    for spa_id in api.spa_ids:
+    for spa_id in controller.spa_ids:
         entities.extend(
             [
-                SmartTubTargetWaterTemperature(api, spa_id),
-                SmartTubCurrentWaterTemperature(api, spa_id),
-                SmartTubHeaterStatus(api, spa_id),
+                SmartTubTargetWaterTemperature(controller, spa_id),
+                SmartTubCurrentWaterTemperature(controller, spa_id),
+                SmartTubHeaterStatus(controller, spa_id),
             ]
         )
 
@@ -30,14 +30,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SmartTubTargetWaterTemperature(SmartTubEntity):
     """The target water temperature for the spa."""
 
-    def __init__(self, api, spa_id):
+    def __init__(self, controller, spa_id):
         """Initialize the sensor."""
-        super().__init__(api, spa_id, "target water temperature")
+        super().__init__(controller, spa_id, "target water temperature")
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.api.get_target_water_temperature(self.spa_id)
+        return self.controller.get_target_water_temperature(self.spa_id)
 
     @property
     def unit_of_measurement(self):
@@ -53,14 +53,14 @@ class SmartTubTargetWaterTemperature(SmartTubEntity):
 class SmartTubCurrentWaterTemperature(SmartTubEntity):
     """The current water temperature for the spa."""
 
-    def __init__(self, api, spa_id):
+    def __init__(self, controller, spa_id):
         """Initialize the sensor."""
-        super().__init__(api, spa_id, "current water temperature")
+        super().__init__(controller, spa_id, "current water temperature")
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.api.get_current_water_temperature(self.spa_id)
+        return self.controller.get_current_water_temperature(self.spa_id)
 
     @property
     def unit_of_measurement(self):
@@ -76,11 +76,11 @@ class SmartTubCurrentWaterTemperature(SmartTubEntity):
 class SmartTubHeaterStatus(SmartTubEntity):
     """The state of the heater."""
 
-    def __init__(self, api, spa_id):
+    def __init__(self, controller, spa_id):
         """Initialize the sensor."""
-        super().__init__(api, spa_id, "heater status")
+        super().__init__(controller, spa_id, "heater status")
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.api.get_heater_status(self.spa_id)
+        return self.controller.get_heater_status(self.spa_id)

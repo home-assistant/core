@@ -7,8 +7,8 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 
-from .api import validate_credentials
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN  # pylint: disable=unused-import
+from .controller import validate_credentials
 
 DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
