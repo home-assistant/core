@@ -6,10 +6,15 @@ import logging
 import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_STATE,
+    CONF_COMMAND_OFF,
+    CONF_COMMAND_ON,
     CONF_DEVICE,
+    CONF_DEVICE_CLASS,
+    CONF_DEVICES,
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_START,
@@ -20,6 +25,7 @@ from homeassistant.const import (
     UV_INDEX,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
@@ -29,15 +35,9 @@ DOMAIN = "rfxtrx"
 
 DEFAULT_SIGNAL_REPETITIONS = 1
 
-ATTR_AUTOMATIC_ADD = "automatic_add"
-ATTR_DEVICE = "device"
-ATTR_DEBUG = "debug"
 ATTR_FIRE_EVENT = "fire_event"
-ATTR_DATA_TYPE = "data_type"
-ATTR_DUMMY = "dummy"
 CONF_DATA_BITS = "data_bits"
 CONF_AUTOMATIC_ADD = "automatic_add"
-CONF_DATA_TYPE = "data_type"
 CONF_SIGNAL_REPETITIONS = "signal_repetitions"
 CONF_FIRE_EVENT = "fire_event"
 CONF_DUMMY = "dummy"
@@ -83,10 +83,25 @@ DATA_TYPES = OrderedDict(
 _LOGGER = logging.getLogger(__name__)
 DATA_RFXOBJECT = "rfxobject"
 
+
+DEVICE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+        vol.Optional(CONF_OFF_DELAY): vol.Any(cv.time_period, cv.positive_timedelta),
+        vol.Optional(CONF_DATA_BITS): cv.positive_int,
+        vol.Optional(CONF_COMMAND_ON): cv.byte,
+        vol.Optional(CONF_COMMAND_OFF): cv.byte,
+        vol.Optional(CONF_SIGNAL_REPETITIONS, default=1): cv.positive_int,
+    }
+)
+
 BASE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEBUG, default=False): cv.boolean,
         vol.Optional(CONF_DUMMY, default=False): cv.boolean,
+        vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
+        vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
     }
 )
 
@@ -121,11 +136,11 @@ def setup(hass, config):
         # Callback to HA registered components.
         hass.helpers.dispatcher.dispatcher_send(SIGNAL_EVENT, event)
 
-    device = config[DOMAIN].get(ATTR_DEVICE)
+    device = config[DOMAIN].get(CONF_DEVICE)
     host = config[DOMAIN].get(CONF_HOST)
     port = config[DOMAIN].get(CONF_PORT)
-    debug = config[DOMAIN][ATTR_DEBUG]
-    dummy_connection = config[DOMAIN][ATTR_DUMMY]
+    debug = config[DOMAIN][CONF_DEBUG]
+    dummy_connection = config[DOMAIN][CONF_DUMMY]
 
     if dummy_connection:
         rfx_object = rfxtrxmod.Connect(
@@ -154,6 +169,13 @@ def setup(hass, config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_rfxtrx)
 
     hass.data[DATA_RFXOBJECT] = rfx_object
+
+    load_platform(hass, "switch", DOMAIN, config[DOMAIN], config)
+    load_platform(hass, "light", DOMAIN, config[DOMAIN], config)
+    load_platform(hass, "cover", DOMAIN, config[DOMAIN], config)
+    load_platform(hass, "binary_sensor", DOMAIN, config[DOMAIN], config)
+    load_platform(hass, "sensor", DOMAIN, config[DOMAIN], config)
+
     return True
 
 
@@ -265,10 +287,10 @@ class RfxtrxDevice(Entity):
     Contains the common logic for Rfxtrx lights and switches.
     """
 
-    def __init__(self, name, device, datas, signal_repetitions, event=None):
+    def __init__(self, device, datas, signal_repetitions, event=None):
         """Initialize the device."""
         self.signal_repetitions = signal_repetitions
-        self._name = name
+        self._name = f"{device.type_string} {device.id_string}"
         self._device = device
         self._state = datas[ATTR_STATE]
         self._should_fire_event = datas[ATTR_FIRE_EVENT]
