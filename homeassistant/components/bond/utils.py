@@ -2,7 +2,7 @@
 
 from typing import List, Optional
 
-from bond import Bond
+from bond import Actions, Bond
 
 
 class BondDevice:
@@ -23,10 +23,24 @@ class BondDevice:
         """Get the type of this device."""
         return self._attrs["type"]
 
-    def supports_command(self, command: str) -> bool:
-        """Return True if this device supports specified command."""
+    def supports_speed(self) -> bool:
+        """Return True if this device supports any of the speed related commands."""
         actions: List[str] = self._attrs["actions"]
-        return command in actions
+        return len([action for action in actions if action in [Actions.SET_SPEED]]) > 0
+
+    def supports_direction(self) -> bool:
+        """Return True if this device supports any of the direction related commands."""
+        actions: List[str] = self._attrs["actions"]
+        return (
+            len(
+                [
+                    action
+                    for action in actions
+                    if action in [Actions.SET_DIRECTION, Actions.TOGGLE_DIRECTION]
+                ]
+            )
+            > 0
+        )
 
 
 class BondHub:
