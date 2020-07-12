@@ -12,12 +12,17 @@ from tests.common import MockConfigEntry
 MOCK_HUB_VERSION: dict = {"bondid": "test-bond-id"}
 
 
-async def setup_bond_entity(hass: core.HomeAssistant, config_entry: MockConfigEntry):
+async def setup_bond_entity(
+    hass: core.HomeAssistant, config_entry: MockConfigEntry, hub_version=None
+):
     """Set up Bond entity."""
+    if hub_version is None:
+        hub_version = MOCK_HUB_VERSION
+
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.bond.Bond.getVersion", return_value=MOCK_HUB_VERSION
+        "homeassistant.components.bond.Bond.getVersion", return_value=hub_version
     ):
         return await hass.config_entries.async_setup(config_entry.entry_id)
 
