@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from bond import BOND_DEVICE_TYPE_MOTORIZED_SHADES
+from bond import DeviceTypes
 
 from homeassistant import core
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def shades(name: str):
     """Create motorized shades with given name."""
-    return {"name": name, "type": BOND_DEVICE_TYPE_MOTORIZED_SHADES}
+    return {"name": name, "type": DeviceTypes.MOTORIZED_SHADES}
 
 
 async def test_entity_registry(hass: core.HomeAssistant):
