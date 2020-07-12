@@ -1,12 +1,12 @@
 """SmartTub integration."""
 import logging
 
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 from .const import DOMAIN, SMARTTUB_CONTROLLER
 from .controller import SmartTubController
+from .helpers import create_config_flow
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,11 +20,7 @@ async def async_setup(hass, config):
     if cfg is None:
         return True
 
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=cfg,
-        )
-    )
+    create_config_flow(hass, cfg)
 
     return True
 

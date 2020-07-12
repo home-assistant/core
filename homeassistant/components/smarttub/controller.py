@@ -13,6 +13,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, POLLING_TIMEOUT
+from .helpers import create_config_flow
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +39,12 @@ class SmartTubController:
         ready for normal operations .
         """
 
-        await self._api.login(entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD])
+        try:
+            await self._api.login(entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD])
+        except LoginFailed:
+            # credentials were changed or invalidated, we need new ones
+            create_config_flow()
+            return False
 
         self._account = await self._api.get_account()
 
