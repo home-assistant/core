@@ -117,7 +117,7 @@ class PioneerDevice(MediaPlayerDevice):
         """Establish a telnet connection and sends command."""
         tries = MAX_TRIES
         while tries > 0:
-            tries = tries - 1
+            tries -= 1
             try:
                 try:
                     telnet = telnetlib.Telnet(self._host, self._port, self._timeout)
