@@ -82,6 +82,8 @@ def stream_worker(hass, stream, quit_event):
                     raise StopIteration("No dts in consecutive packets")
                 last_packet_was_without_dts = True
                 continue
+            else:
+                last_packet_was_without_dts = False
         except (av.AVError, StopIteration) as ex:
             # End of stream, clear listeners and stop thread
             for fmt, _ in outputs.items():
