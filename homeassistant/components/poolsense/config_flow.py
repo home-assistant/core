@@ -21,11 +21,10 @@ class PoolSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize PoolSense config flow."""
-        self._errors = {}
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
-        self._errors = {}
+        errors = {}
 
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_EMAIL])
@@ -43,9 +42,9 @@ class PoolSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             api_key_valid = await poolsense.test_poolsense_credentials()
 
             if not api_key_valid:
-                self._errors["base"] = "invalid_auth"
+                errors["base"] = "invalid_auth"
 
-            if not self._errors:
+            if not errors:
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL],
                     data={
@@ -59,5 +58,5 @@ class PoolSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
             ),
-            errors=self._errors or {},
+            errors=errors or {},
         )
