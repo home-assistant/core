@@ -1,5 +1,6 @@
 """Code to handle a Firmata board."""
 import logging
+from typing import Union
 
 from pymata_express.pymata_express import PymataExpress
 
@@ -18,11 +19,13 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+FirmataPinType = Union[int, str]
+
 
 class FirmataBoard:
     """Manages a single Firmata board."""
 
-    def __init__(self, config):
+    def __init__(self, config: dict):
         """Initialize the board."""
         self.config = config
         self.api = None
@@ -38,12 +41,12 @@ class FirmataBoard:
         if CONF_BINARY_SENSORS in self.config:
             self.binary_sensors = self.config[CONF_BINARY_SENSORS]
 
-    async def async_setup(self, tries=0):
+    async def async_setup(self, tries=0) -> bool:
         """Set up a Firmata instance."""
         try:
             _LOGGER.debug("Connecting to Firmata %s", self.name)
             self.api = await get_board(self.config)
-        except RuntimeError as err:
+        except Exception as err:  # pylint: disable=broad-except
             _LOGGER.error("Error connecting to PyMata board %s: %s", self.name, err)
             return False
 
@@ -71,7 +74,7 @@ board %s: %s",
         _LOGGER.debug("Firmata connection successful for %s", self.name)
         return True
 
-    async def async_reset(self):
+    async def async_reset(self) -> bool:
         """Reset the board to default state."""
         _LOGGER.debug("Shutting down board %s", self.name)
         # If the board was never setup, continue.
@@ -83,14 +86,14 @@ board %s: %s",
 
         return True
 
-    def mark_pin_used(self, pin):
+    def mark_pin_used(self, pin: FirmataPinType) -> bool:
         """Test if a pin is used already on the board or mark as used."""
         if pin in self.used_pins:
             return False
         self.used_pins.append(pin)
         return True
 
-    def get_pin_type(self, pin):
+    def get_pin_type(self, pin: FirmataPinType) -> tuple:
         """Return the type and Firmata location of a pin on the board."""
         if isinstance(pin, str):
             pin_type = "analog"
@@ -102,7 +105,7 @@ board %s: %s",
         return (pin_type, firmata_pin)
 
 
-async def get_board(data: dict):
+async def get_board(data: dict) -> PymataExpress:
     """Create a Pymata board object."""
     board_data = {}
 

@@ -3,7 +3,9 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 
 from .const import CONF_NEGATE_STATE, CONF_PIN, CONF_PIN_MODE, DOMAIN
 from .entity import FirmataPinEntity
@@ -12,7 +14,9 @@ from .pin import FirmataBinaryDigitalInput, FirmataPinUsedException
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up the Firmata binary sensors."""
     new_entities = []
 
@@ -34,18 +38,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         binary_sensor_entity = FirmataBinarySensor(api, config_entry, name, pin)
         new_entities.append(binary_sensor_entity)
 
-    if (new_entities):
+    if new_entities:
         async_add_entities(new_entities)
 
 
 class FirmataBinarySensor(FirmataPinEntity, BinarySensorEntity):
     """Representation of a binary sensor on a Firmata board."""
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Set up a binary sensor."""
         await self._api.start_pin(self.async_write_ha_state)
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Stop reporting a binary sensor."""
         await self._api.stop_pin()
 

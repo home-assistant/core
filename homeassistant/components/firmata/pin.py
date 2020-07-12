@@ -1,8 +1,10 @@
 """Code to handle pins on a Firmata board."""
 import logging
+from typing import Callable
 
 from homeassistant.core import callback
 
+from .board import FirmataBoard, FirmataPinType
 from .const import PIN_MODE_INPUT, PIN_MODE_PULLUP
 
 _LOGGER = logging.getLogger(__name__)
@@ -15,7 +17,7 @@ class FirmataPinUsedException(Exception):
 class FirmataBoardPin:
     """Manages a single Firmata board pin."""
 
-    def __init__(self, board, pin, pin_mode):
+    def __init__(self, board: FirmataBoard, pin: FirmataPinType, pin_mode: str):
         """Initialize the pin."""
         self.board = board
         self._pin = pin
@@ -32,13 +34,20 @@ class FirmataBoardPin:
 class FirmataBinaryDigitalOutput(FirmataBoardPin):
     """Representation of a Firmata Digital Output Pin."""
 
-    def __init__(self, board, pin, pin_mode, initial, negate):
+    def __init__(
+        self,
+        board: FirmataBoard,
+        pin: FirmataPinType,
+        pin_mode: str,
+        initial: bool,
+        negate: bool,
+    ):
         """Initialize the digital output pin."""
         self._initial = initial
         self._negate = negate
         super().__init__(board, pin, pin_mode)
 
-    async def start_pin(self):
+    async def start_pin(self) -> None:
         """Set initial state on a pin."""
         _LOGGER.debug(
             "Setting initial state for digital output pin %s on board %s",
@@ -61,14 +70,14 @@ class FirmataBinaryDigitalOutput(FirmataBoardPin):
         """Return true if digital output is on."""
         return self._state
 
-    async def turn_on(self):
+    async def turn_on(self) -> None:
         """Turn on digital output."""
         _LOGGER.debug("Turning digital output on pin %s on", self._pin)
         new_pin_state = not self._negate
         await self.board.api.digital_pin_write(self._firmata_pin, int(new_pin_state))
         self._state = True
 
-    async def turn_off(self):
+    async def turn_off(self) -> None:
         """Turn off digital output."""
         _LOGGER.debug("Turning digital output on pin %s off", self._pin)
         new_pin_state = self._negate
@@ -79,13 +88,15 @@ class FirmataBinaryDigitalOutput(FirmataBoardPin):
 class FirmataBinaryDigitalInput(FirmataBoardPin):
     """Representation of a Firmata Digital Input Pin."""
 
-    def __init__(self, board, pin, pin_mode, negate):
+    def __init__(
+        self, board: FirmataBoard, pin: FirmataPinType, pin_mode: str, negate: bool
+    ):
         """Initialize the digital input pin."""
         self._negate = negate
         self._forward_callback = None
         super().__init__(board, pin, pin_mode)
 
-    async def start_pin(self, forward_callback):
+    async def start_pin(self, forward_callback: Callable[[], None]) -> None:
         """Get initial state and start reporting a pin."""
         _LOGGER.debug(
             "Starting reporting updates for input pin %s on board %s",
@@ -107,7 +118,7 @@ class FirmataBinaryDigitalInput(FirmataBoardPin):
         await api.enable_digital_reporting(self._pin)
         self._forward_callback()
 
-    async def stop_pin(self):
+    async def stop_pin(self) -> None:
         """Stop reporting digital input pin."""
         _LOGGER.debug(
             "Stopping reporting updates for digital input pin %s on board %s",
@@ -123,7 +134,7 @@ class FirmataBinaryDigitalInput(FirmataBoardPin):
         return self._state
 
     @callback
-    async def latch_callback(self, data):
+    async def latch_callback(self, data: list) -> None:
         """Update pin state on callback."""
         if data[1] != self._firmata_pin:
             return

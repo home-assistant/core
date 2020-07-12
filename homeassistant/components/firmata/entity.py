@@ -1,6 +1,11 @@
 """Entity for Firmata devices."""
+from typing import Type
 
+from homeassistant.config_entries import ConfigEntry
+
+from .board import FirmataPinType
 from .const import DOMAIN, FIRMATA_MANUFACTURER
+from .pin import FirmataBoardPin
 
 
 class FirmataEntity:
@@ -25,7 +30,13 @@ class FirmataEntity:
 class FirmataPinEntity(FirmataEntity):
     """Representation of a Firmata pin entity."""
 
-    def __init__(self, api, config_entry, name, pin):
+    def __init__(
+        self,
+        api: Type[FirmataBoardPin],
+        config_entry: ConfigEntry,
+        name: str,
+        pin: FirmataPinType,
+    ):
         """Initialize the pin entity."""
         super().__init__(api)
         self._name = name
@@ -44,6 +55,6 @@ class FirmataPinEntity(FirmataEntity):
         return False
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique identifier for this device."""
         return self._unique_id

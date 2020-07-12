@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .board import FirmataBoard
@@ -80,7 +81,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the Firmata domain."""
     # Delete specific entries that no longer exist in the config
     if hass.config_entries.async_entries(DOMAIN):
@@ -115,7 +116,9 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+) -> bool:
     """Set up a Firmata board for a config entry."""
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
@@ -134,7 +137,7 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN][config_entry.entry_id] = board
 
-    async def handle_shutdown(event):
+    async def handle_shutdown(event) -> None:
         """Handle shutdown of board when Home Assistant shuts down."""
         # Ensure board was not already removed previously before shutdown
         if config_entry.entry_id in hass.data[DOMAIN]:
@@ -163,7 +166,9 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry) -> None:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+) -> None:
     """Shutdown and close a Firmata board for a config entry."""
     _LOGGER.debug("Closing Firmata board %s", config_entry.data[CONF_NAME])
 

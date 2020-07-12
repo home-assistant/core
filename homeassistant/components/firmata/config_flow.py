@@ -4,7 +4,7 @@ import logging
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from .board import get_board
 from .const import CONF_SERIAL_PORT, DOMAIN  # pylint: disable=unused-import
@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def configured_boards(hass):
+def configured_boards(hass: HomeAssistant) -> dict:
     """Return a set of all configured boards."""
     return {
         entry.data[CONF_NAME]: entry
@@ -27,7 +27,7 @@ class FirmataFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
-    async def async_step_import(self, import_config):
+    async def async_step_import(self, import_config: dict):
         """Import a firmata board as a config entry.
 
         This flow is triggered by `async_setup` for configured boards.
@@ -45,9 +45,9 @@ class FirmataFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             api = await get_board(import_config)
             await api.shutdown()
-        except RuntimeError as err:
+        except Exception as err:  # pylint: disable=broad-except
             _LOGGER.error("Error connecting to PyMata board %s: %s", name, err)
-            return self.async_abort(reason="connection_error")
+            return self.async_abort(reason="cannot_connect")
         _LOGGER.debug("Connection test to Firmata board %s successful", name)
 
         return self.async_create_entry(
