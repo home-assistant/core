@@ -206,8 +206,6 @@ def setup_internal(hass, config):
 
     hass.data[DATA_RFXOBJECT] = rfx_object
 
-    return True
-
 
 def get_rfx_object(packetid):
     """Return the RFXObject with the packetid."""

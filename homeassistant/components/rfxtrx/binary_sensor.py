@@ -276,7 +276,7 @@ class RfxtrxBinarySensor(BinarySensorEntity):
                 """Switch device off after a delay."""
                 self.delay_listener = None
                 self._state = False
-                self.schedule_update_ha_state()
+                self.async_write_ha_state()
 
             self.delay_listener = evt.async_call_later(
                 self.hass, self.off_delay.total_seconds(), off_delay_listener

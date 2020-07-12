@@ -43,7 +43,7 @@ async def test_import_update(hass):
             "port": None,
             "device": "/dev/tty123",
             "debug": False,
-            "demmy": False,
+            "dummy": False,
         },
         unique_id=DOMAIN,
     )
