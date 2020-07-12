@@ -1,5 +1,7 @@
 """The tests for the Rfxtrx component."""
 
+from unittest.mock import call
+
 from homeassistant.components import rfxtrx
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
@@ -131,3 +133,19 @@ async def test_fire_event_sensor(hass):
         == {"entity_id": "sensor.wt260_wt260h_wt440h_wt450_wt450h_06_01_temperature"}
         for call in calls
     )
+
+
+async def test_send(hass, rfxtrx):
+    """Test configuration."""
+    assert await async_setup_component(
+        hass, "rfxtrx", {"rfxtrx": {"device": "/dev/null"}}
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "rfxtrx", "send", {"event": "0a520802060101ff0f0269"}, blocking=True
+    )
+
+    rfxtrx.transport.send.calls == [
+        call(bytearray(b"\x0a\x52\x08\x02\x06\x01\x01\xff\x0f\x02\x69"))
+    ]
