@@ -77,7 +77,10 @@ class BondFan(BondEntity, FanEntity):
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+        max_speed = self._device.props.get("max_speed", 3)
+        if max_speed == 3:
+            return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+        return [SPEED_OFF] + [f"speed {speed}" for speed in range(1, max_speed + 1)]
 
     @property
     def current_direction(self) -> Optional[str]:

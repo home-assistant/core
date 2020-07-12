@@ -28,9 +28,15 @@ async def setup_bond_entity(
 
 
 async def setup_platform(
-    hass: core.HomeAssistant, platform: str, discovered_device: Dict[str, Any]
+    hass: core.HomeAssistant,
+    platform: str,
+    discovered_device: Dict[str, Any],
+    props: Dict[str, Any] = None,
 ):
     """Set up the specified Bond platform."""
+    if not props:
+        props = {}
+
     mock_entry = MockConfigEntry(
         domain=BOND_DOMAIN,
         data={CONF_HOST: "1.1.1.1", CONF_ACCESS_TOKEN: "test-token"},
@@ -46,6 +52,8 @@ async def setup_platform(
         "homeassistant.components.bond.Bond.getDevice", return_value=discovered_device
     ), patch(
         "homeassistant.components.bond.Bond.getDeviceState", return_value={}
+    ), patch(
+        "homeassistant.components.bond.Bond.getProperties", return_value=props
     ):
         assert await async_setup_component(hass, BOND_DOMAIN, {})
         await hass.async_block_till_done()

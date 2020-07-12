@@ -7,6 +7,7 @@ from homeassistant import core
 from homeassistant.components import fan
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
+    ATTR_SPEED_LIST,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN as FAN_DOMAIN,
@@ -16,10 +17,10 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_O
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
-from ...common import async_fire_time_changed
 from .common import setup_platform
 
 from tests.async_mock import patch
+from tests.common import async_fire_time_changed
 
 
 def ceiling_fan(name: str):
@@ -37,6 +38,24 @@ async def test_entity_registry(hass: core.HomeAssistant):
 
     registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
     assert [key for key in registry.entities.keys()] == ["fan.name_1"]
+
+
+async def test_entity_non_standard_speed_list(hass: core.HomeAssistant):
+    """Tests that the device is registered with custom speed list if number of supported speeds differs form 3."""
+    await setup_platform(
+        hass, FAN_DOMAIN, ceiling_fan("name-1"), props={"max_speed": 6}
+    )
+
+    actual = hass.states.get("fan.name_1").attributes[ATTR_SPEED_LIST]
+    assert actual == [
+        "off",
+        "speed 1",
+        "speed 2",
+        "speed 3",
+        "speed 4",
+        "speed 5",
+        "speed 6",
+    ]
 
 
 async def test_turn_on_fan(hass: core.HomeAssistant):
