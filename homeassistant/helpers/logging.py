@@ -72,18 +72,20 @@ class KeywordStyleAdapter(logging.LoggerAdapter):
 
 
 @bind_hass
-def set_default_log_level(hass: HomeAssistant, ns: str, loglevel: int) -> None:
+def set_default_log_level(hass: HomeAssistant, namespace: str, loglevel: int) -> None:
     """Set the log level as long as logger has not overridden it."""
-    if LOGGER_LEVELS not in hass.data or ns in hass.data[LOGGER_LEVELS]:
+    if LOGGER_LEVELS not in hass.data or namespace in hass.data[LOGGER_LEVELS]:
         return
 
-    logging.getLogger(ns).setLevel(loglevel)
+    logging.getLogger(namespace).setLevel(loglevel)
 
 
 @bind_hass
-def restore_log_level(hass: HomeAssistant, ns: str) -> None:
+def restore_log_level(hass: HomeAssistant, namespace: str) -> None:
     """Restore the log level to the level configured by the logger integration."""
-    if LOGGER_LEVELS not in hass.data or ns not in hass.data[LOGGER_LEVELS]:
+    if LOGGER_LEVELS not in hass.data or namespace not in hass.data[LOGGER_LEVELS]:
         return
 
-    logging.getLogger(ns).setLevel(LOGSEVERITY[hass.data[LOGGER_LEVELS][ns]])
+    logging.getLogger(namespace).setLevel(
+        LOGSEVERITY[hass.data[LOGGER_LEVELS][namespace]]
+    )
