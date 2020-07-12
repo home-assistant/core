@@ -42,6 +42,20 @@ class BondDevice:
             > 0
         )
 
+    def supports_light(self) -> bool:
+        """Return True if this device supports any of the light related commands."""
+        actions: List[str] = self._attrs["actions"]
+        return (
+            len(
+                [
+                    action
+                    for action in actions
+                    if action in [Actions.TURN_LIGHT_ON, Actions.TOGGLE_LIGHT]
+                ]
+            )
+            > 0
+        )
+
 
 class BondHub:
     """Hub device representing Bond Bridge."""
