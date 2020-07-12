@@ -107,7 +107,7 @@ async def async_setup_entry(hass, entry):
         raise ConfigEntryNotReady
 
     for component in ("camera", "vacuum", "switch", "sensor"):
-        hass.async_create_task(
+        hass.async_add_job(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
