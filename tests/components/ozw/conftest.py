@@ -122,39 +122,6 @@ async def light_no_rgb_msg_fixture(hass):
     return message
 
 
-@pytest.fixture(name="light_no_ww_msg")
-async def light_no_ww_msg_fixture(hass):
-    """Return a mock MQTT msg with a light actuator message."""
-    light_json = json.loads(
-        await hass.async_add_executor_job(load_fixture, "ozw/light.json")
-    )
-    message = MQTTMessage(topic=light_json["topic"], payload=light_json["payload"])
-    message.encode()
-    return message
-
-
-@pytest.fixture(name="light_no_cw_msg")
-async def light_no_cw_msg_fixture(hass):
-    """Return a mock MQTT msg with a light actuator message."""
-    light_json = json.loads(
-        await hass.async_add_executor_job(load_fixture, "ozw/light.json")
-    )
-    message = MQTTMessage(topic=light_json["topic"], payload=light_json["payload"])
-    message.encode()
-    return message
-
-
-@pytest.fixture(name="light_wc_msg")
-async def light_wc_msg_fixture(hass):
-    """Return a mock MQTT msg with a light actuator message."""
-    light_json = json.loads(
-        await hass.async_add_executor_job(load_fixture, "ozw/light.json")
-    )
-    message = MQTTMessage(topic=light_json["topic"], payload=light_json["payload"])
-    message.encode()
-    return message
-
-
 @pytest.fixture(name="switch_msg")
 async def switch_msg_fixture(hass):
     """Return a mock MQTT msg with a switch actuator message."""
