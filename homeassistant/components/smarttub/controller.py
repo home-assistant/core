@@ -68,6 +68,8 @@ class SmartTubController:
                 # sw_version=config.swversion,
             )
 
+        return True
+
     async def async_update_data(self):
         """Query the API and update our copy of the state."""
 
