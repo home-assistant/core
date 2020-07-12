@@ -144,7 +144,7 @@ class PioneerDevice(MediaPlayerDevice):
         """Get the latest details from the device."""
         tries = MAX_TRIES
         while tries > 0:
-            tries = tries - 1
+            tries -= 1
             try:
                 telnet = telnetlib.Telnet(self._host, self._port, self._timeout)
                 break
