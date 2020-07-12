@@ -26,6 +26,13 @@ async def test_set_default_log_level(hass):
     hass.helpers.logging.set_default_log_level("randomns", logging.DEBUG)
     assert logging.getLogger("randomns").isEnabledFor(logging.DEBUG) is False
     logging.getLogger("randomns").level == logging.INFO
+
+    hass.helpers.logging.set_default_log_level("unconfigured.randomns", logging.DEBUG)
+    assert (
+        logging.getLogger("unconfigured.randomns").isEnabledFor(logging.DEBUG) is True
+    )
+    logging.getLogger("unconfigured.randomns").level == logging.DEBUG
+
     logging.getLogger("").setLevel(logging.NOTSET)
 
 
