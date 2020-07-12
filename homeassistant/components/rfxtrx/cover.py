@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.components.cover import CoverEntity
 from homeassistant.const import ATTR_STATE, CONF_DEVICES, STATE_OPEN
+from homeassistant.core import callback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
@@ -17,16 +18,16 @@ from . import (
     get_device_id,
     get_rfx_object,
 )
-from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
+from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST, DATA_RFXTRX_CONFIG
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the RFXtrx cover."""
-    if discovery_info is None:
-        return
-
+async def async_setup_entry(
+    hass, config_entry, async_add_entities,
+):
+    """Set up config entry."""
+    discovery_info = hass.data[DATA_RFXTRX_CONFIG]
     device_ids = set()
 
     def supported(event):
@@ -50,8 +51,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         entity = RfxtrxCover(event.device, datas, entity_info[CONF_SIGNAL_REPETITIONS])
         entities.append(entity)
 
-    add_entities(entities)
+    async_add_entities(entities)
 
+    @callback
     def cover_update(event):
         """Handle cover updates from the RFXtrx gateway."""
         if not supported(event):
@@ -74,11 +76,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         entity = RfxtrxCover(
             event.device, datas, DEFAULT_SIGNAL_REPETITIONS, event=event
         )
-        add_entities([entity])
+        async_add_entities([entity])
 
     # Subscribe to main RFXtrx events
     if discovery_info[CONF_AUTOMATIC_ADD]:
-        hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, cover_update)
+        hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, cover_update)
 
 
 class RfxtrxCover(RfxtrxDevice, CoverEntity, RestoreEntity):
@@ -127,6 +129,7 @@ class RfxtrxCover(RfxtrxDevice, CoverEntity, RestoreEntity):
         elif event.values["Command"] in COMMAND_OFF_LIST:
             self._state = False
 
+    @callback
     def _handle_event(self, event):
         """Check if event applies to me and update."""
         if event.device.id_string != self._device.id_string:
@@ -134,6 +137,6 @@ class RfxtrxCover(RfxtrxDevice, CoverEntity, RestoreEntity):
 
         self._apply_event(event)
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
         if self.should_fire_event:
             fire_command_event(self.hass, self.entity_id, event.values["Command"])

@@ -10,16 +10,19 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_TEMPERATURE,
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_DEVICES
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
 from . import (
     CONF_AUTOMATIC_ADD,
     CONF_FIRE_EVENT,
     DATA_TYPES,
+    DOMAIN,
     SIGNAL_EVENT,
     get_device_id,
     get_rfx_object,
 )
+from .const import DATA_RFXTRX_CONFIG
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,11 +55,11 @@ CONVERT_FUNCTIONS = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the RFXtrx platform."""
-    if discovery_info is None:
-        return
-
+async def async_setup_entry(
+    hass, config_entry, async_add_entities,
+):
+    """Set up platform."""
+    discovery_info = hass.data[DATA_RFXTRX_CONFIG]
     data_ids = set()
 
     def supported(event):
@@ -83,8 +86,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
             entities.append(entity)
 
-    add_entities(entities)
+    async_add_entities(entities)
 
+    @callback
     def sensor_update(event):
         """Handle sensor updates from the RFXtrx gateway."""
         if not supported(event):
@@ -106,11 +110,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
 
             entity = RfxtrxSensor(event.device, data_type, event=event)
-            add_entities([entity])
+            async_add_entities([entity])
 
     # Subscribe to main RFXtrx events
     if discovery_info[CONF_AUTOMATIC_ADD]:
-        hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, sensor_update)
+        hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, sensor_update)
 
 
 class RfxtrxSensor(Entity):
@@ -182,10 +186,20 @@ class RfxtrxSensor(Entity):
         """Return unique identifier of remote device."""
         return self._unique_id
 
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, *self._device_id)},
+            "name": f"{self._device.type_string} {self._device.id_string}",
+            "model": self._device.type_string,
+        }
+
     def _apply_event(self, event):
         """Apply command from rfxtrx."""
         self.event = event
 
+    @callback
     def _handle_event(self, event):
         """Check if event applies to me and update."""
         if not isinstance(event, SensorEvent):
@@ -206,6 +220,8 @@ class RfxtrxSensor(Entity):
 
         self._apply_event(event)
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
         if self.should_fire_event:
-            self.hass.bus.fire("signal_received", {ATTR_ENTITY_ID: self.entity_id})
+            self.hass.bus.async_fire(
+                "signal_received", {ATTR_ENTITY_ID: self.entity_id}
+            )

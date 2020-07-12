@@ -86,6 +86,7 @@ async def test_fire_event(hass):
     assert state.state == "off"
 
     await _signal_event(hass, "0b1100cd0213c7f210010f51")
+    await hass.async_block_till_done()
 
     state = hass.states.get("switch.ac_213c7f2_16")
     assert state
@@ -125,6 +126,8 @@ async def test_fire_event_sensor(hass):
     hass.bus.async_listen("signal_received", record_event)
 
     await _signal_event(hass, "0a520802060101ff0f0269")
+    await hass.async_block_till_done()
+
     assert len(calls) == 5
     assert any(
         call.data

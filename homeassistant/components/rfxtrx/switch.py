@@ -5,6 +5,7 @@ import RFXtrx as rfxtrxmod
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import ATTR_STATE, CONF_DEVICES, STATE_ON
+from homeassistant.core import callback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
@@ -20,18 +21,18 @@ from . import (
     get_device_id,
     get_rfx_object,
 )
-from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
+from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST, DATA_RFXTRX_CONFIG
 
 DATA_SWITCH = f"{DOMAIN}_switch"
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities_callback, discovery_info=None):
-    """Set up the RFXtrx platform."""
-    if discovery_info is None:
-        return
-
+async def async_setup_entry(
+    hass, config_entry, async_add_entities,
+):
+    """Set up config entry."""
+    discovery_info = hass.data[DATA_RFXTRX_CONFIG]
     device_ids = set()
 
     def supported(event):
@@ -60,8 +61,9 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
         entity = RfxtrxSwitch(event.device, datas, entity_info[CONF_SIGNAL_REPETITIONS])
         entities.append(entity)
 
-    add_entities_callback(entities)
+    async_add_entities(entities)
 
+    @callback
     def switch_update(event):
         """Handle sensor updates from the RFXtrx gateway."""
         if not supported(event):
@@ -84,11 +86,11 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
         entity = RfxtrxSwitch(
             event.device, datas, DEFAULT_SIGNAL_REPETITIONS, event=event
         )
-        add_entities_callback([entity])
+        async_add_entities([entity])
 
     # Subscribe to main RFXtrx events
     if discovery_info[CONF_AUTOMATIC_ADD]:
-        hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, switch_update)
+        hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, switch_update)
 
 
 class RfxtrxSwitch(RfxtrxDevice, SwitchEntity, RestoreEntity):
@@ -115,6 +117,7 @@ class RfxtrxSwitch(RfxtrxDevice, SwitchEntity, RestoreEntity):
         elif event.values["Command"] in COMMAND_OFF_LIST:
             self._state = False
 
+    @callback
     def _handle_event(self, event):
         """Check if event applies to me and update."""
         if event.device.id_string != self._device.id_string:
@@ -122,7 +125,7 @@ class RfxtrxSwitch(RfxtrxDevice, SwitchEntity, RestoreEntity):
 
         self._apply_event(event)
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
         if self.should_fire_event:
             fire_command_event(self.hass, self.entity_id, event.values["Command"])
 
