@@ -4,7 +4,7 @@ from collections import defaultdict
 from datetime import timedelta
 import logging
 
-import smarttub
+from smarttub import APIError, LoginFailed, SmartTub
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL
 from homeassistant.helpers import device_registry as dr
@@ -19,11 +19,10 @@ _LOGGER = logging.getLogger(__name__)
 class SmartTubController:
     """Interface between Home Assistant and the SmartTub API."""
 
-    def __init__(self, hass, api_class=smarttub.SmartTub):
+    def __init__(self, hass):
         """Initialize an interface to SmartTub."""
         self._hass = hass
-        self._api_class = api_class
-        self._api = self._api_class(async_get_clientsession(hass))
+        self._api = SmartTub(async_get_clientsession(hass))
         self._account = None
         self._spas = {}
         self._stop_polling = None
@@ -76,7 +75,7 @@ class SmartTubController:
         try:
             for spa_id, spa in self._spas.items():
                 data[spa_id]["status"] = await spa.get_status()
-        except smarttub.APIError as err:
+        except APIError as err:
             raise UpdateFailed(err)
 
         return data
@@ -93,10 +92,10 @@ class SmartTubController:
 
     async def validate_credentials(self, email, password):
         """Check if the specified credentials are valid for authenticating to SmartTub."""
-        api = self._api_class(async_get_clientsession(self._hass))
+        api = SmartTub(async_get_clientsession(self._hass))
         try:
             await api.login(email, password)
-        except smarttub.LoginFailed:
+        except LoginFailed:
             return False
         return True
 
