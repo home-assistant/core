@@ -1,4 +1,4 @@
-"""AWS platform for notify component."""
+"""AWS platform for image_processing component."""
 import io
 import logging
 import re
