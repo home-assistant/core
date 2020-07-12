@@ -1,4 +1,6 @@
 """Test the smarttub config flow."""
+import pytest
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.smarttub.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL
@@ -7,7 +9,17 @@ from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass):
+@pytest.fixture(name="controller")
+def mock_controller():
+    """Mock the controller."""
+    with patch(
+        "homeassistant.components.smarttub.config_flow.SmartTubController",
+        autospec=True,
+    ) as controller_class_mock:
+        yield controller_class_mock.return_value
+
+
+async def test_form(hass, controller):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -16,10 +28,6 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.smarttub.config_flow.validate_credentials",
-        autospec=True,
-        return_value=True,
-    ), patch(
         "homeassistant.components.smarttub.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.smarttub.async_setup_entry", return_value=True,
@@ -39,26 +47,23 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass, controller):
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.smarttub.config_flow.validate_credentials",
-        autospec=True,
-        return_value=False,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"email": "test-email", "password": "test-password"},
-        )
+    controller.validate_credentials.return_value = False
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"email": "test-email", "password": "test-password"},
+    )
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_options(hass):
+async def test_form_options(hass, controller):
     """Test config flow options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -68,10 +73,8 @@ async def test_form_options(hass):
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.smarttub.config_flow.validate_credentials",
-        autospec=True,
-        return_value=True,
-    ), patch("homeassistant.components.smarttub.async_setup", return_value=True), patch(
+        "homeassistant.components.smarttub.async_setup", return_value=True
+    ), patch(
         "homeassistant.components.smarttub.async_setup_entry", return_value=True,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)

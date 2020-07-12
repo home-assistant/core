@@ -8,7 +8,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN  # pylint: disable=unused-import
-from .controller import validate_credentials
+from .controller import SmartTubController
 
 DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
@@ -54,9 +54,10 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _validate_credentials(self, data):
+        controller = SmartTubController(self.hass)
         errors = {}
-        if not await validate_credentials(
-            self.hass, data[CONF_EMAIL], data[CONF_PASSWORD]
+        if not await controller.validate_credentials(
+            data[CONF_EMAIL], data[CONF_PASSWORD]
         ):
             errors["base"] = "invalid_auth"
         return errors

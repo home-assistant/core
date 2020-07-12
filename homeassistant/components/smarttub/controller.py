@@ -19,10 +19,11 @@ _LOGGER = logging.getLogger(__name__)
 class SmartTubController:
     """Interface between Home Assistant and the SmartTub API."""
 
-    def __init__(self, hass, smarttub_api=smarttub.SmartTub):
+    def __init__(self, hass, api_class=smarttub.SmartTub):
         """Initialize an interface to SmartTub."""
         self._hass = hass
-        self._api = smarttub_api(async_get_clientsession(hass))
+        self._api_class = api_class
+        self._api = self._api_class(async_get_clientsession(hass))
         self._account = None
         self._spas = {}
         self._stop_polling = None
@@ -90,6 +91,15 @@ class SmartTubController:
         """Request a state update on behalf of entity."""
         self._coordinator.async_request_refresh()
 
+    async def validate_credentials(self, email, password):
+        """Check if the specified credentials are valid for authenticating to SmartTub."""
+        api = self._api_class(async_get_clientsession(self._hass))
+        try:
+            await api.login(email, password)
+        except smarttub.LoginFailed:
+            return False
+        return True
+
     def entity_is_available(self, entity):
         """Indicate whether the entity has state available."""
         return self._coordinator.last_update_success
@@ -126,13 +136,3 @@ class SmartTubController:
     def get_heater_status(self, spa_id) -> str:
         """Return the status of the heater (e.g. 'OFF')."""
         return self._get_status_value(spa_id, "heater")
-
-
-async def validate_credentials(hass, email, password):
-    """Check if the specified credentials are valid for authenticating to SmartTub."""
-    api = smarttub.SmartTub(async_get_clientsession(hass))
-    try:
-        await api.login(email, password)
-    except smarttub.LoginFailed:
-        return False
-    return True
