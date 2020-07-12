@@ -198,6 +198,10 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     platform_config = False
     if CONF_SECRET_ACCESS_KEY in conf:
         platform_config = True
+        session_config[CONF_ACCESS_KEY_ID] = conf[CONF_ACCESS_KEY_ID]
+        session_config[CONF_SECRET_ACCESS_KEY] = conf[CONF_SECRET_ACCESS_KEY]
+        del conf[CONF_ACCESS_KEY_ID]
+        del conf[CONF_SECRET_ACCESS_KEY]
     if CONF_CREDENTIAL_NAME in conf:
         platform_config = True
     if CONF_PROFILE_NAME in conf:
