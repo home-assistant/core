@@ -4,6 +4,7 @@ from collections import defaultdict
 from datetime import timedelta
 import logging
 
+import async_timeout
 from smarttub import APIError, LoginFailed, SmartTub
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL
@@ -11,7 +12,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, POLLING_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,8 +76,9 @@ class SmartTubController:
 
         data = defaultdict(dict)
         try:
-            for spa_id, spa in self._spas.items():
-                data[spa_id]["status"] = await spa.get_status()
+            async with async_timeout.timeout(POLLING_TIMEOUT):
+                for spa_id, spa in self._spas.items():
+                    data[spa_id]["status"] = await spa.get_status()
         except APIError as err:
             raise UpdateFailed(err)
 
