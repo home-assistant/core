@@ -1,0 +1,65 @@
+{
+    "title": "HERE Destination Weather",
+    "config": {
+        "step": {
+            "user": {
+                "title": "HERE Destination Weather",
+                "description": "Which configuration option do you want to use?",
+                "data": {
+                    "option": "Configuration Option."
+                }
+            },
+            "coordinates": {
+                "title": "HERE Destination Weather By Coordinates",
+                "description": "Provide the details for the coordinates.",
+                "data": {
+                    "api_key": "[%key:common::config_flow::data::api_key%]",
+                    "name": "Name of this Integration Entry",
+                    "mode": "The Weather Mode to use",
+                    "unit_system": "The Unit System to use",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                }
+            },
+            "zip_code": {
+                "title": "HERE Destination Weather by US ZIP Code",
+                "description": "Provide the details for the US ZIP Code.",
+                "data": {
+                    "api_key": "[%key:common::config_flow::data::api_key%]",
+                    "name": "Name of this Integration Entry",
+                    "mode": "The Weather Mode to use",
+                    "unit_system": "The Unit System to use",
+                    "zip_code": "US ZIP Code"
+                }
+            },
+            "location_name": {
+                "title": "HERE Destination Weather by Location Name or Address",
+                "description": "Provide the details for the Location Name or Address.",
+                "data": {
+                    "api_key": "[%key:common::config_flow::data::api_key%]",
+                    "name": "Name of this Integration Entry",
+                    "mode": "The Weather Mode to use",
+                    "unit_system": "The Unit System to use",
+                    "location_name": "Location Name or Address"
+                }
+            }
+        },
+        "error": {
+            "invalid_request": "HERE reported an invalid request. This indicates the supplied location is not valid.",
+            "unauthorized": "Invalid credentials. This error is returned if the specified token was invalid or no contract could be found for this token."
+        },
+        "abort": {
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "description": "Configure options for HERE Destination Weather",
+                "data": {
+                    "scan_interval": "Update interval."
+                }
+            }
+        }
+    }
+}

@@ -1,11 +1,24 @@
 """Constants for the HERE Destination Weather service."""
+DOMAIN = "here_weather"
+
+HERE_API_KEYS = "here_api_keys"
+
+DEFAULT_SCAN_INTERVAL = 120
+
 CONF_API_KEY = "api_key"
 CONF_LOCATION_NAME = "location_name"
 CONF_ZIP_CODE = "zip_code"
 CONF_LANGUAGE = "language"
 CONF_OFFSET = "offset"
-
-DEFAULT_NAME = "here_weather"
+CONF_OPTION = "option"
+CONF_OPTION_COORDINATES = "Using GPS Coordinates"
+CONF_OPTION_ZIP_CODE = "Using a US ZIP Code"
+CONF_OPTION_LOCATION_NAME = "Using a Location Name or Address"
+CONF_OPTIONS = [
+    CONF_OPTION_COORDINATES,
+    CONF_OPTION_ZIP_CODE,
+    CONF_OPTION_LOCATION_NAME,
+]
 
 MODE_ASTRONOMY = "forecast_astronomy"
 MODE_HOURLY = "forecast_hourly"
@@ -31,7 +44,7 @@ ASTRONOMY_ATTRIBUTES = {
     "city": {"name": "City", "unit_of_measurement": None},
     "latitude": {"name": "Latitude", "unit_of_measurement": None},
     "longitude": {"name": "Longitude", "unit_of_measurement": None},
-    "utcTime": {"name": "Sunrise", "unit_of_measurement": "timestamp"},
+    "utcTime": {"name": "UTC Time", "unit_of_measurement": None},
 }
 
 HOURLY_ATTRIBUTES = {
@@ -66,7 +79,7 @@ HOURLY_ATTRIBUTES = {
     "iconLink": {"name": "Icon Link", "unit_of_measurement": None},
     "dayOfWeek": {"name": "Day of Week", "unit_of_measurement": None},
     "weekday": {"name": "Week Day", "unit_of_measurement": None},
-    "utcTime": {"name": "UTC Time", "unit_of_measurement": "timestamp"},
+    "utcTime": {"name": "UTC Time", "unit_of_measurement": None},
     "localTime": {"name": "Local Time", "unit_of_measurement": None},
     "localTimeFormat": {"name": "Local Time Format", "unit_of_measurement": None},
 }
@@ -111,7 +124,7 @@ DAILY_SIMPLE_ATTRIBUTES = {
     "iconLink": {"name": "Icon Link", "unit_of_measurement": None},
     "dayOfWeek": {"name": "Day of Week", "unit_of_measurement": None},
     "weekday": {"name": "Week Day", "unit_of_measurement": None},
-    "utcTime": {"name": "UTC Time", "unit_of_measurement": "timestamp"},
+    "utcTime": {"name": "UTC Time", "unit_of_measurement": None},
 }
 
 DAILY_ATTRIBUTES = {
@@ -152,7 +165,7 @@ DAILY_ATTRIBUTES = {
     "iconLink": {"name": "Icon Link", "unit_of_measurement": None},
     "dayOfWeek": {"name": "Day of Week", "unit_of_measurement": None},
     "weekday": {"name": "Week Day", "unit_of_measurement": None},
-    "utcTime": {"name": "UTC Time", "unit_of_measurement": "timestamp"},
+    "utcTime": {"name": "UTC Time", "unit_of_measurement": None},
 }
 
 OBSERVATION_ATTRIBUTES = {
@@ -216,7 +229,7 @@ OBSERVATION_ATTRIBUTES = {
     "longitude": {"name": "Longitude", "unit_of_measurement": None},
     "distance": {"name": "Distance", "unit_of_measurement": "km"},
     "elevation": {"name": "Elevation", "unit_of_measurement": "km"},
-    "utcTime": {"name": "UTC Time", "unit_of_measurement": "timestamp"},
+    "utcTime": {"name": "UTC Time", "unit_of_measurement": None},
 }
 
 SENSOR_TYPES = {

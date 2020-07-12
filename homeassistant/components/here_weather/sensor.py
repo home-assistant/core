@@ -1,117 +1,38 @@
 """Support for the HERE Destination Weather service."""
 import logging
-from typing import Callable, Dict, Optional, Union
+from typing import Dict, Optional, Union
 
-import herepy
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_MODE,
-    CONF_NAME,
-    CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MODE, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-from . import (
-    HEREWeatherData,
-    convert_unit_of_measurement_if_needed,
-    get_attribute_from_here_data,
-)
-from .const import (
-    CONF_API_KEY,
-    CONF_LOCATION_NAME,
-    CONF_MODES,
-    CONF_OFFSET,
-    CONF_ZIP_CODE,
-    DEFAULT_MODE,
-    DEFAULT_NAME,
-    SENSOR_TYPES,
-)
-
-UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
+from . import HEREWeatherData
+from .const import DOMAIN, SENSOR_TYPES
+from .utils import convert_unit_of_measurement_if_needed, get_attribute_from_here_data
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
-        vol.Exclusive(CONF_LATITUDE, "coords_or_name_or_zip_code"): cv.latitude,
-        vol.Exclusive(CONF_LOCATION_NAME, "coords_or_name_or_zip_code"): cv.string,
-        vol.Exclusive(CONF_ZIP_CODE, "coords_or_name_or_zip_code"): cv.string,
-        vol.Optional(CONF_OFFSET, default=0): cv.positive_int,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MODE, default=DEFAULT_MODE): vol.In(CONF_MODES),
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_LOCATION_NAME): cv.string,
-        vol.Optional(CONF_ZIP_CODE): cv.string,
-        vol.Optional(CONF_UNIT_SYSTEM): vol.In(UNITS),
-    }
-)
 
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+):
+    """Add here_weather entities from a config_entry."""
+    here_weather_data = hass.data[DOMAIN][config_entry.entry_id]
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: Dict[str, Union[str, bool]],
-    async_add_entities: Callable,
-    discovery_info: None = None,
-) -> None:
-    """Set up the HERE Destination Weather sensor."""
-
-    api_key = config[CONF_API_KEY]
-
-    here_client = herepy.DestinationWeatherApi(api_key)
-
-    if not await hass.async_add_executor_job(
-        _are_valid_client_credentials, here_client
-    ):
-        _LOGGER.error(
-            "Invalid credentials. This error is returned if the specified token was invalid or no contract could be found for this token."
-        )
-        return
-
-    name = config.get(CONF_NAME)
-    mode = config[CONF_MODE]
-    offset = config[CONF_OFFSET]
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    location_name = config.get(CONF_LOCATION_NAME)
-    zip_code = config.get(CONF_ZIP_CODE)
-    units = config.get(CONF_UNIT_SYSTEM, hass.config.units.name)
-
-    here_data = HEREWeatherData(
-        here_client, mode, units, latitude, longitude, location_name, zip_code
-    )
     sensors_to_add = []
     for sensor_type in SENSOR_TYPES:
-        if sensor_type == mode:
+        if sensor_type == config_entry.data[CONF_MODE]:
             for weather_attribute in SENSOR_TYPES[sensor_type]:
                 sensors_to_add.append(
                     HEREDestinationWeatherSensor(
-                        name, here_data, sensor_type, offset, weather_attribute
+                        config_entry.data[CONF_NAME],
+                        here_weather_data,
+                        sensor_type,
+                        weather_attribute,
                     )
                 )
     async_add_entities(sensors_to_add, True)
-
-
-def _are_valid_client_credentials(here_client: herepy.DestinationWeatherApi) -> bool:
-    """Check if the provided credentials are correct using defaults."""
-    try:
-        product = herepy.WeatherProductType.forecast_astronomy
-        known_good_zip_code = "10025"
-        here_client.weather_for_zip_code(known_good_zip_code, product)
-    except herepy.UnauthorizedError:
-        return False
-    return True
 
 
 class HEREDestinationWeatherSensor(Entity):
@@ -120,10 +41,10 @@ class HEREDestinationWeatherSensor(Entity):
     def __init__(
         self,
         name: str,
-        here_data: "HEREWeatherData",
+        here_data: HEREWeatherData,
         sensor_type: str,
-        sensor_number: int,
         weather_attribute: str,
+        sensor_number: int = 0,  # Additional supported offsets will be added in a separate PR
     ) -> None:
         """Initialize the sensor."""
         self._base_name = name
@@ -143,10 +64,17 @@ class HEREDestinationWeatherSensor(Entity):
         return f"{self._base_name} {self._name_suffix}"
 
     @property
+    def unique_id(self):
+        """Set unique_id for sensor."""
+        return self.name
+
+    @property
     def state(self) -> str:
         """Return the state of the device."""
         return get_attribute_from_here_data(
-            self._here_data.data, self._weather_attribute, self._sensor_number
+            self._here_data.coordinator.data,
+            self._weather_attribute,
+            self._sensor_number,
         )
 
     @property
@@ -161,6 +89,37 @@ class HEREDestinationWeatherSensor(Entity):
         """Return the state attributes."""
         return None
 
-    async def async_update(self) -> None:
+    @property
+    def available(self):
+        """Could the api be accessed during the last update call."""
+        return self._here_data.coordinator.last_update_success
+
+    @property
+    def should_poll(self):
+        """Return the polling requirement for this sensor."""
+        return False
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return True
+
+    @property
+    def device_info(self) -> dict:
+        """Return a device description for device registry."""
+
+        return {
+            "identifiers": {(DOMAIN, self._base_name)},
+            "name": self._base_name,
+            "manufacturer": "here.com",
+        }
+
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.async_on_remove(
+            self._here_data.coordinator.async_add_listener(self.async_write_ha_state)
+        )
+
+    async def async_update(self):
         """Get the latest data from HERE."""
-        await self.hass.async_add_executor_job(self._here_data.update)
+        await self._here_data.coordinator.async_request_refresh()

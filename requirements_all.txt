@@ -766,8 +766,10 @@ hdate==0.10.2
 heatmiserV3==1.1.18
 
 # homeassistant.components.here_travel_time
-# homeassistant.components.here_weather
 herepy==2.0.0
+
+# homeassistant.components.here_weather
+herepy==3.0.1
 
 # homeassistant.components.hikvisioncam
 hikvision==0.4

@@ -1,9 +1,10 @@
 {
     "domain": "here_weather",
     "name": "HERE Destination Weather",
-    "documentation": "https://www.home-assistant.io/components/here_weather",
+    "config_flow": true,
+    "documentation": "https://www.home-assistant.io/integrations/here_weather",
     "requirements": [
-      "herepy==2.0.0"
+      "herepy==3.0.1"
     ],
     "dependencies": [],
     "codeowners": [

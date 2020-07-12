@@ -1,6 +1,0 @@
-{
-    "Type": "Invalid Request",
-    "Message": [
-        "Request parameter 'product' does not conform with expected data type. Please check the documentation."
-    ]
-}
