@@ -9,12 +9,16 @@ from homeassistant.setup import async_setup_component
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
+MOCK_HUB_VERSION: dict = {"bondid": "test-bond-id"}
+
 
 async def setup_bond_entity(hass: core.HomeAssistant, config_entry: MockConfigEntry):
     """Set up Bond entity."""
     config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.bond.Bond.getVersion", return_value={}):
+    with patch(
+        "homeassistant.components.bond.Bond.getVersion", return_value=MOCK_HUB_VERSION
+    ):
         return await hass.config_entries.async_setup(config_entry.entry_id)
 
 
@@ -29,7 +33,7 @@ async def setup_platform(
     mock_entry.add_to_hass(hass)
 
     with patch("homeassistant.components.bond.PLATFORMS", [platform]), patch(
-        "homeassistant.components.bond.Bond.getVersion", return_value={}
+        "homeassistant.components.bond.Bond.getVersion", return_value=MOCK_HUB_VERSION
     ), patch(
         "homeassistant.components.bond.Bond.getDeviceIds",
         return_value=["bond-device-id"],

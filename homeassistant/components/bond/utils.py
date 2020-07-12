@@ -49,3 +49,18 @@ class BondHub:
             for device_id in device_ids
         ]
         return devices
+
+    @property
+    def bond_id(self) -> str:
+        """Return unique Bond ID for this hub."""
+        return self._version["bondid"]
+
+    @property
+    def target(self) -> str:
+        """Return this hub model."""
+        return self._version.get("target")
+
+    @property
+    def fw_ver(self) -> str:
+        """Return this hub firmware version."""
+        return self._version.get("fw_ver")

@@ -28,7 +28,11 @@ class BondEntity:
     @property
     def device_info(self) -> Optional[Dict[str, Any]]:
         """Get a an HA device representing this Bond controlled device."""
-        return {ATTR_NAME: self.name, "identifiers": {(DOMAIN, self._device.device_id)}}
+        return {
+            ATTR_NAME: self.name,
+            "identifiers": {(DOMAIN, self._device.device_id)},
+            "via_device": (DOMAIN, self._hub.bond_id),
+        }
 
     @property
     def assumed_state(self) -> bool:
