@@ -353,7 +353,7 @@ def setup(hass: HomeAssistant, base_config):
     return True
 
 
-class CecDevice(Entity):
+class CecEntity(Entity):
     """Representation of a HDMI CEC device entity."""
 
     def __init__(self, device, logical) -> None:
@@ -393,7 +393,7 @@ class CecDevice(Entity):
         """
         Return false.
 
-        CecDevice.update() is called by the HDMI network when there is new data.
+        CecEntity.update() is called by the HDMI network when there is new data.
         """
         return False
 

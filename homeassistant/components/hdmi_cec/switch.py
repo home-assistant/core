@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_STANDBY
 
-from . import ATTR_NEW, CecDevice
+from . import ATTR_NEW, CecEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,12 +22,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities(entities, True)
 
 
-class CecSwitchDevice(CecDevice, SwitchEntity):
+class CecSwitchDevice(CecEntity, SwitchEntity):
     """Representation of a HDMI device as a Switch."""
 
     def __init__(self, device, logical) -> None:
         """Initialize the HDMI device."""
-        CecDevice.__init__(self, device, logical)
+        CecEntity.__init__(self, device, logical)
         self.entity_id = f"{DOMAIN}.hdmi_{hex(self._logical_address)[2:]}"
 
     def turn_on(self, **kwargs) -> None:
