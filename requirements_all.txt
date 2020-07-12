@@ -1727,6 +1727,9 @@ python-qbittorrent==0.4.1
 # homeassistant.components.ripple
 python-ripple-api==0.0.3
 
+# homeassistant.components.smarttub
+python-smarttub==0.0.5
+
 # homeassistant.components.sochain
 python-sochain-api==0.0.2
 
