@@ -78,10 +78,8 @@ async def test_setting_level(hass):
     assert mocks["new_logger"].setLevel.mock_calls[0][1][0] == LOGSEVERITY["NOTSET"]
 
 
-async def test_loading_integration_after_can_set_level(hass):
+async def test_can_set_level(hass):
     """Test logger propagation."""
-    assert await async_setup_component(hass, "group", {})
-    await hass.async_block_till_done()
 
     assert await async_setup_component(
         hass,
@@ -100,9 +98,6 @@ async def test_loading_integration_after_can_set_level(hass):
             }
         },
     )
-    await hass.async_block_till_done()
-    assert await async_setup_component(hass, "zone", {})
-    await hass.async_block_till_done()
 
     logging.getLogger(UNCONFIG_NS).level == logging.NOTSET
     assert logging.getLogger(UNCONFIG_NS).isEnabledFor(logging.CRITICAL) is True
@@ -177,93 +172,5 @@ async def test_loading_integration_after_can_set_level(hass):
 
     assert logging.getLogger(COMPONENTS_NS).isEnabledFor(logging.DEBUG) is False
     assert logging.getLogger(GROUP_NS).isEnabledFor(logging.DEBUG) is False
-
-    logging.getLogger("").setLevel(logging.NOTSET)
-
-
-async def test_loading_integration_after_can_set_level_with_default_debug(hass):
-    """Test logger propagation."""
-    assert await async_setup_component(hass, "group", {})
-    await hass.async_block_till_done()
-
-    assert await async_setup_component(
-        hass,
-        "logger",
-        {
-            "logger": {
-                "default": "debug",
-                "logs": {
-                    CONFIGED_NS: "warning",
-                    f"{CONFIGED_NS}.info": "info",
-                    f"{CONFIGED_NS}.debug": "debug",
-                    HASS_NS: "warning",
-                    COMPONENTS_NS: "info",
-                    ZONE_NS: "debug",
-                    GROUP_NS: "info",
-                },
-            }
-        },
-    )
-    await hass.async_block_till_done()
-    assert await async_setup_component(hass, "zone", {})
-    await hass.async_block_till_done()
-
-    assert logging.getLogger("").isEnabledFor(logging.DEBUG) is True
-    assert logging.getLogger("").isEnabledFor(logging.CRITICAL) is True
-
-    assert logging.getLogger(UNCONFIG_NS).isEnabledFor(logging.DEBUG) is True
-    assert logging.getLogger(f"{UNCONFIG_NS}.any").isEnabledFor(logging.DEBUG) is True
-    assert (
-        logging.getLogger(f"{UNCONFIG_NS}.any.any").isEnabledFor(logging.DEBUG) is True
-    )
-
-    assert logging.getLogger(UNCONFIG_NS).isEnabledFor(logging.CRITICAL) is True
-    assert (
-        logging.getLogger(f"{UNCONFIG_NS}.any").isEnabledFor(logging.CRITICAL) is True
-    )
-    assert (
-        logging.getLogger(f"{UNCONFIG_NS}.any.any").isEnabledFor(logging.CRITICAL)
-        is True
-    )
-
-    assert logging.getLogger(CONFIGED_NS).isEnabledFor(logging.DEBUG) is False
-    assert logging.getLogger(CONFIGED_NS).isEnabledFor(logging.WARNING) is True
-    assert logging.getLogger(f"{CONFIGED_NS}.any").isEnabledFor(logging.WARNING) is True
-    assert (
-        logging.getLogger(f"{CONFIGED_NS}.any.any").isEnabledFor(logging.WARNING)
-        is True
-    )
-    assert logging.getLogger(f"{CONFIGED_NS}.info").isEnabledFor(logging.DEBUG) is False
-    assert logging.getLogger(f"{CONFIGED_NS}.info").isEnabledFor(logging.INFO) is True
-    assert (
-        logging.getLogger(f"{CONFIGED_NS}.info.any").isEnabledFor(logging.DEBUG)
-        is False
-    )
-    assert (
-        logging.getLogger(f"{CONFIGED_NS}.info.any").isEnabledFor(logging.INFO) is True
-    )
-    assert logging.getLogger(f"{CONFIGED_NS}.debug").isEnabledFor(logging.DEBUG) is True
-    assert (
-        logging.getLogger(f"{CONFIGED_NS}.debug.any").isEnabledFor(logging.DEBUG)
-        is True
-    )
-
-    assert logging.getLogger(HASS_NS).isEnabledFor(logging.DEBUG) is False
-    assert logging.getLogger(HASS_NS).isEnabledFor(logging.WARNING) is True
-
-    assert logging.getLogger(COMPONENTS_NS).isEnabledFor(logging.DEBUG) is False
-    assert logging.getLogger(COMPONENTS_NS).isEnabledFor(logging.WARNING) is True
-    assert logging.getLogger(COMPONENTS_NS).isEnabledFor(logging.INFO) is True
-
-    assert logging.getLogger(GROUP_NS).isEnabledFor(logging.DEBUG) is False
-    assert logging.getLogger(GROUP_NS).isEnabledFor(logging.WARNING) is True
-    assert logging.getLogger(GROUP_NS).isEnabledFor(logging.INFO) is True
-
-    assert logging.getLogger(f"{GROUP_NS}.any").isEnabledFor(logging.DEBUG) is False
-    assert logging.getLogger(f"{GROUP_NS}.any").isEnabledFor(logging.WARNING) is True
-    assert logging.getLogger(f"{GROUP_NS}.any").isEnabledFor(logging.INFO) is True
-
-    assert logging.getLogger(ZONE_NS).isEnabledFor(logging.DEBUG) is True
-    assert logging.getLogger(f"{ZONE_NS}.any").isEnabledFor(logging.DEBUG) is True
 
     logging.getLogger("").setLevel(logging.NOTSET)
