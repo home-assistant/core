@@ -731,6 +731,9 @@ habitipy==0.2.0
 # homeassistant.components.hangouts
 hangups==0.4.11
 
+# homeassistant.components.brightsky
+hass-brightsky-client==0.1.2
+
 # homeassistant.components.cloud
 hass-nabucasa==0.39.0
 

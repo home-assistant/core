@@ -1,0 +1,11 @@
+{
+  "domain": "brightsky",
+  "name": "Bright Sky",
+  "documentation": "https://www.home-assistant.io/integrations/brightsky",
+  "codeowners": [
+    "@mweinelt"
+  ],
+  "quality_scale": "silver",
+  "config_flow": true,
+  "requirements": [ "hass-brightsky-client==0.1.2" ]
+}
