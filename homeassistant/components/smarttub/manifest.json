@@ -6,6 +6,6 @@
   "dependencies": [],
   "codeowners": ["@mdz"],
   "requirements": [
-      "python-smarttub==0.0.5"
+      "python-smarttub==0.0.6"
   ]
 }

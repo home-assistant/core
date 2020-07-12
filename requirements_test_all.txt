@@ -776,7 +776,7 @@ python-nest==4.1.0
 python-openzwave-mqtt==1.0.2
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.5
+python-smarttub==0.0.6
 
 # homeassistant.components.songpal
 python-songpal==0.12
