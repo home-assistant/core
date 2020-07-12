@@ -389,6 +389,15 @@ class CecDevice(Entity):
         self.schedule_update_ha_state(True)
 
     @property
+    def should_poll(self):
+        """
+        Return false.
+
+        CecDevice.update() is called by the HDMI network when there is new data.
+        """
+        return False
+
+    @property
     def name(self):
         """Return the name of the device."""
         return (

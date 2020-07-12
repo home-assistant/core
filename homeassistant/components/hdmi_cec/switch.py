@@ -34,11 +34,13 @@ class CecSwitchDevice(CecDevice, SwitchEntity):
         """Turn device on."""
         self._device.turn_on()
         self._state = STATE_ON
+        self.async_write_ha_state()
 
     def turn_off(self, **kwargs) -> None:
         """Turn device off."""
         self._device.turn_off()
         self._state = STATE_OFF
+        self.async_write_ha_state()
 
     def toggle(self, **kwargs):
         """Toggle the entity."""
@@ -47,6 +49,7 @@ class CecSwitchDevice(CecDevice, SwitchEntity):
             self._state = STATE_OFF
         else:
             self._state = STATE_ON
+        self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool:
