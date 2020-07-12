@@ -28,6 +28,7 @@ from homeassistant.util.pil import draw_box
 from .const import (
     ATTR_LABELS,
     ATTR_OBJECTS,
+    CONF_ACCESS_KEY_ID,
     CONF_COLLECTION_ID,
     CONF_CREDENTIAL_NAME,
     CONF_DETECTION_ATTRIBUTES,
@@ -36,6 +37,7 @@ from .const import (
     CONF_REGION,
     CONF_SAVE_FILE_FOLDER,
     CONF_SAVE_FILE_TIMESTAMP,
+    CONF_SECRET_ACCESS_KEY,
     CONF_SERVICE,
     DATA_SESSIONS,
     EVENT_LABEL_DETECTED,
@@ -193,28 +195,37 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
         )
         return None
 
-    aws_config = conf.copy()
-    if CONF_CREDENTIAL_NAME in aws_config:
-        credential_name = aws_config.get(CONF_CREDENTIAL_NAME)
-        if credential_name is not None:
-            session = hass.data[DATA_SESSIONS].get(credential_name)
-            if session is None:
-                _LOGGER.warning("No available aws session for %s", credential_name)
-            del aws_config[CONF_CREDENTIAL_NAME]
-    elif CONF_PROFILE_NAME in aws_config:
-        profile = aws_config.get(CONF_PROFILE_NAME)
-        if profile is not None:
-            session = aiobotocore.AioSession(profile=profile)
-            del aws_config[CONF_PROFILE_NAME]
-    else:
+    platform_config = False
+    if CONF_SECRET_ACCESS_KEY in conf:
+        platform_config = True
+    if CONF_CREDENTIAL_NAME in conf:
+        platform_config = True
+    if CONF_PROFILE_NAME in conf:
+        platform_config = True
+
+    if not platform_config:
         # no platform config, use the first aws component credential instead
         if hass.data[DATA_SESSIONS]:
             session = next(iter(hass.data[DATA_SESSIONS].values()))
         else:
             _LOGGER.error("Missing aws credential for %s", config[CONF_NAME])
             return None
+
     if session is None:
-        session = aiobotocore.AioSession()
+        credential_name = conf.get(CONF_CREDENTIAL_NAME)
+        if credential_name is not None:
+            session = hass.data[DATA_SESSIONS].get(credential_name)
+            if session is None:
+                _LOGGER.warning("No available aws session for %s", credential_name)
+            del conf[CONF_CREDENTIAL_NAME]
+
+    if session is None:
+        profile = conf.get(CONF_PROFILE_NAME)
+        if profile is not None:
+            session = aiobotocore.AioSession(profile=profile)
+            del conf[CONF_PROFILE_NAME]
+        else:
+            session = aiobotocore.AioSession()
 
     if platform == "face":
         entities = []
