@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return isinstance(event, (ControlEvent, SensorEvent))
 
     entities = []
-    for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
+    for packet_id in discovery_info[CONF_DEVICES].keys():
         event = get_rfx_object(packet_id)
         if event is None:
             _LOGGER.error("Invalid device: %s", packet_id)
