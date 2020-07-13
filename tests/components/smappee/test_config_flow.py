@@ -1,6 +1,12 @@
 """Test the Smappee config flow."""
-from homeassistant import config_entries, setup
-from homeassistant.components.smappee.const import AUTHORIZE_URL, DOMAIN, TOKEN_URL
+from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components.smappee.const import (
+    AUTHORIZE_URL,
+    CONF_HOSTNAME,
+    DOMAIN,
+    TOKEN_URL,
+)
+from homeassistant.config_entries import SOURCE_ZEROCONF
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -8,6 +14,23 @@ from tests.async_mock import patch
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
+
+
+async def test_show_zeroconf_confirm_form(hass):
+    """Test that the zeroconf confirmation form is served."""
+    flow = config_entry_oauth2_flow.SmappeeFlowHandler()
+    flow.hass = hass
+    flow.context = {
+        "source": SOURCE_ZEROCONF,
+        CONF_HOSTNAME: "Smappee1006000212.local.",
+    }
+    result = await flow.async_step_zeroconf_confirm()
+
+    assert result["description_placeholders"] == {
+        CONF_HOSTNAME: "Smappee1006000212.local."
+    }
+    assert result["step_id"] == "zeroconf_confirm"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
 
 async def test_full_flow(hass, aiohttp_client, aioclient_mock):
