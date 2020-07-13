@@ -16,7 +16,9 @@ def mock_controller():
         "homeassistant.components.smarttub.config_flow.SmartTubController",
         autospec=True,
     ) as controller_class_mock:
-        yield controller_class_mock.return_value
+        controller_mock = controller_class_mock.return_value
+        controller_mock.validate_credentials.return_value = True
+        yield controller_mock
 
 
 async def test_form(hass, controller):
@@ -43,8 +45,9 @@ async def test_form(hass, controller):
         "password": "test-password",
     }
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    mock_setup.assert_called_once()
+    mock_setup_entry.assert_called_once()
+    controller.validate_credentials.assert_called()
 
 
 async def test_form_invalid_auth(hass, controller):
