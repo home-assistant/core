@@ -105,8 +105,8 @@ async def test_several_sensors(hass, rfxtrx):
             }
         },
     )
-
     await hass.async_block_till_done()
+    await hass.async_start()
 
     state = hass.states.get("sensor.wt260_wt260h_wt440h_wt450_wt450h_05_02_temperature")
     assert state
@@ -144,6 +144,7 @@ async def test_discover_sensor(hass, rfxtrx):
         {"rfxtrx": {"device": "abcd", "dummy": True, "automatic_add": True}},
     )
     await hass.async_block_till_done()
+    await hass.async_start()
 
     # 1
     await _signal_event(hass, "0a520801070100b81b0279")
@@ -252,6 +253,7 @@ async def test_update_of_sensors(hass, rfxtrx):
         },
     )
     await hass.async_block_till_done()
+    await hass.async_start()
 
     state = hass.states.get("sensor.wt260_wt260h_wt440h_wt450_wt450h_05_02_temperature")
     assert state
