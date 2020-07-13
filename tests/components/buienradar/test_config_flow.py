@@ -325,3 +325,110 @@ async def test_config_flow_setup_weather_sensor(hass):
     conf_entries = hass.config_entries.async_entries(DOMAIN)
     await hass.config_entries.async_unload(conf_entries[0].entry_id)
     await hass.async_block_till_done()
+
+
+async def test_config_flow_already_configured(hass):
+    """
+    Test flow manually initialized by user.
+
+    Setup all platforms.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: TEST_NAME,
+            CONF_LATITUDE: TEST_LATITUDE,
+            CONF_LONGITUDE: TEST_LONGITUDE,
+            CONF_WEATHER: True,
+            CONF_CAMERA: False,
+            CONF_SENSOR: False,
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_weather"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_FORECAST: TEST_FORECAST}
+    )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == TEST_NAME
+    assert result["data"] == {
+        CONF_NAME: TEST_NAME,
+        CONF_LATITUDE: TEST_LATITUDE,
+        CONF_LONGITUDE: TEST_LONGITUDE,
+        CONF_WEATHER: {CONF_INCLUDE: True, CONF_FORECAST: TEST_FORECAST},
+        CONF_CAMERA: {CONF_INCLUDE: False},
+        CONF_SENSOR: {CONF_INCLUDE: False},
+    }
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: TEST_NAME,
+            CONF_LATITUDE: TEST_LATITUDE,
+            CONF_LONGITUDE: TEST_LONGITUDE,
+            CONF_WEATHER: True,
+            CONF_CAMERA: False,
+            CONF_SENSOR: False,
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {CONF_NAME: "name_exists"}
+
+    conf_entries = hass.config_entries.async_entries(DOMAIN)
+    await hass.config_entries.async_unload(conf_entries[0].entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_config_flow_empty_selection(hass):
+    """
+    Test flow manually initialized by user.
+
+    Setup all platforms.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: TEST_NAME,
+            CONF_LATITUDE: TEST_LATITUDE,
+            CONF_LONGITUDE: TEST_LONGITUDE,
+            CONF_WEATHER: False,
+            CONF_CAMERA: False,
+            CONF_SENSOR: False,
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "empty_selection"}
