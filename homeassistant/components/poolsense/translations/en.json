@@ -14,7 +14,7 @@
                     "email": "Email",
                     "password": "Password"
                 },
-                "description": "[%key:common::config_flow::description%]",
+                "description": "Set up PoolSense integration. Register on the dedicated app to get your username and password.",
                 "title": "PoolSense"
             }
         }
