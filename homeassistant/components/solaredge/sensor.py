@@ -8,6 +8,7 @@ from stringcase import snakecase
 
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import Throttle
 
 from .const import (
@@ -240,6 +241,12 @@ class SolarEdgePowerFlowSensor(SolarEdgeSensor):
         self._attributes = self.data_service.attributes.get(self._json_key)
         self._unit_of_measurement = self.data_service.unit
 
+        if self._json_key == "STORAGE" and "soc" in self._attributes:
+            charging = True if self._attributes["flow"] == "charge" else False
+            self._icon = icon_for_battery_level(
+                battery_level=self._attributes["soc"], charging=charging,
+            )
+
 
 class SolarEdgeDataService:
     """Get and update the latest data."""
@@ -470,6 +477,7 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
                 charge = key.lower() in power_to
                 self.data[key] *= -1 if charge else 1
                 self.attributes[key]["flow"] = "charge" if charge else "discharge"
+                self.attributes[key]["soc"] = value["chargeLevel"]
 
         _LOGGER.debug(
             "Updated SolarEdge power flow: %s, %s", self.data, self.attributes
