@@ -1,26 +1,38 @@
 """The tests for the Buienradar sensor platform."""
-from homeassistant.components import sensor
-from homeassistant.setup import async_setup_component
+from homeassistant.components.buienradar.const import (
+    CONF_CAMERA,
+    CONF_SENSOR,
+    CONF_TIMEFRAME,
+    CONF_WEATHER,
+    DOMAIN,
+)
+from homeassistant.const import CONF_INCLUDE, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+
+from tests.common import MockConfigEntry
 
 CONDITIONS = ["stationname", "temperature"]
-BASE_CONFIG = {
-    "sensor": [
-        {
-            "platform": "buienradar",
-            "name": "volkel",
-            "latitude": 51.65,
-            "longitude": 5.7,
-            "monitored_conditions": CONDITIONS,
-        }
-    ]
+TEST_CFG_DATA = {
+    CONF_NAME: "volkel",
+    CONF_LATITUDE: 51.65,
+    CONF_LONGITUDE: 5.7,
+    CONF_CAMERA: {CONF_INCLUDE: False},
+    CONF_SENSOR: {CONF_INCLUDE: True, CONF_TIMEFRAME: 60},
+    CONF_WEATHER: {CONF_INCLUDE: False},
 }
 
 
 async def test_smoke_test_setup_component(hass):
     """Smoke test for successfully set-up with default config."""
-    assert await async_setup_component(hass, sensor.DOMAIN, BASE_CONFIG)
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id="TEST_ID", data=TEST_CFG_DATA)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
     for cond in CONDITIONS:
         state = hass.states.get(f"sensor.volkel_{cond}")
         assert state.state == "unknown"
+
+    await hass.config_entries.async_unload(mock_entry.entry_id)
+    await hass.async_block_till_done()
