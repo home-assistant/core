@@ -295,9 +295,6 @@ def print_aldb_to_log(aldb):
     # This service is useless if the log level is not INFO for the
     # insteon component. Setting the log level to INFO and resetting it
     # back when we are done
-    orig_log_level = _LOGGER.level
-    if orig_log_level > logging.INFO:
-        _LINK_LOGGER.setLevel(logging.INFO)
     _LINK_LOGGER.info("%s ALDB load status is %s", aldb.address, aldb.status.name)
     if aldb.status not in [ALDBStatus.LOADED, ALDBStatus.PARTIAL]:
         _LOGGER.warning("All-Link database not loaded")
@@ -317,7 +314,6 @@ def print_aldb_to_log(aldb):
             f"{rec.data2:3d}   {rec.data3:3d}"
         )
         _LINK_LOGGER.info(log_msg)
-    _LINK_LOGGER.setLevel(orig_log_level)
 
 
 @callback
