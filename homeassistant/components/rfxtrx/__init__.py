@@ -91,9 +91,15 @@ def _bytearray_string(data):
         raise vol.Invalid("Data must be a hex string with multiple of two characters")
 
 
+def _ensure_device(value):
+    if value is None:
+        return DEVICE_DATA_SCHEMA({})
+    return value
+
+
 SERVICE_SEND_SCHEMA = vol.Schema({ATTR_EVENT: _bytearray_string})
 
-DEVICE_SCHEMA = vol.Schema(
+DEVICE_DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
@@ -109,7 +115,7 @@ BASE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEBUG, default=False): cv.boolean,
         vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
-        vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
+        vol.Optional(CONF_DEVICES, default={}): {cv.string: _ensure_device},
     }
 )
 
