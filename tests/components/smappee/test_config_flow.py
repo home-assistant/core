@@ -21,7 +21,7 @@ CLIENT_SECRET = "5678"
 
 async def test_show_zeroconf_confirm_form(hass):
     """Test that the zeroconf confirmation form is served."""
-    flow = config_entry_oauth2_flow.SmappeeFlowHandler()
+    flow = config_flow.SmappeeFlowHandler()
     flow.hass = hass
     flow.context = {
         "source": SOURCE_ZEROCONF,
