@@ -1,13 +1,16 @@
 """Support for Bond fans."""
 from typing import Any, Callable, List, Optional
 
-from bond import DeviceTypes
+from bond import DeviceTypes, Directions
 
 from homeassistant.components.fan import (
+    DIRECTION_FORWARD,
+    DIRECTION_REVERSE,
     SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
     SPEED_OFF,
+    SUPPORT_DIRECTION,
     SUPPORT_SET_SPEED,
     FanEntity,
 )
@@ -48,13 +51,17 @@ class BondFan(BondEntity, FanEntity):
 
         self._power: Optional[bool] = None
         self._speed: Optional[int] = None
+        self._direction: Optional[int] = None
 
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
         features = 0
-        if self._device.supports_command("SetSpeed"):
+        if self._device.supports_speed():
             features |= SUPPORT_SET_SPEED
+        if self._device.supports_direction():
+            features |= SUPPORT_DIRECTION
+
         return features
 
     @property
@@ -72,11 +79,23 @@ class BondFan(BondEntity, FanEntity):
         """Get the list of available speeds."""
         return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
+    @property
+    def current_direction(self) -> Optional[str]:
+        """Return fan rotation direction."""
+        direction = None
+        if self._direction == Directions.FORWARD:
+            direction = DIRECTION_FORWARD
+        elif self._direction == Directions.REVERSE:
+            direction = DIRECTION_REVERSE
+
+        return direction
+
     def update(self):
         """Fetch assumed state of the fan from the hub using API."""
         state: dict = self._hub.bond.getDeviceState(self._device.device_id)
         self._power = state.get("power")
         self._speed = state.get("speed")
+        self._direction = state.get("direction")
 
     def set_speed(self, speed: str) -> None:
         """Set the desired speed for the fan."""
@@ -92,3 +111,10 @@ class BondFan(BondEntity, FanEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         self._hub.bond.turnOff(self._device.device_id)
+
+    def set_direction(self, direction: str) -> None:
+        """Set fan rotation direction."""
+        bond_direction = (
+            Directions.REVERSE if direction == DIRECTION_REVERSE else Directions.FORWARD
+        )
+        self._hub.bond.setDirection(self._device.device_id, bond_direction)

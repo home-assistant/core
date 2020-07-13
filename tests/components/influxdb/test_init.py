@@ -188,7 +188,7 @@ async def _setup(hass, mock_influx_client, config_ext, get_write_api):
     config = {
         "influxdb": {
             "host": "host",
-            "exclude": {"entities": ["fake.blacklisted"], "domains": ["another_fake"]},
+            "exclude": {"entities": ["fake.excluded"], "domains": ["another_fake"]},
         }
     }
     config["influxdb"].update(config_ext)

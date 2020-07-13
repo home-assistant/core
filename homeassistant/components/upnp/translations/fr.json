@@ -12,6 +12,10 @@
         },
         "flow_title": "UPnP/IGD: {name}",
         "step": {
+            "init": {
+                "one": "Vide",
+                "other": "Vide"
+            },
             "ssdp_confirm": {
                 "description": "Voulez-vous configurer ce p\u00e9riph\u00e9rique UPnP/IGD?"
             },

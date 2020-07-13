@@ -102,7 +102,7 @@ aiohttp_cors==0.7.0
 aiohue==2.1.0
 
 # homeassistant.components.apache_kafka
-aiokafka==0.5.1
+aiokafka==0.6.0
 
 # homeassistant.components.notion
 aionotion==1.1.0
@@ -586,10 +586,10 @@ pycoolmasternet==0.0.4
 pycountry==19.8.18
 
 # homeassistant.components.daikin
-pydaikin==2.2.0
+pydaikin==2.3.1
 
 # homeassistant.components.deconz
-pydeconz==71
+pydeconz==72
 
 # homeassistant.components.dexcom
 pydexcom==0.2.0
