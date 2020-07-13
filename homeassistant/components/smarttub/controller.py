@@ -83,7 +83,7 @@ class SmartTubController:
         return True
 
     async def async_update_data(self):
-        """Query the API and update our copy of the state."""
+        """Query the API and return the new state."""
 
         data = {}
         try:
@@ -130,7 +130,7 @@ class SmartTubController:
         """Retrieve a value from the data returned by Spa.get_status().
 
         Nested keys can be specified by a dotted path, e.g.
-        status[foo][bar] is 'foo.bar'.
+        status['foo']['bar'] is 'foo.bar'.
         """
 
         status = self._coordinator.data[spa_id].get("status")
@@ -155,7 +155,7 @@ class SmartTubController:
         return self._get_status_value(spa_id, "water.temperature")
 
     def get_heater_status(self, spa_id) -> str:
-        """Return the status of the heater (e.g. 'OFF')."""
+        """Return the status of the heater (e.g. 'OFF', 'ON')."""
         return self._get_status_value(spa_id, "heater")
 
     @staticmethod
