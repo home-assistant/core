@@ -3,22 +3,6 @@ import inspect
 import logging
 from typing import Any, Mapping, MutableMapping, Optional, Tuple
 
-from homeassistant.core import HomeAssistant
-from homeassistant.loader import bind_hass
-
-LOGGER_LEVELS = "logger_levels"
-
-LOGSEVERITY = {
-    "CRITICAL": 50,
-    "FATAL": 50,
-    "ERROR": 40,
-    "WARNING": 30,
-    "WARN": 30,
-    "INFO": 20,
-    "DEBUG": 10,
-    "NOTSET": 0,
-}
-
 
 class KeywordMessage:
     """
@@ -69,23 +53,3 @@ class KeywordStyleAdapter(logging.LoggerAdapter):
                 if k in kwargs
             },
         )
-
-
-@bind_hass
-def set_default_log_level(hass: HomeAssistant, namespace: str, loglevel: int) -> None:
-    """Set the log level as long as logger has not overridden it."""
-    if LOGGER_LEVELS not in hass.data or namespace in hass.data[LOGGER_LEVELS]:
-        return
-
-    logging.getLogger(namespace).setLevel(loglevel)
-
-
-@bind_hass
-def restore_log_level(hass: HomeAssistant, namespace: str) -> None:
-    """Restore the log level to the level configured by the logger integration."""
-    if LOGGER_LEVELS not in hass.data or namespace not in hass.data[LOGGER_LEVELS]:
-        return
-
-    logging.getLogger(namespace).setLevel(
-        LOGSEVERITY[hass.data[LOGGER_LEVELS][namespace]]
-    )

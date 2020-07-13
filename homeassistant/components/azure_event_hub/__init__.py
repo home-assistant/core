@@ -21,7 +21,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.helpers.logging import set_default_log_level
 
 from .const import (
     ADDITIONAL_ARGS,
@@ -117,8 +116,8 @@ class AzureEventHub:
     async def async_start(self):
         """Start the recorder, suppress logging and register the callbacks and do the first send after five seconds, to capture the startup events."""
         # suppress the INFO and below logging on the underlying packages, they are very verbose, even at INFO
-        set_default_log_level(self.hass, "uamqp", logging.WARNING)
-        set_default_log_level(self.hass, "azure.eventhub", logging.WARNING)
+        logging.getLogger("uamqp").setLevel(logging.WARNING)
+        logging.getLogger("azure.eventhub").setLevel(logging.WARNING)
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_shutdown)
         self._listener_remover = self.hass.bus.async_listen(

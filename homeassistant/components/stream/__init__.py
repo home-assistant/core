@@ -9,7 +9,6 @@ from homeassistant.const import CONF_FILENAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.logging import set_default_log_level
 from homeassistant.loader import bind_hass
 
 from .const import (
@@ -79,9 +78,8 @@ def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=N
 
 async def async_setup(hass, config):
     """Set up stream."""
-
     # Set log level to error for libav
-    set_default_log_level(hass, "libav", logging.ERROR)
+    logging.getLogger("libav").setLevel(logging.ERROR)
 
     # Keep import here so that we can import stream integration without installing reqs
     # pylint: disable=import-outside-toplevel
