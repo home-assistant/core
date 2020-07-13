@@ -4,7 +4,7 @@ DOMAIN = "smarttub"
 
 EVENT_SMARTTUB = "smarttub"
 
-SMARTTUB_CONTROLLER = "smarttub_api"
+SMARTTUB_CONTROLLER = "smarttub_controller"
 
 DEFAULT_SCAN_INTERVAL = 60
 
