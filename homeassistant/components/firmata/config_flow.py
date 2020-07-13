@@ -4,21 +4,11 @@ import logging
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant, callback
 
 from .board import get_board
 from .const import CONF_SERIAL_PORT, DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@callback
-def configured_boards(hass: HomeAssistant) -> dict:
-    """Return a set of all configured boards."""
-    return {
-        entry.data[CONF_NAME]: entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-    }
 
 
 class FirmataFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

@@ -4,7 +4,7 @@ from homeassistant.components.firmata.const import CONF_SERIAL_PORT, DOMAIN
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import AsyncMock, patch
+from tests.async_mock import patch
 
 
 async def test_import_cannot_connect(hass: HomeAssistant) -> None:
@@ -31,14 +31,12 @@ async def test_import(hass: HomeAssistant) -> None:
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
-        "homeassistant.components.firmata.board.PymataExpress"
-    ) as PymataExpress, patch(  # pylint: disable=invalid-name
+        "homeassistant.components.firmata.board.PymataExpress", autospec=True
+    ), patch(
         "homeassistant.components.firmata.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.firmata.async_setup_entry", return_value=True,
+        "homeassistant.components.firmata.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-        PymataExpress().start_aio = AsyncMock()
-        PymataExpress().shutdown = AsyncMock()
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
