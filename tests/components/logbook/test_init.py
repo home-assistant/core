@@ -1811,7 +1811,6 @@ async def test_exclude_attribute_changes(hass, hass_client):
     hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 200})
     hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 300})
     hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 400})
-    hass.states.async_set("light.kitchen", STATE_OFF)
 
     await hass.async_block_till_done()
 
@@ -1829,12 +1828,10 @@ async def test_exclude_attribute_changes(hass, hass_client):
     assert response.status == 200
     response_json = await response.json()
 
-    assert len(response_json) == 3
+    assert len(response_json) == 2
     assert response_json[0]["domain"] == "homeassistant"
     assert response_json[1]["message"] == "turned on"
     assert response_json[1]["entity_id"] == "light.kitchen"
-    assert response_json[2]["message"] == "turned off"
-    assert response_json[2]["entity_id"] == "light.kitchen"
 
 
 class MockLazyEventPartialState(ha.Event):
