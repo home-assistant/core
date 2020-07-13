@@ -4,6 +4,9 @@
             "already_configured": "Appareil d\u00e9j\u00e0 configur\u00e9",
             "not_songpal_device": "Pas un appareil Songpal"
         },
+        "error": {
+            "cannot_connect": "Echec de connexion"
+        },
         "flow_title": "Sony Songpal {name} ({host})",
         "step": {
             "init": {

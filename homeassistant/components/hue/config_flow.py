@@ -203,18 +203,6 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.bridge = bridge
         return await self.async_step_link()
 
-    async def async_step_homekit(self, homekit_info):
-        """Handle HomeKit discovery."""
-        bridge = self._async_get_bridge(
-            homekit_info["host"], homekit_info["properties"]["id"]
-        )
-
-        await self.async_set_unique_id(bridge.id)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: bridge.host})
-
-        self.bridge = bridge
-        return await self.async_step_link()
-
     async def async_step_import(self, import_info):
         """Import a new bridge as a config entry.
 

@@ -333,10 +333,10 @@ def get_influx_connection(conf, test_write=False, test_read=False):
 
         buckets = []
         if test_write:
-            # Try to write [] to influx. If we can connect and creds are valid
+            # Try to write b"" to influx. If we can connect and creds are valid
             # Then invalid inputs is returned. Anything else is a broken config
             try:
-                write_v2([])
+                write_v2(b"")
             except ValueError:
                 pass
             write_api = influx.write_api(write_options=ASYNCHRONOUS)

@@ -30,7 +30,7 @@ class DataUpdateCoordinator:
         logger: logging.Logger,
         *,
         name: str,
-        update_interval: timedelta,
+        update_interval: Optional[timedelta] = None,
         update_method: Optional[Callable[[], Awaitable]] = None,
         request_refresh_debouncer: Optional[Debouncer] = None,
     ):
@@ -91,6 +91,9 @@ class DataUpdateCoordinator:
     @callback
     def _schedule_refresh(self) -> None:
         """Schedule a refresh."""
+        if self.update_interval is None:
+            return
+
         if self._unsub_refresh:
             self._unsub_refresh()
             self._unsub_refresh = None
