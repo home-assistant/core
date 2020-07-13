@@ -15,6 +15,10 @@ COMMAND_OFF_LIST = [
     "Close (inline relay)",
 ]
 
+ATTR_EVENT = "event"
+
+SERVICE_SEND = "send"
+
 DEVICE_PACKET_TYPE_LIGHTING4 = 0x13
 
 DATA_RFXTRX_CONFIG = "rfxtrx_config"
