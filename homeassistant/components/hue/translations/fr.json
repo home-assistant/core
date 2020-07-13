@@ -17,7 +17,7 @@
         "step": {
             "init": {
                 "data": {
-                    "host": "H\u00f4te"
+                    "host": "Nom d'h\u00f4te ou adresse IP"
                 },
                 "title": "Choisissez le pont Philips Hue"
             },
@@ -57,6 +57,7 @@
             "init": {
                 "data": {
                     "allow_how_groups": "Autoriser les groupes Hue",
+                    "allow_hue_groups": "Autoriser les groupes Hue",
                     "allow_unreachable": "Autoriser les ampoules inaccessibles \u00e0 signaler correctement leur \u00e9tat"
                 }
             }

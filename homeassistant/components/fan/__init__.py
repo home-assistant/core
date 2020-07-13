@@ -107,7 +107,7 @@ class FanEntity(ToggleEntity):
 
     async def async_set_speed(self, speed: str):
         """Set the speed of the fan."""
-        if speed is SPEED_OFF:
+        if speed == SPEED_OFF:
             await self.async_turn_off()
         else:
             await self.hass.async_add_job(self.set_speed, speed)
@@ -128,7 +128,7 @@ class FanEntity(ToggleEntity):
     # pylint: disable=arguments-differ
     async def async_turn_on(self, speed: Optional[str] = None, **kwargs):
         """Turn on the fan."""
-        if speed is SPEED_OFF:
+        if speed == SPEED_OFF:
             await self.async_turn_off()
         else:
             await self.hass.async_add_job(ft.partial(self.turn_on, speed, **kwargs))

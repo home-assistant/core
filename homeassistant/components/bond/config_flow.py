@@ -1,9 +1,9 @@
 """Config flow for Bond integration."""
+from json import JSONDecodeError
 import logging
 
 from bond import Bond
 from requests.exceptions import ConnectionError as RequestConnectionError
-from simplejson import JSONDecodeError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -51,8 +51,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-
-                return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -60,6 +58,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors

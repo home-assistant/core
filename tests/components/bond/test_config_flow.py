@@ -1,15 +1,16 @@
 """Test the Bond config flow."""
-from requests.exceptions import ConnectionError
-from simplejson import JSONDecodeError
+from json import JSONDecodeError
 
-from homeassistant import config_entries, setup
+from requests.exceptions import ConnectionError
+
+from homeassistant import config_entries, core, setup
 from homeassistant.components.bond.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 
 from tests.async_mock import patch
 
 
-async def test_form(hass):
+async def test_form(hass: core.HomeAssistant):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -40,7 +41,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass: core.HomeAssistant):
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -58,7 +59,7 @@ async def test_form_invalid_auth(hass):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: core.HomeAssistant):
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -76,7 +77,7 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unexpected_error(hass):
+async def test_form_unexpected_error(hass: core.HomeAssistant):
     """Test we handle unexpected error gracefully."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

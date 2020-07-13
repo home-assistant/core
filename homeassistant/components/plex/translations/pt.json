@@ -12,7 +12,8 @@
         "step": {
             "manual_setup": {
                 "data": {
-                    "host": "Servidor"
+                    "host": "Servidor",
+                    "port": "Porta"
                 }
             },
             "select_server": {

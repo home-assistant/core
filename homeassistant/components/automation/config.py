@@ -1,7 +1,6 @@
 """Config validation helper for the automation integration."""
 import asyncio
 import importlib
-import logging
 
 import voluptuous as vol
 
@@ -9,19 +8,13 @@ from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.config import async_log_exception, config_without_domain
-from homeassistant.const import CONF_ALIAS, CONF_ID, CONF_MODE, CONF_PLATFORM
+from homeassistant.const import CONF_PLATFORM
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, config_per_platform
-from homeassistant.helpers.script import (
-    SCRIPT_MODE_LEGACY,
-    async_validate_action_config,
-    warn_deprecated_legacy,
-)
+from homeassistant.helpers.script import async_validate_action_config
 from homeassistant.loader import IntegrationNotFound
 
 from . import CONF_ACTION, CONF_CONDITION, CONF_TRIGGER, DOMAIN, PLATFORM_SCHEMA
-
-_LOGGER = logging.getLogger(__name__)
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
@@ -74,35 +67,6 @@ async def _try_async_validate_config_item(hass, config, full_config=None):
     return config
 
 
-def _deprecated_legacy_mode(config):
-    legacy_names = []
-    legacy_unnamed_found = False
-
-    for cfg in config[DOMAIN]:
-        mode = cfg.get(CONF_MODE)
-        if mode is None:
-            cfg[CONF_MODE] = SCRIPT_MODE_LEGACY
-            name = cfg.get(CONF_ID) or cfg.get(CONF_ALIAS)
-            if name:
-                legacy_names.append(name)
-            else:
-                legacy_unnamed_found = True
-
-    if legacy_names or legacy_unnamed_found:
-        msgs = []
-        if legacy_unnamed_found:
-            msgs.append("unnamed automations")
-        if legacy_names:
-            if len(legacy_names) == 1:
-                base_msg = "this automation"
-            else:
-                base_msg = "these automations"
-            msgs.append(f"{base_msg}: {', '.join(legacy_names)}")
-        warn_deprecated_legacy(_LOGGER, " and ".join(msgs))
-
-    return config
-
-
 async def async_validate_config(hass, config):
     """Validate config."""
     automations = list(
@@ -121,7 +85,5 @@ async def async_validate_config(hass, config):
     # component removed and add validated config back in.
     config = config_without_domain(config, DOMAIN)
     config[DOMAIN] = automations
-
-    _deprecated_legacy_mode(config)
 
     return config

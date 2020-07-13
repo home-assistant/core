@@ -2,138 +2,97 @@
 import logging
 
 import RFXtrx as rfxtrxmod
-import voluptuous as vol
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
-    BinarySensorEntity,
-)
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     CONF_DEVICE_CLASS,
-    CONF_NAME,
+    CONF_DEVICES,
 )
-from homeassistant.helpers import config_validation as cv, event as evt
-from homeassistant.util import slugify
+from homeassistant.helpers import event as evt
 
 from . import (
-    ATTR_NAME,
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
-    CONF_DEVICES,
-    CONF_FIRE_EVENT,
     CONF_OFF_DELAY,
-    RFX_DEVICES,
     SIGNAL_EVENT,
     find_possible_pt2262_device,
-    fire_command_event,
+    get_device_id,
     get_pt2262_cmd,
-    get_pt2262_device,
-    get_pt2262_deviceid,
     get_rfx_object,
 )
-from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
+from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST, DEVICE_PACKET_TYPE_LIGHTING4
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_DEVICES, default={}): {
-            cv.string: vol.Schema(
-                {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-                    vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-                    vol.Optional(CONF_OFF_DELAY): vol.Any(
-                        cv.time_period, cv.positive_timedelta
-                    ),
-                    vol.Optional(CONF_DATA_BITS): cv.positive_int,
-                    vol.Optional(CONF_COMMAND_ON): cv.byte,
-                    vol.Optional(CONF_COMMAND_OFF): cv.byte,
-                }
-            )
-        },
-        vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Binary Sensor platform to RFXtrx."""
+    if discovery_info is None:
+        return
+
     sensors = []
 
-    for packet_id, entity in config[CONF_DEVICES].items():
+    device_ids = set()
+
+    pt2262_devices = []
+
+    def supported(event):
+        return isinstance(event, rfxtrxmod.ControlEvent)
+
+    for packet_id, entity in discovery_info[CONF_DEVICES].items():
         event = get_rfx_object(packet_id)
-        device_id = slugify(event.device.id_string.lower())
-
-        if device_id in RFX_DEVICES:
+        if event is None:
+            _LOGGER.error("Invalid device: %s", packet_id)
             continue
+        if not supported(event):
+            return
 
-        if entity.get(CONF_DATA_BITS) is not None:
-            _LOGGER.debug(
-                "Masked device id: %s",
-                get_pt2262_deviceid(device_id, entity.get(CONF_DATA_BITS)),
-            )
+        device_id = get_device_id(event.device, data_bits=entity.get(CONF_DATA_BITS))
+        if device_id in device_ids:
+            continue
+        device_ids.add(device_id)
 
-        _LOGGER.debug(
-            "Add %s rfxtrx.binary_sensor (class %s)",
-            entity[ATTR_NAME],
-            entity.get(CONF_DEVICE_CLASS),
-        )
+        if event.device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
+            find_possible_pt2262_device(pt2262_devices, event.device.id_string)
+            pt2262_devices.append(event.device.id_string)
 
         device = RfxtrxBinarySensor(
-            event,
-            entity.get(CONF_NAME),
+            event.device,
+            device_id,
             entity.get(CONF_DEVICE_CLASS),
-            entity[CONF_FIRE_EVENT],
             entity.get(CONF_OFF_DELAY),
             entity.get(CONF_DATA_BITS),
             entity.get(CONF_COMMAND_ON),
             entity.get(CONF_COMMAND_OFF),
         )
         sensors.append(device)
-        RFX_DEVICES[device_id] = device
 
     add_entities(sensors)
 
-    def binary_sensor_update(event):
+    def binary_sensor_update(event, device_id):
         """Call for control updates from the RFXtrx gateway."""
-        if not isinstance(event, rfxtrxmod.ControlEvent):
+        if not supported(event):
             return
 
-        device_id = slugify(event.device.id_string.lower())
+        if device_id in device_ids:
+            return
+        device_ids.add(device_id)
 
-        sensor = RFX_DEVICES.get(device_id, get_pt2262_device(device_id))
-
-        if sensor is None:
-            # Add the entity if not exists and automatic_add is True
-            if not config[CONF_AUTOMATIC_ADD]:
-                return
-
-            if event.device.packettype == 0x13:
-                poss_dev = find_possible_pt2262_device(device_id)
-                if poss_dev is not None:
-                    poss_id = slugify(poss_dev.event.device.id_string.lower())
-                    _LOGGER.debug("Found possible matching device ID: %s", poss_id)
-
-            pkt_id = "".join(f"{x:02x}" for x in event.data)
-            sensor = RfxtrxBinarySensor(event, pkt_id)
-            sensor.apply_event(event)
-            RFX_DEVICES[device_id] = sensor
-            add_entities([sensor])
-            _LOGGER.info(
-                "Added binary sensor %s (Device ID: %s Class: %s Sub: %s)",
-                pkt_id,
-                slugify(event.device.id_string.lower()),
-                event.device.__class__.__name__,
-                event.device.subtype,
-            )
+        _LOGGER.info(
+            "Added binary sensor (Device ID: %s Class: %s Sub: %s Event: %s)",
+            event.device.id_string.lower(),
+            event.device.__class__.__name__,
+            event.device.subtype,
+            "".join(f"{x:02x}" for x in event.data),
+        )
+        sensor = RfxtrxBinarySensor(event.device, device_id, event=event)
+        add_entities([sensor])
 
     # Subscribe to main RFXtrx events
-    hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, binary_sensor_update)
+    if discovery_info[CONF_AUTOMATIC_ADD]:
+        hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, binary_sensor_update)
 
 
 class RfxtrxBinarySensor(BinarySensorEntity):
@@ -141,62 +100,40 @@ class RfxtrxBinarySensor(BinarySensorEntity):
 
     def __init__(
         self,
-        event,
-        name,
+        device,
+        device_id,
         device_class=None,
-        should_fire=False,
         off_delay=None,
         data_bits=None,
         cmd_on=None,
         cmd_off=None,
+        event=None,
     ):
         """Initialize the RFXtrx sensor."""
-        self.event = event
-        self._name = name
-        self._should_fire_event = should_fire
+        self.event = None
+        self._device = device
+        self._name = f"{device.type_string} {device.id_string}"
         self._device_class = device_class
+        self._data_bits = data_bits
         self._off_delay = off_delay
         self._state = False
-        self.is_lighting4 = event.device.packettype == 0x13
         self.delay_listener = None
-        self._data_bits = data_bits
         self._cmd_on = cmd_on
         self._cmd_off = cmd_off
-        self._unique_id = f"{slugify(self.event.device.type_string.lower())}_{slugify(self.event.device.id_string.lower())}"
 
-        if data_bits is not None:
-            self._masked_id = get_pt2262_deviceid(
-                event.device.id_string.lower(), data_bits
-            )
-        else:
-            self._masked_id = None
+        self._device_id = device_id
+        self._unique_id = "_".join(x for x in self._device_id)
+
+        if event:
+            self._apply_event(event)
 
     async def async_added_to_hass(self):
         """Restore RFXtrx switch device state (ON/OFF)."""
         await super().async_added_to_hass()
 
-        def _handle_event(event):
-            """Check if event applies to me and update."""
-            if self._masked_id:
-                masked_id = get_pt2262_deviceid(event.device.id_string, self._data_bits)
-                if masked_id != self._masked_id:
-                    return
-            else:
-                if event.device.id_string != self.event.device.id_string:
-                    return
-
-            _LOGGER.debug(
-                "Binary sensor update (Device ID: %s Class: %s Sub: %s)",
-                event.device.id_string,
-                event.device.__class__.__name__,
-                event.device.subtype,
-            )
-
-            self.apply_event(event)
-
         self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_EVENT, _handle_event
+                SIGNAL_EVENT, self._handle_event
             )
         )
 
@@ -204,11 +141,6 @@ class RfxtrxBinarySensor(BinarySensorEntity):
     def name(self):
         """Return the device name."""
         return self._name
-
-    @property
-    def masked_id(self):
-        """Return the masked device id (isolated address bits)."""
-        return self._masked_id
 
     @property
     def data_bits(self):
@@ -229,11 +161,6 @@ class RfxtrxBinarySensor(BinarySensorEntity):
     def should_poll(self):
         """No polling needed."""
         return False
-
-    @property
-    def should_fire_event(self):
-        """Return is the device must fire event."""
-        return self._should_fire_event
 
     @property
     def device_class(self):
@@ -273,17 +200,28 @@ class RfxtrxBinarySensor(BinarySensorEntity):
         elif event.values["Command"] in COMMAND_OFF_LIST:
             self._state = False
 
-    def apply_event(self, event):
+    def _apply_event(self, event):
         """Apply command from rfxtrx."""
-        if self.is_lighting4:
+        if event.device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
             self._apply_event_lighting4(event)
         else:
             self._apply_event_standard(event)
 
-        if self.hass:
-            self.schedule_update_ha_state()
-            if self.should_fire_event:
-                fire_command_event(self.hass, self.entity_id, event.values["Command"])
+    def _handle_event(self, event, device_id):
+        """Check if event applies to me and update."""
+        if device_id != self._device_id:
+            return
+
+        _LOGGER.debug(
+            "Binary sensor update (Device ID: %s Class: %s Sub: %s)",
+            event.device.id_string,
+            event.device.__class__.__name__,
+            event.device.subtype,
+        )
+
+        self._apply_event(event)
+
+        self.schedule_update_ha_state()
 
         if self.is_on and self.off_delay is not None and self.delay_listener is None:
 
@@ -291,8 +229,7 @@ class RfxtrxBinarySensor(BinarySensorEntity):
                 """Switch device off after a delay."""
                 self.delay_listener = None
                 self._state = False
-                if self.hass:
-                    self.schedule_update_ha_state()
+                self.schedule_update_ha_state()
 
             self.delay_listener = evt.call_later(
                 self.hass, self.off_delay.total_seconds(), off_delay_listener
