@@ -14,7 +14,6 @@ from zeroconf import (
     ServiceInfo,
     ServiceStateChange,
     Zeroconf,
-    log as zeroconf_log,
 )
 
 from homeassistant import util
@@ -71,6 +70,7 @@ async def async_get_instance(hass):
 
 def _get_instance(hass, default_interface=False):
     """Create an instance."""
+    logging.getLogger("zeroconf").setLevel(logging.NOTSET)
     args = [InterfaceChoice.Default] if default_interface else []
     zeroconf = HaZeroconf(*args)
 
@@ -115,8 +115,6 @@ class HaZeroconf(Zeroconf):
 
 def setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
-    # Zeroconf sets its log level to WARNING, reset it to allow filtering by the logger component.
-    zeroconf_log.setLevel(logging.NOTSET)
     zeroconf = hass.data[DOMAIN] = _get_instance(
         hass, config.get(DOMAIN, {}).get(CONF_DEFAULT_INTERFACE)
     )
