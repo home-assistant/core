@@ -6,6 +6,8 @@ from homeassistant.setup import async_setup_component
 
 from . import _signal_event
 
+from tests.async_mock import call
+
 
 async def test_valid_config(hass):
     """Test configuration."""
@@ -103,4 +105,20 @@ async def test_fire_event(hass):
             "data": "0716000100900970",
             "values": {"Sound": 9, "Battery numeric": 0, "Rssi numeric": 7},
         },
+    ]
+
+
+async def test_send(hass, rfxtrx):
+    """Test configuration."""
+    assert await async_setup_component(
+        hass, "rfxtrx", {"rfxtrx": {"device": "/dev/null"}}
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "rfxtrx", "send", {"event": "0a520802060101ff0f0269"}, blocking=True
+    )
+
+    assert rfxtrx.transport.send.mock_calls == [
+        call(bytearray(b"\x0a\x52\x08\x02\x06\x01\x01\xff\x0f\x02\x69"))
     ]
