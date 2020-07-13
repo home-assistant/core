@@ -669,7 +669,7 @@ pylutron-caseta==0.6.1
 # homeassistant.components.mailgun
 pymailgunner==1.4
 
-homeassistant.components.firmata
+# homeassistant.components.firmata
 pymata-express==1.13
 
 # homeassistant.components.melcloud
