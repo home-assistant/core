@@ -32,7 +32,7 @@ async def test_entity_registry(hass: core.HomeAssistant):
     await setup_platform(hass, LIGHT_DOMAIN, ceiling_fan("name-1"))
 
     registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
-    assert [key for key in registry.entities.keys()] == ["light.name_1"]
+    assert [key for key in registry.entities] == ["light.name_1"]
 
 
 async def test_turn_on_light(hass: core.HomeAssistant):
