@@ -1,7 +1,8 @@
 """Config flow for Control4 integration."""
 import logging
 
-from aiohttp import client_exceptions
+from aiohttp.client_exceptions import ClientError
+from asyncio.exceptions import TimeoutError
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
 from pyControl4.error_handling import Unauthorized, NotFound
@@ -85,7 +86,7 @@ class Control4Validator:
             self.director = C4Director(self.host, self.director_bearer_token)
             await self.director.getAllItemInfo()
             return True
-        except (Unauthorized, client_exceptions.ClientError) as exception:
+        except (Unauthorized, ClientError, TimeoutError) as exception:
             _LOGGER.error(exception)
             return False
 
