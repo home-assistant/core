@@ -180,7 +180,7 @@ aiohue==2.1.0
 aioimaplib==0.7.15
 
 # homeassistant.components.apache_kafka
-aiokafka==0.5.1
+aiokafka==0.6.0
 
 # homeassistant.components.kef
 aiokef==0.2.13
