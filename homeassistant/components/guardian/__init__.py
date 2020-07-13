@@ -135,10 +135,21 @@ class GuardianEntity(Entity):
         self._name = name
         self._valve_controller_uid = entry.data[CONF_UID]
 
+        self._device_info = {
+            "identifiers": {(DOMAIN, self._valve_controller_uid)},
+            "manufacturer": "Elexa",
+            "name": f"Guardian {self._valve_controller_uid}",
+        }
+
     @property
     def device_class(self) -> str:
         """Return the device class."""
         return self._device_class
+
+    @property
+    def device_info(self) -> dict:
+        """Return device registry information for this entity."""
+        return self._device_info
 
     @property
     def device_state_attributes(self) -> dict:
@@ -155,9 +166,57 @@ class GuardianEntity(Entity):
         """Return True if entity has to be polled for state."""
         return False
 
+    async def _async_internal_added_to_hass(self):
+        """Perform additional, internal tasks when the entity is about to be added.
+
+        This should be extended by Guardian platforms.
+        """
+        raise NotImplementedError
+
+    @callback
+    def _async_update_from_latest_data(self):
+        """Update the entity.
+
+        This should be extended by Guardian platforms.
+        """
+        raise NotImplementedError
+
+    @callback
+    def _async_update_state_callback(self):
+        """Update the entity's state."""
+        self._async_update_from_latest_data()
+        self.async_write_ha_state()
+
 
 class PairedSensorEntity(Entity):
     """Define a Guardian paired sensor entity."""
+
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        coordinator: DataUpdateCoordinator,
+        kind: str,
+        name: str,
+        device_class: str,
+        icon: str,
+    ) -> None:
+        """Initialize."""
+        super().__init__(entry, kind, name, device_class, icon)
+
+        self._coordinator = coordinator
+        self._paired_sensor_uid = coordinator.data["uid"]
+
+        self._device_info["via_device"] = (DOMAIN, self._valve_controller_uid)
+
+    @property
+    def name(self) -> str:
+        """Return the name of the entity."""
+        return f"Guardian Paired Sensor {self._paired_sensor_uid}: {self._name}"
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the entity."""
+        return f"{self._paired_sensor_uid}_{self._kind}"
 
 
 class ValveControllerEntity(GuardianEntity):
@@ -177,15 +236,9 @@ class ValveControllerEntity(GuardianEntity):
 
         self._coordinators = coordinators
 
-    @property
-    def device_info(self) -> dict:
-        """Return device registry information for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self._valve_controller_uid)},
-            "manufacturer": "Elexa",
-            "model": self._coordinators[API_SYSTEM_DIAGNOSTICS].data["firmware"],
-            "name": f"Guardian {self._valve_controller_uid}",
-        }
+        self._device_info["model"] = self._coordinators[API_SYSTEM_DIAGNOSTICS].data[
+            "firmware"
+        ]
 
     @property
     def name(self) -> str:
@@ -197,32 +250,14 @@ class ValveControllerEntity(GuardianEntity):
         """Return the unique ID of the entity."""
         return f"{self._valve_controller_uid}_{self._kind}"
 
-    async def _async_internal_added_to_hass(self):
-        """Perform additional, internal tasks when the entity is about to be added.
-
-        This should be extended by Guardian platforms.
-        """
-        raise NotImplementedError
-
-    @callback
-    def _async_update_from_latest_data(self):
-        """Update the entity.
-
-        This should be extended by Guardian platforms.
-        """
-        raise NotImplementedError
-
     @callback
     def async_add_coordinator_update_listener(self, api: str) -> None:
         """Add a listener to a DataUpdateCoordinator based on the API referenced."""
-
-        @callback
-        def async_update():
-            """Update the entity's state."""
-            self._async_update_from_latest_data()
-            self.async_write_ha_state()
-
-        self.async_on_remove(self._coordinators[api].async_add_listener(async_update))
+        self.async_on_remove(
+            self._coordinators[api].async_add_listener(
+                self._async_update_state_callback
+            )
+        )
 
     async def async_added_to_hass(self) -> None:
         """Perform tasks when the entity is added."""
