@@ -10,7 +10,7 @@
           "title": "Podłącz urządzenie do zasilania."
         },
         "two": {
-          "description": "![AIS logo](https://www.ai-speaker.com/images/ais_s20_2.gif)\n\nTryb parowania sygnalizowany jest mruganiem diody na urządzeniu.\nŻeby uruchomić tryb parowania naciśnij szybko 4 razy przycisk na urządzeniu i poczekaj aż jego dioda zacznie mrugać.\n\nNastępnie rozpocznij wyszukiwanie urządzenia, naciskając **SUBMIT**",
+          "description": "![AIS logo](https://www.ai-speaker.com/images/ais_s20_2.gif)\n\nTryb parowania sygnalizowany jest mruganiem diody na urządzeniu.\nŻeby uruchomić tryb parowania naciśnij szybko 4 razy przycisk na urządzeniu i poczekaj aż jego dioda zacznie mrugać.\n\nNastępnie rozpocznij wyszukiwanie urządzenia, naciskając **ZATWIERDŹ**",
           "title": "Uruchom tryb parowania"
         },
         "search_iot": {

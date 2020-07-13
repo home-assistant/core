@@ -13,6 +13,7 @@ from homeassistant.core import callback
 from .const import (
     DEFAULT_AREAS,
     DOMAIN,
+    STEP_AIS_RESTORE_BACKUP,
     STEP_CORE_CONFIG,
     STEP_INTEGRATION,
     STEP_MOB_INTEGRATION,
@@ -28,6 +29,7 @@ async def async_setup(hass, data, store):
     hass.http.register_view(CoreConfigOnboardingView(data, store))
     hass.http.register_view(IntegrationOnboardingView(data, store))
     hass.http.register_view(MobIntegrationOnboardingView(data, store))
+    hass.http.register_view(AisRestoreBackupOnboardingView(data, store))
 
 
 class OnboardingView(HomeAssistantView):
@@ -165,11 +167,37 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
 
 
 class MobIntegrationOnboardingView(_BaseOnboardingView):
-    """View to finish core config onboarding step."""
+    """View to finish mob integration onboarding step."""
 
     url = "/api/onboarding/mob_integration"
     name = "api:onboarding:mob_integration"
     step = STEP_MOB_INTEGRATION
+
+    async def post(self, request):
+        """Handle finishing core config step."""
+        hass = request.app["hass"]
+
+        async with self._lock:
+            if self._async_is_done():
+                return self.json_message(
+                    "Core config step already done", HTTP_FORBIDDEN
+                )
+
+            await self._async_mark_done(hass)
+
+            await hass.config_entries.flow.async_init(
+                "met", context={"source": "onboarding"}
+            )
+
+            return self.json({})
+
+
+class AisRestoreBackupOnboardingView(_BaseOnboardingView):
+    """View to finish ais restore onboarding step."""
+
+    url = "/api/onboarding/ais_restore_backup"
+    name = "api:onboarding:ais_restore_backup"
+    step = STEP_AIS_RESTORE_BACKUP
 
     async def post(self, request):
         """Handle finishing core config step."""

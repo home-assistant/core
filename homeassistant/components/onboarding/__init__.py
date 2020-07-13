@@ -6,6 +6,7 @@ from homeassistant.loader import bind_hass
 from . import views
 from .const import (
     DOMAIN,
+    STEP_AIS_RESTORE_BACKUP,
     STEP_CORE_CONFIG,
     STEP_INTEGRATION,
     STEP_MOB_INTEGRATION,
@@ -29,6 +30,7 @@ class OnboadingStorage(Store):
             old_data["done"].append(STEP_CORE_CONFIG)
         if old_version < 4:
             old_data["done"].append(STEP_MOB_INTEGRATION)
+            old_data["done"].append(STEP_AIS_RESTORE_BACKUP)
         return old_data
 
 
