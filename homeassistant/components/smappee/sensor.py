@@ -154,7 +154,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         # Add all basic sensors (realtime values and aggregators)
         # Some are available in local only env
         for sensor in TREND_SENSORS:
-            if not service_location._local_polling or TREND_SENSORS[sensor][5]:
+            if not service_location.local_polling or TREND_SENSORS[sensor][5]:
                 entities.append(
                     SmappeeSensor(
                         smappee_base=smappee_base,
@@ -178,7 +178,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         # Add solar sensors (some are available in local only env)
         if service_location.has_solar_production:
             for sensor in SOLAR_SENSORS:
-                if not service_location._local_polling or SOLAR_SENSORS[sensor][5]:
+                if not service_location.local_polling or SOLAR_SENSORS[sensor][5]:
                     entities.append(
                         SmappeeSensor(
                             smappee_base=smappee_base,
