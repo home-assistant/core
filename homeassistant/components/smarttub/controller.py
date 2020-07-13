@@ -1,6 +1,5 @@
 """Interface to the SmartTub API."""
 
-from collections import defaultdict
 from datetime import timedelta
 import logging
 
@@ -86,11 +85,11 @@ class SmartTubController:
     async def async_update_data(self):
         """Query the API and update our copy of the state."""
 
-        data = defaultdict(dict)
+        data = {}
         try:
             async with async_timeout.timeout(POLLING_TIMEOUT):
                 for spa_id, spa in self._spas.items():
-                    data[spa_id]["status"] = await spa.get_status()
+                    data[spa_id] = {"status": await spa.get_status()}
         except APIError as err:
             raise UpdateFailed(err)
 
