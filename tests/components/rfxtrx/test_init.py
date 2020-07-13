@@ -16,7 +16,6 @@ async def test_valid_config(hass):
             "rfxtrx": {
                 "device": "/dev/serial/by-id/usb"
                 + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                "dummy": True,
             }
         },
     )
@@ -31,7 +30,6 @@ async def test_valid_config2(hass):
             "rfxtrx": {
                 "device": "/dev/serial/by-id/usb"
                 + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                "dummy": True,
                 "debug": True,
             }
         },
@@ -64,7 +62,6 @@ async def test_fire_event(hass):
             "rfxtrx": {
                 "device": "/dev/serial/by-id/usb"
                 + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                "dummy": True,
                 "automatic_add": True,
                 "devices": {
                     "0b1100cd0213c7f210010f51": {rfxtrx.CONF_FIRE_EVENT: True},

@@ -36,7 +36,6 @@ CONF_FIRE_EVENT = "fire_event"
 CONF_DATA_BITS = "data_bits"
 CONF_AUTOMATIC_ADD = "automatic_add"
 CONF_SIGNAL_REPETITIONS = "signal_repetitions"
-CONF_DUMMY = "dummy"
 CONF_DEBUG = "debug"
 CONF_OFF_DELAY = "off_delay"
 SIGNAL_EVENT = f"{DOMAIN}_event"
@@ -94,7 +93,6 @@ DEVICE_SCHEMA = vol.Schema(
 BASE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEBUG, default=False): cv.boolean,
-        vol.Optional(CONF_DUMMY, default=False): cv.boolean,
         vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
         vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
     }
@@ -128,7 +126,6 @@ async def async_setup(hass, config):
                 CONF_PORT: config[DOMAIN].get(CONF_PORT),
                 CONF_DEVICE: config[DOMAIN].get(CONF_DEVICE),
                 CONF_DEBUG: config[DOMAIN][CONF_DEBUG],
-                CONF_DUMMY: config[DOMAIN][CONF_DUMMY],
             },
         )
     )
@@ -194,13 +191,8 @@ def setup_internal(hass, config):
     host = config[CONF_HOST]
     port = config[CONF_PORT]
     debug = config[CONF_DEBUG]
-    dummy_connection = config[CONF_DUMMY]
 
-    if dummy_connection:
-        rfx_object = rfxtrxmod.Connect(
-            device, None, debug=debug, transport_protocol=rfxtrxmod.DummyTransport2,
-        )
-    elif port is not None:
+    if port is not None:
         # If port is set then we create a TCP connection
         rfx_object = rfxtrxmod.Connect(
             (host, port),

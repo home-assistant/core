@@ -12,13 +12,7 @@ async def test_import(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            "host": None,
-            "port": None,
-            "device": "/dev/tty123",
-            "debug": False,
-            "dummy": False,
-        },
+        data={"host": None, "port": None, "device": "/dev/tty123", "debug": False},
     )
 
     assert result["type"] == "create_entry"
@@ -28,7 +22,6 @@ async def test_import(hass):
         "port": None,
         "device": "/dev/tty123",
         "debug": False,
-        "dummy": False,
     }
 
 
@@ -38,13 +31,7 @@ async def test_import_update(hass):
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            "host": None,
-            "port": None,
-            "device": "/dev/tty123",
-            "debug": False,
-            "dummy": False,
-        },
+        data={"host": None, "port": None, "device": "/dev/tty123", "debug": False},
         unique_id=DOMAIN,
     )
     entry.add_to_hass(hass)
@@ -52,13 +39,7 @@ async def test_import_update(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            "host": None,
-            "port": None,
-            "device": "/dev/tty123",
-            "debug": True,
-            "dummy": False,
-        },
+        data={"host": None, "port": None, "device": "/dev/tty123", "debug": True},
     )
 
     assert result["type"] == "abort"
