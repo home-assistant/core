@@ -37,6 +37,9 @@ class SmappeeFlowHandler(
             # We currently only support Energy and Solar models (legacy)
             return self.async_abort(reason="invalid mDNS")
 
+        # pylint: E1101: Instance of 'SmappeeFlowHandler' has no 'context' member (no-member)
+        self.context = {"source": "zeroconf"}
+
         self.context.update(
             {
                 CONF_HOSTNAME: discovery_info[CONF_HOSTNAME],
