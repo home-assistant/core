@@ -5,7 +5,12 @@ from pysmappee import Smappee
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_PLATFORM
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_IP_ADDRESS,
+    CONF_PLATFORM,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.util import Throttle
@@ -14,6 +19,7 @@ from . import api, config_flow
 from .const import (
     AUTHORIZE_URL,
     BASE,
+    CONF_SERIALNUMBER,
     DOMAIN,
     MIN_TIME_BETWEEN_UPDATES,
     SMAPPEE_PLATFORMS,
@@ -65,15 +71,20 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up Smappee from a config entry."""
-    implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
-        hass, entry
-    )
+    """Set up Smappee from a zeroconf or config entry."""
+    if CONF_IP_ADDRESS in entry.data:
+        smappee_api = api.api.SmappeeLocalApi(ip=entry.data[CONF_IP_ADDRESS])
+        smappee = Smappee(api=smappee_api, serialnumber=entry.data[CONF_SERIALNUMBER])
+        await hass.async_add_executor_job(smappee.load_local_service_location)
+    else:
+        implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
+        )
 
-    smappee_api = api.ConfigEntrySmappeeApi(hass, entry, implementation)
+        smappee_api = api.ConfigEntrySmappeeApi(hass, entry, implementation)
 
-    smappee = Smappee(smappee_api)
-    await hass.async_add_executor_job(smappee.load_service_locations)
+        smappee = Smappee(api=smappee_api)
+        await hass.async_add_executor_job(smappee.load_service_locations)
 
     hass.data[DOMAIN][BASE] = SmappeeBase(hass, smappee)
 

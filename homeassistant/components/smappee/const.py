@@ -5,6 +5,10 @@ from datetime import timedelta
 DOMAIN = "smappee"
 DATA_CLIENT = "smappee_data"
 
+CONF_HOSTNAME = "hostname"
+CONF_SERIALNUMBER = "serialnumber"
+CONF_TITLE = "title"
+
 BASE = "BASE"
 
 SMAPPEE_PLATFORMS = ["binary_sensor", "sensor", "switch"]

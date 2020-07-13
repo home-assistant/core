@@ -29,7 +29,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     )
                 )
 
-        entities.append(SmappeePresence(smappee_base, service_location))
+        if not smappee_base.smappee.local_polling:
+            # presence value only available in cloud env
+            entities.append(SmappeePresence(smappee_base, service_location))
 
     async_add_entities(entities, True)
 
