@@ -174,17 +174,14 @@ class Control4Entity(entity.Entity):
     ):
         """Initialize a Control4 entity."""
         self.entry = entry
-        self.account = hass.data[DOMAIN][self.entry.entry_id][CONF_ACCOUNT]
-        self.director = hass.data[DOMAIN][self.entry.entry_id][CONF_DIRECTOR]
-        self.director_token_expiry = hass.data[DOMAIN][self.entry.entry_id][
-            CONF_DIRECTOR_TOKEN_EXPIRATION
-        ]
+        entry_data = hass.data[DOMAIN][self.entry.entry_id]
+        self.account = entry_data[CONF_ACCOUNT]
+        self.director = entry_data[CONF_DIRECTOR]
+        self.director_token_expiry = entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION]
         self._name = name
         self._idx = idx
         self._coordinator = coordinator
-        self._controller_name = hass.data[DOMAIN][self.entry.entry_id][
-            CONF_CONTROLLER_NAME
-        ]
+        self._controller_name = entry_data[CONF_CONTROLLER_NAME]
         self._device_name = device_name
         self._device_manufacturer = device_manufacturer
         self._device_model = device_model

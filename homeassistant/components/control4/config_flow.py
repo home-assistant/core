@@ -1,9 +1,10 @@
 """Config flow for Control4 integration."""
 import logging
 
+from aiohttp import client_exceptions
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
-from pyControl4.error_handling import BadCredentials, Unauthorized
+from pyControl4.error_handling import Unauthorized, NotFound
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -75,8 +76,7 @@ class Control4Validator:
                 self.controller_name
             )
             return True
-        except (BadCredentials, Unauthorized) as exception:
-            _LOGGER.error(exception)
+        except (Unauthorized, NotFound):
             return False
 
     async def connect_to_director(self) -> bool:
@@ -85,34 +85,9 @@ class Control4Validator:
             self.director = C4Director(self.host, self.director_bearer_token)
             await self.director.getAllItemInfo()
             return True
-        except Exception as exception:  # pylint: disable=broad-except
+        except (Unauthorized, client_exceptions.ClientError) as exception:
             _LOGGER.error(exception)
             return False
-
-
-async def validate_input(hass: core.HomeAssistant, data):
-    """Validate the user input allows us to connect.
-
-    Data has the keys from DATA_SCHEMA with values provided by the user.
-    """
-
-    hub = Control4Validator(data["host"], data["username"], data["password"])
-
-    if not await hub.authenticate():
-        raise InvalidAuth
-
-    if not await hub.connect_to_director():
-        raise CannotConnect
-
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
-
-    # Return info that you want to store in the config entry.
-    return {
-        "controller_name": hub.controller_name,
-    }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -126,24 +101,40 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
 
+            hub = Control4Validator(
+                user_input["host"], user_input["username"], user_input["password"]
+            )
             try:
-                info = await validate_input(self.hass, user_input)
-                if info["controller_name"] in configured_instances(self.hass):
-                    return self.async_abort(reason="already_configured")
+                if not await hub.authenticate():
+                    raise InvalidAuth
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
 
+            if hub.controller_name in configured_instances(self.hass):
+                return self.async_abort(reason="already_configured")
+
+            try:
+                if not await hub.connect_to_director():
+                    raise CannotConnect
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+
+            try:
                 return self.async_create_entry(
-                    title=info["controller_name"],
+                    title=hub.controller_name,
                     data={
                         CONF_HOST: user_input["host"],
                         CONF_USERNAME: user_input["username"],
                         CONF_PASSWORD: user_input["password"],
-                        CONF_CONTROLLER_NAME: info["controller_name"],
+                        CONF_CONTROLLER_NAME: hub.controller_name,
                     },
                 )
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
