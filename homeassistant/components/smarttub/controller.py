@@ -112,14 +112,19 @@ class SmartTubController:
             and entity.spa_id in self._coordinator.data
         )
 
-    async def validate_credentials(self, email, password):
-        """Check if the specified credentials are valid for authenticating to SmartTub."""
+    async def get_account_id(self, email, password):
+        """Retrieve the account ID corresponding to the specified email and password.
+
+        Returns None if the credentials are invalid.
+        """
+
         api = SmartTub(async_get_clientsession(self._hass))
         try:
             await api.login(email, password)
         except LoginFailed:
-            return False
-        return True
+            return None
+        account = await api.get_account()
+        return account.id
 
     def get_spa_name(self, spa_id):
         """Retrieve the name of the specified spa."""

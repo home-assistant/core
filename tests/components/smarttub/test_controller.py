@@ -120,15 +120,16 @@ async def test_entity(hass, controller):
     assert not controller.entity_is_available(entity)
 
 
-async def test_validate_credentials(controller, smarttub_api):
+async def test_get_account_id(controller, smarttub_api):
     """Test SmartTubController.validate_credentials."""
-    valid = await controller.validate_credentials("test-email1", "test-password1")
+    smarttub_api.get_account.return_value.id = "account-id1"
+    account_id = await controller.get_account_id("test-email1", "test-password1")
     smarttub_api.login.assert_called()
-    assert valid is True
+    assert account_id == "account-id1"
 
     smarttub_api.login.side_effect = smarttub.LoginFailed
-    valid = await controller.validate_credentials("test-email1", "test-password1")
-    assert valid is False
+    account_id = await controller.get_account_id("test-email1", "test-password1")
+    assert account_id is None
 
 
 def test_spa_metadata(controller):

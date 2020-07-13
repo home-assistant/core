@@ -39,28 +39,23 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_EMAIL])
-            self._abort_if_unique_id_configured()
+            controller = SmartTubController(self.hass)
+            account_id = await controller.get_account_id(
+                user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
+            )
+            if account_id is not None:
+                await self.async_set_unique_id(account_id)
+                self._abort_if_unique_id_configured()
 
-            errors = await self._validate_credentials(user_input)
-
-            if not errors:
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL], data=user_input
                 )
 
+            errors["base"] = "invalid_auth"
+
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-    async def _validate_credentials(self, data):
-        controller = SmartTubController(self.hass)
-        errors = {}
-        if not await controller.validate_credentials(
-            data[CONF_EMAIL], data[CONF_PASSWORD]
-        ):
-            errors["base"] = "invalid_auth"
-        return errors
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
