@@ -127,8 +127,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             controller_name = await hub.return_controller_name()
-            if controller_name in configured_instances(self.hass):
-                return self.async_abort(reason="already_configured")
+            await self.async_set_unique_id(controller_name)
+            self._abort_if_unique_id_configured()
 
             if errors == {}:
                 return self.async_create_entry(

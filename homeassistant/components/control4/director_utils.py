@@ -51,8 +51,7 @@ async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
     director_token_expiry = director_token_dict["token_expiration"]
 
     _LOGGER.debug("Saving new tokens in config_entry")
-    hass.data[DOMAIN][entry.entry_id][CONF_ACCOUNT] = account
-    hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR] = director
-    hass.data[DOMAIN][entry.entry_id][
-        CONF_DIRECTOR_TOKEN_EXPIRATION
-    ] = director_token_expiry
+    entry_data = hass.data[DOMAIN][entry.entry_id]
+    entry_data[CONF_ACCOUNT] = account
+    entry_data[CONF_DIRECTOR] = director
+    entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION] = director_token_expiry
