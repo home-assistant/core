@@ -730,7 +730,7 @@ class TestComponentHistory(unittest.TestCase):
         ):
             # This state will be skipped only different in time
             set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt3)})
-            # This state will be skipped because domain blacklisted
+            # This state will be skipped because domain is excluded
             set_state(zone, "zoning")
             set_state(script_nc, "off")
             states[script_c].append(
