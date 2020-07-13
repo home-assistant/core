@@ -11,13 +11,7 @@ async def test_one_cover(hass, rfxtrx):
     assert await async_setup_component(
         hass,
         "rfxtrx",
-        {
-            "rfxtrx": {
-                "device": "abcd",
-                "dummy": True,
-                "devices": {"0b1400cd0213c7f20d010f51": {}},
-            }
-        },
+        {"rfxtrx": {"device": "abcd", "devices": {"0b1400cd0213c7f20d010f51": {}}}},
     )
     await hass.async_block_till_done()
 
@@ -60,7 +54,6 @@ async def test_several_covers(hass, rfxtrx):
         {
             "rfxtrx": {
                 "device": "abcd",
-                "dummy": True,
                 "devices": {
                     "0b1400cd0213c7f20d010f51": {},
                     "0A1400ADF394AB010D0060": {},
@@ -90,11 +83,10 @@ async def test_several_covers(hass, rfxtrx):
 async def test_discover_covers(hass, rfxtrx):
     """Test with discovery of covers."""
     assert await async_setup_component(
-        hass,
-        "rfxtrx",
-        {"rfxtrx": {"device": "abcd", "dummy": True, "automatic_add": True}},
+        hass, "rfxtrx", {"rfxtrx": {"device": "abcd", "automatic_add": True}}
     )
     await hass.async_block_till_done()
+    await hass.async_start()
 
     await _signal_event(hass, "0a140002f38cae010f0070")
     state = hass.states.get("cover.lightwaverf_siemens_f38cae_1")

@@ -180,7 +180,7 @@ aiohue==2.1.0
 aioimaplib==0.7.15
 
 # homeassistant.components.apache_kafka
-aiokafka==0.5.1
+aiokafka==0.6.0
 
 # homeassistant.components.kef
 aiokef==0.2.13
@@ -1265,13 +1265,13 @@ pycsspeechtts==1.0.3
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.2.0
+pydaikin==2.3.1
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==71
+pydeconz==72
 
 # homeassistant.components.delijn
 pydelijn==0.6.0
