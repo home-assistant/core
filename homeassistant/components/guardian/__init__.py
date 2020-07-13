@@ -188,7 +188,7 @@ class GuardianEntity(Entity):
         self.async_write_ha_state()
 
 
-class PairedSensorEntity(Entity):
+class PairedSensorEntity(GuardianEntity):
     """Define a Guardian paired sensor entity."""
 
     def __init__(
