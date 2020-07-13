@@ -20,13 +20,7 @@ async def test_one_sensor(hass, rfxtrx):
     assert await async_setup_component(
         hass,
         "rfxtrx",
-        {
-            "rfxtrx": {
-                "device": "abcd",
-                "dummy": True,
-                "devices": {"0a52080705020095220269": {}},
-            }
-        },
+        {"rfxtrx": {"device": "abcd", "devices": {"0a52080705020095220269": {}}}},
     )
     await hass.async_block_till_done()
 
@@ -45,13 +39,7 @@ async def test_one_sensor_no_datatype(hass, rfxtrx):
     assert await async_setup_component(
         hass,
         "rfxtrx",
-        {
-            "rfxtrx": {
-                "device": "abcd",
-                "dummy": True,
-                "devices": {"0a52080705020095220269": {}},
-            }
-        },
+        {"rfxtrx": {"device": "abcd", "devices": {"0a52080705020095220269": {}}}},
     )
     await hass.async_block_till_done()
 
@@ -97,7 +85,6 @@ async def test_several_sensors(hass, rfxtrx):
         {
             "rfxtrx": {
                 "device": "abcd",
-                "dummy": True,
                 "devices": {
                     "0a52080705020095220269": {},
                     "0a520802060100ff0e0269": {},
@@ -139,9 +126,7 @@ async def test_several_sensors(hass, rfxtrx):
 async def test_discover_sensor(hass, rfxtrx):
     """Test with discovery of sensor."""
     assert await async_setup_component(
-        hass,
-        "rfxtrx",
-        {"rfxtrx": {"device": "abcd", "dummy": True, "automatic_add": True}},
+        hass, "rfxtrx", {"rfxtrx": {"device": "abcd", "automatic_add": True}},
     )
     await hass.async_block_till_done()
     await hass.async_start()
@@ -244,7 +229,6 @@ async def test_update_of_sensors(hass, rfxtrx):
         {
             "rfxtrx": {
                 "device": "abcd",
-                "dummy": True,
                 "devices": {
                     "0a52080705020095220269": {},
                     "0a520802060100ff0e0269": {},
