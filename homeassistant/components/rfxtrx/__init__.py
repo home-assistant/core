@@ -94,7 +94,7 @@ def _bytearray_string(data):
 def _ensure_device(value):
     if value is None:
         return DEVICE_DATA_SCHEMA({})
-    return value
+    return DEVICE_DATA_SCHEMA(value)
 
 
 SERVICE_SEND_SCHEMA = vol.Schema({ATTR_EVENT: _bytearray_string})
