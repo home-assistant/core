@@ -66,68 +66,44 @@ async def test_fire_event(hass):
                 + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
                 "dummy": True,
                 "automatic_add": True,
-                "devices": {"0b1100cd0213c7f210010f51": {rfxtrx.ATTR_FIRE_EVENT: True}},
+                "devices": {
+                    "0b1100cd0213c7f210010f51": {rfxtrx.CONF_FIRE_EVENT: True},
+                    "0716000100900970": {rfxtrx.CONF_FIRE_EVENT: True},
+                },
             }
         },
     )
     await hass.async_block_till_done()
+    await hass.async_start()
 
     calls = []
 
     @callback
     def record_event(event):
         """Add recorded event to set."""
-        calls.append(event)
+        assert event.event_type == "rfxtrx_event"
+        calls.append(event.data)
 
-    hass.bus.async_listen(rfxtrx.EVENT_BUTTON_PRESSED, record_event)
-
-    state = hass.states.get("switch.ac_213c7f2_16")
-    assert state
-    assert state.state == "off"
+    hass.bus.async_listen(rfxtrx.const.EVENT_RFXTRX_EVENT, record_event)
 
     await _signal_event(hass, "0b1100cd0213c7f210010f51")
+    await _signal_event(hass, "0716000100900970")
 
-    state = hass.states.get("switch.ac_213c7f2_16")
-    assert state
-    assert state.state == "on"
-
-    assert any(
-        call.data == {"entity_id": "switch.ac_213c7f2_16", "state": "on"}
-        for call in calls
-    )
-
-
-async def test_fire_event_sensor(hass):
-    """Test fire event."""
-    await async_setup_component(
-        hass,
-        "rfxtrx",
+    assert calls == [
         {
-            "rfxtrx": {
-                "device": "/dev/serial/by-id/usb"
-                + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                "dummy": True,
-                "automatic_add": True,
-                "devices": {"0a520802060100ff0e0269": {rfxtrx.ATTR_FIRE_EVENT: True}},
-            }
+            "packet_type": 17,
+            "sub_type": 0,
+            "type_string": "AC",
+            "id_string": "213c7f2:16",
+            "data": "0b1100cd0213c7f210010f51",
+            "values": {"Command": "On", "Rssi numeric": 5},
         },
-    )
-
-    await hass.async_block_till_done()
-
-    calls = []
-
-    @callback
-    def record_event(event):
-        """Add recorded event to set."""
-        calls.append(event)
-
-    hass.bus.async_listen("signal_received", record_event)
-
-    await _signal_event(hass, "0a520802060101ff0f0269")
-    assert len(calls) == 5
-    assert any(
-        call.data
-        == {"entity_id": "sensor.wt260_wt260h_wt440h_wt450_wt450h_06_01_temperature"}
-        for call in calls
-    )
+        {
+            "packet_type": 22,
+            "sub_type": 0,
+            "type_string": "Byron SX",
+            "id_string": "00:90",
+            "data": "0716000100900970",
+            "values": {"Sound": 9, "Battery numeric": 0, "Rssi numeric": 7},
+        },
+    ]

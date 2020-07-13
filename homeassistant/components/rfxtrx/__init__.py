@@ -8,8 +8,6 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_STATE,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     CONF_DEVICE,
@@ -27,23 +25,20 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import slugify
 
-from .const import DEVICE_PACKET_TYPE_LIGHTING4
+from .const import DEVICE_PACKET_TYPE_LIGHTING4, EVENT_RFXTRX_EVENT
 
 DOMAIN = "rfxtrx"
 
 DEFAULT_SIGNAL_REPETITIONS = 1
 
-ATTR_FIRE_EVENT = "fire_event"
+CONF_FIRE_EVENT = "fire_event"
 CONF_DATA_BITS = "data_bits"
 CONF_AUTOMATIC_ADD = "automatic_add"
 CONF_SIGNAL_REPETITIONS = "signal_repetitions"
-CONF_FIRE_EVENT = "fire_event"
 CONF_DUMMY = "dummy"
 CONF_DEBUG = "debug"
 CONF_OFF_DELAY = "off_delay"
-EVENT_BUTTON_PRESSED = "button_pressed"
 SIGNAL_EVENT = f"{DOMAIN}_event"
 
 DATA_TYPES = OrderedDict(
@@ -118,23 +113,46 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the RFXtrx component."""
+
+    # Setup some per device config
+    device_events = set()
+    device_bits = {}
+    for event_code, event_config in config[DOMAIN][CONF_DEVICES].items():
+        event = get_rfx_object(event_code)
+        device_id = get_device_id(
+            event.device, data_bits=event_config.get(CONF_DATA_BITS)
+        )
+        device_bits[device_id] = event_config.get(CONF_DATA_BITS)
+        if event_config[CONF_FIRE_EVENT]:
+            device_events.add(device_id)
+
     # Declare the Handle event
     def handle_receive(event):
         """Handle received messages from RFXtrx gateway."""
         # Log RFXCOM event
         if not event.device.id_string:
             return
-        _LOGGER.debug(
-            "Receive RFXCOM event from "
-            "(Device_id: %s Class: %s Sub: %s, Pkt_id: %s)",
-            slugify(event.device.id_string.lower()),
-            event.device.__class__.__name__,
-            event.device.subtype,
-            "".join(f"{x:02x}" for x in event.data),
-        )
+
+        event_data = {
+            "packet_type": event.device.packettype,
+            "sub_type": event.device.subtype,
+            "type_string": event.device.type_string,
+            "id_string": event.device.id_string,
+            "data": "".join(f"{x:02x}" for x in event.data),
+            "values": getattr(event, "values", None),
+        }
+
+        _LOGGER.debug("Receive RFXCOM event: %s", event_data)
+
+        data_bits = get_device_data_bits(event.device, device_bits)
+        device_id = get_device_id(event.device, data_bits=data_bits)
 
         # Callback to HA registered components.
-        hass.helpers.dispatcher.dispatcher_send(SIGNAL_EVENT, event)
+        hass.helpers.dispatcher.dispatcher_send(SIGNAL_EVENT, event, device_id)
+
+        # Signal event to any other listeners
+        if device_id in device_events:
+            hass.bus.fire(EVENT_RFXTRX_EVENT, event_data)
 
     device = config[DOMAIN].get(CONF_DEVICE)
     host = config[DOMAIN].get(CONF_HOST)
@@ -228,6 +246,17 @@ def get_pt2262_cmd(device_id, data_bits):
     return hex(data[-1] & mask)
 
 
+def get_device_data_bits(device, device_bits):
+    """Deduce data bits for device based on a cache of device bits."""
+    data_bits = None
+    if device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
+        for device_id, bits in device_bits.items():
+            if get_device_id(device, bits) == device_id:
+                data_bits = bits
+                break
+    return data_bits
+
+
 def find_possible_pt2262_device(device_ids, device_id):
     """Look for the device which id matches the given device_id parameter."""
     for dev_id in device_ids:
@@ -266,35 +295,19 @@ def get_device_id(device, data_bits=None):
     return (f"{device.packettype:x}", f"{device.subtype:x}", id_string)
 
 
-def fire_command_event(hass, entity_id, command):
-    """Fire a command event."""
-    hass.bus.fire(
-        EVENT_BUTTON_PRESSED, {ATTR_ENTITY_ID: entity_id, ATTR_STATE: command.lower()}
-    )
-    _LOGGER.debug(
-        "Rfxtrx fired event: (event_type: %s, %s: %s, %s: %s)",
-        EVENT_BUTTON_PRESSED,
-        ATTR_ENTITY_ID,
-        entity_id,
-        ATTR_STATE,
-        command.lower(),
-    )
-
-
 class RfxtrxDevice(Entity):
     """Represents a Rfxtrx device.
 
     Contains the common logic for Rfxtrx lights and switches.
     """
 
-    def __init__(self, device, datas, signal_repetitions, event=None):
+    def __init__(self, device, device_id, signal_repetitions, event=None):
         """Initialize the device."""
         self.signal_repetitions = signal_repetitions
         self._name = f"{device.type_string} {device.id_string}"
         self._device = device
-        self._state = datas[ATTR_STATE]
-        self._should_fire_event = datas[ATTR_FIRE_EVENT]
-        self._device_id = get_device_id(device)
+        self._state = None
+        self._device_id = device_id
         self._unique_id = "_".join(x for x in self._device_id)
 
         if event:
@@ -309,11 +322,6 @@ class RfxtrxDevice(Entity):
     def name(self):
         """Return the name of the device if any."""
         return self._name
-
-    @property
-    def should_fire_event(self):
-        """Return is the device must fire event."""
-        return self._should_fire_event
 
     @property
     def is_on(self):
