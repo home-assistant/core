@@ -7,7 +7,7 @@ from pyControl4.director import C4Director
 from pyControl4.error_handling import Unauthorized, NotFound
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, exceptions
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
