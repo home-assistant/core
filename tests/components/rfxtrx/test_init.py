@@ -1,12 +1,12 @@
 """The tests for the Rfxtrx component."""
 
-from tests.async_mock import call
-
 from homeassistant.components import rfxtrx
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
 from . import _signal_event
+
+from tests.async_mock import call
 
 
 async def test_valid_config(hass):
