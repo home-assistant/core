@@ -3,7 +3,11 @@
 import pytest
 import smarttub
 
-from homeassistant.components.smarttub.const import DOMAIN
+from homeassistant.components.smarttub.const import (
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
+    DOMAIN,
+)
 from homeassistant.components.smarttub.controller import SmartTubController
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -125,3 +129,6 @@ async def test_spa_temperatures(controller, spa):
 
     await controller.set_target_water_temperature("mockspa1", 38.3)
     spa.set_temperature.assert_called_with(38.3)
+
+    assert controller.get_maximum_target_water_temperature("spaid1") == DEFAULT_MAX_TEMP
+    assert controller.get_minimum_target_water_temperature("spaid1") == DEFAULT_MIN_TEMP

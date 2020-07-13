@@ -12,7 +12,13 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, POLLING_TIMEOUT
+from .const import (
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    POLLING_TIMEOUT,
+)
 from .helpers import create_config_flow
 
 _LOGGER = logging.getLogger(__name__)
@@ -156,9 +162,9 @@ class SmartTubController:
     @staticmethod
     def get_maximum_target_water_temperature(spa_id) -> float:
         """Return the maximum target water temperature in Celsius."""
-        return 40
+        return DEFAULT_MAX_TEMP
 
     @staticmethod
     def get_minimum_target_water_temperature(spa_id) -> float:
         """Return the minimum target water temperature in Celsius."""
-        return 18.5
+        return DEFAULT_MIN_TEMP

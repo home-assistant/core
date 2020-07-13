@@ -3,7 +3,11 @@ from unittest.mock import Mock
 
 import pytest
 
-from homeassistant.components.climate.const import HVAC_MODE_HEAT
+from homeassistant.components.climate.const import (
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    HVAC_MODE_HEAT,
+)
 from homeassistant.components.smarttub.climate import (
     SmartTubThermostat,
     async_setup_entry,
@@ -55,7 +59,9 @@ async def test_thermostat(controller):
 
     thermostat = SmartTubThermostat(controller, "spaid1")
     assert thermostat.temperature_unit == TEMP_CELSIUS
-    assert thermostat.hvac_action
+    assert thermostat.hvac_action == CURRENT_HVAC_HEAT
+    controller.get_heater_status.return_value = "OFF"
+    assert thermostat.hvac_action == CURRENT_HVAC_IDLE
     assert thermostat.hvac_modes
     assert thermostat.hvac_mode
     await thermostat.async_set_hvac_mode(HVAC_MODE_HEAT)
