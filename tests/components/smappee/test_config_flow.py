@@ -29,9 +29,6 @@ async def test_show_zeroconf_confirm_form(hass):
     }
     result = await flow.async_step_zeroconf_confirm()
 
-    assert result["description_placeholders"] == {
-        CONF_HOSTNAME: "Smappee1006000212.local."
-    }
     assert result["step_id"] == "zeroconf_confirm"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
