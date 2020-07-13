@@ -24,7 +24,7 @@ SIGNAL_UPDATE_ENTITY = "magichome_update"
 SERVICE_FORCE_UPDATE = "force_update"
 SERVICE_PULL_DEVICES = "pull_devices"
 
-MAGICHOME_TYPE_TO_HASS = ["light", "scene"]
+MAGICHOME_TYPE_TO_HASS = ["light", "scene", "switch"]
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
