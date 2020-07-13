@@ -45,6 +45,8 @@ from .const import (
     ATTR_STATUS,
     ATTR_TRACCAR_ID,
     ATTR_TRACKER,
+    CONF_DEVICES_EXCLUDE,
+    CONF_DEVICES_INCLUDE,
     CONF_MAX_ACCURACY,
     CONF_SKIP_ACCURACY_ON,
     EVENT_ALARM,
@@ -83,6 +85,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             vol.Coerce(int), vol.Range(min=0)
         ),
         vol.Optional(CONF_SKIP_ACCURACY_ON, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+        vol.Optional(CONF_DEVICES_INCLUDE, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+        vol.Optional(CONF_DEVICES_EXCLUDE, default=[]): vol.All(
             cv.ensure_list, [cv.string]
         ),
         vol.Optional(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
@@ -177,6 +185,8 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
         config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
         config[CONF_MAX_ACCURACY],
         config[CONF_SKIP_ACCURACY_ON],
+        config[CONF_DEVICES_INCLUDE],
+        config[CONF_DEVICES_EXCLUDE],
         config[CONF_MONITORED_CONDITIONS],
         config[CONF_EVENT],
     )
@@ -195,6 +205,8 @@ class TraccarScanner:
         scan_interval,
         max_accuracy,
         skip_accuracy_on,
+        devices_include,
+        devices_exclude,
         custom_attributes,
         event_types,
     ):
@@ -208,6 +220,8 @@ class TraccarScanner:
         self.connected = False
         self._hass = hass
         self._max_accuracy = max_accuracy
+        self._devices_include = devices_include
+        self._devices_exclude = devices_exclude
         self._skip_accuracy_on = skip_accuracy_on
 
     async def async_init(self):
@@ -241,6 +255,18 @@ class TraccarScanner:
     async def import_device_data(self):
         """Import device data from Traccar."""
         for device_unique_id in self._api.device_info:
+            if (
+                len(self._devices_exclude) > 0
+                and device_unique_id in self._devices_exclude
+            ):
+                _LOGGER.debug(f"Excluding device '{device_unique_id}' by exclude list.")
+                continue
+            if (
+                len(self._devices_include) > 0
+                and device_unique_id not in self._devices_include
+            ):
+                _LOGGER.debug(f"Excluding device '{device_unique_id}' by include list.")
+                continue
             device_info = self._api.device_info[device_unique_id]
             device = None
             attr = {}

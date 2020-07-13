@@ -4,6 +4,8 @@ DOMAIN = "traccar"
 
 CONF_MAX_ACCURACY = "max_accuracy"
 CONF_SKIP_ACCURACY_ON = "skip_accuracy_filter_on"
+CONF_DEVICES_INCLUDE = "devices_include"
+CONF_DEVICES_EXCLUDE = "devices_exclude"
 
 ATTR_ACCURACY = "accuracy"
 ATTR_ADDRESS = "address"
