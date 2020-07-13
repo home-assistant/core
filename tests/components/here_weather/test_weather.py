@@ -1,8 +1,13 @@
 """Tests for the here_weather weather platform."""
+import pytest
+
 from homeassistant.components.here_weather.const import (
     CONF_API_KEY,
-    DEFAULT_MODE,
     DOMAIN,
+    MODE_DAILY,
+    MODE_DAILY_SIMPLE,
+    MODE_HOURLY,
+    MODE_OBSERVATION,
 )
 from homeassistant.const import (
     CONF_LATITUDE,
@@ -10,32 +15,43 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_METRIC,
+    CONF_UNIT_SYSTEM_IMPERIAL,
     EVENT_HOMEASSISTANT_START,
 )
-import homeassistant.util.dt as dt_util
 
-from .const import daily_forecasts_response
+from .const import (
+    daily_response,
+    daily_simple_forecasts_response,
+    hourly_response,
+    observation_response,
+)
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
-async def test_weather(hass):
-    """Test that sensor has a value."""
-    utcnow = dt_util.utcnow()
-    # Patching 'utcnow' to gain more control over the timed update.
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
+@pytest.mark.parametrize(
+    "conf_mode, return_value",
+    [
+        (MODE_DAILY, daily_response),
+        (MODE_DAILY_SIMPLE, daily_simple_forecasts_response),
+        (MODE_OBSERVATION, observation_response),
+        (MODE_HOURLY, hourly_response),
+    ],
+)
+async def test_weather_imperial(hass, conf_mode, return_value):
+    """Test that weather has a value."""
+    with patch(
         "herepy.DestinationWeatherApi.weather_for_coordinates",
-        return_value=daily_forecasts_response,
+        return_value=return_value,
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
                 CONF_API_KEY: "test",
                 CONF_NAME: DOMAIN,
-                CONF_MODE: DEFAULT_MODE,
-                CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
+                CONF_MODE: conf_mode,
+                CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
                 CONF_LATITUDE: "40.79962",
                 CONF_LONGITUDE: "-73.970314",
             },

@@ -184,8 +184,10 @@ class HereWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except AlreadyConfigured:
                 return self.async_abort(reason="already_configured")
-            except herepy.HEREError as error:
-                errors["base"] = error.message
+            except herepy.InvalidRequestError:
+                errors["base"] = "invalid_request"
+            except herepy.UnauthorizedError:
+                errors["base"] = "unauthorized"
         return self.async_show_form(
             step_id="zip_code",
             data_schema=get_zip_code_schema(self.hass),
@@ -203,8 +205,10 @@ class HereWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except AlreadyConfigured:
                 return self.async_abort(reason="already_configured")
-            except herepy.HEREError as error:
-                errors["base"] = error.message
+            except herepy.InvalidRequestError:
+                errors["base"] = "invalid_request"
+            except herepy.UnauthorizedError:
+                errors["base"] = "unauthorized"
         return self.async_show_form(
             step_id="location_name",
             data_schema=get_location_name_schema(self.hass),
