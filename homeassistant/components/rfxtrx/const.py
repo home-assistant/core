@@ -21,4 +21,5 @@ SERVICE_SEND = "send"
 
 DEVICE_PACKET_TYPE_LIGHTING4 = 0x13
 
+DATA_RFXTRX_CONFIG = "rfxtrx_config"
 EVENT_RFXTRX_EVENT = "rfxtrx_event"

@@ -6,6 +6,7 @@ import logging
 import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
     CONF_COMMAND_OFF,
@@ -23,11 +24,11 @@ from homeassistant.const import (
     UV_INDEX,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
 
 from .const import (
     ATTR_EVENT,
+    DATA_RFXTRX_CONFIG,
     DEVICE_PACKET_TYPE_LIGHTING4,
     EVENT_RFXTRX_EVENT,
     SERVICE_SEND,
@@ -124,13 +125,48 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
+    """Set up the RFXtrx component."""
+    if DOMAIN not in config:
+        hass.data[DATA_RFXTRX_CONFIG] = BASE_SCHEMA({})
+        return True
+
+    hass.data[DATA_RFXTRX_CONFIG] = config[DOMAIN]
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_HOST: config[DOMAIN].get(CONF_HOST),
+                CONF_PORT: config[DOMAIN].get(CONF_PORT),
+                CONF_DEVICE: config[DOMAIN].get(CONF_DEVICE),
+                CONF_DEBUG: config[DOMAIN][CONF_DEBUG],
+            },
+        )
+    )
+    return True
+
+
+async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
+    """Set up the RFXtrx component."""
+    await hass.async_add_executor_job(setup_internal, hass, entry.data)
+
+    for domain in ["switch", "sensor", "light", "binary_sensor", "cover"]:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, domain)
+        )
+
+    return True
+
+
+def setup_internal(hass, config):
     """Set up the RFXtrx component."""
 
     # Setup some per device config
     device_events = set()
     device_bits = {}
-    for event_code, event_config in config[DOMAIN][CONF_DEVICES].items():
+    for event_code, event_config in hass.data[DATA_RFXTRX_CONFIG][CONF_DEVICES].items():
         event = get_rfx_object(event_code)
         device_id = get_device_id(
             event.device, data_bits=event_config.get(CONF_DATA_BITS)
@@ -167,10 +203,10 @@ def setup(hass, config):
         if device_id in device_events:
             hass.bus.fire(EVENT_RFXTRX_EVENT, event_data)
 
-    device = config[DOMAIN].get(CONF_DEVICE)
-    host = config[DOMAIN].get(CONF_HOST)
-    port = config[DOMAIN].get(CONF_PORT)
-    debug = config[DOMAIN][CONF_DEBUG]
+    device = config[CONF_DEVICE]
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
+    debug = config[CONF_DEBUG]
 
     if port is not None:
         # If port is set then we create a TCP connection
@@ -196,19 +232,11 @@ def setup(hass, config):
 
     hass.data[DATA_RFXOBJECT] = rfx_object
 
-    load_platform(hass, "switch", DOMAIN, config[DOMAIN], config)
-    load_platform(hass, "light", DOMAIN, config[DOMAIN], config)
-    load_platform(hass, "cover", DOMAIN, config[DOMAIN], config)
-    load_platform(hass, "binary_sensor", DOMAIN, config[DOMAIN], config)
-    load_platform(hass, "sensor", DOMAIN, config[DOMAIN], config)
-
     def send(call):
         event = call.data[ATTR_EVENT]
         rfx_object.transport.send(event)
 
-    hass.services.async_register(DOMAIN, SERVICE_SEND, send, schema=SERVICE_SEND_SCHEMA)
-
-    return True
+    hass.services.register(DOMAIN, SERVICE_SEND, send, schema=SERVICE_SEND_SCHEMA)
 
 
 def get_rfx_object(packetid):
@@ -351,6 +379,15 @@ class RfxtrxDevice(Entity):
     def unique_id(self):
         """Return unique identifier of remote device."""
         return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, *self._device_id)},
+            "name": f"{self._device.type_string} {self._device.id_string}",
+            "model": self._device.type_string,
+        }
 
     def _apply_event(self, event):
         """Apply a received event."""

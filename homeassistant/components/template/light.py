@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_LIGHTS,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
+    MATCH_ALL,
     STATE_OFF,
     STATE_ON,
 )
@@ -31,7 +32,7 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import Script
 
 from . import extract_entities, initialise_templates
@@ -277,7 +278,7 @@ class LightTemplate(LightEntity):
         """Register callbacks."""
 
         @callback
-        def template_light_state_listener(entity, old_state, new_state):
+        def template_light_state_listener(event):
             """Handle target device state changes."""
             self.async_schedule_update_ha_state(True)
 
@@ -292,9 +293,11 @@ class LightTemplate(LightEntity):
                 or self._white_value_template is not None
                 or self._availability_template is not None
             ):
-                async_track_state_change(
-                    self.hass, self._entities, template_light_state_listener
-                )
+                if self._entities != MATCH_ALL:
+                    # Track state change only for valid templates
+                    async_track_state_change_event(
+                        self.hass, self._entities, template_light_state_listener
+                    )
 
             self.async_schedule_update_ha_state(True)
 

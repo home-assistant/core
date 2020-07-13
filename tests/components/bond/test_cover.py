@@ -33,7 +33,7 @@ async def test_entity_registry(hass: core.HomeAssistant):
     await setup_platform(hass, COVER_DOMAIN, shades("name-1"))
 
     registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
-    assert [key for key in registry.entities.keys()] == ["cover.name_1"]
+    assert [key for key in registry.entities] == ["cover.name_1"]
 
 
 async def test_open_cover(hass: core.HomeAssistant):
