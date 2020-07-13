@@ -70,6 +70,7 @@ async def async_get_instance(hass):
 
 def _get_instance(hass, default_interface=False):
     """Create an instance."""
+    logging.getLogger("zeroconf").setLevel(logging.NOTSET)
     args = [InterfaceChoice.Default] if default_interface else []
     zeroconf = HaZeroconf(*args)
 
@@ -117,7 +118,6 @@ def setup(hass, config):
     zeroconf = hass.data[DOMAIN] = _get_instance(
         hass, config.get(DOMAIN, {}).get(CONF_DEFAULT_INTERFACE)
     )
-    logging.getLogger("zeroconf").setLevel(logging.NOTSET)
 
     # Get instance UUID
     uuid = asyncio.run_coroutine_threadsafe(
