@@ -147,7 +147,7 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _endpoint_already_configured(self):
         """See if we already have an endpoint matching user input configured."""
-        existing_endpoints = [
-            entry.data[CONF_ENDPOINT] for entry in self._async_current_entries()
-        ]
-        return self.conf.endpoint in existing_endpoints
+        for entry in self._async_current_entries():
+            if entry.data.get(CONF_ENDPOINT) == self.conf.endpoint:
+                return True
+        return False
