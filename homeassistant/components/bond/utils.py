@@ -8,9 +8,10 @@ from bond import Actions, Bond
 class BondDevice:
     """Helper device class to hold ID and attributes together."""
 
-    def __init__(self, device_id: str, attrs: dict):
+    def __init__(self, device_id: str, attrs: dict, props: dict):
         """Create a helper device from ID and attributes returned by API."""
         self.device_id = device_id
+        self.props = props
         self._attrs = attrs
 
     @property
@@ -67,7 +68,11 @@ class BondHub:
         """Fetch all available devices using Bond API."""
         device_ids = self.bond.getDeviceIds()
         devices = [
-            BondDevice(device_id, self.bond.getDevice(device_id))
+            BondDevice(
+                device_id,
+                self.bond.getDevice(device_id),
+                self.bond.getProperties(device_id),
+            )
             for device_id in device_ids
         ]
         return devices
