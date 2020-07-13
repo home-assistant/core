@@ -69,12 +69,8 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
 
         self._device_class = DEVICE_CLASS_MAPPING.get(
             self._binary_sensor_property.sub_type
+            or self._binary_sensor_property.sensor_type
         )
-
-        if self._binary_sensor_property.sub_type == "":
-            self._device_class = DEVICE_CLASS_MAPPING.get(
-                self._binary_sensor_property.sensor_type
-            )
 
         self._state = self._binary_sensor_property.state
 
