@@ -1,11 +1,11 @@
 """Config flow for Control4 integration."""
+from asyncio.exceptions import TimeoutError
 import logging
 
 from aiohttp.client_exceptions import ClientError
-from asyncio.exceptions import TimeoutError
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
-from pyControl4.error_handling import Unauthorized, NotFound
+from pyControl4.error_handling import NotFound, Unauthorized
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
