@@ -66,6 +66,10 @@ DEFAULT_SCRIPT_MODE = SCRIPT_MODE_SINGLE
 CONF_MAX = "max"
 DEFAULT_MAX = 10
 
+ATTR_CUR = "current"
+ATTR_MAX = "max"
+ATTR_MODE = "mode"
+
 _LOG_EXCEPTION = logging.ERROR + 1
 _TIMEOUT_MSG = "Timeout reached, abort script."
 
@@ -548,7 +552,7 @@ class Script:
         template.attach(hass, self.sequence)
         self.name = name
         self.change_listener = change_listener
-        self._script_mode = script_mode
+        self.script_mode = script_mode
         if logger:
             self._logger = logger
         else:
@@ -560,7 +564,6 @@ class Script:
 
         self.last_action = None
         self.last_triggered: Optional[datetime] = None
-        self.can_cancel = True
 
         self._repeat_script = {}
         for step, action in enumerate(sequence):
@@ -579,7 +582,7 @@ class Script:
                 self._repeat_script[step] = sub_script
 
         self._runs: List[_ScriptRun] = []
-        self._max_runs = max_runs
+        self.max_runs = max_runs
         if script_mode == SCRIPT_MODE_QUEUED:
             self._queue_lck = asyncio.Lock()
         self._config_cache: Dict[Set[Tuple], Callable[..., bool]] = {}
@@ -599,6 +602,21 @@ class Script:
     def is_running(self) -> bool:
         """Return true if script is on."""
         return len(self._runs) > 0
+
+    @property
+    def runs(self) -> int:
+        """Return the number of current runs."""
+        return len(self._runs)
+
+    @property
+    def supports_max(self) -> bool:
+        """Return true if the current mode support max."""
+        if (
+            self.script_mode == SCRIPT_MODE_PARALLEL
+            or self.script_mode == SCRIPT_MODE_QUEUED
+        ):
+            return True
+        return False
 
     @property
     def referenced_devices(self):
@@ -667,17 +685,17 @@ class Script:
     ) -> None:
         """Run script."""
         if self.is_running:
-            if self._script_mode == SCRIPT_MODE_SINGLE:
+            if self.script_mode == SCRIPT_MODE_SINGLE:
                 self._log("Already running", level=logging.WARNING)
                 return
-            if self._script_mode == SCRIPT_MODE_RESTART:
+            if self.script_mode == SCRIPT_MODE_RESTART:
                 self._log("Restarting")
                 await self.async_stop(update_state=False)
-            elif len(self._runs) == self._max_runs:
+            elif len(self._runs) == self.max_runs:
                 self._log("Maximum number of runs exceeded", level=logging.WARNING)
                 return
 
-        if self._script_mode != SCRIPT_MODE_QUEUED:
+        if self.script_mode != SCRIPT_MODE_QUEUED:
             cls = _ScriptRun
         else:
             cls = _QueuedScriptRun
