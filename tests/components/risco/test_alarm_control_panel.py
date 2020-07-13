@@ -8,6 +8,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PIN,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
     SERVICE_ALARM_ARM_HOME,
@@ -234,7 +235,7 @@ async def test_sets(hass, two_part_alarm):
     )
 
 
-async def test_close(hass, two_part_alarm):
+async def test_close_on_unload(hass, two_part_alarm):
     """Test calling close on unload."""
     config_entry = await _setup_risco(hass, two_part_alarm)
 
@@ -243,5 +244,18 @@ async def test_close(hass, two_part_alarm):
     ) as close_mock:
 
         assert await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done()
+        close_mock.assert_awaited_once()
+
+
+async def test_close_on_shutdown(hass, two_part_alarm):
+    """Test calling close on shutdown."""
+    await _setup_risco(hass, two_part_alarm)
+
+    with patch(
+        "homeassistant.components.risco.RiscoAPI.close", AsyncMock()
+    ) as close_mock:
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
         close_mock.assert_awaited_once()

@@ -19,7 +19,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 
-from .const import DOMAIN
+from .const import DATA_RISCO, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ SUPPORTED_STATES = [
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Risco alarm control panel."""
-    risco = hass.data[DOMAIN][config_entry.entry_id]
+    risco = hass.data[DOMAIN][config_entry.entry_id][DATA_RISCO]
     alarm = await risco.get_state()
     entities = [RiscoAlarm(hass, risco, partition) for partition in alarm.partitions]
 
