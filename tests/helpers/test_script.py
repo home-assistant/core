@@ -93,15 +93,12 @@ async def test_firing_event_basic(hass):
     sequence = cv.SCRIPT_SCHEMA({"event": event, "event_data": {"hello": "world"}})
     script_obj = script.Script(hass, sequence)
 
-    assert script_obj.can_cancel
-
     await script_obj.async_run(context=context)
     await hass.async_block_till_done()
 
     assert len(events) == 1
     assert events[0].context is context
     assert events[0].data.get("hello") == "world"
-    assert script_obj.can_cancel
 
 
 async def test_firing_event_template(hass):
@@ -125,8 +122,6 @@ async def test_firing_event_template(hass):
     )
     script_obj = script.Script(hass, sequence)
 
-    assert script_obj.can_cancel
-
     await script_obj.async_run({"is_world": "yes"}, context=context)
     await hass.async_block_till_done()
 
@@ -145,8 +140,6 @@ async def test_calling_service_basic(hass):
 
     sequence = cv.SCRIPT_SCHEMA({"service": "test.script", "data": {"hello": "world"}})
     script_obj = script.Script(hass, sequence)
-
-    assert script_obj.can_cancel
 
     await script_obj.async_run(context=context)
     await hass.async_block_till_done()
@@ -181,8 +174,6 @@ async def test_calling_service_template(hass):
         }
     )
     script_obj = script.Script(hass, sequence)
-
-    assert script_obj.can_cancel
 
     await script_obj.async_run({"is_world": "yes"}, context=context)
     await hass.async_block_till_done()
@@ -267,8 +258,6 @@ async def test_activating_scene(hass):
     sequence = cv.SCRIPT_SCHEMA({"scene": "scene.hello"})
     script_obj = script.Script(hass, sequence)
 
-    assert script_obj.can_cancel
-
     await script_obj.async_run(context=context)
     await hass.async_block_till_done()
 
@@ -327,8 +316,6 @@ async def test_delay_basic(hass, mock_timeout):
     sequence = cv.SCRIPT_SCHEMA({"delay": {"seconds": 5}, "alias": delay_alias})
     script_obj = script.Script(hass, sequence)
     delay_started_flag = async_watch_for_action(script_obj, delay_alias)
-
-    assert script_obj.can_cancel
 
     try:
         hass.async_create_task(script_obj.async_run())
@@ -394,8 +381,6 @@ async def test_delay_template_ok(hass, mock_timeout):
     script_obj = script.Script(hass, sequence)
     delay_started_flag = async_watch_for_action(script_obj, "delay")
 
-    assert script_obj.can_cancel
-
     try:
         hass.async_create_task(script_obj.async_run())
         await asyncio.wait_for(delay_started_flag.wait(), 1)
@@ -443,8 +428,6 @@ async def test_delay_template_complex_ok(hass, mock_timeout):
     sequence = cv.SCRIPT_SCHEMA({"delay": {"seconds": "{{ 5 }}"}})
     script_obj = script.Script(hass, sequence)
     delay_started_flag = async_watch_for_action(script_obj, "delay")
-
-    assert script_obj.can_cancel
 
     try:
         hass.async_create_task(script_obj.async_run())
@@ -529,8 +512,6 @@ async def test_wait_template_basic(hass):
     )
     script_obj = script.Script(hass, sequence)
     wait_started_flag = async_watch_for_action(script_obj, wait_alias)
-
-    assert script_obj.can_cancel
 
     try:
         hass.states.async_set("switch.test", "on")
@@ -687,8 +668,6 @@ async def test_wait_template_variables(hass):
     script_obj = script.Script(hass, sequence)
     wait_started_flag = async_watch_for_action(script_obj, "wait")
 
-    assert script_obj.can_cancel
-
     try:
         hass.states.async_set("switch.test", "on")
         hass.async_create_task(script_obj.async_run({"data": "switch.test"}))
@@ -720,8 +699,6 @@ async def test_condition_basic(hass):
         ]
     )
     script_obj = script.Script(hass, sequence)
-
-    assert script_obj.can_cancel
 
     hass.states.async_set("test.entity", "hello")
     await script_obj.async_run()
