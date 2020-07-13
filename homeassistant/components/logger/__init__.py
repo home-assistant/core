@@ -120,6 +120,7 @@ def _get_logger_class(hass_overrides):
 
             super().setLevel(level)
 
+        # pylint: disable=invalid-name
         def orig_setLevel(self, level) -> None:
             """Set the log level."""
             super().setLevel(level)
