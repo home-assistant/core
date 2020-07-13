@@ -43,34 +43,30 @@ class Gateway:
         _LOGGER.debug(
             "Received incoming event type:%s,data:%s", callback_type, callback_data
         )
-        try:
-            entries = self.get_and_delete_all_sms(state_machine)
-            _LOGGER.debug("SMS entries:%s", entries)
-            data = list()
+        entries = self.get_and_delete_all_sms(state_machine)
+        _LOGGER.debug("SMS entries:%s", entries)
+        data = list()
 
-            for entry in entries:
-                decoded_entry = gammu.DecodeSMS(entry)
-                message = entry[0]
-                _LOGGER.debug("Processing sms:%s,decoded:%s", message, decoded_entry)
-                if decoded_entry is None:
-                    text = message["Text"]
-                else:
-                    text = ""
-                    for inner_entry in decoded_entry["Entries"]:
-                        if inner_entry["Buffer"] is not None:
-                            text = text + inner_entry["Buffer"]
+        for entry in entries:
+            decoded_entry = gammu.DecodeSMS(entry)
+            message = entry[0]
+            _LOGGER.debug("Processing sms:%s,decoded:%s", message, decoded_entry)
+            if decoded_entry is None:
+                text = message["Text"]
+            else:
+                text = ""
+                for inner_entry in decoded_entry["Entries"]:
+                    if inner_entry["Buffer"] is not None:
+                        text = text + inner_entry["Buffer"]
 
-                event_data = dict(
-                    phone=message["Number"], date=str(message["DateTime"]), message=text
-                )
+            event_data = dict(
+                phone=message["Number"], date=str(message["DateTime"]), message=text
+            )
 
-                _LOGGER.debug("Append event data:%s", event_data)
-                data.append(event_data)
+            _LOGGER.debug("Append event data:%s", event_data)
+            data.append(event_data)
 
-            self._hass.add_job(self._notify_incoming_sms, data)
-
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.error("Error during SMS callback:%s", ex)
+        self._hass.add_job(self._notify_incoming_sms, data)
 
     # pylint: disable=no-self-use
     def get_and_delete_all_sms(self, state_machine, force=False):
