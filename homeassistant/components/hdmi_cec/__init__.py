@@ -399,8 +399,6 @@ class CecEntity(Entity):
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
 
-        self.hass.bus.listen(EVENT_HDMI_CEC_UNAVAILABLE, self._hdmi_cec_unavailable)
-
     def _hdmi_cec_unavailable(self, event):
         # Change state to unavailable. Without this, entity would remain in
         # its last state, since the state changes are pushed.
