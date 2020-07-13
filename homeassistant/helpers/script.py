@@ -611,12 +611,7 @@ class Script:
     @property
     def supports_max(self) -> bool:
         """Return true if the current mode support max."""
-        if (
-            self.script_mode == SCRIPT_MODE_PARALLEL
-            or self.script_mode == SCRIPT_MODE_QUEUED
-        ):
-            return True
-        return False
+        return self.script_mode in (SCRIPT_MODE_PARALLEL, SCRIPT_MODE_QUEUED)
 
     @property
     def referenced_devices(self):
