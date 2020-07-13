@@ -275,3 +275,20 @@ async def test_reset_switch(hass, hk_driver, events):
     await hass.async_block_till_done()
     assert acc.char_on.value is False
     assert len(events) == 1
+
+
+async def test_reset_switch_reload(hass, hk_driver, events):
+    """Test reset switch after script reload."""
+    entity_id = "script.test"
+
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = Switch(hass, hk_driver, "Switch", entity_id, 2, None)
+    await acc.run_handler()
+    await hass.async_block_till_done()
+
+    assert acc.activate_only is False
+
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    assert acc.char_on.value is False
