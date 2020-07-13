@@ -217,6 +217,21 @@ def setup(hass: HomeAssistant, base_config):
     else:
         adapter = CecAdapter(name=display_name[:12], activate_source=False)
     hdmi_network = HDMINetwork(adapter, loop=loop)
+    if host:
+
+        def _tcpadapter_watchdog(now=None):
+            _LOGGER.debug("Reached _tcpadapter_watchdog")
+            event.async_call_later(hass, WATCHDOG_INTERVAL, _tcpadapter_watchdog)
+            if not adapter.initialized:
+                _LOGGER.info("Adapter not initialized. Trying to restart.")
+                hass.bus.fire(EVENT_HDMI_CEC_UNAVAILABLE)
+                adapter.init()
+
+        hdmi_network.set_initialized_callback(
+            partial(
+                event.async_call_later, hass, WATCHDOG_INTERVAL, _tcpadapter_watchdog
+            )
+        )
 
     def _adapter_watchdog(now=None):
         _LOGGER.debug("Reached _adapter_watchdog")
@@ -384,7 +399,9 @@ class CecEntity(Entity):
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
 
-    def _hdmi_cec_unavailable(self, callback_event):
+        self.hass.bus.listen(EVENT_HDMI_CEC_UNAVAILABLE, self._hdmi_cec_unavailable)
+
+    def _hdmi_cec_unavailable(self, event):
         # Change state to unavailable. Without this, entity would remain in
         # its last state, since the state changes are pushed.
         self._state = STATE_UNAVAILABLE
