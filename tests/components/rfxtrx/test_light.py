@@ -13,13 +13,7 @@ async def test_one_light(hass, rfxtrx):
     assert await async_setup_component(
         hass,
         "rfxtrx",
-        {
-            "rfxtrx": {
-                "device": "abcd",
-                "dummy": True,
-                "devices": {"0b1100cd0213c7f210020f51": {}},
-            }
-        },
+        {"rfxtrx": {"device": "abcd", "devices": {"0b1100cd0213c7f210020f51": {}}}},
     )
     await hass.async_block_till_done()
 
@@ -97,7 +91,6 @@ async def test_several_lights(hass, rfxtrx):
         {
             "rfxtrx": {
                 "device": "abcd",
-                "dummy": True,
                 "devices": {
                     "0b1100cd0213c7f230020f71": {},
                     "0b1100100118cdea02020f70": {},
@@ -133,7 +126,6 @@ async def test_repetitions(hass, rfxtrx, repetitions):
         {
             "rfxtrx": {
                 "device": "abcd",
-                "dummy": True,
                 "devices": {
                     "0b1100cd0213c7f230020f71": {"signal_repetitions": repetitions}
                 },
@@ -153,9 +145,7 @@ async def test_repetitions(hass, rfxtrx, repetitions):
 async def test_discover_light(hass, rfxtrx):
     """Test with discovery of lights."""
     assert await async_setup_component(
-        hass,
-        "rfxtrx",
-        {"rfxtrx": {"device": "abcd", "dummy": True, "automatic_add": True}},
+        hass, "rfxtrx", {"rfxtrx": {"device": "abcd", "automatic_add": True}},
     )
     await hass.async_block_till_done()
     await hass.async_start()

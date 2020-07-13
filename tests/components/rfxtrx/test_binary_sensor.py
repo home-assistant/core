@@ -14,13 +14,7 @@ async def test_one(hass, rfxtrx):
     assert await async_setup_component(
         hass,
         "rfxtrx",
-        {
-            "rfxtrx": {
-                "device": "abcd",
-                "dummy": True,
-                "devices": {"0b1100cd0213c7f230010f71": {}},
-            }
-        },
+        {"rfxtrx": {"device": "abcd", "devices": {"0b1100cd0213c7f230010f71": {}}}},
     )
     await hass.async_block_till_done()
 
@@ -38,7 +32,6 @@ async def test_one_pt2262(hass, rfxtrx):
         {
             "rfxtrx": {
                 "device": "abcd",
-                "dummy": True,
                 "devices": {
                     "0913000022670e013970": {
                         "data_bits": 4,
@@ -74,7 +67,6 @@ async def test_several(hass, rfxtrx):
         {
             "rfxtrx": {
                 "device": "abcd",
-                "dummy": True,
                 "devices": {
                     "0b1100cd0213c7f230010f71": {},
                     "0b1100100118cdea02010f70": {},
@@ -109,7 +101,6 @@ async def test_discover(hass, rfxtrx):
         {
             "rfxtrx": {
                 "device": "abcd",
-                "dummy": True,
                 "automatic_add": True,
                 "devices": {
                     "0b1100cd0213c7f230010f71": {},
@@ -141,7 +132,6 @@ async def test_off_delay(hass, rfxtrx):
         {
             "rfxtrx": {
                 "device": "abcd",
-                "dummy": True,
                 "devices": {"0b1100100118cdea02010f70": {"off_delay": 5}},
             }
         },

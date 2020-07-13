@@ -36,7 +36,6 @@ CONF_FIRE_EVENT = "fire_event"
 CONF_DATA_BITS = "data_bits"
 CONF_AUTOMATIC_ADD = "automatic_add"
 CONF_SIGNAL_REPETITIONS = "signal_repetitions"
-CONF_DUMMY = "dummy"
 CONF_DEBUG = "debug"
 CONF_OFF_DELAY = "off_delay"
 SIGNAL_EVENT = f"{DOMAIN}_event"
@@ -94,7 +93,6 @@ DEVICE_SCHEMA = vol.Schema(
 BASE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEBUG, default=False): cv.boolean,
-        vol.Optional(CONF_DUMMY, default=False): cv.boolean,
         vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
         vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
     }
@@ -158,13 +156,8 @@ def setup(hass, config):
     host = config[DOMAIN].get(CONF_HOST)
     port = config[DOMAIN].get(CONF_PORT)
     debug = config[DOMAIN][CONF_DEBUG]
-    dummy_connection = config[DOMAIN][CONF_DUMMY]
 
-    if dummy_connection:
-        rfx_object = rfxtrxmod.Connect(
-            device, None, debug=debug, transport_protocol=rfxtrxmod.DummyTransport2,
-        )
-    elif port is not None:
+    if port is not None:
         # If port is set then we create a TCP connection
         rfx_object = rfxtrxmod.Connect(
             (host, port),
