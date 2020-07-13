@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_TEMPERATURE,
 )
 from homeassistant.const import CONF_DEVICES
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
     CONF_AUTOMATIC_ADD,
@@ -110,12 +110,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, sensor_update)
 
 
-class RfxtrxSensor(Entity):
+class RfxtrxSensor(RestoreEntity):
     """Representation of a RFXtrx sensor."""
 
     def __init__(self, device, device_id, data_type, event=None):
         """Initialize the sensor."""
-        self.event = None
+        self._event = None
         self._device = device
         self._name = f"{device.type_string} {device.id_string} {data_type}"
         self.data_type = data_type
@@ -133,6 +133,13 @@ class RfxtrxSensor(Entity):
         """Restore RFXtrx switch device state (ON/OFF)."""
         await super().async_added_to_hass()
 
+        if self._event is None:
+            old_state = await self.async_get_last_state()
+            if old_state is not None:
+                event = old_state.attributes.get(ATTR_EVENT)
+                if event:
+                    self._apply_event(get_rfx_object(event))
+
         self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
                 SIGNAL_EVENT, self._handle_event
@@ -146,9 +153,9 @@ class RfxtrxSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if not self.event:
+        if not self._event:
             return None
-        value = self.event.values.get(self.data_type)
+        value = self._event.values.get(self.data_type)
         return self._convert_fun(value)
 
     @property
@@ -159,9 +166,9 @@ class RfxtrxSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        if not self.event:
+        if not self._event:
             return None
-        return {ATTR_EVENT: "".join(f"{x:02x}" for x in self.event.data)}
+        return {ATTR_EVENT: "".join(f"{x:02x}" for x in self._event.data)}
 
     @property
     def unit_of_measurement(self):
@@ -180,7 +187,7 @@ class RfxtrxSensor(Entity):
 
     def _apply_event(self, event):
         """Apply command from rfxtrx."""
-        self.event = event
+        self._event = event
 
     def _handle_event(self, event, device_id):
         """Check if event applies to me and update."""

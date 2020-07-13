@@ -24,7 +24,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     ATTR_EVENT,
@@ -309,7 +309,7 @@ def get_device_id(device, data_bits=None):
     return (f"{device.packettype:x}", f"{device.subtype:x}", id_string)
 
 
-class RfxtrxDevice(Entity):
+class RfxtrxDevice(RestoreEntity):
     """Represents a Rfxtrx device.
 
     Contains the common logic for Rfxtrx lights and switches.
@@ -320,12 +320,22 @@ class RfxtrxDevice(Entity):
         self.signal_repetitions = signal_repetitions
         self._name = f"{device.type_string} {device.id_string}"
         self._device = device
+        self._event = None
         self._state = None
         self._device_id = device_id
         self._unique_id = "_".join(x for x in self._device_id)
 
         if event:
             self._apply_event(event)
+
+    async def async_added_to_hass(self):
+        """Restore RFXtrx device state (ON/OFF)."""
+        if self._event is None:
+            old_state = await self.async_get_last_state()
+            if old_state is not None:
+                event = old_state.attributes.get(ATTR_EVENT)
+                if event:
+                    self._apply_event(get_rfx_object(event))
 
     @property
     def should_poll(self):
