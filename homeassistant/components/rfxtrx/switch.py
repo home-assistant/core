@@ -4,19 +4,16 @@ import logging
 import RFXtrx as rfxtrxmod
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import ATTR_STATE, CONF_DEVICES, STATE_ON
+from homeassistant.const import CONF_DEVICES, STATE_ON
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
-    ATTR_FIRE_EVENT,
     CONF_AUTOMATIC_ADD,
-    CONF_FIRE_EVENT,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
     DOMAIN,
     SIGNAL_EVENT,
     RfxtrxDevice,
-    fire_command_event,
     get_device_id,
     get_rfx_object,
 )
@@ -56,18 +53,18 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
             continue
         device_ids.add(device_id)
 
-        datas = {ATTR_STATE: None, ATTR_FIRE_EVENT: entity_info[CONF_FIRE_EVENT]}
-        entity = RfxtrxSwitch(event.device, datas, entity_info[CONF_SIGNAL_REPETITIONS])
+        entity = RfxtrxSwitch(
+            event.device, device_id, entity_info[CONF_SIGNAL_REPETITIONS]
+        )
         entities.append(entity)
 
     add_entities_callback(entities)
 
-    def switch_update(event):
+    def switch_update(event, device_id):
         """Handle sensor updates from the RFXtrx gateway."""
         if not supported(event):
             return
 
-        device_id = get_device_id(event.device)
         if device_id in device_ids:
             return
         device_ids.add(device_id)
@@ -80,9 +77,8 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
             "".join(f"{x:02x}" for x in event.data),
         )
 
-        datas = {ATTR_STATE: None, ATTR_FIRE_EVENT: False}
         entity = RfxtrxSwitch(
-            event.device, datas, DEFAULT_SIGNAL_REPETITIONS, event=event
+            event.device, device_id, DEFAULT_SIGNAL_REPETITIONS, event=event
         )
         add_entities_callback([entity])
 
@@ -115,16 +111,14 @@ class RfxtrxSwitch(RfxtrxDevice, SwitchEntity, RestoreEntity):
         elif event.values["Command"] in COMMAND_OFF_LIST:
             self._state = False
 
-    def _handle_event(self, event):
+    def _handle_event(self, event, device_id):
         """Check if event applies to me and update."""
-        if event.device.id_string != self._device.id_string:
+        if device_id != self._device_id:
             return
 
         self._apply_event(event)
 
         self.schedule_update_ha_state()
-        if self.should_fire_event:
-            fire_command_event(self.hass, self.entity_id, event.values["Command"])
 
     def turn_on(self, **kwargs):
         """Turn the device on."""

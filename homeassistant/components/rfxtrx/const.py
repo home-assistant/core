@@ -14,4 +14,7 @@ COMMAND_OFF_LIST = [
     "Down",
     "Close (inline relay)",
 ]
+
 DEVICE_PACKET_TYPE_LIGHTING4 = 0x13
+
+EVENT_RFXTRX_EVENT = "rfxtrx_event"

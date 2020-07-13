@@ -50,6 +50,7 @@ async def test_one_pt2262(hass, rfxtrx):
         },
     )
     await hass.async_block_till_done()
+    await hass.async_start()
 
     state = hass.states.get("binary_sensor.pt2262_22670e")
     assert state
@@ -119,6 +120,7 @@ async def test_discover(hass, rfxtrx):
         },
     )
     await hass.async_block_till_done()
+    await hass.async_start()
 
     await _signal_event(hass, "0b1100100118cdea02010f70")
     state = hass.states.get("binary_sensor.ac_118cdea_2")
@@ -145,6 +147,7 @@ async def test_off_delay(hass, rfxtrx):
         },
     )
     await hass.async_block_till_done()
+    await hass.async_start()
 
     state = hass.states.get("binary_sensor.ac_118cdea_2")
     assert state

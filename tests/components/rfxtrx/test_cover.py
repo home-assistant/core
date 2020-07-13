@@ -95,6 +95,7 @@ async def test_discover_covers(hass, rfxtrx):
         {"rfxtrx": {"device": "abcd", "dummy": True, "automatic_add": True}},
     )
     await hass.async_block_till_done()
+    await hass.async_start()
 
     await _signal_event(hass, "0a140002f38cae010f0070")
     state = hass.states.get("cover.lightwaverf_siemens_f38cae_1")
