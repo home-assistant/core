@@ -26,7 +26,7 @@ class AreaEntry:
     """Area Registry Entry."""
 
     name: Optional[str] = attr.ib(default=None)
-    id: str = attr.ib(default=attr.Factory(lambda: uuid.uuid4().hex))
+    id: str = attr.ib(factory=lambda: uuid.uuid4().hex)
 
 
 class AreaRegistry:

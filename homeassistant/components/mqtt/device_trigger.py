@@ -110,7 +110,7 @@ class Trigger:
     subtype: str = attr.ib()
     topic: str = attr.ib()
     type: str = attr.ib()
-    trigger_instances: List[TriggerInstance] = attr.ib(default=attr.Factory(list))
+    trigger_instances: List[TriggerInstance] = attr.ib(factory=list)
 
     async def add_trigger(self, action, automation_info):
         """Add MQTT trigger."""
