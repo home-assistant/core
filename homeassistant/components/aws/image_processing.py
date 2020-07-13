@@ -47,7 +47,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 DATETIME_FORMAT = "%Y-%m-%d_%H:%M:%S"
-SCAN_INTERVAL = dt_util.dt.timedelta(weeks=52)
 
 
 def get_valid_filename(name: str) -> str:
@@ -172,7 +171,7 @@ async def get_available_regions(hass, service):
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Get the Rekognition image processing platform."""
     if discovery_info is None:
-        _LOGGER.error("Please config aws notify platform in aws component")
+        _LOGGER.error("Please config aws image_processing platform in aws component")
         return None
 
     session = None
@@ -309,6 +308,11 @@ class RekognitionObjectEntity(ImageProcessingEntity):
         """Return the name of the entity."""
         return self._name
 
+    @property
+    def should_poll(self):
+        """Return the polling state."""
+        return False
+
     async def async_process_objects(self, objects, labels):
         """Send events with detected objects/labels and store data."""
         # Send events
@@ -393,6 +397,11 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
     def name(self):
         """Return the name of the entity."""
         return self._name
+
+    @property
+    def should_poll(self):
+        """Return the polling state."""
+        return False
 
     async def compute_faces(self, client, image):
         """Detect faces in image and parse response."""

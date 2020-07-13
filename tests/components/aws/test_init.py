@@ -216,7 +216,17 @@ async def test_image_processing_credential(hass):
                             "aws_access_key_id": "some-key",
                             "aws_secret_access_key": "some-secret",
                             "source": [{"entity_id": "camera.test"}],
-                        }
+                        },
+                        {
+                            "service": "rekognition",
+                            "platform": "face",
+                            "collection_id": "test-collection",
+                            "credential_name": "test",
+                            "region_name": "us-east-1",
+                            "aws_access_key_id": "some-key",
+                            "aws_secret_access_key": "some-secret",
+                            "source": [{"entity_id": "camera.test"}],
+                        },
                     ]
                 }
             },
