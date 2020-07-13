@@ -47,7 +47,7 @@ class FirmataBoard:
         try:
             _LOGGER.debug("Connecting to Firmata %s", self.name)
             self.api = await get_board(self.config)
-        except RuntimeError as err:  # pylint: disable=broad-except
+        except RuntimeError as err:
             _LOGGER.error("Error connecting to PyMata board %s: %s", self.name, err)
             return False
         except serial.serialutil.SerialTimeoutException as err:
