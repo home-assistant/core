@@ -50,7 +50,6 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.logging import set_default_log_level
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
@@ -82,7 +81,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -460,7 +458,7 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
 
     # dicttoxml (used by huawei-lte-api) has uselessly verbose INFO level.
     # https://github.com/quandyfactory/dicttoxml/issues/60
-    set_default_log_level(hass, "dicttoxml", logging.WARNING)
+    logging.getLogger("dicttoxml").setLevel(logging.WARNING)
 
     # Arrange our YAML config to dict with normalized URLs as keys
     domain_config = {}

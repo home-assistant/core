@@ -25,7 +25,6 @@ from homeassistant.const import (
 )
 from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.logging import restore_log_level, set_default_log_level
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.singleton import singleton
 
@@ -71,6 +70,7 @@ async def async_get_instance(hass):
 
 def _get_instance(hass, default_interface=False):
     """Create an instance."""
+    logging.getLogger("zeroconf").setLevel(logging.NOTSET)
     args = [InterfaceChoice.Default] if default_interface else []
     zeroconf = HaZeroconf(*args)
 
@@ -118,11 +118,6 @@ def setup(hass, config):
     zeroconf = hass.data[DOMAIN] = _get_instance(
         hass, config.get(DOMAIN, {}).get(CONF_DEFAULT_INTERFACE)
     )
-    # Zeroconf sets its log level to WARNING, restore it to allow filtering by the logger component.
-    restore_log_level(hass, "zeroconf")
-
-    # ..and if we are not filtering in logger make sure it is set to warning
-    set_default_log_level(hass, "zeroconf", logging.WARNING)
 
     # Get instance UUID
     uuid = asyncio.run_coroutine_threadsafe(

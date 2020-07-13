@@ -2,8 +2,10 @@
 from collections import defaultdict
 import logging
 
+import pytest
+
 from homeassistant.components import logger
-from homeassistant.helpers.logging import LOGSEVERITY
+from homeassistant.components.logger import LOGSEVERITY
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import Mock, patch
@@ -14,6 +16,14 @@ ZONE_NS = f"{COMPONENTS_NS}.zone"
 GROUP_NS = f"{COMPONENTS_NS}.group"
 CONFIGED_NS = "otherlibx"
 UNCONFIG_NS = "unconfigurednamespace"
+
+
+@pytest.fixture(autouse=True)
+def restore_logging_class():
+    """Restore logging class."""
+    klass = logging.getLoggerClass()
+    yield
+    logging.setLoggerClass(klass)
 
 
 async def test_setting_level(hass):
@@ -39,18 +49,19 @@ async def test_setting_level(hass):
 
     assert len(mocks) == 4
 
-    assert len(mocks[""].setLevel.mock_calls) == 1
-    assert mocks[""].setLevel.mock_calls[0][1][0] == LOGSEVERITY["WARNING"]
+    assert len(mocks[""].orig_setLevel.mock_calls) == 1
+    assert mocks[""].orig_setLevel.mock_calls[0][1][0] == LOGSEVERITY["WARNING"]
 
-    assert len(mocks["test"].setLevel.mock_calls) == 1
-    assert mocks["test"].setLevel.mock_calls[0][1][0] == LOGSEVERITY["INFO"]
+    assert len(mocks["test"].orig_setLevel.mock_calls) == 1
+    assert mocks["test"].orig_setLevel.mock_calls[0][1][0] == LOGSEVERITY["INFO"]
 
-    assert len(mocks["test.child"].setLevel.mock_calls) == 1
-    assert mocks["test.child"].setLevel.mock_calls[0][1][0] == LOGSEVERITY["DEBUG"]
+    assert len(mocks["test.child"].orig_setLevel.mock_calls) == 1
+    assert mocks["test.child"].orig_setLevel.mock_calls[0][1][0] == LOGSEVERITY["DEBUG"]
 
-    assert len(mocks["test.child.child"].setLevel.mock_calls) == 1
+    assert len(mocks["test.child.child"].orig_setLevel.mock_calls) == 1
     assert (
-        mocks["test.child.child"].setLevel.mock_calls[0][1][0] == LOGSEVERITY["WARNING"]
+        mocks["test.child.child"].orig_setLevel.mock_calls[0][1][0]
+        == LOGSEVERITY["WARNING"]
     )
 
     # Test set default level
@@ -58,8 +69,8 @@ async def test_setting_level(hass):
         await hass.services.async_call(
             "logger", "set_default_level", {"level": "fatal"}, blocking=True
         )
-    assert len(mocks[""].setLevel.mock_calls) == 2
-    assert mocks[""].setLevel.mock_calls[1][1][0] == LOGSEVERITY["FATAL"]
+    assert len(mocks[""].orig_setLevel.mock_calls) == 2
+    assert mocks[""].orig_setLevel.mock_calls[1][1][0] == LOGSEVERITY["FATAL"]
 
     # Test update other loggers
     with patch("logging.getLogger", mocks.__getitem__):
@@ -71,11 +82,13 @@ async def test_setting_level(hass):
         )
     assert len(mocks) == 5
 
-    assert len(mocks["test.child"].setLevel.mock_calls) == 2
-    assert mocks["test.child"].setLevel.mock_calls[1][1][0] == LOGSEVERITY["INFO"]
+    assert len(mocks["test.child"].orig_setLevel.mock_calls) == 2
+    assert mocks["test.child"].orig_setLevel.mock_calls[1][1][0] == LOGSEVERITY["INFO"]
 
-    assert len(mocks["new_logger"].setLevel.mock_calls) == 1
-    assert mocks["new_logger"].setLevel.mock_calls[0][1][0] == LOGSEVERITY["NOTSET"]
+    assert len(mocks["new_logger"].orig_setLevel.mock_calls) == 1
+    assert (
+        mocks["new_logger"].orig_setLevel.mock_calls[0][1][0] == LOGSEVERITY["NOTSET"]
+    )
 
 
 async def test_can_set_level(hass):
@@ -99,7 +112,7 @@ async def test_can_set_level(hass):
         },
     )
 
-    logging.getLogger(UNCONFIG_NS).level == logging.NOTSET
+    assert logging.getLogger(UNCONFIG_NS).level == logging.NOTSET
     assert logging.getLogger(UNCONFIG_NS).isEnabledFor(logging.CRITICAL) is True
     assert (
         logging.getLogger(f"{UNCONFIG_NS}.any").isEnabledFor(logging.CRITICAL) is True
@@ -150,18 +163,16 @@ async def test_can_set_level(hass):
     assert logging.getLogger(f"{ZONE_NS}.any").isEnabledFor(logging.DEBUG) is True
 
     await hass.services.async_call(
-        logger.DOMAIN, "set_level", {f"{UNCONFIG_NS}.any": "debug"}
+        logger.DOMAIN, "set_level", {f"{UNCONFIG_NS}.any": "debug"}, blocking=True
     )
-    await hass.async_block_till_done()
 
     logging.getLogger(UNCONFIG_NS).level == logging.NOTSET
     logging.getLogger(f"{UNCONFIG_NS}.any").level == logging.DEBUG
     logging.getLogger(UNCONFIG_NS).level == logging.NOTSET
 
     await hass.services.async_call(
-        logger.DOMAIN, "set_default_level", {"level": "debug"}
+        logger.DOMAIN, "set_default_level", {"level": "debug"}, blocking=True
     )
-    await hass.async_block_till_done()
 
     assert logging.getLogger(UNCONFIG_NS).isEnabledFor(logging.DEBUG) is True
     assert logging.getLogger(f"{UNCONFIG_NS}.any").isEnabledFor(logging.DEBUG) is True
@@ -172,5 +183,8 @@ async def test_can_set_level(hass):
 
     assert logging.getLogger(COMPONENTS_NS).isEnabledFor(logging.DEBUG) is False
     assert logging.getLogger(GROUP_NS).isEnabledFor(logging.DEBUG) is False
+
+    logging.getLogger(CONFIGED_NS).setLevel(logging.INFO)
+    assert logging.getLogger(CONFIGED_NS).level == logging.WARNING
 
     logging.getLogger("").setLevel(logging.NOTSET)

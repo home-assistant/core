@@ -18,7 +18,6 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.logging import set_default_log_level
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the DSMR sensor."""
     # Suppress logging
-    set_default_log_level(hass, "dsmr_parser", logging.ERROR)
+    logging.getLogger("dsmr_parser").setLevel(logging.ERROR)
 
     dsmr_version = config[CONF_DSMR_VERSION]
 
