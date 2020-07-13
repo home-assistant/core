@@ -91,8 +91,11 @@ class Control4Validator:
             return False
 
     async def return_controller_name(self) -> str:
-        """Returns the controller name found by authenticate().
-        This exists so that the controller name return value can be mocked in tests."""
+        """
+        Return the controller name found by authenticate().
+
+        This exists so that the controller name return value can be mocked in tests.
+        """
         return self.controller_name
 
 
