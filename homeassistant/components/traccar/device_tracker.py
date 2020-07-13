@@ -259,13 +259,13 @@ class TraccarScanner:
                 len(self._devices_exclude) > 0
                 and device_unique_id in self._devices_exclude
             ):
-                _LOGGER.debug(f"Excluding device '{device_unique_id}' by exclude list.")
+                _LOGGER.debug("Excluding device '%' by exclude list.", device_unique_id)
                 continue
             if (
                 len(self._devices_include) > 0
                 and device_unique_id not in self._devices_include
             ):
-                _LOGGER.debug(f"Excluding device '{device_unique_id}' by include list.")
+                _LOGGER.debug("Excluding device '%' by include list.", device_unique_id)
                 continue
             device_info = self._api.device_info[device_unique_id]
             device = None
