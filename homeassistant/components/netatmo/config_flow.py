@@ -106,7 +106,7 @@ class NetatmoOptionsFlowHandler(config_entries.OptionsFlow):
                     user_input={CONF_NEW_AREA: new_client}
                 )
 
-            return await self._update_options()
+            return self._update_options()
 
         weather_areas = list(self.options[CONF_WEATHER_AREAS])
 
@@ -183,7 +183,7 @@ class NetatmoOptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(step_id="public_weather", data_schema=data_schema)
 
-    async def _update_options(self):
+    def _update_options(self):
         """Update config entry options."""
         return self.async_create_entry(
             title="Netatmo Public Weather", data=self.options
