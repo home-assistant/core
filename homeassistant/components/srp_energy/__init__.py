@@ -1,10 +1,12 @@
 """The SRP Energy integration."""
+from datetime import timedelta
 import asyncio
 import logging
 from srpenergy.client import SrpEnergyClient
 
 import voluptuous as vol
 
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME, CONF_ID
 import homeassistant.helpers.config_validation as cv
@@ -30,11 +32,11 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = [DOMAIN]
+PLATFORMS = ["sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the SRP Energy component."""
+    """Set up SRP Energy from a config entry."""
     if DOMAIN in config:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
@@ -43,34 +45,35 @@ async def async_setup(hass: HomeAssistant, config: dict):
         )
     return True
 
-    # name = config[DOMAIN][CONF_NAME]
-    # username = config[DOMAIN][CONF_USERNAME]
-    # password = config[DOMAIN][CONF_PASSWORD]
-    # account_id = config[DOMAIN][CONF_ID]
-
-    # try:
-    #     srp_client = SrpEnergyClient(account_id, username, password)
-    # except ValueError as err:
-    #     _LOGGER.error("Couldn't connect to %s. %s", name, err)
-    #     return False
-
-    # if not srp_client.validate():
-    #     _LOGGER.error("Couldn't connect to %s. Check credentials", name)
-    #     return False
-
-    # return True
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up SRP Energy from a config entry."""
+    """Set up the SRP Energy component."""
     # TODO Store an API object for your platforms to access
     # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
-    _LOGGER.error("Testing")
-    for component in PLATFORMS:
 
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+    # for component in PLATFORMS:
+
+    #     hass.async_create_task(
+    #         hass.config_entries.async_forward_entry_setup(entry, component)
+    #     )
+
+    account_id = entry.data.get(CONF_ID)
+    username = entry.data.get(CONF_USERNAME)
+    password = entry.data.get(CONF_PASSWORD)
+
+    try:
+
+        srp_energy_client = await hass.async_add_executor_job(
+            SrpEnergyClient, account_id, username, password
         )
+        hass.data[DOMAIN] = srp_energy_client
+    except (Exception) as ex:
+        _LOGGER.error("Unable to connect to Srp Energy: %s", str(ex))
+        raise ConfigEntryNotReady
+
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, "sensor")
+    )
 
     return True
 
@@ -90,3 +93,35 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     return unload_ok
 
+
+# class SrpEnergyDataCoordinator(DataUpdateCoordinator):
+#     """Get the latest data from srp.com."""
+
+#     def __init__(self, hass, config_entry):
+#         """Initialize the data object."""
+#         self.hass = hass
+#         self.config_entry = config_entry
+#         self.api = None
+#         self.usage = {}
+#         super().__init__(
+#             self.hass,
+#             _LOGGER,
+#             name=DOMAIN,
+#             update_method=self.async_update,
+#             update_interval=timedelta(hours=24),
+#         )
+
+#     def update_data(self):
+#         """Get the latest data from srp."""
+#         return self.api.usage()
+
+#     async def async_setup(self):
+#         """Set up Srp Energy."""
+#         try:
+#             self.api = await self.hass.async_add_executor_job(speedtest.Speedtest)
+#         except speedtest.ConfigRetrievalError:
+#             raise ConfigEntryNotReady
+
+
+# #     def update_data(self):
+# #         """Get the latest data from srp.com."""

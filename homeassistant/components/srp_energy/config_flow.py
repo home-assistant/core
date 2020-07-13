@@ -45,7 +45,7 @@ def validate_srp_input(account_id, username, password):
     except ValueError:
         raise CannotConnect
 
-    if not srp_client.validate:
+    if not srp_client.validate():
         raise InvalidAuth
 
 
