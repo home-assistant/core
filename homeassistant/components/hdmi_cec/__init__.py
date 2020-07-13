@@ -387,8 +387,6 @@ class CecEntity(Entity):
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
 
-        self.hass.bus.listen(EVENT_HDMI_CEC_UNAVAILABLE, self._hdmi_cec_unavailable)
-
     def _hdmi_cec_unavailable(self, event):
         # Change state to unavailable. Without this, entity would remain in
         # its last state, since the state changes are pushed.
@@ -414,6 +412,9 @@ class CecEntity(Entity):
     async def async_added_to_hass(self):
         """Register HDMI callbacks after initialization."""
         self._device.set_update_callback(self._update)
+        self.hass.bus.async_listen(
+            EVENT_HDMI_CEC_UNAVAILABLE, self._hdmi_cec_unavailable
+        )
 
     def _update(self, device=None):
         """Device status changed, schedule an update."""
