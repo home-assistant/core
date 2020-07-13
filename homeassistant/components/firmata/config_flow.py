@@ -2,6 +2,8 @@
 
 import logging
 
+from pymata_express.pymata_express_serial import serial
+
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 
@@ -35,8 +37,18 @@ class FirmataFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             api = await get_board(import_config)
             await api.shutdown()
-        except Exception as err:  # pylint: disable=broad-except
+        except RuntimeError as err:
             _LOGGER.error("Error connecting to PyMata board %s: %s", name, err)
+            return self.async_abort(reason="cannot_connect")
+        except serial.serialutil.SerialTimeoutException as err:
+            _LOGGER.error(
+                "Timeout writing to serial port for PyMata board %s: %s", name, err
+            )
+            return self.async_abort(reason="cannot_connect")
+        except serial.serialutil.SerialException as err:
+            _LOGGER.error(
+                "Error connecting to serial port for PyMata board %s: %s", name, err
+            )
             return self.async_abort(reason="cannot_connect")
         _LOGGER.debug("Connection test to Firmata board %s successful", name)
 

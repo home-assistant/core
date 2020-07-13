@@ -3,6 +3,7 @@ import logging
 from typing import Union
 
 from pymata_express.pymata_express import PymataExpress
+from pymata_express.pymata_express_serial import serial
 
 from homeassistant.const import CONF_NAME
 
@@ -46,8 +47,20 @@ class FirmataBoard:
         try:
             _LOGGER.debug("Connecting to Firmata %s", self.name)
             self.api = await get_board(self.config)
-        except Exception as err:  # pylint: disable=broad-except
+        except RuntimeError as err:  # pylint: disable=broad-except
             _LOGGER.error("Error connecting to PyMata board %s: %s", self.name, err)
+            return False
+        except serial.serialutil.SerialTimeoutException as err:
+            _LOGGER.error(
+                "Timeout writing to serial port for PyMata board %s: %s", self.name, err
+            )
+            return False
+        except serial.serialutil.SerialException as err:
+            _LOGGER.error(
+                "Error connecting to serial port for PyMata board %s: %s",
+                self.name,
+                err,
+            )
             return False
 
         self.firmware_version = await self.api.get_firmware_version()
