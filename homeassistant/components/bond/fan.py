@@ -1,4 +1,5 @@
 """Support for Bond fans."""
+import math
 from typing import Any, Callable, List, Optional
 
 from bond import DeviceTypes, Directions
@@ -67,12 +68,15 @@ class BondFan(BondEntity, FanEntity):
     @property
     def speed(self) -> Optional[str]:
         """Return the current speed."""
-        if self._power is None:
-            return None
         if self._power == 0:
             return SPEED_OFF
+        if not self._power or not self._speed:
+            return None
 
-        return self.speed_list[self._speed] if self._speed is not None else None
+        # map 1..max_speed Bond speed to 1..3 HA speed
+        max_speed = self._device.props.get("max_speed", 3)
+        ha_speed = math.ceil(self._speed * (len(self.speed_list) - 1) / max_speed)
+        return self.speed_list[ha_speed]
 
     @property
     def speed_list(self) -> list:
@@ -99,8 +103,14 @@ class BondFan(BondEntity, FanEntity):
 
     def set_speed(self, speed: str) -> None:
         """Set the desired speed for the fan."""
-        speed_index = self.speed_list.index(speed)
-        self._hub.bond.setSpeed(self._device.device_id, speed=speed_index)
+        max_speed = self._device.props.get("max_speed", 3)
+        if speed == SPEED_LOW:
+            bond_speed = 1
+        elif speed == SPEED_HIGH:
+            bond_speed = max_speed
+        else:
+            bond_speed = math.ceil(max_speed / 2)
+        self._hub.bond.setSpeed(self._device.device_id, speed=bond_speed)
 
     def turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
         """Turn on the fan."""
