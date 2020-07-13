@@ -54,22 +54,43 @@ def mock_api(account):
         yield api_mock
 
 
+@pytest.fixture(name="config_entry")
+def config_entry():
+    """Create a mock config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"},
+        options={},
+    )
+
+
 @pytest.fixture(name="controller")
-async def make_controller(hass, smarttub_api):
+async def make_controller(hass, smarttub_api, config_entry):
     """Instantiate the controller for testing."""
 
     controller = SmartTubController(hass)
     assert len(controller.spa_ids) == 0
 
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"},
-        options={},
-    )
     ret = await controller.async_setup(config_entry)
     assert ret is True
 
     return controller
+
+
+async def test_invalid_credentials(hass, controller, smarttub_api, config_entry):
+    """Check that we start a new config flow if the configured credentials are invalid.
+
+    This should mean that the user changed their SmartTub password.
+    """
+
+    smarttub_api.login.side_effect = smarttub.LoginFailed
+    controller = SmartTubController(hass)
+    with patch(
+        "homeassistant.components.smarttub.controller.create_config_flow", autospec=True
+    ) as create_config_flow:
+        ret = await controller.async_setup(config_entry)
+        assert ret is False
+        create_config_flow.assert_called()
 
 
 async def test_update(controller, spa):

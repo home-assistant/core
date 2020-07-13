@@ -49,7 +49,7 @@ class SmartTubController:
             await self._api.login(entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD])
         except LoginFailed:
             # credentials were changed or invalidated, we need new ones
-            create_config_flow()
+            create_config_flow(self._hass)
             return False
 
         self._account = await self._api.get_account()
