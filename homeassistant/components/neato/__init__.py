@@ -92,9 +92,8 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up config entry."""
-    hass.data[NEATO_LOGIN] = NeatoHub(hass, entry.data, Account)
+    hub = NeatoHub(hass, entry.data, Account)
 
-    hub = hass.data[NEATO_LOGIN]
     await hass.async_add_executor_job(hub.login)
     if not hub.logged_in:
         _LOGGER.debug("Failed to login to Neato API")
@@ -105,6 +104,8 @@ async def async_setup_entry(hass, entry):
     except NeatoRobotException:
         _LOGGER.debug("Failed to connect to Neato API")
         raise ConfigEntryNotReady
+
+    hass.data[NEATO_LOGIN] = hub
 
     for component in ("camera", "vacuum", "switch", "sensor"):
         hass.async_add_job(
