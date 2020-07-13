@@ -1,6 +1,6 @@
 """The tests for the Rfxtrx component."""
 
-from unittest.mock import call
+from tests.async_mock import call
 
 from homeassistant.components import rfxtrx
 from homeassistant.core import callback
