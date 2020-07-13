@@ -1,0 +1,8 @@
+{
+    "domain": "openrgb",
+    "name": "OpenRGB",
+    "config_flow": true,
+    "documentation": "https://www.home-assistant.io/integrations/openrgb",
+    "requirements": ["openrgb-python==0.2.5"],
+    "codeowners": ["@bahorn"]
+}

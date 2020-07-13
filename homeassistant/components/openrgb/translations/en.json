@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "conn_error": "Unable to connect."
+        },
+        "error": {
+            "cannot_connect": "Unable to connect",
+            "unknown": "Unknown Error"
+        },
+        "flow_title": "OpenRGB Configuration",
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "Client ID",
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "Configure the connection details.",
+                "title": "OpenRGB"
+            }
+        }
+    },
+    "title": "OpenRGB"
+}

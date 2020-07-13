@@ -649,6 +649,10 @@ omit =
     homeassistant/components/openhome/__init__.py
     homeassistant/components/openhome/media_player.py
     homeassistant/components/openhome/const.py
+    homeassistant/components/openrgb/__init__.py
+    homeassistant/components/openrgb/const.py
+    homeassistant/components/openrgb/light.py
+    homeassistant/components/openrgb/helpers.py
     homeassistant/components/opensensemap/air_quality.py
     homeassistant/components/opensky/sensor.py
     homeassistant/components/opentherm_gw/__init__.py

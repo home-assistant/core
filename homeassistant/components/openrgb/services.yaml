@@ -1,0 +1,7 @@
+# Describes the format for available OpenRGB services
+
+pull_devices:
+  description: Pull device list from OpenRGB server.
+
+force_update:
+  description: Force all OpenRGB devices to pull data.
