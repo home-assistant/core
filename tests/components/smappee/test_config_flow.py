@@ -1,7 +1,6 @@
 """Test the Smappee config flow."""
 from homeassistant import data_entry_flow, setup
 from homeassistant.components.smappee.const import (
-    AUTHORIZE_URL,
     CONF_HOSTNAME,
     CONF_SERIALNUMBER,
     DOMAIN,
@@ -26,7 +25,7 @@ async def test_show_user_form(hass):
         DOMAIN, context={"source": SOURCE_USER},
     )
 
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "environment"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
 
@@ -35,7 +34,7 @@ async def test_show_user_host_form(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER},
     )
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "environment"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
@@ -43,7 +42,7 @@ async def test_show_user_host_form(hass):
         result["flow_id"], {"environment": ENV_LOCAL}
     )
 
-    assert result["step_id"] == "user"
+    assert result["step_id"] == ENV_LOCAL
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
@@ -63,7 +62,14 @@ async def test_show_zeroconf_connection_error_form(hass):
         },
     )
 
-    assert result["description_placeholders"] is None
+    assert result["description_placeholders"] == {CONF_SERIALNUMBER: "1006000212"}
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "1.2.3.4"}
+    )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "connection_error"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
@@ -72,20 +78,22 @@ async def test_show_zeroconf_connection_error_form(hass):
 async def test_connection_error(hass):
     """Test we show user form on Smappee connection error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={"host": "1.2.3.4"},
+        DOMAIN, context={"source": SOURCE_USER},
     )
-
-    assert result["reason"] == "connection_error"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["step_id"] == "environment"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
-
-async def test_connection_error_empty_host(hass):
-    """Test we show user form on Smappee connection error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={"host": None},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"environment": ENV_LOCAL}
     )
+    assert result["step_id"] == ENV_LOCAL
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "1.2.3.4"}
+    )
     assert result["reason"] == "connection_error"
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
@@ -123,17 +131,22 @@ async def test_full_user_wrong_mdns(hass):
         return_value=[{"key": "phase0ActivePower", "value": 0}],
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={"host": "1.2.3.4", "environment": ENV_LOCAL},
+            DOMAIN, context={"source": SOURCE_USER},
         )
+        assert result["step_id"] == "environment"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"environment": ENV_LOCAL}
+        )
+        assert result["step_id"] == ENV_LOCAL
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "1.2.3.4"}
         )
-
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "invalid_mdns"
         assert len(hass.config_entries.async_entries(DOMAIN)) == 0
@@ -160,7 +173,21 @@ async def test_user_device_exists_abort(hass):
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data={"host": "1.2.3.4"},
+            DOMAIN, context={"source": SOURCE_USER},
+        )
+        assert result["step_id"] == "environment"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"environment": ENV_LOCAL}
+        )
+        assert result["step_id"] == ENV_LOCAL
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "1.2.3.4"}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
@@ -217,15 +244,12 @@ async def test_full_user_flow(hass, aiohttp_client, aioclient_mock):
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={"environment": ENV_CLOUD},
+        DOMAIN, context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"environment": ENV_CLOUD}
     )
     state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
-
-    assert result["url"] == (
-        f"{AUTHORIZE_URL['PRODUCTION']}?response_type=code&client_id={CLIENT_ID}"
-        "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}"
-    )
 
     client = await aiohttp_client(hass.http.app)
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
@@ -299,13 +323,18 @@ async def test_full_user_local_flow(hass):
         return_value=[{"key": "phase0ActivePower", "value": 0}],
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={"host": "1.2.3.4", "environment": ENV_LOCAL},
+            DOMAIN, context={"source": SOURCE_USER},
         )
+        assert result["step_id"] == "environment"
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "user"
         assert result["description_placeholders"] is None
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"environment": ENV_LOCAL},
+        )
+        assert result["step_id"] == ENV_LOCAL
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
         result = await hass.config_entries.flow.async_configure(
