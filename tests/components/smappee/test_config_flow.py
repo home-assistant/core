@@ -1,13 +1,16 @@
 """Test the Smappee config flow."""
 from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components.smappee import config_flow
 from homeassistant.components.smappee.const import (
     AUTHORIZE_URL,
     CONF_HOSTNAME,
+    CONF_SERIALNUMBER,
+    CONF_TITLE,
     DOMAIN,
     TOKEN_URL,
 )
 from homeassistant.config_entries import SOURCE_ZEROCONF
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_IP_ADDRESS
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.async_mock import patch
@@ -29,6 +32,30 @@ async def test_show_zeroconf_confirm_form(hass):
     assert result["description_placeholders"] == {
         CONF_HOSTNAME: "Smappee1006000212.local."
     }
+    assert result["step_id"] == "zeroconf_confirm"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+
+async def test_show_zerconf_form(hass) -> None:
+    """Test that the zeroconf confirmation form is served."""
+    flow = config_flow.SmappeeFlowHandler()
+    flow.hass = hass
+    flow.context = {"source": SOURCE_ZEROCONF}
+    result = await flow.async_step_zeroconf(
+        {
+            "host": "192.168.0.0",
+            "port": 22,
+            "hostname": "Smappee1006000212.local.",
+            "type": "_ssh._tcp.local.",
+            "name": "Smappee1006000212._ssh._tcp.local.",
+            "properties": {"_raw": {}},
+        }
+    )
+
+    assert flow.context[CONF_HOSTNAME] == "Smappee1006000212.local."
+    assert flow.context[CONF_IP_ADDRESS] == "192.168.0.0"
+    assert flow.context[CONF_TITLE] == "Smappee1006000212"
+    assert flow.context[CONF_SERIALNUMBER] == "1006000212"
     assert result["step_id"] == "zeroconf_confirm"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
