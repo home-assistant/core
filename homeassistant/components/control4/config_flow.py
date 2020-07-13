@@ -72,9 +72,9 @@ class Control4Validator:
             self.controller_name = account_controllers["controllerCommonName"]
 
             # Get bearer token to communicate with controller locally
-            self.director_bearer_token = await self.account.getDirectorBearerToken(
-                self.controller_name
-            )
+            self.director_bearer_token = (
+                await self.account.getDirectorBearerToken(self.controller_name)
+            )["token"]
             return True
         except (Unauthorized, NotFound):
             return False
@@ -107,8 +107,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 if not await hub.authenticate():
                     raise InvalidAuth
+                if not await hub.connect_to_director():
+                    raise CannotConnect
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -116,16 +120,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if hub.controller_name in configured_instances(self.hass):
                 return self.async_abort(reason="already_configured")
 
-            try:
-                if not await hub.connect_to_director():
-                    raise CannotConnect
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-
-            try:
+            if errors == {}:
                 return self.async_create_entry(
                     title=hub.controller_name,
                     data={
@@ -135,9 +130,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_CONTROLLER_NAME: hub.controller_name,
                     },
                 )
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
