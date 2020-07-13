@@ -400,7 +400,7 @@ track_time_interval = threaded_listener_factory(async_track_time_interval)
 class SunListener:
     """Helper class to help listen to sun events."""
 
-    hass = attr.ib(type=HomeAssistant)
+    hass: HomeAssistant = attr.ib()
     action: Callable[..., None] = attr.ib()
     event: str = attr.ib()
     offset: Optional[timedelta] = attr.ib()
