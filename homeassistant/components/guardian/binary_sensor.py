@@ -1,22 +1,20 @@
 """Binary sensors for the Elexa Guardian integration."""
 from typing import Callable, Dict
 
-from aioguardian import Client
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_MOISTURE,
+    DEVICE_CLASS_MOVING,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import GuardianEntity
+from . import ValveControllerEntity
 from .const import (
     API_SYSTEM_ONBOARD_SENSOR_STATUS,
     API_WIFI_STATUS,
-    DATA_CLIENT,
     DATA_COORDINATOR,
     DOMAIN,
 )
@@ -27,7 +25,12 @@ SENSOR_KIND_AP_INFO = "ap_enabled"
 SENSOR_KIND_LEAK_DETECTED = "leak_detected"
 SENSOR_KIND_MOVED = "moved"
 
-SENSORS = [
+PAIRED_SENSOR_SENSORS = [
+    (SENSOR_KIND_LEAK_DETECTED, "Leak Detected", DEVICE_CLASS_MOISTURE),
+    (SENSOR_KIND_MOVED, "Recently Moved", DEVICE_CLASS_MOVING),
+]
+
+VALVE_CONTROLLER_SENSORS = [
     (SENSOR_KIND_AP_INFO, "Onboard AP Enabled", DEVICE_CLASS_CONNECTIVITY),
     (SENSOR_KIND_LEAK_DETECTED, "Leak Detected", DEVICE_CLASS_MOISTURE),
 ]
@@ -37,36 +40,40 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
     """Set up Guardian switches based on a config entry."""
-    async_add_entities(
-        [
-            GuardianBinarySensor(
+    sensors = []
+
+    for kind, name, device_class in VALVE_CONTROLLER_SENSORS:
+        sensors.append(
+            ValveControllerBinarySensor(
                 entry,
-                hass.data[DOMAIN][DATA_CLIENT][entry.entry_id],
                 hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id],
                 kind,
                 name,
                 device_class,
             )
-            for kind, name, device_class in SENSORS
-        ],
-        True,
-    )
+        )
+
+    # for ps_uid, ps_coordinator in hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+    #     API_SENSOR_PAIRED_SENSOR_STATUS
+    # ].items():
+    #     LOGGER.error(ps_coordinator.data)
+
+    async_add_entities(sensors, True)
 
 
-class GuardianBinarySensor(GuardianEntity, BinarySensorEntity):
-    """Define a generic Guardian sensor."""
+class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
+    """Define a binary sensor related to a Guardian valve controller."""
 
     def __init__(
         self,
         entry: ConfigEntry,
-        client: Client,
         coordinators: Dict[str, DataUpdateCoordinator],
         kind: str,
         name: str,
         device_class: str,
     ) -> None:
         """Initialize."""
-        super().__init__(entry, client, coordinators, kind, name, device_class, None)
+        super().__init__(entry, coordinators, kind, name, device_class, None)
 
         self._is_on = True
 

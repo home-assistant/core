@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import GuardianEntity
+from . import ValveControllerEntity
 from .const import API_VALVE_STATUS, DATA_CLIENT, DATA_COORDINATOR, DOMAIN, LOGGER
 
 ATTR_AVG_CURRENT = "average_current"
@@ -52,7 +52,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            GuardianSwitch(
+            ValveControllerSwitch(
                 entry,
                 hass.data[DOMAIN][DATA_CLIENT][entry.entry_id],
                 hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id],
@@ -62,7 +62,7 @@ async def async_setup_entry(
     )
 
 
-class GuardianSwitch(GuardianEntity, SwitchEntity):
+class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
     """Define a switch to open/close the Guardian valve."""
 
     def __init__(
@@ -73,9 +73,10 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
     ):
         """Initialize."""
         super().__init__(
-            entry, client, coordinators, "valve", "Valve", None, "mdi:water"
+            entry, coordinators, "valve", "Valve Controller", None, "mdi:water"
         )
 
+        self._client = client
         self._is_on = True
 
     @property

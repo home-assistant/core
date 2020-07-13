@@ -124,20 +124,11 @@ class GuardianEntity(Entity):
     """Define a base Guardian entity."""
 
     def __init__(
-        self,
-        entry: ConfigEntry,
-        client: Client,
-        coordinators: Dict[str, DataUpdateCoordinator],
-        kind: str,
-        name: str,
-        device_class: str,
-        icon: str,
+        self, entry: ConfigEntry, kind: str, name: str, device_class: str, icon: str
     ) -> None:
         """Initialize."""
         self._attrs = {ATTR_ATTRIBUTION: "Data provided by Elexa"}
         self._available = True
-        self._client = client
-        self._coordinators = coordinators
         self._device_class = device_class
         self._icon = icon
         self._kind = kind
@@ -150,16 +141,6 @@ class GuardianEntity(Entity):
         return self._device_class
 
     @property
-    def device_info(self) -> dict:
-        """Return device registry information for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self._valve_controller_uid)},
-            "manufacturer": "Elexa",
-            "model": self._coordinators[API_SYSTEM_DIAGNOSTICS].data["firmware"],
-            "name": f"Guardian {self._valve_controller_uid}",
-        }
-
-    @property
     def device_state_attributes(self) -> dict:
         """Return the state attributes."""
         return self._attrs
@@ -170,14 +151,46 @@ class GuardianEntity(Entity):
         return self._icon
 
     @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return f"Guardian {self._valve_controller_uid}: {self._name}"
-
-    @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state."""
         return False
+
+
+class PairedSensorEntity(Entity):
+    """Define a Guardian paired sensor entity."""
+
+
+class ValveControllerEntity(GuardianEntity):
+    """Define a Guardian valve controller entity."""
+
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        coordinators: Dict[str, DataUpdateCoordinator],
+        kind: str,
+        name: str,
+        device_class: str,
+        icon: str,
+    ) -> None:
+        """Initialize."""
+        super().__init__(entry, kind, name, device_class, icon)
+
+        self._coordinators = coordinators
+
+    @property
+    def device_info(self) -> dict:
+        """Return device registry information for this entity."""
+        return {
+            "identifiers": {(DOMAIN, self._valve_controller_uid)},
+            "manufacturer": "Elexa",
+            "model": self._coordinators[API_SYSTEM_DIAGNOSTICS].data["firmware"],
+            "name": f"Guardian {self._valve_controller_uid}",
+        }
+
+    @property
+    def name(self) -> str:
+        """Return the name of the entity."""
+        return f"Guardian {self._valve_controller_uid}: {self._name}"
 
     @property
     def unique_id(self):
