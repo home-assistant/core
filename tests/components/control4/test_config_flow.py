@@ -22,8 +22,8 @@ async def test_form(hass):
         "homeassistant.components.control4.config_flow.Control4Validator.connect_to_director",
         return_value=True,
     ), patch(
-        "homeassistant.components.control4.config_flow.validate_input",
-        return_value={"controller_name": "Name of the device"},
+        "homeassistant.components.control4.config_flow.Control4Validator.return_controller_name",
+        return_value="control4_model_00AA00AA00AA",
     ), patch(
         "homeassistant.components.control4.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -39,12 +39,12 @@ async def test_form(hass):
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "control4_model_00AA00AA00AA"
     assert result2["data"] == {
         "host": "1.1.1.1",
         "username": "test-username",
         "password": "test-password",
-        "controller_name": "Name of the device",
+        "controller_name": "control4_model_00AA00AA00AA",
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1

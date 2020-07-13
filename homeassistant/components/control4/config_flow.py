@@ -90,6 +90,11 @@ class Control4Validator:
             _LOGGER.error(exception)
             return False
 
+    async def return_controller_name(self) -> str:
+        """Returns the controller name found by authenticate().
+        This exists so that the controller name return value can be mocked in tests."""
+        return self.controller_name
+
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Control4."""
@@ -118,17 +123,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
-            if hub.controller_name in configured_instances(self.hass):
+            controller_name = await hub.return_controller_name()
+            if controller_name in configured_instances(self.hass):
                 return self.async_abort(reason="already_configured")
 
             if errors == {}:
                 return self.async_create_entry(
-                    title=hub.controller_name,
+                    title=controller_name,
                     data={
                         CONF_HOST: user_input["host"],
                         CONF_USERNAME: user_input["username"],
                         CONF_PASSWORD: user_input["password"],
-                        CONF_CONTROLLER_NAME: hub.controller_name,
+                        CONF_CONTROLLER_NAME: controller_name,
                     },
                 )
 
