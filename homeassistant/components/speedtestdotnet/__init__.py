@@ -17,7 +17,6 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SERVER,
     DOMAIN,
-    MANUAL_INTERVAL,
     SENSOR_TYPES,
     SPEED_TEST_SERVICE,
 )
@@ -105,20 +104,15 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         self.config_entry = config_entry
         self.api = None
         self.servers = {}
-
-        update_interval = (
-            self.config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-            if not self.config_entry.options.get(CONF_MANUAL)
-            else MANUAL_INTERVAL
-        )
-
         super().__init__(
-            self.hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_method=self.async_update,
-            update_interval=timedelta(minutes=update_interval),
+            self.hass, _LOGGER, name=DOMAIN, update_method=self.async_update,
         )
+        if not self.config_entry.options.get(CONF_MANUAL):
+            self.update_interval = timedelta(
+                minutes=self.config_entry.options.get(
+                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                )
+            )
 
     def update_servers(self):
         """Update list of test servers."""
@@ -193,12 +187,11 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
 
 async def options_updated_listener(hass, entry):
     """Handle options update."""
-    if not entry.options[CONF_MANUAL]:
-        hass.data[DOMAIN].update_interval = timedelta(
-            minutes=entry.options[CONF_SCAN_INTERVAL]
-        )
-        await hass.data[DOMAIN].async_request_refresh()
+    if entry.options[CONF_MANUAL]:
+        hass.data[DOMAIN].update_interval = None
         return
-    # set the update interval to a very long time
-    # if the user wants to disable auto update
-    hass.data[DOMAIN].update_interval = timedelta(minutes=MANUAL_INTERVAL)
+
+    hass.data[DOMAIN].update_interval = timedelta(
+        minutes=entry.options[CONF_SCAN_INTERVAL]
+    )
+    await hass.data[DOMAIN].async_request_refresh()
