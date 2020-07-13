@@ -9,13 +9,12 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_DEVICES
+from homeassistant.const import CONF_DEVICES
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
 from . import (
     CONF_AUTOMATIC_ADD,
-    CONF_FIRE_EVENT,
     DATA_TYPES,
     DOMAIN,
     SIGNAL_EVENT,
@@ -66,7 +65,7 @@ async def async_setup_entry(
         return isinstance(event, (ControlEvent, SensorEvent))
 
     entities = []
-    for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
+    for packet_id in discovery_info[CONF_DEVICES]:
         event = get_rfx_object(packet_id)
         if event is None:
             _LOGGER.error("Invalid device: %s", packet_id)
@@ -81,20 +80,17 @@ async def async_setup_entry(
                 continue
             data_ids.add(data_id)
 
-            entity = RfxtrxSensor(
-                event.device, data_type, entity_info[CONF_FIRE_EVENT],
-            )
+            entity = RfxtrxSensor(event.device, device_id, data_type)
             entities.append(entity)
 
     async_add_entities(entities)
 
     @callback
-    def sensor_update(event):
+    def sensor_update(event, device_id):
         """Handle sensor updates from the RFXtrx gateway."""
         if not supported(event):
             return
 
-        device_id = get_device_id(event.device)
         for data_type in set(event.values) & set(DATA_TYPES):
             data_id = (*device_id, data_type)
             if data_id in data_ids:
@@ -109,7 +105,7 @@ async def async_setup_entry(
                 "".join(f"{x:02x}" for x in event.data),
             )
 
-            entity = RfxtrxSensor(event.device, data_type, event=event)
+            entity = RfxtrxSensor(event.device, device_id, data_type, event=event)
             async_add_entities([entity])
 
     # Subscribe to main RFXtrx events
@@ -120,15 +116,14 @@ async def async_setup_entry(
 class RfxtrxSensor(Entity):
     """Representation of a RFXtrx sensor."""
 
-    def __init__(self, device, data_type, should_fire_event=False, event=None):
+    def __init__(self, device, device_id, data_type, event=None):
         """Initialize the sensor."""
         self.event = None
         self._device = device
         self._name = f"{device.type_string} {device.id_string} {data_type}"
-        self.should_fire_event = should_fire_event
         self.data_type = data_type
         self._unit_of_measurement = DATA_TYPES.get(data_type, "")
-        self._device_id = get_device_id(device)
+        self._device_id = device_id
         self._unique_id = "_".join(x for x in (*self._device_id, data_type))
 
         self._device_class = DEVICE_CLASSES.get(data_type)
@@ -200,12 +195,12 @@ class RfxtrxSensor(Entity):
         self.event = event
 
     @callback
-    def _handle_event(self, event):
+    def _handle_event(self, event, device_id):
         """Check if event applies to me and update."""
         if not isinstance(event, SensorEvent):
             return
 
-        if event.device.id_string != self._device.id_string:
+        if device_id != self._device_id:
             return
 
         if self.data_type not in event.values:
@@ -221,7 +216,3 @@ class RfxtrxSensor(Entity):
         self._apply_event(event)
 
         self.async_write_ha_state()
-        if self.should_fire_event:
-            self.hass.bus.async_fire(
-                "signal_received", {ATTR_ENTITY_ID: self.entity_id}
-            )

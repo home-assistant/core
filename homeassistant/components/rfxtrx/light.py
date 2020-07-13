@@ -8,19 +8,16 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     LightEntity,
 )
-from homeassistant.const import ATTR_STATE, CONF_DEVICES, STATE_ON
+from homeassistant.const import CONF_DEVICES, STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
-    ATTR_FIRE_EVENT,
     CONF_AUTOMATIC_ADD,
-    CONF_FIRE_EVENT,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
     SIGNAL_EVENT,
     RfxtrxDevice,
-    fire_command_event,
     get_device_id,
     get_rfx_object,
 )
@@ -59,20 +56,20 @@ async def async_setup_entry(
             continue
         device_ids.add(device_id)
 
-        datas = {ATTR_STATE: None, ATTR_FIRE_EVENT: entity_info[CONF_FIRE_EVENT]}
-        entity = RfxtrxLight(event.device, datas, entity_info[CONF_SIGNAL_REPETITIONS])
+        entity = RfxtrxLight(
+            event.device, device_id, entity_info[CONF_SIGNAL_REPETITIONS]
+        )
 
         entities.append(entity)
 
     async_add_entities(entities)
 
     @callback
-    def light_update(event):
+    def light_update(event, device_id):
         """Handle light updates from the RFXtrx gateway."""
         if not supported(event):
             return
 
-        device_id = get_device_id(event.device)
         if device_id in device_ids:
             return
         device_ids.add(device_id)
@@ -85,9 +82,8 @@ async def async_setup_entry(
             "".join(f"{x:02x}" for x in event.data),
         )
 
-        datas = {ATTR_STATE: None, ATTR_FIRE_EVENT: False}
         entity = RfxtrxLight(
-            event.device, datas, DEFAULT_SIGNAL_REPETITIONS, event=event
+            event.device, device_id, DEFAULT_SIGNAL_REPETITIONS, event=event
         )
 
         async_add_entities([entity])
@@ -160,13 +156,11 @@ class RfxtrxLight(RfxtrxDevice, LightEntity, RestoreEntity):
             self._state = self._brightness > 0
 
     @callback
-    def _handle_event(self, event):
+    def _handle_event(self, event, device_id):
         """Check if event applies to me and update."""
-        if event.device.id_string != self._device.id_string:
+        if device_id != self._device_id:
             return
 
         self._apply_event(event)
 
         self.async_write_ha_state()
-        if self.should_fire_event:
-            fire_command_event(self.hass, self.entity_id, event.values["Command"])
