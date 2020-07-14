@@ -101,8 +101,12 @@ class StatisticsSensor(Entity):
         """Register callbacks."""
 
         @callback
-        def async_stats_sensor_state_listener(entity, old_state, new_state):
+        def async_stats_sensor_state_listener(event):
             """Handle the sensor state changes."""
+            new_state = event.data.get("new_state")
+            if new_state is None:
+                return
+
             self._unit_of_measurement = new_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT
             )
@@ -116,8 +120,8 @@ class StatisticsSensor(Entity):
             """Add listener and get recorded state."""
             _LOGGER.debug("Startup for %s", self.entity_id)
 
-            event.async_track_state_change(
-                self.hass, self._entity_id, async_stats_sensor_state_listener
+            event.async_track_state_change_event(
+                self.hass, [self._entity_id], async_stats_sensor_state_listener
             )
 
             if "recorder" in self.hass.config.components:
