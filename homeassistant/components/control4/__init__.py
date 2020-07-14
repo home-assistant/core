@@ -124,8 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def update_listener(hass, config_entry):
     """Update when config_entry options update."""
     _LOGGER.debug("Config entry was updated, rerunning setup")
-    await async_unload_entry(hass, config_entry)
-    await async_setup_entry(hass, config_entry)
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
