@@ -1,9 +1,10 @@
 """Test the Control4 config flow."""
 from homeassistant import config_entries, setup
-from homeassistant.components.control4.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.control4.const import DOMAIN
 
-from tests.async_mock import patch
+from tests.async_mock import patch, AsyncMock
+import datetime
+from pyControl4.error_handling import Unauthorized
 
 
 async def test_form(hass):
@@ -16,14 +17,20 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.control4.config_flow.Control4Validator.authenticate",
-        return_value=True,
+        "pyControl4.account.C4Account.getAccountControllers",
+        return_value={
+            "controllerCommonName": "control4_model_00AA00AA00AA",
+            "href": "https://apis.control4.com/account/v3/rest/accounts/000000",
+            "name": "Name",
+        },
     ), patch(
-        "homeassistant.components.control4.config_flow.Control4Validator.connect_to_director",
-        return_value=True,
+        "pyControl4.account.C4Account.getDirectorBearerToken",
+        return_value={
+            "token": "token",
+            "token_expiration": datetime.datetime(2020, 7, 15, 13, 50, 15, 26940),
+        },
     ), patch(
-        "homeassistant.components.control4.config_flow.Control4Validator.return_controller_unique_id",
-        return_value="control4_model_00AA00AA00AA",
+        "pyControl4.director.C4Director.getAllItemInfo", return_value={},
     ), patch(
         "homeassistant.components.control4.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -58,8 +65,7 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.control4.config_flow.Control4Validator.authenticate",
-        side_effect=InvalidAuth,
+        "pyControl4.account.C4Account.getAccountControllers", side_effect=Unauthorized,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -84,8 +90,7 @@ async def test_form_cannot_connect(hass):
         "homeassistant.components.control4.config_flow.Control4Validator.authenticate",
         return_value=True,
     ), patch(
-        "homeassistant.components.control4.config_flow.Control4Validator.connect_to_director",
-        side_effect=CannotConnect,
+        "pyControl4.director.C4Director.getAllItemInfo", side_effect=Unauthorized,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
