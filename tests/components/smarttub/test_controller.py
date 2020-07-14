@@ -3,17 +3,12 @@
 import pytest
 import smarttub
 
-from homeassistant.components.smarttub.const import (
-    DEFAULT_MAX_TEMP,
-    DEFAULT_MIN_TEMP,
-    DOMAIN,
-)
+from homeassistant.components.smarttub.const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
 from homeassistant.components.smarttub.controller import SmartTubController
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.async_mock import create_autospec, patch
-from tests.common import MockConfigEntry, MockEntity
+from tests.common import MockEntity
 
 
 @pytest.fixture(name="spa")
@@ -52,16 +47,6 @@ def mock_api(account):
         api_mock = api_class_mock.return_value
         api_mock.get_account.return_value = account
         yield api_mock
-
-
-@pytest.fixture(name="config_entry")
-def config_entry():
-    """Create a mock config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"},
-        options={},
-    )
 
 
 @pytest.fixture(name="controller")
