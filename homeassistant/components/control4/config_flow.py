@@ -125,7 +125,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(formatted_mac)
             self._abort_if_unique_id_configured()
 
-            if errors == {}:
+            if not errors:
                 return self.async_create_entry(
                     title=controller_unique_id,
                     data={
