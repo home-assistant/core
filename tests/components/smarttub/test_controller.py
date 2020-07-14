@@ -108,7 +108,9 @@ async def test_entity(hass, controller):
     entity.hass = hass
     entity.spa_id = "notmockspa1"
     await controller.async_register_entity(entity)
-    assert not controller.entity_is_available(entity)
+    assert controller.entity_is_available(entity) is False
+
+    await controller.async_update_entity(entity)
 
 
 async def test_get_account_id(controller, smarttub_api):
