@@ -305,3 +305,13 @@ class ClimaCellEntity(Entity):
     def attribution(self):
         """Return the attribution."""
         return ATTRIBUTION
+
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return device registry information."""
+        return {
+            "identifiers": {(DOMAIN, self._config_entry.data[CONF_API_KEY])},
+            "name": self.name,
+            "manufacturer": "ClimaCell",
+            "entry_type": "service",
+        }
