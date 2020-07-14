@@ -1,14 +1,19 @@
 """The RPi Pimoroni Fan Shim integration."""
 import asyncio
 
-# pylint: disable=import-error
-from fanshim import FanShim
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
+
+try:
+    # pylint: disable=import-error
+    from fanshim import FanShim
+except (ModuleNotFoundError):
+    pass
+
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 

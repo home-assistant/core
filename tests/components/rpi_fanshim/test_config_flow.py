@@ -10,5 +10,4 @@ async def test_form(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
+    assert result["type"] == "create_entry"
