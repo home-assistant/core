@@ -24,7 +24,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     CONF_ACCOUNT,
     CONF_CONFIG_LISTENER,
-    CONF_CONTROLLER_NAME,
+    CONF_CONTROLLER_UNIQUE_ID,
     CONF_DIRECTOR,
     CONF_DIRECTOR_ALL_ITEMS,
     CONF_DIRECTOR_MODEL,
@@ -67,10 +67,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raise PlatformNotReady()
     entry_data[CONF_ACCOUNT] = account
 
-    controller_name = config[CONF_CONTROLLER_NAME]
-    entry_data[CONF_CONTROLLER_NAME] = controller_name
+    controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
+    entry_data[CONF_CONTROLLER_UNIQUE_ID] = controller_unique_id
 
-    director_token_dict = await account.getDirectorBearerToken(controller_name)
+    director_token_dict = await account.getDirectorBearerToken(controller_unique_id)
     director = C4Director(config[CONF_HOST], director_token_dict[CONF_TOKEN])
     entry_data[CONF_DIRECTOR] = director
     entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION] = director_token_dict["token_expiration"]
@@ -81,16 +81,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         controller_href
     )
 
-    control4, model, mac_address = controller_name.split("_", 3)
+    control4, model, mac_address = controller_unique_id.split("_", 3)
     entry_data[CONF_DIRECTOR_MODEL] = model.upper()
 
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, controller_name)},
+        identifiers={(DOMAIN, controller_unique_id)},
         connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
         manufacturer="Control4",
-        name=controller_name,
+        name=controller_unique_id,
         model=entry_data[CONF_DIRECTOR_MODEL],
         sw_version=entry_data[CONF_DIRECTOR_SW_VERSION],
     )
@@ -140,9 +140,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     hass.data[DOMAIN][entry.entry_id][CONF_CONFIG_LISTENER]()
     if unload_ok:
-        controller_name = entry.entry_id
+        entry_id = entry.entry_id
         hass.data[DOMAIN].pop(entry.entry_id)
-        _LOGGER.debug("Unloaded entry for %s", controller_name)
+        _LOGGER.debug("Unloaded entry for %s", entry_id)
 
     return unload_ok
 
@@ -181,7 +181,7 @@ class Control4Entity(entity.Entity):
         self._name = name
         self._idx = idx
         self._coordinator = coordinator
-        self._controller_name = entry_data[CONF_CONTROLLER_NAME]
+        self._controller_unique_id = entry_data[CONF_CONTROLLER_UNIQUE_ID]
         self._device_name = device_name
         self._device_manufacturer = device_manufacturer
         self._device_model = device_model
@@ -206,7 +206,7 @@ class Control4Entity(entity.Entity):
             "name": self._device_name,
             "manufacturer": self._device_manufacturer,
             "model": self._device_model,
-            "via_device": (DOMAIN, self._controller_name),
+            "via_device": (DOMAIN, self._controller_unique_id),
         }
 
     @property

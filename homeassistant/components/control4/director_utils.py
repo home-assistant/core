@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import (
     CONF_ACCOUNT,
-    CONF_CONTROLLER_NAME,
+    CONF_CONTROLLER_UNIQUE_ID,
     CONF_DIRECTOR,
     CONF_DIRECTOR_TOKEN_EXPIRATION,
     DOMAIN,
@@ -45,8 +45,8 @@ async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
     config = entry.data
     account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD])
     await account.getAccountBearerToken()
-    controller_name = config[CONF_CONTROLLER_NAME]
-    director_token_dict = await account.getDirectorBearerToken(controller_name)
+    controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
+    director_token_dict = await account.getDirectorBearerToken(controller_unique_id)
     director = C4Director(config[CONF_HOST], director_token_dict[CONF_TOKEN])
     director_token_expiry = director_token_dict["token_expiration"]
 

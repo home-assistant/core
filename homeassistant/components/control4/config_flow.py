@@ -20,7 +20,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
-    CONF_CONTROLLER_NAME,
+    CONF_CONTROLLER_UNIQUE_ID,
     CONF_LIGHT_COLD_START_TRANSITION_TIME,
     CONF_LIGHT_TRANSITION_TIME,
     DEFAULT_LIGHT_COLD_START_TRANSITION_TIME,
@@ -50,7 +50,7 @@ class Control4Validator:
         self.username = username
         self.password = password
         self.account = None
-        self.controller_name = None
+        self.controller_unique_id = None
         self.director_bearer_token = None
         self.director = None
 
@@ -63,11 +63,11 @@ class Control4Validator:
 
             # Get controller name
             account_controllers = await self.account.getAccountControllers()
-            self.controller_name = account_controllers["controllerCommonName"]
+            self.controller_unique_id = account_controllers["controllerCommonName"]
 
             # Get bearer token to communicate with controller locally
             self.director_bearer_token = (
-                await self.account.getDirectorBearerToken(self.controller_name)
+                await self.account.getDirectorBearerToken(self.controller_unique_id)
             )["token"]
             return True
         except (Unauthorized, NotFound):
@@ -83,13 +83,13 @@ class Control4Validator:
             _LOGGER.error(exception)
             return False
 
-    def return_controller_name(self) -> str:
+    def return_controller_unique_id(self) -> str:
         """
         Return the controller name found by authenticate().
 
         This exists so that the controller name return value can be mocked in tests.
         """
-        return self.controller_name
+        return self.controller_unique_id
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -119,20 +119,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
-            controller_name = hub.return_controller_name()
-            control4, model, mac = controller_name.split("_", 3)
+            controller_unique_id = hub.return_controller_unique_id()
+            control4, model, mac = controller_unique_id.split("_", 3)
             formatted_mac = format_mac(mac)
             await self.async_set_unique_id(formatted_mac)
             self._abort_if_unique_id_configured()
 
             if errors == {}:
                 return self.async_create_entry(
-                    title=controller_name,
+                    title=controller_unique_id,
                     data={
                         CONF_HOST: user_input["host"],
                         CONF_USERNAME: user_input["username"],
                         CONF_PASSWORD: user_input["password"],
-                        CONF_CONTROLLER_NAME: controller_name,
+                        CONF_CONTROLLER_UNIQUE_ID: controller_unique_id,
                     },
                 )
 

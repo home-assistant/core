@@ -22,7 +22,7 @@ async def test_form(hass):
         "homeassistant.components.control4.config_flow.Control4Validator.connect_to_director",
         return_value=True,
     ), patch(
-        "homeassistant.components.control4.config_flow.Control4Validator.return_controller_name",
+        "homeassistant.components.control4.config_flow.Control4Validator.return_controller_unique_id",
         return_value="control4_model_00AA00AA00AA",
     ), patch(
         "homeassistant.components.control4.async_setup", return_value=True
@@ -44,7 +44,7 @@ async def test_form(hass):
         "host": "1.1.1.1",
         "username": "test-username",
         "password": "test-password",
-        "controller_name": "control4_model_00AA00AA00AA",
+        "controller_unique_id": "control4_model_00AA00AA00AA",
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
