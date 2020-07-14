@@ -13,5 +13,14 @@
                 "title": "W\u00e4hle Authentifizierungs-Methode"
             }
         }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Name des Gebiets"
+                }
+            }
+        }
     }
 }
