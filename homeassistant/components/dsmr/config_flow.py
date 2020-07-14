@@ -254,48 +254,6 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="setup_options", data_schema=schema, errors=errors
         )
 
-    async def async_step_import(self, user_input=None):
-        """Import a config entry."""
-        if CONF_HOST in user_input:
-            self._host = user_input.get(CONF_HOST)
-            self._port = user_input.get(CONF_PORT)
-
-            if self.host_already_configured(self._host, self._port):
-                return self.async_abort(reason="already_configured")
-        else:
-            self._port = user_input.get(CONF_PORT)
-
-            if self.usb_already_configured(self._port):
-                return self.async_abort(reason="already_configured")
-
-        self._dsmr_version = user_input.get(CONF_DSMR_VERSION)
-
-        try:
-            data = {
-                CONF_PORT: self._port,
-                CONF_HOST: self._host,
-                CONF_DSMR_VERSION: self._dsmr_version,
-            }
-
-            info = await validate_input(self.hass, data)
-
-            self._serial_id = info[CONF_SERIAL_ID]
-            self._serial_id_gas = info[CONF_SERIAL_ID_GAS]
-
-            return await self.async_step_setup_options(user_input)
-
-        except CannotConnect:
-            _LOGGER.exception("Cannot connect to device")
-            return self.async_abort(reason="cannot_connect")
-        except CannotCommunicate:
-            _LOGGER.exception("Cannot communicate with device")
-            return self.async_abort(reason="cannot_communicate")
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
-
-        return await self.async_step_setup_options(user_input)
-
     def usb_already_configured(self, port):
         """See if we already have a DSMR USB entry matching user input configured."""
         existing_usb = {
