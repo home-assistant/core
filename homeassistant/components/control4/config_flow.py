@@ -91,7 +91,7 @@ class Control4Validator:
             _LOGGER.error(exception)
             return False
 
-    async def return_controller_name(self) -> str:
+    def return_controller_name(self) -> str:
         """
         Return the controller name found by authenticate().
 
@@ -127,7 +127,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
-            controller_name = await hub.return_controller_name()
+            controller_name = hub.return_controller_name()
             await self.async_set_unique_id(controller_name)
             self._abort_if_unique_id_configured()
 
