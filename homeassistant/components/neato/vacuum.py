@@ -157,7 +157,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
 
     def update(self):
         """Update the states of Neato Vacuums."""
-        _LOGGER.debug("Running Neato Vacuums update")
+        _LOGGER.debug("Running Neato Vacuums update for '%s'", self._name)
         try:
             if self._robot_stats is None:
                 self._robot_stats = self.robot.get_general_info().json().get("data")
@@ -168,7 +168,9 @@ class NeatoConnectedVacuum(StateVacuumEntity):
             self._state = self.robot.state
         except NeatoRobotException as ex:
             if self._available:  # print only once when available
-                _LOGGER.error("Neato vacuum connection error: %s", ex)
+                _LOGGER.error(
+                    "Neato vacuum connection error for '%s': %s", self._name, ex
+                )
             self._state = None
             self._available = False
             return
@@ -247,7 +249,9 @@ class NeatoConnectedVacuum(StateVacuumEntity):
                 try:
                     robot_boundaries = self.robot.get_map_boundaries(maps["id"]).json()
                 except NeatoRobotException as ex:
-                    _LOGGER.error("Could not fetch map boundaries: %s", ex)
+                    _LOGGER.error(
+                        "Could not fetch map boundaries for '%s': %s", self._name, ex
+                    )
                     return
 
                 _LOGGER.debug(
@@ -346,14 +350,14 @@ class NeatoConnectedVacuum(StateVacuumEntity):
             elif self._state["state"] == 3:
                 self.robot.resume_cleaning()
         except NeatoRobotException as ex:
-            _LOGGER.error("Neato vacuum connection error: %s", ex)
+            _LOGGER.error("Neato vacuum connection error for '%s': %s", self._name, ex)
 
     def pause(self):
         """Pause the vacuum."""
         try:
             self.robot.pause_cleaning()
         except NeatoRobotException as ex:
-            _LOGGER.error("Neato vacuum connection error: %s", ex)
+            _LOGGER.error("Neato vacuum connection error for '%s': %s", self._name, ex)
 
     def return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
@@ -363,28 +367,28 @@ class NeatoConnectedVacuum(StateVacuumEntity):
             self._clean_state = STATE_RETURNING
             self.robot.send_to_base()
         except NeatoRobotException as ex:
-            _LOGGER.error("Neato vacuum connection error: %s", ex)
+            _LOGGER.error("Neato vacuum connection error for '%s': %s", self._name, ex)
 
     def stop(self, **kwargs):
         """Stop the vacuum cleaner."""
         try:
             self.robot.stop_cleaning()
         except NeatoRobotException as ex:
-            _LOGGER.error("Neato vacuum connection error: %s", ex)
+            _LOGGER.error("Neato vacuum connection error for '%s': %s", self._name, ex)
 
     def locate(self, **kwargs):
         """Locate the robot by making it emit a sound."""
         try:
             self.robot.locate()
         except NeatoRobotException as ex:
-            _LOGGER.error("Neato vacuum connection error: %s", ex)
+            _LOGGER.error("Neato vacuum connection error for '%s': %s", self._name, ex)
 
     def clean_spot(self, **kwargs):
         """Run a spot cleaning starting from the base."""
         try:
             self.robot.start_spot_cleaning()
         except NeatoRobotException as ex:
-            _LOGGER.error("Neato vacuum connection error: %s", ex)
+            _LOGGER.error("Neato vacuum connection error for '%s': %s", self._name, ex)
 
     def neato_custom_cleaning(self, mode, navigation, category, zone=None, **kwargs):
         """Zone cleaning service call."""
@@ -403,4 +407,4 @@ class NeatoConnectedVacuum(StateVacuumEntity):
         try:
             self.robot.start_cleaning(mode, navigation, category, boundary_id)
         except NeatoRobotException as ex:
-            _LOGGER.error("Neato vacuum connection error: %s", ex)
+            _LOGGER.error("Neato vacuum connection error for '%s': %s", self._name, ex)
