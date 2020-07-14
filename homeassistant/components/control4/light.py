@@ -154,7 +154,12 @@ class Control4Light(Control4Entity, LightEntity):
         self._is_dimmer = is_dimmer
         self._transition_time = light_transition_time
         self._cold_start_transition_time = light_cold_start_transition_time
-        self._c4_light = C4Light(self.director, idx)
+        self._c4_light = None
+
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        super().async_added_to_hass()
+        self._c4_light = C4Light(self.director, self._idx)
 
     @property
     def is_on(self):
