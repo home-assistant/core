@@ -16,7 +16,7 @@ from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.event import (
-    async_track_state_change,
+    async_track_state_change_event,
     async_track_time_interval,
 )
 from homeassistant.util import get_local_ip
@@ -201,7 +201,7 @@ class Camera(HomeAccessory, PyhapCamera):
         self._char_motion_detected = serv_motion.configure_char(
             CHAR_MOTION_DETECTED, value=False
         )
-        self._async_update_motion_state(None, None, state)
+        self._async_update_motion_state(state)
 
     async def run_handler(self):
         """Handle accessory driver started event.
@@ -209,17 +209,25 @@ class Camera(HomeAccessory, PyhapCamera):
         Run inside the Home Assistant event loop.
         """
         if self._char_motion_detected:
-            async_track_state_change(
-                self.hass, self.linked_motion_sensor, self._async_update_motion_state
+            async_track_state_change_event(
+                self.hass,
+                [self.linked_motion_sensor],
+                self._async_update_motion_state_event,
             )
 
         await super().run_handler()
 
     @callback
-    def _async_update_motion_state(
-        self, entity_id=None, old_state=None, new_state=None
-    ):
+    def _async_update_motion_state_event(self, event):
+        """Handle state change event listener callback."""
+        self._async_update_motion_state(event.data.get("new_state"))
+
+    @callback
+    def _async_update_motion_state(self, new_state):
         """Handle link motion sensor state change to update HomeKit value."""
+        if not new_state:
+            return
+
         detected = new_state.state == STATE_ON
         if self._char_motion_detected.value == detected:
             return
