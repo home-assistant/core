@@ -142,6 +142,7 @@ omit =
     homeassistant/components/control4/__init__.py
     homeassistant/components/control4/light.py
     homeassistant/components/control4/const.py
+    homeassistant/components/control4/director_utils.py
     homeassistant/components/coolmaster/__init__.py
     homeassistant/components/coolmaster/climate.py
     homeassistant/components/coolmaster/const.py
