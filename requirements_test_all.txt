@@ -32,6 +32,12 @@ PyTurboJPEG==1.4.0
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.13.4
 
+# homeassistant.components.bmp280
+# homeassistant.components.mcp23017
+# homeassistant.components.rpi_fanshim
+# homeassistant.components.rpi_gpio
+# RPi.GPIO==0.7.0
+
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
 
@@ -296,8 +302,13 @@ enocean==0.50
 # homeassistant.components.season
 ephem==3.7.7.0
 
+<<<<<<< HEAD
 # homeassistant.components.epson
 epson-projector==0.2.3
+=======
+# homeassistant.components.rpi_fanshim
+# fanshim==0.0.4
+>>>>>>> 3d3c0b3d88... Add config flow test and adjust requirments
 
 # homeassistant.components.faa_delays
 faadelays==0.0.6

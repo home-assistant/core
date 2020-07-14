@@ -1,6 +1,7 @@
 """The RPi Pimoroni Fan Shim integration."""
 import asyncio
 
+# pylint: disable=import-error
 from fanshim import FanShim
 import voluptuous as vol
 
@@ -29,6 +30,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up RPi Pimoroni Fan Shim from a config entry."""
+
     fanshim = FanShimHub()
     fanshim.hub = FanShim()
 

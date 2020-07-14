@@ -71,6 +71,7 @@ PyXiaomiGateway==0.13.4
 
 # homeassistant.components.bmp280
 # homeassistant.components.mcp23017
+# homeassistant.components.rpi_fanshim
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.7.0
 
@@ -579,7 +580,7 @@ faadelays==0.0.6
 # face_recognition==1.2.3
 
 # homeassistant.components.rpi_fanshim
-fanshim==0.0.4
+# fanshim==0.0.4
 
 # homeassistant.components.fastdotcom
 fastdotcom==0.0.3
