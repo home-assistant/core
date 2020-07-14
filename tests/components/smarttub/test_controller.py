@@ -71,10 +71,16 @@ async def make_controller(hass, smarttub_api, config_entry):
     controller = SmartTubController(hass)
     assert len(controller.spa_ids) == 0
 
-    ret = await controller.async_setup(config_entry)
+    ret = await controller.async_setup_entry(config_entry)
     assert ret is True
 
     return controller
+
+
+async def test_unload(controller, config_entry):
+    """Test async_unload_entry."""
+    ret = await controller.async_unload_entry(config_entry)
+    assert ret is True
 
 
 async def test_invalid_credentials(hass, controller, smarttub_api, config_entry):
@@ -88,7 +94,7 @@ async def test_invalid_credentials(hass, controller, smarttub_api, config_entry)
     with patch(
         "homeassistant.components.smarttub.controller.create_config_flow", autospec=True
     ) as create_config_flow:
-        ret = await controller.async_setup(config_entry)
+        ret = await controller.async_setup_entry(config_entry)
         assert ret is False
         create_config_flow.assert_called()
 

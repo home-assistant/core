@@ -34,12 +34,24 @@ async def async_setup_entry(hass, entry):
         SMARTTUB_CONTROLLER: controller,
     }
 
-    await controller.async_setup(entry)
+    await controller.async_setup_entry(entry)
 
     for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
+
+    return True
+
+
+async def async_unload_entry(hass, entry):
+    """Remove a smarttub config entry."""
+    for platform in PLATFORMS:
+        await hass.config_entries.async_forward_entry_unload(entry, platform)
+
+    controller = hass.data[DOMAIN][entry.unique_id][SMARTTUB_CONTROLLER]
+    await controller.async_unload_entry(entry)
+    hass.data[DOMAIN].pop(entry.unique_id)
 
     return True
 

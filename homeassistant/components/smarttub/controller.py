@@ -32,12 +32,13 @@ class SmartTubController:
         self._api = SmartTub(async_get_clientsession(hass))
         self._account = None
         self._spas = {}
+        self._spa_devices = {}
         self._stop_polling = None
 
         self._coordinator = None
         self.spa_ids = set()
 
-    async def async_setup(self, entry):
+    async def async_setup_entry(self, entry):
         """Perform initial setup.
 
         Authenticate, query static state, set up polling, and otherwise make
@@ -68,18 +69,13 @@ class SmartTubController:
 
         await self._coordinator.async_refresh()
 
-        device_registry = await dr.async_get_registry(self._hass)
-        for spa in self._spas.values():
-            device_registry.async_get_or_create(
-                config_entry_id=entry.entry_id,
-                connections={(DOMAIN, self._account.id)},
-                identifiers={(DOMAIN, spa.id)},
-                manufacturer=spa.brand,
-                name=self.get_spa_name(spa.id),
-                model=spa.model,
-                # sw_version=config.swversion,
-            )
+        await self.async_register_devices(entry)
 
+        return True
+
+    async def async_unload_entry(self, entry):
+        """Tear down."""
+        await self.async_unregister_devices()
         return True
 
     async def async_update_data(self):
@@ -104,6 +100,28 @@ class SmartTubController:
     async def async_update_entity(self, entity):
         """Request a state update on behalf of entity."""
         await self._coordinator.async_request_refresh()
+
+    async def async_register_devices(self, entry):
+        """Register devices with the device registry for all spas."""
+        device_registry = await dr.async_get_registry(self._hass)
+        for spa in self._spas.values():
+            device = device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                connections={(DOMAIN, self._account.id)},
+                identifiers={(DOMAIN, spa.id)},
+                manufacturer=spa.brand,
+                name=self.get_spa_name(spa.id),
+                model=spa.model,
+                # sw_version=config.swversion,
+            )
+            self._spa_devices[spa.id] = device
+
+    async def async_unregister_devices(self):
+        """Unregister all spa devices with the device registry."""
+        device_registry = await dr.async_get_registry(self._hass)
+        for device in self._spa_devices.values():
+            device_registry.async_remove_device(device.id)
+        self._spa_devices = {}
 
     def entity_is_available(self, entity):
         """Indicate whether the entity has state available."""
