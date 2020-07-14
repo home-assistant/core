@@ -8,4 +8,7 @@ ATTRIBUTION = "Powered by SRP Energy"
 ENERGY_KWH = "kWh"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1440)
 
+SENSOR_NAME = "Usage"
+SENSOR_TYPE = "usage"
+
 ICON = "mdi:flash"

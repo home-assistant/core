@@ -7,7 +7,16 @@ import async_timeout
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers import entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from .const import DOMAIN, DEFAULT_NAME, ENERGY_KWH, ICON, ATTRIBUTION
+from .const import (
+    DOMAIN,
+    DEFAULT_NAME,
+    ENERGY_KWH,
+    ICON,
+    ATTRIBUTION,
+    MIN_TIME_BETWEEN_UPDATES,
+    SENSOR_NAME,
+    SENSOR_TYPE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,22 +36,27 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
             start_date = datetime.now() + timedelta(days=-1)
             end_date = datetime.now()
-            usage = api.usage(start_date, end_date)
-            daily_usage = 0.0
-            for _, _, _, kwh, _ in usage:
-                daily_usage += float(kwh)
-            return daily_usage
+            with async_timeout.timeout(10):
+                hourly_usage = await hass.async_add_executor_job(
+                    api.usage, start_date, end_date
+                )
+
+                previous_daily_usage = 0.0
+                for _, _, _, kwh, _ in hourly_usage:
+                    previous_daily_usage += float(kwh)
+                return previous_daily_usage
+        except (TimeoutError):
+            raise UpdateFailed(f"Timeout communicating with API")
         except (ConnectError, HTTPError, Timeout, ValueError, TypeError) as err:
             raise UpdateFailed(f"Error communicating with API: {err}")
 
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        # Name of the data. For logging purposes.
         name="sensor",
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(minutes=5),
+        update_interval=MIN_TIME_BETWEEN_UPDATES,
     )
 
     # Fetch initial data so we have data when entities subscribe
@@ -52,9 +66,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 
 class SrpEntity(entity.Entity):
+    """Implementation of a Srp Energy Usage sensor."""
+
     def __init__(self, coordinator):
-        self._name = "Usage"
-        self.type = "usage"
+        self._name = SENSOR_NAME
+        self.type = SENSOR_TYPE
         self.coordinator = coordinator
         self._unit_of_measurement = ENERGY_KWH
         self._state = None
@@ -86,10 +102,7 @@ class SrpEntity(entity.Entity):
 
     @property
     def usage(self):
-        """Return entity state.
-
-      Example to show how we fetch data from coordinator.
-      """
+        """Return entity state."""
         return self.coordinator.data
 
     @property

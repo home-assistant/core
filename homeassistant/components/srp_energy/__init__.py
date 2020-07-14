@@ -48,15 +48,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up the SRP Energy component."""
-    # TODO Store an API object for your platforms to access
-    # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
-
-    # for component in PLATFORMS:
-
-    #     hass.async_create_task(
-    #         hass.config_entries.async_forward_entry_setup(entry, component)
-    #     )
-
     account_id = entry.data.get(CONF_ID)
     username = entry.data.get(CONF_USERNAME)
     password = entry.data.get(CONF_PASSWORD)
@@ -92,36 +83,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-# class SrpEnergyDataCoordinator(DataUpdateCoordinator):
-#     """Get the latest data from srp.com."""
-
-#     def __init__(self, hass, config_entry):
-#         """Initialize the data object."""
-#         self.hass = hass
-#         self.config_entry = config_entry
-#         self.api = None
-#         self.usage = {}
-#         super().__init__(
-#             self.hass,
-#             _LOGGER,
-#             name=DOMAIN,
-#             update_method=self.async_update,
-#             update_interval=timedelta(hours=24),
-#         )
-
-#     def update_data(self):
-#         """Get the latest data from srp."""
-#         return self.api.usage()
-
-#     async def async_setup(self):
-#         """Set up Srp Energy."""
-#         try:
-#             self.api = await self.hass.async_add_executor_job(speedtest.Speedtest)
-#         except speedtest.ConfigRetrievalError:
-#             raise ConfigEntryNotReady
-
-
-# #     def update_data(self):
-# #         """Get the latest data from srp.com."""
