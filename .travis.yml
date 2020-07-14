@@ -14,6 +14,15 @@ addons:
     sources:
       - sourceline: ppa:savoury1/ffmpeg4
 
+python:
+  - "3.7.1"
+
+env:
+  - TOXENV=py37 TOX_ARGS="-- --test-group-count 4 --test-group 1"
+  - TOXENV=py37 TOX_ARGS="-- --test-group-count 4 --test-group 2"
+  - TOXENV=py37 TOX_ARGS="-- --test-group-count 4 --test-group 3"
+  - TOXENV=py37 TOX_ARGS="-- --test-group-count 4 --test-group 4"
+
 matrix:
   fast_finish: true
   include:
@@ -23,8 +32,6 @@ matrix:
       env: TOXENV=pylint PYLINT_ARGS=--jobs=0 TRAVIS_WAIT=30
     - python: "3.7.1"
       env: TOXENV=typing
-    - python: "3.7.1"
-      env: TOXENV=py37
 
 cache:
   pip: true
@@ -32,4 +39,4 @@ cache:
     - $HOME/.cache/pre-commit
 install: pip install -U tox
 language: python
-script: ${TRAVIS_WAIT:+travis_wait $TRAVIS_WAIT} tox --develop
+script: ${TRAVIS_WAIT:+travis_wait $TRAVIS_WAIT} tox --develop ${TOX_ARGS-}
