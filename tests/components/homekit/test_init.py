@@ -1,5 +1,4 @@
 """Test HomeKit initialization."""
-from homeassistant import core as ha
 from homeassistant.components import logbook
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
@@ -11,18 +10,22 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_SERVICE
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
+from tests.components.logbook.test_init import MockLazyEventPartialState
 
 
 async def test_humanify_homekit_changed_event(hass, hk_driver):
     """Test humanifying HomeKit changed event."""
+    hass.config.components.add("recorder")
     with patch("homeassistant.components.homekit.HomeKit"):
         assert await async_setup_component(hass, "homekit", {"homekit": {}})
+    assert await async_setup_component(hass, "logbook", {})
+    entity_attr_cache = logbook.EntityAttributeCache(hass)
 
     event1, event2 = list(
         logbook.humanify(
             hass,
             [
-                ha.Event(
+                MockLazyEventPartialState(
                     EVENT_HOMEKIT_CHANGED,
                     {
                         ATTR_ENTITY_ID: "lock.front_door",
@@ -30,7 +33,7 @@ async def test_humanify_homekit_changed_event(hass, hk_driver):
                         ATTR_SERVICE: "lock",
                     },
                 ),
-                ha.Event(
+                MockLazyEventPartialState(
                     EVENT_HOMEKIT_CHANGED,
                     {
                         ATTR_ENTITY_ID: "cover.window",
@@ -40,6 +43,7 @@ async def test_humanify_homekit_changed_event(hass, hk_driver):
                     },
                 ),
             ],
+            entity_attr_cache,
         )
     )
 

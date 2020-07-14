@@ -47,9 +47,17 @@ class TahomaSwitch(TahomaDevice, SwitchEntity):
             else:
                 self._state = STATE_OFF
 
+        if self.tahoma_device.type == "zwave:OnOffLightZWaveComponent":
+            if self.tahoma_device.active_states.get("core:OnOffState") == "on":
+                self._state = STATE_ON
+            else:
+                self._state = STATE_OFF
+
         # A RTS power socket doesn't have a feedback channel,
         # so we must assume the socket is available.
         if self.tahoma_device.type == "rts:OnOffRTSComponent":
+            self._available = True
+        elif self.tahoma_device.type == "zwave:OnOffLightZWaveComponent":
             self._available = True
         else:
             self._available = bool(

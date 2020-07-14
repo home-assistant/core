@@ -23,8 +23,10 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.const import STATE_OFF
+from homeassistant.setup import async_setup_component
 
 from .test_common import (
+    help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_payload,
@@ -47,7 +49,7 @@ from .test_common import (
 )
 
 from tests.async_mock import call
-from tests.common import async_fire_mqtt_message, async_setup_component
+from tests.common import async_fire_mqtt_message
 from tests.components.climate import common
 
 ENTITY_CLIMATE = "climate.test"
@@ -608,6 +610,13 @@ async def test_set_aux(hass, mqtt_mock):
     assert state.attributes.get("aux_heat") == "off"
 
 
+async def test_availability_when_connection_lost(hass, mqtt_mock):
+    """Test availability after MQTT disconnection."""
+    await help_test_availability_when_connection_lost(
+        hass, mqtt_mock, CLIMATE_DOMAIN, DEFAULT_CONFIG
+    )
+
+
 async def test_availability_without_topic(hass, mqtt_mock):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
@@ -862,7 +871,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     )
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass, mqtt_mock):
     """Test unique id option only creates one climate per unique_id."""
     config = {
         CLIMATE_DOMAIN: [
@@ -882,7 +891,7 @@ async def test_unique_id(hass):
             },
         ]
     }
-    await help_test_unique_id(hass, CLIMATE_DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, CLIMATE_DOMAIN, config)
 
 
 async def test_discovery_removal_climate(hass, mqtt_mock, caplog):

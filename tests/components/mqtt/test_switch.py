@@ -7,6 +7,7 @@ import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
+    help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_payload,
@@ -29,7 +30,7 @@ from .test_common import (
 )
 
 from tests.async_mock import patch
-from tests.common import async_fire_mqtt_message, async_mock_mqtt_component
+from tests.common import async_fire_mqtt_message
 from tests.components.switch import common
 
 DEFAULT_CONFIG = {
@@ -37,13 +38,7 @@ DEFAULT_CONFIG = {
 }
 
 
-@pytest.fixture
-def mock_publish(hass):
-    """Initialize components."""
-    yield hass.loop.run_until_complete(async_mock_mqtt_component(hass))
-
-
-async def test_controlling_state_via_topic(hass, mock_publish):
+async def test_controlling_state_via_topic(hass, mqtt_mock):
     """Test the controlling state via topic."""
     assert await async_setup_component(
         hass,
@@ -76,7 +71,7 @@ async def test_controlling_state_via_topic(hass, mock_publish):
     assert state.state == STATE_OFF
 
 
-async def test_sending_mqtt_commands_and_optimistic(hass, mock_publish):
+async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     """Test the sending MQTT commands in optimistic mode."""
     fake_state = ha.State("switch.test", "on")
 
@@ -106,23 +101,23 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mock_publish):
 
     await common.async_turn_on(hass, "switch.test")
 
-    mock_publish.async_publish.assert_called_once_with(
+    mqtt_mock.async_publish.assert_called_once_with(
         "command-topic", "beer on", 2, False
     )
-    mock_publish.async_publish.reset_mock()
+    mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("switch.test")
     assert state.state == STATE_ON
 
     await common.async_turn_off(hass, "switch.test")
 
-    mock_publish.async_publish.assert_called_once_with(
+    mqtt_mock.async_publish.assert_called_once_with(
         "command-topic", "beer off", 2, False
     )
     state = hass.states.get("switch.test")
     assert state.state == STATE_OFF
 
 
-async def test_controlling_state_via_topic_and_json_message(hass, mock_publish):
+async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
     """Test the controlling state via topic and JSON message."""
     assert await async_setup_component(
         hass,
@@ -153,6 +148,13 @@ async def test_controlling_state_via_topic_and_json_message(hass, mock_publish):
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_OFF
+
+
+async def test_availability_when_connection_lost(hass, mqtt_mock):
+    """Test availability after MQTT disconnection."""
+    await help_test_availability_when_connection_lost(
+        hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG
+    )
 
 
 async def test_availability_without_topic(hass, mqtt_mock):
@@ -198,7 +200,7 @@ async def test_custom_availability_payload(hass, mqtt_mock):
     )
 
 
-async def test_custom_state_payload(hass, mock_publish):
+async def test_custom_state_payload(hass, mqtt_mock):
     """Test the state payload."""
     assert await async_setup_component(
         hass,
@@ -268,7 +270,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     )
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass, mqtt_mock):
     """Test unique id option only creates one switch per unique_id."""
     config = {
         switch.DOMAIN: [
@@ -288,7 +290,7 @@ async def test_unique_id(hass):
             },
         ]
     }
-    await help_test_unique_id(hass, switch.DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, switch.DOMAIN, config)
 
 
 async def test_discovery_removal_switch(hass, mqtt_mock, caplog):

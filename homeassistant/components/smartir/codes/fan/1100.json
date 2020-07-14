@@ -1,0 +1,21 @@
+{
+    "manufacturer": "Pacific",
+    "supportedModels": [
+        "Unknown"
+    ],
+    "supportedController": "Broadlink",
+    "commandsEncoding": "Base64",
+    "speed": [
+        "low",
+        "medium",
+        "high"
+    ],
+    "commands": {
+        "off": "JgBiACoOKg0PKSkOKg4OKg4pDioOKg4pDiop8SoOKg0PKSkOKg4OKg0qDioOKQ4qDikq8SsMLAwPKCsNKwwRJxAnECgQKBAnECgr7ysNKQ4NKygPKQ8NKg4qDSoOKg0rDSopAA0FAAAAAAAA",
+        "default": {
+            "low": "JgCCACkPKw0PKCsMKQ8NKg0rDygNKw0qKg4NAAENKQ8pDg0rKg0pDw0qDykPKQ4pDSsqDQ0AAQ0pDykODSsoDykPDSoNKw0qDioNKisNDQABDSkPKQ4OKisMKQ8NKg8pECgPKBAoKA8NAAEOKBArDA0qKg4rDQwrECcQKBAoDygqDg8ADQUAAAAAAAA=",
+            "medium": "JgC2ACsMLAwPKCwMKwwQKBAoDygrDQ8oECgQAAEKLAwrDBAoKwwrDQ8oECgQJywMECgQJxAAAQsrDCsNDygsDCsMECgQKA8oLAwPKBAoEAABCiwMKwwQKCsMKw0PKBAoECcsDA8pDygQAAELKwwrDQ8oKwwsDBAoDygQKCsMECgQJxAAAQsrDCsNDygsCywMECgQJxAoKwwQKBAoDwABCysNKwwQKCsMKw0PKBAoECcsDBAoDygQAA0FAAA=",
+            "high": "JgC2ACsMKw0QJywMKwwQKBAoKw0PKBAoDygQAAELKw0rDQ8nLA0rDA8oECgrDBAoECgQJxAAAQssDCsNDycsDSoNECcQKCsNDygQKBAnEAABCysNKw0PJywNKg0QJxAoKw0PKBAoDygQAAELKw0rDBAoKw0rDQ8oECcsDQ8nECgQKBAAAQorDSsMECgrDSsNDikQJywMDykPKBAoEAABCiwMLAwPKCsNKw0PKBAnLAwPKBAoECgQAA0FAAA="
+        }
+    }
+}

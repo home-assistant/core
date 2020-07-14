@@ -449,12 +449,16 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     async def _async_heater_turn_on(self):
         """Turn heater toggleable device on."""
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
-        await self.hass.services.async_call(HA_DOMAIN, SERVICE_TURN_ON, data)
+        await self.hass.services.async_call(
+            HA_DOMAIN, SERVICE_TURN_ON, data, context=self._context
+        )
 
     async def _async_heater_turn_off(self):
         """Turn heater toggleable device off."""
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
-        await self.hass.services.async_call(HA_DOMAIN, SERVICE_TURN_OFF, data)
+        await self.hass.services.async_call(
+            HA_DOMAIN, SERVICE_TURN_OFF, data, context=self._context
+        )
 
     async def async_set_preset_mode(self, preset_mode: str):
         """Set new preset mode."""

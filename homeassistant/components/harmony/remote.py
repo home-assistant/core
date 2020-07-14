@@ -3,12 +3,9 @@ import asyncio
 import json
 import logging
 
+from aioharmony.const import ClientCallbackType
 import aioharmony.exceptions as aioexc
-from aioharmony.harmonyapi import (
-    ClientCallbackType,
-    HarmonyAPI as HarmonyClient,
-    SendCommandDevice,
-)
+from aioharmony.harmonyapi import HarmonyAPI as HarmonyClient, SendCommandDevice
 import voluptuous as vol
 
 from homeassistant.components import remote
@@ -31,6 +28,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     ACTIVITY_POWER_OFF,
+    ATTR_ACTIVITY_NOTIFY,
     DOMAIN,
     HARMONY_OPTIONS_UPDATE,
     SERVICE_CHANGE_CHANNEL,
@@ -128,7 +126,9 @@ async def async_setup_entry(
 class HarmonyRemote(remote.RemoteEntity):
     """Remote representation used to control a Harmony device."""
 
-    def __init__(self, name, unique_id, host, activity, out_path, delay_secs):
+    def __init__(
+        self, name, unique_id, host, activity, out_path, delay_secs, activity_notify
+    ):
         """Initialize HarmonyRemote class."""
         self._name = name
         self.host = host
@@ -140,6 +140,7 @@ class HarmonyRemote(remote.RemoteEntity):
         self.delay_secs = delay_secs
         self._available = False
         self._unique_id = unique_id
+        self._activity_notify = activity_notify
 
     @property
     def activity_names(self):
@@ -162,16 +163,29 @@ class HarmonyRemote(remote.RemoteEntity):
         if ATTR_ACTIVITY in data:
             self.default_activity = data[ATTR_ACTIVITY]
 
+        if ATTR_ACTIVITY_NOTIFY in data:
+            self._activity_notify = data[ATTR_ACTIVITY_NOTIFY]
+            self._update_callbacks()
+
+    def _update_callbacks(self):
+        callbacks = {
+            "config_updated": self.new_config,
+            "connect": self.got_connected,
+            "disconnect": self.got_disconnected,
+            "new_activity_starting": None,
+            "new_activity": None,
+        }
+        if self._activity_notify:
+            callbacks["new_activity_starting"] = self.new_activity
+        else:
+            callbacks["new_activity"] = self.new_activity
+        self._client.callbacks = ClientCallbackType(**callbacks)
+
     async def async_added_to_hass(self):
         """Complete the initialization."""
         _LOGGER.debug("%s: Harmony Hub added", self._name)
         # Register the callbacks
-        self._client.callbacks = ClientCallbackType(
-            new_activity=self.new_activity,
-            config_updated=self.new_config,
-            connect=self.got_connected,
-            disconnect=self.got_disconnected,
-        )
+        self._update_callbacks()
 
         self.async_on_remove(
             async_dispatcher_connect(
