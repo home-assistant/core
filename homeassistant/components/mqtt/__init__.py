@@ -88,6 +88,8 @@ CONF_TLS_INSECURE = "tls_insecure"
 CONF_TLS_VERSION = "tls_version"
 
 CONF_COMMAND_TOPIC = "command_topic"
+CONF_TOPIC = "topic"
+CONF_AVAILABILITY = "availability"
 CONF_AVAILABILITY_TOPIC = "availability_topic"
 CONF_PAYLOAD_AVAILABLE = "payload_available"
 CONF_PAYLOAD_NOT_AVAILABLE = "payload_not_available"
@@ -203,9 +205,9 @@ CONFIG_SCHEMA = vol.Schema(
 
 SCHEMA_BASE = {vol.Optional(CONF_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA}
 
-MQTT_AVAILABILITY_SCHEMA = vol.Schema(
+MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_AVAILABILITY_TOPIC): valid_subscribe_topic,
+        vol.Exclusive(CONF_AVAILABILITY_TOPIC, "availability"): valid_subscribe_topic,
         vol.Optional(
             CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
         ): cv.string,
@@ -213,6 +215,30 @@ MQTT_AVAILABILITY_SCHEMA = vol.Schema(
             CONF_PAYLOAD_NOT_AVAILABLE, default=DEFAULT_PAYLOAD_NOT_AVAILABLE
         ): cv.string,
     }
+)
+
+MQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
+    {
+        vol.Exclusive(CONF_AVAILABILITY, "availability"): vol.All(
+            cv.ensure_list,
+            [
+                {
+                    vol.Optional(CONF_TOPIC): valid_subscribe_topic,
+                    vol.Optional(
+                        CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
+                    ): cv.string,
+                    vol.Optional(
+                        CONF_PAYLOAD_NOT_AVAILABLE,
+                        default=DEFAULT_PAYLOAD_NOT_AVAILABLE,
+                    ): cv.string,
+                }
+            ],
+        ),
+    }
+)
+
+MQTT_AVAILABILITY_SCHEMA = MQTT_AVAILABILITY_SINGLE_SCHEMA.extend(
+    MQTT_AVAILABILITY_LIST_SCHEMA.schema
 )
 
 MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
@@ -989,23 +1015,43 @@ class MqttAvailability(Entity):
         """Initialize the availability mixin."""
         self._availability_sub_state = None
         self._available = False
-
-        self._avail_config = config
+        self._availability_setup_from_config(config)
 
     async def async_added_to_hass(self) -> None:
         """Subscribe MQTT events."""
         await super().async_added_to_hass()
         await self._availability_subscribe_topics()
-        async_dispatcher_connect(self.hass, MQTT_CONNECTED, self.async_mqtt_connect)
-        async_dispatcher_connect(self.hass, MQTT_DISCONNECTED, self.async_mqtt_connect)
         self.async_on_remove(
             async_dispatcher_connect(self.hass, MQTT_CONNECTED, self.async_mqtt_connect)
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, MQTT_DISCONNECTED, self.async_mqtt_connect
+            )
         )
 
     async def availability_discovery_update(self, config: dict):
         """Handle updated discovery message."""
-        self._avail_config = config
+        self._availability_setup_from_config(config)
         await self._availability_subscribe_topics()
+
+    def _availability_setup_from_config(self, config):
+        """(Re)Setup."""
+        self._avail_topics = {}
+        if CONF_AVAILABILITY_TOPIC in config:
+            self._avail_topics[config[CONF_AVAILABILITY_TOPIC]] = {
+                CONF_PAYLOAD_AVAILABLE: config[CONF_PAYLOAD_AVAILABLE],
+                CONF_PAYLOAD_NOT_AVAILABLE: config[CONF_PAYLOAD_NOT_AVAILABLE],
+            }
+
+        if CONF_AVAILABILITY in config:
+            for avail in config[CONF_AVAILABILITY]:
+                self._avail_topics[avail[CONF_TOPIC]] = {
+                    CONF_PAYLOAD_AVAILABLE: avail[CONF_PAYLOAD_AVAILABLE],
+                    CONF_PAYLOAD_NOT_AVAILABLE: avail[CONF_PAYLOAD_NOT_AVAILABLE],
+                }
+
+        self._avail_config = config
 
     async def _availability_subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -1014,29 +1060,30 @@ class MqttAvailability(Entity):
         @log_messages(self.hass, self.entity_id)
         def availability_message_received(msg: Message) -> None:
             """Handle a new received MQTT availability message."""
-            if msg.payload == self._avail_config[CONF_PAYLOAD_AVAILABLE]:
+            topic = msg.topic
+            if msg.payload == self._avail_topics[topic][CONF_PAYLOAD_AVAILABLE]:
                 self._available = True
-            elif msg.payload == self._avail_config[CONF_PAYLOAD_NOT_AVAILABLE]:
+            elif msg.payload == self._avail_topics[topic][CONF_PAYLOAD_NOT_AVAILABLE]:
                 self._available = False
 
             self.async_write_ha_state()
 
+        topics = {}
+        for topic in self._avail_topics:
+            topics[f"availability_{topic}"] = {
+                "topic": topic,
+                "msg_callback": availability_message_received,
+                "qos": self._avail_config[CONF_QOS],
+            }
+
         self._availability_sub_state = await async_subscribe_topics(
-            self.hass,
-            self._availability_sub_state,
-            {
-                "availability_topic": {
-                    "topic": self._avail_config.get(CONF_AVAILABILITY_TOPIC),
-                    "msg_callback": availability_message_received,
-                    "qos": self._avail_config[CONF_QOS],
-                }
-            },
+            self.hass, self._availability_sub_state, topics,
         )
 
     @callback
     def async_mqtt_connect(self):
         """Update state on connection/disconnection to MQTT broker."""
-        if self.hass.is_running:
+        if not self.hass.is_stopping:
             self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self):
@@ -1048,10 +1095,9 @@ class MqttAvailability(Entity):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        availability_topic = self._avail_config.get(CONF_AVAILABILITY_TOPIC)
-        if not self.hass.data[DATA_MQTT].connected:
+        if not self.hass.data[DATA_MQTT].connected and not self.hass.is_stopping:
             return False
-        return availability_topic is None or self._available
+        return not self._avail_topics or self._available
 
 
 async def cleanup_device_registry(hass, device_id):
