@@ -38,13 +38,6 @@ DEFAULT_QUALITY = "high"
 
 VALID_QUALITIES = ["high", "medium", "low", "poor"]
 
-SCHEMA_SERVICE_SETLIGHTAUTO = vol.Schema(
-    {
-        # vol.Optional(ATTR_ENTITY_ID): cv.entity_domain(CAMERA_DOMAIN),
-        # vol.Required(ATTR_HOME_NAME): cv.string,
-    }
-)
-
 SCHEMA_SERVICE_SETPERSONSHOME = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_domain(CAMERA_DOMAIN),
@@ -140,12 +133,12 @@ class NetatmoCamera(Camera, NetatmoBase):
 
         self._data_classes.append({"name": data_class})
 
-        self._camera_id = camera_id
+        self._id = camera_id
         self._home_id = home_id
-        self._camera_name = self._data.get_camera(camera_id=camera_id).get("name")
-        self._name = f"{MANUFACTURER} {self._camera_name}"
-        self._camera_type = camera_type
-        self._unique_id = f"{self._camera_id}-{self._camera_type}"
+        self._device_name = self._data.get_camera(camera_id=camera_id).get("name")
+        self._name = f"{MANUFACTURER} {self._device_name}"
+        self._model = camera_type
+        self._unique_id = f"{self._id}-{self._model}"
         self._quality = quality
         self._vpnurl = None
         self._localurl = None
@@ -168,10 +161,7 @@ class NetatmoCamera(Camera, NetatmoBase):
             if not data.get("camera_id"):
                 return
 
-            if (
-                data["home_id"] == self._home_id
-                and data["camera_id"] == self._camera_id
-            ):
+            if data["home_id"] == self._home_id and data["camera_id"] == self._id:
                 if data["push_type"] in ["NACamera-off", "NACamera-disconnection"]:
                     self.is_streaming = False
                     self._status = "off"
@@ -198,38 +188,21 @@ class NetatmoCamera(Camera, NetatmoBase):
             else:
                 _LOGGER.error("Welcome/Presence VPN URL is None")
                 (self._vpnurl, self._localurl) = self._data.camera_urls(
-                    camera_id=self._camera_id
+                    camera_id=self._id
                 )
                 return None
         except requests.exceptions.RequestException as error:
             _LOGGER.info("Welcome/Presence URL changed: %s", error)
-            self._data.update_camera_urls(camera_id=self._camera_id)
-            (self._vpnurl, self._localurl) = self._data.camera_urls(
-                camera_id=self._camera_id
-            )
+            self._data.update_camera_urls(camera_id=self._id)
+            (self._vpnurl, self._localurl) = self._data.camera_urls(camera_id=self._id)
             return None
         return response.content
-
-    @property
-    def name(self):
-        """Return the name of this Netatmo camera device."""
-        return self._name
-
-    @property
-    def device_info(self):
-        """Return the device info for the sensor."""
-        return {
-            "identifiers": {(DOMAIN, self._camera_id)},
-            "name": self._camera_name,
-            "manufacturer": MANUFACTURER,
-            "model": MODELS[self._camera_type],
-        }
 
     @property
     def device_state_attributes(self):
         """Return the Netatmo-specific camera state attributes."""
         return {
-            "id": self._camera_id,
+            "id": self._id,
             "status": self._status,
             "sd_status": self._sd_status,
             "alim_status": self._alim_status,
@@ -266,14 +239,12 @@ class NetatmoCamera(Camera, NetatmoBase):
     def turn_off(self):
         """Turn off camera."""
         self._data.set_state(
-            home_id=self._home_id, camera_id=self._camera_id, monitoring="off"
+            home_id=self._home_id, camera_id=self._id, monitoring="off"
         )
 
     def turn_on(self):
         """Turn on camera."""
-        self._data.set_state(
-            home_id=self._home_id, camera_id=self._camera_id, monitoring="on"
-        )
+        self._data.set_state(home_id=self._home_id, camera_id=self._id, monitoring="on")
 
     async def stream_source(self):
         """Return the stream source."""
@@ -285,18 +256,13 @@ class NetatmoCamera(Camera, NetatmoBase):
     @property
     def model(self):
         """Return the camera model."""
-        return MODELS[self._camera_type]
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for this sensor."""
-        return self._unique_id
+        return MODELS[self._model]
 
     @callback
     def async_update_callback(self):
         """Update the entity's state."""
-        camera = self._data.get_camera(self._camera_id)
-        self._vpnurl, self._localurl = self._data.camera_urls(self._camera_id)
+        camera = self._data.get_camera(self._id)
+        self._vpnurl, self._localurl = self._data.camera_urls(self._id)
         self._status = camera.get("status")
         self._sd_status = camera.get("sd_status")
         self._alim_status = camera.get("alim_status")

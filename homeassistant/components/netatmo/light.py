@@ -79,12 +79,13 @@ class NetatmoLight(LightEntity, NetatmoBase):
         NetatmoBase.__init__(self, data_handler)
 
         self._data_classes.append({"name": data_class})
-        self._camera_id = camera_id
+        self._id = camera_id
         self._home_id = home_id
-        self._camera_type = camera_type
-        self._name = f"{MANUFACTURER} {self._data.get_camera(camera_id).get('name')}"
+        self._model = camera_type
+        self._device_name = self._data.get_camera(camera_id).get("name")
+        self._name = f"{MANUFACTURER} {self._device_name}"
         self._is_on = False
-        self._unique_id = f"{self._camera_id}-light"
+        self._unique_id = f"{self._id}-light"
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
@@ -102,7 +103,7 @@ class NetatmoLight(LightEntity, NetatmoBase):
 
             if (
                 data["home_id"] == self._home_id
-                and data["camera_id"] == self._camera_id
+                and data["camera_id"] == self._id
                 and data["push_type"] == "NOC-light_mode"
             ):
                 if data["sub_type"] in ["off", "auto"]:
@@ -117,26 +118,6 @@ class NetatmoLight(LightEntity, NetatmoBase):
         self.hass.bus.async_listen("netatmo_event", handle_event)
 
     @property
-    def name(self):
-        """Return the display name of this light."""
-        return self._name
-
-    @property
-    def device_info(self):
-        """Return the device info for the sensor."""
-        return {
-            "identifiers": {(DOMAIN, self._camera_id)},
-            "name": self._name,
-            "manufacturer": MANUFACTURER,
-            "model": self._camera_type,
-        }
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for this light."""
-        return self._unique_id
-
-    @property
     def is_on(self):
         """Return true if light is on."""
         return self._is_on
@@ -145,20 +126,17 @@ class NetatmoLight(LightEntity, NetatmoBase):
         """Turn camera floodlight on."""
         _LOGGER.debug("Turn camera '%s' on", self._name)
         self._data.set_state(
-            home_id=self._home_id, camera_id=self._camera_id, floodlight="on",
+            home_id=self._home_id, camera_id=self._id, floodlight="on",
         )
 
     def turn_off(self, **kwargs):
         """Turn camera floodlight into auto mode."""
         _LOGGER.debug("Turn camera '%s' off", self._name)
         self._data.set_state(
-            home_id=self._home_id, camera_id=self._camera_id, floodlight="auto",
+            home_id=self._home_id, camera_id=self._id, floodlight="auto",
         )
 
     @callback
     def async_update_callback(self):
         """Update the entity's state."""
-        if self._data.get_light_state(self._camera_id) == "on":
-            self._is_on = True
-        else:
-            self._is_on = False
+        self._is_on = True if self._data.get_light_state(self._id) == "on" else False

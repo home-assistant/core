@@ -216,34 +216,31 @@ class NetatmoSensor(NetatmoBase):
 
         self._data_classes.append({"name": data_class})
 
-        self._module_id = module_info["_id"]
-        self._station_id = module_info.get("main_device", self._module_id)
+        self._id = module_info["_id"]
+        self._station_id = module_info.get("main_device", self._id)
 
         station = self._data.get_station(self._station_id)
-        device = self._data.get_module(self._module_id)
+        device = self._data.get_module(self._id)
 
         if not device:
             # Assume it's a station if module can't be found
             device = station
 
         if device["type"] in ("NHC", "NAMain"):
-            self.module_name = module_info["station_name"]
+            self._device_name = module_info["station_name"]
         else:
-            self.module_name = f"{station['station_name']} {module_info.get('module_name', device['type'])}"
+            self._device_name = f"{station['station_name']} {module_info.get('module_name', device['type'])}"
 
-        self._name = f"{MANUFACTURER} {self.module_name} {SENSOR_TYPES[sensor_type][0]}"
+        self._name = (
+            f"{MANUFACTURER} {self._device_name} {SENSOR_TYPES[sensor_type][0]}"
+        )
         self.type = sensor_type
         self._state = None
         self._device_class = SENSOR_TYPES[self.type][3]
         self._icon = SENSOR_TYPES[self.type][2]
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
-        self._module_type = device["type"]
-        self._unique_id = f"{self._module_id}-{self.type}"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+        self._model = device["type"]
+        self._unique_id = f"{self._id}-{self.type}"
 
     @property
     def icon(self):
@@ -256,16 +253,6 @@ class NetatmoSensor(NetatmoBase):
         return self._device_class
 
     @property
-    def device_info(self):
-        """Return the device info for the sensor."""
-        return {
-            "identifiers": {(DOMAIN, self._module_id)},
-            "name": self.module_name,
-            "manufacturer": MANUFACTURER,
-            "model": MODELS[self._module_type],
-        }
-
-    @property
     def state(self):
         """Return the state of the device."""
         return self._state
@@ -274,11 +261,6 @@ class NetatmoSensor(NetatmoBase):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for this sensor."""
-        return self._unique_id
 
     @property
     def available(self):
@@ -296,14 +278,12 @@ class NetatmoSensor(NetatmoBase):
             return
 
         data = self._data.get_last_data(station_id=self._station_id, exclude=3600).get(
-            self._module_id
+            self._id
         )
 
         if data is None:
             if self._state:
-                _LOGGER.debug(
-                    "No data found for %s (%s)", self.module_name, self._module_id
-                )
+                _LOGGER.debug("No data found for %s (%s)", self._device_name, self._id)
                 _LOGGER.debug("data: %s", self._data)
             self._state = None
             return
@@ -329,7 +309,7 @@ class NetatmoSensor(NetatmoBase):
                 self._state = data["battery_percent"]
             elif self.type == "battery_lvl":
                 self._state = data["battery_vp"]
-            elif self.type == "battery_vp" and self._module_type == MODULE_TYPE_WIND:
+            elif self.type == "battery_vp" and self._model == MODULE_TYPE_WIND:
                 if data["battery_vp"] >= 5590:
                     self._state = "Full"
                 elif data["battery_vp"] >= 5180:
@@ -340,7 +320,7 @@ class NetatmoSensor(NetatmoBase):
                     self._state = "Low"
                 else:
                     self._state = "Very Low"
-            elif self.type == "battery_vp" and self._module_type == MODULE_TYPE_RAIN:
+            elif self.type == "battery_vp" and self._model == MODULE_TYPE_RAIN:
                 if data["battery_vp"] >= 5500:
                     self._state = "Full"
                 elif data["battery_vp"] >= 5000:
@@ -351,7 +331,7 @@ class NetatmoSensor(NetatmoBase):
                     self._state = "Low"
                 else:
                     self._state = "Very Low"
-            elif self.type == "battery_vp" and self._module_type == MODULE_TYPE_INDOOR:
+            elif self.type == "battery_vp" and self._model == MODULE_TYPE_INDOOR:
                 if data["battery_vp"] >= 5640:
                     self._state = "Full"
                 elif data["battery_vp"] >= 5280:
@@ -362,7 +342,7 @@ class NetatmoSensor(NetatmoBase):
                     self._state = "Low"
                 else:
                     self._state = "Very Low"
-            elif self.type == "battery_vp" and self._module_type == MODULE_TYPE_OUTDOOR:
+            elif self.type == "battery_vp" and self._model == MODULE_TYPE_OUTDOOR:
                 if data["battery_vp"] >= 5500:
                     self._state = "Full"
                 elif data["battery_vp"] >= 5000:
@@ -460,7 +440,7 @@ class NetatmoSensor(NetatmoBase):
                     self._state = "Unhealthy"
         except KeyError:
             if self._state:
-                _LOGGER.debug("No %s data found for %s", self.type, self.module_name)
+                _LOGGER.debug("No %s data found for %s", self.type, self._device_name)
             self._state = None
             return
 
@@ -497,7 +477,7 @@ class NetatmoPublicSensor(NetatmoBase):
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
         self._show_on_map = area[CONF_SHOW_ON_MAP]
         self._unique_id = f"{self._name.replace(' ', '-')}"
-        self._module_type = PUBLIC
+        self._model = PUBLIC
 
     @property
     def name(self):
@@ -521,7 +501,7 @@ class NetatmoPublicSensor(NetatmoBase):
             "identifiers": {(DOMAIN, self._area_name)},
             "name": self._area_name,
             "manufacturer": MANUFACTURER,
-            "model": MODELS[self._module_type],
+            "model": MODELS[self._model],
         }
 
     @property
