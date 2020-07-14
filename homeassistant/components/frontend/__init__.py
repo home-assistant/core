@@ -85,6 +85,8 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
+            cv.deprecated(CONF_EXTRA_HTML_URL, invalidation_version="0.115"),
+            cv.deprecated(CONF_EXTRA_HTML_URL_ES5, invalidation_version="0.115"),
             {
                 vol.Optional(CONF_FRONTEND_REPO): cv.isdir,
                 vol.Optional(CONF_THEMES): vol.Schema(
@@ -100,7 +102,7 @@ CONFIG_SCHEMA = vol.Schema(
                 # We no longer use these options.
                 vol.Optional(CONF_EXTRA_HTML_URL_ES5): cv.match_all,
                 vol.Optional(CONF_JS_VERSION): cv.match_all,
-            }
+            },
         )
     },
     extra=vol.ALLOW_EXTRA,
