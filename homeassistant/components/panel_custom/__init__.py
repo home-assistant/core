@@ -47,6 +47,7 @@ def url_validator(value):
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
+            cv.deprecated(CONF_WEBCOMPONENT_PATH, invalidation_version="0.115"),
             cv.ensure_list,
             [
                 vol.All(
