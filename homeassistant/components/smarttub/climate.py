@@ -17,6 +17,8 @@ from .const import DOMAIN, SMARTTUB_CONTROLLER
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up climate entity for the thermostat in the tub."""
