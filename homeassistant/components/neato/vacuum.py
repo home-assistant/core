@@ -152,7 +152,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
         self._clean_error_time = None
         self._launched_from = None
         self._battery_level = None
-        self._robot_boundaries = {}
+        self._robot_boundaries = []
         self._robot_stats = None
 
     def update(self):
@@ -241,14 +241,27 @@ class NeatoConnectedVacuum(StateVacuumEntity):
             and self._robot_maps[self._robot_serial]
         ):
             allmaps = self._robot_maps[self._robot_serial]
+            _LOGGER.debug("Found the following maps for '%s': %s", self._name, allmaps)
+            self._robot_boundaries = []  # Reset boundaries before refreshing boundaries
             for maps in allmaps:
                 try:
-                    self._robot_boundaries = self.robot.get_map_boundaries(
-                        maps["id"]
-                    ).json()
+                    robot_boundaries = self.robot.get_map_boundaries(maps["id"]).json()
                 except NeatoRobotException as ex:
                     _LOGGER.error("Could not fetch map boundaries: %s", ex)
-                    self._robot_boundaries = {}
+                    return
+
+                _LOGGER.debug(
+                    "Boundaries for robot '%s' in map '%s': %s",
+                    self._name,
+                    maps["name"],
+                    robot_boundaries,
+                )
+                self._robot_boundaries += robot_boundaries["data"]["boundaries"]
+                _LOGGER.debug(
+                    "List of boundaries for '%s': %s",
+                    self._name,
+                    self._robot_boundaries,
+                )
 
     @property
     def name(self):
@@ -323,6 +336,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
             info["manufacturer"] = self._robot_stats["battery"]["vendor"]
             info["model"] = self._robot_stats["model"]
             info["sw_version"] = self._robot_stats["firmware"]
+        return info
 
     def start(self):
         """Start cleaning or resume cleaning."""
@@ -376,7 +390,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
         """Zone cleaning service call."""
         boundary_id = None
         if zone is not None:
-            for boundary in self._robot_boundaries["data"]["boundaries"]:
+            for boundary in self._robot_boundaries:
                 if zone in boundary["name"]:
                     boundary_id = boundary["id"]
             if boundary_id is None:
