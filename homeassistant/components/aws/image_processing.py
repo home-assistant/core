@@ -49,12 +49,14 @@ _LOGGER = logging.getLogger(__name__)
 DATETIME_FORMAT = "%Y-%m-%d_%H:%M:%S"
 
 
-def get_valid_filename(name: str) -> str:
+async def get_valid_filename(name):
     """Parse input to ensure valid filename characters."""
     return re.sub(r"(?u)[^-\w.]", "", str(name).strip().replace(" ", "_"))
 
 
-def save_image(self, image, entity_name, objects, directory, save_timestamp=False):
+async def save_image(
+    self, image, entity_name, objects, directory, save_timestamp=False
+):
     """Draw the bounding boxes and save the image."""
     try:
         img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
@@ -83,7 +85,8 @@ def save_image(self, image, entity_name, objects, directory, save_timestamp=Fals
             text="X",
             fill=box_colour,
         )
-    filename = get_valid_filename(entity_name).lower()
+    filename = await get_valid_filename(entity_name)
+    filename = filename.lower()
     latest_save_path = f"{directory}/{filename}_latest.jpg"
     img.save(latest_save_path)
     if save_timestamp:
@@ -93,7 +96,7 @@ def save_image(self, image, entity_name, objects, directory, save_timestamp=Fals
         _LOGGER.info("Rekognition saved file %s", timestamp_save_path)
 
 
-def compute_box(box, decimal_places):
+async def compute_box(box, decimal_places):
     """Compute AWS BoundingBox coordinates to be PIL compatible."""
     box_data = {}
     # Get bounding box
@@ -126,7 +129,7 @@ def compute_box(box, decimal_places):
     return box_data
 
 
-def get_objects(response, confidence):
+async def get_objects(response, confidence):
     """Parse the data, returning detected objects only."""
     objects = []
     labels = []
@@ -139,7 +142,7 @@ def get_objects(response, confidence):
                     continue
                 # Extract and format instance data
                 box = instance["BoundingBox"]
-                box_data = compute_box(box, decimal_places)
+                box_data = await compute_box(box, decimal_places)
                 box_data.update(
                     {
                         "name": label["Name"].lower(),
@@ -331,7 +334,7 @@ class RekognitionObjectEntity(ImageProcessingEntity):
     async def compute_objects(self, client, image):
         """Detect labels in image and parse response."""
         detect_labels = await client.detect_labels(Image={"Bytes": image})
-        objects, labels = get_objects(detect_labels, self.confidence)
+        objects, labels = await get_objects(detect_labels, self.confidence)
         return objects, labels
 
     async def async_process_image(self, image):
@@ -344,7 +347,7 @@ class RekognitionObjectEntity(ImageProcessingEntity):
         ) as client:
             objects, labels = await self.compute_objects(client, image)
             if len(objects) > 0 and self.conf_save_file_folder:
-                save_image(
+                await save_image(
                     self,
                     image,
                     self.name,
@@ -378,6 +381,7 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
         self.detection_attributes = entity_config.get(
             CONF_DETECTION_ATTRIBUTES, "DEFAULT"
         )
+        self.valid_collection_id = False
         if name:
             self._name = name
         else:
@@ -403,6 +407,13 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
         """Return the polling state."""
         return False
 
+    async def init_collection(self, client):
+        """Create AWS image collection if doesnt exist"""
+        collection_id_req = await client.list_collections(MaxResults=99)
+        if self.collection_id not in collection_id_req["CollectionIds"]:
+            await client.create_collection(CollectionId=self.collection_id)
+        self.valid_collection_id = True
+
     async def compute_faces(self, client, image):
         """Detect faces in image and parse response."""
         index_faces = await client.index_faces(
@@ -411,11 +422,12 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
             ExternalImageId=self.camera,
             DetectionAttributes=[self.detection_attributes],
         )
+        _LOGGER.error(index_faces)
         known_faces = []
         detected_faces = index_faces.get("FaceRecords", [])
         for face_record in detected_faces:
             known_face = {}
-            box = compute_box(face_record["Face"]["BoundingBox"], 3)
+            box = await compute_box(face_record["Face"]["BoundingBox"], 3)
             known_face[ATTR_NAME] = "Unknown"
             known_face[ATTR_CONFIDENCE] = face_record["Face"]["Confidence"]
             known_face["bounding_box"] = box["bounding_box"]
@@ -439,6 +451,7 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
                     FaceMatchThreshold=self.confidence,
                     MaxFaces=1,
                 )
+                _LOGGER.error(search_faces)
                 for face_match in search_faces["FaceMatches"]:
                     image_id = face_match["Face"]["ExternalImageId"]
                     # Don't accidentally match against comparison images
@@ -446,6 +459,7 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
                         continue
                     known_face[ATTR_NAME] = image_id
                     known_face[ATTR_CONFIDENCE] = face_match["Face"]["Confidence"]
+            _LOGGER.error(known_face)
             known_faces.append(known_face)
         return known_faces
 
@@ -457,9 +471,11 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
         async with self.session.create_client(
             self._service, **self.session_config
         ) as client:
+            if not self.valid_collection_id:
+                await self.init_collection(client)
             known_faces = await self.compute_faces(client, image)
             if len(known_faces) > 0 and self.conf_save_file_folder:
-                save_image(
+                await save_image(
                     self,
                     image,
                     self.name,
