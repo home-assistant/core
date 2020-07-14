@@ -2,7 +2,6 @@
 import asyncio
 import json
 import logging
-import re
 
 from aiohttp import client_exceptions
 from pyControl4.account import C4Account
@@ -82,13 +81,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         controller_href
     )
 
-    result = re.search("_(.*)_", controller_name)
-    entry_data[CONF_DIRECTOR_MODEL] = result.group(1).upper()
+    control4, model, mac_address = controller_name.split("_", 3)
+    entry_data[CONF_DIRECTOR_MODEL] = model.upper()
 
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, controller_name)},
+        connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
         manufacturer="Control4",
         name=controller_name,
         model=entry_data[CONF_DIRECTOR_MODEL],

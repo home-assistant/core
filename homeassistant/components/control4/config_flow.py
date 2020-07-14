@@ -17,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
     CONF_CONTROLLER_NAME,
@@ -38,15 +39,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): str,
     }
 )
-
-
-@callback
-def configured_instances(hass):
-    """Return a set of configured Control4 instances."""
-    return {
-        entry.data.get(CONF_CONTROLLER_NAME)
-        for entry in hass.config_entries.async_entries(DOMAIN)
-    }
 
 
 class Control4Validator:
@@ -128,7 +120,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             controller_name = hub.return_controller_name()
-            await self.async_set_unique_id(controller_name)
+            control4, model, mac = controller_name.split("_", 3)
+            formatted_mac = format_mac(mac)
+            await self.async_set_unique_id(formatted_mac)
             self._abort_if_unique_id_configured()
 
             if errors == {}:
