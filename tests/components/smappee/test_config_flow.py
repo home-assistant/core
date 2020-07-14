@@ -33,7 +33,7 @@ async def test_show_zeroconf_confirm_form(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
 
-async def test_show_zerconf_form(hass) -> None:
+async def test_show_zerconf_form(hass):
     """Test that the zeroconf confirmation form is served."""
     flow = config_flow.SmappeeFlowHandler()
     flow.hass = hass
@@ -64,6 +64,26 @@ async def test_zeroconf_no_data(hass):
     result = await flow.async_step_zeroconf()
 
     assert result["reason"] == "connection_error"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+
+
+async def test_zerconf_wrong_mdns(hass):
+    """Test we abort if unsupported mDNS name is discovered."""
+    flow = config_flow.SmappeeFlowHandler()
+    flow.hass = hass
+    flow.context = {"source": SOURCE_ZEROCONF}
+    result = await flow.async_step_zeroconf(
+        {
+            "host": "192.168.0.0",
+            "port": 22,
+            "hostname": "example.local.",
+            "type": "_ssh._tcp.local.",
+            "name": "Example._ssh._tcp.local.",
+            "properties": {"_raw": {}},
+        }
+    )
+
+    assert result["reason"] == "invalid mDNS"
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
