@@ -590,9 +590,8 @@ class ScriptCapabilities(AlexaEntity):
 
     def interfaces(self):
         """Yield the supported interfaces."""
-        can_cancel = bool(self.entity.attributes.get("can_cancel"))
         return [
-            AlexaSceneController(self.entity, supports_deactivation=can_cancel),
+            AlexaSceneController(self.entity, supports_deactivation=True),
             Alexa(self.hass),
         ]
 
