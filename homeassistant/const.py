@@ -479,6 +479,7 @@ POWER_VOLT_AMPERE: Final = "VA"
 # Power units
 POWER_WATT: Final = "W"
 POWER_KILO_WATT: Final = "kW"
+POWER_MEGA_WATT: Final = "MW"
 POWER_BTU_PER_HOUR: Final = "BTU/h"
 
 # Reactive power units
