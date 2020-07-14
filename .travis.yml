@@ -24,7 +24,7 @@ env:
   - TOX_ARGS="-- --test-group-count 4 --test-group 3"
   - TOX_ARGS="-- --test-group-count 4 --test-group 4"
 
-matrix:
+jobs:
   fast_finish: true
   include:
     - python: "3.7.1"
