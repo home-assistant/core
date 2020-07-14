@@ -2,9 +2,38 @@
 from homeassistant import config_entries, setup
 from homeassistant.components.control4.const import DOMAIN
 
-from tests.async_mock import patch, AsyncMock
+from tests.async_mock import patch, AsyncMock, MagicMock
 import datetime
 from pyControl4.error_handling import Unauthorized
+
+
+def _get_mock_c4_account(
+    getAccountControllers={
+        "controllerCommonName": "control4_model_00AA00AA00AA",
+        "href": "https://apis.control4.com/account/v3/rest/accounts/000000",
+        "name": "Name",
+    },
+    getDirectorBearerToken={
+        "token": "token",
+        "token_expiration": datetime.datetime(2020, 7, 15, 13, 50, 15, 26940),
+    },
+):
+    c4_account_mock = AsyncMock()
+    type(c4_account_mock).getAccountControllers = AsyncMock(
+        return_value=getAccountControllers
+    )
+    type(c4_account_mock).getDirectorBearerToken = AsyncMock(
+        return_value=getDirectorBearerToken
+    )
+
+    return c4_account_mock
+
+
+def _get_mock_c4_director(getAllItemInfo={}):
+    c4_director_mock = AsyncMock()
+    type(c4_director_mock).getAllItemInfo = AsyncMock(return_value=getAllItemInfo)
+
+    return c4_director_mock
 
 
 async def test_form(hass):
@@ -16,21 +45,14 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
+    c4_account = _get_mock_c4_account()
+    c4_director = _get_mock_c4_director()
     with patch(
-        "pyControl4.account.C4Account.getAccountControllers",
-        return_value={
-            "controllerCommonName": "control4_model_00AA00AA00AA",
-            "href": "https://apis.control4.com/account/v3/rest/accounts/000000",
-            "name": "Name",
-        },
+        "homeassistant.components.control4.config_flow.C4Account",
+        return_value=c4_account,
     ), patch(
-        "pyControl4.account.C4Account.getDirectorBearerToken",
-        return_value={
-            "token": "token",
-            "token_expiration": datetime.datetime(2020, 7, 15, 13, 50, 15, 26940),
-        },
-    ), patch(
-        "pyControl4.director.C4Director.getAllItemInfo", return_value={},
+        "homeassistant.components.control4.config_flow.C4Director",
+        return_value=c4_director,
     ), patch(
         "homeassistant.components.control4.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -65,7 +87,8 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "pyControl4.account.C4Account.getAccountControllers", side_effect=Unauthorized,
+        "homeassistant.components.control4.config_flow.C4Account",
+        side_effect=Unauthorized("message"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -90,7 +113,8 @@ async def test_form_cannot_connect(hass):
         "homeassistant.components.control4.config_flow.Control4Validator.authenticate",
         return_value=True,
     ), patch(
-        "pyControl4.director.C4Director.getAllItemInfo", side_effect=Unauthorized,
+        "homeassistant.components.control4.config_flow.C4Director",
+        side_effect=Unauthorized("message"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
