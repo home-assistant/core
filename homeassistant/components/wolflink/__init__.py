@@ -2,6 +2,7 @@
 from _datetime import timedelta
 import logging
 
+from httpcore._exceptions import ConnectError
 from wolf_smartset.token_auth import InvalidAuth
 from wolf_smartset.wolf_client import WolfClient
 
@@ -9,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import COORDINATOR, DEVICE_ID, DOMAIN, PARAMETERS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,10 +29,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     password = entry.data["password"]
     device_name = entry.data["device_name"]
     _LOGGER.debug("Setting up wolflink integration for device: %s", device_name)
-    hub = WolfClient(username, password)
+    wolf_client = WolfClient(username, password)
 
     try:
-        systems = await hub.fetch_system_list()
+        systems = await wolf_client.fetch_system_list()
     except InvalidAuth:
         _LOGGER.error("Could not set up wolflink integration due to wrong credentials")
         return False
@@ -39,15 +40,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     filtered_systems = [device for device in systems if device.name == device_name]
     gateway_id = filtered_systems[0].gateway
     device_id = filtered_systems[0].id
-    parameters = await fetch_parameters(hub, gateway_id, device_id)
+    parameters = await fetch_parameters(wolf_client, gateway_id, device_id)
 
     async def async_update_data():
         """Update all stored entities for Wolf SmartSet."""
         try:
-            values = await hub.fetch_value(gateway_id, device_id, parameters)
+            values = await wolf_client.fetch_value(gateway_id, device_id, parameters)
             return {v.value_id: v.value for v in values}
-        except Exception as exception:
+        except ConnectError as exception:
             raise UpdateFailed(f"Error communicating with API: {exception}")
+        except InvalidAuth:
+            raise UpdateFailed("Invalid authentication during update.")
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -60,8 +63,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await coordinator.async_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = {}
-    hass.data[DOMAIN][entry.entry_id]["parameters"] = parameters
-    hass.data[DOMAIN][entry.entry_id]["coordinator"] = coordinator
+    hass.data[DOMAIN][entry.entry_id][PARAMETERS] = parameters
+    hass.data[DOMAIN][entry.entry_id][COORDINATOR] = coordinator
+    hass.data[DOMAIN][entry.entry_id][DEVICE_ID] = device_id
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "sensor")

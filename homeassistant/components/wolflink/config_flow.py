@@ -28,21 +28,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize with empty username and password."""
         self.username = None
         self.password = None
-        self.hub = None
         self.fetched_systems = None
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step to get connection parameters."""
         errors = {}
         if user_input is not None:
+            wolf_client = WolfClient(
+                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+            )
             try:
-                self.hub = WolfClient(
-                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-                )
-                self.fetched_systems = await self.hub.fetch_system_list()
-                self.username = user_input[CONF_USERNAME]
-                self.password = user_input[CONF_PASSWORD]
-                return await self.async_step_device()
+                self.fetched_systems = await wolf_client.fetch_system_list()
             except ConnectError:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -50,6 +46,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                self.username = user_input[CONF_USERNAME]
+                self.password = user_input[CONF_PASSWORD]
+                return await self.async_step_device()
         return self.async_show_form(
             step_id="user", data_schema=USER_SCHEMA, errors=errors
         )

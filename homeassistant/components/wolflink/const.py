@@ -2,6 +2,10 @@
 
 DOMAIN = "wolflink"
 
+COORDINATOR = "coordinator"
+PARAMETERS = "parameters"
+DEVICE_ID = "device_id"
+
 STATES = {
     "Ein": "ein",
     "Deaktiviert": "deaktiviert",

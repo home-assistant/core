@@ -11,7 +11,13 @@ from wolf_smartset.models import (
     Temperature,
 )
 
-from homeassistant.components.wolflink.const import DOMAIN, STATES
+from homeassistant.components.wolflink.const import (
+    COORDINATOR,
+    DEVICE_ID,
+    DOMAIN,
+    PARAMETERS,
+    STATES,
+)
 from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
@@ -27,23 +33,24 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up all entries for Wolf Platform."""
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
-    parameters = hass.data[DOMAIN][config_entry.entry_id]["parameters"]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
+    parameters = hass.data[DOMAIN][config_entry.entry_id][PARAMETERS]
+    device_id = hass.data[DOMAIN][config_entry.entry_id][DEVICE_ID]
 
     entities = []
     for parameter in parameters:
         if isinstance(parameter, Temperature):
-            entities.append(WolfLinkTemperature(coordinator, parameter))
+            entities.append(WolfLinkTemperature(coordinator, parameter, device_id))
         if isinstance(parameter, Pressure):
-            entities.append(WolfLinkPressure(coordinator, parameter))
+            entities.append(WolfLinkPressure(coordinator, parameter, device_id))
         if isinstance(parameter, PercentageParameter):
-            entities.append(WolfLinkPercentage(coordinator, parameter))
+            entities.append(WolfLinkPercentage(coordinator, parameter, device_id))
         if isinstance(parameter, ListItemParameter):
-            entities.append(WolfLinkState(coordinator, parameter))
+            entities.append(WolfLinkState(coordinator, parameter, device_id))
         if isinstance(parameter, HoursParameter):
-            entities.append(WolfLinkHours(coordinator, parameter))
+            entities.append(WolfLinkHours(coordinator, parameter, device_id))
         if isinstance(parameter, SimpleParameter):
-            entities.append(WolfLinkSensor(coordinator, parameter))
+            entities.append(WolfLinkSensor(coordinator, parameter, device_id))
 
     async_add_entities(entities, True)
 
@@ -51,10 +58,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class WolfLinkSensor(Entity):
     """Base class for all Wolf entities."""
 
-    def __init__(self, coordinator, wolf_object: Parameter):
+    def __init__(self, coordinator, wolf_object: Parameter, device_id):
         """Initialize."""
         self.coordinator = coordinator
         self.wolf_object = wolf_object
+        self.device_id = device_id
 
     @property
     def name(self):
@@ -78,12 +86,12 @@ class WolfLinkSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return self.wolf_object.parameter_id
+        return f"{self.device_id}:{self.wolf_object.parameter_id}"
 
     @property
     def available(self):
         """Return True if entity is available."""
-        return bool(self.state)
+        return self.coordinator.last_update_success
 
     @property
     def should_poll(self):
