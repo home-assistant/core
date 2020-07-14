@@ -83,7 +83,7 @@ async def test_zerconf_wrong_mdns(hass):
         }
     )
 
-    assert result["reason"] == "invalid mDNS"
+    assert result["reason"] == "invalid_mdns"
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 

@@ -7,7 +7,8 @@
         },
         "abort": {
             "authorize_url_timeout": "Timeout generating authorize url.",
-            "missing_configuration": "The component is not configured. Please follow the documentation."
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "invalid_mdns": "Unsupported device for the Smappee integration."
         }
     }
 }
