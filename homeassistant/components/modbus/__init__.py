@@ -50,6 +50,7 @@ from .const import (
     CONF_STATUS_REGISTER_TYPE,
     CONF_STOPBITS,
     DEFAULT_HUB,
+    DEFAULT_SCAN_INTERVAL,
     DEFAULT_SLAVE,
     MODBUS_DOMAIN as DOMAIN,
     SERVICE_WRITE_COIL,
@@ -109,7 +110,9 @@ COVERS_SCHEMA = vol.All(
         {
             vol.Required(CONF_HUB): cv.string,
             vol.Required(CONF_NAME): cv.string,
-            vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
+            vol.Optional(
+                CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+            ): cv.positive_int,
             vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_SLAVE, default=DEFAULT_SLAVE): cv.positive_int,
             vol.Optional(CONF_STATE_CLOSED, default=0): cv.positive_int,

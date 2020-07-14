@@ -1,4 +1,5 @@
 """Support for Modbus covers."""
+from datetime import timedelta
 import logging
 from typing import Any, Dict, Optional
 
@@ -6,7 +7,13 @@ from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
 
 from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN, CoverEntity
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_SLAVE
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    CONF_SCAN_INTERVAL,
+    CONF_SLAVE,
+)
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import (
     ConfigType,
@@ -70,6 +77,7 @@ class ModbusCover(CoverEntity, RestoreEntity):
         self._state_opening = config[CONF_STATE_OPENING]
         self._status_register = config.get(CONF_STATUS_REGISTER)
         self._status_register_type = config[CONF_STATUS_REGISTER_TYPE]
+        self._scan_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
         self._value = None
         self._available = True
 
@@ -95,6 +103,10 @@ class ModbusCover(CoverEntity, RestoreEntity):
         if not state:
             return
         self._value = state.state
+
+        async_track_time_interval(
+            self.hass, lambda arg: self.update(), self._scan_interval
+        )
 
     @property
     def device_class(self) -> Optional[str]:
@@ -131,6 +143,16 @@ class ModbusCover(CoverEntity, RestoreEntity):
         """Return if the cover is closed or not."""
         return self._value == self._state_closed
 
+    @property
+    def should_poll(self):
+        """Return True if entity has to be polled for state.
+
+        False if entity pushes its state to HA.
+        """
+
+        # Handle polling directly in this entity
+        return False
+
     def open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         if self._coil is not None:
@@ -151,6 +173,8 @@ class ModbusCover(CoverEntity, RestoreEntity):
             self._value = self._read_coil()
         else:
             self._value = self._read_status_register()
+
+        self.async_write_ha_state()
 
     def _read_status_register(self) -> Optional[int]:
         """Read status register using the Modbus hub slave."""
