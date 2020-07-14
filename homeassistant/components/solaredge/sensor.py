@@ -236,10 +236,12 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
         self.data = {}
 
         for key, value in overview.items():
-            if key in ["lifeTimeData", "lastYearData", "lastMonthData", "lastDayData"]:
-                data = value["energy"]
+            if key in ["lifeTimeData", "lastYearData"]:
+                data = float("{:.2f}".format(value["energy"]/1000000))
+            elif key in ["lastDayData", "lastMonthData"]:
+                data = float("{:.2f}".format(value["energy"]/1000))
             elif key in ["currentPower"]:
-                data = value["power"]
+                data =  float("{:.2f}".format(value["power"]/1000))
             else:
                 data = value
             self.data[key] = data
