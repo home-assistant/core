@@ -19,7 +19,7 @@ CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
 
-async def test_show_zeroconf_confirm_form(hass):
+async def test_show_zeroconf_confirm_form(hass, aiohttp_client, aioclient_mock):
     """Test that the zeroconf confirmation form is served."""
     flow = config_flow.SmappeeFlowHandler()
     flow.hass = hass
@@ -33,7 +33,7 @@ async def test_show_zeroconf_confirm_form(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
 
-async def test_show_zerconf_form(hass):
+async def test_show_zerconf_form(hass, aiohttp_client, aioclient_mock):
     """Test that the zeroconf confirmation form is served."""
     flow = config_flow.SmappeeFlowHandler()
     flow.hass = hass
@@ -57,17 +57,18 @@ async def test_show_zerconf_form(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
 
-async def test_zeroconf_no_data(hass):
+async def test_zeroconf_no_data(hass, aiohttp_client, aioclient_mock):
     """Test we abort if zeroconf provides no data."""
     flow = config_flow.SmappeeFlowHandler()
     flow.hass = hass
+    flow.context = {"source": SOURCE_ZEROCONF}
     result = await flow.async_step_zeroconf(None)
 
     assert result["reason"] == "connection_error"
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
-async def test_zerconf_wrong_mdns(hass):
+async def test_zerconf_wrong_mdns(hass, aiohttp_client, aioclient_mock):
     """Test we abort if unsupported mDNS name is discovered."""
     flow = config_flow.SmappeeFlowHandler()
     flow.hass = hass
