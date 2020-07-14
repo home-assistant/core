@@ -429,6 +429,7 @@ class _ScriptRun:
             repeat_vars = {"repeat": {"first": iteration == 1, "index": iteration}}
             if extra_vars:
                 repeat_vars["repeat"].update(extra_vars)
+            # pylint: disable=protected-access
             await self._async_run_script(
                 self._script._get_repeat_script(self._step),
                 # Add repeat to variables. Override if it already exists in case of
