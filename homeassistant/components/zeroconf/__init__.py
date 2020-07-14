@@ -200,7 +200,7 @@ def setup(hass, config):
 
         # If we can handle it as a HomeKit discovery, we do that here.
         if service_type == HOMEKIT_TYPE:
-            handle_homekit(hass, info)
+            discovery_was_forwarded = handle_homekit(hass, info)
             # Continue on here as homekit_controller
             # still needs to get updates on devices
             # so it can see when the 'c#' field is updated.
@@ -209,7 +209,8 @@ def setup(hass, config):
             # if the device is already paired in order to avoid
             # offering a second discovery for the same device
             if (
-                HOMEKIT_PROPERTIES in info
+                discovery_was_forwarded
+                and HOMEKIT_PROPERTIES in info
                 and HOMEKIT_PAIRED_STATUS_FLAG in info[HOMEKIT_PROPERTIES]
             ):
                 try:
