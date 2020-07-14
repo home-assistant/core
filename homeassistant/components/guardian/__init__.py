@@ -166,13 +166,6 @@ class GuardianEntity(Entity):
         """Return True if entity has to be polled for state."""
         return False
 
-    async def _async_internal_added_to_hass(self):
-        """Perform additional, internal tasks when the entity is about to be added.
-
-        This should be extended by Guardian platforms.
-        """
-        raise NotImplementedError
-
     @callback
     def _async_update_from_latest_data(self):
         """Update the entity.
@@ -218,6 +211,13 @@ class PairedSensorEntity(GuardianEntity):
         """Return the unique ID of the entity."""
         return f"{self._paired_sensor_uid}_{self._kind}"
 
+    async def async_added_to_hass(self) -> None:
+        """Perform tasks when the entity is added."""
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self._async_update_state_callback)
+        )
+        self._async_update_from_latest_data()
+
 
 class ValveControllerEntity(GuardianEntity):
     """Define a Guardian valve controller entity."""
@@ -249,6 +249,13 @@ class ValveControllerEntity(GuardianEntity):
     def unique_id(self):
         """Return the unique ID of the entity."""
         return f"{self._valve_controller_uid}_{self._kind}"
+
+    async def _async_internal_added_to_hass(self):
+        """Perform additional, internal tasks when the entity is about to be added.
+
+        This should be extended by Guardian platforms.
+        """
+        raise NotImplementedError
 
     @callback
     def async_add_coordinator_update_listener(self, api: str) -> None:

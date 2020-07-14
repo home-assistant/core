@@ -1,40 +1,55 @@
 """Sensors for the Elexa Guardian integration."""
-from typing import Callable, Dict
+from typing import Callable, Dict, Optional
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT, TIME_MINUTES
+from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_FAHRENHEIT,
+    TIME_MINUTES,
+    UNIT_PERCENTAGE,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import ValveControllerEntity
+from . import PairedSensorEntity, ValveControllerEntity
 from .const import (
+    API_SENSOR_PAIRED_SENSOR_STATUS,
     API_SYSTEM_DIAGNOSTICS,
     API_SYSTEM_ONBOARD_SENSOR_STATUS,
     DATA_COORDINATOR,
     DOMAIN,
 )
 
+SENSOR_KIND_BATTERY = "battery"
 SENSOR_KIND_TEMPERATURE = "temperature"
 SENSOR_KIND_UPTIME = "uptime"
-SENSORS = [
-    (
-        SENSOR_KIND_TEMPERATURE,
-        "Internal Temperature",
+
+SENSOR_ATTRS_MAP = {
+    SENSOR_KIND_BATTERY: ("Battery", DEVICE_CLASS_BATTERY, None, UNIT_PERCENTAGE),
+    SENSOR_KIND_TEMPERATURE: (
+        "Temperature",
         DEVICE_CLASS_TEMPERATURE,
         None,
         TEMP_FAHRENHEIT,
     ),
-    (SENSOR_KIND_UPTIME, "Uptime", None, "mdi:timer-outline", TIME_MINUTES),
-]
+    SENSOR_KIND_UPTIME: ("Uptime", None, "mdi:timer", TIME_MINUTES),
+}
+
+PAIRED_SENSOR_SENSORS = [SENSOR_KIND_BATTERY, SENSOR_KIND_TEMPERATURE]
+VALVE_CONTROLLER_SENSORS = [SENSOR_KIND_TEMPERATURE, SENSOR_KIND_UPTIME]
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
     """Set up Guardian switches based on a config entry."""
-    async_add_entities(
-        [
-            ValveControllerGuardianSensor(
+    sensors = []
+
+    for kind in VALVE_CONTROLLER_SENSORS:
+        name, device_class, icon, unit = SENSOR_ATTRS_MAP[kind]
+        sensors.append(
+            ValveControllerSensor(
                 entry,
                 hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id],
                 kind,
@@ -43,13 +58,66 @@ async def async_setup_entry(
                 icon,
                 unit,
             )
-            for kind, name, device_class, icon, unit in SENSORS
-        ],
-        True,
-    )
+        )
+
+    for ps_coordinator in hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+        API_SENSOR_PAIRED_SENSOR_STATUS
+    ].values():
+        for kind in PAIRED_SENSOR_SENSORS:
+            name, device_class, icon, unit = SENSOR_ATTRS_MAP[kind]
+            sensors.append(
+                PairedSensorSensor(
+                    entry, ps_coordinator, kind, name, device_class, icon, unit
+                )
+            )
+
+    async_add_entities(sensors, True)
 
 
-class ValveControllerGuardianSensor(ValveControllerEntity):
+class PairedSensorSensor(PairedSensorEntity):
+    """Define a binary sensor related to a Guardian valve controller."""
+
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        coordinator: DataUpdateCoordinator,
+        kind: str,
+        name: str,
+        device_class: Optional[str],
+        icon: Optional[str],
+        unit: Optional[str],
+    ) -> None:
+        """Initialize."""
+        super().__init__(entry, coordinator, kind, name, device_class, icon)
+
+        self._state = None
+        self._unit = unit
+
+    @property
+    def available(self) -> bool:
+        """Return whether the entity is available."""
+        return self._coordinator.last_update_success
+
+    @property
+    def state(self) -> str:
+        """Return the sensor state."""
+        return self._state
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement of this entity, if any."""
+        return self._unit
+
+    @callback
+    def _async_update_from_latest_data(self) -> None:
+        """Update the entity."""
+        if self._kind == SENSOR_KIND_BATTERY:
+            self._state = self._coordinator.data["battery"]
+        elif self._kind == SENSOR_KIND_TEMPERATURE:
+            self._state = self._coordinator.data["temperature"]
+
+
+class ValveControllerSensor(ValveControllerEntity):
     """Define a generic Guardian sensor."""
 
     def __init__(
@@ -58,9 +126,9 @@ class ValveControllerGuardianSensor(ValveControllerEntity):
         coordinators: Dict[str, DataUpdateCoordinator],
         kind: str,
         name: str,
-        device_class: str,
-        icon: str,
-        unit: str,
+        device_class: Optional[str],
+        icon: Optional[str],
+        unit: Optional[str],
     ) -> None:
         """Initialize."""
         super().__init__(entry, coordinators, kind, name, device_class, icon)

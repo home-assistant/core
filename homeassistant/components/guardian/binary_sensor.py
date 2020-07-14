@@ -1,5 +1,5 @@
 """Binary sensors for the Elexa Guardian integration."""
-from typing import Callable
+from typing import Callable, Dict, Optional
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
@@ -9,6 +9,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import PairedSensorEntity, ValveControllerEntity
 from .const import (
@@ -25,15 +26,14 @@ SENSOR_KIND_AP_INFO = "ap_enabled"
 SENSOR_KIND_LEAK_DETECTED = "leak_detected"
 SENSOR_KIND_MOVED = "moved"
 
-PAIRED_SENSOR_SENSORS = [
-    (SENSOR_KIND_LEAK_DETECTED, "Leak Detected", DEVICE_CLASS_MOISTURE),
-    (SENSOR_KIND_MOVED, "Recently Moved", DEVICE_CLASS_MOVING),
-]
+SENSOR_ATTRS_MAP = {
+    SENSOR_KIND_AP_INFO: ("Onboard AP Enabled", DEVICE_CLASS_CONNECTIVITY),
+    SENSOR_KIND_LEAK_DETECTED: ("Leak Detected", DEVICE_CLASS_MOISTURE),
+    SENSOR_KIND_MOVED: ("Recently Moved", DEVICE_CLASS_MOVING),
+}
 
-VALVE_CONTROLLER_SENSORS = [
-    (SENSOR_KIND_AP_INFO, "Onboard AP Enabled", DEVICE_CLASS_CONNECTIVITY),
-    (SENSOR_KIND_LEAK_DETECTED, "Leak Detected", DEVICE_CLASS_MOISTURE),
-]
+PAIRED_SENSOR_SENSORS = [SENSOR_KIND_LEAK_DETECTED, SENSOR_KIND_MOVED]
+VALVE_CONTROLLER_SENSORS = [SENSOR_KIND_AP_INFO, SENSOR_KIND_LEAK_DETECTED]
 
 
 async def async_setup_entry(
@@ -42,7 +42,8 @@ async def async_setup_entry(
     """Set up Guardian switches based on a config entry."""
     sensors = []
 
-    for kind, name, device_class in VALVE_CONTROLLER_SENSORS:
+    for kind in VALVE_CONTROLLER_SENSORS:
+        name, device_class = SENSOR_ATTRS_MAP[kind]
         sensors.append(
             ValveControllerBinarySensor(
                 entry,
@@ -57,7 +58,8 @@ async def async_setup_entry(
     for ps_coordinator in hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
         API_SENSOR_PAIRED_SENSOR_STATUS
     ].values():
-        for kind, name, device_class in PAIRED_SENSOR_SENSORS:
+        for kind in PAIRED_SENSOR_SENSORS:
+            name, device_class = SENSOR_ATTRS_MAP[kind]
             sensors.append(
                 PairedSensorBinarySensor(
                     entry, ps_coordinator, kind, name, device_class, None,
@@ -70,6 +72,20 @@ async def async_setup_entry(
 class PairedSensorBinarySensor(PairedSensorEntity, BinarySensorEntity):
     """Define a binary sensor related to a Guardian valve controller."""
 
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        coordinator: DataUpdateCoordinator,
+        kind: str,
+        name: str,
+        device_class: Optional[str],
+        icon: Optional[str],
+    ) -> None:
+        """Initialize."""
+        super().__init__(entry, coordinator, kind, name, device_class, icon)
+
+        self._is_on = True
+
     @property
     def available(self) -> bool:
         """Return whether the entity is available."""
@@ -78,13 +94,7 @@ class PairedSensorBinarySensor(PairedSensorEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return True if the binary sensor is on."""
-        return True
-
-    async def _async_internal_added_to_hass(self) -> None:
-        """Add an API listener."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self._async_update_state_callback)
-        )
+        return self._is_on
 
     @callback
     def _async_update_from_latest_data(self) -> None:
@@ -97,6 +107,20 @@ class PairedSensorBinarySensor(PairedSensorEntity, BinarySensorEntity):
 
 class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
     """Define a binary sensor related to a Guardian valve controller."""
+
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        coordinators: Dict[str, DataUpdateCoordinator],
+        kind: str,
+        name: str,
+        device_class: Optional[str],
+        icon: Optional[str],
+    ) -> None:
+        """Initialize."""
+        super().__init__(entry, coordinators, kind, name, device_class, icon)
+
+        self._is_on = True
 
     @property
     def available(self) -> bool:
@@ -112,7 +136,7 @@ class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return True if the binary sensor is on."""
-        return self._coordinators[API_WIFI_STATUS].data["ap_enabled"]
+        return self._is_on
 
     async def _async_internal_added_to_hass(self) -> None:
         """Add an API listener."""
