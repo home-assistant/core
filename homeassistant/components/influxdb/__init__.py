@@ -145,9 +145,7 @@ def validate_version_specific_config(conf: Dict) -> Dict:
 _CUSTOMIZE_ENTITY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
-        vol.Optional(CONF_IGNORE_ATTRIBUTES, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
-        ),
+        vol.Optional(CONF_IGNORE_ATTRIBUTES): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 
@@ -191,7 +189,7 @@ def _generate_event_to_json(conf: Dict) -> Callable[[Dict], str]:
     tags_attributes = conf.get(CONF_TAGS_ATTRIBUTES)
     default_measurement = conf.get(CONF_DEFAULT_MEASUREMENT)
     override_measurement = conf.get(CONF_OVERRIDE_MEASUREMENT)
-    global_ignore_attributes = set(conf.get(CONF_IGNORE_ATTRIBUTES))
+    global_ignore_attributes = set(conf[CONF_IGNORE_ATTRIBUTES])
     component_config = EntityValues(
         conf[CONF_COMPONENT_CONFIG],
         conf[CONF_COMPONENT_CONFIG_DOMAIN],
