@@ -17,15 +17,16 @@ from homeassistant.const import (
     CONF_ALIAS,
     CONF_CHOOSE,
     CONF_CONDITION,
+    CONF_CONDITIONS,
     CONF_CONTINUE_ON_TIMEOUT,
     CONF_COUNT,
+    CONF_DEFAULT,
     CONF_DELAY,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
-    CONF_IF,
     CONF_MODE,
     CONF_REPEAT,
     CONF_SCENE,
@@ -484,13 +485,23 @@ class _ScriptRun:
     async def _async_choose_step(self):
         """Choose a sequence."""
         # pylint: disable=protected-access
-        for conditions, script in await self._script._async_get_choose_data(self._step):
+        choose_data = await self._script._async_get_choose_data(self._step)
+
+        for conditions, script in choose_data["choices"]:
             if all(condition(self._hass, self._variables) for condition in conditions):
                 task = self._hass.async_create_task(
                     script.async_run(self._variables, self._context)
                 )
                 await self._async_run_long_action(task)
                 break
+
+        else:
+            if choose_data["default"]:
+                await self._async_run_long_action(
+                    self._hass.async_create_task(
+                        choose_data["default"].async_run(self._variables, self._context)
+                    )
+                )
 
 
 class _QueuedScriptRun(_ScriptRun):
@@ -729,7 +740,7 @@ class Script:
         for idx, choice in enumerate(action[CONF_CHOOSE], start=1):
             conditions = [
                 await self._async_get_condition(config)
-                for config in choice.get(CONF_IF, [])
+                for config in choice.get(CONF_CONDITIONS, [])
             ]
             sub_script = Script(
                 self._hass,
@@ -742,7 +753,22 @@ class Script:
                 self._chain_change_listener, sub_script
             )
             choices.append((conditions, sub_script))
-        return choices
+
+        if CONF_DEFAULT in action:
+            default_script = Script(
+                self._hass,
+                action[CONF_DEFAULT],
+                f"{self.name}: {step_name}: default",
+                script_mode=SCRIPT_MODE_PARALLEL,
+                logger=self._logger,
+            )
+            default_script.change_listener = partial(
+                self._chain_change_listener, default_script
+            )
+        else:
+            default_script = None
+
+        return {"choices": choices, "default": default_script}
 
     async def _async_get_choose_data(self, step):
         choose_data = self._choose_data.get(step)

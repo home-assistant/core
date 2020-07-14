@@ -40,8 +40,10 @@ from homeassistant.const import (
     CONF_BELOW,
     CONF_CHOOSE,
     CONF_CONDITION,
+    CONF_CONDITIONS,
     CONF_CONTINUE_ON_TIMEOUT,
     CONF_COUNT,
+    CONF_DEFAULT,
     CONF_DELAY,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -51,7 +53,6 @@ from homeassistant.const import (
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
     CONF_FOR,
-    CONF_IF,
     CONF_PLATFORM,
     CONF_REPEAT,
     CONF_SCAN_INTERVAL,
@@ -932,7 +933,7 @@ ZONE_CONDITION_SCHEMA = vol.Schema(
 AND_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONDITION): "and",
-        vol.Required("conditions"): vol.All(
+        vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
             # pylint: disable=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
@@ -943,7 +944,7 @@ AND_CONDITION_SCHEMA = vol.Schema(
 OR_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONDITION): "or",
-        vol.Required("conditions"): vol.All(
+        vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
             # pylint: disable=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
@@ -954,7 +955,7 @@ OR_CONDITION_SCHEMA = vol.Schema(
 NOT_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONDITION): "not",
-        vol.Required("conditions"): vol.All(
+        vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
             # pylint: disable=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
@@ -1040,11 +1041,14 @@ _SCRIPT_CHOOSE_SCHEMA = vol.Schema(
             ensure_list,
             [
                 {
-                    vol.Optional(CONF_IF): vol.All(ensure_list, [CONDITION_SCHEMA]),
+                    vol.Required(CONF_CONDITIONS): vol.All(
+                        ensure_list, [CONDITION_SCHEMA]
+                    ),
                     vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
                 }
             ],
         ),
+        vol.Optional(CONF_DEFAULT): SCRIPT_SCHEMA,
     }
 )
 

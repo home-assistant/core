@@ -886,21 +886,21 @@ async def test_choose(hass, var, result):
         {
             "choose": [
                 {
-                    "if": {
+                    "conditions": {
                         "condition": "template",
                         "value_template": "{{ var == 1 }}",
                     },
                     "sequence": {"event": event, "event_data": {"choice": "first"}},
                 },
                 {
-                    "if": {
+                    "conditions": {
                         "condition": "template",
                         "value_template": "{{ var == 2 }}",
                     },
                     "sequence": {"event": event, "event_data": {"choice": "second"}},
                 },
-                {"sequence": {"event": event, "event_data": {"choice": "default"}}},
-            ]
+            ],
+            "default": {"event": event, "event_data": {"choice": "default"}},
         }
     )
     script_obj = script.Script(hass, sequence)
