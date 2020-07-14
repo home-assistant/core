@@ -1,0 +1,12 @@
+{
+    "config": {
+        "flow_title": "Konfiguracja ENOcean",
+        "step": {
+            "detect": {
+                "data": {
+                    "path": "\u015acie\u017cka urz\u0105dzenia USB"
+                }
+            }
+        }
+    }
+}

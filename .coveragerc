@@ -634,6 +634,7 @@ omit =
     homeassistant/components/point/*
     homeassistant/components/poolsense/__init__.py
     homeassistant/components/poolsense/sensor.py
+    homeassistant/components/poolsense/binary_sensor.py
     homeassistant/components/prezzibenzina/sensor.py
     homeassistant/components/proliphix/climate.py
     homeassistant/components/prometheus/*

@@ -14,7 +14,6 @@ from zeroconf import (
     ServiceInfo,
     ServiceStateChange,
     Zeroconf,
-    log as zeroconf_log,
 )
 
 from homeassistant import util
@@ -71,6 +70,7 @@ async def async_get_instance(hass):
 
 def _get_instance(hass, default_interface=False):
     """Create an instance."""
+    logging.getLogger("zeroconf").setLevel(logging.NOTSET)
     args = [InterfaceChoice.Default] if default_interface else []
     zeroconf = HaZeroconf(*args)
 
@@ -115,8 +115,6 @@ class HaZeroconf(Zeroconf):
 
 def setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
-    # Zeroconf sets its log level to WARNING, reset it to allow filtering by the logger component.
-    zeroconf_log.setLevel(logging.NOTSET)
     zeroconf = hass.data[DOMAIN] = _get_instance(
         hass, config.get(DOMAIN, {}).get(CONF_DEFAULT_INTERFACE)
     )
@@ -200,7 +198,7 @@ def setup(hass, config):
 
         # If we can handle it as a HomeKit discovery, we do that here.
         if service_type == HOMEKIT_TYPE:
-            handle_homekit(hass, info)
+            discovery_was_forwarded = handle_homekit(hass, info)
             # Continue on here as homekit_controller
             # still needs to get updates on devices
             # so it can see when the 'c#' field is updated.
@@ -209,7 +207,8 @@ def setup(hass, config):
             # if the device is already paired in order to avoid
             # offering a second discovery for the same device
             if (
-                HOMEKIT_PROPERTIES in info
+                discovery_was_forwarded
+                and HOMEKIT_PROPERTIES in info
                 and HOMEKIT_PAIRED_STATUS_FLAG in info[HOMEKIT_PROPERTIES]
             ):
                 try:

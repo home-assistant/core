@@ -14,6 +14,7 @@
                     "email": "Adresse e-mail",
                     "password": "Mot de passe"
                 },
+                "description": "[%key:common::config_flow::description%]",
                 "title": "PoolSense"
             }
         }
