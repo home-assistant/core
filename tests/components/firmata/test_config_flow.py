@@ -23,9 +23,8 @@ async def test_import_cannot_connect_pymata(hass: HomeAssistant) -> None:
             data={CONF_SERIAL_PORT: "/dev/nonExistent"},
         )
 
-    assert result["type"] == "abort"
-    assert result["reason"] == "cannot_connect"
-    await hass.async_block_till_done()
+        assert result["type"] == "abort"
+        assert result["reason"] == "cannot_connect"
 
 
 async def test_import_cannot_connect_serial(hass: HomeAssistant) -> None:
@@ -42,9 +41,8 @@ async def test_import_cannot_connect_serial(hass: HomeAssistant) -> None:
             data={CONF_SERIAL_PORT: "/dev/nonExistent"},
         )
 
-    assert result["type"] == "abort"
-    assert result["reason"] == "cannot_connect"
-    await hass.async_block_till_done()
+        assert result["type"] == "abort"
+        assert result["reason"] == "cannot_connect"
 
 
 async def test_import_cannot_connect_serial_timeout(hass: HomeAssistant) -> None:
@@ -61,9 +59,8 @@ async def test_import_cannot_connect_serial_timeout(hass: HomeAssistant) -> None
             data={CONF_SERIAL_PORT: "/dev/nonExistent"},
         )
 
-    assert result["type"] == "abort"
-    assert result["reason"] == "cannot_connect"
-    await hass.async_block_till_done()
+        assert result["type"] == "abort"
+        assert result["reason"] == "cannot_connect"
 
 
 async def test_import(hass: HomeAssistant) -> None:
