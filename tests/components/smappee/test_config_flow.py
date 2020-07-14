@@ -57,6 +57,16 @@ async def test_show_zerconf_form(hass) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
 
+async def test_zeroconf_no_data(hass):
+    """Test we abort if zeroconf provides no data."""
+    flow = config_flow.SmappeeFlowHandler()
+    flow.hass = hass
+    result = await flow.async_step_zeroconf()
+
+    assert result["reason"] == "connection_error"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+
+
 async def test_full_flow(hass, aiohttp_client, aioclient_mock):
     """Check full flow."""
     assert await setup.async_setup_component(
