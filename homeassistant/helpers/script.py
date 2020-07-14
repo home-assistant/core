@@ -429,16 +429,12 @@ class _ScriptRun:
             repeat_vars = {"repeat": {"first": iteration == 1, "index": iteration}}
             if extra_vars:
                 repeat_vars["repeat"].update(extra_vars)
-            task = self._hass.async_create_task(
-                # pylint: disable=protected-access
-                self._script._get_repeat_script(self._step).async_run(
-                    # Add repeat to variables. Override if it already exists in case of
-                    # nested calls.
-                    {**(self._variables or {}), **repeat_vars},
-                    self._context,
-                )
+            await self._async_run_script(
+                self._script._get_repeat_script(self._step),
+                # Add repeat to variables. Override if it already exists in case of
+                # nested calls.
+                {**(self._variables or {}), **repeat_vars},
             )
-            await self._async_run_long_action(task)
 
         if CONF_COUNT in repeat:
             count = repeat[CONF_COUNT]
@@ -489,19 +485,19 @@ class _ScriptRun:
 
         for conditions, script in choose_data["choices"]:
             if all(condition(self._hass, self._variables) for condition in conditions):
-                task = self._hass.async_create_task(
-                    script.async_run(self._variables, self._context)
-                )
-                await self._async_run_long_action(task)
-                break
+                await self._async_run_script(script)
+                return
 
-        else:
-            if choose_data["default"]:
-                await self._async_run_long_action(
-                    self._hass.async_create_task(
-                        choose_data["default"].async_run(self._variables, self._context)
-                    )
-                )
+        if choose_data["default"]:
+            await self._async_run_script(choose_data["default"])
+
+    async def _async_run_script(self, script, variables=None):
+        """Execute a script."""
+        await self._async_run_long_action(
+            self._hass.async_create_task(
+                script.async_run(variables or self._variables, self._context)
+            )
+        )
 
 
 class _QueuedScriptRun(_ScriptRun):
