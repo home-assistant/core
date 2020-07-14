@@ -38,7 +38,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, State, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import color as color_util
 
@@ -100,14 +100,12 @@ class LightGroup(light.LightEntity):
         """Register callbacks."""
 
         @callback
-        def async_state_changed_listener(
-            entity_id: str, old_state: State, new_state: State
-        ):
+        def async_state_changed_listener(*_):
             """Handle child updates."""
             self.async_schedule_update_ha_state(True)
 
         assert self.hass is not None
-        self._async_unsub_state_changed = async_track_state_change(
+        self._async_unsub_state_changed = async_track_state_change_event(
             self.hass, self._entity_ids, async_state_changed_listener
         )
         await self.async_update()
