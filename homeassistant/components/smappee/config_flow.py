@@ -26,7 +26,7 @@ class SmappeeFlowHandler(
         """Return logger."""
         return logging.getLogger(__name__)
 
-    async def async_step_zeroconf(self, discovery_info=None):
+    async def async_step_zeroconf(self, discovery_info):
         """Handle zeroconf discovery."""
 
         if not discovery_info[CONF_HOSTNAME].startswith("Smappee1"):
