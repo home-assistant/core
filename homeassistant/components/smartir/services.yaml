@@ -1,0 +1,4 @@
+check_updates:
+  description: Check for SmartIR updates.
+update_component:
+  description: Update SmartIR component.

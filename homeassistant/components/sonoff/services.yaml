@@ -1,0 +1,12 @@
+send_command:
+  description: Sends a command to a device.
+  fields:
+    device:
+      description: Device ID to send command to.
+      example: '1000123456'
+    cmd:
+      description: A single command to send.
+      example: 'switch'
+
+update_consumption:
+  description: Power consumption update of all Pow devices.

@@ -8,12 +8,8 @@
 # Install python3 and pip3
 # pip install ffmpy yattag python-crontab
 
-import os
-import time
 import argparse
-from shutil import copyfile
-from ffmpy import FFmpeg
-from yattag import Doc, indent
+from yattag import Doc
 doc, tag, text = Doc().tagtext()
 import sqlite3
 from sqlite3 import Error

@@ -1,0 +1,12 @@
+{
+  "domain": "sonoff",
+  "name": "Sonoff",
+  "documentation": "https://github.com/AlexxIT/SonoffLAN",
+  "dependencies": [],
+  "codeowners": [
+    "AlexxIT"
+  ],
+  "requirements": [
+    "pycryptodome>=3.6.6"
+  ]
+}
