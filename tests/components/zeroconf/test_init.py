@@ -215,6 +215,25 @@ async def test_homekit_invalid_paring_status(hass, mock_zeroconf):
     assert mock_config_flow.mock_calls[0][1][0] == "tado"
 
 
+async def test_homekit_not_paired(hass, mock_zeroconf):
+    """Test that an not paired device is sent to homekit_controller."""
+    with patch.dict(
+        zc_gen.ZEROCONF, {zeroconf.HOMEKIT_TYPE: ["homekit_controller"]}, clear=True
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow, patch.object(
+        zeroconf, "HaServiceBrowser", side_effect=service_update_mock
+    ) as mock_service_browser:
+        mock_zeroconf.get_service_info.side_effect = get_homekit_info_mock(
+            "this_will_not_match_any_integration", HOMEKIT_STATUS_UNPAIRED
+        )
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+
+    assert len(mock_service_browser.mock_calls) == 1
+    assert len(mock_config_flow.mock_calls) == 1
+    assert mock_config_flow.mock_calls[0][1][0] == "homekit_controller"
+
+
 async def test_info_from_service_non_utf8(hass):
     """Test info_from_service handles non UTF-8 property keys and values correctly."""
     service_type = "_test._tcp.local."
