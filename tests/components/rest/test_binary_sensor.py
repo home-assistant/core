@@ -144,6 +144,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                         "username": "my username",
                         "password": "my password",
                         "headers": {"Accept": "application/json"},
+                        "proxy_url": "http://localhost:3128",
                     }
                 },
             )
@@ -171,6 +172,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                         "username": "my username",
                         "password": "my password",
                         "headers": {"Accept": "application/json"},
+                        "proxy_url": "http://localhost:3128",
                     }
                 },
             )
