@@ -50,6 +50,7 @@ CONFIG_SCHEMA = vol.Schema(
             cv.ensure_list,
             [
                 vol.All(
+                    cv.deprecated(CONF_WEBCOMPONENT_PATH, invalidation_version="0.115"),
                     vol.Schema(
                         {
                             vol.Required(CONF_COMPONENT_NAME): cv.string,
