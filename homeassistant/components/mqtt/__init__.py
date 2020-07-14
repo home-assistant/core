@@ -612,10 +612,10 @@ async def async_setup_entry(hass, entry):
 class Subscription:
     """Class to hold data about an active subscription."""
 
-    topic = attr.ib(type=str)
-    callback = attr.ib(type=MessageCallbackType)
-    qos = attr.ib(type=int, default=0)
-    encoding = attr.ib(type=str, default="utf-8")
+    topic: str = attr.ib()
+    callback: MessageCallbackType = attr.ib()
+    qos: int = attr.ib(default=0)
+    encoding: str = attr.ib(default="utf-8")
 
 
 class MQTT:
