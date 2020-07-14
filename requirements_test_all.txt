@@ -984,7 +984,7 @@ ya_ma==0.3.8
 zeroconf==0.27.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.41
+zha-quirks==0.0.42
 
 # homeassistant.components.zha
 zigpy-cc==0.4.4
@@ -999,4 +999,4 @@ zigpy-xbee==0.12.1
 zigpy-zigate==0.6.1
 
 # homeassistant.components.zha
-zigpy==0.21.0
+zigpy==0.22.1
