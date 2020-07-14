@@ -31,7 +31,9 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAss
         "homeassistant.components.bond.fan.async_setup_entry"
     ) as mock_fan_async_setup_entry, patch(
         "homeassistant.components.bond.light.async_setup_entry"
-    ) as mock_light_async_setup_entry:
+    ) as mock_light_async_setup_entry, patch(
+        "homeassistant.components.bond.switch.async_setup_entry"
+    ) as mock_switch_async_setup_entry:
         result = await setup_bond_entity(
             hass,
             config_entry,
@@ -61,6 +63,7 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAss
     assert len(mock_cover_async_setup_entry.mock_calls) == 1
     assert len(mock_fan_async_setup_entry.mock_calls) == 1
     assert len(mock_light_async_setup_entry.mock_calls) == 1
+    assert len(mock_switch_async_setup_entry.mock_calls) == 1
 
 
 async def test_unload_config_entry(hass: HomeAssistant):
