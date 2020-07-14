@@ -152,12 +152,12 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Select options for serial connection."""
         errors = {}
         if user_input is not None:
-            self._port = user_input[CONF_PORT]
+            if self.usb_already_configured(user_input[CONF_PORT]):
+                errors["base"] = "already_configured"
+            else:
+                self._port = user_input[CONF_PORT]
 
-            try:
-                if self.usb_already_configured(user_input[CONF_PORT]):
-                    errors["base"] = "already_configured"
-                else:
+                try:
                     data = {
                         CONF_PORT: self._port,
                         CONF_HOST: self._host,
@@ -171,13 +171,13 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
                     return await self.async_step_setup_options()
 
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except CannotCommunicate:
-                errors["base"] = "cannot_communicate"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                except CannotConnect:
+                    errors["base"] = "cannot_connect"
+                except CannotCommunicate:
+                    errors["base"] = "cannot_communicate"
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
 
         schema = vol.Schema({vol.Required(CONF_PORT): str})
         return self.async_show_form(
@@ -272,10 +272,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def host_already_configured(self, host, port):
         """See if we already have a DSMR Host entry matching user input configured."""
         for entry in self._async_current_entries():
-            if (
-                entry.data[CONF_HOST] == self._host
-                and entry.data[CONF_PORT] == self._port
-            ):
+            if entry.data[CONF_HOST] == host and entry.data[CONF_PORT] == port:
                 return True
 
         return False

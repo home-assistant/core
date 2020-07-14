@@ -448,3 +448,179 @@ async def test_config_flow_manual_usb_no_gas(hass, mock_connection_factory):
     conf_entries = hass.config_entries.async_entries(DOMAIN)
     await hass.config_entries.async_unload(conf_entries[0].entry_id)
     await hass.async_block_till_done()
+
+
+async def test_config_flow_manual_usb_already_configured(hass, mock_connection_factory):
+    """
+    Test flow manually initialized by user.
+
+    With USB configuration.
+    """
+    (connection_factory, transport, protocol) = mock_connection_factory
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TYPE: "Serial", CONF_DSMR_VERSION: TEST_DSMR_VERSION},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_serial"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PORT: TEST_USB_PATH}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_options"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PRECISION: TEST_PRECISION,
+            CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
+            CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
+            CONF_POWER_WATT: TEST_POWER_WATT,
+        },
+    )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == TEST_USB_PATH
+    assert result["data"] == {
+        CONF_HOST: None,
+        CONF_PORT: TEST_USB_PATH,
+        CONF_DSMR_VERSION: TEST_DSMR_VERSION,
+        CONF_PRECISION: TEST_PRECISION,
+        CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
+        CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
+        CONF_POWER_WATT: TEST_POWER_WATT,
+        CONF_SERIAL_ID: TEST_SERIALNUMBER,
+        CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
+    }
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TYPE: "Serial", CONF_DSMR_VERSION: TEST_DSMR_VERSION},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_serial"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PORT: TEST_USB_PATH}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_serial"
+    assert result["errors"] == {"base": "already_configured"}
+
+    conf_entries = hass.config_entries.async_entries(DOMAIN)
+    await hass.config_entries.async_unload(conf_entries[0].entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_config_flow_manual_host_already_configured(
+    hass, mock_connection_factory
+):
+    """
+    Test flow manually initialized by user.
+
+    With Host configuration.
+    """
+    (connection_factory, transport, protocol) = mock_connection_factory
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TYPE: "Host", CONF_DSMR_VERSION: TEST_DSMR_VERSION},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_host"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_options"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PRECISION: TEST_PRECISION,
+            CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
+            CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
+            CONF_POWER_WATT: TEST_POWER_WATT,
+        },
+    )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == f"{TEST_HOST}:{TEST_PORT}"
+    assert result["data"] == {
+        CONF_HOST: TEST_HOST,
+        CONF_PORT: TEST_PORT,
+        CONF_DSMR_VERSION: TEST_DSMR_VERSION,
+        CONF_PRECISION: TEST_PRECISION,
+        CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
+        CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
+        CONF_POWER_WATT: TEST_POWER_WATT,
+        CONF_SERIAL_ID: TEST_SERIALNUMBER,
+        CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
+    }
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TYPE: "Host", CONF_DSMR_VERSION: TEST_DSMR_VERSION},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_host"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_host"
+    assert result["errors"] == {"base": "already_configured"}
+
+    conf_entries = hass.config_entries.async_entries(DOMAIN)
+    await hass.config_entries.async_unload(conf_entries[0].entry_id)
+    await hass.async_block_till_done()
