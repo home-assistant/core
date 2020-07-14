@@ -57,7 +57,7 @@ class Control4Validator:
         self.host = host
         self.username = username
         self.password = password
-        self.account = C4Account(self.username, self.password)
+        self.account = None
         self.controller_name = None
         self.director_bearer_token = None
         self.director = None
@@ -65,6 +65,7 @@ class Control4Validator:
     async def authenticate(self) -> bool:
         """Test if we can authenticate with the Control4 account API."""
         try:
+            self.account = C4Account(self.username, self.password)
             # Authenticate with Control4 account
             await self.account.getAccountBearerToken()
 
