@@ -79,8 +79,8 @@ class Control4Validator:
             self.director = C4Director(self.host, self.director_bearer_token)
             await self.director.getAllItemInfo()
             return True
-        except (Unauthorized, ClientError, asyncioTimeoutError) as exception:
-            _LOGGER.error(exception)
+        except (Unauthorized, ClientError, asyncioTimeoutError):
+            _LOGGER.error("Failed to connect to the Control4 controller")
             return False
 
     def return_controller_unique_id(self) -> str:
