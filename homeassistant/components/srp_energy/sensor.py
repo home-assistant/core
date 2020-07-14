@@ -1,3 +1,4 @@
+"""Support for SRP Energy Sensor."""
 from datetime import datetime, timedelta
 import logging
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
@@ -22,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up the SRP Energy Usage sensor."""
     api = hass.data[DOMAIN]
 
     async def async_update_data():
@@ -46,7 +48,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     previous_daily_usage += float(kwh)
                 return previous_daily_usage
         except (TimeoutError):
-            raise UpdateFailed(f"Timeout communicating with API")
+            raise UpdateFailed("Timeout communicating with API")
         except (ConnectError, HTTPError, Timeout, ValueError, TypeError) as err:
             raise UpdateFailed(f"Error communicating with API: {err}")
 
@@ -69,6 +71,7 @@ class SrpEntity(entity.Entity):
     """Implementation of a Srp Energy Usage sensor."""
 
     def __init__(self, coordinator):
+        """Initialize the SrpEntity class."""
         self._name = SENSOR_NAME
         self.type = SENSOR_TYPE
         self.coordinator = coordinator

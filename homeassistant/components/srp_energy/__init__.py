@@ -1,5 +1,4 @@
 """The SRP Energy integration."""
-from datetime import timedelta
 import asyncio
 import logging
 from srpenergy.client import SrpEnergyClient
