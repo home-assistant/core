@@ -20,3 +20,5 @@ CONF_DIRECTOR_ALL_ITEMS = "director_all_items"
 CONF_CONTROLLER_UNIQUE_ID = "controller_unique_id"
 
 CONF_CONFIG_LISTENER = "config_listener"
+
+CONTROL4_ENTITY_TYPE = 7

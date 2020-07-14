@@ -22,6 +22,7 @@ from . import Control4Entity, get_items_of_category
 from .const import (
     CONF_LIGHT_COLD_START_TRANSITION_TIME,
     CONF_LIGHT_TRANSITION_TIME,
+    CONTROL4_ENTITY_TYPE,
     DOMAIN,
 )
 from .director_utils import director_update_data
@@ -83,7 +84,7 @@ async def async_setup_entry(
 
     items_of_category = await get_items_of_category(hass, entry, CONTROL4_CATEGORY)
     for item in items_of_category:
-        if item["type"] == 7:
+        if item["type"] == CONTROL4_ENTITY_TYPE:
             item_name = item["name"]
             item_id = item["id"]
             item_parent_id = item["parentId"]
