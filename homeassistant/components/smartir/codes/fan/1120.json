@@ -1,0 +1,22 @@
+{
+  "manufacturer": "Europace",
+  "supportedModels": [
+    "Unknown"
+  ],
+  "supportedController": "Broadlink",
+  "commandsEncoding": "Base64",
+  "speed": [
+    "low",
+    "medium",
+    "high"
+  ],
+  "commands": {
+    "off": "JgBYAAABLJYTEhMTExITExQ2EzgTEhMTEzcUNhQ3EzcUEhITFDYUNxMSFBIUNhQ3ExIUEhQRFDcUNhQ2FBIUERQ3EzcUNhQSFAAFKQABLUkUAAxzAAEsShQADQU=",
+    "default": {
+      "low": "JgBYAAABLZUTEhMTFBETExM3EzgSExMTEzcTNxQ3EzcUEhITEzcTOBQRFBITExI4ExITExMTEjgUNhM3FDcTEhM4EzcTNxQSEwAFKgABLEoUAAxyAAEtSRQADQU=",
+      "medium": "JgBYAAABLZUTEhMTFBETExM3EzgSExMTEzcTNxQ3EzcUEhITEzcTOBQRFBITExI4ExITExMTEjgUNhM3FDcTEhM4EzcTNxQSEwAFKgABLEoUAAxyAAEtSRQADQU=",
+      "high": "JgBYAAABLZUTEhMTFBETExM3EzgSExMTEzcTNxQ3EzcUEhITEzcTOBQRFBITExI4ExITExMTEjgUNhM3FDcTEhM4EzcTNxQSEwAFKgABLEoUAAxyAAEtSRQADQU="
+    },
+    "oscillate": "JgBQAAABLJYTExMSFBITExM3FDYTExMSEzgTNxQ3FDYTExITFDcSOBMTEjgUNhQSExMTEhMTFDYTOBMSFBITNxQ2FDcTNxMTEwAFKwABLEsTAA0FAAAAAAAAAAA="
+  }
+}

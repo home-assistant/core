@@ -1,6 +1,9 @@
 /config
 config2/*
 
+venv/*
+venv38/*
+
 tests/testing_config/deps
 tests/testing_config/home-assistant.log*
 
