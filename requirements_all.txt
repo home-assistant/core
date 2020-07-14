@@ -678,6 +678,9 @@ greenwavereality==0.5.1
 # homeassistant.components.griddy
 griddypower==0.1.0
 
+# homeassistant.components.growatt_rs232
+growattRS232==1.0.0
+
 # homeassistant.components.growatt_server
 growattServer==0.0.4
 

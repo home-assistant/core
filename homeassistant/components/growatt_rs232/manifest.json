@@ -1,0 +1,9 @@
+{
+  "domain": "growatt_rs232",
+  "name": "Growatt RS232",
+  "documentation": "https://www.home-assistant.io/integrations/growatt_rs232",
+  "codeowners": ["@ArdescoConsulting"],
+  "config_flow": true,
+  "requirements": ["growattRS232==1.0.0"],
+  "dependencies": []
+}

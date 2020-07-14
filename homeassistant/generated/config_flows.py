@@ -63,6 +63,7 @@ FLOWS = [
     "gogogate2",
     "gpslogger",
     "griddy",
+    "growatt_rs232",
     "guardian",
     "hangouts",
     "harmony",

@@ -1,0 +1,24 @@
+{
+  "title": "Growatt RS232 inverter.",
+  "config": {
+    "flow_title": "Growatt inverter: {model} {serial_number}",
+    "step": {
+      "user": {
+        "description": "Set up Growatt RS232 integration. If you have problems with configuration go to: https://www.home-assistant.io/integrations/growatt_rs232",
+        "data": {
+          "port": "USB port of the RS232 interface.",
+          "address": "Modbus address of the Growatt inverter (1-247)."
+        }
+      }
+    },
+    "error": {
+      "connection_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "modbus_error": "Modbus communication error.",
+      "port_error": "Invalid usb port."
+    },
+    "abort": {
+      "already_configured": "This Growatt inverter is already configured.",
+      "serial_number_error": "Unable to get serial number from Growatt inverter."
+    }
+  }
+}

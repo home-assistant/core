@@ -328,6 +328,9 @@ google-cloud-pubsub==0.39.1
 # homeassistant.components.griddy
 griddypower==0.1.0
 
+# homeassistant.components.growatt_rs232
+growattRS232==1.0.0
+
 # homeassistant.components.ffmpeg
 ha-ffmpeg==2.0
 

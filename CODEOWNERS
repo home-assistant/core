@@ -156,6 +156,7 @@ homeassistant/components/gpsd/* @fabaff
 homeassistant/components/greeneye_monitor/* @jkeljo
 homeassistant/components/griddy/* @bdraco
 homeassistant/components/group/* @home-assistant/core
+homeassistant/components/growatt_rs232/* @ArdescoConsulting
 homeassistant/components/growatt_server/* @indykoning
 homeassistant/components/guardian/* @bachya
 homeassistant/components/harmony/* @ehendrix23 @bramkragten @bdraco
