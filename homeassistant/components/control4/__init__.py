@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         await account.getAccountBearerToken()
     except client_exceptions.ClientError as exception:
         _LOGGER.error("Error connecting to Control4 account API: %s", exception)
-        raise PlatformNotReady()
+        raise ConfigEntryNotReady
     entry_data[CONF_ACCOUNT] = account
 
     controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
