@@ -76,9 +76,7 @@ class SmappeeFlowHandler(
 
         # Check if already configured
         await self.async_set_unique_id(discovery_info[CONF_HOSTNAME])
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOSTNAME: discovery_info[CONF_HOSTNAME]}
-        )
+        self._abort_if_unique_id_configured()
 
         if prepare:
             return await self.async_step_zeroconf_confirm()
