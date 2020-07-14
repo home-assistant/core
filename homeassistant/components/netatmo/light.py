@@ -139,4 +139,4 @@ class NetatmoLight(LightEntity, NetatmoBase):
     @callback
     def async_update_callback(self):
         """Update the entity's state."""
-        self._is_on = True if self._data.get_light_state(self._id) == "on" else False
+        self._is_on = bool(self._data.get_light_state(self._id) == "on")
