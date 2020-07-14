@@ -153,8 +153,7 @@ class Control4Light(Control4Entity, LightEntity):
         self._is_dimmer = is_dimmer
         self._transition_time = light_transition_time
         self._cold_start_transition_time = light_cold_start_transition_time
-        # pylint: disable=invalid-name
-        self._C4Light = C4Light(self.director, idx)
+        self._c4_light = C4Light(self.director, idx)
 
     @property
     def is_on(self):
@@ -190,10 +189,10 @@ class Control4Light(Control4Entity, LightEntity):
                 brightness = (kwargs[ATTR_BRIGHTNESS] / 255) * 100
             else:
                 brightness = 100
-            await self._C4Light.rampToLevel(brightness, transition_length)
+            await self._c4_light.rampToLevel(brightness, transition_length)
         else:
             transition_length = 0
-            await self._C4Light.setLevel(100)
+            await self._c4_light.setLevel(100)
         if transition_length == 0:
             transition_length = 1000
         delay_time = (transition_length / 1000) + 0.7
@@ -208,10 +207,10 @@ class Control4Light(Control4Entity, LightEntity):
                 transition_length = kwargs[ATTR_TRANSITION] * 1000
             else:
                 transition_length = self._cold_start_transition_time * 1000
-            await self._C4Light.rampToLevel(0, transition_length)
+            await self._c4_light.rampToLevel(0, transition_length)
         else:
             transition_length = 0
-            await self._C4Light.setLevel(0)
+            await self._c4_light.setLevel(0)
         if transition_length == 0:
             transition_length = 1500
         delay_time = (transition_length / 1000) + 0.7
