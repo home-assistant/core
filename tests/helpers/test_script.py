@@ -877,6 +877,41 @@ async def test_repeat_conditional(hass, condition):
         assert event.data.get("index") == str(index + 1)
 
 
+@pytest.mark.parametrize("var,result", [(1, "first"), (2, "second"), (3, "default")])
+async def test_choose(hass, var, result):
+    """Test choose action."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "choose": [
+                {
+                    "conditions": {
+                        "condition": "template",
+                        "value_template": "{{ var == 1 }}",
+                    },
+                    "sequence": {"event": event, "event_data": {"choice": "first"}},
+                },
+                {
+                    "conditions": {
+                        "condition": "template",
+                        "value_template": "{{ var == 2 }}",
+                    },
+                    "sequence": {"event": event, "event_data": {"choice": "second"}},
+                },
+            ],
+            "default": {"event": event, "event_data": {"choice": "default"}},
+        }
+    )
+    script_obj = script.Script(hass, sequence)
+
+    await script_obj.async_run({"var": var})
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data["choice"] == result
+
+
 async def test_last_triggered(hass):
     """Test the last_triggered."""
     event = "test_event"
