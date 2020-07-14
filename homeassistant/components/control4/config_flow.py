@@ -119,13 +119,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
-            controller_unique_id = hub.return_controller_unique_id()
-            control4, model, mac = controller_unique_id.split("_", 3)
-            formatted_mac = format_mac(mac)
-            await self.async_set_unique_id(formatted_mac)
-            self._abort_if_unique_id_configured()
-
-            if not errors:
+            if not errors:            
+                controller_unique_id = hub.return_controller_unique_id()
+                _, model, mac = controller_unique_id.split("_", 3)
+                formatted_mac = format_mac(mac)
+                await self.async_set_unique_id(formatted_mac)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=controller_unique_id,
                     data={
