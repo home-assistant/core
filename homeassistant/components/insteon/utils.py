@@ -291,18 +291,13 @@ def async_register_services(hass):
 
 def print_aldb_to_log(aldb):
     """Print the All-Link Database to the log file."""
-    # This service is useless if the log level is not INFO for the
-    # insteon component. Setting the log level to INFO and resetting it
-    # back when we are done
-    orig_log_level = _LOGGER.level
-    if orig_log_level > logging.INFO:
-        _LOGGER.setLevel(logging.INFO)
-    _LOGGER.info("%s ALDB load status is %s", aldb.address, aldb.status.name)
+    logger = logging.getLogger(f"{__name__}.links")
+    logger.info("%s ALDB load status is %s", aldb.address, aldb.status.name)
     if aldb.status not in [ALDBStatus.LOADED, ALDBStatus.PARTIAL]:
         _LOGGER.warning("All-Link database not loaded")
 
-    _LOGGER.info("RecID In Use Mode HWM Group Address  Data 1 Data 2 Data 3")
-    _LOGGER.info("----- ------ ---- --- ----- -------- ------ ------ ------")
+    logger.info("RecID In Use Mode HWM Group Address  Data 1 Data 2 Data 3")
+    logger.info("----- ------ ---- --- ----- -------- ------ ------ ------")
     for mem_addr in aldb:
         rec = aldb[mem_addr]
         # For now we write this to the log
@@ -315,8 +310,7 @@ def print_aldb_to_log(aldb):
             f"{rec.group:3d} {str(rec.target):s}   {rec.data1:3d}   "
             f"{rec.data2:3d}   {rec.data3:3d}"
         )
-        _LOGGER.info(log_msg)
-    _LOGGER.setLevel(orig_log_level)
+        logger.info(log_msg)
 
 
 @callback

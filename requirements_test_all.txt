@@ -52,7 +52,7 @@ adb-shell[async]==0.2.0
 adguardhome==0.4.2
 
 # homeassistant.components.agent_dvr
-agent-py==0.0.20
+agent-py==0.0.23
 
 # homeassistant.components.geonetnz_quakes
 aio_geojson_geonetnz_quakes==0.12
@@ -70,7 +70,7 @@ aio_georss_gdacs==0.3
 aioambient==1.1.1
 
 # homeassistant.components.asuswrt
-aioasuswrt==1.2.6
+aioasuswrt==1.2.7
 
 # homeassistant.components.aws
 aiobotocore==0.11.1
@@ -359,7 +359,7 @@ homeassistant-pyozw==0.1.10
 homeconnect==0.5
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.18
+homematicip==0.10.19
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk

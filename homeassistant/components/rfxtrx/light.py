@@ -9,6 +9,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_DEVICES
+from homeassistant.core import callback
 
 from . import (
     CONF_AUTOMATIC_ADD,
@@ -19,18 +20,18 @@ from . import (
     get_device_id,
     get_rfx_object,
 )
-from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
+from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST, DATA_RFXTRX_CONFIG
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_RFXTRX = SUPPORT_BRIGHTNESS
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the RFXtrx platform."""
-    if discovery_info is None:
-        return
-
+async def async_setup_entry(
+    hass, config_entry, async_add_entities,
+):
+    """Set up config entry."""
+    discovery_info = hass.data[DATA_RFXTRX_CONFIG]
     device_ids = set()
 
     def supported(event):
@@ -60,8 +61,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         entities.append(entity)
 
-    add_entities(entities)
+    async_add_entities(entities)
 
+    @callback
     def light_update(event, device_id):
         """Handle light updates from the RFXtrx gateway."""
         if not supported(event):
@@ -83,11 +85,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             event.device, device_id, DEFAULT_SIGNAL_REPETITIONS, event=event
         )
 
-        add_entities([entity])
+        async_add_entities([entity])
 
     # Subscribe to main RFXtrx events
     if discovery_info[CONF_AUTOMATIC_ADD]:
-        hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, light_update)
+        hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, light_update)
 
 
 class RfxtrxLight(RfxtrxDevice, LightEntity):
@@ -142,6 +144,7 @@ class RfxtrxLight(RfxtrxDevice, LightEntity):
             self._brightness = event.values["Dim level"] * 255 // 100
             self._state = self._brightness > 0
 
+    @callback
     def _handle_event(self, event, device_id):
         """Check if event applies to me and update."""
         if device_id != self._device_id:
@@ -149,4 +152,4 @@ class RfxtrxLight(RfxtrxDevice, LightEntity):
 
         self._apply_event(event)
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()

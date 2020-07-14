@@ -8,9 +8,10 @@ from bond import Actions, Bond
 class BondDevice:
     """Helper device class to hold ID and attributes together."""
 
-    def __init__(self, device_id: str, attrs: dict):
+    def __init__(self, device_id: str, attrs: dict, props: dict):
         """Create a helper device from ID and attributes returned by API."""
         self.device_id = device_id
+        self.props = props
         self._attrs = attrs
 
     @property
@@ -26,34 +27,28 @@ class BondDevice:
     def supports_speed(self) -> bool:
         """Return True if this device supports any of the speed related commands."""
         actions: List[str] = self._attrs["actions"]
-        return len([action for action in actions if action in [Actions.SET_SPEED]]) > 0
+        return bool([action for action in actions if action in [Actions.SET_SPEED]])
 
     def supports_direction(self) -> bool:
         """Return True if this device supports any of the direction related commands."""
         actions: List[str] = self._attrs["actions"]
-        return (
-            len(
-                [
-                    action
-                    for action in actions
-                    if action in [Actions.SET_DIRECTION, Actions.TOGGLE_DIRECTION]
-                ]
-            )
-            > 0
+        return bool(
+            [
+                action
+                for action in actions
+                if action in [Actions.SET_DIRECTION, Actions.TOGGLE_DIRECTION]
+            ]
         )
 
     def supports_light(self) -> bool:
         """Return True if this device supports any of the light related commands."""
         actions: List[str] = self._attrs["actions"]
-        return (
-            len(
-                [
-                    action
-                    for action in actions
-                    if action in [Actions.TURN_LIGHT_ON, Actions.TOGGLE_LIGHT]
-                ]
-            )
-            > 0
+        return bool(
+            [
+                action
+                for action in actions
+                if action in [Actions.TURN_LIGHT_ON, Actions.TOGGLE_LIGHT]
+            ]
         )
 
 
@@ -73,7 +68,11 @@ class BondHub:
         """Fetch all available devices using Bond API."""
         device_ids = self.bond.getDeviceIds()
         devices = [
-            BondDevice(device_id, self.bond.getDevice(device_id))
+            BondDevice(
+                device_id,
+                self.bond.getDevice(device_id),
+                self.bond.getProperties(device_id),
+            )
             for device_id in device_ids
         ]
         return devices
