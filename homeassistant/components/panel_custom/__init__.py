@@ -47,39 +47,35 @@ def url_validator(value):
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            cv.deprecated(CONF_WEBCOMPONENT_PATH, invalidation_version="0.115"),
-            vol.Schema(
-                cv.ensure_list,
-                [
-                    vol.All(
-                        vol.Schema(
-                            {
-                                vol.Required(CONF_COMPONENT_NAME): cv.string,
-                                vol.Optional(CONF_SIDEBAR_TITLE): cv.string,
-                                vol.Optional(
-                                    CONF_SIDEBAR_ICON, default=DEFAULT_ICON
-                                ): cv.icon,
-                                vol.Optional(CONF_URL_PATH): cv.string,
-                                vol.Optional(CONF_CONFIG): dict,
-                                vol.Optional(CONF_WEBCOMPONENT_PATH,): cv.string,
-                                vol.Optional(CONF_JS_URL,): cv.string,
-                                vol.Optional(CONF_MODULE_URL,): cv.string,
-                                vol.Optional(
-                                    CONF_EMBED_IFRAME, default=DEFAULT_EMBED_IFRAME
-                                ): cv.boolean,
-                                vol.Optional(
-                                    CONF_TRUST_EXTERNAL_SCRIPT,
-                                    default=DEFAULT_TRUST_EXTERNAL,
-                                ): cv.boolean,
-                                vol.Optional(
-                                    CONF_REQUIRE_ADMIN, default=False
-                                ): cv.boolean,
-                            }
-                        ),
-                        url_validator,
-                    )
-                ],
-            ),
+            cv.ensure_list,
+            [
+                vol.All(
+                    cv.deprecated(CONF_WEBCOMPONENT_PATH, invalidation_version="0.115"),
+                    vol.Schema(
+                        {
+                            vol.Required(CONF_COMPONENT_NAME): cv.string,
+                            vol.Optional(CONF_SIDEBAR_TITLE): cv.string,
+                            vol.Optional(
+                                CONF_SIDEBAR_ICON, default=DEFAULT_ICON
+                            ): cv.icon,
+                            vol.Optional(CONF_URL_PATH): cv.string,
+                            vol.Optional(CONF_CONFIG): dict,
+                            vol.Optional(CONF_WEBCOMPONENT_PATH,): cv.string,
+                            vol.Optional(CONF_JS_URL,): cv.string,
+                            vol.Optional(CONF_MODULE_URL,): cv.string,
+                            vol.Optional(
+                                CONF_EMBED_IFRAME, default=DEFAULT_EMBED_IFRAME
+                            ): cv.boolean,
+                            vol.Optional(
+                                CONF_TRUST_EXTERNAL_SCRIPT,
+                                default=DEFAULT_TRUST_EXTERNAL,
+                            ): cv.boolean,
+                            vol.Optional(CONF_REQUIRE_ADMIN, default=False): cv.boolean,
+                        }
+                    ),
+                    url_validator,
+                )
+            ],
         )
     },
     extra=vol.ALLOW_EXTRA,
