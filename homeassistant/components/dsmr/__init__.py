@@ -32,6 +32,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     task = hass.data[DOMAIN][entry.title]
 
+    # Cancel the reconnect task
     task.cancel()
     try:
         await task
