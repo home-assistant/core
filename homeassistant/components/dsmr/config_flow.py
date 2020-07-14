@@ -155,18 +155,21 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._port = user_input[CONF_PORT]
 
             try:
-                data = {
-                    CONF_PORT: self._port,
-                    CONF_HOST: self._host,
-                    CONF_DSMR_VERSION: self._dsmr_version,
-                }
+                if self.usb_already_configured(user_input[CONF_PORT]):
+                    errors["base"] = "already_configured"
+                else:
+                    data = {
+                        CONF_PORT: self._port,
+                        CONF_HOST: self._host,
+                        CONF_DSMR_VERSION: self._dsmr_version,
+                    }
 
-                info = await validate_input(self.hass, data)
+                    info = await validate_input(self.hass, data)
 
-                self._serial_id = info[CONF_SERIAL_ID]
-                self._serial_id_gas = info[CONF_SERIAL_ID_GAS]
+                    self._serial_id = info[CONF_SERIAL_ID]
+                    self._serial_id_gas = info[CONF_SERIAL_ID_GAS]
 
-                return await self.async_step_setup_options()
+                    return await self.async_step_setup_options()
 
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -185,30 +188,35 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Select options for host connection."""
         errors = {}
         if user_input is not None:
-            self._port = user_input[CONF_PORT]
-            self._host = user_input[CONF_HOST]
+            if self.host_already_configured(
+                user_input[CONF_HOST], user_input[CONF_PORT]
+            ):
+                errors["base"] = "already_configured"
+            else:
+                self._port = user_input[CONF_PORT]
+                self._host = user_input[CONF_HOST]
 
-            try:
-                data = {
-                    CONF_PORT: self._port,
-                    CONF_HOST: self._host,
-                    CONF_DSMR_VERSION: self._dsmr_version,
-                }
+                try:
+                    data = {
+                        CONF_PORT: self._port,
+                        CONF_HOST: self._host,
+                        CONF_DSMR_VERSION: self._dsmr_version,
+                    }
 
-                info = await validate_input(self.hass, data)
+                    info = await validate_input(self.hass, data)
 
-                self._serial_id = info[CONF_SERIAL_ID]
-                self._serial_id_gas = info[CONF_SERIAL_ID_GAS]
+                    self._serial_id = info[CONF_SERIAL_ID]
+                    self._serial_id_gas = info[CONF_SERIAL_ID_GAS]
 
-                return await self.async_step_setup_options()
+                    return await self.async_step_setup_options()
 
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except CannotCommunicate:
-                errors["base"] = "cannot_communicate"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                except CannotConnect:
+                    errors["base"] = "cannot_connect"
+                except CannotCommunicate:
+                    errors["base"] = "cannot_communicate"
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
 
         schema = vol.Schema(
             {vol.Required(CONF_HOST): str, vol.Required(CONF_PORT): int}
