@@ -61,7 +61,7 @@ async def test_zeroconf_no_data(hass):
     """Test we abort if zeroconf provides no data."""
     flow = config_flow.SmappeeFlowHandler()
     flow.hass = hass
-    result = await flow.async_step_zeroconf()
+    result = await flow.async_step_zeroconf(None)
 
     assert result["reason"] == "connection_error"
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
