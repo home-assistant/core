@@ -24,6 +24,12 @@ class NetatmoBase(Entity):
         self.data_handler = data_handler
         self._data_classes: List[Dict] = []
 
+        self._device_name = None
+        self._id = None
+        self._model = None
+        self._name = None
+        self._unique_id = None
+
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         _LOGGER.debug("New client %s", self.entity_id)
