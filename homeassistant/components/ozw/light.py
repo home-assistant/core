@@ -162,7 +162,10 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
             # white LED must be off in order for color to work
 
         elif white is not None:
-            rgbw = f"#000000{white:02x}00"
+            if self._color_channels & COLOR_CHANNEL_WARM_WHITE:
+                rgbw = f"#000000{white:02x}00"
+            else:
+                rgbw = f"#00000000{white:02x}"
 
         if rgbw and self.values.color:
             self.values.color.send_value(rgbw)
@@ -200,15 +203,13 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
 
         # Warm white
         if self._color_channels & COLOR_CHANNEL_WARM_WHITE:
-            warm_white = int(data[index : index + 2], 16)
-            self._white = warm_white
+            self._white = int(data[index : index + 2], 16)
 
         index += 2
 
         # Cold white
         if self._color_channels & COLOR_CHANNEL_COLD_WHITE:
-            cold_white = int(data[index : index + 2], 16)
-            self._white = cold_white
+            self._white = int(data[index : index + 2], 16)
 
         # If no rgb channels supported, report None.
         if not (
