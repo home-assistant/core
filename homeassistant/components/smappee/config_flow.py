@@ -60,8 +60,17 @@ class SmappeeFlowHandler(
 
     async def _handle_config_flow(self, discovery_info=None, prepare=False):
         """Config flow handler for discovered Smappee monitors."""
+
+        def show_confirm_dialog(self, errors=None):
+            """Show the confirm dialog to the user."""
+            return self.async_show_form(
+                step_id="zeroconf_confirm",
+                description_placeholders={"name": self.context.get(CONF_TITLE)},
+                errors=errors or {},
+            )
+
         if discovery_info is None and not prepare:
-            return self._show_confirm_dialog()
+            return show_confirm_dialog(self)
 
         discovery_info[CONF_HOSTNAME] = self.context.get(CONF_HOSTNAME)
         discovery_info[CONF_TITLE] = self.context.get(CONF_TITLE)
@@ -84,12 +93,4 @@ class SmappeeFlowHandler(
                 CONF_IP_ADDRESS: discovery_info[CONF_IP_ADDRESS],
                 CONF_SERIALNUMBER: discovery_info[CONF_SERIALNUMBER],
             },
-        )
-
-    def _show_confirm_dialog(self, errors=None):
-        """Show the confirm dialog to the user."""
-        return self.async_show_form(
-            step_id="zeroconf_confirm",
-            description_placeholders={"name": self.context.get(CONF_TITLE)},
-            errors=errors or {},
         )
