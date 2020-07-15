@@ -1202,18 +1202,12 @@ async def test_script_logging(hass, caplog):
     assert "Test message without name 2" in caplog.text
 
 
-@pytest.mark.parametrize("after_shutdown", [False, True])
-async def test_shutdown(hass, caplog, after_shutdown):
+async def test_shutdown_at(hass, caplog):
     """Test stopping scripts at shutdown."""
     delay_alias = "delay step"
     sequence = cv.SCRIPT_SCHEMA({"delay": {"seconds": 120}, "alias": delay_alias})
     script_obj = script.Script(hass, sequence, "test script")
     delay_started_flag = async_watch_for_action(script_obj, delay_alias)
-
-    if after_shutdown:
-        hass.state = CoreState.stopping
-        hass.bus.async_fire("homeassistant_stop")
-        await hass.async_block_till_done()
 
     try:
         hass.async_create_task(script_obj.async_run())
@@ -1225,12 +1219,39 @@ async def test_shutdown(hass, caplog, after_shutdown):
         await script_obj.async_stop()
         raise
     else:
-        if after_shutdown:
-            async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
-        else:
-            hass.bus.async_fire("homeassistant_stop")
+        hass.bus.async_fire("homeassistant_stop")
         await hass.async_block_till_done()
 
         assert not script_obj.is_running
-        msg = "too long after" if after_shutdown else "at"
-        assert f"Stopping scripts running {msg} shutdown: test script" in caplog.text
+        assert "Stopping scripts running at shutdown: test script" in caplog.text
+
+
+async def test_shutdown_after(hass, caplog):
+    """Test stopping scripts at shutdown."""
+    delay_alias = "delay step"
+    sequence = cv.SCRIPT_SCHEMA({"delay": {"seconds": 120}, "alias": delay_alias})
+    script_obj = script.Script(hass, sequence, "test script")
+    delay_started_flag = async_watch_for_action(script_obj, delay_alias)
+
+    hass.state = CoreState.stopping
+    hass.bus.async_fire("homeassistant_stop")
+    await hass.async_block_till_done()
+
+    try:
+        hass.async_create_task(script_obj.async_run())
+        await asyncio.wait_for(delay_started_flag.wait(), 1)
+
+        assert script_obj.is_running
+        assert script_obj.last_action == delay_alias
+    except (AssertionError, asyncio.TimeoutError):
+        await script_obj.async_stop()
+        raise
+    else:
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+        await hass.async_block_till_done()
+
+        assert not script_obj.is_running
+        assert (
+            "Stopping scripts running too long after shutdown: test script"
+            in caplog.text
+        )
