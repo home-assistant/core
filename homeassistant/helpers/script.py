@@ -550,13 +550,10 @@ class _QueuedScriptRun(_ScriptRun):
         super()._finish()
 
 
-_HASS = None
-
-
-async def _async_stop_scripts_after_shutdown(point_in_time):
+async def _async_stop_scripts_after_shutdown(hass, point_in_time):
     """Stop running Script objects started after shutdown."""
     running_scripts = [
-        script for script in _HASS.data["Scripts"] if script["instance"].is_running
+        script for script in hass.data["Scripts"] if script["instance"].is_running
     ]
     if running_scripts:
         names = ", ".join([script["instance"].name for script in running_scripts])
@@ -569,23 +566,22 @@ async def _async_stop_scripts_after_shutdown(point_in_time):
         )
 
 
-async def _async_stop_scripts_at_shutdown(event):
+async def _async_stop_scripts_at_shutdown(hass, event):
     """Stop running Script objects started before shutdown."""
-    async_call_later(_HASS, _SHUTDOWN_MAX_WAIT, _async_stop_scripts_after_shutdown)
+    async_call_later(
+        hass, _SHUTDOWN_MAX_WAIT, partial(_async_stop_scripts_after_shutdown, hass)
+    )
 
     running_scripts = [
         script
-        for script in _HASS.data["Scripts"]
+        for script in hass.data["Scripts"]
         if script["instance"].is_running and script["started_before_shutdown"]
     ]
     if running_scripts:
         names = ", ".join([script["instance"].name for script in running_scripts])
         _LOGGER.debug("Stopping scripts running at shutdown: %s", names)
         await asyncio.gather(
-            *[
-                script["instance"].async_stop(update_state=False)
-                for script in running_scripts
-            ]
+            *[script["instance"].async_stop() for script in running_scripts]
         )
 
 
@@ -605,14 +601,11 @@ class Script:
         top_level: bool = True,
     ) -> None:
         """Initialize the script."""
-        global _HASS
-
         all_scripts = hass.data.get("Scripts")
         if not all_scripts:
-            _HASS = hass
             all_scripts = hass.data["Scripts"] = []
             hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, _async_stop_scripts_at_shutdown
+                EVENT_HOMEASSISTANT_STOP, partial(_async_stop_scripts_at_shutdown, hass)
             )
         if top_level:
             all_scripts.append(
