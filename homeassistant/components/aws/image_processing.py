@@ -408,7 +408,7 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
         return False
 
     async def init_collection(self, client):
-        """Create AWS image collection if doesnt exist"""
+        """Create AWS image collection if doesn't exist."""
         collection_id_req = await client.list_collections(MaxResults=99)
         if self.collection_id not in collection_id_req["CollectionIds"]:
             await client.create_collection(CollectionId=self.collection_id)
