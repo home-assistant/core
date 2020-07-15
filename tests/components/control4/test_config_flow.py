@@ -28,19 +28,15 @@ def _get_mock_c4_account(
     },
 ):
     c4_account_mock = AsyncMock()
-    type(c4_account_mock).getAccountControllers = AsyncMock(
-        return_value=getAccountControllers
-    )
-    type(c4_account_mock).getDirectorBearerToken = AsyncMock(
-        return_value=getDirectorBearerToken
-    )
+    c4_account_mock.getAccountControllers.return_value = getAccountControllers
+    c4_account_mock.getDirectorBearerToken.return_value = getDirectorBearerToken
 
     return c4_account_mock
 
 
 def _get_mock_c4_director(getAllItemInfo={}):
     c4_director_mock = AsyncMock()
-    type(c4_director_mock).getAllItemInfo = AsyncMock(return_value=getAllItemInfo)
+    c4_director_mock.getAllItemInfo.return_value = getAllItemInfo
 
     return c4_director_mock
 
