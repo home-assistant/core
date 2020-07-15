@@ -15,7 +15,6 @@
           "password": "Password",
           "username": "Username/Email"
         },
-        "title": "Control4",
         "description": "Please enter your Control4 account details and the hostname of your local controller."
       }
     }
