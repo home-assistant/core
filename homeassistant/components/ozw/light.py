@@ -167,7 +167,7 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         rgbw = None
         white = kwargs.get(ATTR_WHITE_VALUE)
         hs_color = kwargs.get(ATTR_HS_COLOR)
-        ct = kwargs.get(ATTR_COLOR_TEMP)
+        color_temp = kwargs.get(ATTR_COLOR_TEMP)
 
         if hs_color is not None:
             rgbw = "#"
@@ -182,8 +182,8 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
             else:
                 rgbw = f"#00000000{white:02x}"
 
-        elif ct is not None:
-            cold = int((TEMP_COLOR_MAX - ct) / TEMP_COLOR_DIFF * 255)
+        elif color_temp is not None:
+            cold = int((TEMP_COLOR_MAX - color_temp) / TEMP_COLOR_DIFF * 255)
             warm = 255 - cold
             rgbw = f"#000000{warm:02x}{cold:02x}"
 
@@ -220,27 +220,27 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         # Parse remaining color channels. Openzwave appends white channels
         # that are present.
         index = 7
-        ct_1 = 0
-        ct_2 = 0
+        temp_1 = 0
+        temp_2 = 0
 
         # Warm white
         if self._color_channels & COLOR_CHANNEL_WARM_WHITE:
             self._white = int(data[index : index + 2], 16)
-            ct_1 = self._white
+            temp_1 = self._white
 
         index += 2
 
         # Cold white
         if self._color_channels & COLOR_CHANNEL_COLD_WHITE:
             self._white = int(data[index : index + 2], 16)
-            ct_2 = self._white
+            temp_2 = self._white
 
         # Calculate color temps based on white LED status
-        if ct_1 > 0:
-            self._ct = TEMP_COLOR_MAX - ((ct_1 / 255) * TEMP_COLOR_DIFF)
+        if temp_1 > 0:
+            self._ct = TEMP_COLOR_MAX - ((temp_1 / 255) * TEMP_COLOR_DIFF)
         # Only used if WW channel missing
-        elif ct_2 > 0:
-            self._ct = TEMP_COLOR_MAX - ct_1
+        elif temp_2 > 0:
+            self._ct = TEMP_COLOR_MAX - temp_2
 
         # If no rgb channels supported, report None.
         if not (
