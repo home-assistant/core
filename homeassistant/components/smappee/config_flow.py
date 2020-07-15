@@ -2,6 +2,7 @@
 import logging
 import socket
 
+from requests.exceptions import ConnectTimeout
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -110,9 +111,7 @@ class SmappeeFlowHandler(
                     user_input[CONF_HOSTNAME] = f"{serialnumber}.local"
                     user_input[CONF_TITLE] = serialnumber
                     user_input[CONF_SERIALNUMBER] = serialnumber.replace("Smappee", "")
-            except socket.gaierror:
-                return self.async_abort(reason="connection_error")
-            except socket.timeout:
+            except (socket.gaierror, socket.timeout, ConnectTimeout):
                 return self.async_abort(reason="connection_error")
 
         # Check if already configured
