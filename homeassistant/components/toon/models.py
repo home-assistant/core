@@ -109,6 +109,20 @@ class ToonGasMeterDeviceEntity(ToonEntity):
             "via_device": (DOMAIN, agreement_id, "electricity"),
         }
 
+    
+class ToonWaterMeterDeviceEntity(ToonEntity):
+    """Defines a Water Meter device entity."""
+
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return device information about this entity."""
+        agreement_id = self.coordinator.data.agreement.agreement_id
+        return {
+            "name": "Water Meter",
+            "identifiers": {(DOMAIN, agreement_id, "water")},
+            "via_device": (DOMAIN, agreement_id, "electricity"),
+        }
+
 
 class ToonSolarDeviceEntity(ToonEntity):
     """Defines a Solar Device device entity."""
