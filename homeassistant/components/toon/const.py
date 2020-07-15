@@ -370,7 +370,7 @@ SENSOR_ENTITIES = {
         ATTR_NAME: "Water Meter",
         ATTR_SECTION: "water_usage",
         ATTR_MEASUREMENT: "meter",
-        ATTR_UNIT_OF_MEASUREMENT: VOLUME_CM3,
+        ATTR_UNIT_OF_MEASUREMENT: VOLUME_M3,
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:water",
         ATTR_DEFAULT_ENABLED: False,
