@@ -174,7 +174,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     def hvac_mode(self):
         """Return hvac operation ie. heat, cool mode."""
         if not self.values.mode:
-            # Thermostat(valve) with no support for setting a mode is condidered heating-only
+            # Thermostat(valve) with no support for setting a mode is considered heating-only
             return HVAC_MODE_HEAT
         return ZW_HVAC_MODE_MAPPINGS.get(
             self.values.mode.value[VALUE_SELECTED_ID], HVAC_MODE_HEAT_COOL
