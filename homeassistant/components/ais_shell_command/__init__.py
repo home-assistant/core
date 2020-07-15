@@ -141,6 +141,8 @@ async def _run(cmd):
 async def _change_host_name(hass, call):
     if "hostname" not in call.data:
         return
+    if not ais_global.has_root():
+        return
     new_host_name = call.data["hostname"]
     file = "/data/data/pl.sviete.dom/.ais/ais-hostname"
     command = 'echo "net.hostname = ' + new_host_name + '" > ' + file
@@ -177,12 +179,16 @@ async def _change_remote_access(hass, call):
 
 
 async def _hdmi_control_disable(hass, call):
+    if not ais_global.has_root():
+        return
     comm = r'su -c "settings put global hdmi_control_enabled 0"'
     await _run(comm)
 
 
 async def _change_wm_overscan(hass, call):
     if "value" not in call.data:
+        return
+    if not ais_global.has_root():
         return
     new_value = call.data["value"]
     cl = 0
@@ -336,6 +342,8 @@ async def _ssh_remote_access(hass, call):
 async def _key_event(hass, call):
     if "key_code" not in call.data:
         return
+    if not ais_global.has_root():
+        return
     key_code = call.data["key_code"]
     import subprocess
 
@@ -349,6 +357,8 @@ async def _key_event(hass, call):
 
 async def _led(hass, call):
     if "brightness" not in call.data:
+        return
+    if not ais_global.has_root():
         return
     brightness = call.data["brightness"]
 
@@ -434,11 +444,17 @@ async def _execute_script(hass, call):
 async def _execute_restart(hass, call):
     import subprocess
 
+    if not ais_global.has_root():
+        return
+
     subprocess.Popen("su -c reboot", shell=True, stdout=None, stderr=None)  # nosec
 
 
 async def _execute_stop(hass, call):
     import subprocess
+
+    if not ais_global.has_root():
+        return
 
     subprocess.Popen("su -c 'reboot -p'", shell=True, stdout=None, stderr=None)  # nosec
 
@@ -695,6 +711,8 @@ async def _flush_logs(hass, call):
 
 
 async def _disable_irda_remote(hass, call):
+    if not ais_global.has_root():
+        return
     # aml_keypad -> event0 irda remote
     comm = r'su -c "rm -rf /dev/input/event0"'
     await _run(comm)
@@ -705,6 +723,8 @@ async def _disable_irda_remote(hass, call):
 
 
 async def _set_scaling_governor(hass, call):
+    if not ais_global.has_root():
+        return
     # /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
     scaling_available_governors = ["hotplug", "interactive", "performance"]
 
@@ -736,6 +756,8 @@ async def _set_scaling_governor(hass, call):
 
 
 async def _set_io_scheduler(hass, call):
+    if not ais_global.has_root():
+        return
     # /sys/block/mmcblk0/queue/scheduler
     available_io_schedulers = ["noop", "deadline", "cfq"]
 

@@ -1596,13 +1596,14 @@ class AisColudData:
         # HA backup
         if backup_type in ("all", "ha"):
             # 0. chmod
-            try:
-                ret = subprocess.check_output(
-                    'su -c "chmod -R 755 /data/data/pl.sviete.dom/files/home/AIS"',
-                    shell=True,  # nosec
-                )
-            except Exception as e:
-                _LOGGER.error("do_backup chmod: " + str(e))
+            if ais_global.has_root():
+                try:
+                    subprocess.check_output(
+                        'su -c "chmod -R 755 /data/data/pl.sviete.dom/files/home/AIS"',
+                        shell=True,  # nosec
+                    )
+                except Exception as e:
+                    _LOGGER.error("do_backup chmod: " + str(e))
 
             # 1. zip files
             self.get_backup_info(

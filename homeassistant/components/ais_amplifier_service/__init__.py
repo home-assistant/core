@@ -5,8 +5,9 @@ For more details about this platform, please refer to the documentation at
 https://www.ai-speaker.com
 """
 import asyncio
-import os
 import logging
+import os
+
 import homeassistant.components.ais_dom.ais_global as ais_global
 
 DOMAIN = "ais_amplifier_service"
@@ -46,13 +47,14 @@ def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "get_audio_mono", get_audio_mono)
 
     # temporarily suppress all kernel logging to the console
-    os.system("su -c 'dmesg -n 1'")
-    # set permissions to /dev/ttyS0
-    os.system("su -c 'chmod 666 /dev/ttyS0'")
-    # disable tone on start
-    # os.system(r'su -c "stty -F /dev/ttyS0 9600 && echo COM+TONEOFF\r\n > /dev/ttyS0"')
-    # set aux mode on start
-    os.system(r'su -c "stty -F /dev/ttyS0 9600 && echo COM+MAX\r\n > /dev/ttyS0"')
+    if ais_global.has_root():
+        os.system("su -c 'dmesg -n 1'")
+        # set permissions to /dev/ttyS0
+        os.system("su -c 'chmod 666 /dev/ttyS0'")
+        # disable tone on start
+        # os.system(r'su -c "stty -F /dev/ttyS0 9600 && echo COM+TONEOFF\r\n > /dev/ttyS0"')
+        # set aux mode on start
+        os.system(r'su -c "stty -F /dev/ttyS0 9600 && echo COM+MAX\r\n > /dev/ttyS0"')
     return True
 
 
@@ -61,6 +63,8 @@ def _change_sound_mode(hass, call):
     # set the mode
     if "mode" not in call.data:
         _LOGGER.error("No mode in call")
+        return
+    if not ais_global.has_root():
         return
 
     mode = call.data["mode"]
@@ -84,6 +88,8 @@ def _change_sound_mode(hass, call):
 
 
 def set_bt_mode():
+    if not ais_global.has_root():
+        return
     comm = r'su -c "stty -F /dev/ttyS0 9600 && echo COM+MBT\r\n > /dev/ttyS0"'
     os.system(comm)
 
@@ -93,12 +99,14 @@ def _change_audio_to_mono(hass, call):
     mode = hass.states.get("input_boolean.ais_audio_mono").state
     info_text = ""
     if mode == "on":
-        comm = r'su -c "settings put system master_mono 1"'
-        os.system(comm)
+        if ais_global.has_root():
+            comm = r'su -c "settings put system master_mono 1"'
+            os.system(comm)
         info_text = "włączony"
     else:
-        comm = r'su -c "settings put system master_mono 0"'
-        os.system(comm)
+        if ais_global.has_root():
+            comm = r'su -c "settings put system master_mono 0"'
+            os.system(comm)
         info_text = "wyłączony"
 
     if ais_global.G_AIS_START_IS_DONE:
@@ -112,10 +120,15 @@ def _get_audio_mono(hass, call):
     import subprocess
 
     try:
-        mode = subprocess.check_output(
-            'su -c "settings get system master_mono"', shell=True, timeout=10
-        )
-        mode = mode.decode("utf-8").replace("\n", "")
+        if ais_global.has_root():
+            mode = subprocess.check_output(
+                'su -c "settings get system master_mono"',
+                shell=True,  # nosec
+                timeout=10,
+            )
+            mode = mode.decode("utf-8").replace("\n", "")
+        else:
+            mode = "0"
         if mode == "1":
             yield from hass.services.async_call(
                 "input_boolean",
@@ -138,7 +151,8 @@ def _change_work_mode(hass, call):
     if "mode" not in call.data:
         _LOGGER.error("No mode in call")
         return
-
+    if not ais_global.has_root():
+        return
     from threading import Timer
 
     mode = call.data["mode"]
@@ -168,6 +182,8 @@ def _change_work_mode(hass, call):
 def _exec_command(hass, call):
     if "command" not in call.data:
         _LOGGER.error("No mode in call")
+        return
+    if not ais_global.has_root():
         return
     command = call.data["command"]
     # execute control instruction on amplifier via UART
