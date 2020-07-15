@@ -40,8 +40,11 @@ def extract_entities(
             else:
                 invalid_templates.append(template_name.replace("_template", ""))
 
+        entity_ids = list(entity_ids)
+
         if invalid_templates:
-            entity_ids = MATCH_ALL
+            if not entity_ids:
+                entity_ids = MATCH_ALL
             _LOGGER.warning(
                 "Template %s '%s' has no entity ids configured to track nor"
                 " were we able to extract the entities to track from the %s "
@@ -51,8 +54,6 @@ def extract_entities(
                 device_name,
                 ", ".join(invalid_templates),
             )
-        else:
-            entity_ids = list(entity_ids)
     else:
         entity_ids = manual_entity_ids
 
