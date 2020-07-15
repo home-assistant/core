@@ -178,7 +178,7 @@ def fix_rclone_config_permissions():
             'su -c "chown ' + uid + ":" + gid + " " + G_RCLONE_CONF_FILE + '"'
         )
         try:
-            ret = subprocess.check_output(fix_rclone_cmd, shell=True)  # nosec
+            subprocess.check_output(fix_rclone_cmd, shell=True)  # nosec
         except Exception as e:
             _LOGGER.error(
                 "Nie można uzyskać uprwanień do konfiguracji dysków: " + str(e)
@@ -701,7 +701,7 @@ class LocalData:
                 drive_exist = True
 
         if drive_exist:
-            if platform.machine() == "x86_64":
+            if not ais_global.has_root():
                 # to suport local test
                 rclone_cmd_mount = (
                     "rclone mount "
@@ -757,7 +757,7 @@ class LocalData:
             _LOGGER.error("rclone_remove_drive: NO drive in Rclone, name: " + name)
 
         # fusermount
-        if platform.machine() == "x86_64":
+        if not ais_global.has_root():
             os.system("fusermount -u /data/data/pl.sviete.dom/dom_cloud_drives/" + name)
         else:
             os.system(
