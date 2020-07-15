@@ -100,13 +100,13 @@ class NetatmoDataHandler:
             self.hass, async_update, timedelta(seconds=SCAN_INTERVAL)
         )
 
-        async def handle_event(event):
-            """Handle webhook events."""
-            if event.data["data"]["push_type"] == "webhook_activation":
-                _LOGGER.info("%s webhook successfully registered", MANUFACTURER)
-                self._webhook = True
+        self.hass.bus.async_listen("netatmo_event", self.handle_event)
 
-        self.hass.bus.async_listen("netatmo_event", handle_event)
+    async def handle_event(self, event):
+        """Handle webhook events."""
+        if event.data["data"]["push_type"] == "webhook_activation":
+            _LOGGER.info("%s webhook successfully registered", MANUFACTURER)
+            self._webhook = True
 
     async def register_data_class(self, data_class_name, **kwargs):
         """Register data class."""
