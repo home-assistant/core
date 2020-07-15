@@ -6,6 +6,7 @@ import logging
 from aiohttp import client_exceptions
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
+from pyControl4.error_handling import BadCredentials
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -60,6 +61,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         await account.getAccountBearerToken()
     except client_exceptions.ClientError as exception:
         _LOGGER.error("Error connecting to Control4 account API: %s", exception)
+        raise ConfigEntryNotReady
+    except BadCredentials as exception:
+        _LOGGER.error(
+            "Error authenticating with Control4 account API, incorrect username or password: %s",
+            exception,
+        )
         raise ConfigEntryNotReady
     entry_data[CONF_ACCOUNT] = account
 
