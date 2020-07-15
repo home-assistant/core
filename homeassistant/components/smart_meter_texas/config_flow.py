@@ -41,7 +41,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise InvalidAuth
 
     # Return info that you want to store in the config entry.
-    return {"title": f"Electric Meter {data['meter']}"}
+    return {"title": "Electric Meter"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
