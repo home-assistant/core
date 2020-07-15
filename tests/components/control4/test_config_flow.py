@@ -1,7 +1,8 @@
 """Test the Control4 config flow."""
-import datetime
 import asyncio
+import datetime
 import sys
+
 from pyControl4.error_handling import Unauthorized
 
 from homeassistant import config_entries, setup
