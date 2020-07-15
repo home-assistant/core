@@ -388,6 +388,8 @@ async def _set_ais_secure_android_id_dom(hass, call):
 
 
 async def _init_local_sdcard(hass, call):
+    if not ais_global.has_root():
+        return
     script = str(os.path.dirname(__file__))
     script += "/scripts/init_local_sdcard.sh"
     import subprocess
