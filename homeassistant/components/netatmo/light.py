@@ -68,7 +68,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     return
 
 
-class NetatmoLight(LightEntity, NetatmoBase):
+class NetatmoLight(NetatmoBase, LightEntity):
     """Representation of a Netatmo Presence camera light."""
 
     def __init__(
@@ -76,7 +76,7 @@ class NetatmoLight(LightEntity, NetatmoBase):
     ):
         """Initialize a Netatmo Presence camera light."""
         LightEntity.__init__(self)
-        NetatmoBase.__init__(self, data_handler)
+        super.__init__(data_handler)
 
         self._data_classes.append({"name": data_class})
         self._id = camera_id
@@ -89,7 +89,7 @@ class NetatmoLight(LightEntity, NetatmoBase):
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
-        await NetatmoBase.async_added_to_hass(self)
+        await super().async_added_to_hass()
 
         async def handle_event(event):
             """Handle webhook events."""
