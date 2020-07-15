@@ -1,19 +1,50 @@
 """Test the Smappee config flow."""
 from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components.smappee import config_flow
 from homeassistant.components.smappee.const import (
     AUTHORIZE_URL,
     CONF_HOSTNAME,
+    CONF_SERIALNUMBER,
+    CONF_TITLE,
     DOMAIN,
     TOKEN_URL,
 )
-from homeassistant.config_entries import SOURCE_ZEROCONF
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_IP_ADDRESS
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.async_mock import patch
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
+
+
+async def test_show_user_form(hass):
+    """Test that the user set up form is served."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER},
+    )
+
+    assert result["step_id"] == "user"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+
+async def test_show_zeroconf_confirm_form(hass):
+    """Test that the zeroconf confirmation form is served."""
+    flow = config_flow.SmappeeFlowHandler()
+    flow.hass = hass
+    flow.context = {
+        "source": SOURCE_ZEROCONF,
+        CONF_HOSTNAME: "Smappee1006000212.local.",
+        CONF_TITLE: "Smappee1006000212",
+        CONF_IP_ADDRESS: "1.2.3.4",
+        CONF_SERIALNUMBER: "1006000212",
+    }
+    result = await flow.async_step_zeroconf_confirm()
+
+    assert result["description_placeholders"] == {CONF_SERIALNUMBER: "1006000212"}
+    assert result["step_id"] == "zeroconf_confirm"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
 
 async def test_show_zeroconf_connection_error_form(
