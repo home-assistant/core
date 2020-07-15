@@ -17,9 +17,15 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_O
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
-from .common import setup_platform
+from .common import (
+    patch_bond_device_state,
+    patch_bond_set_direction,
+    patch_bond_set_speed,
+    patch_bond_turn_off,
+    patch_bond_turn_on,
+    setup_platform,
+)
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 
@@ -69,32 +75,25 @@ async def test_entity_non_standard_speed_list(hass: core.HomeAssistant):
         fan.SPEED_HIGH,
     ]
 
-    with patch("homeassistant.components.bond.Bond.turnOn"), patch(
-        "homeassistant.components.bond.Bond.setSpeed"
-    ) as mock_set_speed_low:
-        await turn_fan_on(hass, "fan.name_1", fan.SPEED_LOW)
-    mock_set_speed_low.assert_called_once_with("test-device-id", speed=1)
+    with patch_bond_device_state():
+        with patch_bond_turn_on(), patch_bond_set_speed() as mock_set_speed_low:
+            await turn_fan_on(hass, "fan.name_1", fan.SPEED_LOW)
+        mock_set_speed_low.assert_called_once_with("test-device-id", speed=1)
 
-    with patch("homeassistant.components.bond.Bond.turnOn"), patch(
-        "homeassistant.components.bond.Bond.setSpeed"
-    ) as mock_set_speed_medium:
-        await turn_fan_on(hass, "fan.name_1", fan.SPEED_MEDIUM)
-    mock_set_speed_medium.assert_called_once_with("test-device-id", speed=3)
+        with patch_bond_turn_on(), patch_bond_set_speed() as mock_set_speed_medium:
+            await turn_fan_on(hass, "fan.name_1", fan.SPEED_MEDIUM)
+        mock_set_speed_medium.assert_called_once_with("test-device-id", speed=3)
 
-    with patch("homeassistant.components.bond.Bond.turnOn"), patch(
-        "homeassistant.components.bond.Bond.setSpeed"
-    ) as mock_set_speed_high:
-        await turn_fan_on(hass, "fan.name_1", fan.SPEED_HIGH)
-    mock_set_speed_high.assert_called_once_with("test-device-id", speed=6)
+        with patch_bond_turn_on(), patch_bond_set_speed() as mock_set_speed_high:
+            await turn_fan_on(hass, "fan.name_1", fan.SPEED_HIGH)
+        mock_set_speed_high.assert_called_once_with("test-device-id", speed=6)
 
 
 async def test_turn_on_fan(hass: core.HomeAssistant):
     """Tests that turn on command delegates to API."""
     await setup_platform(hass, FAN_DOMAIN, ceiling_fan("name-1"))
 
-    with patch("homeassistant.components.bond.Bond.turnOn") as mock_turn_on, patch(
-        "homeassistant.components.bond.Bond.setSpeed"
-    ) as mock_set_speed:
+    with patch_bond_turn_on() as mock_turn_on, patch_bond_set_speed() as mock_set_speed, patch_bond_device_state():
         await turn_fan_on(hass, "fan.name_1", fan.SPEED_LOW)
 
     mock_set_speed.assert_called_once()
@@ -105,7 +104,7 @@ async def test_turn_off_fan(hass: core.HomeAssistant):
     """Tests that turn off command delegates to API."""
     await setup_platform(hass, FAN_DOMAIN, ceiling_fan("name-1"))
 
-    with patch("homeassistant.components.bond.Bond.turnOff") as mock_turn_off:
+    with patch_bond_turn_off() as mock_turn_off, patch_bond_device_state():
         await hass.services.async_call(
             FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "fan.name_1"}, blocking=True,
         )
@@ -118,10 +117,7 @@ async def test_update_reports_fan_on(hass: core.HomeAssistant):
     """Tests that update command sets correct state when Bond API reports fan power is on."""
     await setup_platform(hass, FAN_DOMAIN, ceiling_fan("name-1"))
 
-    with patch(
-        "homeassistant.components.bond.Bond.getDeviceState",
-        return_value={"power": 1, "speed": 1},
-    ):
+    with patch_bond_device_state(return_value={"power": 1, "speed": 1}):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
 
@@ -132,10 +128,7 @@ async def test_update_reports_fan_off(hass: core.HomeAssistant):
     """Tests that update command sets correct state when Bond API reports fan power is off."""
     await setup_platform(hass, FAN_DOMAIN, ceiling_fan("name-1"))
 
-    with patch(
-        "homeassistant.components.bond.Bond.getDeviceState",
-        return_value={"power": 0, "speed": 1},
-    ):
+    with patch_bond_device_state(return_value={"power": 0, "speed": 1}):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
 
@@ -146,10 +139,7 @@ async def test_update_reports_direction_forward(hass: core.HomeAssistant):
     """Tests that update command sets correct direction when Bond API reports fan direction is forward."""
     await setup_platform(hass, FAN_DOMAIN, ceiling_fan("name-1"))
 
-    with patch(
-        "homeassistant.components.bond.Bond.getDeviceState",
-        return_value={"direction": Directions.FORWARD},
-    ):
+    with patch_bond_device_state(return_value={"direction": Directions.FORWARD}):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
 
@@ -160,10 +150,7 @@ async def test_update_reports_direction_reverse(hass: core.HomeAssistant):
     """Tests that update command sets correct direction when Bond API reports fan direction is reverse."""
     await setup_platform(hass, FAN_DOMAIN, ceiling_fan("name-1"))
 
-    with patch(
-        "homeassistant.components.bond.Bond.getDeviceState",
-        return_value={"direction": Directions.REVERSE},
-    ):
+    with patch_bond_device_state(return_value={"direction": Directions.REVERSE}):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
 
@@ -174,7 +161,7 @@ async def test_set_fan_direction(hass: core.HomeAssistant):
     """Tests that set direction command delegates to API."""
     await setup_platform(hass, FAN_DOMAIN, ceiling_fan("name-1"))
 
-    with patch("homeassistant.components.bond.Bond.setDirection") as mock_set_direction:
+    with patch_bond_set_direction() as mock_set_direction, patch_bond_device_state():
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_SET_DIRECTION,
