@@ -75,10 +75,10 @@ class SmappeeFlowHandler(
             if user_input["environment"] == "LOCAL":
                 self.context.update({"environment": "LOCAL"})
                 return self._show_setup_form(step="host")
-            else:
-                # Use configuration.yaml CLOUD setup
-                self.context.update({"environment": "CLOUD"})
-                return await self.async_step_pick_implementation()
+
+            # Use configuration.yaml CLOUD setup
+            self.context.update({"environment": "CLOUD"})
+            return await self.async_step_pick_implementation()
 
         if source == SOURCE_ZEROCONF:
             user_input[CONF_HOSTNAME] = self.context.get(CONF_HOSTNAME)
