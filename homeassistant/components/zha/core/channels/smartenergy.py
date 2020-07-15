@@ -3,7 +3,7 @@ import logging
 
 import zigpy.zcl.clusters.smartenergy as smartenergy
 
-from homeassistant.const import LENGTH_FEET, TIME_HOURS, TIME_SECONDS
+from homeassistant.const import LENGTH_FEET, POWER_WATT, TIME_HOURS, TIME_SECONDS
 from homeassistant.core import callback
 
 from .. import registries, typing as zha_typing
@@ -60,7 +60,7 @@ class Metering(ZigbeeChannel):
     REPORT_CONFIG = [{"attr": "instantaneous_demand", "config": REPORT_CONFIG_DEFAULT}]
 
     unit_of_measure_map = {
-        0x00: "kW",
+        0x00: POWER_WATT,
         0x01: f"m³/{TIME_HOURS}",
         0x02: f"{LENGTH_FEET}³/{TIME_HOURS}",
         0x03: f"ccf/{TIME_HOURS}",
@@ -117,6 +117,10 @@ class Metering(ZigbeeChannel):
         self._divisor = results.get("divisor", self._divisor)
         self._multiplier = results.get("multiplier", self._multiplier)
         self._unit_enum = results.get("unit_of_measure", 0x7F)  # default to unknown
+
+        if self.unit_of_measurement == "W":
+            # Zigbee spec power unit is kW, but we show the value in W
+            self._multiplier = self._multiplier * 1000
 
         fmting = results.get(
             "demand_formatting", 0xF9
