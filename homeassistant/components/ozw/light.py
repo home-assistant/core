@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_WHITE_VALUE,
@@ -28,6 +29,9 @@ COLOR_CHANNEL_COLD_WHITE = 0x02
 COLOR_CHANNEL_RED = 0x04
 COLOR_CHANNEL_GREEN = 0x08
 COLOR_CHANNEL_BLUE = 0x10
+TEMP_COLOR_MAX = 500  # mireds (inverted)
+TEMP_COLOR_MIN = 154
+TEMP_COLOR_DIFF = TEMP_COLOR_MAX - TEMP_COLOR_MIN
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -64,6 +68,7 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         self._color_channels = None
         self._hs = None
         self._white = None
+        self._ct = None
         self._supported_features = SUPPORT_BRIGHTNESS
         # make sure that supported features is correctly set
         self.on_value_update()
@@ -117,6 +122,11 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         """Return the white value of this light between 0..255."""
         return self._white
 
+    @property
+    def color_temp(self):
+        """Return the color temperature."""
+        return self._ct
+
     @callback
     def async_set_duration(self, **kwargs):
         """Set the transition time for the brightness value.
@@ -157,6 +167,7 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         rgbw = None
         white = kwargs.get(ATTR_WHITE_VALUE)
         hs_color = kwargs.get(ATTR_HS_COLOR)
+        ct = kwargs.get(ATTR_COLOR_TEMP)
 
         if hs_color is not None:
             rgbw = "#"
@@ -170,6 +181,11 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
                 rgbw = f"#000000{white:02x}00"
             else:
                 rgbw = f"#00000000{white:02x}"
+
+        elif ct is not None:
+            cold = int((TEMP_COLOR_MAX - ct) / TEMP_COLOR_DIFF * 255)
+            warm = 255 - cold
+            rgbw = f"#000000{warm:02x}{cold:02x}"
 
         if rgbw and self.values.color:
             self.values.color.send_value(rgbw)
@@ -204,16 +220,27 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         # Parse remaining color channels. Openzwave appends white channels
         # that are present.
         index = 7
+        ct_1 = 0
+        ct_2 = 0
 
         # Warm white
         if self._color_channels & COLOR_CHANNEL_WARM_WHITE:
             self._white = int(data[index : index + 2], 16)
+            ct_1 = self._white
 
         index += 2
 
         # Cold white
         if self._color_channels & COLOR_CHANNEL_COLD_WHITE:
             self._white = int(data[index : index + 2], 16)
+            ct_2 = self._white
+
+        # Calculate color temps based on white LED status
+        if ct_1 > 0:
+            self._ct = TEMP_COLOR_MAX - ((ct_1 / 255) * TEMP_COLOR_DIFF)
+        # Only used if WW channel missing
+        elif ct_2 > 0:
+            self._ct = TEMP_COLOR_MAX - ct_1
 
         # If no rgb channels supported, report None.
         if not (
