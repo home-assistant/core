@@ -18,11 +18,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         entities = []
         for device in discovery_info[ATTR_NEW]:
             hdmi_device = hass.data.get(device)
-            entities.append(CecSwitchDevice(hdmi_device, hdmi_device.logical_address))
+            entities.append(CecSwitchEntity(hdmi_device, hdmi_device.logical_address))
         add_entities(entities, True)
 
 
-class CecSwitchDevice(CecEntity, SwitchEntity):
+class CecSwitchEntity(CecEntity, SwitchEntity):
     """Representation of a HDMI device as a Switch."""
 
     def __init__(self, device, logical) -> None:
@@ -34,13 +34,13 @@ class CecSwitchDevice(CecEntity, SwitchEntity):
         """Turn device on."""
         self._device.turn_on()
         self._state = STATE_ON
-        self.async_write_ha_state()
+        self.schedule_update_ha_state(force_refresh=False)
 
     def turn_off(self, **kwargs) -> None:
         """Turn device off."""
         self._device.turn_off()
         self._state = STATE_OFF
-        self.async_write_ha_state()
+        self.schedule_update_ha_state(force_refresh=False)
 
     def toggle(self, **kwargs):
         """Toggle the entity."""
@@ -49,7 +49,7 @@ class CecSwitchDevice(CecEntity, SwitchEntity):
             self._state = STATE_OFF
         else:
             self._state = STATE_ON
-        self.async_write_ha_state()
+        self.schedule_update_ha_state(force_refresh=False)
 
     @property
     def is_on(self) -> bool:
