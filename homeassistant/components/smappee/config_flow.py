@@ -89,22 +89,28 @@ class SmappeeFlowHandler(
             user_input[CONF_IP_ADDRESS] = user_input["host"]
 
         if user_input.get(CONF_IP_ADDRESS) is not None or not prepare:
+            smappee_api = api.api.SmappeeLocalApi(ip=user_input[CONF_IP_ADDRESS])
             try:
-                smappee_api = api.api.SmappeeLocalApi(ip=user_input[CONF_IP_ADDRESS])
                 await self.hass.async_add_executor_job(smappee_api.logon)
 
-                # LOCAL setup
+                # In a LOCAL setup we still need to resolve the host to serialnumber
                 if not source == SOURCE_ZEROCONF:
-                    for config_item in smappee_api.load_advanced_config():
+                    advanced_config = await self.hass.async_add_executor_job(
+                        smappee_api.load_advanced_config
+                    )
+                    serialnumber = None
+                    for config_item in advanced_config:
                         if config_item["key"] == "mdnsHostName":
-                            if not config_item["value"].startswith("Smappee1"):
-                                # We currently only support Energy and Solar models (legacy)
-                                return self.async_abort(reason="invalid_mdns")
-                            user_input[CONF_HOSTNAME] = f'{config_item["value"]}.local'
-                            user_input[CONF_TITLE] = config_item["value"]
-                            user_input[CONF_SERIALNUMBER] = config_item[
-                                "value"
-                            ].replace("Smappee", "")
+                            serialnumber = config_item["value"]
+
+                    if serialnumber is None or not serialnumber.startswith("Smappee1"):
+                        # We currently only support Energy and Solar models (legacy)
+                        return self.async_abort(reason="invalid_mdns")
+                    user_input[CONF_HOSTNAME] = f'{config_item["value"]}.local'
+                    user_input[CONF_TITLE] = config_item["value"]
+                    user_input[CONF_SERIALNUMBER] = config_item["value"].replace(
+                        "Smappee", ""
+                    )
             except Exception:
                 return self.async_abort(reason="connection_error")
 
