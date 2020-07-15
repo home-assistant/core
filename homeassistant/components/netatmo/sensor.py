@@ -6,7 +6,6 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONCENTRATION_PARTS_PER_MILLION,
-    CONF_SHOW_ON_MAP,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
@@ -21,19 +20,8 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 
-from .const import (
-    CONF_AREA_NAME,
-    CONF_LAT_NE,
-    CONF_LAT_SW,
-    CONF_LON_NE,
-    CONF_LON_SW,
-    CONF_PUBLIC_MODE,
-    CONF_WEATHER_AREAS,
-    DATA_HANDLER,
-    DOMAIN,
-    MANUFACTURER,
-    MODELS,
-)
+from .const import CONF_WEATHER_AREAS, DATA_HANDLER, DOMAIN, MANUFACTURER, MODELS
+from .helper import NetatmoArea
 from .netatmo_entity_base import NetatmoBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -115,19 +103,16 @@ async def async_setup_entry(hass, entry, async_add_entities):
         await data_handler.register_data_class(data_class)
 
         all_module_infos = {}
+        data = data_handler.data
 
-        if not data_handler.data.get(data_class):
+        if not data.get(data_class):
             return []
 
-        for station_id in data_handler.data.get(data_class).stations:
-            for module_id in data_handler.data.get(data_class).get_modules(station_id):
-                all_module_infos[module_id] = data_handler.data.get(
-                    data_class
-                ).get_module(module_id)
+        for station_id in data.get(data_class).stations:
+            for module_id in data.get(data_class).get_modules(station_id):
+                all_module_infos[module_id] = data.get(data_class).get_module(module_id)
 
-            all_module_infos[station_id] = data_handler.data.get(
-                data_class
-            ).get_station(station_id)
+            all_module_infos[station_id] = data.get(data_class).get_station(station_id)
 
         entities = []
         for module in all_module_infos.values():
@@ -138,7 +123,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             _LOGGER.debug(
                 "Adding module %s %s", module.get("module_name"), module.get("_id"),
             )
-            for condition in data_handler.data[data_class].get_monitored_conditions(
+            for condition in data[data_class].get_monitored_conditions(
                 module_id=module["_id"]
             ):
                 entities.append(
@@ -164,22 +149,22 @@ async def async_setup_entry(hass, entry, async_add_entities):
         """Retrieve Netatmo public weather entities."""
         data_class = "PublicData"
         entities = []
-        for area in entry.options.get(CONF_WEATHER_AREAS, {}).values():
+        for area in [
+            NetatmoArea(**i) for i in entry.options.get(CONF_WEATHER_AREAS, {}).values()
+        ]:
             await data_handler.register_data_class(
                 data_class,
-                LAT_NE=area[CONF_LAT_NE],
-                LON_NE=area[CONF_LON_NE],
-                LAT_SW=area[CONF_LAT_SW],
-                LON_SW=area[CONF_LON_SW],
-                area_name=area[CONF_AREA_NAME],
+                LAT_NE=area.lat_ne,
+                LON_NE=area.lon_ne,
+                LAT_SW=area.lat_sw,
+                LON_SW=area.lon_sw,
+                area_name=area.area_name,
             )
             for sensor_type in SUPPORTED_PUBLIC_SENSOR_TYPES:
                 entities.append(
                     NetatmoPublicSensor(data_handler, data_class, area, sensor_type,)
                 )
-            await data_handler.unregister_data_class(
-                f"{data_class}-{area[CONF_AREA_NAME]}"
-            )
+            await data_handler.unregister_data_class(f"{data_class}-{area.area_name}")
 
         for device in async_entries_for_config_entry(device_registry, entry.entry_id):
             if device.model == "Public Weather stations":
@@ -455,27 +440,24 @@ class NetatmoPublicSensor(NetatmoBase):
         self._data_classes.append(
             {
                 "name": data_class,
-                "LAT_NE": area[CONF_LAT_NE],
-                "LON_NE": area[CONF_LON_NE],
-                "LAT_SW": area[CONF_LAT_SW],
-                "LON_SW": area[CONF_LON_SW],
-                "area_name": area[CONF_AREA_NAME],
+                "LAT_NE": area.lat_ne,
+                "LON_NE": area.lon_ne,
+                "LAT_SW": area.lat_sw,
+                "LON_SW": area.lon_sw,
+                "area_name": area.area_name,
             }
         )
 
         self.type = sensor_type
-        self.lat_ne = area[CONF_LAT_NE]
-        self.lon_ne = area[CONF_LON_NE]
-        self.lat_sw = area[CONF_LAT_SW]
-        self.lon_sw = area[CONF_LON_SW]
-        self._mode = area[CONF_PUBLIC_MODE]
-        self._area_name = area[CONF_AREA_NAME]
+        self.area = area
+        self._mode = area.mode
+        self._area_name = area.area_name
         self._name = f"{MANUFACTURER} {self._area_name} {SENSOR_TYPES[self.type][0]}"
         self._state = None
         self._device_class = SENSOR_TYPES[self.type][3]
         self._icon = SENSOR_TYPES[self.type][2]
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
-        self._show_on_map = area[CONF_SHOW_ON_MAP]
+        self._show_on_map = area.show_on_map
         self._unique_id = f"{self._name.replace(' ', '-')}"
         self._model = PUBLIC
 
@@ -510,8 +492,8 @@ class NetatmoPublicSensor(NetatmoBase):
         attrs = {}
 
         if self._show_on_map:
-            attrs[ATTR_LATITUDE] = (self.lat_ne + self.lat_sw) / 2
-            attrs[ATTR_LONGITUDE] = (self.lon_ne + self.lon_sw) / 2
+            attrs[ATTR_LATITUDE] = (self.area.lat_ne + self.area.lat_sw) / 2
+            attrs[ATTR_LONGITUDE] = (self.area.lon_ne + self.area.lon_sw) / 2
 
         return attrs
 

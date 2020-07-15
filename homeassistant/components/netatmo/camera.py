@@ -121,7 +121,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     return
 
 
-class NetatmoCamera(Camera, NetatmoBase):
+class NetatmoCamera(NetatmoBase, Camera):
     """Representation of a Netatmo camera."""
 
     def __init__(
@@ -129,7 +129,7 @@ class NetatmoCamera(Camera, NetatmoBase):
     ):
         """Set up for access to the Netatmo camera images."""
         Camera.__init__(self)
-        NetatmoBase.__init__(self, data_handler)
+        super().__init__(data_handler)
 
         self._data_classes.append({"name": data_class})
 
