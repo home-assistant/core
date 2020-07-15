@@ -222,9 +222,9 @@ class Alert(ToggleEntity):
             return STATE_ON
         return STATE_IDLE
 
-    async def watched_entity_change(self, event):
+    async def watched_entity_change(self, ev):
         """Determine if the alert should start or stop."""
-        to_state = event.data.get("new_state")
+        to_state = ev.data.get("new_state")
         if to_state is None:
             return
         _LOGGER.debug("Watched entity (%s) has changed", event.data.get("entity_id"))
