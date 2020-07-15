@@ -49,7 +49,7 @@ class NeatoSensor(Entity):
         except NeatoRobotException as ex:
             if self._available:
                 _LOGGER.error(
-                    "Neato sensor connection error for '%s': %s", self._robot_name, ex
+                    "Neato sensor connection error for '%s': %s", self.entity_id, ex
                 )
             self._state = None
             self._available = False
