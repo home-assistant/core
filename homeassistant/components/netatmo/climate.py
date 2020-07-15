@@ -237,51 +237,49 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         """Entity created."""
         await super().async_added_to_hass()
 
-        async def handle_event(event):
-            """Handle webhook events."""
-            data = event.data["data"]
+        self.hass.bus.async_listen("netatmo_event", self.handle_event)
 
-            if not data.get("event_type"):
-                return
+    async def handle_event(self, event):
+        """Handle webhook events."""
+        data = event.data["data"]
 
-            if not data.get("home"):
-                return
+        if not data.get("event_type"):
+            return
 
-            home = data["home"]
-            if self._home_id == home["id"] and data["event_type"] == "therm_mode":
-                self._preset = NETATMO_MAP_PRESET[home["therm_mode"]]
-                self._hvac_mode = HVAC_MAP_NETATMO[self._preset]
-                if self._preset == PRESET_FROST_GUARD:
-                    self._target_temperature = self._hg_temperature
-                elif self._preset == PRESET_AWAY:
-                    self._target_temperature = self._away_temperature
-                elif self._preset == PRESET_SCHEDULE:
+        if not data.get("home"):
+            return
+
+        home = data["home"]
+        if self._home_id == home["id"] and data["event_type"] == "therm_mode":
+            self._preset = NETATMO_MAP_PRESET[home["therm_mode"]]
+            self._hvac_mode = HVAC_MAP_NETATMO[self._preset]
+            if self._preset == PRESET_FROST_GUARD:
+                self._target_temperature = self._hg_temperature
+            elif self._preset == PRESET_AWAY:
+                self._target_temperature = self._away_temperature
+            elif self._preset == PRESET_SCHEDULE:
+                self.async_update_callback()
+            self.async_write_ha_state()
+            return
+
+        if not home.get("rooms"):
+            return
+
+        for room in home["rooms"]:
+            if data["event_type"] == "set_point":
+                if self._id == room["id"]:
+                    if room["therm_setpoint_mode"] == "off":
+                        self._hvac_mode = HVAC_MODE_OFF
+                    else:
+                        self._target_temperature = room["therm_setpoint_temperature"]
+                    self.async_write_ha_state()
+                    break
+
+            elif data["event_type"] == "cancel_set_point":
+                if self._id == room["id"]:
                     self.async_update_callback()
-                self.async_write_ha_state()
-                return
-
-            if not home.get("rooms"):
-                return
-
-            for room in home["rooms"]:
-                if data["event_type"] == "set_point":
-                    if self._id == room["id"]:
-                        if room["therm_setpoint_mode"] == "off":
-                            self._hvac_mode = HVAC_MODE_OFF
-                        else:
-                            self._target_temperature = room[
-                                "therm_setpoint_temperature"
-                            ]
-                        self.async_write_ha_state()
-                        break
-
-                elif data["event_type"] == "cancel_set_point":
-                    if self._id == room["id"]:
-                        self.async_update_callback()
-                        self.async_write_ha_state()
-                        break
-
-        self.hass.bus.async_listen("netatmo_event", handle_event)
+                    self.async_write_ha_state()
+                    break
 
     @property
     def supported_features(self):

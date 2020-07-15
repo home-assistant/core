@@ -91,31 +91,31 @@ class NetatmoLight(NetatmoBase, LightEntity):
         """Entity created."""
         await super().async_added_to_hass()
 
-        async def handle_event(event):
-            """Handle webhook events."""
-            data = event.data["data"]
+        self.hass.bus.async_listen("netatmo_event", self.handle_event)
 
-            if not data.get("event_type"):
-                return
+    async def handle_event(self, event):
+        """Handle webhook events."""
+        data = event.data["data"]
 
-            if not data.get("camera_id"):
-                return
+        if not data.get("event_type"):
+            return
 
-            if (
-                data["home_id"] == self._home_id
-                and data["camera_id"] == self._id
-                and data["push_type"] == "NOC-light_mode"
-            ):
-                if data["sub_type"] in ["off", "auto"]:
-                    self._is_on = False
+        if not data.get("camera_id"):
+            return
 
-                elif data["sub_type"] == "on":
-                    self._is_on = True
+        if (
+            data["home_id"] == self._home_id
+            and data["camera_id"] == self._id
+            and data["push_type"] == "NOC-light_mode"
+        ):
+            if data["sub_type"] in ["off", "auto"]:
+                self._is_on = False
 
-                self.async_write_ha_state()
-                return
+            elif data["sub_type"] == "on":
+                self._is_on = True
 
-        self.hass.bus.async_listen("netatmo_event", handle_event)
+            self.async_write_ha_state()
+            return
 
     @property
     def is_on(self):
