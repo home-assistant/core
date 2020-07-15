@@ -81,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         controller_href
     )
 
-    control4, model, mac_address = controller_unique_id.split("_", 3)
+    _, model, mac_address = controller_unique_id.split("_", 3)
     entry_data[CONF_DIRECTOR_MODEL] = model.upper()
 
     device_registry = await dr.async_get_registry(hass)
