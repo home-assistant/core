@@ -43,6 +43,7 @@ async def test_show_zeroconf_confirm_form(hass):
     }
     result = await flow.async_step_zeroconf_confirm()
 
+    assert flow.context["source"] == SOURCE_ZEROCONF
     assert result["description_placeholders"] == {CONF_SERIALNUMBER: "1006000212"}
     assert result["step_id"] == "zeroconf_confirm"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -67,6 +68,16 @@ async def test_show_zeroconf_connection_error_form(
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "connection_error"
+
+
+async def test_connection_error(hass, aiohttp_client, aioclient_mock):
+    """Test we show user form on Smappee connection error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data={"host": "1.2.3.4"},
+    )
+
+    assert result["reason"] == "connection_error"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
 async def test_zeroconf_no_data(hass, aiohttp_client, aioclient_mock):
