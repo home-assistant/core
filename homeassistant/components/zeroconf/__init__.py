@@ -9,6 +9,7 @@ from zeroconf import (
     DNSPointer,
     DNSRecord,
     InterfaceChoice,
+    IPVersion,
     NonUniqueNameException,
     ServiceBrowser,
     ServiceInfo,
@@ -42,7 +43,9 @@ ZEROCONF_TYPE = "_home-assistant._tcp.local."
 HOMEKIT_TYPE = "_hap._tcp.local."
 
 CONF_DEFAULT_INTERFACE = "default_interface"
+CONF_IPV6 = "ipv6"
 DEFAULT_DEFAULT_INTERFACE = False
+DEFAULT_IPV6 = True
 
 HOMEKIT_PROPERTIES = "properties"
 HOMEKIT_PAIRED_STATUS_FLAG = "sf"
@@ -54,7 +57,8 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Optional(
                     CONF_DEFAULT_INTERFACE, default=DEFAULT_DEFAULT_INTERFACE
-                ): cv.boolean
+                ): cv.boolean,
+                vol.Optional(CONF_IPV6, default=DEFAULT_IPV6): cv.boolean,
             }
         )
     },
@@ -68,11 +72,17 @@ async def async_get_instance(hass):
     return await hass.async_add_executor_job(_get_instance, hass)
 
 
-def _get_instance(hass, default_interface=False):
+def _get_instance(hass, default_interface=False, ipv6=True):
     """Create an instance."""
     logging.getLogger("zeroconf").setLevel(logging.NOTSET)
-    args = [InterfaceChoice.Default] if default_interface else []
-    zeroconf = HaZeroconf(*args)
+
+    zc_args = {}
+    if default_interface:
+        zc_args["interfaces"] = InterfaceChoice.Default
+    if not ipv6:
+        zc_args["ip_version"] = IPVersion.V4Only
+
+    zeroconf = HaZeroconf(**zc_args)
 
     def stop_zeroconf(_):
         """Stop Zeroconf."""
@@ -115,8 +125,13 @@ class HaZeroconf(Zeroconf):
 
 def setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
+    zc_config = config.get(DOMAIN, {})
     zeroconf = hass.data[DOMAIN] = _get_instance(
-        hass, config.get(DOMAIN, {}).get(CONF_DEFAULT_INTERFACE)
+        hass,
+        default_interface=zc_config.get(
+            CONF_DEFAULT_INTERFACE, DEFAULT_DEFAULT_INTERFACE
+        ),
+        ipv6=zc_config.get(CONF_IPV6, DEFAULT_IPV6),
     )
 
     # Get instance UUID
