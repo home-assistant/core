@@ -645,9 +645,7 @@ class EntityAttributeCache:
         if current_state:
             # Try the current state as its faster than decoding the
             # attributes
-            self._cache[entity_id][attribute] = current_state.attributes.get(
-                attribute, None
-            )
+            self._cache[entity_id][attribute] = current_state.attributes.get(attribute)
         else:
             # If the entity has been removed, decode the attributes
             # instead
