@@ -158,7 +158,7 @@ class Control4Light(Control4Entity, LightEntity):
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
-        super().async_added_to_hass()
+        await super().async_added_to_hass()
         self._c4_light = C4Light(self.director, self._idx)
 
     @property
