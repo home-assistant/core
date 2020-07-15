@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant import exceptions
 import homeassistant.components.scene as scene
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
-from homeassistant.core import Context, callback
+from homeassistant.core import Context, CoreState, callback
 from homeassistant.helpers import config_validation as cv, script
 from homeassistant.helpers.event import async_call_later
 import homeassistant.util.dt as dt_util
@@ -267,7 +267,7 @@ async def test_activating_scene(hass):
 
 
 @pytest.mark.parametrize("count", [1, 3])
-async def test_stop_no_wait(hass, caplog, count):
+async def test_stop_no_wait(hass, count):
     """Test stopping script."""
     service_started_sem = asyncio.Semaphore(0)
     finish_service_event = asyncio.Event()
@@ -959,10 +959,10 @@ async def test_propagate_error_service_exception(hass):
     assert not script_obj.is_running
 
 
-async def test_referenced_entities():
+async def test_referenced_entities(hass):
     """Test referenced entities."""
     script_obj = script.Script(
-        None,
+        hass,
         cv.SCRIPT_SCHEMA(
             [
                 {
@@ -995,10 +995,10 @@ async def test_referenced_entities():
     assert script_obj.referenced_entities is script_obj.referenced_entities
 
 
-async def test_referenced_devices():
+async def test_referenced_devices(hass):
     """Test referenced entities."""
     script_obj = script.Script(
-        None,
+        hass,
         cv.SCRIPT_SCHEMA(
             [
                 {"domain": "light", "device_id": "script-dev-id"},
@@ -1190,13 +1190,47 @@ async def test_script_mode_queued(hass):
         assert events[3].data["value"] == 2
 
 
-async def test_script_logging(caplog):
+async def test_script_logging(hass, caplog):
     """Test script logging."""
-    script_obj = script.Script(None, [], "Script with % Name")
+    script_obj = script.Script(hass, [], "Script with % Name")
     script_obj._log("Test message with name %s", 1)
 
     assert "Script with % Name: Test message with name 1" in caplog.text
 
-    script_obj = script.Script(None, [])
+    script_obj = script.Script(hass, [])
     script_obj._log("Test message without name %s", 2)
     assert "Test message without name 2" in caplog.text
+
+
+@pytest.mark.parametrize("after_shutdown", [False, True])
+async def test_shutdown(hass, caplog, after_shutdown):
+    """Test stopping scripts at shutdown."""
+    delay_alias = "delay step"
+    sequence = cv.SCRIPT_SCHEMA({"delay": {"seconds": 120}, "alias": delay_alias})
+    script_obj = script.Script(hass, sequence, "test script")
+    delay_started_flag = async_watch_for_action(script_obj, delay_alias)
+
+    if after_shutdown:
+        hass.state = CoreState.stopping
+        hass.bus.async_fire("homeassistant_stop")
+        await hass.async_block_till_done()
+
+    try:
+        hass.async_create_task(script_obj.async_run())
+        await asyncio.wait_for(delay_started_flag.wait(), 1)
+
+        assert script_obj.is_running
+        assert script_obj.last_action == delay_alias
+    except (AssertionError, asyncio.TimeoutError):
+        await script_obj.async_stop()
+        raise
+    else:
+        if after_shutdown:
+            async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+        else:
+            hass.bus.async_fire("homeassistant_stop")
+        await hass.async_block_till_done()
+
+        assert not script_obj.is_running
+        msg = "too long after" if after_shutdown else "at"
+        assert f"Stopping scripts running {msg} shutdown: test script" in caplog.text
