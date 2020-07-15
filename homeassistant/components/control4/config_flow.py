@@ -19,15 +19,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import (
-    CONF_CONTROLLER_UNIQUE_ID,
-    CONF_LIGHT_COLD_START_TRANSITION_TIME,
-    CONF_LIGHT_TRANSITION_TIME,
-    DEFAULT_LIGHT_COLD_START_TRANSITION_TIME,
-    DEFAULT_LIGHT_TRANSITION_TIME,
-    DEFAULT_SCAN_INTERVAL,
-    MIN_SCAN_INTERVAL
-)
+from .const import CONF_CONTROLLER_UNIQUE_ID, DEFAULT_SCAN_INTERVAL, MIN_SCAN_INTERVAL
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -158,19 +150,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                     ),
                 ): vol.All(cv.positive_int, vol.Clamp(min=MIN_SCAN_INTERVAL)),
-                vol.Optional(
-                    CONF_LIGHT_COLD_START_TRANSITION_TIME,
-                    default=self.config_entry.options.get(
-                        CONF_LIGHT_COLD_START_TRANSITION_TIME,
-                        DEFAULT_LIGHT_COLD_START_TRANSITION_TIME,
-                    ),
-                ): vol.All(cv.positive_int),
-                vol.Optional(
-                    CONF_LIGHT_TRANSITION_TIME,
-                    default=self.config_entry.options.get(
-                        CONF_LIGHT_TRANSITION_TIME, DEFAULT_LIGHT_TRANSITION_TIME
-                    ),
-                ): vol.All(cv.positive_int),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

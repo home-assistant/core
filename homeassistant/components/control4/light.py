@@ -19,12 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import Control4Entity, get_items_of_category
-from .const import (
-    CONF_LIGHT_COLD_START_TRANSITION_TIME,
-    CONF_LIGHT_TRANSITION_TIME,
-    CONTROL4_ENTITY_TYPE,
-    DOMAIN,
-)
+from .const import CONTROL4_ENTITY_TYPE, DOMAIN
 from .director_utils import director_update_data
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,13 +35,8 @@ async def async_setup_entry(
     """Set up Control4 lights from a config entry."""
     entry_data = hass.data[DOMAIN][entry.entry_id]
     scan_interval = entry_data[CONF_SCAN_INTERVAL]
-    light_transition_time = entry_data[CONF_LIGHT_TRANSITION_TIME]
-    light_cold_start_transition_time = entry_data[CONF_LIGHT_COLD_START_TRANSITION_TIME]
     _LOGGER.debug(
-        "Scan interval = %s, light transition time = %s, light cold start transition time = %s",
-        scan_interval,
-        light_transition_time,
-        light_cold_start_transition_time,
+        "Scan interval = %s", scan_interval,
     )
 
     async def async_update_data_non_dimmer():
@@ -113,8 +103,6 @@ async def async_setup_entry(
                         item_model,
                         item_parent_id,
                         item_is_dimmer,
-                        light_transition_time,
-                        light_cold_start_transition_time,
                     )
                 ],
                 True,
@@ -136,8 +124,6 @@ class Control4Light(Control4Entity, LightEntity):
         device_model: str,
         device_id: int,
         is_dimmer: bool,
-        light_transition_time: int,
-        light_cold_start_transition_time: int,
     ):
         """Initialize Control4 light entity."""
         super().__init__(
@@ -152,8 +138,6 @@ class Control4Light(Control4Entity, LightEntity):
             device_id,
         )
         self._is_dimmer = is_dimmer
-        self._transition_time = light_transition_time
-        self._cold_start_transition_time = light_cold_start_transition_time
         self._c4_light = None
 
     async def async_added_to_hass(self):
@@ -186,10 +170,8 @@ class Control4Light(Control4Entity, LightEntity):
         if self._is_dimmer:
             if ATTR_TRANSITION in kwargs:
                 transition_length = kwargs[ATTR_TRANSITION] * 1000
-            elif self.brightness == 0:
-                transition_length = self._cold_start_transition_time * 1000
             else:
-                transition_length = self._transition_time * 1000
+                transition_length = 0
             if ATTR_BRIGHTNESS in kwargs:
                 brightness = (kwargs[ATTR_BRIGHTNESS] / 255) * 100
             else:
@@ -211,7 +193,7 @@ class Control4Light(Control4Entity, LightEntity):
             if ATTR_TRANSITION in kwargs:
                 transition_length = kwargs[ATTR_TRANSITION] * 1000
             else:
-                transition_length = self._cold_start_transition_time * 1000
+                transition_length = 0
             await self._c4_light.rampToLevel(0, transition_length)
         else:
             transition_length = 0

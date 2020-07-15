@@ -4,14 +4,7 @@ import datetime
 from pyControl4.error_handling import Unauthorized
 
 from homeassistant import config_entries, setup
-from homeassistant.components.control4.const import (
-    CONF_LIGHT_COLD_START_TRANSITION_TIME,
-    CONF_LIGHT_TRANSITION_TIME,
-    DEFAULT_LIGHT_COLD_START_TRANSITION_TIME,
-    DEFAULT_LIGHT_TRANSITION_TIME,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-)
+from homeassistant.components.control4.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -179,18 +172,11 @@ async def test_option_flow(hass):
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_SCAN_INTERVAL: 5,
-            CONF_LIGHT_COLD_START_TRANSITION_TIME: 2,
-            CONF_LIGHT_TRANSITION_TIME: 1,
-        },
+        result["flow_id"], user_input={CONF_SCAN_INTERVAL: 4},
     )
     assert result["type"] == "create_entry"
     assert result["data"] == {
-        CONF_SCAN_INTERVAL: 5,
-        CONF_LIGHT_COLD_START_TRANSITION_TIME: 2,
-        CONF_LIGHT_TRANSITION_TIME: 1,
+        CONF_SCAN_INTERVAL: 4,
     }
 
 
@@ -210,6 +196,4 @@ async def test_option_flow_defaults(hass):
     assert result["type"] == "create_entry"
     assert result["data"] == {
         CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
-        CONF_LIGHT_COLD_START_TRANSITION_TIME: DEFAULT_LIGHT_COLD_START_TRANSITION_TIME,
-        CONF_LIGHT_TRANSITION_TIME: DEFAULT_LIGHT_TRANSITION_TIME,
     }

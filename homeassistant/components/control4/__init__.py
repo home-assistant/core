@@ -30,10 +30,6 @@ from .const import (
     CONF_DIRECTOR_MODEL,
     CONF_DIRECTOR_SW_VERSION,
     CONF_DIRECTOR_TOKEN_EXPIRATION,
-    CONF_LIGHT_COLD_START_TRANSITION_TIME,
-    CONF_LIGHT_TRANSITION_TIME,
-    DEFAULT_LIGHT_COLD_START_TRANSITION_TIME,
-    DEFAULT_LIGHT_TRANSITION_TIME,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
@@ -103,12 +99,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Load options from config entry
     entry_data[CONF_SCAN_INTERVAL] = entry.options.get(
         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-    )
-    entry_data[CONF_LIGHT_TRANSITION_TIME] = entry.options.get(
-        CONF_LIGHT_TRANSITION_TIME, DEFAULT_LIGHT_TRANSITION_TIME
-    )
-    entry_data[CONF_LIGHT_COLD_START_TRANSITION_TIME] = entry.options.get(
-        CONF_LIGHT_COLD_START_TRANSITION_TIME, DEFAULT_LIGHT_COLD_START_TRANSITION_TIME
     )
 
     entry_data[CONF_CONFIG_LISTENER] = entry.add_update_listener(update_listener)
