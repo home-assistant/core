@@ -16,7 +16,9 @@ CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
 
-async def test_show_zeroconf_confirm_form(hass, aiohttp_client, aioclient_mock):
+async def test_show_zeroconf_connection_error_form(
+    hass, aiohttp_client, aioclient_mock
+):
     """Test that the zeroconf confirmation form is served."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -31,27 +33,8 @@ async def test_show_zeroconf_confirm_form(hass, aiohttp_client, aioclient_mock):
         },
     )
 
-    assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-
-
-async def test_show_zerconf_form(hass, aiohttp_client, aioclient_mock):
-    """Test that the zeroconf confirmation form is served."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data={
-            "host": "1.2.3.4",
-            "port": 22,
-            CONF_HOSTNAME: "Smappee1006000212.local.",
-            "type": "_ssh._tcp.local.",
-            "name": "Smappee1006000212._ssh._tcp.local.",
-            "properties": {"_raw": {}},
-        },
-    )
-
-    assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "connection_error"
 
 
 async def test_zeroconf_no_data(hass, aiohttp_client, aioclient_mock):
@@ -95,7 +78,9 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={"environment": "CLOUD"},
     )
     state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
 

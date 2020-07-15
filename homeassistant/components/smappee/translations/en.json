@@ -1,13 +1,28 @@
 {
     "config": {
-        "abort": {
-            "authorize_url_timeout": "Timeout generating authorize url.",
-            "missing_configuration": "The component is not configured. Please follow the documentation."
-        },
+        "flow_title": "Smappee: {name}",
         "step": {
+            "user": {
+                "description": "Set up your Smappee to integrate with Home Assistant.",
+                "data": {
+                    "environment": "Environment",
+                    "host": "Host"
+                }
+            },
+            "zeroconf_confirm": {
+                "description": "Do you want to add the Smappee device with serialnumber `{serialnumber}` to Home Assistant?",
+                "title": "Discovered Smappee device"
+            },
             "pick_implementation": {
                 "title": "Pick Authentication Method"
             }
+        },
+        "abort": {
+            "already_configured": "This Smappee device is already configured.",
+            "authorize_url_timeout": "Timeout generating authorize url.",
+            "connection_error": "Failed to connect to Smappee device.",
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "invalid_mdns": "Unsupported device for the Smappee integration."
         }
     }
 }
