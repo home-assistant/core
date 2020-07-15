@@ -1,5 +1,6 @@
 """Config flow for Smappee."""
 import logging
+import socket
 
 import voluptuous as vol
 
@@ -106,12 +107,12 @@ class SmappeeFlowHandler(
                     if serialnumber is None or not serialnumber.startswith("Smappee1"):
                         # We currently only support Energy and Solar models (legacy)
                         return self.async_abort(reason="invalid_mdns")
-                    user_input[CONF_HOSTNAME] = f'{config_item["value"]}.local'
-                    user_input[CONF_TITLE] = config_item["value"]
-                    user_input[CONF_SERIALNUMBER] = config_item["value"].replace(
-                        "Smappee", ""
-                    )
-            except Exception:
+                    user_input[CONF_HOSTNAME] = f"{serialnumber}.local"
+                    user_input[CONF_TITLE] = serialnumber
+                    user_input[CONF_SERIALNUMBER] = serialnumber.replace("Smappee", "")
+            except socket.gaierror:
+                return self.async_abort(reason="connection_error")
+            except socket.timeout:
                 return self.async_abort(reason="connection_error")
 
         # Check if already configured
