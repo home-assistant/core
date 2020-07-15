@@ -1,6 +1,9 @@
 {
     "config": {
         "abort": {
+            "already_configured": "L'accord s\u00e9lectionn\u00e9 est d\u00e9j\u00e0 configur\u00e9.",
+            "authorize_url_fail": "Erreur inconnue lors de la g\u00e9n\u00e9ration d'une URL d'autorisation.",
+            "authorize_url_timeout": "Timout de g\u00e9n\u00e9ration de l'URL d'autorisation.",
             "client_id": "L'ID client de la configuration n'est pas valide.",
             "client_secret": "Le client secret de la configuration n'est pas valide.",
             "missing_configuration": "The composant n'est pas configur\u00e9. Veuillez vous r\u00e9f\u00e9rer \u00e0 la documentation.",

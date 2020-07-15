@@ -14,14 +14,14 @@ class ChromecastInfo:
     This also has the same attributes as the mDNS fields by zeroconf.
     """
 
-    services = attr.ib(type=Optional[set])
-    host = attr.ib(type=Optional[str], default=None)
-    port = attr.ib(type=Optional[int], default=0)
-    uuid = attr.ib(
-        type=Optional[str], converter=attr.converters.optional(str), default=None
+    services: Optional[set] = attr.ib()
+    host: Optional[str] = attr.ib(default=None)
+    port: Optional[int] = attr.ib(default=0)
+    uuid: Optional[str] = attr.ib(
+        converter=attr.converters.optional(str), default=None
     )  # always convert UUID to string if not None
-    model_name = attr.ib(type=str, default="")
-    friendly_name = attr.ib(type=Optional[str], default=None)
+    model_name: str = attr.ib(default="")
+    friendly_name: Optional[str] = attr.ib(default=None)
 
     @property
     def is_audio_group(self) -> bool:

@@ -41,7 +41,7 @@ async def async_setup_ha_cast(
 
     async def handle_show_view(call: core.ServiceCall):
         """Handle a Show View service call."""
-        hass_url = get_url(hass, require_ssl=True)
+        hass_url = get_url(hass, require_ssl=True, prefer_external=True)
 
         controller = HomeAssistantController(
             # If you are developing Home Assistant Cast, uncomment and set to your dev app id.

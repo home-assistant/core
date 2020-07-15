@@ -11,7 +11,7 @@ from homeassistant.const import (
     CONF_ALIAS,
     CONF_ICON,
     CONF_MODE,
-    CONF_QUEUE_SIZE,
+    CONF_SEQUENCE,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -24,11 +24,13 @@ from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.script import (
-    SCRIPT_BASE_SCHEMA,
-    SCRIPT_MODE_LEGACY,
+    ATTR_CUR,
+    ATTR_MAX,
+    ATTR_MODE,
+    CONF_MAX,
+    SCRIPT_MODE_SINGLE,
     Script,
-    validate_queue_size,
-    warn_deprecated_legacy,
+    make_script_schema,
 )
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.loader import bind_hass
@@ -36,7 +38,7 @@ from homeassistant.loader import bind_hass
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "script"
-ATTR_CAN_CANCEL = "can_cancel"
+
 ATTR_LAST_ACTION = "last_action"
 ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_VARIABLES = "variables"
@@ -44,50 +46,30 @@ ATTR_VARIABLES = "variables"
 CONF_DESCRIPTION = "description"
 CONF_EXAMPLE = "example"
 CONF_FIELDS = "fields"
-CONF_SEQUENCE = "sequence"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 EVENT_SCRIPT_STARTED = "script_started"
 
 
-def _deprecated_legacy_mode(config):
-    legacy_scripts = []
-    for object_id, cfg in config.items():
-        mode = cfg.get(CONF_MODE)
-        if mode is None:
-            legacy_scripts.append(object_id)
-            cfg[CONF_MODE] = SCRIPT_MODE_LEGACY
-    if legacy_scripts:
-        warn_deprecated_legacy(_LOGGER, f"script(s): {', '.join(legacy_scripts)}")
-    return config
-
-
-SCRIPT_ENTRY_SCHEMA = vol.All(
-    SCRIPT_BASE_SCHEMA.extend(
-        {
-            vol.Optional(CONF_ALIAS): cv.string,
-            vol.Optional(CONF_ICON): cv.icon,
-            vol.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_DESCRIPTION, default=""): cv.string,
-            vol.Optional(CONF_FIELDS, default={}): {
-                cv.string: {
-                    vol.Optional(CONF_DESCRIPTION): cv.string,
-                    vol.Optional(CONF_EXAMPLE): cv.string,
-                }
-            },
-        }
-    ),
-    validate_queue_size,
+SCRIPT_ENTRY_SCHEMA = make_script_schema(
+    {
+        vol.Optional(CONF_ALIAS): cv.string,
+        vol.Optional(CONF_ICON): cv.icon,
+        vol.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_DESCRIPTION, default=""): cv.string,
+        vol.Optional(CONF_FIELDS, default={}): {
+            cv.string: {
+                vol.Optional(CONF_DESCRIPTION): cv.string,
+                vol.Optional(CONF_EXAMPLE): cv.string,
+            }
+        },
+    },
+    SCRIPT_MODE_SINGLE,
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.schema_with_slug_keys(SCRIPT_ENTRY_SCHEMA), _deprecated_legacy_mode
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
+    {DOMAIN: cv.schema_with_slug_keys(SCRIPT_ENTRY_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
 
 SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)
@@ -183,29 +165,26 @@ async def async_setup(hass, config):
         """Call a service to turn script on."""
         variables = service.data.get(ATTR_VARIABLES)
         for script_entity in await component.async_extract_from_service(service):
-            if script_entity.script.is_legacy:
-                await hass.services.async_call(
-                    DOMAIN, script_entity.object_id, variables, context=service.context
-                )
-            else:
-                await script_entity.async_turn_on(
-                    variables=variables, context=service.context, wait=False
-                )
+            await script_entity.async_turn_on(
+                variables=variables, context=service.context, wait=False
+            )
 
     async def turn_off_service(service):
         """Cancel a script."""
         # Stopping a script is ok to be done in parallel
-        scripts = await component.async_extract_from_service(service)
+        script_entities = await component.async_extract_from_service(service)
 
-        if not scripts:
+        if not script_entities:
             return
 
-        await asyncio.wait([script.async_turn_off() for script in scripts])
+        await asyncio.wait(
+            [script_entity.async_turn_off() for script_entity in script_entities]
+        )
 
     async def toggle_service(service):
         """Toggle a script."""
         for script_entity in await component.async_extract_from_service(service):
-            await script_entity.async_toggle(context=service.context)
+            await script_entity.async_toggle(context=service.context, wait=False)
 
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, reload_service, schema=RELOAD_SERVICE_SCHEMA
@@ -230,27 +209,14 @@ async def _async_process_config(hass, config, component):
         """Execute a service call to script.<script name>."""
         entity_id = ENTITY_ID_FORMAT.format(service.service)
         script_entity = component.get_entity(entity_id)
-        if script_entity.script.is_legacy and script_entity.is_on:
-            _LOGGER.warning("Script %s already running", entity_id)
-            return
         await script_entity.async_turn_on(
             variables=service.data, context=service.context
         )
 
-    script_entities = []
-
-    for object_id, cfg in config.get(DOMAIN, {}).items():
-        script_entities.append(
-            ScriptEntity(
-                hass,
-                object_id,
-                cfg.get(CONF_ALIAS, object_id),
-                cfg.get(CONF_ICON),
-                cfg[CONF_SEQUENCE],
-                cfg[CONF_MODE],
-                cfg.get(CONF_QUEUE_SIZE, 0),
-            )
-        )
+    script_entities = [
+        ScriptEntity(hass, object_id, cfg)
+        for object_id, cfg in config.get(DOMAIN, {}).items()
+    ]
 
     await component.async_add_entities(script_entities)
 
@@ -280,18 +246,18 @@ class ScriptEntity(ToggleEntity):
 
     icon = None
 
-    def __init__(self, hass, object_id, name, icon, sequence, mode, queue_size):
+    def __init__(self, hass, object_id, cfg):
         """Initialize the script."""
         self.object_id = object_id
-        self.icon = icon
+        self.icon = cfg.get(CONF_ICON)
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self.script = Script(
             hass,
-            sequence,
-            name,
+            cfg[CONF_SEQUENCE],
+            cfg.get(CONF_ALIAS, object_id),
             self.async_change_listener,
-            mode,
-            queue_size,
+            cfg[CONF_MODE],
+            cfg[CONF_MAX],
             logging.getLogger(f"{__name__}.{object_id}"),
         )
         self._changed = asyncio.Event()
@@ -309,9 +275,14 @@ class ScriptEntity(ToggleEntity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        attrs = {ATTR_LAST_TRIGGERED: self.script.last_triggered}
-        if self.script.can_cancel:
-            attrs[ATTR_CAN_CANCEL] = self.script.can_cancel
+        attrs = {
+            ATTR_LAST_TRIGGERED: self.script.last_triggered,
+            ATTR_MODE: self.script.script_mode,
+        }
+        if self.script.supports_max:
+            attrs[ATTR_MAX] = self.script.max_runs
+            if self.is_on:
+                attrs[ATTR_CUR] = self.script.runs
         if self.script.last_action:
             attrs[ATTR_LAST_ACTION] = self.script.last_action
         return attrs
@@ -345,13 +316,10 @@ class ScriptEntity(ToggleEntity):
 
         # Caller does not want to wait for called script to finish so let script run in
         # separate Task. However, wait for first state change so we can guarantee that
-        # it is written to the State Machine before we return. Only do this for
-        # non-legacy scripts, since legacy scripts don't necessarily change state
-        # immediately.
+        # it is written to the State Machine before we return.
         self._changed.clear()
         self.hass.async_create_task(coro)
-        if not self.script.is_legacy:
-            await self._changed.wait()
+        await self._changed.wait()
 
     async def async_turn_off(self, **kwargs):
         """Turn script off."""

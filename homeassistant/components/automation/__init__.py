@@ -15,7 +15,6 @@ from homeassistant.const import (
     CONF_ID,
     CONF_MODE,
     CONF_PLATFORM,
-    CONF_QUEUE_SIZE,
     CONF_ZONE,
     EVENT_HOMEASSISTANT_STARTED,
     SERVICE_RELOAD,
@@ -31,7 +30,15 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.script import SCRIPT_BASE_SCHEMA, Script, validate_queue_size
+from homeassistant.helpers.script import (
+    ATTR_CUR,
+    ATTR_MAX,
+    ATTR_MODE,
+    CONF_MAX,
+    SCRIPT_MODE_PARALLEL,
+    Script,
+    make_script_schema,
+)
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
@@ -99,7 +106,7 @@ _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_HIDE_ENTITY, invalidation_version="0.110"),
-    SCRIPT_BASE_SCHEMA.extend(
+    make_script_schema(
         {
             # str on purpose
             CONF_ID: str,
@@ -110,9 +117,9 @@ PLATFORM_SCHEMA = vol.All(
             vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
             vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
             vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
-        }
+        },
+        SCRIPT_MODE_PARALLEL,
     ),
-    validate_queue_size,
 )
 
 
@@ -272,7 +279,15 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
     @property
     def state_attributes(self):
         """Return the entity state attributes."""
-        return {ATTR_LAST_TRIGGERED: self._last_triggered}
+        attrs = {
+            ATTR_LAST_TRIGGERED: self._last_triggered,
+            ATTR_MODE: self.action_script.script_mode,
+        }
+        if self.action_script.supports_max:
+            attrs[ATTR_MAX] = self.action_script.max_runs
+            if self.is_on:
+                attrs[ATTR_CUR] = self.action_script.runs
+        return attrs
 
     @property
     def is_on(self) -> bool:
@@ -507,7 +522,7 @@ async def _async_process_config(hass, config, component):
                 config_block[CONF_ACTION],
                 name,
                 script_mode=config_block[CONF_MODE],
-                queue_size=config_block.get(CONF_QUEUE_SIZE, 0),
+                max_runs=config_block[CONF_MAX],
                 logger=_LOGGER,
             )
 

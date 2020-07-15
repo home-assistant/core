@@ -69,9 +69,7 @@ async def async_setup_entry(
                 )
             ]
         )
-        
-    if coordinator.data.water_usage:
-        sensors.extend(
+    sensors.extend(
             [
                 ToonWaterMeterDeviceSensor(coordinator, key=key)
                 for key in (
@@ -82,7 +80,8 @@ async def async_setup_entry(
                     "water_value",
                 )
             ]
-        )
+    )
+
 
     if coordinator.data.agreement.is_toon_solar:
         sensors.extend(
@@ -104,8 +103,9 @@ async def async_setup_entry(
     if coordinator.data.thermostat.have_opentherm_boiler:
         sensors.extend(
             [
-                ToonBoilerDeviceSensor(coordinator, key=key)
-                for key in ["thermostat_info_current_modulation_level"]
+                ToonBoilerDeviceSensor(
+                    coordinator, key="thermostat_info_current_modulation_level"
+                )
             ]
         )
 
