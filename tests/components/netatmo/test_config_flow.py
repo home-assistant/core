@@ -31,7 +31,7 @@ async def test_abort_if_existing_entry(hass):
         "netatmo", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "single_instance_allowed"
 
     result = await hass.config_entries.flow.async_init(
         "netatmo",
@@ -39,7 +39,7 @@ async def test_abort_if_existing_entry(hass):
         data={"host": "0.0.0.0", "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_full_flow(hass, aiohttp_client, aioclient_mock):
