@@ -128,8 +128,10 @@ def setup(hass, config):
     zc_config = config.get(DOMAIN, {})
     zeroconf = hass.data[DOMAIN] = _get_instance(
         hass,
-        default_interface=zc_config[CONF_DEFAULT_INTERFACE],
-        ipv6=zc_config[CONF_IPV6],
+        default_interface=zc_config.get(
+            CONF_DEFAULT_INTERFACE, DEFAULT_DEFAULT_INTERFACE
+        ),
+        ipv6=zc_config.get(CONF_IPV6, DEFAULT_IPV6),
     )
 
     # Get instance UUID
