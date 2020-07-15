@@ -35,7 +35,7 @@ from homeassistant.helpers.script import (
     ATTR_MAX,
     ATTR_MODE,
     CONF_MAX,
-    SCRIPT_MODE_PARALLEL,
+    SCRIPT_MODE_SINGLE,
     Script,
     make_script_schema,
 )
@@ -118,7 +118,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
             vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
         },
-        SCRIPT_MODE_PARALLEL,
+        SCRIPT_MODE_SINGLE,
     ),
 )
 
