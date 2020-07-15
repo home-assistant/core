@@ -12,6 +12,11 @@ from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
+def patch_setup_entry(domain: str):
+    """Patch async_setup_entry for specified domain."""
+    return patch(f"homeassistant.components.bond.{domain}.async_setup_entry")
+
+
 async def test_async_setup_no_domain_config(hass: HomeAssistant):
     """Test setup without configuration is noop."""
     result = await async_setup_component(hass, DOMAIN, {})
@@ -25,14 +30,12 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAss
         domain=DOMAIN, data={CONF_HOST: "1.1.1.1", CONF_ACCESS_TOKEN: "test-token"},
     )
 
-    with patch(
-        "homeassistant.components.bond.cover.async_setup_entry"
-    ) as mock_cover_async_setup_entry, patch(
-        "homeassistant.components.bond.fan.async_setup_entry"
-    ) as mock_fan_async_setup_entry, patch(
-        "homeassistant.components.bond.light.async_setup_entry"
-    ) as mock_light_async_setup_entry, patch(
-        "homeassistant.components.bond.switch.async_setup_entry"
+    with patch_setup_entry("cover") as mock_cover_async_setup_entry, patch_setup_entry(
+        "fan"
+    ) as mock_fan_async_setup_entry, patch_setup_entry(
+        "light"
+    ) as mock_light_async_setup_entry, patch_setup_entry(
+        "switch"
     ) as mock_switch_async_setup_entry:
         result = await setup_bond_entity(
             hass,
@@ -72,9 +75,9 @@ async def test_unload_config_entry(hass: HomeAssistant):
         domain=DOMAIN, data={CONF_HOST: "1.1.1.1", CONF_ACCESS_TOKEN: "test-token"},
     )
 
-    with patch("homeassistant.components.bond.cover.async_setup_entry"), patch(
-        "homeassistant.components.bond.fan.async_setup_entry"
-    ):
+    with patch_setup_entry("cover"), patch_setup_entry("fan"), patch_setup_entry(
+        "light"
+    ), patch_setup_entry("switch"):
         result = await setup_bond_entity(hass, config_entry)
         assert result is True
         await hass.async_block_till_done()
