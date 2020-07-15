@@ -31,7 +31,6 @@ DEFAULT_MIN_TEMP = 6.0
 CURRENCY_EUR = "EUR"
 VOLUME_CM3 = "CM3"
 VOLUME_M3 = "M3"
-VOLUME_LMIN = "L/MIN"
 VOLUME_LHOUR = "L/H"
 
 ATTR_DEFAULT_ENABLED = "default_enabled"
@@ -347,7 +346,7 @@ SENSOR_ENTITIES = {
         ATTR_UNIT_OF_MEASUREMENT: VOLUME_LHOUR,
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:water",
-        ATTR_DEFAULT_ENABLED: True,
+        ATTR_DEFAULT_ENABLED: False,
     },
     "water_average_daily": {
         ATTR_NAME: "Average Daily Water Usage",
@@ -380,7 +379,7 @@ SENSOR_ENTITIES = {
         ATTR_NAME: "Current Water Usage",
         ATTR_SECTION: "water_usage",
         ATTR_MEASUREMENT: "current",
-        ATTR_UNIT_OF_MEASUREMENT: VOLUME_LMIN,
+        ATTR_UNIT_OF_MEASUREMENT: VOLUME_LHOUR,
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:water-pump",
         ATTR_DEFAULT_ENABLED: True,
