@@ -26,9 +26,9 @@ from .const import (
     DEFAULT_LIGHT_COLD_START_TRANSITION_TIME,
     DEFAULT_LIGHT_TRANSITION_TIME,
     DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    MIN_SCAN_INTERVAL,
+    MIN_SCAN_INTERVAL
 )
+from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
