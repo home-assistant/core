@@ -51,8 +51,8 @@ async def setup_platform(
         return_value=[bond_device_id],
     ), patch(
         "homeassistant.components.bond.Bond.getDevice", return_value=discovered_device
-    ), patch(
-        "homeassistant.components.bond.Bond.getDeviceState", return_value={}
+    ), patch_bond_device_state(
+        return_value={}
     ), patch(
         "homeassistant.components.bond.Bond.getProperties", return_value=props
     ):
@@ -60,3 +60,63 @@ async def setup_platform(
         await hass.async_block_till_done()
 
     return mock_entry
+
+
+def patch_bond_turn_on():
+    """Patch Bond API turnOn command."""
+    return patch("homeassistant.components.bond.Bond.turnOn")
+
+
+def patch_bond_turn_off():
+    """Patch Bond API turnOff command."""
+    return patch("homeassistant.components.bond.Bond.turnOff")
+
+
+def patch_bond_set_speed():
+    """Patch Bond API setSpeed command."""
+    return patch("homeassistant.components.bond.Bond.setSpeed")
+
+
+def patch_bond_set_flame():
+    """Patch Bond API setFlame command."""
+    return patch("homeassistant.components.bond.Bond.setFlame")
+
+
+def patch_bond_open():
+    """Patch Bond API open command."""
+    return patch("homeassistant.components.bond.Bond.open")
+
+
+def patch_bond_close():
+    """Patch Bond API close command."""
+    return patch("homeassistant.components.bond.Bond.close")
+
+
+def patch_bond_hold():
+    """Patch Bond API hold command."""
+    return patch("homeassistant.components.bond.Bond.hold")
+
+
+def patch_bond_set_direction():
+    """Patch Bond API setDirection command."""
+    return patch("homeassistant.components.bond.Bond.setDirection")
+
+
+def patch_turn_light_on():
+    """Patch Bond API turnLightOn command."""
+    return patch("homeassistant.components.bond.Bond.turnLightOn")
+
+
+def patch_turn_light_off():
+    """Patch Bond API turnLightOff command."""
+    return patch("homeassistant.components.bond.Bond.turnLightOff")
+
+
+def patch_bond_device_state(return_value=None):
+    """Patch Bond API getDeviceState command."""
+    if return_value is None:
+        return_value = {}
+
+    return patch(
+        "homeassistant.components.bond.Bond.getDeviceState", return_value=return_value
+    )

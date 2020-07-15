@@ -10,9 +10,16 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_O
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
-from .common import setup_platform
+from .common import (
+    patch_bond_device_state,
+    patch_bond_set_flame,
+    patch_bond_turn_off,
+    patch_bond_turn_on,
+    patch_turn_light_off,
+    patch_turn_light_on,
+    setup_platform,
+)
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +51,7 @@ async def test_turn_on_light(hass: core.HomeAssistant):
     """Tests that turn on command delegates to API."""
     await setup_platform(hass, LIGHT_DOMAIN, ceiling_fan("name-1"))
 
-    with patch("homeassistant.components.bond.Bond.turnLightOn") as mock_turn_light_on:
+    with patch_turn_light_on() as mock_turn_light_on, patch_bond_device_state():
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -59,9 +66,7 @@ async def test_turn_off_light(hass: core.HomeAssistant):
     """Tests that turn off command delegates to API."""
     await setup_platform(hass, LIGHT_DOMAIN, ceiling_fan("name-1"))
 
-    with patch(
-        "homeassistant.components.bond.Bond.turnLightOff"
-    ) as mock_turn_light_off:
+    with patch_turn_light_off() as mock_turn_light_off, patch_bond_device_state():
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
@@ -76,9 +81,7 @@ async def test_update_reports_light_is_on(hass: core.HomeAssistant):
     """Tests that update command sets correct state when Bond API reports the light is on."""
     await setup_platform(hass, LIGHT_DOMAIN, ceiling_fan("name-1"))
 
-    with patch(
-        "homeassistant.components.bond.Bond.getDeviceState", return_value={"light": 1}
-    ):
+    with patch_bond_device_state(return_value={"light": 1}):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
 
@@ -89,9 +92,7 @@ async def test_update_reports_light_is_off(hass: core.HomeAssistant):
     """Tests that update command sets correct state when Bond API reports the light is off."""
     await setup_platform(hass, LIGHT_DOMAIN, ceiling_fan("name-1"))
 
-    with patch(
-        "homeassistant.components.bond.Bond.getDeviceState", return_value={"light": 0}
-    ):
+    with patch_bond_device_state(return_value={"light": 0}):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
 
@@ -104,9 +105,7 @@ async def test_turn_on_fireplace(hass: core.HomeAssistant):
         hass, LIGHT_DOMAIN, fireplace("name-1"), bond_device_id="test-device-id"
     )
 
-    with patch("homeassistant.components.bond.Bond.turnOn") as mock_turn_on, patch(
-        "homeassistant.components.bond.Bond.setFlame"
-    ) as mock_set_flame:
+    with patch_bond_turn_on() as mock_turn_on, patch_bond_set_flame() as mock_set_flame, patch_bond_device_state():
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -123,7 +122,7 @@ async def test_turn_off_fireplace(hass: core.HomeAssistant):
     """Tests that turn off command delegates to API."""
     await setup_platform(hass, LIGHT_DOMAIN, fireplace("name-1"))
 
-    with patch("homeassistant.components.bond.Bond.turnOff") as mock_turn_off:
+    with patch_bond_turn_off() as mock_turn_off, patch_bond_device_state():
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
@@ -138,10 +137,7 @@ async def test_flame_converted_to_brightness(hass: core.HomeAssistant):
     """Tests that reported flame level (0..100) converted to HA brightness (0...255)."""
     await setup_platform(hass, LIGHT_DOMAIN, fireplace("name-1"))
 
-    with patch(
-        "homeassistant.components.bond.Bond.getDeviceState",
-        return_value={"power": 1, "flame": 50},
-    ):
+    with patch_bond_device_state(return_value={"power": 1, "flame": 50}):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
 
