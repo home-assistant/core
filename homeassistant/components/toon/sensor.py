@@ -160,7 +160,7 @@ class ToonElectricityMeterDeviceSensor(ToonSensor, ToonElectricityMeterDeviceEnt
 class ToonGasMeterDeviceSensor(ToonSensor, ToonGasMeterDeviceEntity):
     """Defines a Gas Meter sensor."""
 
-    
+
 class ToonWaterMeterDeviceSensor(ToonSensor, ToonWaterMeterDeviceEntity):
     """Defines a Water sensor."""
 
