@@ -74,6 +74,8 @@ ATTR_CUR = "current"
 ATTR_MAX = "max"
 ATTR_MODE = "mode"
 
+DATA_SCRIPTS = "helpers.script"
+
 _LOGGER = logging.getLogger(__name__)
 
 _LOG_EXCEPTION = logging.ERROR + 1
@@ -553,7 +555,7 @@ class _QueuedScriptRun(_ScriptRun):
 async def _async_stop_scripts_after_shutdown(hass, point_in_time):
     """Stop running Script objects started after shutdown."""
     running_scripts = [
-        script for script in hass.data["Scripts"] if script["instance"].is_running
+        script for script in hass.data[DATA_SCRIPTS] if script["instance"].is_running
     ]
     if running_scripts:
         names = ", ".join([script["instance"].name for script in running_scripts])
@@ -574,7 +576,7 @@ async def _async_stop_scripts_at_shutdown(hass, event):
 
     running_scripts = [
         script
-        for script in hass.data["Scripts"]
+        for script in hass.data[DATA_SCRIPTS]
         if script["instance"].is_running and script["started_before_shutdown"]
     ]
     if running_scripts:
@@ -601,9 +603,9 @@ class Script:
         top_level: bool = True,
     ) -> None:
         """Initialize the script."""
-        all_scripts = hass.data.get("Scripts")
+        all_scripts = hass.data.get(DATA_SCRIPTS)
         if not all_scripts:
-            all_scripts = hass.data["Scripts"] = []
+            all_scripts = hass.data[DATA_SCRIPTS] = []
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, partial(_async_stop_scripts_at_shutdown, hass)
             )
