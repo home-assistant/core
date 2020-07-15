@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 @dataclass
 class NetatmoArea:
-    """Class for keeping track of an item in inventory."""
+    """Class for keeping track of an area."""
 
     area_name: str
     lat_ne: float
