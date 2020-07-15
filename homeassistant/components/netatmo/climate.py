@@ -184,13 +184,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     return
 
 
-class NetatmoThermostat(ClimateEntity, NetatmoBase):
+class NetatmoThermostat(NetatmoBase, ClimateEntity):
     """Representation a Netatmo thermostat."""
 
     def __init__(self, data_handler, data_class, home_id, room_id):
         """Initialize the sensor."""
         ClimateEntity.__init__(self)
-        NetatmoBase.__init__(self, data_handler)
+        super().__init__(data_handler)
 
         self._id = room_id
         self._home_id = home_id
@@ -235,7 +235,7 @@ class NetatmoThermostat(ClimateEntity, NetatmoBase):
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
-        await NetatmoBase.async_added_to_hass(self)
+        await super().async_added_to_hass()
 
         async def handle_event(event):
             """Handle webhook events."""
@@ -418,67 +418,13 @@ class NetatmoThermostat(ClimateEntity, NetatmoBase):
     @callback
     def async_update_callback(self):
         """Update the entity's state."""
-        try:
-            roomstatus = {}
+        self._home_status = self.data_handler.data[self._home_status_class]
+        self._room_status = self._home_status.rooms[self._id]
+        self._room_data = self._data.rooms[self._home_id][self._id]
 
-            self._home_status = self.data_handler.data[self._home_status_class]
-            self._room_status = self._home_status.rooms[self._id]
-            self._room_data = self._data.rooms[self._home_id][self._id]
-
-            roomstatus["roomID"] = self._room_status["id"]
-            if self._room_status["reachable"]:
-                roomstatus["roomname"] = self._room_data["name"]
-                roomstatus["target_temperature"] = self._room_status[
-                    "therm_setpoint_temperature"
-                ]
-                roomstatus["setpoint_mode"] = self._room_status["therm_setpoint_mode"]
-                roomstatus["current_temperature"] = self._room_status[
-                    "therm_measured_temperature"
-                ]
-                roomstatus["module_type"] = self._data.get_thermostat_type(
-                    home_id=self._home_id, room_id=self._id,
-                )
-                roomstatus["module_id"] = None
-                roomstatus["heating_status"] = None
-                roomstatus["heating_power_request"] = None
-                batterylevel = None
-                for module_id in self._room_data["module_ids"]:
-                    if (
-                        self._data.modules[self._home_id][module_id]["type"] == NA_THERM
-                        or roomstatus["module_id"] is None
-                    ):
-                        roomstatus["module_id"] = module_id
-                if roomstatus["module_type"] == NA_THERM:
-                    self._boilerstatus = self._home_status.boiler_status(
-                        roomstatus["module_id"]
-                    )
-                    roomstatus["heating_status"] = self._boilerstatus
-                    batterylevel = self._home_status.thermostats[
-                        roomstatus["module_id"]
-                    ].get("battery_level")
-                elif roomstatus["module_type"] == NA_VALVE:
-                    roomstatus["heating_power_request"] = self._room_status[
-                        "heating_power_request"
-                    ]
-                    roomstatus["heating_status"] = (
-                        roomstatus["heating_power_request"] > 0
-                    )
-                    if self._boilerstatus is not None:
-                        roomstatus["heating_status"] = (
-                            self._boilerstatus and roomstatus["heating_status"]
-                        )
-                    batterylevel = self._home_status.valves[
-                        roomstatus["module_id"]
-                    ].get("battery_level")
-
-                if batterylevel:
-                    batterypct = interpolate(batterylevel, roomstatus["module_type"])
-                    if roomstatus.get("battery_level") is None:
-                        roomstatus["battery_level"] = batterypct
-                    elif batterypct < roomstatus["battery_level"]:
-                        roomstatus["battery_level"] = batterypct
-        except KeyError as err:
-            _LOGGER.error("Update of room %s failed. Error: %s", self._id, err)
+        roomstatus = {"roomID": self._room_status["id"]}
+        if self._room_status.get("reachable"):
+            roomstatus.update(self._build_room_status())
 
         self._away_temperature = self._data.get_away_temp(self._home_id)
         self._hg_temperature = self._data.get_hg_temp(self._home_id)
@@ -493,6 +439,7 @@ class NetatmoThermostat(ClimateEntity, NetatmoBase):
             self._hvac_mode = HVAC_MAP_NETATMO[self._preset]
             self._battery_level = roomstatus.get("battery_level")
             self._connected = True
+
         except KeyError as err:
             if self._connected:
                 _LOGGER.debug(
@@ -502,7 +449,67 @@ class NetatmoThermostat(ClimateEntity, NetatmoBase):
                 )
 
             self._connected = False
+
         self._away = self._hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
+
+    def _build_room_status(self):
+        """Construct room status."""
+        try:
+            roomstatus = {
+                "roomname": self._room_data["name"],
+                "target_temperature": self._room_status["therm_setpoint_temperature"],
+                "setpoint_mode": self._room_status["therm_setpoint_mode"],
+                "current_temperature": self._room_status["therm_measured_temperature"],
+                "module_type": self._data.get_thermostat_type(
+                    home_id=self._home_id, room_id=self._id
+                ),
+                "module_id": None,
+                "heating_status": None,
+                "heating_power_request": None,
+            }
+
+            batterylevel = None
+            for module_id in self._room_data["module_ids"]:
+                if (
+                    self._data.modules[self._home_id][module_id]["type"] == NA_THERM
+                    or roomstatus["module_id"] is None
+                ):
+                    roomstatus["module_id"] = module_id
+            if roomstatus["module_type"] == NA_THERM:
+                self._boilerstatus = self._home_status.boiler_status(
+                    roomstatus["module_id"]
+                )
+                roomstatus["heating_status"] = self._boilerstatus
+                batterylevel = self._home_status.thermostats[
+                    roomstatus["module_id"]
+                ].get("battery_level")
+            elif roomstatus["module_type"] == NA_VALVE:
+                roomstatus["heating_power_request"] = self._room_status[
+                    "heating_power_request"
+                ]
+                roomstatus["heating_status"] = roomstatus["heating_power_request"] > 0
+                if self._boilerstatus is not None:
+                    roomstatus["heating_status"] = (
+                        self._boilerstatus and roomstatus["heating_status"]
+                    )
+                batterylevel = self._home_status.valves[roomstatus["module_id"]].get(
+                    "battery_level"
+                )
+
+            if batterylevel:
+                batterypct = interpolate(batterylevel, roomstatus["module_type"])
+                if (
+                    not roomstatus.get("battery_level")
+                    or batterypct < roomstatus["battery_level"]
+                ):
+                    roomstatus["battery_level"] = batterypct
+
+            return roomstatus
+
+        except KeyError as err:
+            _LOGGER.error("Update of room %s failed. Error: %s", self._id, err)
+
+        return {}
 
     def _service_setschedule(self, **kwargs):
         schedule_name = kwargs.get(ATTR_SCHEDULE_NAME)
