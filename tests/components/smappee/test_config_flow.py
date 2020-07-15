@@ -7,6 +7,7 @@ from homeassistant.components.smappee.const import (
     CONF_SERIALNUMBER,
     CONF_TITLE,
     DOMAIN,
+    ENV_CLOUD,
     TOKEN_URL,
 )
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -111,7 +112,7 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={"environment": "CLOUD"},
+        data={"environment": ENV_CLOUD},
     )
     state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
 

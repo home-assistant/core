@@ -9,6 +9,9 @@ CONF_HOSTNAME = "hostname"
 CONF_SERIALNUMBER = "serialnumber"
 CONF_TITLE = "title"
 
+ENV_CLOUD = "cloud"
+ENV_LOCAL = "local"
+
 BASE = "BASE"
 
 SMAPPEE_PLATFORMS = ["binary_sensor", "sensor", "switch"]

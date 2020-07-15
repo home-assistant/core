@@ -11,7 +11,14 @@ from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import api
-from .const import CONF_HOSTNAME, CONF_SERIALNUMBER, CONF_TITLE, DOMAIN
+from .const import (
+    CONF_HOSTNAME,
+    CONF_SERIALNUMBER,
+    CONF_TITLE,
+    DOMAIN,
+    ENV_CLOUD,
+    ENV_LOCAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,12 +81,12 @@ class SmappeeFlowHandler(
 
         # Environment chosen, request additional host information for LOCAL or OAuth2 flow for CLOUD
         if user_input is not None and "environment" in user_input:
-            if user_input["environment"] == "LOCAL":
-                self.context.update({"environment": "LOCAL"})
+            if user_input["environment"] == ENV_LOCAL:
+                self.context.update({"environment": ENV_LOCAL})
                 return self._show_setup_form(step="host")
 
             # Use configuration.yaml CLOUD setup
-            self.context.update({"environment": "CLOUD"})
+            self.context.update({"environment": ENV_CLOUD})
             return await self.async_step_pick_implementation()
 
         if source == SOURCE_ZEROCONF:
@@ -135,8 +142,8 @@ class SmappeeFlowHandler(
         if step == "environment":
             data_schema = vol.Schema(
                 {
-                    vol.Required("environment", default="CLOUD"): vol.In(
-                        ["CLOUD", "LOCAL"]
+                    vol.Required("environment", default=ENV_CLOUD): vol.In(
+                        [ENV_CLOUD, ENV_LOCAL]
                     )
                 }
             )
