@@ -80,6 +80,16 @@ async def test_connection_error(hass, aiohttp_client, aioclient_mock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
+async def test_connection_error_empty_host(hass, aiohttp_client, aioclient_mock):
+    """Test we show user form on Smappee connection error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data={"host": None},
+    )
+
+    assert result["reason"] == "connection_error"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+
+
 async def test_zeroconf_no_data(hass, aiohttp_client, aioclient_mock):
     """Test we abort if zeroconf provides no data."""
     result = await hass.config_entries.flow.async_init(
