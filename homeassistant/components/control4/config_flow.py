@@ -83,14 +83,6 @@ class Control4Validator:
             _LOGGER.error("Failed to connect to the Control4 controller")
             return False
 
-    def return_controller_unique_id(self) -> str:
-        """
-        Return the controller name found by authenticate().
-
-        This exists so that the controller name return value can be mocked in tests.
-        """
-        return self.controller_unique_id
-
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Control4."""
@@ -120,7 +112,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if not errors:
-                controller_unique_id = hub.return_controller_unique_id()
+                controller_unique_id = hub.controller_unique_id
                 mac = (controller_unique_id.split("_", 3))[2]
                 formatted_mac = format_mac(mac)
                 await self.async_set_unique_id(formatted_mac)
