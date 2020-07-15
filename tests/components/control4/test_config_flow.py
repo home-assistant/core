@@ -1,10 +1,26 @@
 """Test the Control4 config flow."""
-from homeassistant import config_entries, setup
-from homeassistant.components.control4.const import DOMAIN
-
-from tests.async_mock import patch, AsyncMock, MagicMock
 import datetime
+
 from pyControl4.error_handling import Unauthorized
+
+from homeassistant import config_entries, setup
+from homeassistant.components.control4.const import (
+    CONF_LIGHT_COLD_START_TRANSITION_TIME,
+    CONF_LIGHT_TRANSITION_TIME,
+    DEFAULT_LIGHT_COLD_START_TRANSITION_TIME,
+    DEFAULT_LIGHT_TRANSITION_TIME,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
+
+from tests.async_mock import AsyncMock, patch
+from tests.common import MockConfigEntry
 
 
 def _get_mock_c4_account(
@@ -61,18 +77,18 @@ async def test_form(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "control4_model_00AA00AA00AA"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
+        CONF_HOST: "1.1.1.1",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
         "controller_unique_id": "control4_model_00AA00AA00AA",
     }
     await hass.async_block_till_done()
@@ -93,14 +109,37 @@ async def test_form_invalid_auth(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_form_unexpected_exception(hass):
+    """Test we handle an unexpected exception."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.control4.config_flow.C4Account",
+        side_effect=ValueError("message"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_form_cannot_connect(hass):
@@ -119,11 +158,58 @@ async def test_form_cannot_connect(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_option_flow(hass):
+    """Test config flow options."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options=None)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_SCAN_INTERVAL: 5,
+            CONF_LIGHT_COLD_START_TRANSITION_TIME: 2,
+            CONF_LIGHT_TRANSITION_TIME: 1,
+        },
+    )
+    assert result["type"] == "create_entry"
+    assert result["data"] == {
+        CONF_SCAN_INTERVAL: 5,
+        CONF_LIGHT_COLD_START_TRANSITION_TIME: 2,
+        CONF_LIGHT_TRANSITION_TIME: 1,
+    }
+
+
+async def test_option_flow_defaults(hass):
+    """Test config flow options."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options=None)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] == "create_entry"
+    assert result["data"] == {
+        CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+        CONF_LIGHT_COLD_START_TRANSITION_TIME: DEFAULT_LIGHT_COLD_START_TRANSITION_TIME,
+        CONF_LIGHT_TRANSITION_TIME: DEFAULT_LIGHT_TRANSITION_TIME,
+    }
