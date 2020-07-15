@@ -77,7 +77,6 @@ async def async_setup_entry(
                 for key in (
                     "water_average_daily",
                     "water_average",
-                    "water_daily_cost",
                     "water_daily_usage",
                     "water_meter_reading",
                     "water_value",
