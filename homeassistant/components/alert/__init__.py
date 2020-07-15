@@ -227,7 +227,7 @@ class Alert(ToggleEntity):
         to_state = ev.data.get("new_state")
         if to_state is None:
             return
-        _LOGGER.debug("Watched entity (%s) has changed", event.data.get("entity_id"))
+        _LOGGER.debug("Watched entity (%s) has changed", ev.data.get("entity_id"))
         if to_state.state == self._alert_state and not self._firing:
             await self.begin_alerting()
         if to_state.state != self._alert_state and self._firing:
