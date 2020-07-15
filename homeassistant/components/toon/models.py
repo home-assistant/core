@@ -109,7 +109,7 @@ class ToonGasMeterDeviceEntity(ToonEntity):
             "via_device": (DOMAIN, agreement_id, "electricity"),
         }
 
-    
+
 class ToonWaterMeterDeviceEntity(ToonEntity):
     """Defines a Water Meter device entity."""
 
