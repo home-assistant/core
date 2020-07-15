@@ -29,6 +29,8 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 def setup(hass, config):
     """Set up Zeroconf and make AIS dom discoverable."""
+    if not ais_global.has_root():
+        return True
     from zeroconf import Zeroconf, ServiceInfo
 
     zero_config = Zeroconf()

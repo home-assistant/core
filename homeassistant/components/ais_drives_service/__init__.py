@@ -173,17 +173,16 @@ def fix_rclone_config_permissions():
     uid = str(os.getuid())
     gid = str(os.getgid())
 
-    if platform.machine() == "x86_64":
-        # to suport local test
-        fix_rclone_cmd = "chown " + uid + ":" + gid + " " + G_RCLONE_CONF_FILE
-    else:
+    if ais_global.has_root():
         fix_rclone_cmd = (
             'su -c "chown ' + uid + ":" + gid + " " + G_RCLONE_CONF_FILE + '"'
         )
-    try:
-        ret = subprocess.check_output(fix_rclone_cmd, shell=True)  # nosec
-    except Exception as e:
-        _LOGGER.error("Nie można uzyskać uprwanień do konfiguracji dysków: " + str(e))
+        try:
+            ret = subprocess.check_output(fix_rclone_cmd, shell=True)  # nosec
+        except Exception as e:
+            _LOGGER.error(
+                "Nie można uzyskać uprwanień do konfiguracji dysków: " + str(e)
+            )
 
 
 def rclone_get_remotes_long():
