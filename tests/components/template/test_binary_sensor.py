@@ -622,9 +622,10 @@ async def test_no_update_template_match_all(hass, caplog):
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.all_state").state == "on"
-    assert hass.states.get("binary_sensor.all_icon").state == "on"
-    assert hass.states.get("binary_sensor.all_entity_picture").state == "on"
-    assert hass.states.get("binary_sensor.all_attribute").state == "on"
+    # Will now process because we have one valid template
+    assert hass.states.get("binary_sensor.all_icon").state == "off"
+    assert hass.states.get("binary_sensor.all_entity_picture").state == "off"
+    assert hass.states.get("binary_sensor.all_attribute").state == "off"
 
     await hass.helpers.entity_component.async_update_entity("binary_sensor.all_state")
     await hass.helpers.entity_component.async_update_entity("binary_sensor.all_icon")
