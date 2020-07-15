@@ -7,6 +7,14 @@ from typing import Tuple
 from PIL import ImageDraw
 
 
+COLOR_RGB_RED = (255, 0, 0)
+COLOR_RGB_GREEN = (0, 255, 0)
+COLOR_RGB_BLUE = (0, 0, 255)
+COLOR_RGB_YELLOW = (255, 255, 0)
+COLOR_RGB_PURPLE = (255, 0, 255)
+COLOR_RGB_CYAN = (0, 255, 255)
+
+
 def draw_box(
     draw: ImageDraw,
     box: Tuple[float, float, float, float],

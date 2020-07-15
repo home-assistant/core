@@ -11,6 +11,7 @@ import pytz.tzinfo as pytzinfo
 from homeassistant.const import MATCH_ALL
 
 DATE_STR_FORMAT = "%Y-%m-%d"
+DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 UTC = pytz.utc
 DEFAULT_TIME_ZONE: dt.tzinfo = pytz.utc
 

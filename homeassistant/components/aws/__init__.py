@@ -87,7 +87,7 @@ IMAGE_PROCESSING_PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_IDENTIFY_FACES): cv.boolean,
         vol.Optional(CONF_DETECTION_ATTRIBUTES): cv.string,
         vol.Optional(CONF_SAVE_FILE_TIMESTAMP): cv.boolean,
-        vol.Optional(CONF_SAVE_FILE_FOLDER): cv.string,
+        vol.Optional(CONF_SAVE_FILE_FOLDER): cv.isdir,
     }
 )
 

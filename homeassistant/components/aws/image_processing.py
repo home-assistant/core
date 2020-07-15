@@ -1,6 +1,7 @@
 """AWS platform for image_processing component."""
 import io
 import logging
+from pathlib import Path
 import re
 
 from PIL import Image, ImageDraw, UnidentifiedImageError
@@ -20,10 +21,10 @@ from homeassistant.components.image_processing import (
     ImageProcessingEntity,
     ImageProcessingFaceEntity,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, STATE_UNKNOWN
 from homeassistant.core import split_entity_id
 import homeassistant.util.dt as dt_util
-from homeassistant.util.pil import draw_box
+from homeassistant.util.pil import COLOR_RGB_YELLOW, draw_box
 
 from .const import (
     ATTR_LABELS,
@@ -46,8 +47,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DATETIME_FORMAT = "%Y-%m-%d_%H:%M:%S"
-
 
 async def get_valid_filename(name):
     """Parse input to ensure valid filename characters."""
@@ -69,7 +68,7 @@ async def save_image(
         confidence = obj["confidence"]
         box = obj["bounding_box"]
         centroid = obj["centroid"]
-        box_colour = (255, 255, 0)  # Yellow
+        box_colour = COLOR_RGB_YELLOW
         box_label = f"{name}: {confidence:.1f}%"
         draw_box(
             draw,
@@ -87,11 +86,11 @@ async def save_image(
         )
     filename = await get_valid_filename(entity_name)
     filename = filename.lower()
-    latest_save_path = f"{directory}/{filename}_latest.jpg"
+    latest_save_path = directory / f"{filename}_latest.jpg"
     img.save(latest_save_path)
     if save_timestamp:
-        timestamp = dt_util.now().strftime(DATETIME_FORMAT)
-        timestamp_save_path = f"{directory}/{filename}_{timestamp}.jpg"
+        timestamp = dt_util.now().strftime(dt_util.DATETIME_STR_FORMAT)
+        timestamp_save_path = directory / f"{filename}_{timestamp}.jpg"
         img.save(timestamp_save_path)
         _LOGGER.info("Rekognition saved file %s", timestamp_save_path)
 
@@ -275,7 +274,7 @@ class RekognitionObjectEntity(ImageProcessingEntity):
 
         self.session = session
         self.session_config = session_config
-        self.camera = camera_entity
+        self._camera = camera_entity
         self.conf_save_file_folder = entity_config.get(CONF_SAVE_FILE_FOLDER, None)
         self.conf_save_file_timestamp = entity_config.get(
             CONF_SAVE_FILE_TIMESTAMP, False
@@ -285,6 +284,8 @@ class RekognitionObjectEntity(ImageProcessingEntity):
             self._name = name
         else:
             self._name = f"Rekognition Object {split_entity_id(camera_entity)[1]}"
+        if self.conf_save_file_folder:
+            self.conf_save_file_folder = Path(self.conf_save_file_folder)
 
     @property
     def state_attributes(self):
@@ -304,7 +305,7 @@ class RekognitionObjectEntity(ImageProcessingEntity):
     @property
     def camera_entity(self):
         """Return camera entity id from process pictures."""
-        return self.camera
+        return self._camera
 
     @property
     def name(self):
@@ -370,14 +371,14 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
         super().__init__()
         self.session = session
         self.session_config = session_config
-        self.camera = camera_entity
+        self._camera = camera_entity
+        self._confidence = entity_config[CONF_CONFIDENCE]
         self.collection_id = entity_config[CONF_COLLECTION_ID]
         self.identify_faces = entity_config.get(CONF_IDENTIFY_FACES, False)
         self.conf_save_file_folder = entity_config.get(CONF_SAVE_FILE_FOLDER, None)
         self.conf_save_file_timestamp = entity_config.get(
             CONF_SAVE_FILE_TIMESTAMP, False
         )
-        self._confidence = entity_config.get(CONF_CONFIDENCE, 0.0)
         self.detection_attributes = entity_config.get(
             CONF_DETECTION_ATTRIBUTES, "DEFAULT"
         )
@@ -386,6 +387,8 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
             self._name = name
         else:
             self._name = f"Rekognition Face {split_entity_id(camera_entity)[1]}"
+        if self.conf_save_file_folder:
+            self.conf_save_file_folder = Path(self.conf_save_file_folder)
 
     @property
     def confidence(self):
@@ -395,7 +398,7 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
     @property
     def camera_entity(self):
         """Return camera entity id from process pictures."""
-        return self.camera
+        return self._camera
 
     @property
     def name(self):
@@ -409,7 +412,7 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
 
     async def init_collection(self, client):
         """Create AWS image collection if doesn't exist."""
-        collection_id_req = await client.list_collections(MaxResults=99)
+        collection_id_req = await client.list_collections()
         if self.collection_id not in collection_id_req["CollectionIds"]:
             await client.create_collection(CollectionId=self.collection_id)
         self.valid_collection_id = True
@@ -419,7 +422,7 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
         index_faces = await client.index_faces(
             CollectionId=self.collection_id,
             Image={"Bytes": image},
-            ExternalImageId=self.camera,
+            ExternalImageId=self._camera,
             DetectionAttributes=[self.detection_attributes],
         )
         known_faces = []
@@ -427,7 +430,7 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
         for face_record in detected_faces:
             known_face = {}
             box = await compute_box(face_record["Face"]["BoundingBox"], 3)
-            known_face[ATTR_NAME] = "Unknown"
+            known_face[ATTR_NAME] = STATE_UNKNOWN
             known_face[ATTR_CONFIDENCE] = face_record["Face"]["Confidence"]
             known_face["bounding_box"] = box["bounding_box"]
             known_face["centroid"] = box["centroid"]
@@ -435,13 +438,10 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
             # Add extra attributes
             if self.detection_attributes == "ALL":
                 face_detail = face_record["FaceDetail"]
-                age_range = face_detail["AgeRange"]
                 known_face[ATTR_GENDER] = face_detail["Gender"]["Value"]
                 known_face[ATTR_MOTION] = face_detail["Emotions"][0]["Type"]
                 known_face[ATTR_GLASSES] = face_detail["Eyeglasses"]["Value"]
-                known_face[ATTR_AGE] = (
-                    float(age_range["High"]) + float(age_range["Low"])
-                ) / 2
+                known_face[ATTR_AGE] = face_detail["AgeRange"]
             # Run identification against existing collection
             if self.identify_faces:
                 search_faces = await client.search_faces(
@@ -453,7 +453,7 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
                 for face_match in search_faces["FaceMatches"]:
                     image_id = face_match["Face"]["ExternalImageId"]
                     # Don't accidentally match against comparison images
-                    if image_id == self.camera:
+                    if image_id == self._camera:
                         continue
                     known_face[ATTR_NAME] = image_id
                     known_face[ATTR_CONFIDENCE] = face_match["Face"]["Confidence"]

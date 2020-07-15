@@ -271,7 +271,7 @@ REKOGNITION_FACE_PARSED_RESPONSE = {
     "gender": "Male",
     "motion": "CALM",
     "glasses": "False",
-    "age": 50.5,
+    "age": {"Low": 1, "High": 100},
 }
 
 REKOGNITION_OBJECT_PARSED_RESPONSE = {
@@ -555,6 +555,8 @@ async def test_rekognition_object(hass):
                             "service": "rekognition",
                             "platform": "object",
                             "credential_name": "test",
+                            "save_file_folder": "./",
+                            "save_file_timestamp": True,
                             "region_name": "us-east-1",
                             "source": [{"entity_id": "camera.demo_camera"}],
                         },
@@ -595,6 +597,8 @@ async def test_rekognition_face(hass):
                             "region_name": "us-east-1",
                             "identify_faces": True,
                             "detection_attributes": "ALL",
+                            "save_file_folder": "./",
+                            "save_file_timestamp": True,
                             "collection_id": "testcollection",
                             "source": [{"entity_id": "camera.demo_camera"}],
                         },
