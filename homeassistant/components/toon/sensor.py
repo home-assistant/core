@@ -69,19 +69,19 @@ async def async_setup_entry(
                 )
             ]
         )
+        
     sensors.extend(
-            [
-                ToonWaterMeterDeviceSensor(coordinator, key=key)
-                for key in (
-                    "water_average_daily",
-                    "water_average",
-                    "water_daily_usage",
-                    "water_meter_reading",
-                    "water_value",
-                )
-            ]
+        [
+            ToonWaterMeterDeviceSensor(coordinator, key=key)
+            for key in (
+                "water_average_daily",
+                "water_average",
+                "water_daily_usage",
+                "water_meter_reading",
+                "water_value",
+            )
+        ]
     )
-
 
     if coordinator.data.agreement.is_toon_solar:
         sensors.extend(
@@ -164,7 +164,7 @@ class ToonGasMeterDeviceSensor(ToonSensor, ToonGasMeterDeviceEntity):
 class ToonWaterMeterDeviceSensor(ToonSensor, ToonWaterMeterDeviceEntity):
     """Defines a Water sensor."""
 
-    
+
 class ToonSolarDeviceSensor(ToonSensor, ToonSolarDeviceEntity):
     """Defines a Solar sensor."""
 
