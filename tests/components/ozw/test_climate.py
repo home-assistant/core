@@ -218,3 +218,32 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg, caplog):
     )
     assert len(sent_messages) == 8
     assert "Received an invalid preset mode: invalid preset mode" in caplog.text
+
+    # test thermostat device without a mode commandclass
+    state = hass.states.get("climate.danfoss_living_connect_z_v1_06_014g0013_heating_1")
+    assert state is not None
+    assert state.state == HVAC_MODE_HEAT
+    assert state.attributes[ATTR_HVAC_MODES] == [
+        HVAC_MODE_HEAT,
+    ]
+    assert round(state.attributes[ATTR_TEMPERATURE], 0) == 21
+    assert state.attributes.get(ATTR_TARGET_TEMP_LOW) is None
+    assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) is None
+
+    # Test set target temperature
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {
+            "entity_id": "climate.danfoss_living_connect_z_v1_06_014g0013_heating_1",
+            "temperature": 28.0,
+        },
+        blocking=True,
+    )
+    assert len(sent_messages) == 9
+    msg = sent_messages[-1]
+    assert msg["topic"] == "OpenZWave/1/command/setvalue/"
+    assert msg["payload"] == {
+        "Value": 28.0,
+        "ValueIDKey": 281475116220434,
+    }
