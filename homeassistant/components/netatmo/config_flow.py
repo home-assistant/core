@@ -68,7 +68,7 @@ class NetatmoFlowHandler(
         await self.async_set_unique_id(DOMAIN)
 
         if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="single_instance_allowed")
 
         return await super().async_step_user(user_input)
 
