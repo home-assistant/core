@@ -54,7 +54,6 @@ async def test_valid_data(hass):
     for reading, value in GOOD_DATA.items():
         sensor.state_changed(
             GOOD_CONFIG["sensors"][reading],
-            None,
             State(GOOD_CONFIG["sensors"][reading], value),
         )
     assert sensor.state == "ok"
@@ -72,9 +71,7 @@ async def test_low_battery(hass):
     sensor.hass = hass
     assert sensor.state_attributes["problem"] == "none"
     sensor.state_changed(
-        "sensor.mqtt_plant_battery",
-        State("sensor.mqtt_plant_battery", 45),
-        State("sensor.mqtt_plant_battery", 10),
+        "sensor.mqtt_plant_battery", State("sensor.mqtt_plant_battery", 10),
     )
     assert sensor.state == "problem"
     assert sensor.state_attributes["problem"] == "battery low"
