@@ -5,7 +5,6 @@ from typing import Dict, List
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from .const import DOMAIN, MANUFACTURER, MODELS
 from .data_handler import NetatmoDataHandler
@@ -75,16 +74,6 @@ class NetatmoBase(Entity):
         entity_entry = entity_registry.async_get(self.entity_id)
         if not entity_entry:
             await super().async_remove()
-            return
-
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
-        device_entry = device_registry.async_get(entity_entry.device_id)
-        if not device_entry:
-            entity_registry.async_remove(self.entity_id)
-            return
-
-        if len(async_entries_for_device(entity_registry, entity_entry.device_id)) == 1:
-            device_registry.async_remove_device(device_entry.id)
             return
 
         entity_registry.async_remove(self.entity_id)
