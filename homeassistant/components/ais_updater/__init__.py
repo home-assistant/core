@@ -319,6 +319,8 @@ def get_current_dt():
 
 
 def get_current_android_apk_version():
+    if not ais_global.has_root():
+        return "0", "0", "0", "0"
 
     try:
         apk_dom_version = subprocess.check_output(
@@ -785,6 +787,8 @@ def run_shell_command(command):
 
 
 def grant_write_to_sdcard():
+    if not ais_global.has_root():
+        return
     try:
         ret_output = subprocess.check_output(
             'su -c "pm grant launcher.sviete.pl.domlauncherapp android.permission.READ_EXTERNAL_STORAGE"',
