@@ -69,7 +69,7 @@ async def async_setup_entry(
                 )
             ]
         )
-    
+
     sensors.extend(
         [
             ToonWaterMeterDeviceSensor(coordinator, key=key)
