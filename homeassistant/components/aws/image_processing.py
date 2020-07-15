@@ -422,7 +422,6 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
             ExternalImageId=self.camera,
             DetectionAttributes=[self.detection_attributes],
         )
-        _LOGGER.error(index_faces)
         known_faces = []
         detected_faces = index_faces.get("FaceRecords", [])
         for face_record in detected_faces:
@@ -451,7 +450,6 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
                     FaceMatchThreshold=self.confidence,
                     MaxFaces=1,
                 )
-                _LOGGER.error(search_faces)
                 for face_match in search_faces["FaceMatches"]:
                     image_id = face_match["Face"]["ExternalImageId"]
                     # Don't accidentally match against comparison images
@@ -459,7 +457,6 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
                         continue
                     known_face[ATTR_NAME] = image_id
                     known_face[ATTR_CONFIDENCE] = face_match["Face"]["Confidence"]
-            _LOGGER.error(known_face)
             known_faces.append(known_face)
         return known_faces
 
