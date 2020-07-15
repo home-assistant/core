@@ -367,15 +367,6 @@ SENSOR_ENTITIES = {
         ATTR_ICON: "mdi:water",
         ATTR_DEFAULT_ENABLED: True,
     },
-    "water_daily_cost": {
-        ATTR_NAME: "Water Cost Today",
-        ATTR_SECTION: "water_usage",
-        ATTR_MEASUREMENT: "day_cost",
-        ATTR_UNIT_OF_MEASUREMENT: CURRENCY_EUR,
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:water",
-        ATTR_DEFAULT_ENABLED: True,
-    },
     "water_meter_reading": {
         ATTR_NAME: "Water Meter",
         ATTR_SECTION: "water_usage",
