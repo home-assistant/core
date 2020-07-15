@@ -18,8 +18,21 @@
         "step": {
             "public_weather": {
                 "data": {
-                    "area_name": "Name des Gebiets"
+                    "area_name": "Name des Gebiets",
+                    "lat_ne": "Breitengrad Nord-Ost-Ecke",
+                    "lat_sw": "Breitengrad S\u00fcd-West-Ecke",
+                    "lon_ne": "L\u00e4ngengrad Nord-Ost-Ecke",
+                    "lon_sw": "L\u00e4ngengrad S\u00fcdwest-Ecke",
+                    "mode": "Berechnung",
+                    "show_on_map": "Auf Karte anzeigen"
                 }
+            },
+            "public_weather_areas": {
+                "data": {
+                    "weather_areas": "Wettergebiete"
+                },
+                "description": "Konfiguriere \u00f6ffentliche Wettersensoren.",
+                "title": "\u00d6ffentlicher Netatmo Wettersensor"
             }
         }
     }
