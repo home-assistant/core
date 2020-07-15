@@ -169,7 +169,7 @@ class NetatmoCamera(NetatmoBase, Camera):
                     self.is_streaming = True
                     self._status = "on"
 
-                self.schedule_update_ha_state()
+                self.async_write_ha_state()
                 return
 
         self.hass.bus.async_listen("netatmo_event", handle_event)

@@ -257,7 +257,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                     self._target_temperature = self._away_temperature
                 elif self._preset == PRESET_SCHEDULE:
                     self.async_update_callback()
-                self.schedule_update_ha_state()
+                self.async_write_ha_state()
                 return
 
             if not home.get("rooms"):
@@ -272,13 +272,13 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                             self._target_temperature = room[
                                 "therm_setpoint_temperature"
                             ]
-                        self.schedule_update_ha_state()
+                        self.async_write_ha_state()
                         break
 
                 elif data["event_type"] == "cancel_set_point":
                     if self._id == room["id"]:
                         self.async_update_callback()
-                        self.schedule_update_ha_state()
+                        self.async_write_ha_state()
                         break
 
         self.hass.bus.async_listen("netatmo_event", handle_event)
@@ -359,7 +359,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         else:
             _LOGGER.error("Preset mode '%s' not available", preset_mode)
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def preset_mode(self) -> Optional[str]:
@@ -378,7 +378,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             return
         self._home_status.set_room_thermpoint(self._id, STATE_NETATMO_MANUAL, temp)
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def device_state_attributes(self):
@@ -403,12 +403,12 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             )
         elif self.hvac_mode != HVAC_MODE_OFF:
             self._home_status.set_room_thermpoint(self._id, STATE_NETATMO_OFF)
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def turn_on(self):
         """Turn the entity on."""
         self._home_status.set_room_thermpoint(self._id, STATE_NETATMO_HOME)
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def available(self) -> bool:

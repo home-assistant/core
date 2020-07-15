@@ -112,7 +112,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
                 elif data["sub_type"] == "on":
                     self._is_on = True
 
-                self.schedule_update_ha_state()
+                self.async_write_ha_state()
                 return
 
         self.hass.bus.async_listen("netatmo_event", handle_event)
