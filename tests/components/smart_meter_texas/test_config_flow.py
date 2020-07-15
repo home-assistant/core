@@ -1,6 +1,9 @@
 """Test the Smart Meter Texas config flow."""
 from homeassistant import config_entries, setup
-from homeassistant.components.smart_meter_texas.config_flow import CannotConnect, InvalidAuth
+from homeassistant.components.smart_meter_texas.config_flow import (
+    CannotConnect,
+    InvalidAuth,
+)
 from homeassistant.components.smart_meter_texas.const import DOMAIN
 
 from tests.async_mock import patch
@@ -21,7 +24,8 @@ async def test_form(hass):
     ), patch(
         "homeassistant.components.smart_meter_texas.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.smart_meter_texas.async_setup_entry", return_value=True,
+        "homeassistant.components.smart_meter_texas.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
