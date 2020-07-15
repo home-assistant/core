@@ -91,11 +91,15 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
 
         Zwave multilevel switches use a range of [0, 99] to control brightness.
         """
+        if "target" in self.values:
+            return round((self.values.target.value / 99) * 255)
         return round((self.values.primary.value / 99) * 255)
 
     @property
     def is_on(self):
         """Return true if device is on (brightness above 0)."""
+        if "target" in self.values:
+            return self.values.target.value > 0
         return self.values.primary.value > 0
 
     @property
