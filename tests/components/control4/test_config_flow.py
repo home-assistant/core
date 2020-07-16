@@ -1,8 +1,8 @@
 """Test the Control4 config flow."""
-import asyncio
 import datetime
-import sys
 
+from pyControl4.account import C4Account
+from pyControl4.director import C4Director
 from pyControl4.error_handling import Unauthorized
 
 from homeassistant import config_entries, setup
@@ -29,30 +29,17 @@ def _get_mock_c4_account(
         "token_expiration": datetime.datetime(2020, 7, 15, 13, 50, 15, 26940),
     },
 ):
-    c4_account_mock = AsyncMock()
+    c4_account_mock = AsyncMock(C4Account)
 
-    if sys.version_info[:2] < (3, 8):
-        c4_account_mock.getAccountBearerToken.return_value = asyncio.Future()
-        c4_account_mock.getAccountBearerToken.return_value.set_result(None)
-        c4_account_mock.getAccountControllers.return_value = asyncio.Future()
-        c4_account_mock.getAccountControllers.return_value.set_result(
-            getAccountControllers
-        )
-        c4_account_mock.getDirectorBearerToken.return_value = asyncio.Future()
-        c4_account_mock.getDirectorBearerToken.return_value.set_result(
-            getDirectorBearerToken
-        )
-    else:
-        c4_account_mock.getAccountControllers.return_value = getAccountControllers
-        c4_account_mock.getDirectorBearerToken.return_value = getDirectorBearerToken
+    c4_account_mock.getAccountControllers.return_value = getAccountControllers
+    c4_account_mock.getDirectorBearerToken.return_value = getDirectorBearerToken
 
     return c4_account_mock
 
 
 def _get_mock_c4_director(getAllItemInfo={}):
-    c4_director_mock = AsyncMock()
-    c4_director_mock.getAllItemInfo.return_value = asyncio.Future()
-    c4_director_mock.getAllItemInfo.return_value.set_result(getAllItemInfo)
+    c4_director_mock = AsyncMock(C4Director)
+    c4_director_mock.getAllItemInfo.return_value = getAllItemInfo
 
     return c4_director_mock
 
