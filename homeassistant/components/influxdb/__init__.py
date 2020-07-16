@@ -51,6 +51,7 @@ from .const import (
     CONF_DB_NAME,
     CONF_DEFAULT_MEASUREMENT,
     CONF_HOST,
+    CONF_IGNORE_ATTRIBUTES,
     CONF_ORG,
     CONF_OVERRIDE_MEASUREMENT,
     CONF_PASSWORD,
@@ -142,7 +143,10 @@ def validate_version_specific_config(conf: Dict) -> Dict:
 
 
 _CUSTOMIZE_ENTITY_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string}
+    {
+        vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
+        vol.Optional(CONF_IGNORE_ATTRIBUTES): vol.All(cv.ensure_list, [cv.string]),
+    }
 )
 
 _INFLUX_BASE_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
@@ -152,6 +156,9 @@ _INFLUX_BASE_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
         vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
         vol.Optional(CONF_TAGS, default={}): vol.Schema({cv.string: cv.string}),
         vol.Optional(CONF_TAGS_ATTRIBUTES, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+        vol.Optional(CONF_IGNORE_ATTRIBUTES, default=[]): vol.All(
             cv.ensure_list, [cv.string]
         ),
         vol.Optional(CONF_COMPONENT_CONFIG, default={}): vol.Schema(
@@ -182,6 +189,7 @@ def _generate_event_to_json(conf: Dict) -> Callable[[Dict], str]:
     tags_attributes = conf.get(CONF_TAGS_ATTRIBUTES)
     default_measurement = conf.get(CONF_DEFAULT_MEASUREMENT)
     override_measurement = conf.get(CONF_OVERRIDE_MEASUREMENT)
+    global_ignore_attributes = set(conf[CONF_IGNORE_ATTRIBUTES])
     component_config = EntityValues(
         conf[CONF_COMPONENT_CONFIG],
         conf[CONF_COMPONENT_CONFIG_DOMAIN],
@@ -211,9 +219,8 @@ def _generate_event_to_json(conf: Dict) -> Callable[[Dict], str]:
                 _include_state = True
 
         include_uom = True
-        measurement = component_config.get(state.entity_id).get(
-            CONF_OVERRIDE_MEASUREMENT
-        )
+        entity_config = component_config.get(state.entity_id)
+        measurement = entity_config.get(CONF_OVERRIDE_MEASUREMENT)
         if measurement in (None, ""):
             if override_measurement:
                 measurement = override_measurement
@@ -241,10 +248,14 @@ def _generate_event_to_json(conf: Dict) -> Callable[[Dict], str]:
         if _include_value:
             json[INFLUX_CONF_FIELDS][INFLUX_CONF_VALUE] = _state_as_value
 
+        ignore_attributes = set(entity_config.get(CONF_IGNORE_ATTRIBUTES, []))
+        ignore_attributes.update(global_ignore_attributes)
         for key, value in state.attributes.items():
             if key in tags_attributes:
                 json[INFLUX_CONF_TAGS][key] = value
-            elif key != CONF_UNIT_OF_MEASUREMENT or include_uom:
+            elif (
+                key != CONF_UNIT_OF_MEASUREMENT or include_uom
+            ) and key not in ignore_attributes:
                 # If the key is already in fields
                 if key in json[INFLUX_CONF_FIELDS]:
                     key = f"{key}_"
