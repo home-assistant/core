@@ -46,10 +46,7 @@ async def setup_platform(
 
     with patch("homeassistant.components.bond.PLATFORMS", [platform]), patch(
         "homeassistant.components.bond.Bond.getVersion", return_value=MOCK_HUB_VERSION
-    ), patch(
-        "homeassistant.components.bond.Bond.getDeviceIds",
-        return_value=[bond_device_id],
-    ), patch(
+    ), patch_bond_device_ids(return_value=[bond_device_id],), patch(
         "homeassistant.components.bond.Bond.getDevice", return_value=discovered_device
     ), patch_bond_device_state(
         return_value={}
@@ -60,6 +57,16 @@ async def setup_platform(
         await hass.async_block_till_done()
 
     return mock_entry
+
+
+def patch_bond_device_ids(return_value=None):
+    """Patch Bond API getDeviceIds command."""
+    if return_value is None:
+        return_value = []
+
+    return patch(
+        "homeassistant.components.bond.Bond.getDeviceIds", return_value=return_value,
+    )
 
 
 def patch_bond_turn_on():
