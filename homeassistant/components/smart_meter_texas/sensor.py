@@ -67,7 +67,7 @@ class SmartMeterTexasSensor(Entity):
             attributes[LAST_UPDATED] = self._last_updated
 
         attributes["meter"] = self._meter_number
-        attributes["esidd"] = self._esiid
+        attributes["esiid"] = self._esiid
 
         return attributes
 
