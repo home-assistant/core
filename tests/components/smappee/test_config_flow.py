@@ -165,3 +165,38 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
+
+
+async def test_full_zeroconf_flow(hass):
+    """Test the full zeroconf flow."""
+    flow = config_flow.SmappeeFlowHandler()
+    flow.hass = hass
+    flow.context = {
+        "source": SOURCE_ZEROCONF,
+        CONF_HOSTNAME: "Smappee1006000212.local.",
+        CONF_TITLE: "Smappee1006000212",
+        CONF_IP_ADDRESS: "192.168.1.123",
+        CONF_SERIALNUMBER: "1006000212",
+    }
+
+    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}):
+        result = await flow.async_step_zeroconf(
+            {
+                "host": "192.168.1.123",
+                "port": 22,
+                CONF_HOSTNAME: "Smappee1006000212.local.",
+                "type": "_ssh._tcp.local.",
+                "name": "Smappee1006000212._ssh._tcp.local.",
+                "properties": {"_raw": {}},
+            }
+        )
+
+        assert flow.context[CONF_IP_ADDRESS] == "192.168.1.123"
+        assert result["description_placeholders"] == {CONF_SERIALNUMBER: "1006000212"}
+        assert result["step_id"] == "zeroconf_confirm"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        result = await flow.async_step_zeroconf_confirm(user_input={})
+        assert result["data"][CONF_IP_ADDRESS] == "192.168.1.123"
+        assert result["title"] == "Smappee1006000212"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
