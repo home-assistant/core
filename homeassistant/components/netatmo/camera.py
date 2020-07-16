@@ -149,9 +149,11 @@ class NetatmoCamera(NetatmoBase, Camera):
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
-        await NetatmoBase.async_added_to_hass(self)
+        await super().async_added_to_hass()
 
-        self.hass.bus.async_listen("netatmo_event", self.handle_event)
+        self._listeners.append(
+            self.hass.bus.async_listen("netatmo_event", self.handle_event)
+        )
 
     async def handle_event(self, event):
         """Handle webhook events."""
@@ -191,11 +193,13 @@ class NetatmoCamera(NetatmoBase, Camera):
                     camera_id=self._id
                 )
                 return None
+
         except requests.exceptions.RequestException as error:
             _LOGGER.info("Welcome/Presence URL changed: %s", error)
             self._data.update_camera_urls(camera_id=self._id)
             (self._vpnurl, self._localurl) = self._data.camera_urls(camera_id=self._id)
             return None
+
         return response.content
 
     @property
@@ -214,7 +218,7 @@ class NetatmoCamera(NetatmoBase, Camera):
     @property
     def available(self):
         """Return True if entity is available."""
-        return bool(self._alim_status == "on")
+        return bool(self._alim_status == "on" or self._status == "disconnected")
 
     @property
     def supported_features(self):

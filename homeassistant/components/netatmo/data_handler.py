@@ -43,19 +43,6 @@ SCAN_INTERVAL = 60
 class NetatmoDataHandler:
     """Manages the Netatmo data handling."""
 
-    # Central class to manage the polling data from the Netatmo API
-    # as well as the push data from the webhook
-    #
-    # Create one instance of the handler and store it in hass.data
-    #
-    # Register entities of its platforms when added to HA
-    # to receive signals once new data is available
-    #
-    # Fetch data for all data classes for the first time
-    # to gather all available entities
-    # then only update periodically the registered data classes and
-    # dispatch signals for the registered entities to fetch the new data
-
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
         """Initialize self."""
         self.hass = hass
@@ -100,7 +87,14 @@ class NetatmoDataHandler:
             self.hass, async_update, timedelta(seconds=SCAN_INTERVAL)
         )
 
-        self.hass.bus.async_listen("netatmo_event", self.handle_event)
+        self.listeners.append(
+            self.hass.bus.async_listen("netatmo_event", self.handle_event)
+        )
+
+    async def async_remove(self):
+        """Clean up the Netatmo data handler."""
+        for listener in self.listeners:
+            listener()
 
     async def handle_event(self, event):
         """Handle webhook events."""

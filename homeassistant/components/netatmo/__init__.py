@@ -181,6 +181,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
         _LOGGER.info("Unregister Netatmo webhook.")
 
+    await hass.data[DOMAIN][entry.entry_id][DATA_HANDLER].async_remove()
+
     unload_ok = all(
         await asyncio.gather(
             *[

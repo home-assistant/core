@@ -237,7 +237,9 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         """Entity created."""
         await super().async_added_to_hass()
 
-        self.hass.bus.async_listen("netatmo_event", self.handle_event)
+        self._listeners.append(
+            self.hass.bus.async_listen("netatmo_event", self.handle_event)
+        )
 
     async def handle_event(self, event):
         """Handle webhook events."""

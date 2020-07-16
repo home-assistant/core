@@ -2,7 +2,7 @@
 import logging
 from typing import Dict, List
 
-from homeassistant.core import callback
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
@@ -22,6 +22,7 @@ class NetatmoBase(Entity):
         """Set up Netatmo entity base."""
         self.data_handler = data_handler
         self._data_classes: List[Dict] = []
+        self._listeners: List[CALLBACK_TYPE] = []
 
         self._device_name = None
         self._id = None
@@ -60,6 +61,13 @@ class NetatmoBase(Entity):
                 )
             )
         self.async_update_callback()
+
+    async def async_will_remove_from_hass(self):
+        """Run when entity will be removed from hass."""
+        await super().async_will_remove_from_hass()
+
+        for listener in self._listeners:
+            listener()
 
     async def async_remove(self):
         """Clean up when removing entity.
