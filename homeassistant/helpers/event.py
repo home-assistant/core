@@ -335,8 +335,9 @@ def async_track_point_in_utc_time(
     # Ensure point_in_time is UTC
     point_in_time = dt_util.as_utc(point_in_time)
     _LOGGER.debug(
-        "async_track_point_in_utc_time point_in_time after UTC: %s [loop time: %s tracked loop time: %s]",
+        "async_track_point_in_utc_time point_in_time after UTC: %s [now: %s] [loop time: %s tracked loop time: %s]",
         point_in_time,
+        dt_util.utcnow(),
         hass.loop.time(),
         hass.loop.time() + point_in_time.timestamp() - time.time(),
     )
