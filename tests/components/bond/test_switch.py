@@ -10,9 +10,13 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_O
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
-from .common import setup_platform
+from .common import (
+    patch_bond_device_state,
+    patch_bond_turn_off,
+    patch_bond_turn_on,
+    setup_platform,
+)
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +39,7 @@ async def test_turn_on_switch(hass: core.HomeAssistant):
     """Tests that turn on command delegates to API."""
     await setup_platform(hass, SWITCH_DOMAIN, generic_device("name-1"))
 
-    with patch("homeassistant.components.bond.Bond.turnOn") as mock_turn_on:
+    with patch_bond_turn_on() as mock_turn_on, patch_bond_device_state():
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -50,7 +54,7 @@ async def test_turn_off_switch(hass: core.HomeAssistant):
     """Tests that turn off command delegates to API."""
     await setup_platform(hass, SWITCH_DOMAIN, generic_device("name-1"))
 
-    with patch("homeassistant.components.bond.Bond.turnOff") as mock_turn_off:
+    with patch_bond_turn_off() as mock_turn_off, patch_bond_device_state():
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
@@ -65,9 +69,7 @@ async def test_update_reports_switch_is_on(hass: core.HomeAssistant):
     """Tests that update command sets correct state when Bond API reports the device is on."""
     await setup_platform(hass, SWITCH_DOMAIN, generic_device("name-1"))
 
-    with patch(
-        "homeassistant.components.bond.Bond.getDeviceState", return_value={"power": 1}
-    ):
+    with patch_bond_device_state(return_value={"power": 1}):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
 
@@ -78,9 +80,7 @@ async def test_update_reports_switch_is_off(hass: core.HomeAssistant):
     """Tests that update command sets correct state when Bond API reports the device is off."""
     await setup_platform(hass, SWITCH_DOMAIN, generic_device("name-1"))
 
-    with patch(
-        "homeassistant.components.bond.Bond.getDeviceState", return_value={"power": 0}
-    ):
+    with patch_bond_device_state(return_value={"power": 0}):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
 

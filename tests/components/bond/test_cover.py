@@ -15,9 +15,14 @@ from homeassistant.const import (
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
-from .common import setup_platform
+from .common import (
+    patch_bond_close,
+    patch_bond_device_state,
+    patch_bond_hold,
+    patch_bond_open,
+    setup_platform,
+)
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,7 +45,7 @@ async def test_open_cover(hass: core.HomeAssistant):
     """Tests that open cover command delegates to API."""
     await setup_platform(hass, COVER_DOMAIN, shades("name-1"))
 
-    with patch("homeassistant.components.bond.Bond.open") as mock_open:
+    with patch_bond_open() as mock_open, patch_bond_device_state():
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
@@ -55,7 +60,7 @@ async def test_close_cover(hass: core.HomeAssistant):
     """Tests that close cover command delegates to API."""
     await setup_platform(hass, COVER_DOMAIN, shades("name-1"))
 
-    with patch("homeassistant.components.bond.Bond.close") as mock_close:
+    with patch_bond_close() as mock_close, patch_bond_device_state():
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
@@ -70,7 +75,7 @@ async def test_stop_cover(hass: core.HomeAssistant):
     """Tests that stop cover command delegates to API."""
     await setup_platform(hass, COVER_DOMAIN, shades("name-1"))
 
-    with patch("homeassistant.components.bond.Bond.hold") as mock_hold:
+    with patch_bond_hold() as mock_hold, patch_bond_device_state():
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_STOP_COVER,
@@ -85,9 +90,7 @@ async def test_update_reports_open_cover(hass: core.HomeAssistant):
     """Tests that update command sets correct state when Bond API reports cover is open."""
     await setup_platform(hass, COVER_DOMAIN, shades("name-1"))
 
-    with patch(
-        "homeassistant.components.bond.Bond.getDeviceState", return_value={"open": 1}
-    ):
+    with patch_bond_device_state(return_value={"open": 1}):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
 
@@ -98,9 +101,7 @@ async def test_update_reports_closed_cover(hass: core.HomeAssistant):
     """Tests that update command sets correct state when Bond API reports cover is closed."""
     await setup_platform(hass, COVER_DOMAIN, shades("name-1"))
 
-    with patch(
-        "homeassistant.components.bond.Bond.getDeviceState", return_value={"open": 0}
-    ):
+    with patch_bond_device_state(return_value={"open": 0}):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
 
