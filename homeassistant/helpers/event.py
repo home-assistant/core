@@ -284,7 +284,20 @@ def async_track_same_state(
     ) -> None:
         """Fire on changes and cancel for listener if changed."""
         if not async_check_same_func(entity, from_state, to_state):
+            _LOGGER.debug(
+                "async_track_same_state state_for_cancel_listener -- CANCELED: entity: %s from_state: %s to_state: %s",
+                entity,
+                from_state,
+                to_state,
+            )
             clear_listener()
+        else:
+            _LOGGER.debug(
+                "async_track_same_state state_for_cancel_listener -- NOT CANCELED: entity: %s from_state: %s to_state: %s",
+                entity,
+                from_state,
+                to_state,
+            )
 
     _LOGGER.debug(
         "async_track_same_state schedule async_track_point_in_utc_time: %s %s %s",
