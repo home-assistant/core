@@ -163,7 +163,7 @@ def async_track_state_change_event(
 
             _LOGGER.debug("_async_state_change_dispatcher: %s", entity_id)
 
-            for action in entity_callbacks[entity_id][:]:
+            for action in entity_callbacks[entity_id]:
                 try:
                     hass.async_run_job(action, event)
                 except Exception:  # pylint: disable=broad-except
