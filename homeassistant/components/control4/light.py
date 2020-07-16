@@ -148,7 +148,7 @@ class Control4Light(Control4Entity, LightEntity):
     @property
     def is_on(self):
         """Return whether this light is on or off."""
-        return bool(self._coordinator.data[self._idx]["value"] > 0)
+        return self._coordinator.data[self._idx]["value"] > 0
 
     @property
     def brightness(self):
