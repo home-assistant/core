@@ -86,9 +86,17 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         if self.values.color is not None:
             self._supported_features |= SUPPORT_COLOR
 
-        if self.values.color_channels is not None:
-            self._supported_features |= SUPPORT_WHITE_VALUE
+        # Support Color Temp if both white channels
+        if self.values.color_channels.value & (
+            COLOR_CHANNEL_WARM_WHITE | COLOR_CHANNEL_COLD_WHITE
+        ):
             self._supported_features |= SUPPORT_COLOR_TEMP
+
+        # Support White value if only a single white channel
+        if self.values.color_channels.value & (
+            COLOR_CHANNEL_WARM_WHITE ^ COLOR_CHANNEL_COLD_WHITE
+        ):
+            self._supported_features |= SUPPORT_WHITE_VALUE
 
         self._calculate_rgb_values()
 
