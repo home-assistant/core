@@ -999,4 +999,4 @@ zigpy-xbee==0.12.1
 zigpy-zigate==0.6.1
 
 # homeassistant.components.zha
-zigpy==0.22.1
+zigpy==0.22.2
