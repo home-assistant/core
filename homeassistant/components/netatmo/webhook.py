@@ -35,13 +35,13 @@ async def handle_webhook(hass, webhook_id, request):
         hass.bus.async_fire(
             event_type=NETATMO_EVENT, event_data={"type": event_type, "data": data}
         )
-        for event_data in data.get("event_list"):
+        for event_data in data.get("event_list", []):
             async_evaluate_event(hass, event_data)
     elif event_type == "therm_mode":
         hass.bus.async_fire(
             event_type=NETATMO_EVENT, event_data={"type": event_type, "data": data}
         )
-        for event_data in data.get("data"):
+        for event_data in data.get("data", []):
             async_evaluate_event(hass, event_data)
     else:
         async_evaluate_event(hass, data)
