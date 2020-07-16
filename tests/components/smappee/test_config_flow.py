@@ -194,6 +194,31 @@ async def test_user_device_exists_abort(hass):
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
+async def test_user_device_exists_abort(hass):
+    """Test we abort user flow if Smappee device already configured."""
+    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}), patch(
+        "pysmappee.api.SmappeeLocalApi.load_advanced_config",
+        return_value=[{"key": "mdnsHostName", "value": "Smappee1006000212"}],
+    ), patch(
+        "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
+    ), patch(
+        "pysmappee.api.SmappeeLocalApi.load_instantaneous",
+        return_value=[{"key": "phase0ActivePower", "value": 0}],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": SOURCE_USER},
+            data={"host": "1.2.3.4"},
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data={"host": "1.2.3.4"},
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
+
+
 async def test_zeroconf_device_exists_abort(hass):
     """Test we abort zeroconf flow if Smappee device already configured."""
     with patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}), patch(
