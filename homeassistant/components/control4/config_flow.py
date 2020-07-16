@@ -41,25 +41,23 @@ class Control4Validator:
         self.host = host
         self.username = username
         self.password = password
-        self.account = None
         self.controller_unique_id = None
         self.director_bearer_token = None
-        self.director = None
 
     async def authenticate(self) -> bool:
         """Test if we can authenticate with the Control4 account API."""
         try:
-            self.account = C4Account(self.username, self.password)
+            account = C4Account(self.username, self.password)
             # Authenticate with Control4 account
-            await self.account.getAccountBearerToken()
+            await account.getAccountBearerToken()
 
             # Get controller name
-            account_controllers = await self.account.getAccountControllers()
+            account_controllers = await account.getAccountControllers()
             self.controller_unique_id = account_controllers["controllerCommonName"]
 
             # Get bearer token to communicate with controller locally
             self.director_bearer_token = (
-                await self.account.getDirectorBearerToken(self.controller_unique_id)
+                await account.getDirectorBearerToken(self.controller_unique_id)
             )["token"]
             return True
         except (Unauthorized, NotFound):
@@ -68,8 +66,8 @@ class Control4Validator:
     async def connect_to_director(self) -> bool:
         """Test if we can connect to the local Control4 Director."""
         try:
-            self.director = C4Director(self.host, self.director_bearer_token)
-            await self.director.getAllItemInfo()
+            director = C4Director(self.host, self.director_bearer_token)
+            await director.getAllItemInfo()
             return True
         except (Unauthorized, ClientError, asyncioTimeoutError):
             _LOGGER.error("Failed to connect to the Control4 controller")
