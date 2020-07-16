@@ -59,15 +59,15 @@ class BondHub:
         """Initialize Bond Hub."""
         self.bond: Bond = bond
         self._version: Optional[dict] = None
+        self._devices: Optional[List[BondDevice]] = None
 
     def setup(self):
         """Read hub version information."""
         self._version = self.bond.getVersion()
 
-    def get_bond_devices(self) -> List[BondDevice]:
-        """Fetch all available devices using Bond API."""
+        # Fetch all available devices using Bond API.
         device_ids = self.bond.getDeviceIds()
-        devices = [
+        self._devices = [
             BondDevice(
                 device_id,
                 self.bond.getDevice(device_id),
@@ -75,7 +75,6 @@ class BondHub:
             )
             for device_id in device_ids
         ]
-        return devices
 
     @property
     def bond_id(self) -> str:
@@ -91,3 +90,8 @@ class BondHub:
     def fw_ver(self) -> str:
         """Return this hub firmware version."""
         return self._version.get("fw_ver")
+
+    @property
+    def devices(self) -> List[BondDevice]:
+        """Return a list of all devices controlled by this hub."""
+        return self._devices
