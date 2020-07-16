@@ -118,10 +118,6 @@ class Metering(ZigbeeChannel):
         self._multiplier = results.get("multiplier", self._multiplier)
         self._unit_enum = results.get("unit_of_measure", 0x7F)  # default to unknown
 
-        if self.unit_of_measurement == POWER_WATT:
-            # Zigbee spec power unit is kW, but we show the value in W
-            self._multiplier = self._multiplier * 1000
-
         fmting = results.get(
             "demand_formatting", 0xF9
         )  # 1 digit to the right, 15 digits to the left
@@ -139,6 +135,12 @@ class Metering(ZigbeeChannel):
 
     def formatter_function(self, value):
         """Return formatted value for display."""
+        if self.unit_of_measurement == POWER_WATT:
+            # Zigbee spec power unit is kW, but we show the value in W
+            value_watt = value * 1000
+            if value_watt < 100:
+                return round(value_watt, 1)
+            return round(value_watt)
         return self._format_spec.format(value).lstrip()
 
 
