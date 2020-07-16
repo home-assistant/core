@@ -93,7 +93,7 @@ async def async_setup_entry(
             async_add_entities(
                 [
                     Control4Light(
-                        hass,
+                        entry_data,
                         entry,
                         item_coordinator,
                         item_name,
@@ -114,7 +114,7 @@ class Control4Light(Control4Entity, LightEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
+        entry_data: dict,
         entry: ConfigEntry,
         coordinator: DataUpdateCoordinator,
         name: str,
@@ -127,7 +127,7 @@ class Control4Light(Control4Entity, LightEntity):
     ):
         """Initialize Control4 light entity."""
         super().__init__(
-            hass,
+            entry_data,
             entry,
             coordinator,
             name,

@@ -157,7 +157,7 @@ class Control4Entity(entity.Entity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
+        entry_data: dict,
         entry: ConfigEntry,
         coordinator: DataUpdateCoordinator,
         name: str,
@@ -169,7 +169,6 @@ class Control4Entity(entity.Entity):
     ):
         """Initialize a Control4 entity."""
         self.entry = entry
-        entry_data = hass.data[DOMAIN][self.entry.entry_id]
         self.account = entry_data[CONF_ACCOUNT]
         self.director = entry_data[CONF_DIRECTOR]
         self.director_token_expiry = entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION]
