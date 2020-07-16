@@ -283,7 +283,7 @@ def async_track_same_state(
     @callback
     def state_for_cancel_listener(event: Event) -> None:
         """Fire on changes and cancel for listener if changed."""
-        entity: str = event.data.get("entity_id")  # type: ignore
+        entity: str = event.data["entity_id"]
         from_state: Optional[State] = event.data.get("old_state")
         to_state: Optional[State] = event.data.get("new_state")
 
