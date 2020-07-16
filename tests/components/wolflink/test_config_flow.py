@@ -1,5 +1,5 @@
 """Test the Wolf SmartSet Service config flow."""
-from httpcore._exceptions import ConnectError
+from httpcore import ConnectError
 from wolf_smartset.models import Device
 from wolf_smartset.token_auth import InvalidAuth
 

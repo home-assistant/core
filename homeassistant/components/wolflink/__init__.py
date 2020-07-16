@@ -2,7 +2,7 @@
 from _datetime import timedelta
 import logging
 
-from httpcore._exceptions import ConnectError
+from httpcore import ConnectError
 from wolf_smartset.token_auth import InvalidAuth
 from wolf_smartset.wolf_client import WolfClient
 

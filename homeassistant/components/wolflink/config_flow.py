@@ -1,7 +1,7 @@
 """Config flow for Wolf SmartSet Service integration."""
 import logging
 
-from httpcore._exceptions import ConnectError
+from httpcore import ConnectError
 import voluptuous as vol
 from wolf_smartset.token_auth import InvalidAuth
 from wolf_smartset.wolf_client import WolfClient
