@@ -2,6 +2,11 @@
 import asyncio
 import json
 import logging
+from datetime import timedelta
+
+import async_timeout
+from homeassistant.exceptions import ConfigEntryNotReady
+
 
 import aiohttp
 from omnilogic.omnilogic import OmniLogic
@@ -10,6 +15,9 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
 
 from .const import DOMAIN
 
@@ -18,7 +26,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 # TODO List the platforms that you want to support.
 # For your initial PR, limit it to 1 platform.
-PLATFORMS = ["light"]
+PLATFORMS = ["sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -40,31 +48,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
 
-    api_client = OmniLogic(username, password)
-    config_data = await api_client.get_msp_config_file()
-    telemetry_data = await api_client.get_telemetry_data()
-    BOWS = config_data["Backyard"]["Body-of-water"]
-    for i, BOW in enumerate(BOWS):
-        _LOGGER.info("BOW")
-        _LOGGER.info(BOW["Name"])
-        bow_name = BOW["Name"]
-        bow_systemId = BOW["System-Id"]
-        filterPump = json.loads(json.dumps(BOWS[i]["Filter"]))
-        fp_name = filterPump["Name"].replace(" ", "_")
-        fp_systemId = filterPump["System-Id"]
-        filterSpeed = telemetry_data["Backyard"]["BOW%s" % (i + 1)]["Filter"][
-            "filterSpeed"
-        ]
-        filterState = (
-            "on"
-            if telemetry_data["Backyard"]["BOW%s" % (i + 1)]["Filter"]["filterState"]
-            == "1"
-            else "off"
+    session = async_get_clientsession(hass)
+    coordinator = OmnilogicUpdateCoordinator(
+        hass, username, password, session, timedelta(minutes=1)
+    )
+    await coordinator.async_refresh()
+
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = coordinator
+
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
         )
-        hass.states.async_set(
-            f"omnilogic.{bow_name}_{fp_name}", filterState, {"speed": filterSpeed}
-        )
-    await api_client.close()
 
     return True
 
@@ -83,3 +82,30 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+class OmnilogicUpdateCoordinator(DataUpdateCoordinator):
+    """Define an object to hold Omnilogic data"""
+
+    def __init__(self, hass, username, password, session, update_interval):
+        """Initialize"""
+        _LOGGER.info("__INIT__")
+        self.name = "test"
+        self.api = OmniLogic(username, password)
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
+
+    async def _async_update_data(self):
+        """update data"""
+        _LOGGER.info("async_update_data")
+
+        with async_timeout.timeout(20):
+            try:
+                _LOGGER.info("fetching data")
+                telemetry_data = await self.api.get_telemetry_data()
+                _LOGGER.info("Data updated!")
+                # need to find out where/when to close api connection
+                # await self.api.close()
+                return telemetry_data
+            except ImportError as err:
+                raise UpdateFailed(err)
+
