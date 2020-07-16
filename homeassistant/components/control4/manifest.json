@@ -9,8 +9,5 @@
       "st": "c4:director"
     }
   ],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": ["@lawtancool"]
 }
