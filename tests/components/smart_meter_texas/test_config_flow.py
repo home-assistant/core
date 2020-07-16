@@ -5,6 +5,7 @@ from homeassistant.components.smart_meter_texas.config_flow import (
     InvalidAuth,
 )
 from homeassistant.components.smart_meter_texas.const import DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.async_mock import patch
 
@@ -19,8 +20,7 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.smart_meter_texas.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
+        "smart_meter_texas.async_api.Auth.authenticate", return_value=True
     ), patch(
         "homeassistant.components.smart_meter_texas.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -30,18 +30,20 @@ async def test_form(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                "meter": "123456789",
+                "esiid": "12345678901234567",
             },
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "Electric Meter"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
+        "meter": "123456789",
+        "esiid": "12345678901234567",
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -55,15 +57,15 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.smart_meter_texas.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
+        "smart_meter_texas.async_api.Auth.authenticate", side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                "meter": "123456789",
+                "esiid": "12345678901234567",
             },
         )
 
@@ -78,15 +80,15 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.smart_meter_texas.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
+        "smart_meter_texas.async_api.Auth.authenticate", side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                "meter": "123456789",
+                "esiid": "12345678901234567",
             },
         )
 
