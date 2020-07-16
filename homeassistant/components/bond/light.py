@@ -26,19 +26,19 @@ async def async_setup_entry(
     """Set up Bond light devices."""
     hub: BondHub = hass.data[DOMAIN][entry.entry_id]
 
-    lights = [
+    lights: List[Entity] = [
         BondLight(hub, device)
         for device in hub.devices
         if device.type == DeviceTypes.CEILING_FAN and device.supports_light()
     ]
-    async_add_entities(lights, True)
 
-    fireplaces = [
+    fireplaces: List[Entity] = [
         BondFireplace(hub, device)
         for device in hub.devices
         if device.type == DeviceTypes.FIREPLACE
     ]
-    async_add_entities(fireplaces, True)
+
+    async_add_entities(lights + fireplaces, True)
 
 
 class BondLight(BondEntity, LightEntity):
