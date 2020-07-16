@@ -87,8 +87,8 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
             self._supported_features |= SUPPORT_COLOR
 
         # Support Color Temp if both white channels
-        if self.values.color_channels.value & (
-            COLOR_CHANNEL_WARM_WHITE | COLOR_CHANNEL_COLD_WHITE
+        if (self.values.color_channels.value & COLOR_CHANNEL_WARM_WHITE) and (
+            self.values.color_channels.value & COLOR_CHANNEL_COLD_WHITE
         ):
             self._supported_features |= SUPPORT_COLOR_TEMP
 
