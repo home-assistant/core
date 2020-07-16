@@ -193,8 +193,10 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
                 rgbw = f"#00000000{white:02x}"
 
         elif color_temp is not None:
-            cold = int((TEMP_COLOR_MAX - color_temp) / TEMP_COLOR_DIFF * 255)
+            cold = round((TEMP_COLOR_MAX - round(color_temp)) / TEMP_COLOR_DIFF * 255)
             warm = 255 - cold
+            if warm < 0:
+                warm = 0
             rgbw = f"#000000{warm:02x}{cold:02x}"
 
         if rgbw and self.values.color:
@@ -246,11 +248,11 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
             temp_2 = self._white
 
         # Calculate color temps based on white LED status
-        if temp_1 > 0:
-            self._ct = TEMP_COLOR_MAX - ((temp_1 / 255) * TEMP_COLOR_DIFF)
-        # Only used if WW channel missing
-        elif temp_2 > 0:
-            self._ct = TEMP_COLOR_MAX - temp_2
+        if temp_2 > 0:
+            self._ct = round(TEMP_COLOR_MAX - ((temp_2 / 255) * TEMP_COLOR_DIFF))
+        # Only used if CW channel missing
+        elif temp_1 > 0:
+            self._ct = round(TEMP_COLOR_MAX - temp_1)
 
         # If no rgb channels supported, report None.
         if not (
