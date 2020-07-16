@@ -1,8 +1,13 @@
 """Tests for the aws component config and setup."""
+from pathlib import Path
+import shutil
+
 from homeassistant.components import aws
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import AsyncMock, MagicMock, patch as async_patch
+
+TEST_IMAGE_DEST = "./test_images"
 
 MOCK_REKOGNITION_INDEX_FACE_RESPONSE = {
     "FaceRecords": [
@@ -541,6 +546,8 @@ async def test_image_processing_credential(hass):
 
 async def test_rekognition_object(hass):
     """Test rekognition object detection functions."""
+    image_path = Path(TEST_IMAGE_DEST)
+    image_path.mkdir(exist_ok=True)
     with async_patch("aiobotocore.AioSession", new=MockAioSession):
         await async_setup_component(
             hass, "camera", {"camera": {"platform": "demo", "name": "demo camera"}},
@@ -555,7 +562,7 @@ async def test_rekognition_object(hass):
                             "service": "rekognition",
                             "platform": "object",
                             "credential_name": "test",
-                            "save_file_folder": "./",
+                            "save_file_folder": image_path,
                             "save_file_timestamp": True,
                             "region_name": "us-east-1",
                             "source": [{"entity_id": "camera.demo_camera"}],
@@ -576,10 +583,13 @@ async def test_rekognition_object(hass):
     assert len(state.attributes.get("objects")) == 5
     assert len(state.attributes.get("labels")) == 7
     assert state.attributes.get("objects")[0] == REKOGNITION_OBJECT_PARSED_RESPONSE
+    shutil.rmtree(image_path)
 
 
 async def test_rekognition_face(hass):
     """Test rekognition face detection/identification functions."""
+    image_path = Path(TEST_IMAGE_DEST)
+    image_path.mkdir(exist_ok=True)
     with async_patch("aiobotocore.AioSession", new=MockAioSession):
         await async_setup_component(
             hass, "camera", {"camera": {"platform": "demo", "name": "demo camera"}},
@@ -597,7 +607,7 @@ async def test_rekognition_face(hass):
                             "region_name": "us-east-1",
                             "identify_faces": True,
                             "detection_attributes": "ALL",
-                            "save_file_folder": "./",
+                            "save_file_folder": image_path,
                             "save_file_timestamp": True,
                             "collection_id": "testcollection",
                             "source": [{"entity_id": "camera.demo_camera"}],
@@ -618,6 +628,7 @@ async def test_rekognition_face(hass):
     assert state.attributes.get("total_faces") == 1
     assert len(state.attributes.get("faces")) == 1
     assert state.attributes.get("faces")[0] == REKOGNITION_FACE_PARSED_RESPONSE
+    shutil.rmtree(image_path)
 
 
 async def test_notify_credential_profile(hass):

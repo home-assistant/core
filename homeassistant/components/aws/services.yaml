@@ -1,0 +1,15 @@
+index_face:
+  description: Adds face metadata from image file or folder to face collection.
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set
+      example: "image_processing.rekognition_face_demo_camera"
+    image_id:
+      description: The reference ID of the image(s) being indexed. This is returned as the 'name' attribute when identifying faces.
+      example: "Jane"
+    image_path:
+      description: "Path to a single image of a face to be indexed."
+      example: "Jane_face1.jpg"
+    image_folder:
+      description: "Folder containing many images of a face to be indexed with the same `image_id`"
+      example: "/config/face_images/Jane"

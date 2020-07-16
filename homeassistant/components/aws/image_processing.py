@@ -23,9 +23,11 @@ from homeassistant.components.image_processing import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, STATE_UNKNOWN
 from homeassistant.core import split_entity_id
+from homeassistant.helpers import entity_platform
 import homeassistant.util.dt as dt_util
 from homeassistant.util.pil import COLOR_RGB_YELLOW, draw_box
 
+from . import SERVICE_INDEX_FACE_SCHEMA
 from .const import (
     ATTR_LABELS,
     ATTR_OBJECTS,
@@ -41,8 +43,10 @@ from .const import (
     CONF_SECRET_ACCESS_KEY,
     CONF_SERVICE,
     DATA_SESSIONS,
+    EVENT_FACE_INDEXED,
     EVENT_LABEL_DETECTED,
     EVENT_OBJECT_DETECTED,
+    SERVICE_INDEX_FACE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,15 +88,16 @@ async def save_image(
             text="X",
             fill=box_colour,
         )
-    filename = await get_valid_filename(entity_name)
-    filename = filename.lower()
-    latest_save_path = directory / f"{filename}_latest.jpg"
+    filename = f"{entity_name.lower()}_latest.jpg"
+    filename = await get_valid_filename(filename)
+    latest_save_path = directory / filename
     img.save(latest_save_path)
     if save_timestamp:
         timestamp = dt_util.now().strftime(dt_util.DATETIME_STR_FORMAT)
-        timestamp_save_path = directory / f"{filename}_{timestamp}.jpg"
+        filename = f"{entity_name.lower()}_{timestamp}.jpg"
+        filename = await get_valid_filename(filename)
+        timestamp_save_path = directory / filename
         img.save(timestamp_save_path)
-        _LOGGER.info("Rekognition saved file %s", timestamp_save_path)
 
 
 async def compute_box(box, decimal_places):
@@ -181,7 +186,6 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     conf = discovery_info
 
     service = conf[CONF_SERVICE]
-    platform = conf[CONF_PLATFORM]
     region_name = conf[CONF_REGION]
     session_config = {CONF_REGION: conf[CONF_REGION]}
     platform = conf[CONF_PLATFORM]
@@ -244,6 +248,10 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
             )
             entities.append(face_entity)
         add_entities(entities)
+        platform_obj = entity_platform.current_platform.get()
+        platform_obj.async_register_entity_service(
+            SERVICE_INDEX_FACE, SERVICE_INDEX_FACE_SCHEMA, "index_face",
+        )
     if platform == "object":
         entities = []
         for camera in conf.get(CONF_SOURCE, []):
@@ -410,6 +418,48 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
         """Return the polling state."""
         return False
 
+    async def index_face(
+        self, image_path=None, image_folder=None, image_id=None, image=None
+    ):
+        """Add face metadata from image bytes, file or folder to face collection."""
+        async with self.session.create_client(
+            self._service, **self.session_config
+        ) as client:
+
+            async def upload(image, image_id):
+                try:
+                    index_faces = await client.index_faces(
+                        CollectionId=self.collection_id,
+                        Image={"Bytes": image},
+                        ExternalImageId=image_id,
+                        DetectionAttributes=[self.detection_attributes],
+                    )
+                except UnboundLocalError:
+                    _LOGGER.error(
+                        "Error indexing image. Ensure suitable path/folder has been specified."
+                    )
+                face_records = index_faces.get("FaceRecords", [])
+                return face_records
+
+            # Prevent spamming events during 'scan' operations
+            create_events = False
+            if image_folder:
+                face_records = []
+                create_events = True
+                image_folder = Path(image_folder)
+                for path in image_folder.iterdir():
+                    image = open(path, "rb").read()
+                    face_records.extend(await upload(image, image_id))
+            else:
+                if image_path:
+                    create_events = True
+                    image = open(image_path, "rb").read()
+                face_records = await upload(image, image_id)
+        if create_events:
+            for face in face_records:
+                self.hass.bus.fire(EVENT_FACE_INDEXED, face)
+        return face_records
+
     async def init_collection(self, client):
         """Create AWS image collection if doesn't exist."""
         collection_id_req = await client.list_collections()
@@ -419,15 +469,9 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
 
     async def compute_faces(self, client, image):
         """Detect faces in image and parse response."""
-        index_faces = await client.index_faces(
-            CollectionId=self.collection_id,
-            Image={"Bytes": image},
-            ExternalImageId=self._camera,
-            DetectionAttributes=[self.detection_attributes],
-        )
-        known_faces = []
-        detected_faces = index_faces.get("FaceRecords", [])
-        for face_record in detected_faces:
+        detected_faces = []
+        face_records = await self.index_face(image=image, image_id=self._camera)
+        for face_record in face_records:
             known_face = {}
             box = await compute_box(face_record["Face"]["BoundingBox"], 3)
             known_face[ATTR_NAME] = STATE_UNKNOWN
@@ -457,8 +501,8 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
                         continue
                     known_face[ATTR_NAME] = image_id
                     known_face[ATTR_CONFIDENCE] = face_match["Face"]["Confidence"]
-            known_faces.append(known_face)
-        return known_faces
+            detected_faces.append(known_face)
+        return detected_faces
 
     async def async_process_image(self, image):
         """Process image.

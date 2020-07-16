@@ -10,7 +10,12 @@ from homeassistant import config_entries
 from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
 )
-from homeassistant.const import ATTR_CREDENTIALS, CONF_NAME, CONF_PROFILE_NAME
+from homeassistant.const import (
+    ATTR_CREDENTIALS,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    CONF_PROFILE_NAME,
+)
 from homeassistant.helpers import config_validation as cv, discovery
 
 # Loading the config flow file will register the flow
@@ -23,6 +28,9 @@ from .const import (
     CONF_CREDENTIALS,
     CONF_DETECTION_ATTRIBUTES,
     CONF_IDENTIFY_FACES,
+    CONF_IMAGE_FOLDER,
+    CONF_IMAGE_ID,
+    CONF_IMAGE_PATH,
     CONF_IMAGE_PROCESSING,
     CONF_NOTIFY,
     CONF_REGION,
@@ -70,6 +78,14 @@ NOTIFY_PLATFORM_SCHEMA = vol.Schema(
     }
 )
 
+SERVICE_INDEX_FACE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ENTITY_ID): cv.string,
+        vol.Optional(CONF_IMAGE_PATH): cv.isfile,
+        vol.Optional(CONF_IMAGE_FOLDER): cv.isdir,
+        vol.Optional(CONF_IMAGE_ID): cv.string,
+    }
+)
 
 IMAGE_PROCESSING_PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
