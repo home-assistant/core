@@ -1,10 +1,12 @@
 """The Netatmo data handler."""
 import asyncio
+from collections import deque
 from datetime import timedelta
 from functools import partial
+from itertools import islice
 import logging
 from time import time
-from typing import Dict, List
+from typing import Deque, Dict, List
 
 import pyatmo
 
@@ -50,7 +52,7 @@ class NetatmoDataHandler:
         self.listeners: List[CALLBACK_TYPE] = []
         self._data_classes: Dict = {}
         self.data = {}
-        self._queue: List = []
+        self._queue: Deque = deque()
         self._webhook: bool = False
 
         self.lock = asyncio.Lock()
@@ -60,11 +62,9 @@ class NetatmoDataHandler:
 
         async def async_update(event_time):
             """Update device."""
-            queue = self._queue[0:PARALLEL_CALLS]
-            for _ in queue:
-                self._queue.append(self._queue.pop(0))
-
-            for data_class in queue:
+            print(list(self._queue))
+            for data_class in islice(self._queue, 0, PARALLEL_CALLS):
+                print(data_class)
                 if data_class["next_scan"] > time():
                     continue
                 self._data_classes[data_class["name"]]["next_scan"] = (
@@ -82,6 +82,8 @@ class NetatmoDataHandler:
                     )
                 except (pyatmo.NoDevice, pyatmo.ApiError) as err:
                     _LOGGER.debug(err)
+
+            self._queue.rotate(PARALLEL_CALLS)
 
         async_track_time_interval(
             self.hass, async_update, timedelta(seconds=SCAN_INTERVAL)
