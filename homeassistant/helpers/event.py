@@ -286,6 +286,13 @@ def async_track_same_state(
         if not async_check_same_func(entity, from_state, to_state):
             clear_listener()
 
+    _LOGGER.debug(
+        "async_track_same_state schedule async_track_point_in_utc_time: %s %s %s",
+        dt_util.utcnow(),
+        period,
+        dt_util.utcnow() + period,
+    )
+
     async_remove_state_for_listener = async_track_point_in_utc_time(
         hass, state_for_listener, dt_util.utcnow() + period
     )
@@ -326,7 +333,13 @@ def async_track_point_in_utc_time(
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in UTC time."""
     # Ensure point_in_time is UTC
+    _LOGGER.debug(
+        "async_track_point_in_utc_time point_in_time before UTC: %s", point_in_time
+    )
     point_in_time = dt_util.as_utc(point_in_time)
+    _LOGGER.debug(
+        "async_track_point_in_utc_time point_in_time after UTC: %s", point_in_time
+    )
 
     cancel_callback = hass.loop.call_at(
         hass.loop.time() + point_in_time.timestamp() - time.time(),
