@@ -144,7 +144,7 @@ async def get_items_of_category(hass: HomeAssistant, entry: ConfigEntry, categor
     director_all_items = hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR_ALL_ITEMS]
     return_list = []
     for item in director_all_items:
-        if "categories" in item.keys() and category in item["categories"]:
+        if "categories" in item and category in item["categories"]:
             return_list.append(item)
     return return_list
 
