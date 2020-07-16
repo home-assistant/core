@@ -249,7 +249,7 @@ def async_track_same_state(
     hass: HomeAssistant,
     period: timedelta,
     action: Callable[..., None],
-    async_check_same_func: Callable[[str, State, State], bool],
+    async_check_same_func: Callable[[str, Optional[State], Optional[State]], bool],
     entity_ids: Union[str, Iterable[str]] = MATCH_ALL,
 ) -> CALLBACK_TYPE:
     """Track the state of entities for a period and run an action.
@@ -281,10 +281,12 @@ def async_track_same_state(
         hass.async_run_job(action)
 
     @callback
-    def state_for_cancel_listener(
-        entity: str, from_state: State, to_state: State
-    ) -> None:
+    def state_for_cancel_listener(event: Event) -> None:
         """Fire on changes and cancel for listener if changed."""
+        entity: str = event.data.get("entity_id")  # type: ignore
+        from_state: Optional[State] = event.data.get("old_state")
+        to_state: Optional[State] = event.data.get("new_state")
+
         if not async_check_same_func(entity, from_state, to_state):
             _LOGGER.debug(
                 "async_track_same_state state_for_cancel_listener -- CANCELED: entity: %s from_state: %s to_state: %s",
@@ -312,9 +314,16 @@ def async_track_same_state(
         hass, state_for_listener, dt_util.utcnow() + period
     )
 
-    async_remove_state_for_cancel = async_track_state_change(
-        hass, entity_ids, state_for_cancel_listener
-    )
+    if entity_ids == MATCH_ALL:
+        async_remove_state_for_cancel = hass.bus.async_listen(
+            EVENT_STATE_CHANGED, state_for_cancel_listener
+        )
+    else:
+        async_remove_state_for_cancel = async_track_state_change_event(
+            hass,
+            [entity_ids] if isinstance(entity_ids, str) else entity_ids,
+            state_for_cancel_listener,
+        )
 
     return clear_listener
 
