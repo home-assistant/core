@@ -62,9 +62,7 @@ class NetatmoDataHandler:
 
         async def async_update(event_time):
             """Update device."""
-            print(list(self._queue))
             for data_class in islice(self._queue, 0, PARALLEL_CALLS):
-                print(data_class)
                 if data_class["next_scan"] > time():
                     continue
                 self._data_classes[data_class["name"]]["next_scan"] = (
