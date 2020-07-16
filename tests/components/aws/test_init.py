@@ -546,8 +546,8 @@ async def test_image_processing_credential(hass):
 
 async def test_rekognition_object(hass):
     """Test rekognition object detection functions."""
-    image_path = Path(TEST_IMAGE_DEST)
-    image_path.mkdir(exist_ok=True)
+    image_folder = Path(TEST_IMAGE_DEST)
+    image_folder.mkdir(exist_ok=True)
     with async_patch("aiobotocore.AioSession", new=MockAioSession):
         await async_setup_component(
             hass, "camera", {"camera": {"platform": "demo", "name": "demo camera"}},
@@ -562,7 +562,7 @@ async def test_rekognition_object(hass):
                             "service": "rekognition",
                             "platform": "object",
                             "credential_name": "test",
-                            "save_file_folder": image_path,
+                            "save_file_folder": image_folder,
                             "save_file_timestamp": True,
                             "region_name": "us-east-1",
                             "source": [{"entity_id": "camera.demo_camera"}],
@@ -583,13 +583,13 @@ async def test_rekognition_object(hass):
     assert len(state.attributes.get("objects")) == 5
     assert len(state.attributes.get("labels")) == 7
     assert state.attributes.get("objects")[0] == REKOGNITION_OBJECT_PARSED_RESPONSE
-    shutil.rmtree(image_path)
+    shutil.rmtree(image_folder)
 
 
 async def test_rekognition_face(hass):
     """Test rekognition face detection/identification functions."""
-    image_path = Path(TEST_IMAGE_DEST)
-    image_path.mkdir(exist_ok=True)
+    image_folder = Path(TEST_IMAGE_DEST)
+    image_folder.mkdir(exist_ok=True)
     with async_patch("aiobotocore.AioSession", new=MockAioSession):
         await async_setup_component(
             hass, "camera", {"camera": {"platform": "demo", "name": "demo camera"}},
@@ -607,7 +607,7 @@ async def test_rekognition_face(hass):
                             "region_name": "us-east-1",
                             "identify_faces": True,
                             "detection_attributes": "ALL",
-                            "save_file_folder": image_path,
+                            "save_file_folder": image_folder,
                             "save_file_timestamp": True,
                             "collection_id": "testcollection",
                             "source": [{"entity_id": "camera.demo_camera"}],
@@ -628,7 +628,18 @@ async def test_rekognition_face(hass):
     assert state.attributes.get("total_faces") == 1
     assert len(state.attributes.get("faces")) == 1
     assert state.attributes.get("faces")[0] == REKOGNITION_FACE_PARSED_RESPONSE
-    shutil.rmtree(image_path)
+    assert hass.services.has_service("aws", "index_face") is True
+    await hass.services.async_call(
+        "aws",
+        "index_face",
+        {
+            "entity_id": "image_processing.rekognition_face_demo_camera",
+            "image_id": "Jane",
+            "image_folder": image_folder,
+        },
+        blocking=True,
+    )
+    shutil.rmtree(image_folder)
 
 
 async def test_notify_credential_profile(hass):
