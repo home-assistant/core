@@ -93,8 +93,8 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
             self._supported_features |= SUPPORT_COLOR_TEMP
 
         # Support White value if only a single white channel
-        if self.values.color_channels.value & (
-            COLOR_CHANNEL_WARM_WHITE ^ COLOR_CHANNEL_COLD_WHITE
+        if ((self.values.color_channels.value & COLOR_CHANNEL_WARM_WHITE) != 0) ^ (
+            (self.values.color_channels.value & COLOR_CHANNEL_COLD_WHITE) != 0
         ):
             self._supported_features |= SUPPORT_WHITE_VALUE
 
@@ -232,27 +232,27 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         # Parse remaining color channels. Openzwave appends white channels
         # that are present.
         index = 7
-        temp_1 = 0
-        temp_2 = 0
+        temp_warm = 0
+        temp_cold = 0
 
         # Warm white
         if self._color_channels & COLOR_CHANNEL_WARM_WHITE:
             self._white = int(data[index : index + 2], 16)
-            temp_1 = self._white
+            temp_warm = self._white
 
         index += 2
 
         # Cold white
         if self._color_channels & COLOR_CHANNEL_COLD_WHITE:
             self._white = int(data[index : index + 2], 16)
-            temp_2 = self._white
+            temp_cold = self._white
 
         # Calculate color temps based on white LED status
-        if temp_2 > 0:
-            self._ct = round(TEMP_COLOR_MAX - ((temp_2 / 255) * TEMP_COLOR_DIFF))
+        if temp_cold > 0:
+            self._ct = round(TEMP_COLOR_MAX - ((temp_cold / 255) * TEMP_COLOR_DIFF))
         # Only used if CW channel missing
-        elif temp_1 > 0:
-            self._ct = round(TEMP_COLOR_MAX - temp_1)
+        elif temp_warm > 0:
+            self._ct = round(TEMP_COLOR_MAX - temp_warm)
 
         # If no rgb channels supported, report None.
         if not (
