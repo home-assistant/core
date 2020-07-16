@@ -10,6 +10,7 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
     SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
     LightEntity,
@@ -87,6 +88,7 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
 
         if self.values.color_channels is not None:
             self._supported_features |= SUPPORT_WHITE_VALUE
+            self._supported_features |= SUPPORT_COLOR_TEMP
 
         self._calculate_rgb_values()
 
