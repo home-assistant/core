@@ -1,21 +1,21 @@
 {
   "config": {
     "abort": {
-      "already_configured": "The Control4 controller associated with this account has already been configured."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "cannot_connect": "Couldn't connect to the local controller. Check your hostname and login details.",
-      "invalid_auth": "Invalid Control4 username or password.",
-      "unknown": "An unknown error occured. Please report log info."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
         "data": {
-          "host": "Controller hostname",
-          "password": "Password",
-          "username": "Username/Email"
+          "host": "[%key:common::config_flow::data::ip%]",
+          "password": "[%key:common::config_flow::data::username%]",
+          "username": "[%key:common::config_flow::data::password%]"
         },
-        "description": "Please enter your Control4 account details and the hostname of your local controller."
+        "description": "Please enter your Control4 account details and the IP address of your local controller."
       }
     }
   },
