@@ -37,7 +37,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 SENSOR_TYPES = {
     "usage": ["Usage", UNIT_PERCENTAGE, "mdi:percent"],
-    "balance": ["Balance", PRICE, "mdi:square-inc-cash"],
+    "balance": ["Balance", PRICE, "mdi:cash-usd"],
     "limit": ["Data limit", DATA_GIGABITS, "mdi:download"],
     "days_left": ["Days left", TIME_DAYS, "mdi:calendar-today"],
     "before_offpeak_download": [

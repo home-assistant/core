@@ -9,7 +9,11 @@
             "one": "Vide",
             "other": "Vide"
         },
+        "flow_title": "Arcam FMJ sur {host}",
         "step": {
+            "confirm": {
+                "description": "Voulez-vous ajouter Arcam FMJ sur ` {host} ` \u00e0 HomeAssistant ?"
+            },
             "user": {
                 "data": {
                     "host": "H\u00f4te",

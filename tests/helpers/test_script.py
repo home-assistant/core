@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant import exceptions
 import homeassistant.components.scene as scene
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
-from homeassistant.core import Context, callback
+from homeassistant.core import Context, CoreState, callback
 from homeassistant.helpers import config_validation as cv, script
 from homeassistant.helpers.event import async_call_later
 import homeassistant.util.dt as dt_util
@@ -93,15 +93,12 @@ async def test_firing_event_basic(hass):
     sequence = cv.SCRIPT_SCHEMA({"event": event, "event_data": {"hello": "world"}})
     script_obj = script.Script(hass, sequence)
 
-    assert script_obj.can_cancel
-
     await script_obj.async_run(context=context)
     await hass.async_block_till_done()
 
     assert len(events) == 1
     assert events[0].context is context
     assert events[0].data.get("hello") == "world"
-    assert script_obj.can_cancel
 
 
 async def test_firing_event_template(hass):
@@ -125,8 +122,6 @@ async def test_firing_event_template(hass):
     )
     script_obj = script.Script(hass, sequence)
 
-    assert script_obj.can_cancel
-
     await script_obj.async_run({"is_world": "yes"}, context=context)
     await hass.async_block_till_done()
 
@@ -145,8 +140,6 @@ async def test_calling_service_basic(hass):
 
     sequence = cv.SCRIPT_SCHEMA({"service": "test.script", "data": {"hello": "world"}})
     script_obj = script.Script(hass, sequence)
-
-    assert script_obj.can_cancel
 
     await script_obj.async_run(context=context)
     await hass.async_block_till_done()
@@ -181,8 +174,6 @@ async def test_calling_service_template(hass):
         }
     )
     script_obj = script.Script(hass, sequence)
-
-    assert script_obj.can_cancel
 
     await script_obj.async_run({"is_world": "yes"}, context=context)
     await hass.async_block_till_done()
@@ -267,8 +258,6 @@ async def test_activating_scene(hass):
     sequence = cv.SCRIPT_SCHEMA({"scene": "scene.hello"})
     script_obj = script.Script(hass, sequence)
 
-    assert script_obj.can_cancel
-
     await script_obj.async_run(context=context)
     await hass.async_block_till_done()
 
@@ -278,7 +267,7 @@ async def test_activating_scene(hass):
 
 
 @pytest.mark.parametrize("count", [1, 3])
-async def test_stop_no_wait(hass, caplog, count):
+async def test_stop_no_wait(hass, count):
     """Test stopping script."""
     service_started_sem = asyncio.Semaphore(0)
     finish_service_event = asyncio.Event()
@@ -327,8 +316,6 @@ async def test_delay_basic(hass, mock_timeout):
     sequence = cv.SCRIPT_SCHEMA({"delay": {"seconds": 5}, "alias": delay_alias})
     script_obj = script.Script(hass, sequence)
     delay_started_flag = async_watch_for_action(script_obj, delay_alias)
-
-    assert script_obj.can_cancel
 
     try:
         hass.async_create_task(script_obj.async_run())
@@ -394,8 +381,6 @@ async def test_delay_template_ok(hass, mock_timeout):
     script_obj = script.Script(hass, sequence)
     delay_started_flag = async_watch_for_action(script_obj, "delay")
 
-    assert script_obj.can_cancel
-
     try:
         hass.async_create_task(script_obj.async_run())
         await asyncio.wait_for(delay_started_flag.wait(), 1)
@@ -443,8 +428,6 @@ async def test_delay_template_complex_ok(hass, mock_timeout):
     sequence = cv.SCRIPT_SCHEMA({"delay": {"seconds": "{{ 5 }}"}})
     script_obj = script.Script(hass, sequence)
     delay_started_flag = async_watch_for_action(script_obj, "delay")
-
-    assert script_obj.can_cancel
 
     try:
         hass.async_create_task(script_obj.async_run())
@@ -529,8 +512,6 @@ async def test_wait_template_basic(hass):
     )
     script_obj = script.Script(hass, sequence)
     wait_started_flag = async_watch_for_action(script_obj, wait_alias)
-
-    assert script_obj.can_cancel
 
     try:
         hass.states.async_set("switch.test", "on")
@@ -687,8 +668,6 @@ async def test_wait_template_variables(hass):
     script_obj = script.Script(hass, sequence)
     wait_started_flag = async_watch_for_action(script_obj, "wait")
 
-    assert script_obj.can_cancel
-
     try:
         hass.states.async_set("switch.test", "on")
         hass.async_create_task(script_obj.async_run({"data": "switch.test"}))
@@ -720,8 +699,6 @@ async def test_condition_basic(hass):
         ]
     )
     script_obj = script.Script(hass, sequence)
-
-    assert script_obj.can_cancel
 
     hass.states.async_set("test.entity", "hello")
     await script_obj.async_run()
@@ -877,6 +854,41 @@ async def test_repeat_conditional(hass, condition):
         assert event.data.get("index") == str(index + 1)
 
 
+@pytest.mark.parametrize("var,result", [(1, "first"), (2, "second"), (3, "default")])
+async def test_choose(hass, var, result):
+    """Test choose action."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "choose": [
+                {
+                    "conditions": {
+                        "condition": "template",
+                        "value_template": "{{ var == 1 }}",
+                    },
+                    "sequence": {"event": event, "event_data": {"choice": "first"}},
+                },
+                {
+                    "conditions": {
+                        "condition": "template",
+                        "value_template": "{{ var == 2 }}",
+                    },
+                    "sequence": {"event": event, "event_data": {"choice": "second"}},
+                },
+            ],
+            "default": {"event": event, "event_data": {"choice": "default"}},
+        }
+    )
+    script_obj = script.Script(hass, sequence)
+
+    await script_obj.async_run({"var": var})
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data["choice"] == result
+
+
 async def test_last_triggered(hass):
     """Test the last_triggered."""
     event = "test_event"
@@ -947,10 +959,10 @@ async def test_propagate_error_service_exception(hass):
     assert not script_obj.is_running
 
 
-async def test_referenced_entities():
+async def test_referenced_entities(hass):
     """Test referenced entities."""
     script_obj = script.Script(
-        None,
+        hass,
         cv.SCRIPT_SCHEMA(
             [
                 {
@@ -983,10 +995,10 @@ async def test_referenced_entities():
     assert script_obj.referenced_entities is script_obj.referenced_entities
 
 
-async def test_referenced_devices():
+async def test_referenced_devices(hass):
     """Test referenced entities."""
     script_obj = script.Script(
-        None,
+        hass,
         cv.SCRIPT_SCHEMA(
             [
                 {"domain": "light", "device_id": "script-dev-id"},
@@ -1178,13 +1190,68 @@ async def test_script_mode_queued(hass):
         assert events[3].data["value"] == 2
 
 
-async def test_script_logging(caplog):
+async def test_script_logging(hass, caplog):
     """Test script logging."""
-    script_obj = script.Script(None, [], "Script with % Name")
+    script_obj = script.Script(hass, [], "Script with % Name")
     script_obj._log("Test message with name %s", 1)
 
     assert "Script with % Name: Test message with name 1" in caplog.text
 
-    script_obj = script.Script(None, [])
+    script_obj = script.Script(hass, [])
     script_obj._log("Test message without name %s", 2)
     assert "Test message without name 2" in caplog.text
+
+
+async def test_shutdown_at(hass, caplog):
+    """Test stopping scripts at shutdown."""
+    delay_alias = "delay step"
+    sequence = cv.SCRIPT_SCHEMA({"delay": {"seconds": 120}, "alias": delay_alias})
+    script_obj = script.Script(hass, sequence, "test script")
+    delay_started_flag = async_watch_for_action(script_obj, delay_alias)
+
+    try:
+        hass.async_create_task(script_obj.async_run())
+        await asyncio.wait_for(delay_started_flag.wait(), 1)
+
+        assert script_obj.is_running
+        assert script_obj.last_action == delay_alias
+    except (AssertionError, asyncio.TimeoutError):
+        await script_obj.async_stop()
+        raise
+    else:
+        hass.bus.async_fire("homeassistant_stop")
+        await hass.async_block_till_done()
+
+        assert not script_obj.is_running
+        assert "Stopping scripts running at shutdown: test script" in caplog.text
+
+
+async def test_shutdown_after(hass, caplog):
+    """Test stopping scripts at shutdown."""
+    delay_alias = "delay step"
+    sequence = cv.SCRIPT_SCHEMA({"delay": {"seconds": 120}, "alias": delay_alias})
+    script_obj = script.Script(hass, sequence, "test script")
+    delay_started_flag = async_watch_for_action(script_obj, delay_alias)
+
+    hass.state = CoreState.stopping
+    hass.bus.async_fire("homeassistant_stop")
+    await hass.async_block_till_done()
+
+    try:
+        hass.async_create_task(script_obj.async_run())
+        await asyncio.wait_for(delay_started_flag.wait(), 1)
+
+        assert script_obj.is_running
+        assert script_obj.last_action == delay_alias
+    except (AssertionError, asyncio.TimeoutError):
+        await script_obj.async_stop()
+        raise
+    else:
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+        await hass.async_block_till_done()
+
+        assert not script_obj.is_running
+        assert (
+            "Stopping scripts running too long after shutdown: test script"
+            in caplog.text
+        )

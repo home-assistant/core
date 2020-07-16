@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_FRIENDLY_NAME,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
+    MATCH_ALL,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
@@ -313,16 +314,18 @@ class TemplateFan(FanEntity):
         """Register callbacks."""
 
         @callback
-        def template_fan_state_listener(entity, old_state, new_state):
+        def template_fan_state_listener(event):
             """Handle target device state changes."""
             self.async_schedule_update_ha_state(True)
 
         @callback
         def template_fan_startup(event):
             """Update template on startup."""
-            self.hass.helpers.event.async_track_state_change(
-                self._entities, template_fan_state_listener
-            )
+            if self._entities != MATCH_ALL:
+                # Track state change only for valid templates
+                self.hass.helpers.event.async_track_state_change_event(
+                    self._entities, template_fan_state_listener
+                )
 
             self.async_schedule_update_ha_state(True)
 

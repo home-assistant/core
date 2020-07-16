@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_SWITCHES,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
+    MATCH_ALL,
     STATE_OFF,
     STATE_ON,
 )
@@ -23,7 +24,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import Script
 
@@ -147,16 +148,18 @@ class SwitchTemplate(SwitchEntity, RestoreEntity):
 
         # set up event listening
         @callback
-        def template_switch_state_listener(entity, old_state, new_state):
+        def template_switch_state_listener(event):
             """Handle target device state changes."""
             self.async_schedule_update_ha_state(True)
 
         @callback
         def template_switch_startup(event):
             """Update template on startup."""
-            async_track_state_change(
-                self.hass, self._entities, template_switch_state_listener
-            )
+            if self._entities != MATCH_ALL:
+                # Track state change only for valid templates
+                async_track_state_change_event(
+                    self.hass, self._entities, template_switch_state_listener
+                )
 
             self.async_schedule_update_ha_state(True)
 

@@ -1,20 +1,18 @@
 """An abstract class common to all Bond entities."""
 from typing import Any, Dict, Optional
 
-from bond import Bond
-
-from homeassistant.components.bond.utils import BondDevice
 from homeassistant.const import ATTR_NAME
 
 from .const import DOMAIN
+from .utils import BondDevice, BondHub
 
 
 class BondEntity:
     """Generic Bond entity encapsulating common features of any Bond controlled device."""
 
-    def __init__(self, bond: Bond, device: BondDevice):
+    def __init__(self, hub: BondHub, device: BondDevice):
         """Initialize entity with API and device info."""
-        self._bond = bond
+        self._hub = hub
         self._device = device
 
     @property
@@ -30,7 +28,11 @@ class BondEntity:
     @property
     def device_info(self) -> Optional[Dict[str, Any]]:
         """Get a an HA device representing this Bond controlled device."""
-        return {ATTR_NAME: self.name, "identifiers": {(DOMAIN, self._device.device_id)}}
+        return {
+            ATTR_NAME: self.name,
+            "identifiers": {(DOMAIN, self._device.device_id)},
+            "via_device": (DOMAIN, self._hub.bond_id),
+        }
 
     @property
     def assumed_state(self) -> bool:
