@@ -135,7 +135,9 @@ track_state_change = threaded_listener_factory(async_track_state_change)
 
 @bind_hass
 def async_track_state_change_event(
-    hass: HomeAssistant, entity_ids: Iterable[str], action: Callable[[Event], None]
+    hass: HomeAssistant,
+    entity_ids: Union[str, Iterable[str]],
+    action: Callable[[Event], None],
 ) -> Callable[[], None]:
     """Track specific state change events indexed by entity_id.
 
@@ -163,7 +165,10 @@ def async_track_state_change_event(
 
             _LOGGER.debug("_async_state_change_dispatcher: %s", entity_id)
 
-            for action in entity_callbacks[entity_id]:
+            for action in entity_callbacks[entity_id][:]:
+                _LOGGER.debug(
+                    "_async_state_change_dispatcher: %s %s %s", entity_id, action, event
+                )
                 try:
                     hass.async_run_job(action, event)
                 except Exception:  # pylint: disable=broad-except
@@ -175,13 +180,13 @@ def async_track_state_change_event(
             EVENT_STATE_CHANGED, _async_state_change_dispatcher
         )
 
+    if isinstance(entity_ids, str):
+        entity_ids = [entity_ids]
+
     entity_ids = [entity_id.lower() for entity_id in entity_ids]
 
     for entity_id in entity_ids:
-        if entity_id not in entity_callbacks:
-            entity_callbacks[entity_id] = []
-
-        entity_callbacks[entity_id].append(action)
+        entity_callbacks.setdefault(entity_id, []).append(action)
 
     @callback
     def remove_listener() -> None:
