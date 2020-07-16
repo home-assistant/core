@@ -118,7 +118,7 @@ class Metering(ZigbeeChannel):
         self._multiplier = results.get("multiplier", self._multiplier)
         self._unit_enum = results.get("unit_of_measure", 0x7F)  # default to unknown
 
-        if self.unit_of_measurement == "W":
+        if self.unit_of_measurement == POWER_WATT:
             # Zigbee spec power unit is kW, but we show the value in W
             self._multiplier = self._multiplier * 1000
 
