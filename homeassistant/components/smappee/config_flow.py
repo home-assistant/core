@@ -11,14 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import api
-from .const import (
-    CONF_HOSTNAME,
-    CONF_SERIALNUMBER,
-    CONF_TITLE,
-    DOMAIN,
-    ENV_CLOUD,
-    ENV_LOCAL,
-)
+from .const import CONF_HOSTNAME, CONF_SERIALNUMBER, DOMAIN, ENV_CLOUD, ENV_LOCAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 class SmappeeFlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
-    """Config flow to handle Smappee OAuth2 authentication."""
+    """Config Smappee config flow."""
 
     DOMAIN = DOMAIN
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
@@ -51,8 +44,6 @@ class SmappeeFlowHandler(
 
         self.context.update(
             {
-                CONF_HOSTNAME: user_input[CONF_HOSTNAME],
-                CONF_TITLE: user_input[CONF_HOSTNAME].replace(".local.", ""),
                 CONF_IP_ADDRESS: user_input["host"],
                 CONF_SERIALNUMBER: user_input[CONF_HOSTNAME]
                 .replace(".local.", "")
@@ -90,8 +81,6 @@ class SmappeeFlowHandler(
             return await self.async_step_pick_implementation()
 
         if source == SOURCE_ZEROCONF:
-            user_input[CONF_HOSTNAME] = self.context.get(CONF_HOSTNAME)
-            user_input[CONF_TITLE] = self.context.get(CONF_TITLE)
             user_input[CONF_IP_ADDRESS] = self.context.get(CONF_IP_ADDRESS)
             user_input[CONF_SERIALNUMBER] = self.context.get(CONF_SERIALNUMBER)
         else:
@@ -115,23 +104,20 @@ class SmappeeFlowHandler(
                     if serialnumber is None or not serialnumber.startswith("Smappee1"):
                         # We currently only support Energy and Solar models (legacy)
                         return self.async_abort(reason="invalid_mdns")
-                    user_input[CONF_HOSTNAME] = f"{serialnumber}.local"
-                    user_input[CONF_TITLE] = serialnumber
                     user_input[CONF_SERIALNUMBER] = serialnumber.replace("Smappee", "")
             except (socket.gaierror, socket.timeout, ConnectTimeout, ConnectionError):
                 return self.async_abort(reason="connection_error")
 
         # Check if already configured
-        await self.async_set_unique_id(user_input[CONF_TITLE])
+        await self.async_set_unique_id(f"Smappee{user_input[CONF_SERIALNUMBER]}")
         self._abort_if_unique_id_configured()
 
         if prepare:
             return await self.async_step_zeroconf_confirm()
 
         return self.async_create_entry(
-            title=user_input[CONF_TITLE],
+            title=f"Smappee{user_input[CONF_SERIALNUMBER]}",
             data={
-                CONF_HOSTNAME: user_input[CONF_HOSTNAME],
                 CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
                 CONF_SERIALNUMBER: user_input[CONF_SERIALNUMBER],
             },
