@@ -760,14 +760,16 @@ class Script:
             raise
 
     async def _async_stop(self, update_state):
-        await asyncio.wait([run.async_stop() for run in self._runs])
+        aws = [run.async_stop() for run in self._runs]
+        if not aws:
+            return
+        await asyncio.wait(aws)
         if update_state:
             self._changed()
 
     async def async_stop(self, update_state: bool = True) -> None:
         """Stop running script."""
-        if self.is_running:
-            await asyncio.shield(self._async_stop(update_state))
+        await asyncio.shield(self._async_stop(update_state))
 
     async def _async_get_condition(self, config):
         config_cache_key = frozenset((k, str(v)) for k, v in config.items())
