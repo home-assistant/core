@@ -163,7 +163,7 @@ def async_track_state_change_event(
             if entity_id not in entity_callbacks:
                 return
 
-            for action in entity_callbacks[entity_id][:]:
+            for action in list(entity_callbacks[entity_id]):
                 try:
                     hass.async_run_job(action, event)
                 except Exception:  # pylint: disable=broad-except
