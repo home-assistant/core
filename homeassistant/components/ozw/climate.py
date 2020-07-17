@@ -174,7 +174,8 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     def hvac_mode(self):
         """Return hvac operation ie. heat, cool mode."""
         if not self.values.mode:
-            return None
+            # Thermostat(valve) with no support for setting a mode is considered heating-only
+            return HVAC_MODE_HEAT
         return ZW_HVAC_MODE_MAPPINGS.get(
             self.values.mode.value[VALUE_SELECTED_ID], HVAC_MODE_HEAT_COOL
         )
@@ -197,7 +198,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        if self.values.temperature and self.values.temperature.units == "F":
+        if self.values.temperature is not None and self.values.temperature.units == "F":
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
 
@@ -220,6 +221,8 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     def preset_mode(self):
         """Return preset operation ie. eco, away."""
         # A Zwave mode that can not be translated to a hass mode is considered a preset
+        if not self.values.mode:
+            return None
         if self.values.mode.value[VALUE_SELECTED_ID] not in MODES_LIST:
             return self.values.mode.value[VALUE_SELECTED_LABEL]
         return PRESET_NONE
@@ -274,8 +277,14 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
+        if not self.values.mode:
+            # Thermostat(valve) with no support for setting a mode
+            _LOGGER.warning(
+                "Thermostat %s does not support setting a mode", self.entity_id
+            )
+            return
         hvac_mode_value = self._hvac_modes.get(hvac_mode)
-        if not hvac_mode_value:
+        if hvac_mode_value is None:
             _LOGGER.warning("Received an invalid hvac mode: %s", hvac_mode)
             return
         self.values.mode.send_value(hvac_mode_value)
@@ -320,8 +329,11 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
 
     def _get_current_mode_setpoint_values(self) -> Tuple:
         """Return a tuple of current setpoint Z-Wave value(s)."""
-        current_mode = self.values.mode.value[VALUE_SELECTED_ID]
-        setpoint_names = MODE_SETPOINT_MAPPINGS.get(current_mode, ())
+        if not self.values.mode:
+            setpoint_names = ("setpoint_heating",)
+        else:
+            current_mode = self.values.mode.value[VALUE_SELECTED_ID]
+            setpoint_names = MODE_SETPOINT_MAPPINGS.get(current_mode, ())
         # we do not want None values in our tuple so check if the value exists
         return tuple(
             getattr(self.values, value_name)
@@ -331,20 +343,21 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
 
     def _set_modes_and_presets(self):
         """Convert Z-Wave Thermostat modes into Home Assistant modes and presets."""
-        if not self.values.mode:
-            return
         all_modes = {}
         all_presets = {PRESET_NONE: None}
-        # Z-Wave uses one list for both modes and presets.
-        # Iterate over all Z-Wave ThermostatModes and extract the hvac modes and presets.
-        for val in self.values.mode.value[VALUE_LIST]:
-            if val[VALUE_ID] in MODES_LIST:
-                # treat value as hvac mode
-                hass_mode = ZW_HVAC_MODE_MAPPINGS.get(val[VALUE_ID])
-                all_modes[hass_mode] = val[VALUE_ID]
-            else:
-                # treat value as hvac preset
-                all_presets[val[VALUE_LABEL]] = val[VALUE_ID]
+        if self.values.mode:
+            # Z-Wave uses one list for both modes and presets.
+            # Iterate over all Z-Wave ThermostatModes and extract the hvac modes and presets.
+            for val in self.values.mode.value[VALUE_LIST]:
+                if val[VALUE_ID] in MODES_LIST:
+                    # treat value as hvac mode
+                    hass_mode = ZW_HVAC_MODE_MAPPINGS.get(val[VALUE_ID])
+                    all_modes[hass_mode] = val[VALUE_ID]
+                else:
+                    # treat value as hvac preset
+                    all_presets[val[VALUE_LABEL]] = val[VALUE_ID]
+        else:
+            all_modes[HVAC_MODE_HEAT] = None
         self._hvac_modes = all_modes
         self._hvac_presets = all_presets
 
