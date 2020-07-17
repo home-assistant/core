@@ -312,7 +312,6 @@ class MpdDevice(MediaPlayerEntity):
         else:
             self._client.play()
 
-
     def media_pause(self):
         """Service to send the MPD the command for play/pause."""
         self._client.pause(1)
