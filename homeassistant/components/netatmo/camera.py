@@ -89,14 +89,16 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     )
                 )
 
-            for person_id, person_data in data_handler.data[data_class_name].persons.items():
+            for person_id, person_data in data_handler.data[
+                data_class_name
+            ].persons.items():
                 hass.data[DOMAIN][DATA_PERSONS][person_id] = person_data.get(
                     ATTR_PSEUDO
                 )
         except pyatmo.NoDevice:
             _LOGGER.debug("No cameras found")
 
-        await data_handler.unregister_data_class(data_class)
+        await data_handler.unregister_data_class(data_class_name)
         return entities
 
     async_add_entities(await get_entities(), True)
@@ -125,13 +127,13 @@ class NetatmoCamera(NetatmoBase, Camera):
     """Representation of a Netatmo camera."""
 
     def __init__(
-        self, data_handler, data_class, camera_id, camera_type, home_id, quality,
+        self, data_handler, data_class_name, camera_id, camera_type, home_id, quality,
     ):
         """Set up for access to the Netatmo camera images."""
         Camera.__init__(self)
         super().__init__(data_handler)
 
-        self._data_classes.append({"name": data_class})
+        self._data_classes.append({"name": data_class_name})
 
         self._id = camera_id
         self._home_id = home_id

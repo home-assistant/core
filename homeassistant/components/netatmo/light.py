@@ -4,6 +4,7 @@ import logging
 import pyatmo
 
 from homeassistant.components.light import LightEntity
+from homeassistant.components.netatmo.data_handler import NetatmoDataHandler
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 
@@ -23,16 +24,16 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    data_class = "CameraData"
+    data_class_name = "CameraData"
 
     async def get_entities():
         """Retrieve Netatmo entities."""
-        await data_handler.register_data_class(data_class)
+        await data_handler.register_data_class(data_class_name)
 
         entities = []
         try:
             all_cameras = []
-            for home in data_handler.data[data_class].cameras.values():
+            for home in data_handler.data[data_class_name].cameras.values():
                 for camera in home.values():
                     all_cameras.append(camera)
 
@@ -47,7 +48,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     entities.append(
                         NetatmoLight(
                             data_handler,
-                            data_class,
+                            data_class_name,
                             camera["id"],
                             camera["type"],
                             camera["home_id"],
@@ -57,7 +58,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         except pyatmo.NoDevice:
             _LOGGER.debug("No cameras found")
 
-        await data_handler.unregister_data_class(data_class)
+        await data_handler.unregister_data_class(data_class_name)
         return entities
 
     async_add_entities(await get_entities(), True)
@@ -72,13 +73,18 @@ class NetatmoLight(NetatmoBase, LightEntity):
     """Representation of a Netatmo Presence camera light."""
 
     def __init__(
-        self, data_handler, data_class, camera_id: str, camera_type: str, home_id: str
+        self,
+        data_handler: NetatmoDataHandler,
+        data_class_name: str,
+        camera_id: str,
+        camera_type: str,
+        home_id: str,
     ):
         """Initialize a Netatmo Presence camera light."""
         LightEntity.__init__(self)
         super().__init__(data_handler)
 
-        self._data_classes.append({"name": data_class})
+        self._data_classes.append({"name": data_class_name})
         self._id = camera_id
         self._home_id = home_id
         self._model = camera_type

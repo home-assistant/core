@@ -98,21 +98,25 @@ async def async_setup_entry(hass, entry, async_add_entities):
     device_registry = await hass.helpers.device_registry.async_get_registry()
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    async def find_entities(data_class):
+    async def find_entities(data_class_name):
         """Find all entities."""
-        await data_handler.register_data_class(data_class)
+        await data_handler.register_data_class(data_class_name)
 
         all_module_infos = {}
         data = data_handler.data
 
-        if not data.get(data_class):
+        if not data.get(data_class_name):
             return []
 
-        for station_id in data.get(data_class).stations:
-            for module_id in data.get(data_class).get_modules(station_id):
-                all_module_infos[module_id] = data.get(data_class).get_module(module_id)
+        for station_id in data.get(data_class_name).stations:
+            for module_id in data.get(data_class_name).get_modules(station_id):
+                all_module_infos[module_id] = data.get(data_class_name).get_module(
+                    module_id
+                )
 
-            all_module_infos[station_id] = data.get(data_class).get_station(station_id)
+            all_module_infos[station_id] = data.get(data_class_name).get_station(
+                station_id
+            )
 
         entities = []
         for module in all_module_infos.values():
@@ -123,14 +127,16 @@ async def async_setup_entry(hass, entry, async_add_entities):
             _LOGGER.debug(
                 "Adding module %s %s", module.get("module_name"), module.get("_id"),
             )
-            for condition in data[data_class].get_monitored_conditions(
+            for condition in data[data_class_name].get_monitored_conditions(
                 module_id=module["_id"]
             ):
                 entities.append(
-                    NetatmoSensor(data_handler, data_class, module, condition.lower())
+                    NetatmoSensor(
+                        data_handler, data_class_name, module, condition.lower()
+                    )
                 )
 
-        await data_handler.unregister_data_class(data_class)
+        await data_handler.unregister_data_class(data_class_name)
         return entities
 
     async def get_entities():
@@ -162,9 +168,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
             )
             for sensor_type in SUPPORTED_PUBLIC_SENSOR_TYPES:
                 entities.append(
-                    NetatmoPublicSensor(data_handler, data_class, area, sensor_type,)
+                    NetatmoPublicSensor(
+                        data_handler, data_class_name, area, sensor_type,
+                    )
                 )
-            await data_handler.unregister_data_class(f"{data_class}-{area.area_name}")
+            await data_handler.unregister_data_class(
+                f"{data_class_name}-{area.area_name}"
+            )
 
         for device in async_entries_for_config_entry(device_registry, entry.entry_id):
             if device.model == "Public Weather stations":
@@ -199,7 +209,7 @@ class NetatmoSensor(NetatmoBase):
         """Initialize the sensor."""
         super().__init__(data_handler)
 
-        self._data_classes.append({"name": data_class})
+        self._data_classes.append({"name": data_class_name})
 
         self._id = module_info["_id"]
         self._station_id = module_info.get("main_device", self._id)

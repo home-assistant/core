@@ -111,9 +111,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Netatmo energy platform."""
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    data_class = "HomeData"
-    await data_handler.register_data_class(data_class)
-    home_data = data_handler.data.get(data_class)
+    data_class_name = "HomeData"
+    await data_handler.register_data_class(data_class_name)
+    home_data = data_handler.data.get(data_class_name)
 
     if not home_data:
         return
@@ -150,25 +150,27 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 home_status = data_handler.data.get(f"HomeStatus-{home_id}")
                 if home_status and room_id in home_status.rooms:
                     entities.append(
-                        NetatmoThermostat(data_handler, data_class, home_id, room_id)
+                        NetatmoThermostat(
+                            data_handler, data_class_name, home_id, room_id
+                        )
                     )
                 await data_handler.unregister_data_class(f"HomeStatus-{home_id}")
 
             hass.data[DOMAIN][DATA_SCHEDULES][home_id] = {
                 schedule_id: schedule_data.get("name")
                 for schedule_id, schedule_data in (
-                    data_handler.data[data_class].schedules[home_id].items()
+                    data_handler.data[data_class_name].schedules[home_id].items()
                 )
             }
 
         hass.data[DOMAIN][DATA_HOMES] = {
             home_id: home_data.get("name")
-            for home_id, home_data in (data_handler.data[data_class].homes.items())
+            for home_id, home_data in (data_handler.data[data_class_name].homes.items())
         }
 
         return entities
 
-    await data_handler.unregister_data_class(data_class)
+    await data_handler.unregister_data_class(data_class_name)
     async_add_entities(await get_entities(), True)
 
     platform = entity_platform.current_platform.get()
@@ -187,7 +189,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class NetatmoThermostat(NetatmoBase, ClimateEntity):
     """Representation a Netatmo thermostat."""
 
-    def __init__(self, data_handler, data_class, home_id, room_id):
+    def __init__(self, data_handler, data_class_name, home_id, room_id):
         """Initialize the sensor."""
         ClimateEntity.__init__(self)
         super().__init__(data_handler)
@@ -198,7 +200,10 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         self._home_status_class = f"HomeStatus-{self._home_id}"
 
         self._data_classes.extend(
-            [{"name": data_class}, {"name": "HomeStatus", "home_id": self._home_id}]
+            [
+                {"name": data_class_name},
+                {"name": "HomeStatus", "home_id": self._home_id},
+            ]
         )
 
         self._home_status = self.data_handler.data[self._home_status_class]
