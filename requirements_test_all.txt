@@ -52,7 +52,7 @@ adb-shell[async]==0.2.0
 adguardhome==0.4.2
 
 # homeassistant.components.agent_dvr
-agent-py==0.0.20
+agent-py==0.0.23
 
 # homeassistant.components.geonetnz_quakes
 aio_geojson_geonetnz_quakes==0.12
@@ -350,7 +350,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200702.1
+home-assistant-frontend==20200716.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -359,7 +359,7 @@ homeassistant-pyozw==0.1.10
 homeconnect==0.5
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.18
+homematicip==0.10.19
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk
@@ -670,6 +670,9 @@ pylutron-caseta==0.6.1
 # homeassistant.components.mailgun
 pymailgunner==1.4
 
+# homeassistant.components.firmata
+pymata-express==1.13
+
 # homeassistant.components.melcloud
 pymelcloud==2.5.2
 
@@ -743,7 +746,7 @@ pysmartthings==0.7.1
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.31
+pysonos==0.0.32
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -984,7 +987,7 @@ ya_ma==0.3.8
 zeroconf==0.27.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.41
+zha-quirks==0.0.42
 
 # homeassistant.components.zha
 zigpy-cc==0.4.4
@@ -999,4 +1002,4 @@ zigpy-xbee==0.12.1
 zigpy-zigate==0.6.1
 
 # homeassistant.components.zha
-zigpy==0.21.0
+zigpy==0.22.2

@@ -1,9 +1,9 @@
 """Test Zeroconf component setup process."""
 import pytest
-from zeroconf import InterfaceChoice, ServiceInfo, ServiceStateChange
+from zeroconf import InterfaceChoice, IPVersion, ServiceInfo, ServiceStateChange
 
 from homeassistant.components import zeroconf
-from homeassistant.components.zeroconf import CONF_DEFAULT_INTERFACE
+from homeassistant.components.zeroconf import CONF_DEFAULT_INTERFACE, CONF_IPV6
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.generated import zeroconf as zc_gen
 from homeassistant.setup import async_setup_component
@@ -110,6 +110,43 @@ async def test_setup_without_default_interface(hass, mock_zeroconf):
         assert await async_setup_component(
             hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {CONF_DEFAULT_INTERFACE: False}}
         )
+
+    assert mock_zeroconf.called_with()
+
+
+async def test_setup_without_ipv6(hass, mock_zeroconf):
+    """Test without ipv6."""
+    with patch.object(hass.config_entries.flow, "async_init"), patch.object(
+        zeroconf, "HaServiceBrowser", side_effect=service_update_mock
+    ):
+        mock_zeroconf.get_service_info.side_effect = get_service_info_mock
+        assert await async_setup_component(
+            hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {CONF_IPV6: False}}
+        )
+
+    assert mock_zeroconf.called_with(ip_version=IPVersion.V4Only)
+
+
+async def test_setup_with_ipv6(hass, mock_zeroconf):
+    """Test without ipv6."""
+    with patch.object(hass.config_entries.flow, "async_init"), patch.object(
+        zeroconf, "HaServiceBrowser", side_effect=service_update_mock
+    ):
+        mock_zeroconf.get_service_info.side_effect = get_service_info_mock
+        assert await async_setup_component(
+            hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {CONF_IPV6: True}}
+        )
+
+    assert mock_zeroconf.called_with()
+
+
+async def test_setup_with_ipv6_default(hass, mock_zeroconf):
+    """Test without ipv6 as default."""
+    with patch.object(hass.config_entries.flow, "async_init"), patch.object(
+        zeroconf, "HaServiceBrowser", side_effect=service_update_mock
+    ):
+        mock_zeroconf.get_service_info.side_effect = get_service_info_mock
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
 
     assert mock_zeroconf.called_with()
 

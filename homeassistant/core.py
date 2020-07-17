@@ -456,9 +456,9 @@ class HomeAssistant:
 class Context:
     """The context that triggered something."""
 
-    user_id = attr.ib(type=str, default=None)
-    parent_id = attr.ib(type=Optional[str], default=None)
-    id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
+    user_id: str = attr.ib(default=None)
+    parent_id: Optional[str] = attr.ib(default=None)
+    id: str = attr.ib(factory=lambda: uuid.uuid4().hex)
 
     def as_dict(self) -> dict:
         """Return a dictionary representation of the context."""

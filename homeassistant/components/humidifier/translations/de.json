@@ -6,5 +6,12 @@
             "turn_off": "Schalte {entity_name} aus",
             "turn_on": "Schalte {entity_name} an"
         }
-    }
+    },
+    "state": {
+        "_": {
+            "off": "Aus",
+            "on": "An"
+        }
+    },
+    "title": "Luftbefeuchter"
 }

@@ -27,6 +27,30 @@ def light_data_fixture():
     return load_fixture("ozw/light_network_dump.csv")
 
 
+@pytest.fixture(name="light_no_rgb_data", scope="session")
+def light_no_rgb_data_fixture():
+    """Load light dimmer MQTT data and return it."""
+    return load_fixture("ozw/light_no_rgb_network_dump.csv")
+
+
+@pytest.fixture(name="light_no_ww_data", scope="session")
+def light_no_ww_data_fixture():
+    """Load light dimmer MQTT data and return it."""
+    return load_fixture("ozw/light_no_ww_network_dump.csv")
+
+
+@pytest.fixture(name="light_no_cw_data", scope="session")
+def light_no_cw_data_fixture():
+    """Load light dimmer MQTT data and return it."""
+    return load_fixture("ozw/light_no_cw_network_dump.csv")
+
+
+@pytest.fixture(name="light_wc_data", scope="session")
+def light_wc_only_data_fixture():
+    """Load light dimmer MQTT data and return it."""
+    return load_fixture("ozw/light_wc_network_dump.csv")
+
+
 @pytest.fixture(name="cover_data", scope="session")
 def cover_data_fixture():
     """Load cover MQTT data and return it."""
@@ -81,6 +105,28 @@ async def light_msg_fixture(hass):
     """Return a mock MQTT msg with a light actuator message."""
     light_json = json.loads(
         await hass.async_add_executor_job(load_fixture, "ozw/light.json")
+    )
+    message = MQTTMessage(topic=light_json["topic"], payload=light_json["payload"])
+    message.encode()
+    return message
+
+
+@pytest.fixture(name="light_no_rgb_msg")
+async def light_no_rgb_msg_fixture(hass):
+    """Return a mock MQTT msg with a light actuator message."""
+    light_json = json.loads(
+        await hass.async_add_executor_job(load_fixture, "ozw/light_no_rgb.json")
+    )
+    message = MQTTMessage(topic=light_json["topic"], payload=light_json["payload"])
+    message.encode()
+    return message
+
+
+@pytest.fixture(name="light_rgb_msg")
+async def light_rgb_msg_fixture(hass):
+    """Return a mock MQTT msg with a light actuator message."""
+    light_json = json.loads(
+        await hass.async_add_executor_job(load_fixture, "ozw/light_rgb.json")
     )
     message = MQTTMessage(topic=light_json["topic"], payload=light_json["payload"])
     message.encode()

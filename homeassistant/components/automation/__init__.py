@@ -31,8 +31,11 @@ from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
+    ATTR_CUR,
+    ATTR_MAX,
+    ATTR_MODE,
     CONF_MAX,
-    SCRIPT_MODE_PARALLEL,
+    SCRIPT_MODE_SINGLE,
     Script,
     make_script_schema,
 )
@@ -115,7 +118,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
             vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
         },
-        SCRIPT_MODE_PARALLEL,
+        SCRIPT_MODE_SINGLE,
     ),
 )
 
@@ -276,7 +279,15 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
     @property
     def state_attributes(self):
         """Return the entity state attributes."""
-        return {ATTR_LAST_TRIGGERED: self._last_triggered}
+        attrs = {
+            ATTR_LAST_TRIGGERED: self._last_triggered,
+            ATTR_MODE: self.action_script.script_mode,
+        }
+        if self.action_script.supports_max:
+            attrs[ATTR_MAX] = self.action_script.max_runs
+            if self.is_on:
+                attrs[ATTR_CUR] = self.action_script.runs
+        return attrs
 
     @property
     def is_on(self) -> bool:

@@ -8,7 +8,7 @@ from homeassistant.const import EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_A
 from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, Unauthorized
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
@@ -255,7 +255,7 @@ def handle_render_template(hass, connection, msg):
         )
 
     if entity_ids and entity_ids != MATCH_ALL:
-        connection.subscriptions[msg["id"]] = async_track_state_change(
+        connection.subscriptions[msg["id"]] = async_track_state_change_event(
             hass, entity_ids, state_listener
         )
     else:

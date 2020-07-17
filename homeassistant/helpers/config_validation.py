@@ -38,9 +38,12 @@ from homeassistant.const import (
     CONF_ABOVE,
     CONF_ALIAS,
     CONF_BELOW,
+    CONF_CHOOSE,
     CONF_CONDITION,
+    CONF_CONDITIONS,
     CONF_CONTINUE_ON_TIMEOUT,
     CONF_COUNT,
+    CONF_DEFAULT,
     CONF_DELAY,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -930,7 +933,7 @@ ZONE_CONDITION_SCHEMA = vol.Schema(
 AND_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONDITION): "and",
-        vol.Required("conditions"): vol.All(
+        vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
             # pylint: disable=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
@@ -941,7 +944,7 @@ AND_CONDITION_SCHEMA = vol.Schema(
 OR_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONDITION): "or",
-        vol.Required("conditions"): vol.All(
+        vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
             # pylint: disable=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
@@ -952,7 +955,7 @@ OR_CONDITION_SCHEMA = vol.Schema(
 NOT_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONDITION): "not",
-        vol.Required("conditions"): vol.All(
+        vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
             # pylint: disable=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
@@ -1031,6 +1034,24 @@ _SCRIPT_REPEAT_SCHEMA = vol.Schema(
     }
 )
 
+_SCRIPT_CHOOSE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ALIAS): string,
+        vol.Required(CONF_CHOOSE): vol.All(
+            ensure_list,
+            [
+                {
+                    vol.Required(CONF_CONDITIONS): vol.All(
+                        ensure_list, [CONDITION_SCHEMA]
+                    ),
+                    vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
+                }
+            ],
+        ),
+        vol.Optional(CONF_DEFAULT): SCRIPT_SCHEMA,
+    }
+)
+
 SCRIPT_ACTION_DELAY = "delay"
 SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
 SCRIPT_ACTION_CHECK_CONDITION = "condition"
@@ -1039,6 +1060,7 @@ SCRIPT_ACTION_CALL_SERVICE = "call_service"
 SCRIPT_ACTION_DEVICE_AUTOMATION = "device"
 SCRIPT_ACTION_ACTIVATE_SCENE = "scene"
 SCRIPT_ACTION_REPEAT = "repeat"
+SCRIPT_ACTION_CHOOSE = "choose"
 
 
 def determine_script_action(action: dict) -> str:
@@ -1064,6 +1086,9 @@ def determine_script_action(action: dict) -> str:
     if CONF_REPEAT in action:
         return SCRIPT_ACTION_REPEAT
 
+    if CONF_CHOOSE in action:
+        return SCRIPT_ACTION_CHOOSE
+
     return SCRIPT_ACTION_CALL_SERVICE
 
 
@@ -1076,4 +1101,5 @@ ACTION_TYPE_SCHEMAS: Dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_DEVICE_AUTOMATION: DEVICE_ACTION_SCHEMA,
     SCRIPT_ACTION_ACTIVATE_SCENE: _SCRIPT_SCENE_SCHEMA,
     SCRIPT_ACTION_REPEAT: _SCRIPT_REPEAT_SCHEMA,
+    SCRIPT_ACTION_CHOOSE: _SCRIPT_CHOOSE_SCHEMA,
 }

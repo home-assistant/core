@@ -199,8 +199,8 @@ class Alert(ToggleEntity):
         self._send_done_message = False
         self.entity_id = f"{DOMAIN}.{entity_id}"
 
-        event.async_track_state_change(
-            hass, watched_entity_id, self.watched_entity_change
+        event.async_track_state_change_event(
+            hass, [watched_entity_id], self.watched_entity_change
         )
 
     @property
@@ -222,9 +222,12 @@ class Alert(ToggleEntity):
             return STATE_ON
         return STATE_IDLE
 
-    async def watched_entity_change(self, entity, from_state, to_state):
+    async def watched_entity_change(self, ev):
         """Determine if the alert should start or stop."""
-        _LOGGER.debug("Watched entity (%s) has changed", entity)
+        to_state = ev.data.get("new_state")
+        if to_state is None:
+            return
+        _LOGGER.debug("Watched entity (%s) has changed", ev.data.get("entity_id"))
         if to_state.state == self._alert_state and not self._firing:
             await self.begin_alerting()
         if to_state.state != self._alert_state and self._firing:

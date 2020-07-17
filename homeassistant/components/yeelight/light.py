@@ -651,7 +651,7 @@ class YeelightGenericLight(LightEntity):
     def set_flash(self, flash) -> None:
         """Activate flash."""
         if flash:
-            if self._bulb.last_properties["color_mode"] != 1:
+            if int(self._bulb.last_properties["color_mode"]) != 1:
                 _LOGGER.error("Flash supported currently only in RGB mode")
                 return
 
