@@ -214,8 +214,7 @@ def _async_remove_entity_listeners(
     entity_callbacks = hass.data[storage_key]
 
     for entity_id in entity_ids:
-        if action in entity_callbacks[entity_id]:
-            entity_callbacks[entity_id].remove(action)
+        entity_callbacks[entity_id].remove(action)
         if len(entity_callbacks[entity_id]) == 0:
             del entity_callbacks[entity_id]
 
