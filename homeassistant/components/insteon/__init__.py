@@ -108,17 +108,24 @@ async def async_setup(hass, config):
     else:
         _LOGGER.info("Connecting to Insteon PLM on %s", port)
 
-    try:
-        await async_connect(
-            device=port,
-            host=host,
-            port=ip_port,
-            username=username,
-            password=password,
-            hub_version=hub_version,
-        )
-    except ConnectionError:
-        _LOGGER.error("Could not connect to Insteon modem")
+    retries = 5
+    connected = False
+    while retries and not connected:
+        try:
+            await async_connect(
+                device=port,
+                host=host,
+                port=ip_port,
+                username=username,
+                password=password,
+                hub_version=hub_version,
+            )
+            connected = True
+        except ConnectionError:
+            _LOGGER.error("Could not connect to Insteon modem")
+            await asyncio.sleep(90)
+            retries -= 1
+    if not connected:
         return False
     _LOGGER.info("Connection to Insteon modem successful")
 
