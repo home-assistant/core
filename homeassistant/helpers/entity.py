@@ -27,11 +27,8 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.helpers.entity_platform import EntityPlatform
-from homeassistant.helpers.entity_registry import (
-    EVENT_ENTITY_REGISTRY_UPDATED,
-    RegistryEntry,
-)
-from homeassistant.helpers.event import Event
+from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.helpers.event import Event, async_track_entity_registry_updated_event
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 from homeassistant.util.async_ import run_callback_threadsafe
 
@@ -116,6 +113,9 @@ class Entity(ABC):
     # Context
     _context: Optional[Context] = None
     _context_set: Optional[datetime] = None
+
+    # Registry updated listener
+    _registry_updated_listener = None
 
     @property
     def should_poll(self) -> bool:
@@ -517,17 +517,27 @@ class Entity(ABC):
         """
         if self.registry_entry is not None:
             assert self.hass is not None
-            self.async_on_remove(
-                self.hass.bus.async_listen(
-                    EVENT_ENTITY_REGISTRY_UPDATED, self._async_registry_updated
-                )
-            )
+            self._async_setup_registry_updated_listener()
+
+    def _async_setup_registry_updated_listener(self) -> None:
+        """Listen for entity registry updates for the entity_id."""
+        assert self.hass is not None
+
+        if self._registry_updated_listener is not None:
+            self._registry_updated_listener()  # type: ignore
+            self._registry_updated_listener = None
+
+        self._registry_updated_listener = async_track_entity_registry_updated_event(
+            self.hass, self.entity_id, self._async_registry_updated
+        )
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
 
         Not to be extended by integrations.
         """
+        if self._registry_updated_listener is not None:
+            self._registry_updated_listener()
 
     async def _async_registry_updated(self, event: Event) -> None:
         """Handle entity registry update."""
