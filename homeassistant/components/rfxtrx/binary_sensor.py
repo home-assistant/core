@@ -125,34 +125,14 @@ class RfxtrxBinarySensor(BinarySensorEntity, RfxtrxEntity):
         self._data_bits = data_bits
         self._off_delay = off_delay
         self._state = None
-        self.delay_listener = None
+        self._delay_listener = None
         self._cmd_on = cmd_on
         self._cmd_off = cmd_off
-
-    @property
-    def data_bits(self):
-        """Return the number of data bits."""
-        return self._data_bits
-
-    @property
-    def cmd_on(self):
-        """Return the value of the 'On' command."""
-        return self._cmd_on
-
-    @property
-    def cmd_off(self):
-        """Return the value of the 'Off' command."""
-        return self._cmd_off
 
     @property
     def device_class(self):
         """Return the sensor class."""
         return self._device_class
-
-    @property
-    def off_delay(self):
-        """Return the off_delay attribute value."""
-        return self._off_delay
 
     @property
     def is_on(self):
@@ -161,12 +141,12 @@ class RfxtrxBinarySensor(BinarySensorEntity, RfxtrxEntity):
 
     def _apply_event_lighting4(self, event):
         """Apply event for a lighting 4 device."""
-        if self.data_bits is not None:
-            cmd = get_pt2262_cmd(event.device.id_string, self.data_bits)
+        if self._data_bits is not None:
+            cmd = get_pt2262_cmd(event.device.id_string, self._data_bits)
             cmd = int(cmd, 16)
-            if cmd == self.cmd_on:
+            if cmd == self._cmd_on:
                 self._state = True
-            elif cmd == self.cmd_off:
+            elif cmd == self._cmd_off:
                 self._state = False
         else:
             self._state = True
@@ -202,15 +182,15 @@ class RfxtrxBinarySensor(BinarySensorEntity, RfxtrxEntity):
 
         self.async_write_ha_state()
 
-        if self.is_on and self.off_delay is not None and self.delay_listener is None:
+        if self.is_on and self._off_delay is not None and self._delay_listener is None:
 
             @callback
             def off_delay_listener(now):
                 """Switch device off after a delay."""
-                self.delay_listener = None
+                self._delay_listener = None
                 self._state = False
                 self.async_write_ha_state()
 
             self.delay_listener = evt.async_call_later(
-                self.hass, self.off_delay.total_seconds(), off_delay_listener
+                self.hass, self._off_delay.total_seconds(), off_delay_listener
             )
