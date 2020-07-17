@@ -153,7 +153,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             NetatmoArea(**i) for i in entry.options.get(CONF_WEATHER_AREAS, {}).values()
         ]:
             await data_handler.register_data_class(
-                data_class,
+                data_class_name,
                 LAT_NE=area.lat_ne,
                 LON_NE=area.lon_ne,
                 LAT_SW=area.lat_sw,
