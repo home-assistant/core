@@ -90,6 +90,13 @@ MODULE_TYPE_WIND = "NAModule2"
 MODULE_TYPE_RAIN = "NAModule3"
 MODULE_TYPE_INDOOR = "NAModule4"
 
+BATTERY_VALUES = {
+    MODULE_TYPE_WIND: {"Full": 5590, "High": 5180, "Medium": 4770, "Low": 4360},
+    MODULE_TYPE_RAIN: {"Full": 5500, "High": 5000, "Medium": 4500, "Low": 4000},
+    MODULE_TYPE_INDOOR: {"Full": 5500, "High": 5280, "Medium": 4920, "Low": 4560},
+    MODULE_TYPE_OUTDOOR: {"Full": 5500, "High": 5000, "Medium": 4500, "Low": 4000},
+}
+
 PUBLIC = "public"
 
 
@@ -304,50 +311,8 @@ class NetatmoSensor(NetatmoBase):
                 self._state = data["battery_percent"]
             elif self.type == "battery_lvl":
                 self._state = data["battery_vp"]
-            elif self.type == "battery_vp" and self._model == MODULE_TYPE_WIND:
-                if data["battery_vp"] >= 5590:
-                    self._state = "Full"
-                elif data["battery_vp"] >= 5180:
-                    self._state = "High"
-                elif data["battery_vp"] >= 4770:
-                    self._state = "Medium"
-                elif data["battery_vp"] >= 4360:
-                    self._state = "Low"
-                else:
-                    self._state = "Very Low"
-            elif self.type == "battery_vp" and self._model == MODULE_TYPE_RAIN:
-                if data["battery_vp"] >= 5500:
-                    self._state = "Full"
-                elif data["battery_vp"] >= 5000:
-                    self._state = "High"
-                elif data["battery_vp"] >= 4500:
-                    self._state = "Medium"
-                elif data["battery_vp"] >= 4000:
-                    self._state = "Low"
-                else:
-                    self._state = "Very Low"
-            elif self.type == "battery_vp" and self._model == MODULE_TYPE_INDOOR:
-                if data["battery_vp"] >= 5640:
-                    self._state = "Full"
-                elif data["battery_vp"] >= 5280:
-                    self._state = "High"
-                elif data["battery_vp"] >= 4920:
-                    self._state = "Medium"
-                elif data["battery_vp"] >= 4560:
-                    self._state = "Low"
-                else:
-                    self._state = "Very Low"
-            elif self.type == "battery_vp" and self._model == MODULE_TYPE_OUTDOOR:
-                if data["battery_vp"] >= 5500:
-                    self._state = "Full"
-                elif data["battery_vp"] >= 5000:
-                    self._state = "High"
-                elif data["battery_vp"] >= 4500:
-                    self._state = "Medium"
-                elif data["battery_vp"] >= 4000:
-                    self._state = "Low"
-                else:
-                    self._state = "Very Low"
+            elif self.type == "battery_vp":
+                self._state = process_battery(data["battery_vp"], self._model)
             elif self.type == "min_temp":
                 self._state = data["min_temp"]
             elif self.type == "max_temp":
@@ -355,47 +320,13 @@ class NetatmoSensor(NetatmoBase):
             elif self.type == "windangle_value":
                 self._state = data["WindAngle"]
             elif self.type == "windangle":
-                if data["WindAngle"] >= 330:
-                    self._state = "N (%d\xb0)" % data["WindAngle"]
-                elif data["WindAngle"] >= 300:
-                    self._state = "NW (%d\xb0)" % data["WindAngle"]
-                elif data["WindAngle"] >= 240:
-                    self._state = "W (%d\xb0)" % data["WindAngle"]
-                elif data["WindAngle"] >= 210:
-                    self._state = "SW (%d\xb0)" % data["WindAngle"]
-                elif data["WindAngle"] >= 150:
-                    self._state = "S (%d\xb0)" % data["WindAngle"]
-                elif data["WindAngle"] >= 120:
-                    self._state = "SE (%d\xb0)" % data["WindAngle"]
-                elif data["WindAngle"] >= 60:
-                    self._state = "E (%d\xb0)" % data["WindAngle"]
-                elif data["WindAngle"] >= 30:
-                    self._state = "NE (%d\xb0)" % data["WindAngle"]
-                elif data["WindAngle"] >= 0:
-                    self._state = "N (%d\xb0)" % data["WindAngle"]
+                self._state = process_angle(data["WindAngle"])
             elif self.type == "windstrength":
                 self._state = data["WindStrength"]
             elif self.type == "gustangle_value":
                 self._state = data["GustAngle"]
             elif self.type == "gustangle":
-                if data["GustAngle"] >= 330:
-                    self._state = "N (%d\xb0)" % data["GustAngle"]
-                elif data["GustAngle"] >= 300:
-                    self._state = "NW (%d\xb0)" % data["GustAngle"]
-                elif data["GustAngle"] >= 240:
-                    self._state = "W (%d\xb0)" % data["GustAngle"]
-                elif data["GustAngle"] >= 210:
-                    self._state = "SW (%d\xb0)" % data["GustAngle"]
-                elif data["GustAngle"] >= 150:
-                    self._state = "S (%d\xb0)" % data["GustAngle"]
-                elif data["GustAngle"] >= 120:
-                    self._state = "SE (%d\xb0)" % data["GustAngle"]
-                elif data["GustAngle"] >= 60:
-                    self._state = "E (%d\xb0)" % data["GustAngle"]
-                elif data["GustAngle"] >= 30:
-                    self._state = "NE (%d\xb0)" % data["GustAngle"]
-                elif data["GustAngle"] >= 0:
-                    self._state = "N (%d\xb0)" % data["GustAngle"]
+                self._state = process_angle(data["GustAngle"])
             elif self.type == "guststrength":
                 self._state = data["GustStrength"]
             elif self.type == "reachable":
@@ -403,41 +334,93 @@ class NetatmoSensor(NetatmoBase):
             elif self.type == "rf_status_lvl":
                 self._state = data["rf_status"]
             elif self.type == "rf_status":
-                if data["rf_status"] >= 90:
-                    self._state = "Low"
-                elif data["rf_status"] >= 76:
-                    self._state = "Medium"
-                elif data["rf_status"] >= 60:
-                    self._state = "High"
-                elif data["rf_status"] <= 59:
-                    self._state = "Full"
+                self._state = process_rf(data["rf_status"])
             elif self.type == "wifi_status_lvl":
                 self._state = data["wifi_status"]
             elif self.type == "wifi_status":
-                if data["wifi_status"] >= 86:
-                    self._state = "Low"
-                elif data["wifi_status"] >= 71:
-                    self._state = "Medium"
-                elif data["wifi_status"] >= 56:
-                    self._state = "High"
-                elif data["wifi_status"] <= 55:
-                    self._state = "Full"
+                self._state = process_wifi(data["wifi_status"])
             elif self.type == "health_idx":
-                if data["health_idx"] == 0:
-                    self._state = "Healthy"
-                elif data["health_idx"] == 1:
-                    self._state = "Fine"
-                elif data["health_idx"] == 2:
-                    self._state = "Fair"
-                elif data["health_idx"] == 3:
-                    self._state = "Poor"
-                elif data["health_idx"] == 4:
-                    self._state = "Unhealthy"
+                self._state = process_health(data["health_idx"])
         except KeyError:
             if self._state:
                 _LOGGER.debug("No %s data found for %s", self.type, self._device_name)
             self._state = None
             return
+
+
+def process_angle(angle: int) -> str:
+    """Process angle and return string for display."""
+    if angle >= 330:
+        return f"N ({angle}\xb0)"
+    elif angle >= 300:
+        return f"NW ({angle}\xb0)"
+    elif angle >= 240:
+        return f"W ({angle}\xb0)"
+    elif angle >= 210:
+        return f"SW ({angle}\xb0)"
+    elif angle >= 150:
+        return f"S ({angle}\xb0)"
+    elif angle >= 120:
+        return f"SE ({angle}\xb0)"
+    elif angle >= 60:
+        return f"E ({angle}\xb0)"
+    elif angle >= 30:
+        return f"NE ({angle}\xb0)"
+    elif angle >= 0:
+        return f"N ({angle}\xb0)"
+
+
+def process_battery(data: int, model: str) -> str:
+    """Process battery data and return string for display."""
+    values = BATTERY_VALUES[model]
+
+    if data >= values["Full"]:
+        return "Full"
+    elif data >= values["High"]:
+        return "High"
+    elif data >= values["Medium"]:
+        return "Medium"
+    elif data >= values["Low"]:
+        return "Low"
+    return "Very Low"
+
+
+def process_health(health):
+    """Process health index and return string for display."""
+    if health == 0:
+        return "Healthy"
+    elif health == 1:
+        return "Fine"
+    elif health == 2:
+        return "Fair"
+    elif health == 3:
+        return "Poor"
+    elif health == 4:
+        return "Unhealthy"
+
+
+def process_rf(strength):
+    """Process wifi signal strength and return string for display."""
+    if strength >= 90:
+        return "Low"
+    elif strength >= 76:
+        return "Medium"
+    elif strength >= 60:
+        return "High"
+    elif strength <= 59:
+        return "Full"
+
+
+def process_wifi(strength):
+    """Process wifi signal strength and return string for display."""
+    if strength >= 86:
+        return "Low"
+    elif strength >= 71:
+        return "Medium"
+    elif strength >= 56:
+        return "High"
+    elif strength <= 55:
+        return "Full"
 
 
 class NetatmoPublicSensor(NetatmoBase):
