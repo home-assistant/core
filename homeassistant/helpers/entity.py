@@ -517,15 +517,9 @@ class Entity(ABC):
         """
         if self.registry_entry is not None:
             assert self.hass is not None
-            self._async_setup_registry_updated_listener()
-
-    def _async_setup_registry_updated_listener(self) -> None:
-        """Listen for entity registry updates for the entity_id."""
-        assert self.hass is not None
-
-        self._registry_updated_listener = async_track_entity_registry_updated_event(
-            self.hass, self.entity_id, self._async_registry_updated
-        )
+            self._registry_updated_listener = async_track_entity_registry_updated_event(
+                self.hass, self.entity_id, self._async_registry_updated
+            )
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
