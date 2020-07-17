@@ -523,10 +523,6 @@ class Entity(ABC):
         """Listen for entity registry updates for the entity_id."""
         assert self.hass is not None
 
-        if self._registry_updated_listener is not None:
-            self._registry_updated_listener()  # type: ignore
-            self._registry_updated_listener = None
-
         self._registry_updated_listener = async_track_entity_registry_updated_event(
             self.hass, self.entity_id, self._async_registry_updated
         )
