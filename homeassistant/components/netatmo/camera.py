@@ -89,7 +89,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     )
                 )
 
-            for person_id, person_data in data_handler.data[data_class].persons.items():
+            for person_id, person_data in data_handler.data[data_class_name].persons.items():
                 hass.data[DOMAIN][DATA_PERSONS][person_id] = person_data.get(
                     ATTR_PSEUDO
                 )
