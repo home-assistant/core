@@ -134,7 +134,7 @@ class FibaroController:
             info = self._client.info.get()
             self.hub_serial = slugify(info.serialNumber)
         except AssertionError:
-            _LOGGER.error("Can't connect to Fibaro HC. Please check URL.")
+            _LOGGER.error("Can't connect to Fibaro HC. Please check URL")
             return False
         if login is None or login.status is False:
             _LOGGER.error(
@@ -227,10 +227,7 @@ class FibaroController:
                     device_type = "sensor"
 
         # Switches that control lights should show up as lights
-        if (
-            device_type == "switch"
-            and device.properties.get("isLight", "false") == "true"
-        ):
+        if device_type == "switch" and device.properties.get("isLight", False):
             device_type = "light"
         return device_type
 

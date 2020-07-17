@@ -22,9 +22,11 @@ DATA_SETUP = "setup_tasks"
 DATA_DEPS_REQS = "deps_reqs_processed"
 
 SLOW_SETUP_WARNING = 10
-# Since a pip install can run, we wait
-# 30 minutes to timeout
-SLOW_SETUP_MAX_WAIT = 1800
+
+# Since its possible for databases to be
+# upwards of 36GiB (or larger) in the wild
+# we wait up to 3 hours for startup
+SLOW_SETUP_MAX_WAIT = 10800
 
 
 @core.callback
@@ -192,7 +194,7 @@ async def _async_setup_component(
     except asyncio.TimeoutError:
         _LOGGER.error(
             "Setup of %s is taking longer than %s seconds."
-            " Startup will proceed without waiting any longer.",
+            " Startup will proceed without waiting any longer",
             domain,
             SLOW_SETUP_MAX_WAIT,
         )
@@ -207,7 +209,7 @@ async def _async_setup_component(
         end = timer()
         if warn_task:
             warn_task.cancel()
-    _LOGGER.info("Setup of domain %s took %.1f seconds.", domain, end - start)
+    _LOGGER.info("Setup of domain %s took %.1f seconds", domain, end - start)
 
     if result is False:
         log_error("Integration failed to initialize.")

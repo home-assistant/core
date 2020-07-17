@@ -8,6 +8,7 @@
             "invalid_auth": "Autenticazione non valida. Controllare gli 8 caratteri dell'ID Smile",
             "unknown": "Errore imprevisto"
         },
+        "flow_title": "Smile: {name}",
         "step": {
             "user": {
                 "data": {

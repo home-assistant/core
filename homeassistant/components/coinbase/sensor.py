@@ -12,7 +12,7 @@ CURRENCY_ICONS = {
     "USD": "mdi:currency-usd",
 }
 
-DEFAULT_COIN_ICON = "mdi:coin"
+DEFAULT_COIN_ICON = "mdi:currency-usd-circle"
 
 ATTRIBUTION = "Data provided by coinbase.com"
 

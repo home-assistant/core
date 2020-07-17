@@ -310,29 +310,10 @@ async def test_script(hass):
         appliance, "Alexa.SceneController", "Alexa"
     )
     scene_capability = get_capability(capabilities, "Alexa.SceneController")
-    assert not scene_capability["supportsDeactivation"]
-
-    await assert_scene_controller_works("script#test", "script.turn_on", None, hass)
-
-
-async def test_cancelable_script(hass):
-    """Test cancalable script discovery."""
-    device = (
-        "script.test_2",
-        "off",
-        {"friendly_name": "Test script 2", "can_cancel": True},
-    )
-    appliance = await discovery_test(device, hass)
-
-    assert appliance["endpointId"] == "script#test_2"
-    capabilities = assert_endpoint_capabilities(
-        appliance, "Alexa.SceneController", "Alexa"
-    )
-    scene_capability = get_capability(capabilities, "Alexa.SceneController")
     assert scene_capability["supportsDeactivation"]
 
     await assert_scene_controller_works(
-        "script#test_2", "script.turn_on", "script.turn_off", hass
+        "script#test", "script.turn_on", "script.turn_off", hass
     )
 
 

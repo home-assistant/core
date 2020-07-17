@@ -20,8 +20,8 @@
             },
             "user": {
                 "data": {
-                    "host": "Konnected enhet IP-adresse",
-                    "port": "Koblet enhetsport"
+                    "host": "IP adresse",
+                    "port": ""
                 },
                 "description": "Vennligst skriv inn verten informasjon for din Konnected Panel."
             }

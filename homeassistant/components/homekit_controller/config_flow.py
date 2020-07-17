@@ -6,6 +6,7 @@ import aiohomekit
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.core import callback
 
 from .connection import get_accessory_name, get_bridge_information
@@ -59,8 +60,13 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         self.model = None
         self.hkid = None
         self.devices = {}
-        self.controller = aiohomekit.Controller()
+        self.controller = None
         self.finish_pairing = None
+
+    async def _async_setup_controller(self):
+        """Create the controller."""
+        zeroconf_instance = await zeroconf.async_get_instance(self.hass)
+        self.controller = aiohomekit.Controller(zeroconf_instance=zeroconf_instance)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
@@ -74,6 +80,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
                 normalize_hkid(self.hkid), raise_on_progress=False
             )
             return await self.async_step_pair()
+
+        if self.controller is None:
+            await self._async_setup_controller()
 
         all_hosts = await self.controller.discover_ip()
 
@@ -101,7 +110,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         unique_id = user_input["unique_id"]
         await self.async_set_unique_id(unique_id)
 
-        devices = await self.controller.discover_ip(5)
+        if self.controller is None:
+            await self._async_setup_controller()
+
+        devices = await self.controller.discover_ip(max_seconds=5)
         for device in devices:
             if normalize_hkid(device.device_id) != unique_id:
                 continue
@@ -226,6 +238,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         # in.
 
         errors = {}
+        if self.controller is None:
+            await self._async_setup_controller()
 
         if pair_info:
             code = pair_info["pairing_code"]

@@ -9,6 +9,7 @@ from homeassistant import config_entries
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_PAYLOAD,
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_USERNAME,
@@ -23,9 +24,9 @@ from .const import (
     CONF_BROKER,
     CONF_DISCOVERY,
     CONF_WILL_MESSAGE,
+    DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
-    DEFAULT_QOS,
-    DEFAULT_RETAIN,
+    DEFAULT_WILL,
 )
 from .util import MQTT_WILL_BIRTH_SCHEMA
 
@@ -220,6 +221,8 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                 except vol.Invalid:
                     errors["base"] = "bad_birth"
                     bad_birth = True
+            if not user_input["birth_enable"]:
+                options_config[CONF_BIRTH_MESSAGE] = {}
 
             if "will_topic" in user_input:
                 will_message = {
@@ -234,6 +237,8 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                 except vol.Invalid:
                     errors["base"] = "bad_will"
                     bad_will = True
+            if not user_input["will_enable"]:
+                options_config[CONF_WILL_MESSAGE] = {}
 
             options_config[CONF_DISCOVERY] = user_input[CONF_DISCOVERY]
 
@@ -246,29 +251,8 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                 )
                 return self.async_create_entry(title="", data=None)
 
-        birth_topic = None
-        birth_payload = None
-        birth_qos = DEFAULT_QOS
-        birth_retain = DEFAULT_RETAIN
-        if CONF_BIRTH_MESSAGE in current_config:
-            birth_topic = current_config[CONF_BIRTH_MESSAGE][ATTR_TOPIC]
-            birth_payload = current_config[CONF_BIRTH_MESSAGE][ATTR_PAYLOAD]
-            birth_qos = current_config[CONF_BIRTH_MESSAGE].get(ATTR_QOS, DEFAULT_QOS)
-            birth_retain = current_config[CONF_BIRTH_MESSAGE].get(
-                ATTR_RETAIN, DEFAULT_RETAIN
-            )
-
-        will_topic = None
-        will_payload = None
-        will_qos = DEFAULT_QOS
-        will_retain = DEFAULT_RETAIN
-        if CONF_WILL_MESSAGE in current_config:
-            will_topic = current_config[CONF_WILL_MESSAGE][ATTR_TOPIC]
-            will_payload = current_config[CONF_WILL_MESSAGE][ATTR_PAYLOAD]
-            will_qos = current_config[CONF_WILL_MESSAGE].get(ATTR_QOS, DEFAULT_QOS)
-            will_retain = current_config[CONF_WILL_MESSAGE].get(
-                ATTR_RETAIN, DEFAULT_RETAIN
-            )
+        birth = {**DEFAULT_BIRTH, **current_config.get(CONF_BIRTH_MESSAGE, {})}
+        will = {**DEFAULT_WILL, **current_config.get(CONF_WILL_MESSAGE, {})}
 
         fields = OrderedDict()
         fields[
@@ -277,24 +261,48 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                 default=current_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY),
             )
         ] = bool
+
+        # Birth message is disabled if CONF_BIRTH_MESSAGE = {}
         fields[
-            vol.Optional("birth_topic", description={"suggested_value": birth_topic})
+            vol.Optional(
+                "birth_enable",
+                default=CONF_BIRTH_MESSAGE not in current_config
+                or current_config[CONF_BIRTH_MESSAGE] != {},
+            )
+        ] = bool
+        fields[
+            vol.Optional(
+                "birth_topic", description={"suggested_value": birth[ATTR_TOPIC]}
+            )
         ] = str
         fields[
             vol.Optional(
-                "birth_payload", description={"suggested_value": birth_payload}
+                "birth_payload", description={"suggested_value": birth[CONF_PAYLOAD]}
             )
         ] = str
-        fields[vol.Optional("birth_qos", default=birth_qos)] = vol.In([0, 1, 2])
-        fields[vol.Optional("birth_retain", default=birth_retain)] = bool
+        fields[vol.Optional("birth_qos", default=birth[ATTR_QOS])] = vol.In([0, 1, 2])
+        fields[vol.Optional("birth_retain", default=birth[ATTR_RETAIN])] = bool
+
+        # Will message is disabled if CONF_WILL_MESSAGE = {}
         fields[
-            vol.Optional("will_topic", description={"suggested_value": will_topic})
+            vol.Optional(
+                "will_enable",
+                default=CONF_WILL_MESSAGE not in current_config
+                or current_config[CONF_WILL_MESSAGE] != {},
+            )
+        ] = bool
+        fields[
+            vol.Optional(
+                "will_topic", description={"suggested_value": will[ATTR_TOPIC]}
+            )
         ] = str
         fields[
-            vol.Optional("will_payload", description={"suggested_value": will_payload})
+            vol.Optional(
+                "will_payload", description={"suggested_value": will[CONF_PAYLOAD]}
+            )
         ] = str
-        fields[vol.Optional("will_qos", default=will_qos)] = vol.In([0, 1, 2])
-        fields[vol.Optional("will_retain", default=will_retain)] = bool
+        fields[vol.Optional("will_qos", default=will[ATTR_QOS])] = vol.In([0, 1, 2])
+        fields[vol.Optional("will_retain", default=will[ATTR_RETAIN])] = bool
 
         return self.async_show_form(
             step_id="options", data_schema=vol.Schema(fields), errors=errors,

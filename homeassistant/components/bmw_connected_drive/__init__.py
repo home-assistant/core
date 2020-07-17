@@ -145,7 +145,7 @@ class BMWConnectedDriveAccount:
         except OSError as exception:
             _LOGGER.error(
                 "Could not connect to the BMW Connected Drive portal. "
-                "The vehicle state could not be updated."
+                "The vehicle state could not be updated"
             )
             _LOGGER.exception(exception)
 

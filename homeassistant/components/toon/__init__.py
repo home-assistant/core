@@ -146,14 +146,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.data[DOMAIN][entry.entry_id].unregister_webhook()
 
     # Unload entities for this entry/device.
-    await asyncio.gather(
-        *(
-            hass.config_entries.async_forward_entry_unload(entry, component)
-            for component in ENTITY_COMPONENTS
+    unload_ok = all(
+        await asyncio.gather(
+            *(
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in ENTITY_COMPONENTS
+            )
         )
     )
 
     # Cleanup
-    del hass.data[DOMAIN][entry.entry_id]
+    if unload_ok:
+        del hass.data[DOMAIN][entry.entry_id]
 
-    return True
+    return unload_ok

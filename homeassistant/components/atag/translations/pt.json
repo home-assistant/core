@@ -3,7 +3,9 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Servidor"
+                    "email": "E-mail (opcional)",
+                    "host": "Servidor",
+                    "port": "Porta"
                 }
             }
         }

@@ -5,7 +5,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_PROBLEM,
 )
-from homeassistant.components.sensor import DEVICE_CLASS_POWER
+from homeassistant.components.sensor import DEVICE_CLASS_POWER, DEVICE_CLASS_TEMPERATURE
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
@@ -13,6 +13,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
+    TEMP_CELSIUS,
     UNIT_PERCENTAGE,
 )
 
@@ -112,6 +113,15 @@ BINARY_SENSOR_ENTITIES = {
 }
 
 SENSOR_ENTITIES = {
+    "current_display_temperature": {
+        ATTR_NAME: "Temperature",
+        ATTR_SECTION: "thermostat",
+        ATTR_MEASUREMENT: "current_display_temperature",
+        ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+        ATTR_ICON: None,
+        ATTR_DEFAULT_ENABLED: False,
+    },
     "gas_average": {
         ATTR_NAME: "Average Gas Usage",
         ATTR_SECTION: "gas_usage",
