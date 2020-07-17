@@ -1156,8 +1156,8 @@ async def test_async_track_point_in_time_cancel(hass):
     """Test cancel of async track point in time."""
 
     times = []
-    hass.config.time_zone = dt_util.get_time_zone("US/Hawaii")
-    dt_util.set_default_time_zone(hass.config.time_zone)
+    hst_tz = dt_util.get_time_zone("US/Hawaii")
+    dt_util.set_default_time_zone(hst_tz)
 
     @ha.callback
     def run_callback(local_time):
@@ -1165,7 +1165,7 @@ async def test_async_track_point_in_time_cancel(hass):
         times.append(local_time)
 
     utc_now = dt_util.utcnow()
-    hst_now = utc_now.astimezone(hass.config.time_zone)
+    hst_now = utc_now.astimezone(hst_tz)
 
     unsub1 = hass.helpers.event.async_track_point_in_time(
         run_callback, hst_now + timedelta(seconds=0.1)
