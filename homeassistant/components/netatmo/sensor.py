@@ -132,7 +132,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             _LOGGER.debug(
                 "Adding module %s %s", module.get("module_name"), module.get("_id"),
             )
-            for condition in data[data_class_name].get_monitored_conditions(
+            for condition in data_class.get_monitored_conditions(
                 module_id=module["_id"]
             ):
                 entities.append(

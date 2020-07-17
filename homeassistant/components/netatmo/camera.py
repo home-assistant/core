@@ -69,10 +69,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
         """Retrieve Netatmo entities."""
         await data_handler.register_data_class(data_class_name)
 
+        data = data_handler.data
+
+        if not data.get(data_class_name):
+            return []
+
+        data_class = data_handler.data[data_class_name]
+
         entities = []
         try:
             all_cameras = []
-            for home in data_handler.data[data_class_name].cameras.values():
+            for home in data_class.cameras.values():
                 for camera in home.values():
                     all_cameras.append(camera)
 
