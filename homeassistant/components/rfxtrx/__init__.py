@@ -418,7 +418,6 @@ class RfxtrxEntity(RestoreEntity):
     @callback
     def _handle_event(self, event, device_id):
         """Handle a reception of data, overridden by other classes."""
-        pass
 
 
 class RfxtrxCommandEntity(RfxtrxEntity):
