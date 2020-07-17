@@ -137,8 +137,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         """Retrieve Netatmo entities."""
         entities = []
 
-        for data_class in ["WeatherStationData", "HomeCoachData"]:
-            entities.extend(await find_entities(data_class))
+        for data_class_name in ["WeatherStationData", "HomeCoachData"]:
+            entities.extend(await find_entities(data_class_name))
 
         return entities
 
