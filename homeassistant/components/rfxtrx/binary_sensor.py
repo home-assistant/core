@@ -56,7 +56,7 @@ async def async_setup_entry(
             _LOGGER.error("Invalid device: %s", packet_id)
             continue
         if not supported(event):
-            return
+            continue
 
         device_id = get_device_id(event.device, data_bits=entity.get(CONF_DATA_BITS))
         if device_id in device_ids:
