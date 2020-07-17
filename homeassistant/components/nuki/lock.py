@@ -19,6 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PORT = 8080
 DEFAULT_TIMEOUT = 20
 
+CONF_SECURE = "secure"
+
 ATTR_BATTERY_CRITICAL = "battery_critical"
 ATTR_NUKI_ID = "nuki_id"
 ATTR_UNLATCH = "unlatch"
@@ -37,6 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Required(CONF_TOKEN): cv.string,
+        vol.Optional(CONF_SECURE, default=True): cv.boolean,
     }
 )
 
@@ -51,7 +54,11 @@ LOCK_N_GO_SERVICE_SCHEMA = vol.Schema(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nuki lock platform."""
     bridge = NukiBridge(
-        config[CONF_HOST], config[CONF_TOKEN], config[CONF_PORT], True, DEFAULT_TIMEOUT,
+        config[CONF_HOST],
+        config[CONF_TOKEN],
+        config[CONF_PORT],
+        config[CONF_SECURE],
+        DEFAULT_TIMEOUT,
     )
 
     devices = [NukiLockEntity(lock) for lock in bridge.locks]
