@@ -18,18 +18,18 @@ SENSORS = [
     ("pump_speed", "Pump Speed", PERCENT_UNITS, "mdi:speedometer"),
 ]
 
-SCAN_INTERVAL = timedelta(minutes=1)
+SCAN_INTERVAL = timedelta(seconds=30)
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None):
     """Set up the sensor platform."""
-    _LOGGER.info("TESTING")
 
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     for backyard in coordinator.data:
         for bow in backyard["Telemetry"][0]["BOWS"]:
+
             sensors = [
                 OmnilogicSensor(
                     coordinator, kind, name, backyard, bow, device_class, unit
@@ -43,7 +43,6 @@ class OmnilogicSensor(Entity):
     """Defines an Omnilogic sensor entity"""
 
     def __init__(self, coordinator, kind, name, backyard, bow, icon, unit):
-        _LOGGER.info("Sensor INIT")
         self._kind = kind
         self._name = name
         self._backyard = backyard
@@ -84,22 +83,26 @@ class OmnilogicSensor(Entity):
         await self.coordinator.async_request_refresh()
 
         if self._kind == "pool_temperature":
-            _LOGGER.info("waterTemp")
-            _LOGGER.info(self._bow.get("waterTemp"))
-            self._state = self._bow.get("waterTemp")
+            self._state = self.coordinator.data[0]["Telemetry"][0]["BOWS"][0].get(
+                "waterTemp"
+            )
         elif self._kind == "pump_speed":
-            _LOGGER.info("filterSpeed")
-            _LOGGER.info(self._bow["Filter"].get("filterSpeed"))
-            self._state = self._bow["Filter"].get("filterSpeed")
+            self._state = self.coordinator.data[0]["Telemetry"][0]["BOWS"][0][
+                "Filter"
+            ].get("filterSpeed")
         elif self._kind == "salt_level":
-            _LOGGER.info("avgSaltLevel")
-            _LOGGER.info(self._bow["Chlorinator"].get("avgSaltLevel"))
-            self._state = self._bow["Chlorinator"].get("avgSaltLevel")
+            self._state = self.coordinator.data[0]["Telemetry"][0]["BOWS"][0][
+                "Chlorinator"
+            ].get("avgSaltLevel")
         elif self._kind == "pool_chlorinator":
-            _LOGGER.info("Timed-Percent")
-            _LOGGER.info(self._bow["Chlorinator"].get("Timed-Percent"))
-            self._state = self._bow["Chlorinator"].get("Timed-Percent")
+            self._state = self.coordinator.data[0]["Telemetry"][0]["BOWS"][0][
+                "Chlorinator"
+            ].get("Timed-Percent")
         elif self._kind == "air_temperature":
-            _LOGGER.info("airTemp")
-            _LOGGER.info(self._backyard["Telemetry"][0].get("airTemp"))
-            self._state = self._backyard["Telemetry"][0].get("airTemp")
+            self._state = self.coordinator.data[0]["Telemetry"][0].get("airTemp")
+
+    async def async_added_to_hass(self):
+        """Subscribe to updates."""
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
