@@ -179,6 +179,16 @@ class RfxtrxSensor(RestoreEntity):
         return self._unit_of_measurement
 
     @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def force_update(self) -> bool:
+        """We should force updates. Repeated states have meaning."""
+        return True
+
+    @property
     def device_class(self):
         """Return a device class for sensor."""
         return self._device_class
