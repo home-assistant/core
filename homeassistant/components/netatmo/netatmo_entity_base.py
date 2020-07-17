@@ -15,9 +15,6 @@ _LOGGER = logging.getLogger(__name__)
 class NetatmoBase(Entity):
     """Netatmo entity base class."""
 
-    DOMAIN = ""
-    TYPE = ""
-
     def __init__(self, data_handler: NetatmoDataHandler) -> None:
         """Set up Netatmo entity base."""
         self.data_handler = data_handler
