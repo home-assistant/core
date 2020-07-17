@@ -69,7 +69,12 @@ class NetatmoDataHandler:
         )
 
     async def async_update(self, event_time):
-        """Update device."""
+        """
+        Update device.
+
+        We do up to BATCH_SIZE calls in one update in order
+        to minimize the calls on the api service.
+        """
         for data_class in islice(self._queue, 0, BATCH_SIZE):
             if data_class["next_scan"] > time():
                 continue
