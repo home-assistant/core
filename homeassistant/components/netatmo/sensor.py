@@ -147,7 +147,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     @callback
     async def add_public_entities():
         """Retrieve Netatmo public weather entities."""
-        data_class = "PublicData"
+        data_class_name = "PublicData"
         entities = []
         for area in [
             NetatmoArea(**i) for i in entry.options.get(CONF_WEATHER_AREAS, {}).values()
