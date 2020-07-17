@@ -769,7 +769,8 @@ class ConfigEntries:
 
         for listener_ref in entry.update_listeners:
             listener = listener_ref()
-            self.hass.async_create_task(listener(self.hass, entry))
+            if listener is not None:
+                self.hass.async_create_task(listener(self.hass, entry))
 
         self._async_schedule_save()
 
