@@ -64,18 +64,16 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    data_class_name = CAMERA_DATA_CLASS_NAME
-
     async def get_entities():
         """Retrieve Netatmo entities."""
-        await data_handler.register_data_class(data_class_name)
+        await data_handler.register_data_class(CAMERA_DATA_CLASS_NAME)
 
         data = data_handler.data
 
-        if not data.get(data_class_name):
+        if not data.get(CAMERA_DATA_CLASS_NAME):
             return []
 
-        data_class = data_handler.data[data_class_name]
+        data_class = data_handler.data[CAMERA_DATA_CLASS_NAME]
 
         entities = []
         try:
@@ -89,7 +87,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 entities.append(
                     NetatmoCamera(
                         data_handler,
-                        data_class_name,
                         camera["id"],
                         camera["type"],
                         camera["home_id"],
@@ -98,7 +95,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 )
 
             for person_id, person_data in data_handler.data[
-                data_class_name
+                CAMERA_DATA_CLASS_NAME
             ].persons.items():
                 hass.data[DOMAIN][DATA_PERSONS][person_id] = person_data.get(
                     ATTR_PSEUDO
@@ -106,14 +103,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
         except pyatmo.NoDevice:
             _LOGGER.debug("No cameras found")
 
-        await data_handler.unregister_data_class(data_class_name)
+        await data_handler.unregister_data_class(CAMERA_DATA_CLASS_NAME)
         return entities
 
     async_add_entities(await get_entities(), True)
 
     platform = entity_platform.current_platform.get()
 
-    if data_handler.data[data_class_name] is not None:
+    if data_handler.data[CAMERA_DATA_CLASS_NAME] is not None:
         platform.async_register_entity_service(
             SERVICE_SETPERSONSHOME,
             SCHEMA_SERVICE_SETPERSONSHOME,
@@ -135,13 +132,13 @@ class NetatmoCamera(NetatmoBase, Camera):
     """Representation of a Netatmo camera."""
 
     def __init__(
-        self, data_handler, data_class_name, camera_id, camera_type, home_id, quality,
+        self, data_handler, camera_id, camera_type, home_id, quality,
     ):
         """Set up for access to the Netatmo camera images."""
         Camera.__init__(self)
         super().__init__(data_handler)
 
-        self._data_classes.append({"name": data_class_name})
+        self._data_classes.append({"name": CAMERA_DATA_CLASS_NAME})
 
         self._id = camera_id
         self._home_id = home_id
