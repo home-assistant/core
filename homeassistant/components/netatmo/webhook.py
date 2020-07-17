@@ -65,19 +65,8 @@ def async_evaluate_event(hass, event_data):
                 event_type=NETATMO_EVENT,
                 event_data={"type": event_type, "data": person_event_data},
             )
-    elif event_type == "therm_mode":
-        _LOGGER.debug("therm_mode: %s", event_data)
-        hass.bus.async_fire(
-            event_type=NETATMO_EVENT,
-            event_data={"type": event_type, "data": event_data},
-        )
-    elif event_type == "set_point":
-        _LOGGER.debug("set_point: %s", event_data)
-        hass.bus.async_fire(
-            event_type=NETATMO_EVENT,
-            event_data={"type": event_type, "data": event_data},
-        )
     else:
+        _LOGGER.debug("%s: %s", event_type, event_data)
         hass.bus.async_fire(
             event_type=NETATMO_EVENT,
             event_data={"type": event_type, "data": event_data},
