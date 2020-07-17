@@ -1,5 +1,6 @@
 """Test event helpers."""
 # pylint: disable=protected-access
+import asyncio
 from datetime import datetime, timedelta
 
 from astral import Astral
@@ -22,6 +23,7 @@ from homeassistant.helpers.event import (
     async_track_time_change,
     async_track_time_interval,
     async_track_utc_time_change,
+    track_point_in_utc_time,
 )
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
@@ -108,7 +110,9 @@ async def test_track_state_change_from_to_state_match(hass):
         hass, "light.Bowl", from_and_to_state_callback, "on", "off"
     )
     async_track_state_change(hass, "light.Bowl", only_from_state_callback, "on", None)
-    async_track_state_change(hass, "light.Bowl", only_to_state_callback, None, "off")
+    async_track_state_change(
+        hass, "light.Bowl", only_to_state_callback, None, ["off", "standby"]
+    )
     async_track_state_change(
         hass, "light.Bowl", match_all_callback, MATCH_ALL, MATCH_ALL
     )
@@ -1112,3 +1116,67 @@ async def test_track_state_change_event_chain_single_entity(hass):
     assert len(chained_tracker_called) == 1
     assert len(tracker_unsub) == 1
     assert len(chained_tracker_unsub) == 2
+
+
+async def test_track_point_in_utc_time_cancel(hass):
+    """Test cancel of async track point in time."""
+
+    times = []
+
+    @ha.callback
+    def run_callback(utc_time):
+        nonlocal times
+        times.append(utc_time)
+
+    def _setup_listeners():
+        """Ensure we test the non-async version."""
+        utc_now = dt_util.utcnow()
+
+        with pytest.raises(TypeError):
+            track_point_in_utc_time("nothass", run_callback, utc_now)
+
+        unsub1 = hass.helpers.event.track_point_in_utc_time(
+            run_callback, utc_now + timedelta(seconds=0.1)
+        )
+        hass.helpers.event.track_point_in_utc_time(
+            run_callback, utc_now + timedelta(seconds=0.1)
+        )
+
+        unsub1()
+
+    await hass.async_add_executor_job(_setup_listeners)
+
+    await asyncio.sleep(0.2)
+
+    assert len(times) == 1
+    assert times[0].tzinfo == dt_util.UTC
+
+
+async def test_async_track_point_in_time_cancel(hass):
+    """Test cancel of async track point in time."""
+
+    times = []
+    hst_tz = dt_util.get_time_zone("US/Hawaii")
+    dt_util.set_default_time_zone(hst_tz)
+
+    @ha.callback
+    def run_callback(local_time):
+        nonlocal times
+        times.append(local_time)
+
+    utc_now = dt_util.utcnow()
+    hst_now = utc_now.astimezone(hst_tz)
+
+    unsub1 = hass.helpers.event.async_track_point_in_time(
+        run_callback, hst_now + timedelta(seconds=0.1)
+    )
+    hass.helpers.event.async_track_point_in_time(
+        run_callback, hst_now + timedelta(seconds=0.1)
+    )
+
+    unsub1()
+
+    await asyncio.sleep(0.2)
+
+    assert len(times) == 1
+    assert times[0].tzinfo.zone == "US/Hawaii"

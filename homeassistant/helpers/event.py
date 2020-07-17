@@ -317,14 +317,13 @@ def async_track_point_in_time(
     hass: HomeAssistant, action: Callable[..., None], point_in_time: datetime
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in time."""
-    utc_point_in_time = dt_util.as_utc(point_in_time)
 
     @callback
     def utc_converter(utc_now: datetime) -> None:
         """Convert passed in UTC now to local now."""
         hass.async_run_job(action, dt_util.as_local(utc_now))
 
-    return async_track_point_in_utc_time(hass, utc_converter, utc_point_in_time)
+    return async_track_point_in_utc_time(hass, utc_converter, point_in_time)
 
 
 track_point_in_time = threaded_listener_factory(async_track_point_in_time)
@@ -337,13 +336,13 @@ def async_track_point_in_utc_time(
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in UTC time."""
     # Ensure point_in_time is UTC
-    point_in_time = dt_util.as_utc(point_in_time)
+    utc_point_in_time = dt_util.as_utc(point_in_time)
 
     cancel_callback = hass.loop.call_at(
         hass.loop.time() + point_in_time.timestamp() - time.time(),
         hass.async_run_job,
         action,
-        point_in_time,
+        utc_point_in_time,
     )
 
     @callback

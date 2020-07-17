@@ -2,7 +2,6 @@
 # pylint: disable=protected-access,invalid-name
 import collections
 from datetime import datetime, timedelta
-from functools import partial
 import json
 import logging
 import unittest
@@ -1370,7 +1369,7 @@ async def test_logbook_view_period_entity(hass, hass_client):
     entity_id_second = "switch.second"
     hass.states.async_set(entity_id_second, STATE_OFF)
     hass.states.async_set(entity_id_second, STATE_ON)
-    await hass.async_add_job(partial(trigger_db_commit, hass))
+    await hass.async_add_job(trigger_db_commit, hass)
     await hass.async_block_till_done()
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
@@ -1563,7 +1562,7 @@ async def test_logbook_view_end_time_entity(hass, hass_client):
     entity_id_second = "switch.second"
     hass.states.async_set(entity_id_second, STATE_OFF)
     hass.states.async_set(entity_id_second, STATE_ON)
-    await hass.async_add_job(partial(trigger_db_commit, hass))
+    await hass.async_add_job(trigger_db_commit, hass)
     await hass.async_block_till_done()
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
@@ -1635,7 +1634,7 @@ async def test_logbook_entity_filter_with_automations(hass, hass_client):
     )
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
-    await hass.async_add_job(partial(trigger_db_commit, hass))
+    await hass.async_add_job(trigger_db_commit, hass)
     await hass.async_block_till_done()
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
@@ -1701,7 +1700,7 @@ async def test_filter_continuous_sensor_values(hass, hass_client):
     hass.states.async_set(entity_id_third, STATE_OFF, {"unit_of_measurement": "foo"})
     hass.states.async_set(entity_id_third, STATE_ON, {"unit_of_measurement": "foo"})
 
-    await hass.async_add_job(partial(trigger_db_commit, hass))
+    await hass.async_add_job(trigger_db_commit, hass)
     await hass.async_block_till_done()
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
@@ -1735,7 +1734,7 @@ async def test_exclude_new_entities(hass, hass_client):
     hass.states.async_set(entity_id2, STATE_OFF)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
-    await hass.async_add_job(partial(trigger_db_commit, hass))
+    await hass.async_add_job(trigger_db_commit, hass)
     await hass.async_block_till_done()
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
@@ -1776,7 +1775,7 @@ async def test_exclude_removed_entities(hass, hass_client):
     hass.states.async_remove(entity_id)
     hass.states.async_remove(entity_id2)
 
-    await hass.async_add_job(partial(trigger_db_commit, hass))
+    await hass.async_add_job(trigger_db_commit, hass)
     await hass.async_block_till_done()
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
@@ -1811,11 +1810,13 @@ async def test_exclude_attribute_changes(hass, hass_client):
     hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 200})
     hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 300})
     hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 400})
+    hass.states.async_set("light.kitchen", STATE_OFF)
 
     await hass.async_block_till_done()
 
-    await hass.async_add_job(partial(trigger_db_commit, hass))
+    await hass.async_add_job(trigger_db_commit, hass)
     await hass.async_block_till_done()
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     client = await hass_client()
 
@@ -1828,10 +1829,12 @@ async def test_exclude_attribute_changes(hass, hass_client):
     assert response.status == 200
     response_json = await response.json()
 
-    assert len(response_json) == 2
+    assert len(response_json) == 3
     assert response_json[0]["domain"] == "homeassistant"
     assert response_json[1]["message"] == "turned on"
     assert response_json[1]["entity_id"] == "light.kitchen"
+    assert response_json[2]["message"] == "turned off"
+    assert response_json[2]["entity_id"] == "light.kitchen"
 
 
 class MockLazyEventPartialState(ha.Event):
