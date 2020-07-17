@@ -9,7 +9,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 
 import aiohttp
-from omnilogic.omnilogic import OmniLogic
+from omnilogic import OmniLogic
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -100,9 +100,8 @@ class OmnilogicUpdateCoordinator(DataUpdateCoordinator):
 
         with async_timeout.timeout(20):
             try:
-                _LOGGER.info("fetching data")
                 telemetry_data = await self.api.get_telemetry_data()
-                _LOGGER.info("Data updated!")
+                _LOGGER.info(telemetry_data[0]["Telemetry"][0]["BOWS"][1])
                 # need to find out where/when to close api connection
                 # await self.api.close()
                 return telemetry_data
