@@ -214,6 +214,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         for module in self._room_data.get("module_ids"):
             if self._home_status.thermostats.get(module):
                 self._model = NA_THERM
+                break
 
         self._state = None
         self._device_name = self._data.rooms[home_id][room_id]["name"]
