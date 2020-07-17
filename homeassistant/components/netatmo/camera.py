@@ -63,7 +63,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    data_class = "CameraData"
+    data_class_name = "CameraData"
 
     async def get_entities():
         """Retrieve Netatmo entities."""
