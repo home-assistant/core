@@ -1,6 +1,11 @@
 {
   "title": "Humidifier",
   "device_automation": {
+    "condition_type": {
+      "is_mode": "{entity_name} is set to a specific mode",
+      "is_on": "{entity_name} is on",
+      "is_off": "{entity_name} is off"
+    },
     "action_type": {
       "set_humidity": "Set humidity for {entity_name}",
       "set_mode": "Change mode on {entity_name}",
