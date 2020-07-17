@@ -462,15 +462,14 @@ async def test_creating_sensor_loads_group(hass):
 
     with patch(
         "homeassistant.components.group.async_setup", new=async_setup_group,
+    ), patch(
+        "homeassistant.components.template.sensor.async_setup_platform",
+        new=async_setup_template,
     ):
-        with patch(
-            "homeassistant.components.template.sensor.async_setup_platform",
-            new=async_setup_template,
-        ):
-            await async_from_config_dict(
-                {"sensor": {"platform": "template", "sensors": {}}, "group": {}}, hass
-            )
-            await hass.async_block_till_done()
+        await async_from_config_dict(
+            {"sensor": {"platform": "template", "sensors": {}}, "group": {}}, hass
+        )
+        await hass.async_block_till_done()
 
     assert ["group", "sensor.template"] == order
 
