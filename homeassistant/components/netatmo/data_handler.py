@@ -30,7 +30,7 @@ DATA_CLASSES = {
 }
 
 MAX_CALLS_1H = 20
-PARALLEL_CALLS = 3
+BATCH_SIZE = 3
 DEFAULT_INTERVALS = {
     "HomeData": 900,
     "HomeStatus": 300,
@@ -70,7 +70,7 @@ class NetatmoDataHandler:
 
     async def async_update(self, event_time):
         """Update device."""
-        for data_class in islice(self._queue, 0, PARALLEL_CALLS):
+        for data_class in islice(self._queue, 0, BATCH_SIZE):
             if data_class["next_scan"] > time():
                 continue
             self._data_classes[data_class["name"]]["next_scan"] = (
@@ -81,7 +81,7 @@ class NetatmoDataHandler:
                 data_class["class"], data_class["name"], **data_class["kwargs"]
             )
 
-        self._queue.rotate(PARALLEL_CALLS)
+        self._queue.rotate(BATCH_SIZE)
 
     async def async_cleanup(self):
         """Clean up the Netatmo data handler."""
