@@ -195,7 +195,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class NetatmoSensor(NetatmoBase):
     """Implementation of a Netatmo sensor."""
 
-    def __init__(self, data_handler, data_class, module_info, sensor_type):
+    def __init__(self, data_handler, data_class_name, module_info, sensor_type):
         """Initialize the sensor."""
         super().__init__(data_handler)
 
