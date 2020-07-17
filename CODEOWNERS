@@ -128,6 +128,7 @@ homeassistant/components/ezviz/* @baqs
 homeassistant/components/fastdotcom/* @rohankapoorcom
 homeassistant/components/file/* @fabaff
 homeassistant/components/filter/* @dgomes
+homeassistant/components/firmata/* @DaAwesomeP
 homeassistant/components/fixer/* @fabaff
 homeassistant/components/flick_electric/* @ZephireNZ
 homeassistant/components/flock/* @fabaff
