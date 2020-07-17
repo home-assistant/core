@@ -11,6 +11,15 @@ enable_ap:
     entity_id:
       description: The Guardian valve controller to affect.
       example: switch.guardian_abcde_valve
+pair_sensor:
+  description: Add a new paired sensor to the valve controller.
+  fields:
+    entity_id:
+      description: The Guardian valve controller to affect.
+      example: switch.guardian_abcde_valve
+    uid:
+      description: The UID of the paired sensor
+      example: 5410EC688BCF
 reboot:
   description: Reboot the device.
   fields:
@@ -23,6 +32,15 @@ reset_valve_diagnostics:
     entity_id:
       description: The Guardian valve controller to affect.
       example: switch.guardian_abcde_valve
+unpair_sensor:
+  description: Remove a paired sensor from the valve controller.
+  fields:
+    entity_id:
+      description: The Guardian valve controller to affect.
+      example: switch.guardian_abcde_valve
+    uid:
+      description: The UID of the paired sensor
+      example: 5410EC688BCF
 upgrade_firmware:
   description: Upgrade the device firmware.
   fields:

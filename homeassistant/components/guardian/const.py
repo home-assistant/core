@@ -16,3 +16,7 @@ CONF_UID = "uid"
 
 DATA_CLIENT = "client"
 DATA_COORDINATOR = "coordinator"
+
+SIGNAL_ADD_PAIRED_SENSOR = "guardian_add_paired_sensor_{0}"
+SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED = "guardian_paired_sensor_coordinator_added_{0}"
+SIGNAL_REMOVE_PAIRED_SENSOR = "guardian_remove_paired_sensor_{0}"

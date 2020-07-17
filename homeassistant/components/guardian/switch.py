@@ -10,10 +10,20 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FILENAME, CONF_PORT, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import ValveControllerEntity
-from .const import API_VALVE_STATUS, DATA_CLIENT, DATA_COORDINATOR, DOMAIN, LOGGER
+from .const import (
+    API_VALVE_STATUS,
+    CONF_UID,
+    DATA_CLIENT,
+    DATA_COORDINATOR,
+    DOMAIN,
+    LOGGER,
+    SIGNAL_ADD_PAIRED_SENSOR,
+    SIGNAL_REMOVE_PAIRED_SENSOR,
+)
 
 ATTR_AVG_CURRENT = "average_current"
 ATTR_INST_CURRENT = "instantaneous_current"
@@ -22,8 +32,10 @@ ATTR_TRAVEL_COUNT = "travel_count"
 
 SERVICE_DISABLE_AP = "disable_ap"
 SERVICE_ENABLE_AP = "enable_ap"
+SERVICE_PAIR_SENSOR = "pair_sensor"
 SERVICE_REBOOT = "reboot"
 SERVICE_RESET_VALVE_DIAGNOSTICS = "reset_valve_diagnostics"
+SERVICE_UNPAIR_SENSOR = "unpair_sensor"
 SERVICE_UPGRADE_FIRMWARE = "upgrade_firmware"
 
 
@@ -36,6 +48,7 @@ async def async_setup_entry(
     for service_name, schema, method in [
         (SERVICE_DISABLE_AP, {}, "async_disable_ap"),
         (SERVICE_ENABLE_AP, {}, "async_enable_ap"),
+        (SERVICE_PAIR_SENSOR, {vol.Required(CONF_UID): cv.string}, "async_pair_sensor"),
         (SERVICE_REBOOT, {}, "async_reboot"),
         (SERVICE_RESET_VALVE_DIAGNOSTICS, {}, "async_reset_valve_diagnostics"),
         (
@@ -46,6 +59,11 @@ async def async_setup_entry(
                 vol.Optional(CONF_FILENAME): cv.string,
             },
             "async_upgrade_firmware",
+        ),
+        (
+            SERVICE_UNPAIR_SENSOR,
+            {vol.Required(CONF_UID): cv.string},
+            "async_unpair_sensor",
         ),
     ]:
         platform.async_register_entity_service(service_name, schema, method)
@@ -126,7 +144,7 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
             async with self._client:
                 await self._client.wifi.disable_ap()
         except GuardianError as err:
-            LOGGER.error("Error during service call: %s", err)
+            LOGGER.error("Error while disabling valve controller AP: %s", err)
 
     async def async_enable_ap(self):
         """Enable the device's onboard access point."""
@@ -134,7 +152,20 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
             async with self._client:
                 await self._client.wifi.enable_ap()
         except GuardianError as err:
-            LOGGER.error("Error during service call: %s", err)
+            LOGGER.error("Error while enabling valve controller AP: %s", err)
+
+    async def async_pair_sensor(self, *, uid):
+        """Add a new paired sensor."""
+        try:
+            async with self._client:
+                await self._client.sensor.pair_sensor(uid)
+        except GuardianError as err:
+            LOGGER.error("Error while adding paired sensor: %s", err)
+            return
+
+        async_dispatcher_send(
+            self.hass, SIGNAL_ADD_PAIRED_SENSOR.format(self._entry.data[CONF_UID]), uid,
+        )
 
     async def async_reboot(self):
         """Reboot the device."""
@@ -142,7 +173,7 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
             async with self._client:
                 await self._client.system.reboot()
         except GuardianError as err:
-            LOGGER.error("Error during service call: %s", err)
+            LOGGER.error("Error while rebooting valve controller: %s", err)
 
     async def async_reset_valve_diagnostics(self):
         """Fully reset system motor diagnostics."""
@@ -150,7 +181,22 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
             async with self._client:
                 await self._client.valve.reset()
         except GuardianError as err:
-            LOGGER.error("Error during service call: %s", err)
+            LOGGER.error("Error while resetting valve diagnostics: %s", err)
+
+    async def async_unpair_sensor(self, *, uid):
+        """Add a new paired sensor."""
+        try:
+            async with self._client:
+                await self._client.sensor.unpair_sensor(uid)
+        except GuardianError as err:
+            LOGGER.error("Error while removing paired sensor: %s", err)
+            return
+
+        async_dispatcher_send(
+            self.hass,
+            SIGNAL_REMOVE_PAIRED_SENSOR.format(self._entry.data[CONF_UID]),
+            uid,
+        )
 
     async def async_upgrade_firmware(self, *, url, port, filename):
         """Upgrade the device firmware."""
@@ -162,7 +208,7 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
                     filename=filename,
                 )
         except GuardianError as err:
-            LOGGER.error("Error during service call: %s", err)
+            LOGGER.error("Error while upgrading firmware: %s", err)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the valve off (closed)."""

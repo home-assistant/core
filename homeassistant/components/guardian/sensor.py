@@ -12,13 +12,19 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import PairedSensorEntity, ValveControllerEntity
+from . import (
+    PairedSensorEntity,
+    ValveControllerEntity,
+    async_register_dispatcher_connect,
+)
 from .const import (
     API_SENSOR_PAIRED_SENSOR_STATUS,
     API_SYSTEM_DIAGNOSTICS,
     API_SYSTEM_ONBOARD_SENSOR_STATUS,
+    CONF_UID,
     DATA_COORDINATOR,
     DOMAIN,
+    SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
 )
 
 SENSOR_KIND_BATTERY = "battery"
@@ -44,8 +50,35 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
     """Set up Guardian switches based on a config entry."""
+
+    async def add_new_paired_sensor(uid: str) -> None:
+        """Add a new paired sensor."""
+        coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+            API_SENSOR_PAIRED_SENSOR_STATUS
+        ][uid]
+
+        entities = []
+        for kind in PAIRED_SENSOR_SENSORS:
+            name, device_class, icon, unit = SENSOR_ATTRS_MAP[kind]
+            entities.append(
+                PairedSensorSensor(
+                    entry, coordinator, kind, name, device_class, icon, unit
+                )
+            )
+
+        async_add_entities(entities, True)
+
+    # Handle adding paired sensors after HASS startup:
+    async_register_dispatcher_connect(
+        hass,
+        entry,
+        SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED.format(entry.data[CONF_UID]),
+        add_new_paired_sensor,
+    )
+
     sensors = []
 
+    # Add all valve controller-specific binary sensors:
     for kind in VALVE_CONTROLLER_SENSORS:
         name, device_class, icon, unit = SENSOR_ATTRS_MAP[kind]
         sensors.append(
@@ -60,14 +93,15 @@ async def async_setup_entry(
             )
         )
 
-    for ps_coordinator in hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+    # Add all paired sensor-specific binary sensors:
+    for coordinator in hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
         API_SENSOR_PAIRED_SENSOR_STATUS
     ].values():
         for kind in PAIRED_SENSOR_SENSORS:
             name, device_class, icon, unit = SENSOR_ATTRS_MAP[kind]
             sensors.append(
                 PairedSensorSensor(
-                    entry, ps_coordinator, kind, name, device_class, icon, unit
+                    entry, coordinator, kind, name, device_class, icon, unit
                 )
             )
 
