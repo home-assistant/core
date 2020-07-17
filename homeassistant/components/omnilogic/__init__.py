@@ -36,22 +36,26 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Omnilogic from a config entry."""
-    # TODO Store an API object for your platforms to access
-    # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
-
-    # for component in PLATFORMS:
-    #     hass.async_create_task(
-    #         hass.config_entries.async_forward_entry_setup(entry, component)
-    #     )
 
     conf = entry.data
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
 
-    session = async_get_clientsession(hass)
-    coordinator = OmnilogicUpdateCoordinator(
-        hass, username, password, session, timedelta(minutes=1)
+    async def async_update_data():
+        """Fetch data from API endpoint"""
+        api = OmniLogic(username, password)
+        data = await api.get_telemetry_data()
+        await api.close()
+        return data
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="Omnilogic",
+        update_method=async_update_data,
+        update_interval=timedelta(seconds=30),
     )
+
     await coordinator.async_refresh()
 
     if not coordinator.last_update_success:
@@ -82,29 +86,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-class OmnilogicUpdateCoordinator(DataUpdateCoordinator):
-    """Define an object to hold Omnilogic data"""
-
-    def __init__(self, hass, username, password, session, update_interval):
-        """Initialize"""
-        _LOGGER.info("__INIT__")
-        self.name = "test"
-        self.api = OmniLogic(username, password)
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
-
-    async def _async_update_data(self):
-        """update data"""
-        _LOGGER.info("async_update_data")
-
-        with async_timeout.timeout(20):
-            try:
-                telemetry_data = await self.api.get_telemetry_data()
-                _LOGGER.info(telemetry_data[0]["Telemetry"][0]["BOWS"][1])
-                # need to find out where/when to close api connection
-                # await self.api.close()
-                return telemetry_data
-            except ImportError as err:
-                raise UpdateFailed(err)
-
