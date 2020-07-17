@@ -189,6 +189,11 @@ class RfxtrxBinarySensor(BinarySensorEntity, RestoreEntity):
         return False
 
     @property
+    def force_update(self) -> bool:
+        """We should force updates. Repeated states have meaning."""
+        return True
+
+    @property
     def device_class(self):
         """Return the sensor class."""
         return self._device_class
