@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.components.cover import CoverEntity
-from homeassistant.const import CONF_DEVICES, STATE_OPEN
+from homeassistant.const import CONF_DEVICES
 from homeassistant.core import callback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -86,10 +86,6 @@ class RfxtrxCover(RfxtrxDevice, CoverEntity, RestoreEntity):
         """Restore RFXtrx cover device state (OPEN/CLOSE)."""
         await super().async_added_to_hass()
 
-        old_state = await self.async_get_last_state()
-        if old_state is not None:
-            self._state = old_state.state == STATE_OPEN
-
         self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
                 SIGNAL_EVENT, self._handle_event
@@ -120,6 +116,7 @@ class RfxtrxCover(RfxtrxDevice, CoverEntity, RestoreEntity):
 
     def _apply_event(self, event):
         """Apply command from rfxtrx."""
+        super()._apply_event(event)
         if event.values["Command"] in COMMAND_ON_LIST:
             self._state = True
         elif event.values["Command"] in COMMAND_OFF_LIST:
