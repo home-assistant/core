@@ -59,7 +59,7 @@ class HumidityHandler(intent.IntentHandler):
 
         service_data[ATTR_HUMIDITY] = humidity
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_HUMIDITY, service_data, context=intent_obj.context
+            DOMAIN, SERVICE_SET_HUMIDITY, service_data, context=intent_obj.context, blocking=True
         )
 
         response = intent_obj.create_response()
@@ -98,7 +98,7 @@ class SetModeHandler(intent.IntentHandler):
 
         if state.state == STATE_OFF:
             await hass.services.async_call(
-                DOMAIN, SERVICE_TURN_ON, service_data, context=intent_obj.context
+                DOMAIN, SERVICE_TURN_ON, service_data, context=intent_obj.context, blocking=True
             )
             speech = f"Turned {state.name} on and set {mode} mode"
         else:
@@ -106,7 +106,7 @@ class SetModeHandler(intent.IntentHandler):
 
         service_data[ATTR_MODE] = mode
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_MODE, service_data, context=intent_obj.context
+            DOMAIN, SERVICE_SET_MODE, service_data, context=intent_obj.context, blocking=True
         )
 
         response = intent_obj.create_response()
