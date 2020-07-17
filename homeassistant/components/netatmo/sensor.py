@@ -439,7 +439,7 @@ class NetatmoPublicSensor(NetatmoBase):
 
         self._data_classes.append(
             {
-                "name": data_class,
+                "name": data_class_name,
                 "LAT_NE": area.lat_ne,
                 "LON_NE": area.lon_ne,
                 "LAT_SW": area.lat_sw,
