@@ -114,29 +114,67 @@ class PingData:
         self.available = False
 
         if sys.platform == "win32":
-            self._ping_cmd = f"ping -n {self._count} -w 1000 {self._ip_address}"
+            self._ping_cmd = [
+                "ping",
+                "-n",
+                str(self._count),
+                "-w",
+                "1000",
+                self._ip_address,
+            ]
         else:
-            self._ping_cmd = f"ping -n -q -c {self._count} -W1 {self._ip_address}"
+            self._ping_cmd = [
+                "ping",
+                "-n",
+                "-q",
+                "-c",
+                str(self._count),
+                "-W1",
+                self._ip_address,
+            ]
 
     async def async_ping(self):
         """Send ICMP echo request and return details if success."""
-        pinger = await asyncio.create_subprocess_shell(
-            self._ping_cmd,
+        pinger = await asyncio.create_subprocess_exec(
+            *self._ping_cmd,
+            stdin=None,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
         try:
-            out = await pinger.communicate(timeout=self._count + PING_TIMEOUT)
-            _LOGGER.debug("Output is %s", str(out))
+            out_data, out_error = await pinger.communicate(timeout=self._count + PING_TIMEOUT)
+
+            if out_data:
+                _LOGGER.debug(
+                    "Output of command: `%s`, return code: %s:\n%s",
+                    " ".join(self._ping_cmd),
+                    pinger.returncode,
+                    out_data,
+                )
+            if out_error:
+                _LOGGER.debug(
+                    "Error of command: `%s`, return code: %s:\n%s",
+                    " ".join(self._ping_cmd),
+                    pinger.returncode,
+                    out_error,
+                )
+
+            if pinger.returncode != 0:
+                _LOGGER.exception(
+                    "Error running command: `%s`, return code: %s",
+                    " ".join(self._ping_cmd),
+                    pinger.returncode,
+                )
+
             if sys.platform == "win32":
-                match = WIN32_PING_MATCHER.search(str(out).split("\n")[-1])
+                match = WIN32_PING_MATCHER.search(str(out_data).split("\n")[-1])
                 rtt_min, rtt_avg, rtt_max = match.groups()
                 return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": ""}
-            if "max/" not in str(out):
-                match = PING_MATCHER_BUSYBOX.search(str(out).split("\n")[-1])
+            if "max/" not in str(out_data):
+                match = PING_MATCHER_BUSYBOX.search(str(out_data).split("\n")[-1])
                 rtt_min, rtt_avg, rtt_max = match.groups()
                 return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": ""}
-            match = PING_MATCHER.search(str(out).split("\n")[-1])
+            match = PING_MATCHER.search(str(out_data).split("\n")[-1])
             rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
             return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
         except subprocess.TimeoutExpired:
