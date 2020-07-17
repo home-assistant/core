@@ -26,6 +26,7 @@ from .const import (
     SERVICE_SETPERSONAWAY,
     SERVICE_SETPERSONSHOME,
 )
+from .data_handler import CAMERA_DATA_CLASS_NAME
 from .netatmo_entity_base import NetatmoBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,7 +64,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    data_class_name = "CameraData"
+    data_class_name = CAMERA_DATA_CLASS_NAME
 
     async def get_entities():
         """Retrieve Netatmo entities."""

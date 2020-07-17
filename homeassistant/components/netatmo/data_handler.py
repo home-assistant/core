@@ -19,25 +19,31 @@ from .const import AUTH, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
+CAMERA_DATA_CLASS_NAME = "CameraData"
+WEATHERSTATION_DATA_CLASS_NAME = "WeatherStationData"
+HOMECOACH_DATA_CLASS_NAME = "HomeCoachData"
+HOMEDATA_DATA_CLASS_NAME = "HomeData"
+HOMESTATUS_DATA_CLASS_NAME = "HomeStatus"
+PUBLICDATA_DATA_CLASS_NAME = "PublicData"
 
 DATA_CLASSES = {
-    "WeatherStationData": pyatmo.WeatherStationData,
-    "HomeCoachData": pyatmo.HomeCoachData,
-    "CameraData": pyatmo.CameraData,
-    "HomeData": pyatmo.HomeData,
-    "HomeStatus": pyatmo.HomeStatus,
-    "PublicData": pyatmo.PublicData,
+    WEATHERSTATION_DATA_CLASS_NAME: pyatmo.WeatherStationData,
+    HOMECOACH_DATA_CLASS_NAME: pyatmo.HomeCoachData,
+    CAMERA_DATA_CLASS_NAME: pyatmo.CameraData,
+    HOMEDATA_DATA_CLASS_NAME: pyatmo.HomeData,
+    HOMESTATUS_DATA_CLASS_NAME: pyatmo.HomeStatus,
+    PUBLICDATA_DATA_CLASS_NAME: pyatmo.PublicData,
 }
 
 MAX_CALLS_1H = 20
 BATCH_SIZE = 3
 DEFAULT_INTERVALS = {
-    "HomeData": 900,
-    "HomeStatus": 300,
-    "CameraData": 900,
-    "WeatherStationData": 300,
-    "HomeCoachData": 300,
-    "PublicData": 600,
+    HOMEDATA_DATA_CLASS_NAME: 900,
+    HOMESTATUS_DATA_CLASS_NAME: 300,
+    CAMERA_DATA_CLASS_NAME: 900,
+    WEATHERSTATION_DATA_CLASS_NAME: 300,
+    HOMECOACH_DATA_CLASS_NAME: 300,
+    PUBLICDATA_DATA_CLASS_NAME: 600,
 }
 SCAN_INTERVAL = 60
 

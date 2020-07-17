@@ -21,6 +21,11 @@ from homeassistant.helpers.dispatcher import (
 )
 
 from .const import CONF_WEATHER_AREAS, DATA_HANDLER, DOMAIN, MANUFACTURER, MODELS
+from .data_handler import (
+    HOMECOACH_DATA_CLASS_NAME,
+    PUBLICDATA_DATA_CLASS_NAME,
+    WEATHERSTATION_DATA_CLASS_NAME,
+)
 from .helper import NetatmoArea
 from .netatmo_entity_base import NetatmoBase
 
@@ -148,7 +153,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
         """Retrieve Netatmo entities."""
         entities = []
 
-        for data_class_name in ["WeatherStationData", "HomeCoachData"]:
+        for data_class_name in [
+            WEATHERSTATION_DATA_CLASS_NAME,
+            HOMECOACH_DATA_CLASS_NAME,
+        ]:
             entities.extend(await find_entities(data_class_name))
 
         return entities
@@ -158,7 +166,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     @callback
     async def add_public_entities():
         """Retrieve Netatmo public weather entities."""
-        data_class_name = "PublicData"
+        data_class_name = PUBLICDATA_DATA_CLASS_NAME
         entities = []
         for area in [
             NetatmoArea(**i) for i in entry.options.get(CONF_WEATHER_AREAS, {}).values()
