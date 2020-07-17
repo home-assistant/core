@@ -115,15 +115,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
         if not data.get(data_class_name):
             return []
 
-        for station_id in data.get(data_class_name).stations:
-            for module_id in data.get(data_class_name).get_modules(station_id):
-                all_module_infos[module_id] = data.get(data_class_name).get_module(
-                    module_id
-                )
+        data_class = data[data_class_name]
 
-            all_module_infos[station_id] = data.get(data_class_name).get_station(
-                station_id
-            )
+        for station_id in data_class.stations:
+            for module_id in data_class.get_modules(station_id):
+                all_module_infos[module_id] = data_class.get_module(module_id)
+
+            all_module_infos[station_id] = data_class.get_station(station_id)
 
         entities = []
         for module in all_module_infos.values():
