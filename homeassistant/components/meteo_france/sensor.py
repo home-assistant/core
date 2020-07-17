@@ -46,27 +46,14 @@ async def async_setup_entry(
         if sensor_type == "next_rain":
             if coordinator_rain:
                 entities.append(MeteoFranceRainSensor(sensor_type, coordinator_rain))
-                _LOGGER.debug(
-                    "Next rain sensor added for %s.",
-                    coordinator_forecast.data.position["name"],
-                )
 
         elif sensor_type == "weather_alert":
             if coordinator_alert:
                 entities.append(MeteoFranceAlertSensor(sensor_type, coordinator_alert))
-                _LOGGER.debug(
-                    "Weather alert sensor for department n°%s added with %s.",
-                    coordinator_forecast.data.position["dept"],
-                    coordinator_forecast.data.position["name"],
-                )
+
         elif sensor_type in ["rain_chance", "freeze_chance", "snow_chance"]:
             if coordinator_forecast.data.probability_forecast:
                 entities.append(MeteoFranceSensor(sensor_type, coordinator_forecast))
-                _LOGGER.debug(
-                    "Sensor %s added for %s.",
-                    sensor_type,
-                    coordinator_forecast.data.position["name"],
-                )
             else:
                 _LOGGER.info(
                     "Sensor %s skipped for %s as data is missing in the API",
@@ -76,11 +63,6 @@ async def async_setup_entry(
 
         else:
             entities.append(MeteoFranceSensor(sensor_type, coordinator_forecast))
-            _LOGGER.debug(
-                "Sensor %s added for %s.",
-                sensor_type,
-                coordinator_forecast.data.position["name"],
-            )
 
     async_add_entities(
         entities, False,

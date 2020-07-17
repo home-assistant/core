@@ -57,9 +57,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     latitude = entry.data.get(CONF_LATITUDE)
 
+    client = MeteoFranceClient()
     # Migrate from previous config
     if not latitude:
-        client = MeteoFranceClient()
         places = await hass.async_add_executor_job(
             client.search_places, entry.data[CONF_CITY]
         )
@@ -74,8 +74,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
-
-    client = MeteoFranceClient()
 
     async def _async_update_data_forecast_forecast():
         """Fetch data from API endpoint."""
@@ -126,11 +124,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
             entry.title,
         )
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        COORDINATOR_FORECAST: coordinator_forecast,
-        COORDINATOR_RAIN: coordinator_rain,
-    }
-
     department = coordinator_forecast.data.position.get("dept")
     _LOGGER.debug(
         "Department corresponding to %s is %s", entry.title, department,
@@ -179,7 +172,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload a config entry."""
-    _LOGGER.debug("Unload %s", entry.title)
     if hass.data[DOMAIN][entry.entry_id][COORDINATOR_ALERT]:
 
         department = hass.data[DOMAIN][entry.entry_id][
@@ -187,7 +179,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
         ].data.position.get("dept")
         hass.data[DOMAIN][department] = False
         _LOGGER.debug(
-            "Weather alert for depatment n° %s unloaded and released. It can be added now by another city.",
+            "Weather alert for depatment %s unloaded and released. It can be added now by another city.",
             department,
         )
 
