@@ -63,9 +63,6 @@ def execute(qry, to_native=False, validate_entity_ids=True):
 
     This method also retries a few times in the case of stale connections.
     """
-    # xstr = str(qry.statement.compile(compile_kwargs={"literal_binds": True}))
-    # _LOGGER.warning("SQL Query: %s", xstr)
-
     for tryno in range(0, RETRIES):
         try:
             timer_start = time.perf_counter()
@@ -127,7 +124,7 @@ def validate_sqlite_database(dbpath: str) -> bool:
         conn.cursor().execute("PRAGMA QUICK_CHECK")
         conn.close()
     except sqlite3.DatabaseError:
-        _LOGGER.exception("The database at %s is corrupt or malformed.", dbpath)
+        _LOGGER.exception("The database at %s is corrupt or malformed.")
         return False
 
     return True
