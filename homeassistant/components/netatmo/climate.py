@@ -122,20 +122,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         """Retrieve Netatmo entities."""
         entities = []
 
-        def get_all_home_ids():
-            """Get all the home ids returned by NetAtmo API."""
-            if home_data is None:
-                return []
-            return [
-                home_data.homes[home_id]["id"]
-                for home_id in home_data.homes
-                if (
-                    "therm_schedules" in home_data.homes[home_id]
-                    and "modules" in home_data.homes[home_id]
-                )
-            ]
-
-        home_ids = get_all_home_ids()
+        home_ids = get_all_home_ids(home_data)
 
         def get_room_ids(home_id):
             """Return all module available on the API as a list."""
@@ -577,3 +564,17 @@ def interpolate(batterylevel, module_type):
         / (levels[i + 1] - levels[i])
     )
     return int(pct)
+
+
+def get_all_home_ids(home_data):
+    """Get all the home ids returned by NetAtmo API."""
+    if home_data is None:
+        return []
+    return [
+        home_data.homes[home_id]["id"]
+        for home_id in home_data.homes
+        if (
+            "therm_schedules" in home_data.homes[home_id]
+            and "modules" in home_data.homes[home_id]
+        )
+    ]
