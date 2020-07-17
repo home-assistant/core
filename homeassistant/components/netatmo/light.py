@@ -4,11 +4,11 @@ import logging
 import pyatmo
 
 from homeassistant.components.light import LightEntity
-from homeassistant.components.netatmo.data_handler import NetatmoDataHandler
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 
 from .const import DATA_HANDLER, DOMAIN, MANUFACTURER
+from .data_handler import NetatmoDataHandler
 from .netatmo_entity_base import NetatmoBase
 
 _LOGGER = logging.getLogger(__name__)
