@@ -7,7 +7,6 @@ import voluptuous_serialize
 import homeassistant.components.automation as automation
 from homeassistant.components.humidifier import DOMAIN, const, device_trigger
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
-import homeassistant.core as ha
 from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
