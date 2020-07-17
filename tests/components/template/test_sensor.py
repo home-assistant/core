@@ -1,15 +1,16 @@
 """The test for the Template sensor platform."""
-from asyncio import sleep
+from asyncio import Event
 from unittest.mock import patch
 
 from homeassistant.bootstrap import async_from_config_dict
 from homeassistant.const import (
+    EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_START,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.setup import async_setup_component, setup_component
+from homeassistant.setup import ATTR_COMPONENT, async_setup_component, setup_component
 
 from tests.common import assert_setup_component, get_test_home_assistant
 
@@ -445,11 +446,12 @@ class TestTemplateSensor:
 async def test_creating_sensor_loads_group(hass):
     """Test setting up template sensor loads group component first."""
     order = []
+    after_dep_event = Event()
 
     async def async_setup_group(hass, config):
         # Make sure group takes longer to load, so that it won't
         # be loaded first by chance
-        await sleep(0.1)
+        await after_dep_event.wait()
 
         order.append("group")
         return True
@@ -459,6 +461,12 @@ async def test_creating_sensor_loads_group(hass):
     ):
         order.append("sensor.template")
         return True
+
+    async def set_after_dep_event(event):
+        if event.data[ATTR_COMPONENT] == "sensor":
+            after_dep_event.set()
+
+    hass.bus.async_listen(EVENT_COMPONENT_LOADED, set_after_dep_event)
 
     with patch(
         "homeassistant.components.group.async_setup", new=async_setup_group,
