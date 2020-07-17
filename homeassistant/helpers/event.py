@@ -163,12 +163,7 @@ def async_track_state_change_event(
             if entity_id not in entity_callbacks:
                 return
 
-            _LOGGER.debug("_async_state_change_dispatcher: %s", entity_id)
-
             for action in entity_callbacks[entity_id][:]:
-                _LOGGER.debug(
-                    "_async_state_change_dispatcher: %s %s %s", entity_id, action, event
-                )
                 try:
                     hass.async_run_job(action, event)
                 except Exception:  # pylint: disable=broad-except
@@ -293,27 +288,7 @@ def async_track_same_state(
         to_state: Optional[State] = event.data.get("new_state")
 
         if not async_check_same_func(entity, from_state, to_state):
-            _LOGGER.debug(
-                "async_track_same_state state_for_cancel_listener -- CANCELED: entity: %s from_state: %s to_state: %s",
-                entity,
-                from_state,
-                to_state,
-            )
             clear_listener()
-        else:
-            _LOGGER.debug(
-                "async_track_same_state state_for_cancel_listener -- NOT CANCELED: entity: %s from_state: %s to_state: %s",
-                entity,
-                from_state,
-                to_state,
-            )
-
-    _LOGGER.debug(
-        "async_track_same_state schedule async_track_point_in_utc_time: %s %s %s",
-        dt_util.utcnow(),
-        period,
-        dt_util.utcnow() + period,
-    )
 
     async_remove_state_for_listener = async_track_point_in_utc_time(
         hass, state_for_listener, dt_util.utcnow() + period
@@ -363,13 +338,6 @@ def async_track_point_in_utc_time(
     """Add a listener that fires once after a specific point in UTC time."""
     # Ensure point_in_time is UTC
     point_in_time = dt_util.as_utc(point_in_time)
-    _LOGGER.debug(
-        "async_track_point_in_utc_time point_in_time after UTC: %s [now: %s] [loop time: %s tracked loop time: %s]",
-        point_in_time,
-        dt_util.utcnow(),
-        hass.loop.time(),
-        hass.loop.time() + point_in_time.timestamp() - time.time(),
-    )
 
     cancel_callback = hass.loop.call_at(
         hass.loop.time() + point_in_time.timestamp() - time.time(),
