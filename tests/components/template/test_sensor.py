@@ -446,30 +446,33 @@ async def test_creating_sensor_loads_group(hass):
     """Test setting up template sensor loads group component first."""
     order = []
 
-    def register_setup(domain):
-        async def async_setup(hass, config):
-            if domain == "group":
-                # Make sure group takes longer to load, so that it won't
-                # be loaded first by chance
-                await sleep(0.1)
+    async def async_setup_group(hass, config):
+        # Make sure group takes longer to load, so that it won't
+        # be loaded first by chance
+        await sleep(0.1)
 
-            order.append(domain)
-            return True
+        order.append("group")
+        return True
 
-        return async_setup
+    async def async_setup_template(
+        hass, config, async_add_entities, discovery_info=None
+    ):
+        order.append("sensor.template")
+        return True
 
     with patch(
-        "homeassistant.components.group.async_setup", new=register_setup("group"),
+        "homeassistant.components.group.async_setup", new=async_setup_group,
     ):
         with patch(
-            "homeassistant.components.sensor.async_setup", new=register_setup("sensor"),
+            "homeassistant.components.template.sensor.async_setup_platform",
+            new=async_setup_template,
         ):
             await async_from_config_dict(
                 {"sensor": {"platform": "template", "sensors": {}}, "group": {}}, hass
             )
             await hass.async_block_till_done()
 
-    assert ["group", "sensor"] == order
+    assert ["group", "sensor.template"] == order
 
 
 async def test_available_template_with_entities(hass):
