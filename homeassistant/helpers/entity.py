@@ -571,7 +571,6 @@ class Entity(ABC):
 
         assert self.platform is not None
         self.entity_id = self.registry_entry.entity_id
-        self._async_setup_registry_updated_listener()
         await self.platform.async_add_entities([self])
 
     def __eq__(self, other: Any) -> bool:
