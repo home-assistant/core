@@ -194,6 +194,8 @@ DISCOVERY_SCHEMAS = (
         const.DISC_SPECIFIC_DEVICE_CLASS: (
             const_ozw.SPECIFIC_TYPE_POWER_SWITCH_MULTILEVEL,
             const_ozw.SPECIFIC_TYPE_SCENE_SWITCH_MULTILEVEL,
+            const_ozw.SPECIFIC_TYPE_COLOR_TUNABLE_BINARY,
+            const_ozw.SPECIFIC_TYPE_COLOR_TUNABLE_MULTILEVEL,
             const_ozw.SPECIFIC_TYPE_NOT_USED,
         ),
         const.DISC_VALUES: {
