@@ -12,21 +12,19 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import event as evt
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_OFF_DELAY,
-    DOMAIN,
     SIGNAL_EVENT,
+    RfxtrxEntity,
     find_possible_pt2262_device,
     get_device_id,
     get_pt2262_cmd,
     get_rfx_object,
 )
 from .const import (
-    ATTR_EVENT,
     COMMAND_OFF_LIST,
     COMMAND_ON_LIST,
     DATA_RFXTRX_CONFIG,
@@ -107,7 +105,7 @@ async def async_setup_entry(
         )
 
 
-class RfxtrxBinarySensor(BinarySensorEntity, RestoreEntity):
+class RfxtrxBinarySensor(BinarySensorEntity, RfxtrxEntity):
     """A representation of a RFXtrx binary sensor."""
 
     def __init__(
@@ -122,51 +120,14 @@ class RfxtrxBinarySensor(BinarySensorEntity, RestoreEntity):
         event=None,
     ):
         """Initialize the RFXtrx sensor."""
-        self._event = None
-        self._device = device
-        self._name = f"{device.type_string} {device.id_string}"
+        super().__init__(device, device_id, event=event)
         self._device_class = device_class
         self._data_bits = data_bits
         self._off_delay = off_delay
-        self._state = False
+        self._state = None
         self.delay_listener = None
         self._cmd_on = cmd_on
         self._cmd_off = cmd_off
-
-        self._device_id = device_id
-        self._unique_id = "_".join(x for x in self._device_id)
-
-        if event:
-            self._apply_event(event)
-
-    async def async_added_to_hass(self):
-        """Restore RFXtrx switch device state (ON/OFF)."""
-        await super().async_added_to_hass()
-
-        if self._event is None:
-            old_state = await self.async_get_last_state()
-            if old_state is not None:
-                event = old_state.attributes.get(ATTR_EVENT)
-                if event:
-                    self._apply_event(get_rfx_object(event))
-
-        self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_EVENT, self._handle_event
-            )
-        )
-
-    @property
-    def name(self):
-        """Return the device name."""
-        return self._name
-
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        if not self._event:
-            return None
-        return {ATTR_EVENT: "".join(f"{x:02x}" for x in self._event.data)}
 
     @property
     def data_bits(self):
@@ -184,11 +145,6 @@ class RfxtrxBinarySensor(BinarySensorEntity, RestoreEntity):
         return self._cmd_off
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def device_class(self):
         """Return the sensor class."""
         return self._device_class
@@ -202,20 +158,6 @@ class RfxtrxBinarySensor(BinarySensorEntity, RestoreEntity):
     def is_on(self):
         """Return true if the sensor state is True."""
         return self._state
-
-    @property
-    def unique_id(self):
-        """Return unique identifier of remote device."""
-        return self._unique_id
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, *self._device_id)},
-            "name": f"{self._device.type_string} {self._device.id_string}",
-            "model": self._device.type_string,
-        }
 
     def _apply_event_lighting4(self, event):
         """Apply event for a lighting 4 device."""
@@ -237,7 +179,7 @@ class RfxtrxBinarySensor(BinarySensorEntity, RestoreEntity):
 
     def _apply_event(self, event):
         """Apply command from rfxtrx."""
-        self._event = event
+        super()._apply_event(event)
         if event.device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
             self._apply_event_lighting4(event)
         else:
