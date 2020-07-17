@@ -82,7 +82,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config.get(CONF_NAME)
 
     dev = []
-    for variable in config[CONF_MONITORED_VARIABLES]:
+    variables = config[CONF_MONITORED_VARIABLES]
+    if len(variables) == 0:
+        variables = SENSOR_TYPES
+
+    for variable in variables:
         sensor = QBittorrentSensor(variable, client, name, LoginRequired)
         dev.append(sensor)
 
@@ -170,15 +174,15 @@ class QBittorrentSensor(Entity):
         elif self.type == SENSOR_TYPE_UPLOAD_SPEED:
             self._state = format_speed(upload)
 
-        elif self.type == "total_torrents":
-            data = self.client.torrents()
+        elif self.type == SENSOR_TYPE_TOTAL_TORRENTS:
+            torrents = data["torrents"]
 
-            for torrent in data:
+            for torrent in torrents:
                 attributes[trim_name(torrent, TRIM_SIZE - 5)] = torrent["state"]
 
             self._state = len(data)
             self._attribute = attributes
-        elif self.type == "active_torrents":
+        elif self.type == SENSOR_TYPE_ACTIVE_TORRENTS:
             data = self.client.torrents(filter="active")
 
             for torrent in data:
@@ -186,7 +190,7 @@ class QBittorrentSensor(Entity):
 
             self._state = len(data)
             self._attribute = attributes
-        elif self.type == "inactive_torrents":
+        elif self.type == SENSOR_TYPE_INACTIVE_TORRENTS:
             data = self.client.torrents(filter="inactive")
 
             for torrent in data:
@@ -194,7 +198,7 @@ class QBittorrentSensor(Entity):
 
             self._state = len(data)
             self._attribute = attributes
-        elif self.type == "downloading_torrents":
+        elif self.type == SENSOR_TYPE_DOWNLOADING_TORRENTS:
             data = self.client.torrents(filter="downloading")
 
             for torrent in data:
@@ -202,7 +206,7 @@ class QBittorrentSensor(Entity):
 
             self._state = len(data)
             self._attribute = attributes
-        elif self.type == "seeding_torrents":
+        elif self.type == SENSOR_TYPE_SEEDING_TORRENTS:
             data = self.client.torrents(filter="seeding")
 
             for torrent in data:
@@ -214,7 +218,7 @@ class QBittorrentSensor(Entity):
 
             self._state = len(data)
             self._attribute = attributes
-        elif self.type == "resumed_torrents":
+        elif self.type == SENSOR_TYPE_RESUMED_TORRENTS:
             data = self.client.torrents(filter="resumed")
 
             for torrent in data:
@@ -222,7 +226,7 @@ class QBittorrentSensor(Entity):
 
             self._state = len(data)
             self._attribute = attributes
-        elif self.type == "paused_torrents":
+        elif self.type == SENSOR_TYPE_PAUSED_TORRENTS:
             data = self.client.torrents(filter="paused")
 
             for torrent in data:
@@ -230,7 +234,7 @@ class QBittorrentSensor(Entity):
 
             self._state = len(data)
             self._attribute = attributes
-        elif self.type == "completed_torrents":
+        elif self.type == SENSOR_TYPE_COMPLETED_TORRENTS:
             data = self.client.torrents(filter="completed")
 
             for torrent in data:
@@ -238,16 +242,6 @@ class QBittorrentSensor(Entity):
 
             self._state = len(data)
             self._attribute = attributes
-        elif self.type == "download_speed":
-            dlspeed = self.client.global_transfer_info["dl_info_speed"]
-            mb_spd = float(dlspeed)
-            mb_spd = mb_spd / 1024
-            self._state = round(mb_spd, 2 if mb_spd < 0.1 else 1)
-        elif self.type == "upload_speed":
-            upspeed = self.client.global_transfer_info["up_info_speed"]
-            mb_spd = float(upspeed)
-            mb_spd = mb_spd / 1024
-            self._state = round(mb_spd, 2 if mb_spd < 0.1 else 1)
 
 
 def trim_name(torrent, trim_size=TRIM_SIZE):
