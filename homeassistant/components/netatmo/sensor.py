@@ -352,22 +352,21 @@ def process_angle(angle: int) -> str:
     """Process angle and return string for display."""
     if angle >= 330:
         return f"N ({angle}\xb0)"
-    elif angle >= 300:
+    if angle >= 300:
         return f"NW ({angle}\xb0)"
-    elif angle >= 240:
+    if angle >= 240:
         return f"W ({angle}\xb0)"
-    elif angle >= 210:
+    if angle >= 210:
         return f"SW ({angle}\xb0)"
-    elif angle >= 150:
+    if angle >= 150:
         return f"S ({angle}\xb0)"
-    elif angle >= 120:
+    if angle >= 120:
         return f"SE ({angle}\xb0)"
-    elif angle >= 60:
+    if angle >= 60:
         return f"E ({angle}\xb0)"
-    elif angle >= 30:
+    if angle >= 30:
         return f"NE ({angle}\xb0)"
-    elif angle >= 0:
-        return f"N ({angle}\xb0)"
+    return f"N ({angle}\xb0)"
 
 
 def process_battery(data: int, model: str) -> str:
@@ -376,11 +375,11 @@ def process_battery(data: int, model: str) -> str:
 
     if data >= values["Full"]:
         return "Full"
-    elif data >= values["High"]:
+    if data >= values["High"]:
         return "High"
-    elif data >= values["Medium"]:
+    if data >= values["Medium"]:
         return "Medium"
-    elif data >= values["Low"]:
+    if data >= values["Low"]:
         return "Low"
     return "Very Low"
 
@@ -389,13 +388,13 @@ def process_health(health):
     """Process health index and return string for display."""
     if health == 0:
         return "Healthy"
-    elif health == 1:
+    if health == 1:
         return "Fine"
-    elif health == 2:
+    if health == 2:
         return "Fair"
-    elif health == 3:
+    if health == 3:
         return "Poor"
-    elif health == 4:
+    if health == 4:
         return "Unhealthy"
 
 
@@ -403,24 +402,22 @@ def process_rf(strength):
     """Process wifi signal strength and return string for display."""
     if strength >= 90:
         return "Low"
-    elif strength >= 76:
+    if strength >= 76:
         return "Medium"
-    elif strength >= 60:
+    if strength >= 60:
         return "High"
-    elif strength <= 59:
-        return "Full"
+    return "Full"
 
 
 def process_wifi(strength):
     """Process wifi signal strength and return string for display."""
     if strength >= 86:
         return "Low"
-    elif strength >= 71:
+    if strength >= 71:
         return "Medium"
-    elif strength >= 56:
+    if strength >= 56:
         return "High"
-    elif strength <= 55:
-        return "Full"
+    return "Full"
 
 
 class NetatmoPublicSensor(NetatmoBase):
