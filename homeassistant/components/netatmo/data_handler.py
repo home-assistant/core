@@ -60,38 +60,30 @@ class NetatmoDataHandler:
     async def async_setup(self):
         """Set up the Netatmo data handler."""
 
-        async def async_update(event_time):
-            """Update device."""
-            for data_class in islice(self._queue, 0, PARALLEL_CALLS):
-                if data_class["next_scan"] > time():
-                    continue
-                self._data_classes[data_class["name"]]["next_scan"] = (
-                    time() + data_class["interval"]
-                )
-                try:
-                    self.data[
-                        data_class["name"]
-                    ] = await self.hass.async_add_executor_job(
-                        partial(data_class["class"], **data_class["kwargs"]),
-                        self._auth,
-                    )
-                    async_dispatcher_send(
-                        self.hass, f"netatmo-update-{data_class['name']}"
-                    )
-                except (pyatmo.NoDevice, pyatmo.ApiError) as err:
-                    _LOGGER.debug(err)
-
-            self._queue.rotate(PARALLEL_CALLS)
-
         async_track_time_interval(
-            self.hass, async_update, timedelta(seconds=SCAN_INTERVAL)
+            self.hass, self.async_update, timedelta(seconds=SCAN_INTERVAL)
         )
 
         self.listeners.append(
             self.hass.bus.async_listen("netatmo_event", self.handle_event)
         )
 
-    async def async_remove(self):
+    async def async_update(self, event_time):
+        """Update device."""
+        for data_class in islice(self._queue, 0, PARALLEL_CALLS):
+            if data_class["next_scan"] > time():
+                continue
+            self._data_classes[data_class["name"]]["next_scan"] = (
+                time() + data_class["interval"]
+            )
+
+            await self.async_fetch_data(
+                data_class["class"], data_class["name"], **data_class["kwargs"]
+            )
+
+        self._queue.rotate(PARALLEL_CALLS)
+
+    async def async_cleanup(self):
         """Clean up the Netatmo data handler."""
         for listener in self.listeners:
             listener()
@@ -101,6 +93,16 @@ class NetatmoDataHandler:
         if event.data["data"]["push_type"] == "webhook_activation":
             _LOGGER.info("%s webhook successfully registered", MANUFACTURER)
             self._webhook = True
+
+    async def async_fetch_data(self, data_class, data_class_entry, **kwargs):
+        """Fetch data and notify."""
+        try:
+            self.data[data_class_entry] = await self.hass.async_add_executor_job(
+                partial(data_class, **kwargs), self._auth,
+            )
+            async_dispatcher_send(self.hass, f"netatmo-update-{data_class_entry}")
+        except (pyatmo.NoDevice, pyatmo.ApiError) as err:
+            _LOGGER.debug(err)
 
     async def register_data_class(self, data_class_name, **kwargs):
         """Register data class."""
@@ -122,14 +124,9 @@ class NetatmoDataHandler:
                     "registered": 1,
                 }
 
-                try:
-                    self.data[
-                        data_class_entry
-                    ] = await self.hass.async_add_executor_job(
-                        partial(DATA_CLASSES[data_class_name], **kwargs), self._auth,
-                    )
-                except (pyatmo.NoDevice, pyatmo.ApiError) as err:
-                    _LOGGER.debug(err)
+                await self.async_fetch_data(
+                    DATA_CLASSES[data_class_name], data_class_entry, **kwargs
+                )
 
                 self._queue.append(self._data_classes[data_class_entry])
                 _LOGGER.debug("Data class %s added", data_class_entry)
