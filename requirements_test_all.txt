@@ -125,6 +125,9 @@ aioswitcher==1.2.0
 # homeassistant.components.unifi
 aiounifi==23
 
+# homeassistant.components.yandex_transport
+aioymaps==1.0.0
+
 # homeassistant.components.airly
 airly==0.0.2
 
@@ -979,9 +982,6 @@ wled==0.4.3
 # homeassistant.components.yr
 # homeassistant.components.zestimate
 xmltodict==0.12.0
-
-# homeassistant.components.yandex_transport
-ya_ma==0.3.8
 
 # homeassistant.components.zeroconf
 zeroconf==0.27.1
