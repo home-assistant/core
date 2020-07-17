@@ -32,11 +32,9 @@ async def async_setup_entry(
     """Set up Bond fan devices."""
     hub: BondHub = hass.data[DOMAIN][entry.entry_id]
 
-    devices = await hass.async_add_executor_job(hub.get_bond_devices)
-
     fans = [
         BondFan(hub, device)
-        for device in devices
+        for device in hub.devices
         if device.type == DeviceTypes.CEILING_FAN
     ]
 

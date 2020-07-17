@@ -26,18 +26,16 @@ async def async_setup_entry(
     """Set up Bond light devices."""
     hub: BondHub = hass.data[DOMAIN][entry.entry_id]
 
-    devices = await hass.async_add_executor_job(hub.get_bond_devices)
-
     lights = [
         BondLight(hub, device)
-        for device in devices
+        for device in hub.devices
         if device.type == DeviceTypes.CEILING_FAN and device.supports_light()
     ]
     async_add_entities(lights, True)
 
     fireplaces = [
         BondFireplace(hub, device)
-        for device in devices
+        for device in hub.devices
         if device.type == DeviceTypes.FIREPLACE
     ]
     async_add_entities(fireplaces, True)
