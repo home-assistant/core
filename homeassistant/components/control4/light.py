@@ -154,7 +154,7 @@ class Control4Light(Control4Entity, LightEntity):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         if self._is_dimmer:
-            return self._coordinator.data[self._idx]["value"] * 2.55
+            return round(self._coordinator.data[self._idx]["value"] * 2.55)
         return None
 
     @property
