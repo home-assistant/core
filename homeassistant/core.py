@@ -622,6 +622,12 @@ class EventBus:
         else:
             self._listeners[event_type] = [listener]
 
+        if event_type == "entity_registry_updated":
+            try:
+                1 / 0
+            except ZeroDivisionError:
+                _LOGGER.exception("EVENT_ENTITY_REGISTRY_UPDATED")
+
         def remove_listener() -> None:
             """Remove the listener."""
             self._async_remove_listener(event_type, listener)
