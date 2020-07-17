@@ -166,13 +166,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
     @callback
     async def add_public_entities():
         """Retrieve Netatmo public weather entities."""
-        data_class_name = PUBLICDATA_DATA_CLASS_NAME
         entities = []
         for area in [
             NetatmoArea(**i) for i in entry.options.get(CONF_WEATHER_AREAS, {}).values()
         ]:
             await data_handler.register_data_class(
-                data_class_name,
+                PUBLICDATA_DATA_CLASS_NAME,
                 LAT_NE=area.lat_ne,
                 LON_NE=area.lon_ne,
                 LAT_SW=area.lat_sw,
@@ -180,13 +179,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 area_name=area.area_name,
             )
             for sensor_type in SUPPORTED_PUBLIC_SENSOR_TYPES:
-                entities.append(
-                    NetatmoPublicSensor(
-                        data_handler, data_class_name, area, sensor_type,
-                    )
-                )
+                entities.append(NetatmoPublicSensor(data_handler, area, sensor_type,))
             await data_handler.unregister_data_class(
-                f"{data_class_name}-{area.area_name}"
+                f"{PUBLICDATA_DATA_CLASS_NAME}-{area.area_name}"
             )
 
         for device in async_entries_for_config_entry(device_registry, entry.entry_id):
@@ -429,13 +424,13 @@ def process_wifi(strength):
 class NetatmoPublicSensor(NetatmoBase):
     """Represent a single sensor in a Netatmo."""
 
-    def __init__(self, data_handler, data_class_name, area, sensor_type):
+    def __init__(self, data_handler, area, sensor_type):
         """Initialize the sensor."""
         super().__init__(data_handler)
 
         self._data_classes.append(
             {
-                "name": data_class_name,
+                "name": PUBLICDATA_DATA_CLASS_NAME,
                 "LAT_NE": area.lat_ne,
                 "LON_NE": area.lon_ne,
                 "LAT_SW": area.lat_sw,
