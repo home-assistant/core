@@ -67,7 +67,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async def get_entities():
         """Retrieve Netatmo entities."""
-        await data_handler.register_data_class(data_class)
+        await data_handler.register_data_class(data_class_name)
 
         entities = []
         try:
