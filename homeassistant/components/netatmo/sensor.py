@@ -433,7 +433,7 @@ class NetatmoSensor(NetatmoBase):
 class NetatmoPublicSensor(NetatmoBase):
     """Represent a single sensor in a Netatmo."""
 
-    def __init__(self, data_handler, data_class, area, sensor_type):
+    def __init__(self, data_handler, data_class_name, area, sensor_type):
         """Initialize the sensor."""
         super().__init__(data_handler)
 
