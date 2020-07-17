@@ -72,7 +72,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entities = []
         try:
             all_cameras = []
-            for home in data_handler.data[data_class].cameras.values():
+            for home in data_handler.data[data_class_name].cameras.values():
                 for camera in home.values():
                     all_cameras.append(camera)
 
