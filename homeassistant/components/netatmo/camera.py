@@ -81,7 +81,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 entities.append(
                     NetatmoCamera(
                         data_handler,
-                        data_class,
+                        data_class_name,
                         camera["id"],
                         camera["type"],
                         camera["home_id"],
