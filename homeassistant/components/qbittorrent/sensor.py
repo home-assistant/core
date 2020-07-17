@@ -180,67 +180,67 @@ class QBittorrentSensor(Entity):
             for torrent in torrents:
                 attributes[trim_name(torrent, TRIM_SIZE - 5)] = torrent["state"]
 
-            self._state = len(data)
+            self._state = len(torrents)
             self._attribute = attributes
         elif self.type == SENSOR_TYPE_ACTIVE_TORRENTS:
-            data = self.client.torrents(filter="active")
+            torrents = self.client.torrents(filter="active")
 
-            for torrent in data:
+            for torrent in torrents:
                 attributes[trim_name(torrent, TRIM_SIZE - 5)] = torrent["state"]
 
-            self._state = len(data)
+            self._state = len(torrents)
             self._attribute = attributes
         elif self.type == SENSOR_TYPE_INACTIVE_TORRENTS:
-            data = self.client.torrents(filter="inactive")
+            torrents = self.client.torrents(filter="inactive")
 
-            for torrent in data:
+            for torrent in torrents:
                 attributes[trim_name(torrent, TRIM_SIZE - 5)] = torrent["state"]
 
-            self._state = len(data)
+            self._state = len(torrents)
             self._attribute = attributes
         elif self.type == SENSOR_TYPE_DOWNLOADING_TORRENTS:
-            data = self.client.torrents(filter="downloading")
+            torrents = self.client.torrents(filter="downloading")
 
-            for torrent in data:
+            for torrent in torrents:
                 attributes[trim_name(torrent)] = format_progress(torrent)
 
-            self._state = len(data)
+            self._state = len(torrents)
             self._attribute = attributes
         elif self.type == SENSOR_TYPE_SEEDING_TORRENTS:
-            data = self.client.torrents(filter="seeding")
+            torrents = self.client.torrents(filter="seeding")
 
-            for torrent in data:
+            for torrent in torrents:
                 ratio = torrent["ratio"]
                 ratio = float(ratio)
                 ratio = f"{ratio:.2f}"
 
                 attributes[trim_name(torrent)] = ratio
 
-            self._state = len(data)
+            self._state = len(torrents)
             self._attribute = attributes
         elif self.type == SENSOR_TYPE_RESUMED_TORRENTS:
-            data = self.client.torrents(filter="resumed")
+            torrents = self.client.torrents(filter="resumed")
 
-            for torrent in data:
+            for torrent in torrents:
                 attributes[trim_name(torrent)] = format_progress(torrent)
 
-            self._state = len(data)
+            self._state = len(torrents)
             self._attribute = attributes
         elif self.type == SENSOR_TYPE_PAUSED_TORRENTS:
-            data = self.client.torrents(filter="paused")
+            torrents = self.client.torrents(filter="paused")
 
-            for torrent in data:
+            for torrent in torrents:
                 attributes[trim_name(torrent)] = format_progress(torrent)
 
-            self._state = len(data)
+            self._state = len(torrents)
             self._attribute = attributes
         elif self.type == SENSOR_TYPE_COMPLETED_TORRENTS:
-            data = self.client.torrents(filter="completed")
+            torrents = self.client.torrents(filter="completed")
 
-            for torrent in data:
+            for torrent in torrents:
                 attributes[trim_name(torrent)] = "100.0%"
 
-            self._state = len(data)
+            self._state = len(torrents)
             self._attribute = attributes
 
 
