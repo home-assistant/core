@@ -95,8 +95,7 @@ class Store:
         the second call will wait and return the result of the first call.
         """
         if self._load_task is None:
-            self._load_task = self.hass.async_add_job(self._async_load())
-            assert self._load_task is not None
+            self._load_task = self.hass.async_create_task(self._async_load())
 
         return await self._load_task
 
