@@ -2,7 +2,6 @@
 import datetime
 
 import pytest
-import pytz
 import voluptuous_serialize
 
 import homeassistant.components.automation as automation
