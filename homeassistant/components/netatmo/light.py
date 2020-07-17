@@ -116,11 +116,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
             and data["camera_id"] == self._id
             and data["push_type"] == "NOC-light_mode"
         ):
-            if data["sub_type"] in ["off", "auto"]:
-                self._is_on = False
-
-            elif data["sub_type"] == "on":
-                self._is_on = True
+            self._is_on = bool(data["sub_type"] == "on")
 
             self.async_write_ha_state()
             return
