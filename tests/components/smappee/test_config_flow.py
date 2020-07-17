@@ -32,21 +32,30 @@ async def test_show_user_form(hass):
 
 async def test_show_zeroconf_confirm_form(hass):
     """Test that the zeroconf confirmation form is served."""
-    flow = config_flow.SmappeeFlowHandler()
-    flow.hass = hass
-    flow.context = {
-        "source": SOURCE_ZEROCONF,
-        CONF_HOSTNAME: "Smappee1006000212.local.",
-        CONF_TITLE: "Smappee1006000212",
-        CONF_IP_ADDRESS: "1.2.3.4",
-        CONF_SERIALNUMBER: "1006000212",
-    }
-    result = await flow.async_step_zeroconf_confirm()
-
-    assert flow.context["source"] == SOURCE_ZEROCONF
-    assert result["description_placeholders"] == {CONF_SERIALNUMBER: "1006000212"}
-    assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}), patch(
+        "pysmappee.api.SmappeeLocalApi.load_advanced_config",
+        return_value=[{"key": "mdnsHostName", "value": "Smappee1006000212"}],
+    ), patch(
+        "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
+    ), patch(
+        "pysmappee.api.SmappeeLocalApi.load_instantaneous",
+        return_value=[{"key": "phase0ActivePower", "value": 0}],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data={
+                "host": "1.2.3.4",
+                "port": 22,
+                CONF_HOSTNAME: "Smappee1006000212.local.",
+                "type": "_ssh._tcp.local.",
+                "name": "Smappee1006000212._ssh._tcp.local.",
+                "properties": {"_raw": {}},
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "zeroconf_confirm"
+        assert result["description_placeholders"] == {CONF_SERIALNUMBER: "1006000212"}
 
 
 async def test_show_zeroconf_connection_error_form(hass):
