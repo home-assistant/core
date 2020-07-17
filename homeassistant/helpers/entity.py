@@ -114,9 +114,6 @@ class Entity(ABC):
     _context: Optional[Context] = None
     _context_set: Optional[datetime] = None
 
-    # Registry updated listener
-    _registry_updated_listener = None
-
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
@@ -517,8 +514,10 @@ class Entity(ABC):
         """
         if self.registry_entry is not None:
             assert self.hass is not None
-            self._registry_updated_listener = async_track_entity_registry_updated_event(
-                self.hass, self.entity_id, self._async_registry_updated
+            self.async_on_remove(
+                async_track_entity_registry_updated_event(
+                    self.hass, self.entity_id, self._async_registry_updated
+                )
             )
 
     async def async_internal_will_remove_from_hass(self) -> None:
@@ -526,8 +525,6 @@ class Entity(ABC):
 
         Not to be extended by integrations.
         """
-        if self._registry_updated_listener is not None:
-            self._registry_updated_listener()
 
     async def _async_registry_updated(self, event: Event) -> None:
         """Handle entity registry update."""
