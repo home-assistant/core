@@ -6,6 +6,7 @@ GATEWAYS_KEY = "gateways"
 LISTENER_KEY = "listener"
 
 ZEROCONF_GATEWAY = "lumi-gateway"
+ZEROCONF_ACPARTNER = "lumi-acpartner"
 
 CONF_INTERFACE = "interface"
 CONF_PROTOCOL = "protocol"
