@@ -52,14 +52,12 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def get_valid_filename(name):
+def get_valid_filename(name):
     """Parse input to ensure valid filename characters."""
     return re.sub(r"(?u)[^-\w.]", "", str(name).strip().replace(" ", "_"))
 
 
-async def save_image(
-    self, image, entity_name, objects, directory, save_timestamp=False
-):
+def save_image(self, image, entity_name, objects, directory, save_timestamp=False):
     """Draw the bounding boxes and save the image."""
     try:
         img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
@@ -89,18 +87,18 @@ async def save_image(
             fill=box_colour,
         )
     filename = f"{entity_name.lower()}_latest.jpg"
-    filename = await get_valid_filename(filename)
+    filename = get_valid_filename(filename)
     latest_save_path = directory / filename
     img.save(latest_save_path)
     if save_timestamp:
         timestamp = dt_util.now().strftime(dt_util.DATETIME_STR_FORMAT)
         filename = f"{entity_name.lower()}_{timestamp}.jpg"
-        filename = await get_valid_filename(filename)
+        filename = get_valid_filename(filename)
         timestamp_save_path = directory / filename
         img.save(timestamp_save_path)
 
 
-async def compute_box(box, decimal_places):
+def compute_box(box, decimal_places):
     """Compute AWS BoundingBox coordinates to be PIL compatible."""
     box_data = {}
     # Get bounding box
@@ -133,7 +131,7 @@ async def compute_box(box, decimal_places):
     return box_data
 
 
-async def get_objects(response, confidence):
+def get_objects(response, confidence):
     """Parse the data, returning detected objects only."""
     objects = []
     labels = []
@@ -146,7 +144,7 @@ async def get_objects(response, confidence):
                     continue
                 # Extract and format instance data
                 box = instance["BoundingBox"]
-                box_data = await compute_box(box, decimal_places)
+                box_data = compute_box(box, decimal_places)
                 box_data.update(
                     {
                         "name": label["Name"].lower(),
@@ -343,7 +341,7 @@ class RekognitionObjectEntity(ImageProcessingEntity):
     async def compute_objects(self, client, image):
         """Detect labels in image and parse response."""
         detect_labels = await client.detect_labels(Image={"Bytes": image})
-        objects, labels = await get_objects(detect_labels, self.confidence)
+        objects, labels = get_objects(detect_labels, self.confidence)
         return objects, labels
 
     async def async_process_image(self, image):
@@ -356,7 +354,7 @@ class RekognitionObjectEntity(ImageProcessingEntity):
         ) as client:
             objects, labels = await self.compute_objects(client, image)
             if len(objects) > 0 and self.conf_save_file_folder:
-                await save_image(
+                save_image(
                     self,
                     image,
                     self.name,
@@ -473,7 +471,7 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
         face_records = await self.index_face(image=image, image_id=self._camera)
         for face_record in face_records:
             known_face = {}
-            box = await compute_box(face_record["Face"]["BoundingBox"], 3)
+            box = compute_box(face_record["Face"]["BoundingBox"], 3)
             known_face[ATTR_NAME] = STATE_UNKNOWN
             known_face[ATTR_CONFIDENCE] = face_record["Face"]["Confidence"]
             known_face["bounding_box"] = box["bounding_box"]
@@ -516,7 +514,7 @@ class RekognitionFaceEntity(ImageProcessingFaceEntity):
                 await self.init_collection(client)
             known_faces = await self.compute_faces(client, image)
             if len(known_faces) > 0 and self.conf_save_file_folder:
-                await save_image(
+                save_image(
                     self,
                     image,
                     self.name,
