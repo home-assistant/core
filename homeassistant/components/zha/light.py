@@ -496,18 +496,20 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         self._level_channel = group.endpoint[LevelControl.cluster_id]
         self._color_channel = group.endpoint[Color.cluster_id]
         self._identify_channel = group.endpoint[Identify.cluster_id]
+        self._debounced_member_refresh = None
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
-        force_refresh_debouncer = Debouncer(
-            self.hass,
-            _LOGGER,
-            cooldown=3,
-            immediate=True,
-            function=self._force_member_updates,
-        )
-        self._debounced_member_refresh = force_refresh_debouncer
+        if self._debounced_member_refresh is None:
+            force_refresh_debouncer = Debouncer(
+                self.hass,
+                _LOGGER,
+                cooldown=3,
+                immediate=True,
+                function=self._force_member_updates,
+            )
+            self._debounced_member_refresh = force_refresh_debouncer
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
