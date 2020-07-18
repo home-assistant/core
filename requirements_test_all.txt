@@ -984,7 +984,7 @@ wled==0.4.3
 xmltodict==0.12.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.27.1
+zeroconf==0.28.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.42
