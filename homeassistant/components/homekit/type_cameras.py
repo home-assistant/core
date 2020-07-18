@@ -5,7 +5,6 @@ import logging
 
 from haffmpeg.core import HAFFmpeg
 from pyhap.camera import (
-    STREAMING_STATUS,
     VIDEO_CODEC_PARAM_LEVEL_TYPES,
     VIDEO_CODEC_PARAM_PROFILE_ID_TYPES,
     Camera as PyhapCamera,
@@ -24,7 +23,6 @@ from homeassistant.util import get_local_ip
 from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_MOTION_DETECTED,
-    CHAR_STREAMING_STRATUS,
     CONF_AUDIO_CODEC,
     CONF_AUDIO_MAP,
     CONF_AUDIO_PACKET_SIZE,
@@ -48,7 +46,6 @@ from .const import (
     DEFAULT_VIDEO_CODEC,
     DEFAULT_VIDEO_MAP,
     DEFAULT_VIDEO_PACKET_SIZE,
-    SERV_CAMERA_RTP_STREAM_MANAGEMENT,
     SERV_MOTION_SENSOR,
 )
 from .img_util import scale_jpeg_camera_image
@@ -178,6 +175,7 @@ class Camera(HomeAccessory, PyhapCamera):
             "audio": audio_options,
             "address": stream_address,
             "srtp": True,
+            "stream_count": 4,
         }
 
         super().__init__(
@@ -340,7 +338,7 @@ class Camera(HomeAccessory, PyhapCamera):
 
         _LOGGER.warning("Streaming process ended unexpectedly - PID %d", ffmpeg_pid)
         self._async_stop_ffmpeg_watch()
-        self._async_set_streaming_available(session_id)
+        self.set_streaming_available(self.sessions[session_id]["stream_idx"])
         return False
 
     @callback
@@ -350,14 +348,6 @@ class Camera(HomeAccessory, PyhapCamera):
             return
         self._cur_session[FFMPEG_WATCHER]()
         self._cur_session = None
-
-    @callback
-    def _async_set_streaming_available(self, session_id):
-        """Free the session so they can start another."""
-        self.streaming_status = STREAMING_STATUS["AVAILABLE"]
-        self.get_service(SERV_CAMERA_RTP_STREAM_MANAGEMENT).get_characteristic(
-            CHAR_STREAMING_STRATUS
-        ).notify()
 
     async def stop_stream(self, session_info):
         """Stop the stream for the given ``session_id``."""
