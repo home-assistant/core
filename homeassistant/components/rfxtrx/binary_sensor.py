@@ -191,6 +191,6 @@ class RfxtrxBinarySensor(BinarySensorEntity, RfxtrxEntity):
                 self._state = False
                 self.async_write_ha_state()
 
-            self.delay_listener = evt.async_call_later(
+            self._delay_listener = evt.async_call_later(
                 self.hass, self._off_delay.total_seconds(), off_delay_listener
             )
