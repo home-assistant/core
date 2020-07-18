@@ -1,6 +1,11 @@
 {
   "title": "Humidifier",
   "device_automation": {
+    "trigger_type": {
+      "target_humidity_changed": "{entity_name} target humidity changed",
+      "turned_on": "{entity_name} turned on",
+      "turned_off": "{entity_name} turned off"
+    },
     "condition_type": {
       "is_mode": "{entity_name} is set to a specific mode",
       "is_on": "{entity_name} is on",
