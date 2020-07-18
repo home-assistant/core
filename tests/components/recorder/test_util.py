@@ -64,41 +64,25 @@ def test_recorder_bad_execute(hass_recorder):
     assert e_mock.call_count == 2
 
 
-async def test_validate_or_move_away_sqlite_database(hass, tmpdir, caplog):
+def test_validate_or_move_away_sqlite_database(hass, tmpdir, caplog):
     """Ensure a malformed sqlite database is moved away."""
 
     test_dir = tmpdir.mkdir("test_validate_or_move_away_sqlite_database")
     test_db_file = f"{test_dir}/broken.db"
     dburl = f"{SQLITE_URL_PREFIX}{test_db_file}"
 
-    assert (
-        await hass.async_add_executor_job(util.validate_sqlite_database, test_db_file)
-        is True
-    )
+    util.validate_sqlite_database(test_db_file) is True
+
     assert os.path.exists(test_db_file) is True
-    assert (
-        await hass.async_add_executor_job(
-            util.validate_or_move_away_sqlite_database, dburl
-        )
-        is True
-    )
+    assert util.validate_or_move_away_sqlite_database(dburl) is True
 
-    await hass.async_add_executor_job(_corrupt_db_file, test_db_file)
+    _corrupt_db_file(test_db_file)
 
-    assert (
-        await hass.async_add_executor_job(
-            util.validate_or_move_away_sqlite_database, dburl
-        )
-        is False
-    )
+    assert util.validate_or_move_away_sqlite_database(dburl) is False
+
     assert "corrupt or malformed" in caplog.text
 
-    assert (
-        await hass.async_add_executor_job(
-            util.validate_or_move_away_sqlite_database, dburl
-        )
-        is True
-    )
+    assert util.validate_or_move_away_sqlite_database(dburl) is True
 
 
 def _corrupt_db_file(test_db_file):
