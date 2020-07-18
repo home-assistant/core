@@ -47,6 +47,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PLATFORM,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
     STATE_PLAYING,
     STATE_STANDBY,
@@ -1154,3 +1155,22 @@ async def test_services_firetv(hass):
             await _test_service(hass, entity_id, SERVICE_MEDIA_STOP, "back")
             await _test_service(hass, entity_id, SERVICE_TURN_OFF, "adb_shell")
             await _test_service(hass, entity_id, SERVICE_TURN_ON, "adb_shell")
+
+
+async def test_connection_closed_on_ha_stop(hass):
+    """Test that the ADB socket connection is closed when HA stops."""
+    patch_key, entity_id = _setup(CONFIG_ANDROIDTV_ADB_SERVER)
+
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[patch_key]:
+        with patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
+            assert await async_setup_component(
+                hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER
+            )
+            await hass.async_block_till_done()
+
+            with patch(
+                "androidtv.androidtv.androidtv_async.AndroidTVAsync.adb_close"
+            ) as adb_close:
+                hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+                await hass.async_block_till_done()
+                assert adb_close.called

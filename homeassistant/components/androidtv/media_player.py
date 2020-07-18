@@ -491,6 +491,10 @@ class ADBDevice(MediaPlayerEntity):
         """Return the device unique id."""
         return self._unique_id
 
+    async def async_will_remove_from_hass(self):
+        """Close the ADB socket connection."""
+        await self.aftv.adb_close()
+
     @adb_decorator()
     async def async_get_media_image(self):
         """Fetch current playing image."""
