@@ -1,4 +1,4 @@
-"""The Shelly integration."""
+"""The Shelly MQTT integration."""
 import asyncio
 
 from homeassistant.config_entries import ConfigEntry
@@ -8,12 +8,12 @@ PLATFORMS = ["switch"]  # , "binary_sensor", "sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Shelly component."""
+    """Set up the Shelly MQTT component."""
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up Shelly from a config entry."""
+    """Set up Shelly MQTT from a config entry."""
 
     for component in PLATFORMS:
         hass.async_create_task(

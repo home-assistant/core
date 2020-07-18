@@ -1,4 +1,4 @@
-"""Config flow for Shelly integration."""
+"""Config flow for Shelly MQTT integration."""
 import asyncio
 import json
 import logging
@@ -54,8 +54,8 @@ async def validate_input(hass: core.HomeAssistant, data, timeout=DEFAULT_TIMEOUT
 
 
 async def async_discovery(hass, timeout=DEFAULT_TIMEOUT):
-    """Return Shelly devices connected to the MQTT broker."""
-    _LOGGER.debug("Starting Shelly discovery...")
+    """Return Shelly MQTT devices connected to the MQTT broker."""
+    _LOGGER.debug("Starting Shelly MQTT discovery...")
     mqtt = hass.components.mqtt
 
     devices = []
@@ -73,13 +73,13 @@ async def async_discovery(hass, timeout=DEFAULT_TIMEOUT):
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Shelly."""
+    """Handle a config flow for Shelly MQTT."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
-        """Initialize the Shelly config flow."""
+        """Initialize the Shelly MQTT config flow."""
         self._device = None
         self._devices = []
 
@@ -116,7 +116,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if supported and not configured:
                 self._devices.append(device)
 
-        _LOGGER.debug("Discovered Shelly devices %s", pformat(self._devices))
+        _LOGGER.debug("Discovered Shelly MQTT devices %s", pformat(self._devices))
 
         if self._devices:
             names = [device[CONF_ID] for device in self._devices]
@@ -129,7 +129,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason="no_devices_found")
 
     async def async_step_topic(self, user_input=None):
-        """Model and topic configuration for Shelly device."""
+        """Model and topic configuration for Shelly MQTT device."""
         errors = {}
         if user_input:
             try:

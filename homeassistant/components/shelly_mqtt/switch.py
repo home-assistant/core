@@ -1,4 +1,4 @@
-"""Representation of Shelly switches."""
+"""Representation of Shelly MQTT switches."""
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import callback
@@ -19,7 +19,7 @@ TOGGLE = "toggle"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up Shelly switch(es) from config entry."""
+    """Set up Shelly MQTT switch(es) from config entry."""
 
     device_id = config_entry.data[CONF_DEVICE_ID]
     topic = config_entry.data[CONF_TOPIC]
@@ -36,7 +36,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             unique_id = f"{device_id}_{i+1}"
             via_device = device_id
         switches.append(
-            ShellySwitch(
+            ShellyMQTTSwitch(
                 hass.components.mqtt, unique_id, switch_topic, title, via_device
             )
         )
@@ -44,8 +44,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(switches)
 
 
-class ShellySwitch(SwitchEntity):
-    """Representation of a Shelly switch."""
+class ShellyMQTTSwitch(SwitchEntity):
+    """Representation of a Shelly MQTT switch."""
 
     def __init__(self, mqtt, unique_id, topic, title, via_device):
         """Initialize the MQTT switch."""

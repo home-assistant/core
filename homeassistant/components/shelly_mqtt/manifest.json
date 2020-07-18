@@ -1,0 +1,9 @@
+{
+  "domain": "shelly_mqtt",
+  "name": "Shelly MQTT",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/shelly_mqtt",
+  "requirements": [],
+  "after_dependencies": ["mqtt"],
+  "codeowners": ["@OnFreund"]
+}

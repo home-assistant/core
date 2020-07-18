@@ -1,4 +1,4 @@
-"""Helpers for Shelly tests."""
+"""Helpers for Shelly MQTT tests."""
 import json
 
 

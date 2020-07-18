@@ -1,6 +1,6 @@
-"""Constants for the Shelly integration."""
+"""Constants for the Shelly MQTT integration."""
 
-DOMAIN = "shelly"
+DOMAIN = "shelly_mqtt"
 
 ANNOUNCE_COMMAND = "announce"
 UPDATE_COMMAND = "update"

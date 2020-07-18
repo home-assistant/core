@@ -1,14 +1,14 @@
-"""Test the Shelly config flow."""
+"""Test the Shelly MQTT config flow."""
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.shelly.config_flow import (
+from homeassistant.components.shelly_mqtt.config_flow import (
     CONF_DEVICE_ID,
     CONF_MODEL,
     CONF_TOPIC,
     async_discovery,
     validate_input,
 )
-from homeassistant.components.shelly.const import DOMAIN
+from homeassistant.components.shelly_mqtt.const import DOMAIN
 
 from .common import send_msg
 
@@ -88,7 +88,8 @@ async def test_no_devices(hass):
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.shelly.config_flow.async_discovery", return_value={},
+        "homeassistant.components.shelly_mqtt.config_flow.async_discovery",
+        return_value={},
     ):
 
         result = await hass.config_entries.flow.async_configure(
@@ -110,7 +111,7 @@ async def test_ignore_existing_and_abort(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
     with patch(
-        "homeassistant.components.shelly.config_flow.async_discovery",
+        "homeassistant.components.shelly_mqtt.config_flow.async_discovery",
         return_value=DISCOVERY,
     ):
 
@@ -137,14 +138,15 @@ async def test_flow(hass):
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.shelly.config_flow.async_discovery",
+        "homeassistant.components.shelly_mqtt.config_flow.async_discovery",
         return_value=DISCOVERY,
     ), patch(
-        "homeassistant.components.shelly.config_flow.validate_input", return_value=True
+        "homeassistant.components.shelly_mqtt.config_flow.validate_input",
+        return_value=True,
     ), patch(
-        "homeassistant.components.shelly.async_setup", return_value=True
+        "homeassistant.components.shelly_mqtt.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.shelly.async_setup_entry", return_value=True,
+        "homeassistant.components.shelly_mqtt.async_setup_entry", return_value=True,
     ) as mock_setup_entry:
 
         result = await hass.config_entries.flow.async_configure(
@@ -194,10 +196,11 @@ async def test_form_with_failed_validation(hass):
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.shelly.config_flow.async_discovery",
+        "homeassistant.components.shelly_mqtt.config_flow.async_discovery",
         return_value=DISCOVERY,
     ), patch(
-        "homeassistant.components.shelly.config_flow.validate_input", return_value=False
+        "homeassistant.components.shelly_mqtt.config_flow.validate_input",
+        return_value=False,
     ):
 
         result = await hass.config_entries.flow.async_configure(
@@ -240,7 +243,7 @@ async def test_form_with_invalid_topic(hass):
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.shelly.config_flow.async_discovery",
+        "homeassistant.components.shelly_mqtt.config_flow.async_discovery",
         return_value=DISCOVERY,
     ):
 

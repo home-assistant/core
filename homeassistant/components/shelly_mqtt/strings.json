@@ -1,5 +1,5 @@
 {
-  "title": "Shelly",
+  "title": "Shelly MQTT",
   "config": {
     "step": {
       "user": {

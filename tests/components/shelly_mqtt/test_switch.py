@@ -1,8 +1,8 @@
-"""The tests for the Shelly switch platform."""
+"""The tests for the Shelly MQTT switch platform."""
 import asyncio
 
 from homeassistant.components import switch
-from homeassistant.components.shelly.const import CONF_MODEL, CONF_TOPIC, DOMAIN
+from homeassistant.components.shelly_mqtt.const import CONF_MODEL, CONF_TOPIC, DOMAIN
 from homeassistant.const import (
     CONF_DEVICE_ID,
     SERVICE_TOGGLE,
