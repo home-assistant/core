@@ -15,7 +15,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_NEXT_RAIN_1_HOUR_FORECAST,
-    ATTR_NEXT_RAIN_SUMMARY,
     ATTRIBUTION,
     COORDINATOR_ALERT,
     COORDINATOR_FORECAST,
@@ -179,17 +178,6 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        next_rain_date_locale = self.coordinator.data.next_rain_date_locale()
-        next_rain_datetime = (
-            dt_util.as_local(next_rain_date_locale) if next_rain_date_locale else None
-        )
-        if next_rain_datetime:
-            rain_text_summary = (
-                f"La pluie est attendue à {next_rain_datetime.strftime('%H:%M')}."
-            )
-        else:
-            rain_text_summary = "Pas de pluie dans la prochaine heure."
-
         return {
             ATTR_NEXT_RAIN_1_HOUR_FORECAST: [
                 {
@@ -199,7 +187,6 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
                 }
                 for item in self.coordinator.data.forecast
             ],
-            ATTR_NEXT_RAIN_SUMMARY: rain_text_summary,
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
