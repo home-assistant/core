@@ -321,7 +321,7 @@ class Camera(HomeAccessory, PyhapCamera):
         session_info[FFMPEG_PID] = stream.process.pid
         session_info[FFMPEG_WATCHER] = async_track_time_interval(
             self.hass,
-            lambda: self._async_ffmpeg_watch(session_info["id"]),
+            lambda _: self._async_ffmpeg_watch(session_info["id"]),
             FFMPEG_WATCH_INTERVAL,
         )
 
@@ -354,7 +354,7 @@ class Camera(HomeAccessory, PyhapCamera):
             _LOGGER.debug("No stream for session ID %s", session_id)
             return
 
-        self._async_stop_ffmpeg_watch()
+        self._async_stop_ffmpeg_watch(session_id)
 
         if not pid_is_alive(stream.process.pid):
             _LOGGER.info("[%s] Stream already stopped", session_id)
