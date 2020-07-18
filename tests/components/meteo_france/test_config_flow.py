@@ -102,6 +102,17 @@ def mock_controller_client_multiple():
         yield service_mock
 
 
+@pytest.fixture(name="client_empty")
+def mock_controller_client_empty():
+    """Mock a successful client."""
+    with patch(
+        "homeassistant.components.meteo_france.config_flow.MeteoFranceClient",
+        update=False,
+    ) as service_mock:
+        service_mock.return_value.search_places.return_value = []
+        yield service_mock
+
+
 async def test_user(hass, client_single):
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
@@ -153,6 +164,16 @@ async def test_import(hass, client_multiple):
     assert result["title"] == f"{CITY_2}"
     assert result["data"][CONF_LATITUDE] == str(CITY_2_LAT)
     assert result["data"][CONF_LONGITUDE] == str(CITY_2_LON)
+
+
+async def test_search_failed(hass, client_empty):
+    """Test error displayed if no result in search."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data={CONF_CITY: CITY_1_POSTAL},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {CONF_CITY: "empty"}
 
 
 async def test_abort_if_already_setup(hass, client_single):
