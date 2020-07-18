@@ -37,8 +37,8 @@ CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
         vol.Required(CONF_CONFIGURATION): str,
         vol.Required(CONF_CLIENT_ID): str,
         vol.Required(CONF_CLIENT_SECRET): str,
-        vol.Optional(CONF_EMAILS, default=[]): [str],
-        vol.Optional(CONF_SUBJECTS, default=[]): [str],
+        vol.Optional(CONF_EMAILS): [str],
+        vol.Optional(CONF_SUBJECTS): [str],
     },
     extra=vol.PREVENT_EXTRA,
 )
@@ -169,12 +169,12 @@ class OpenIdAuthProvider(AuthProvider):
         if id_token.get("nonce") != nonce:
             raise InvalidAuthError("Nonce mismatch in id_token")
 
-        if id_token["sub"] in self.config[CONF_SUBJECTS]:
+        if id_token["sub"] in self.config.get(CONF_SUBJECTS, []):
             return id_token
 
         if "email" in id_token and "email_verified" in id_token:
             if (
-                id_token["email"] in self.config[CONF_EMAILS]
+                id_token["email"] in self.config.get(CONF_EMAILS, [])
                 and id_token["email_verified"]
             ):
                 return id_token
