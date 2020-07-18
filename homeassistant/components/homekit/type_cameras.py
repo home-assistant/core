@@ -128,7 +128,6 @@ class Camera(HomeAccessory, PyhapCamera):
     def __init__(self, hass, driver, name, entity_id, aid, config):
         """Initialize a Camera accessory object."""
         self._ffmpeg = hass.data[DATA_FFMPEG]
-        self._cur_session = None
         for config_key in CONFIG_DEFAULTS:
             if config_key not in config:
                 config[config_key] = CONFIG_DEFAULTS[config_key]
@@ -311,43 +310,41 @@ class Camera(HomeAccessory, PyhapCamera):
         if not opened:
             _LOGGER.error("Failed to open ffmpeg stream")
             return False
-        session_info["stream"] = stream
+
         _LOGGER.info(
             "[%s] Started stream process - PID %d",
             session_info["id"],
             stream.process.pid,
         )
 
-        ffmpeg_watcher = async_track_time_interval(
-            self.hass, self._async_ffmpeg_watch, FFMPEG_WATCH_INTERVAL
+        session_info["stream"] = stream
+        session_info[FFMPEG_PID] = stream.process.pid
+        session_info[FFMPEG_WATCHER] = async_track_time_interval(
+            self.hass,
+            lambda: self._async_ffmpeg_watch(session_info["id"]),
+            FFMPEG_WATCH_INTERVAL,
         )
-        self._cur_session = {
-            FFMPEG_WATCHER: ffmpeg_watcher,
-            FFMPEG_PID: stream.process.pid,
-            SESSION_ID: session_info["id"],
-        }
 
-        return await self._async_ffmpeg_watch(0)
+        return await self._async_ffmpeg_watch(session_info["id"])
 
-    async def _async_ffmpeg_watch(self, _):
+    async def _async_ffmpeg_watch(self, session_id):
         """Check to make sure ffmpeg is still running and cleanup if not."""
-        ffmpeg_pid = self._cur_session[FFMPEG_PID]
-        session_id = self._cur_session[SESSION_ID]
+        ffmpeg_pid = self.sessions[session_id][FFMPEG_PID]
         if pid_is_alive(ffmpeg_pid):
             return True
 
         _LOGGER.warning("Streaming process ended unexpectedly - PID %d", ffmpeg_pid)
-        self._async_stop_ffmpeg_watch()
+        self._async_stop_ffmpeg_watch(session_id)
         self.set_streaming_available(self.sessions[session_id]["stream_idx"])
         return False
 
     @callback
-    def _async_stop_ffmpeg_watch(self):
+    def _async_stop_ffmpeg_watch(self, session_id):
         """Cleanup a streaming session after stopping."""
-        if not self._cur_session:
+        if FFMPEG_WATCHER not in self.sessions[session_id]:
             return
-        self._cur_session[FFMPEG_WATCHER]()
-        self._cur_session = None
+        self.sessions[session_id][FFMPEG_WATCHER]()
+        del self.sessions[session_id][FFMPEG_WATCHER]
 
     async def stop_stream(self, session_info):
         """Stop the stream for the given ``session_id``."""
