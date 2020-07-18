@@ -10,6 +10,7 @@ from homeassistant.components import sun
 from homeassistant.const import MATCH_ALL
 import homeassistant.core as ha
 from homeassistant.core import callback
+from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.event import (
     async_call_later,
     async_track_point_in_time,
@@ -1180,3 +1181,104 @@ async def test_async_track_point_in_time_cancel(hass):
 
     assert len(times) == 1
     assert times[0].tzinfo.zone == "US/Hawaii"
+
+
+async def test_async_track_entity_registry_updated_event(hass):
+    """Test tracking entity registry updates for an entity_id."""
+
+    entity_id = "switch.puppy_feeder"
+    new_entity_id = "switch.dog_feeder"
+    untracked_entity_id = "switch.kitty_feeder"
+
+    hass.states.async_set(entity_id, "on")
+    await hass.async_block_till_done()
+    event_data = []
+
+    @ha.callback
+    def run_callback(event):
+        event_data.append(event.data)
+
+    unsub1 = hass.helpers.event.async_track_entity_registry_updated_event(
+        entity_id, run_callback
+    )
+    unsub2 = hass.helpers.event.async_track_entity_registry_updated_event(
+        new_entity_id, run_callback
+    )
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "entity_id": entity_id}
+    )
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED,
+        {"action": "create", "entity_id": untracked_entity_id},
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED,
+        {
+            "action": "update",
+            "entity_id": new_entity_id,
+            "old_entity_id": entity_id,
+            "changes": {},
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED, {"action": "remove", "entity_id": new_entity_id}
+    )
+    await hass.async_block_till_done()
+
+    unsub1()
+    unsub2()
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "entity_id": entity_id}
+    )
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "entity_id": new_entity_id}
+    )
+    await hass.async_block_till_done()
+
+    assert event_data[0] == {"action": "create", "entity_id": "switch.puppy_feeder"}
+    assert event_data[1] == {
+        "action": "update",
+        "changes": {},
+        "entity_id": "switch.dog_feeder",
+        "old_entity_id": "switch.puppy_feeder",
+    }
+    assert event_data[2] == {"action": "remove", "entity_id": "switch.dog_feeder"}
+
+
+async def test_async_track_entity_registry_updated_event_with_a_callback_that_throws(
+    hass,
+):
+    """Test tracking entity registry updates for an entity_id when one callback throws."""
+
+    entity_id = "switch.puppy_feeder"
+
+    hass.states.async_set(entity_id, "on")
+    await hass.async_block_till_done()
+    event_data = []
+
+    @ha.callback
+    def run_callback(event):
+        event_data.append(event.data)
+
+    @ha.callback
+    def failing_callback(event):
+        raise ValueError
+
+    unsub1 = hass.helpers.event.async_track_entity_registry_updated_event(
+        entity_id, failing_callback
+    )
+    unsub2 = hass.helpers.event.async_track_entity_registry_updated_event(
+        entity_id, run_callback
+    )
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "entity_id": entity_id}
+    )
+    await hass.async_block_till_done()
+    unsub1()
+    unsub2()
+
+    assert event_data[0] == {"action": "create", "entity_id": "switch.puppy_feeder"}
