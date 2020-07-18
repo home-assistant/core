@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 
 from raincloudy.core import RainCloudy
+from raincloudy.exceptions import RainCloudyException
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
@@ -106,6 +107,14 @@ def setup(hass, config):
         hass.data[DATA_RAINCLOUD] = RainCloudHub(raincloud)
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Rain Cloud service: %s", str(ex))
+        hass.components.persistent_notification.create(
+            f"Error: {ex}<br />" "You will need to restart hass after fixing.",
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID,
+        )
+        return False
+    except RainCloudyException as ex:
+        _LOGGER.error("Problem connecting to Rain Cloud service: %s", str(ex))
         hass.components.persistent_notification.create(
             f"Error: {ex}<br />" "You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
