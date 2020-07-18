@@ -89,18 +89,6 @@ async def async_attach_trigger(
         @callback
         def call_action():
             """Call action with right context."""
-            _LOGGER.debug(
-                "Calling automation action: %s",
-                {
-                    "trigger": {
-                        "platform": platform_type,
-                        "entity_id": entity,
-                        "from_state": from_s,
-                        "to_state": to_s,
-                        "for": time_delta if not time_delta else period[entity],
-                    }
-                },
-            )
             hass.async_run_job(
                 action(
                     {
