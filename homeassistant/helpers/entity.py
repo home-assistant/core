@@ -529,14 +529,11 @@ class Entity(ABC):
     async def _async_registry_updated(self, event: Event) -> None:
         """Handle entity registry update."""
         data = event.data
-        if data["action"] == "remove" and data["entity_id"] == self.entity_id:
+        if data["action"] == "remove":
             await self.async_removed_from_registry()
             await self.async_remove()
 
-        if (
-            data["action"] != "update"
-            or data.get("old_entity_id", data["entity_id"]) != self.entity_id
-        ):
+        if data["action"] != "update":
             return
 
         assert self.hass is not None
