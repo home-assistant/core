@@ -143,11 +143,6 @@ class AccuWeatherEntity(WeatherEntity):
             return forecast
         return None
 
-    @property
-    def entity_registry_enabled_default(self):
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return True
-
     async def async_added_to_hass(self):
         """Connect to dispatcher listening for entity data notifications."""
         self.async_on_remove(
