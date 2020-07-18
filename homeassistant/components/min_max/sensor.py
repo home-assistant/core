@@ -83,7 +83,7 @@ def calc_min(sensor_values):
     val = None
     entity_id = None
     for sensor_id, sensor_value in sensor_values:
-        if sensor_value != STATE_UNKNOWN:
+        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
             if val is None or val > sensor_value:
                 entity_id, val = sensor_id, sensor_value
     return entity_id, val
@@ -94,7 +94,7 @@ def calc_max(sensor_values):
     val = None
     entity_id = None
     for sensor_id, sensor_value in sensor_values:
-        if sensor_value != STATE_UNKNOWN:
+        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
             if val is None or val < sensor_value:
                 entity_id, val = sensor_id, sensor_value
     return entity_id, val
@@ -105,7 +105,7 @@ def calc_mean(sensor_values, round_digits):
     sensor_value_sum = 0
     count = 0
     for _, sensor_value in sensor_values:
-        if sensor_value != STATE_UNKNOWN:
+        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
             sensor_value_sum += sensor_value
             count += 1
     if count == 0:
@@ -118,7 +118,7 @@ def calc_median(sensor_values, round_digits):
     count = 0
     sensor_value_list = []
     for _, sensor_value in sensor_values:
-        if sensor_value != STATE_UNKNOWN:
+        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
             count += 1
             sensor_value_list.append(sensor_value)
     if count == 0:
