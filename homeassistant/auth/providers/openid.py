@@ -1,7 +1,6 @@
 """OpenID based authentication provider."""
 
 import logging
-import re
 from secrets import token_hex
 from typing import Any, Dict, Optional, cast
 
@@ -229,12 +228,7 @@ class OpenIdAuthProvider(AuthProvider):
         elif "name" in credentials.data:
             name = credentials.data["name"]
         elif "email" in credentials.data:
-            email = credentials.data["email"]
-            match = re.match(r"[^@]+", email)
-            if match:
-                name = str(match.group(0))
-            else:
-                name = str(email)
+            name = cast(str, credentials.data["email"]).split("@", 1)[0]
         else:
             name = credentials.data["sub"]
 
