@@ -105,7 +105,7 @@ async def async_setup_entry(
         )
 
 
-class RfxtrxBinarySensor(BinarySensorEntity, RfxtrxEntity):
+class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
     """A representation of a RFXtrx binary sensor."""
 
     def __init__(
