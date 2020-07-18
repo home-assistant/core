@@ -59,8 +59,8 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if not places:
                 errors[CONF_CITY] = "empty"
                 return await self._show_setup_form(user_input, errors)
-            else:
-                return await self.async_step_cities(places=places)
+
+            return await self.async_step_cities(places=places)
 
         # Check if already configured
         await self.async_set_unique_id(f"{latitude}, {longitude}")
