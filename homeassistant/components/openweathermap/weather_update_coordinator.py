@@ -61,12 +61,11 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     def _convert_weather_response(self, weather_response):
         return {
-            ATTR_API_TEMPERATURE: self.hass.config.units.temperature(
-                float(weather_response.get_temperature("celsius").get("temp")),
-                TEMP_CELSIUS,
+            ATTR_API_TEMPERATURE: _get_temperature_in_current_unit(
+                self.hass, weather_response.get_temperature("celsius").get("temp")
             ),
-            ATTR_API_PRESSURE: self.hass.config.units.pressure(
-                weather_response.get_pressure().get("press"), PRESSURE_PA
+            ATTR_API_PRESSURE: _get_pressure_in_current_unit(
+                self.hass, weather_response.get_pressure().get("press")
             ),
             ATTR_API_HUMIDITY: weather_response.get_humidity(),
             ATTR_API_WIND_BEARING: weather_response.get_wind().get("deg"),
@@ -78,6 +77,14 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_CONDITION: _get_condition(weather_response.get_weather_code()),
             ATTR_API_WEATHER_CODE: weather_response.get_weather_code(),
         }
+
+
+def _get_temperature_in_current_unit(hass, value):
+    return hass.config.units.temperature(float(value), TEMP_CELSIUS)
+
+
+def _get_pressure_in_current_unit(hass, value):
+    return hass.config.units.pressure(value, PRESSURE_PA)
 
 
 def _get_rain(rain):

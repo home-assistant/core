@@ -18,16 +18,16 @@ class AbstractOpenWeatherMapSensor(Entity):
         name,
         unique_id,
         sensor_type,
-        sensor_types,
+        sensor_configuration,
         coordinator: DataUpdateCoordinator,
     ):
         """Initialize the sensor."""
         self._name = name
         self._unique_id = unique_id
         self._sensor_type = sensor_type
-        self._sensor_name = sensor_types[sensor_type][SENSOR_NAME]
-        self._unit_of_measurement = sensor_types[sensor_type][SENSOR_UNIT]
-        self._device_class = sensor_types[sensor_type][SENSOR_DEVICE_CLASS]
+        self._sensor_name = sensor_configuration[SENSOR_NAME]
+        self._unit_of_measurement = sensor_configuration[SENSOR_UNIT]
+        self._device_class = sensor_configuration[SENSOR_DEVICE_CLASS]
         self._coordinator = coordinator
 
     @property
