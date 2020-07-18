@@ -76,6 +76,8 @@ async def async_unload_entry(hass, config_entry):
         )
     )
 
+    hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
+
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
