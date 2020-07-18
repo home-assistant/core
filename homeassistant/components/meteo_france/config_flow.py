@@ -78,6 +78,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 places_for_form[_build_place_key(place)] = f"{place}"
 
             return await self._show_cities_form(places_for_form)
+        # for import and only 1 city in the search result
         if places and not user_input:
             user_input = {CONF_CITY: _build_place_key(places[0])}
 
