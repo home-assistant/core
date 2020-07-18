@@ -36,7 +36,7 @@ class SmartMeterTexasSensor(Entity):
     @property
     def name(self):
         """Device Name."""
-        return f"Electric meter {self._meter_number}"
+        return "Electric meter"
 
     @property
     def icon(self):
