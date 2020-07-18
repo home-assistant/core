@@ -40,6 +40,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
@@ -491,9 +492,13 @@ class ADBDevice(MediaPlayerEntity):
         """Return the device unique id."""
         return self._unique_id
 
-    async def async_will_remove_from_hass(self):
+    async def _async_stop(self, event):
         """Close the ADB socket connection."""
         await self.aftv.adb_close()
+
+    async def async_added_to_hass(self):
+        """Run when entity is added to HA."""
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_stop)
 
     @adb_decorator()
     async def async_get_media_image(self):
