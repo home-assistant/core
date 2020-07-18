@@ -86,7 +86,7 @@ WANTED_SCOPES = {"openid", "email", "profile"}
 
 @AUTH_PROVIDERS.register("openid")
 class OpenIdAuthProvider(AuthProvider):
-    """Example auth provider based on hardcoded usernames and passwords."""
+    """Auth provider using openid connect as the authentication source."""
 
     DEFAULT_TITLE = "OpenID Connect"
 
