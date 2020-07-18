@@ -27,7 +27,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return MeteoFranceOptionsFlowHandler(config_entry)
 
-    def _show_setup_form(self, user_input=None, errors=None):
+    async def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
 
         if user_input is None:
@@ -46,7 +46,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is None:
-            return self._show_setup_form(user_input, errors)
+            return await self._show_setup_form(user_input, errors)
 
         city = user_input[CONF_CITY]  # Might be a city name or a postal code
         latitude = user_input.get(CONF_LATITUDE)
@@ -56,7 +56,11 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             client = MeteoFranceClient()
             places = await self.hass.async_add_executor_job(client.search_places, city)
             _LOGGER.debug("places search result: %s", places)
-            return await self.async_step_cities(places=places)
+            if not places:
+                errors["base"] = "empty"
+                return await self._show_setup_form(user_input, errors)
+            else:
+                return await self.async_step_cities(places=places)
 
         # Check if already configured
         await self.async_set_unique_id(f"{latitude}, {longitude}")
