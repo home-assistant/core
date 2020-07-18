@@ -1168,13 +1168,6 @@ async def test_connection_closed_on_ha_stop(hass):
             )
             await hass.async_block_till_done()
 
-            await hass.helpers.entity_component.async_update_entity(entity_id)
-            await hass.async_block_till_done()
-
-            state = hass.states.get(entity_id)
-            assert state is not None
-            assert state.state == STATE_OFF
-
             with patch(
                 "androidtv.androidtv.androidtv_async.AndroidTVAsync.adb_close"
             ) as adb_close:
