@@ -6,7 +6,6 @@ import RFXtrx as rfxtrxmod
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_DEVICES
 from homeassistant.core import callback
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
     CONF_AUTOMATIC_ADD,
@@ -14,7 +13,7 @@ from . import (
     DEFAULT_SIGNAL_REPETITIONS,
     DOMAIN,
     SIGNAL_EVENT,
-    RfxtrxDevice,
+    RfxtrxCommandEntity,
     get_device_id,
     get_rfx_object,
 )
@@ -89,18 +88,8 @@ async def async_setup_entry(
         hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, switch_update)
 
 
-class RfxtrxSwitch(RfxtrxDevice, SwitchEntity, RestoreEntity):
+class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
     """Representation of a RFXtrx switch."""
-
-    async def async_added_to_hass(self):
-        """Restore RFXtrx switch device state (ON/OFF)."""
-        await super().async_added_to_hass()
-
-        self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_EVENT, self._handle_event
-            )
-        )
 
     def _apply_event(self, event):
         """Apply command from rfxtrx."""
@@ -119,6 +108,11 @@ class RfxtrxSwitch(RfxtrxDevice, SwitchEntity, RestoreEntity):
         self._apply_event(event)
 
         self.async_write_ha_state()
+
+    @property
+    def is_on(self):
+        """Return true if device is on."""
+        return self._state
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
