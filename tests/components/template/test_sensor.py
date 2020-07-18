@@ -479,7 +479,7 @@ async def test_creating_sensor_loads_group(hass):
         )
         await hass.async_block_till_done()
 
-    assert ["group", "sensor.template"] == order
+    assert order == ["group", "sensor.template"]
 
 
 async def test_available_template_with_entities(hass):
