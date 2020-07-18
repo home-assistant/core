@@ -16,7 +16,7 @@ from . import (
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
     SIGNAL_EVENT,
-    RfxtrxDevice,
+    RfxtrxCommandEntity,
     get_device_id,
     get_rfx_object,
 )
@@ -92,20 +92,10 @@ async def async_setup_entry(
         hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, light_update)
 
 
-class RfxtrxLight(RfxtrxDevice, LightEntity):
+class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
     """Representation of a RFXtrx light."""
 
     _brightness = 0
-
-    async def async_added_to_hass(self):
-        """Restore RFXtrx device state (ON/OFF)."""
-        await super().async_added_to_hass()
-
-        self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_EVENT, self._handle_event
-            )
-        )
 
     @property
     def brightness(self):
@@ -116,6 +106,11 @@ class RfxtrxLight(RfxtrxDevice, LightEntity):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_RFXTRX
+
+    @property
+    def is_on(self):
+        """Return true if device is on."""
+        return self._state
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
