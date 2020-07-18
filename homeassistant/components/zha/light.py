@@ -1,4 +1,5 @@
 """Lights on Zigbee Home Automation networks."""
+import asyncio
 from collections import Counter
 from datetime import timedelta
 import functools
@@ -406,7 +407,7 @@ class Light(BaseLight, ZhaEntity):
 
     async def async_get_state(self, from_cache=True):
         """Attempt to retrieve on off state from the light."""
-        self.debug("polling current state")
+        self.debug("polling current state - from cache: %s", from_cache)
         if self._on_off_channel:
             state = await self._on_off_channel.get_attribute_value(
                 "on_off", from_cache=from_cache
@@ -495,6 +496,16 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         self._color_channel = group.endpoint[Color.cluster_id]
         self._identify_channel = group.endpoint[Identify.cluster_id]
 
+    async def async_turn_on(self, **kwargs):
+        """Turn the entity on."""
+        await super().async_turn_on(**kwargs)
+        await self._force_member_updates()
+
+    async def async_turn_off(self, **kwargs):
+        """Turn the entity off."""
+        await super().async_turn_off(**kwargs)
+        await self._force_member_updates()
+
     async def async_update(self) -> None:
         """Query all members and determine the light group state."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
@@ -541,3 +552,11 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         # Bitwise-and the supported features with the GroupedLight's features
         # so that we don't break in the future when a new feature is added.
         self._supported_features &= SUPPORT_GROUP_LIGHT
+
+    async def _force_member_updates(self):
+        """Force the update of member entities to ensure the states are correct for bulbs that don't report their state."""
+        component = self.hass.data[light.DOMAIN]
+        entities = [component.get_entity(entity_id) for entity_id in self._entity_ids]
+        tasks = [entity.async_get_state(from_cache=False) for entity in entities]
+        if tasks:
+            await asyncio.gather(*tasks)
