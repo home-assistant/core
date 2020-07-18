@@ -102,34 +102,30 @@ def calc_max(sensor_values):
 
 def calc_mean(sensor_values, round_digits):
     """Calculate mean value, honoring unknown states."""
-    sensor_value_sum = 0
-    count = 0
+    result = []
     for _, sensor_value in sensor_values:
         if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
-            sensor_value_sum += sensor_value
-            count += 1
-    if count == 0:
+            result.append(sensor_value)
+    if len(result) == 0:
         return None
-    return round(sensor_value_sum / count, round_digits)
+    return round(sum(result) / len(result), round_digits)
 
 
 def calc_median(sensor_values, round_digits):
     """Calculate median value, honoring unknown states."""
-    count = 0
-    sensor_value_list = []
+    result = []
     for _, sensor_value in sensor_values:
         if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
-            count += 1
-            sensor_value_list.append(sensor_value)
-    if count == 0:
+            result.append(sensor_value)
+    if len(result) == 0:
         return None
-    sensor_value_list.sort()
-    if count % 2 == 0:
-        median1 = sensor_value_list[count // 2]
-        median2 = sensor_value_list[count // 2 - 1]
+    result.sort()
+    if len(result) % 2 == 0:
+        median1 = result[len(result) // 2]
+        median2 = result[len(result) // 2 - 1]
         median = (median1 + median2) / 2
     else:
-        median = sensor_value_list[count // 2]
+        median = result[len(result) // 2]
     return round(median, round_digits)
 
 
