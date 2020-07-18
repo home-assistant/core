@@ -32,6 +32,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import State, callback
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
@@ -496,15 +497,27 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         self._color_channel = group.endpoint[Color.cluster_id]
         self._identify_channel = group.endpoint[Identify.cluster_id]
 
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+        force_refresh_debouncer = Debouncer(
+            self.hass,
+            _LOGGER,
+            cooldown=3,
+            immediate=True,
+            function=self._force_member_updates,
+        )
+        self._debounced_member_refresh = force_refresh_debouncer
+
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
         await super().async_turn_on(**kwargs)
-        await self._force_member_updates()
+        await self._debounced_member_refresh.async_call()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
         await super().async_turn_off(**kwargs)
-        await self._force_member_updates()
+        await self._debounced_member_refresh.async_call()
 
     async def async_update(self) -> None:
         """Query all members and determine the light group state."""
