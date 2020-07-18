@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity
+from homeassistant.helpers import aiohttp_client, device_registry as dr, entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -51,9 +51,10 @@ async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Control4 from a config entry."""
     entry_data = hass.data[DOMAIN].setdefault(entry.entry_id, {})
+    account_session = aiohttp_client.async_get_clientsession(hass)
 
     config = entry.data
-    account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD])
+    account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD], account_session)
     try:
         await account.getAccountBearerToken()
     except client_exceptions.ClientError as exception:
@@ -71,7 +72,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     entry_data[CONF_CONTROLLER_UNIQUE_ID] = controller_unique_id
 
     director_token_dict = await account.getDirectorBearerToken(controller_unique_id)
-    director = C4Director(config[CONF_HOST], director_token_dict[CONF_TOKEN])
+    director_session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
+
+    director = C4Director(
+        config[CONF_HOST], director_token_dict[CONF_TOKEN], director_session
+    )
     entry_data[CONF_DIRECTOR] = director
     entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION] = director_token_dict["token_expiration"]
 

@@ -8,6 +8,7 @@ from pyControl4.error_handling import BadToken
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import aiohttp_client
 
 from .const import (
     CONF_ACCOUNT,
@@ -43,11 +44,18 @@ async def director_update_data(
 async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
     """Store updated authentication and director tokens in hass.data."""
     config = entry.data
-    account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD])
+    account_session = aiohttp_client.async_get_clientsession(hass)
+
+    account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD], account_session)
     await account.getAccountBearerToken()
+
     controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
     director_token_dict = await account.getDirectorBearerToken(controller_unique_id)
-    director = C4Director(config[CONF_HOST], director_token_dict[CONF_TOKEN])
+    director_session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
+
+    director = C4Director(
+        config[CONF_HOST], director_token_dict[CONF_TOKEN], director_session
+    )
     director_token_expiry = director_token_dict["token_expiration"]
 
     _LOGGER.debug("Saving new tokens in hass data")
