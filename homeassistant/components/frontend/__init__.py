@@ -76,6 +76,7 @@ DATA_EXTRA_MODULE_URL = "frontend_extra_module_url"
 DATA_EXTRA_JS_URL_ES5 = "frontend_extra_js_url_es5"
 DATA_THEMES = "frontend_themes"
 DATA_DEFAULT_THEME = "frontend_default_theme"
+DATA_DEFAULT_DARK_THEME = "frontend_default_dark_theme"
 DEFAULT_THEME = "default"
 
 PRIMARY_COLOR = "primary-color"
@@ -113,6 +114,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 SERVICE_SET_THEME = "set_theme"
+SERVICE_SET_DARK_THEME = "set_dark_theme"
 SERVICE_RELOAD_THEMES = "reload_themes"
 
 
@@ -357,6 +359,18 @@ def _async_setup_themes(hass, themes):
         else:
             _LOGGER.warning("Theme %s is not defined", name)
 
+    @callback
+    def set_dark_theme(call):
+        """Set backend-preferred dark theme."""
+        data = call.data
+        name = data[CONF_NAME]
+        if name == DEFAULT_THEME or name in hass.data[DATA_THEMES]:
+            _LOGGER.info("Theme %s set as default dark", name)
+            hass.data[DATA_DEFAULT_DARK_THEME] = name
+            update_theme_and_fire_event()
+        else:
+            _LOGGER.warning("Theme %s is not defined", name)
+
     async def reload_themes(_):
         """Reload themes."""
         config = await async_hass_config_yaml(hass)
@@ -364,6 +378,11 @@ def _async_setup_themes(hass, themes):
         hass.data[DATA_THEMES] = new_themes
         if hass.data[DATA_DEFAULT_THEME] not in new_themes:
             hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
+        if (
+            hass.data.get(DATA_DEFAULT_DARK_THEME)
+            and hass.data.get(DATA_DEFAULT_DARK_THEME) not in new_themes
+        ):
+            hass.data[DATA_DEFAULT_DARK_THEME] = None
         update_theme_and_fire_event()
 
     service.async_register_admin_service(
@@ -371,6 +390,14 @@ def _async_setup_themes(hass, themes):
         DOMAIN,
         SERVICE_SET_THEME,
         set_theme,
+        vol.Schema({vol.Required(CONF_NAME): cv.string}),
+    )
+
+    service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_DARK_THEME,
+        set_dark_theme,
         vol.Schema({vol.Required(CONF_NAME): cv.string}),
     )
 
@@ -536,6 +563,7 @@ def websocket_get_themes(hass, connection, msg):
             {
                 "themes": hass.data[DATA_THEMES],
                 "default_theme": hass.data[DATA_DEFAULT_THEME],
+                "default_dark_theme": hass.data.get(DATA_DEFAULT_DARK_THEME),
             },
         )
     )
