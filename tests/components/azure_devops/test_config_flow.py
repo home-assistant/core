@@ -27,16 +27,6 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_show_reauth_form(hass: HomeAssistant) -> None:
-    """Test that the reauth form is served."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "reauth"
-
-
 async def test_authorization_error(hass: HomeAssistant) -> None:
     """Test we show user form on Azure DevOps authorization error."""
     result = await hass.config_entries.flow.async_init(
@@ -62,7 +52,7 @@ async def test_authorization_error(hass: HomeAssistant) -> None:
 async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
     """Test we show user form on Azure DevOps authorization error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}
+        DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -106,7 +96,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
 async def test_reauth_connection_error(hass: HomeAssistant) -> None:
     """Test we show user form on Azure DevOps connection error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}
+        DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -155,7 +145,7 @@ async def test_project_error(hass: HomeAssistant) -> None:
 async def test_reauth_project_error(hass: HomeAssistant) -> None:
     """Test we show user form on Azure DevOps project error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}
+        DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -182,7 +172,7 @@ async def test_reauth_project_error(hass: HomeAssistant) -> None:
 async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test reauth works."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}
+        DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
