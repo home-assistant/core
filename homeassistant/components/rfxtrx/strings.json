@@ -1,9 +1,26 @@
 {
-    "config": {
-        "step": {},
-        "error": {},
-        "abort": {
-            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-        }
+  "title": "Rfxtrx",
+  "config": {
+    "flow_title": "Rfxtrx",
+    "step": {
+      "init": {
+        "data": {}
+      }
+    },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "options": {
+    "step": {
+      "prompt_options": {
+        "data": {
+          "selected_option": "Select configuration option"
+        }
+      }
+    }
+  }
 }

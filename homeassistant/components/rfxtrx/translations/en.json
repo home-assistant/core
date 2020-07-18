@@ -1,9 +1,50 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-        },
-        "error": {},
-        "step": {}
-    }
+    "options": {
+        "step": {
+            "prompt_options": {
+                "data": {
+                  "selected_option": "Select configuration option"
+                },
+                "title": "Rfxtrx Options"
+            },
+            "global_options": {
+                "data": {
+                  "debug": "Enable debugging"
+                },
+                "title": "Global Rfxtrx Options"
+            },
+            "discovered_devices": {
+                "data": {
+                  "discovered_devices": "Select device",
+                  "device_class": "Select device class"
+                },
+                "title": "Discovered devices"
+            },
+            "set_device_options": {
+                "data": {
+                  "fire_event": "Enable device event",
+                  "off_delay": "Off delay",
+                  "data_bit": "Number of data bits",
+                  "command_on": "Data bits value for command on",
+                  "command_off": "Data bits value for command off",
+                  "signal_repetitions": "Number of signal repetitions"
+                },
+                "title": "Configure device options"
+            },
+            "device_by_id": {
+                "data": {
+                    "device_id": "Device id",
+                    "device_class": "Select device class"
+                },
+                "title": "Enter device id"
+            },
+            "select_device_conf": {
+                "data": {
+                    "configured_devices": "Select configured device"
+                },
+                "title": "Enter device id"
+            }
+        }
+    },
+    "title": "Demo"
 }
