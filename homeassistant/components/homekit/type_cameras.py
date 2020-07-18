@@ -31,6 +31,7 @@ from .const import (
     CONF_MAX_HEIGHT,
     CONF_MAX_WIDTH,
     CONF_STREAM_ADDRESS,
+    CONF_STREAM_COUNT,
     CONF_STREAM_SOURCE,
     CONF_SUPPORT_AUDIO,
     CONF_VIDEO_CODEC,
@@ -42,6 +43,7 @@ from .const import (
     DEFAULT_MAX_FPS,
     DEFAULT_MAX_HEIGHT,
     DEFAULT_MAX_WIDTH,
+    DEFAULT_STREAM_COUNT,
     DEFAULT_SUPPORT_AUDIO,
     DEFAULT_VIDEO_CODEC,
     DEFAULT_VIDEO_MAP,
@@ -118,6 +120,7 @@ CONFIG_DEFAULTS = {
     CONF_VIDEO_CODEC: DEFAULT_VIDEO_CODEC,
     CONF_AUDIO_PACKET_SIZE: DEFAULT_AUDIO_PACKET_SIZE,
     CONF_VIDEO_PACKET_SIZE: DEFAULT_VIDEO_PACKET_SIZE,
+    CONF_STREAM_COUNT: DEFAULT_STREAM_COUNT,
 }
 
 
@@ -174,7 +177,7 @@ class Camera(HomeAccessory, PyhapCamera):
             "audio": audio_options,
             "address": stream_address,
             "srtp": True,
-            "stream_count": 4,
+            "stream_count": config[CONF_STREAM_COUNT],
         }
 
         super().__init__(
