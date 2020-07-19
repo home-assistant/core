@@ -259,7 +259,7 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice):
         return self._sub_device.status[self._data_key]
 
 
-class XiaomiGatewayLightSensor(Entity):
+class XiaomiGatewayIlluminanceSensor(Entity):
     """Representation of the XiaomiGatewayLightSensor."""
 
     def __init__(self, gateway_device, gateway_name, gateway_device_id):
