@@ -36,8 +36,8 @@ async def validate_input(hass: core.HomeAssistant, data):
     # )
 
     try:
-        client = syncthing.System(data["token"], host=data["host"], port=data["port"])
-        await hass.async_add_executor_job(client.config)
+        system = syncthing.System(data["token"], host=data["host"], port=data["port"])
+        await hass.async_add_executor_job(system.config)
     except syncthing.SyncthingError as err:
         if type(err.__cause__) is requests.exceptions.HTTPError:
             if err.__cause__.response.status_code == 403:
