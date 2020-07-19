@@ -15,7 +15,8 @@
                     "name": "Name",
                     "host": "[%key:common::config_flow::data::host%]",
                     "token": "Token",
-                    "port": "[%key:common::config_flow::data::port%]"
+                    "port": "[%key:common::config_flow::data::port%]",
+                    "use_https": "Use HTTPS"
                 }
             }
         }

@@ -15,16 +15,15 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Syncthing sensors."""
 
-    syncthing = hass.data[DOMAIN][config_entry.entry_id]
-    system = syncthing["system"]
+    client = hass.data[DOMAIN][config_entry.entry_id]
     name = config_entry.data[CONF_NAME]
 
-    config = await hass.async_add_executor_job(system.config)
+    config = await hass.async_add_executor_job(client.system.config)
 
     dev = []
 
     for folder in config["folders"]:
-        dev.append(FolderSensor(hass, syncthing, name, folder))
+        dev.append(FolderSensor(hass, client, name, folder))
 
     async_add_entities(dev, True)
 
@@ -32,10 +31,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FolderSensor(Entity):
     """A Syncthing folder sensor."""
 
-    def __init__(self, hass, syncthing, client_name, folder):
+    def __init__(self, hass, client, client_name, folder):
         """Initialize the sensor."""
         self._hass = hass
-        self._syncthing = syncthing
+        self._client = client
         self._client_name = client_name
         self._folder = folder
         self._state = None
@@ -76,7 +75,7 @@ class FolderSensor(Entity):
         """Update device state."""
         try:
             self._state = await self._hass.async_add_executor_job(
-                self._syncthing["database"].status, self._folder["id"]
+                self._client.database.status, self._folder["id"]
             )
         except syncthing.SyncthingError:
             self._state = None
