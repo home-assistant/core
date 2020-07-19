@@ -539,6 +539,9 @@ py-melissa-climate==2.0.0
 # homeassistant.components.seventeentrack
 py17track==2.2.2
 
+# homeassistant.components.control4
+pyControl4==0.0.6
+
 # homeassistant.components.tplink
 pyHS100==0.3.5.1
 

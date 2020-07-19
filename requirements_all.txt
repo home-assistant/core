@@ -1167,6 +1167,9 @@ py17track==2.2.2
 # homeassistant.components.hdmi_cec
 pyCEC==0.4.13
 
+# homeassistant.components.control4
+pyControl4==0.0.6
+
 # homeassistant.components.tplink
 pyHS100==0.3.5.1
 
