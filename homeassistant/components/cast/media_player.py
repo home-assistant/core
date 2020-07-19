@@ -279,6 +279,8 @@ class CastDevice(MediaPlayerEntity):
                 cast_info.uuid,
                 cast_info.model_name,
                 cast_info.friendly_name,
+                None,
+                None,
             ),
             ChromeCastZeroconf.get_zeroconf(),
         )
