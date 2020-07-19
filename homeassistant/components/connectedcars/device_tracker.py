@@ -2,36 +2,30 @@
 import logging
 from typing import Any, Callable, Dict, List
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_NAME,
-    ATTR_ATTRIBUTION,
-)
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_NAME
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
 
+from . import ConnectedCarsDataUpdateCoordinator
 from .const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    DOMAIN,
-    ATTR_API_VEHICLE_VIN,
+    ATTR_API_VEHICLE_LICENSEPLATE,
     ATTR_API_VEHICLE_MAKE,
     ATTR_API_VEHICLE_MODEL,
     ATTR_API_VEHICLE_NAME,
-    ATTR_API_VEHICLE_LICENSEPLATE,
     ATTR_API_VEHICLE_POS_LATITUDE,
     ATTR_API_VEHICLE_POS_LONGITUDE,
+    ATTR_API_VEHICLE_VIN,
+    ATTR_ICON,
+    ATTR_IDENTIFIERS,
+    ATTR_LABEL,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTRIBUTION,
+    DOMAIN,
 )
-
-from . import ConnectedCarsDataUpdateCoordinator
-
-ATTRIBUTION = "Data provided by ConnectedCars.io"
-
-ATTR_ICON = "icon"
-ATTR_LABEL = "label"
 
 SENSOR_TYPES = {
     "position": {ATTR_ICON: "mdi:car-side", ATTR_LABEL: "position",},

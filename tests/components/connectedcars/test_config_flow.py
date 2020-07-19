@@ -1,6 +1,6 @@
 """Test the ConnectedCars.io config flow."""
 from homeassistant import config_entries, setup
-from homeassistant.components.connectedcars.config_flow import CannotConnect, InvalidAuth
+from homeassistant.components.connectedcars.config_flow import InvalidAuth, CannotGetVin
 from homeassistant.components.connectedcars.const import DOMAIN
 
 from tests.async_mock import patch
@@ -16,7 +16,7 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.connectedcars.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.connectedcars.config_flow.ConnectedcarsApiHandler.authenticate",
         return_value=True,
     ), patch(
         "homeassistant.components.connectedcars.async_setup", return_value=True
@@ -26,18 +26,20 @@ async def test_form(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
+                "namespace": "test:something",
                 "username": "test-username",
                 "password": "test-password",
+                "vim": "",
             },
         )
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Name of the device"
     assert result2["data"] == {
-        "host": "1.1.1.1",
+        "namespace": "test:something",
         "username": "test-username",
         "password": "test-password",
+        "vim": "",
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -51,15 +53,16 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.connectedcars.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.connectedcars.config_flow.ConnectedcarsApiHandler.authenticate",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
+                "namespace": "test:something",
                 "username": "test-username",
                 "password": "test-password",
+                "vim": "",
             },
         )
 
@@ -74,15 +77,16 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.connectedcars.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
+        "homeassistant.components.connectedcars.config_flow.ConnectedcarsApiHandler.authenticate",
+        side_effect=CannotGetVin,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
+                "namespace": "test:something",
                 "username": "test-username",
                 "password": "test-password",
+                "vim": "",
             },
         )
 

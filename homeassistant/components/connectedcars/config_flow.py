@@ -1,10 +1,9 @@
 """Config flow for ConnectedCars.io integration."""
 import logging
-import nest_asyncio
-
-import voluptuous as vol
 
 from connectedcars import ConnectedCarsClient, ConnectedCarsException
+import nest_asyncio
+import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 
@@ -23,7 +22,7 @@ DATA_SCHEMA = vol.Schema(
 
 
 class ConnectedcarsApiHandler:
-    """Connected Cars.io API connector class"""
+    """Connected Cars.io API connector class."""
 
     def __init__(self, namespace):
         """Initialize."""
@@ -46,7 +45,7 @@ class ConnectedcarsApiHandler:
         return True
 
     async def get_email(self) -> str:
-        """Gets the emailadress of the account"""
+        """Gets the emailadress of the account."""
 
         if not self.user_data:
             user_q = (
@@ -59,7 +58,7 @@ class ConnectedcarsApiHandler:
         return email
 
     async def get_vin(self, userinput_vin) -> str:
-        """Gets the vin name of the first car"""
+        """Gets the vin name of the first car."""
 
         if not self.vin:
             vin_q = "query User {\n viewer {\n vehicles {\n vehicle {\n id\n vin\n }\n}\n}\n}"

@@ -14,7 +14,7 @@
                     "namespace": "Namespace (semler:minvolkswagen)",
                     "password": "Password",
                     "username": "Username",
-                    "vin":"Vin"
+                    "vin": "Vin (optional - serialnumber)"
                 }
             }
         }

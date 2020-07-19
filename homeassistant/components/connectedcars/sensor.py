@@ -4,40 +4,37 @@ from typing import Any, Callable, Dict, List
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_NAME,
-    ATTR_DEVICE_CLASS,
     ATTR_ATTRIBUTION,
+    ATTR_DEVICE_CLASS,
+    ATTR_NAME,
     LENGTH_KILOMETERS,
     UNIT_PERCENTAGE,
-    VOLUME_LITERS,
     VOLT,
+    VOLUME_LITERS,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
+from . import ConnectedCarsDataUpdateCoordinator
 from .const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    DOMAIN,
-    ATTR_API_VEHICLE_VIN,
+    ATTR_API_VEHICLE_FUELLEVEL,
+    ATTR_API_VEHICLE_FUELPERCENTAGE,
+    ATTR_API_VEHICLE_LICENSEPLATE,
     ATTR_API_VEHICLE_MAKE,
     ATTR_API_VEHICLE_MODEL,
     ATTR_API_VEHICLE_NAME,
-    ATTR_API_VEHICLE_LICENSEPLATE,
-    ATTR_API_VEHICLE_FUELLEVEL,
-    ATTR_API_VEHICLE_FUELPERCENTAGE,
     ATTR_API_VEHICLE_ODOMETER,
+    ATTR_API_VEHICLE_VIN,
     ATTR_API_VEHICLE_VOLTAGE,
+    ATTR_ICON,
+    ATTR_IDENTIFIERS,
+    ATTR_LABEL,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_UNIT,
+    ATTRIBUTION,
+    DOMAIN,
 )
-
-from . import ConnectedCarsDataUpdateCoordinator
-
-ATTRIBUTION = "Data provided by ConnectedCars.io"
-
-ATTR_ICON = "icon"
-ATTR_LABEL = "label"
-ATTR_UNIT = "unit"
 
 SENSOR_TYPES = {
     ATTR_API_VEHICLE_ODOMETER: {
@@ -110,7 +107,6 @@ class ConnectedCarsSensor(Entity):
     def name(self):
         """Return the name."""
         return f"{self.coordinator.data[ATTR_API_VEHICLE_LICENSEPLATE]} {SENSOR_TYPES[self.kind][ATTR_LABEL]}"
-        # return f"{self._name} {SENSOR_TYPES[self.kind][ATTR_LABEL]}"
 
     @property
     def should_poll(self):
@@ -121,10 +117,6 @@ class ConnectedCarsSensor(Entity):
     def state(self):
         """Return the state."""
         self._state = self.coordinator.data[self.kind]
-        # if self.kind in [ATTR_API_PM1, ATTR_API_PRESSURE]:
-        #    self._state = round(self._state)
-        # if self.kind in [ATTR_API_TEMPERATURE, ATTR_API_HUMIDITY]:
-        #    self._state = round(self._state, 1)
         return self._state
 
     @property

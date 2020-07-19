@@ -1,42 +1,41 @@
 """The ConnectedCars.io integration."""
 import asyncio
-import logging
-import async_timeout
-
-from connectedcars import ConnectedCarsClient, ConnectedCarsException
 from datetime import timedelta
+import logging
 
+import async_timeout
+from connectedcars import ConnectedCarsClient, ConnectedCarsException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.util.dt import utcnow
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.dt import utcnow
 
 from .const import (
-    DOMAIN,
-    CONF_NAMESPACE,
-    CONNECTED_CARS_CLIENT,
-    COMPLETE_QUERY,
+    ATTR_API_USER_EMAIL,
     ATTR_API_USER_FIRSTNAME,
     ATTR_API_USER_LASTNAME,
-    ATTR_API_USER_EMAIL,
+    ATTR_API_VEHICLE_FUELLEVEL,
+    ATTR_API_VEHICLE_FUELPERCENTAGE,
     ATTR_API_VEHICLE_ID,
-    ATTR_API_VEHICLE_VIN,
+    ATTR_API_VEHICLE_LICENSEPLATE,
     ATTR_API_VEHICLE_MAKE,
     ATTR_API_VEHICLE_MODEL,
     ATTR_API_VEHICLE_NAME,
-    ATTR_API_VEHICLE_LICENSEPLATE,
-    ATTR_API_VEHICLE_FUELLEVEL,
-    ATTR_API_VEHICLE_FUELPERCENTAGE,
     ATTR_API_VEHICLE_ODOMETER,
-    ATTR_API_VEHICLE_VOLTAGE,
     ATTR_API_VEHICLE_POS_LATITUDE,
     ATTR_API_VEHICLE_POS_LONGITUDE,
+    ATTR_API_VEHICLE_VIN,
+    ATTR_API_VEHICLE_VOLTAGE,
+    COMPLETE_QUERY,
+    CONF_NAMESPACE,
+    CONNECTED_CARS_CLIENT,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)

@@ -1,20 +1,20 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This ConnectedCars.io-component is already configured"
+            "already_configured": "ConnectedCars.io komponenten er allerede konfigureret"
         },
         "error": {
-            "cannot_get_vin": "Could not connect get vin of car from ConnectedCars.io",
-            "invalid_auth": "Unable to login to ConnectedCars.io",
-            "unknown": "Unknown error occured"
+            "cannot_get_vin": "Kunne ikke hente vin for bilen fra ConnectedCars.io",
+            "invalid_auth": "Kunne ikke logge ind på ConnectedCars.io",
+            "unknown": "Ukendt fejl opstod"
         },
         "step": {
             "user": {
                 "data": {
                     "namespace": "Namespace (semler:minvolkswagen)",
-                    "password": "Password",
-                    "username": "Username",
-                    "vin":"Vin"
+                    "password": "Kodeord",
+                    "username": "Brugernavn",
+                    "vin":"Vin (optionel - serienummer)"
                 }
             }
         }
