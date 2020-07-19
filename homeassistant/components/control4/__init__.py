@@ -65,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             "Error authenticating with Control4 account API, incorrect username or password: %s",
             exception,
         )
-        raise ConfigEntryNotReady
+        return False
     entry_data[CONF_ACCOUNT] = account
 
     controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
