@@ -134,9 +134,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         gateway = hass.data[DOMAIN][config_entry.entry_id]
         # Gateway light
         entities.append(
-            XiaomiGatewayLight(
-                gateway, config_entry.title, config_entry.unique_id
-            )
+            XiaomiGatewayLight(gateway, config_entry.title, config_entry.unique_id)
         )
 
     async_add_entities(entities, update_before_add=True)
@@ -974,7 +972,6 @@ class XiaomiGatewayLight(LightEntity):
         self._rgb = (255, 255, 255)
         self._hs = (0, 0)
 
-
     @property
     def unique_id(self):
         """Return an unique ID."""
@@ -1036,23 +1033,27 @@ class XiaomiGatewayLight(LightEntity):
 
         brightness_and_color = brightness_and_color_to_int(brightness_pct, rgb)
         self._gateway.send("set_rgb", [brightness_and_color])
-        
+
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
         brightness_and_color = brightness_and_color_to_int(0, self._rgb)
         self._gateway.send("set_rgb", [brightness_and_color])
-        
+
         self.schedule_update_ha_state()
 
     async def async_update(self):
         """Fetch state from the device."""
         try:
-            state_int = await self.hass.async_add_executor_job(partial(self._gateway.send, "get_rgb"))
+            state_int = await self.hass.async_add_executor_job(
+                partial(self._gateway.send, "get_rgb")
+            )
         except GatewayException as ex:
             self._available = False
-            _LOGGER.error("Got exception while fetching the gateway light state: %s", ex)
+            _LOGGER.error(
+                "Got exception while fetching the gateway light state: %s", ex
+            )
             return
 
         state_int = state_int.pop()
