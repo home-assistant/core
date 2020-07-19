@@ -4,15 +4,15 @@
     "step": {
       "user": {
         "data": {
-          "namespace": "[%key:common::config_flow::data::namespace%]",
+          "namespace": "Namespace (semler:minvolkswagen)",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "vin": "[%key:common::config_flow::data::vin%]"
+          "vin": "Vin (optional - serialnumber)"
         }
       }
     },
     "error": {
-      "cannot_get_vin": "[%key:common::config_flow::error::cannot_get_vin%]",
+      "cannot_get_vin": "Could not connect get vin of car from ConnectedCars.io",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },

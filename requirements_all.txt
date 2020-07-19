@@ -422,6 +422,9 @@ concord232==0.15
 # homeassistant.components.upc_connect
 connect-box==0.2.5
 
+# homeassistant.components.connectedcars
+connectedcars==0.1.3
+
 # homeassistant.components.eddystone_temperature
 # homeassistant.components.eq3btsmart
 # homeassistant.components.xiaomi_miio
@@ -933,6 +936,9 @@ ndms2_client==0.0.11
 
 # homeassistant.components.ness_alarm
 nessclient==0.9.15
+
+# homeassistant.components.connectedcars
+nest-asyncio==1.4.0
 
 # homeassistant.components.netdata
 netdata==0.2.0
