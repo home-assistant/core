@@ -1,5 +1,4 @@
 """Lights on Zigbee Home Automation networks."""
-import asyncio
 from collections import Counter
 from datetime import timedelta
 import functools
@@ -33,7 +32,10 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import State, callback
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
 
@@ -73,6 +75,7 @@ UNSUPPORTED_ATTRIBUTE = 0x86
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, light.DOMAIN)
 GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, light.DOMAIN)
 PARALLEL_UPDATES = 0
+SIGNAL_LIGHT_GROUP_STATE_CHANGED = "zha_light_group_state_changed"
 
 SUPPORT_GROUP_LIGHT = (
     SUPPORT_BRIGHTNESS
@@ -380,6 +383,12 @@ class Light(BaseLight, ZhaEntity):
         self._cancel_refresh_handle = async_track_time_interval(
             self.hass, self._refresh, timedelta(seconds=refresh_interval)
         )
+        await self.async_accept_signal(
+            None,
+            SIGNAL_LIGHT_GROUP_STATE_CHANGED,
+            self._maybe_force_refresh,
+            signal_override=True,
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
@@ -469,6 +478,12 @@ class Light(BaseLight, ZhaEntity):
         """Call async_get_state at an interval."""
         await self.async_get_state(from_cache=False)
         self.async_write_ha_state()
+
+    async def _maybe_force_refresh(self, signal):
+        """Force update the state if the signal contains the entity id for this entity."""
+        if self.entity_id in signal["entity_ids"]:
+            await self.async_get_state(from_cache=False)
+            self.async_write_ha_state()
 
 
 @STRICT_MATCH(
@@ -570,8 +585,8 @@ class LightGroup(BaseLight, ZhaGroupEntity):
 
     async def _force_member_updates(self):
         """Force the update of member entities to ensure the states are correct for bulbs that don't report their state."""
-        component = self.hass.data[light.DOMAIN]
-        entities = [component.get_entity(entity_id) for entity_id in self._entity_ids]
-        tasks = [entity.async_get_state(from_cache=False) for entity in entities]
-        if tasks:
-            await asyncio.gather(*tasks)
+        async_dispatcher_send(
+            self.hass,
+            SIGNAL_LIGHT_GROUP_STATE_CHANGED,
+            {"entity_ids": self._entity_ids},
+        )
