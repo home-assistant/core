@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "This ConnectedCars.io-component is already configured"
+        },
+        "error": {
+            "cannot_get_vin": "Could not connect get vin of car from ConnectedCars.io",
+            "invalid_auth": "Unable to login to ConnectedCars.io",
+            "unknown": "Unknown error occured"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "namespace": "Namespace (semler:minvolkswagen)",
+                    "password": "Password",
+                    "username": "Username",
+                    "vin": "Vin (optional - serialnumber)"
+                }
+            }
+        }
+    },
+    "title": "ConnectedCars.io"
+}
