@@ -157,6 +157,7 @@ FLOWS = [
     "spotify",
     "squeezebox",
     "starline",
+    "syncthing",
     "syncthru",
     "synology_dsm",
     "tado",
