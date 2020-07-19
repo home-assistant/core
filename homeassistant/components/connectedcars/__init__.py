@@ -11,10 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.dt import utcnow
 
 from .const import (
     ATTR_API_USER_EMAIL,
@@ -34,7 +31,6 @@ from .const import (
     ATTR_API_VEHICLE_VOLTAGE,
     COMPLETE_QUERY,
     CONF_NAMESPACE,
-    CONNECTED_CARS_CLIENT,
     DOMAIN,
 )
 
@@ -42,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor", "device_tracker"]
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
-UPDATE_INTERVAL = timedelta(minutes=5)  # TODO: Create a config for this
+UPDATE_INTERVAL = timedelta(minutes=5)  # Maybe create a config for this
 
 
 async def async_setup(hass: HomeAssistant, config: dict):

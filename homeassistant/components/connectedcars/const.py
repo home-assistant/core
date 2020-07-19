@@ -26,7 +26,7 @@ ATTR_MANUFACTURER = "manufacturer"
 ATTR_MODEL = "model"
 ATTR_UNIT = "unit"
 
-COMPLETE_QUERY = """query User{
+COMPLETE_QUERY = """query User {
   viewer {
     id
     firstname
@@ -52,7 +52,7 @@ COMPLETE_QUERY = """query User{
         odometer {
             odometer
         }
-        position{
+        position {
             latitude
             longitude
         }
@@ -72,7 +72,7 @@ COMPLETE_QUERY = """query User{
                 }
             }
         }
-        trips (last:3){
+        trips (last:3) {
             items {
                 duration
                 fuelUsed
@@ -87,10 +87,30 @@ COMPLETE_QUERY = """query User{
     }
   }
 }"""
+COMPLETE_QUERY_USER = """query User {
+    viewer {
+        id
+        firstname
+        lastname
+        email
+    }
+}"""
+COMPLETE_QUERY_VIN = """query User {
+    viewer {
+        vehicles {
+            vehicle {
+                id
+                vin
+            }
+        }
+    }
+}"""
 
 CONF_NAMESPACE = "namespace"
 CONF_VIN = "config_vin"
 
 CONNECTED_CARS_CLIENT = "connectec_cars_client"
+
+DEFAULT_NAMESPACE = "semler:minvolkswagen"
 
 DOMAIN = "connectedcars"

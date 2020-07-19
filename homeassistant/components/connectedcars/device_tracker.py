@@ -1,5 +1,4 @@
 """Support for reading vehicle status from ConnectedCars.io."""
-import logging
 from typing import Any, Callable, Dict, List
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
@@ -28,12 +27,8 @@ from .const import (
 )
 
 SENSOR_TYPES = {
-    "position": {ATTR_ICON: "mdi:car-side", ATTR_LABEL: "position",},
+    "position": {ATTR_ICON: "mdi:car-side", ATTR_LABEL: "position"}
 }
-
-# TODO: Use Logger where smart to do so
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistantType,
@@ -47,7 +42,7 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
 
-    # TODO: Add vin to unique id
+    # Maybe add vin to unique id some time
     sensors = []
     for sensor in SENSOR_TYPES:
         unique_id = f"{config_entry.unique_id}-{sensor.lower()}"

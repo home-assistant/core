@@ -7,13 +7,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import COMPLETE_QUERY_USER, COMPLETE_QUERY_VIN, DEFAULT_NAMESPACE, DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("namespace", default="semler:minvolkswagen"): str,
+        vol.Required("namespace", default=DEFAULT_NAMESPACE): str,
         vol.Required("username"): str,
         vol.Required("password"): str,
         vol.Optional("vin"): str,
@@ -36,34 +36,27 @@ class ConnectedcarsApiHandler:
         client = ConnectedCarsClient(username, password, self.namespace)
 
         self.client = client
-        get_user_query = (
-            "query User {\n viewer {\n id\n firstname\n lastname\n email\n } \n}"
-        )
 
-        self.user_data = await client.async_query(get_user_query)
+        self.user_data = await client.async_query(COMPLETE_QUERY_USER)
 
         return True
 
     async def get_email(self) -> str:
-        """Gets the emailadress of the account."""
+        """Will get the email adress of the account holder."""
 
         if not self.user_data:
-            user_q = (
-                "query User {\n viewer {\n id\n firstname\n lastname\n email\n } \n}"
-            )
-            self.user_data = await self.client.async_query(user_q)
+            self.user_data = await self.client.async_query(COMPLETE_QUERY_USER)
 
         email = self.user_data["data"]["viewer"]["email"]
 
         return email
 
     async def get_vin(self, userinput_vin) -> str:
-        """Gets the vin name of the first car."""
+        """Will get the vin identifier of the car."""
 
         if not self.vin:
-            vin_q = "query User {\n viewer {\n vehicles {\n vehicle {\n id\n vin\n }\n}\n}\n}"
-            response = await self.client.async_query(vin_q)
-            # TODO: This needs to lookup the "userinput_vin" to see if it can be found in the result
+            response = await self.client.async_query(COMPLETE_QUERY_VIN)
+            # This needs to lookup the "userinput_vin" to see if it can be found in the result, not just take the first car
             vin = response["data"]["viewer"]["vehicles"][0]["vehicle"]["vin"]
             self.vin = vin
 
@@ -85,7 +78,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     try:
         email = await ccah.get_email()
         userinput_vin = None
-        # if not data["vin"]: ## TODO: Fix this somehow
+        # if not data["vin"]: ## Do this somehow
         #     userinput_vin = data["vin"]
         vin = await ccah.get_vin(userinput_vin)
     except ConnectedCarsException as exception:

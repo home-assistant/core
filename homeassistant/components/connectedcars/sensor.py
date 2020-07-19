@@ -1,5 +1,4 @@
 """Support for reading vehicle status from ConnectedCars.io."""
-import logging
 from typing import Any, Callable, Dict, List
 
 from homeassistant.config_entries import ConfigEntry
@@ -63,10 +62,6 @@ SENSOR_TYPES = {
     },
 }
 
-# TODO: Use Logger where smart to do so
-_LOGGER = logging.getLogger(__name__)
-
-
 async def async_setup_entry(
     hass: HomeAssistantType,
     config_entry: ConfigEntry,
@@ -79,7 +74,7 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
 
-    # TODO: Add vin to unique id
+    # Maybe add vin to unique id
     sensors = []
     for sensor in SENSOR_TYPES:
         unique_id = f"{config_entry.unique_id}-{sensor.lower()}"
