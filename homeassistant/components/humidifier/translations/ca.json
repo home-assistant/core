@@ -11,6 +11,11 @@
             "is_mode": "{entity_name} est\u00e0 configurat/ada en un mode espec\u00edfic",
             "is_off": "{entity_name} est\u00e0 apagat/ada",
             "is_on": "{entity_name} est\u00e0 enc\u00e8s/a"
+        },
+        "trigger_type": {
+            "target_humidity_changed": "Ha canviat la humitat desitjada de {entity_name}",
+            "turned_off": "{entity_name} s'ha apagat",
+            "turned_on": "{entity_name} s'ha engegat"
         }
     },
     "state": {
