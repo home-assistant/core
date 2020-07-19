@@ -26,9 +26,8 @@ from .const import (
     DOMAIN,
 )
 
-SENSOR_TYPES = {
-    "position": {ATTR_ICON: "mdi:car-side", ATTR_LABEL: "position"}
-}
+SENSOR_TYPES = {"position": {ATTR_ICON: "mdi:car-side", ATTR_LABEL: "position"}}
+
 
 async def async_setup_entry(
     hass: HomeAssistantType,

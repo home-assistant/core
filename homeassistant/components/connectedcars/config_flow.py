@@ -7,7 +7,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 
-from .const import COMPLETE_QUERY_USER, COMPLETE_QUERY_VIN, DEFAULT_NAMESPACE, DOMAIN  # pylint:disable=unused-import
+from .const import (  # pylint:disable=unused-import
+    COMPLETE_QUERY_USER,
+    COMPLETE_QUERY_VIN,
+    DEFAULT_NAMESPACE,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +47,7 @@ class ConnectedcarsApiHandler:
         return True
 
     async def get_email(self) -> str:
-        """Will get the email adress of the account holder."""
+        """Will get the email address of the account holder."""
 
         if not self.user_data:
             self.user_data = await self.client.async_query(COMPLETE_QUERY_USER)

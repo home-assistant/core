@@ -62,6 +62,7 @@ SENSOR_TYPES = {
     },
 }
 
+
 async def async_setup_entry(
     hass: HomeAssistantType,
     config_entry: ConfigEntry,
