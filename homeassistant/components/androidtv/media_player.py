@@ -249,6 +249,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         device = FireTVDevice(*device_args)
         device_name = config.get(CONF_NAME, "Fire TV")
 
+    # Close the ADB connection when HA stops
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device._async_stop)
+
     async_add_entities([device])
     _LOGGER.debug("Setup %s at %s %s", device_name, address, adb_log)
     hass.data[ANDROIDTV_DOMAIN][address] = device
@@ -495,10 +498,6 @@ class ADBDevice(MediaPlayerEntity):
     async def _async_stop(self, event):
         """Close the ADB socket connection."""
         await self.aftv.adb_close()
-
-    async def async_added_to_hass(self):
-        """Run when entity is added to HA."""
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_stop)
 
     @adb_decorator()
     async def async_get_media_image(self):
