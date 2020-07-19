@@ -1,0 +1,14 @@
+{
+  "domain": "syncthing",
+  "name": "syncthing",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/syncthing",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@zhulik"
+  ]
+}
