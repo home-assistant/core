@@ -6,7 +6,7 @@ from n26 import api as n26_api, config as n26_config
 from requests import HTTPError
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME, CONF_AUTH_MFA_MODULES, CONF_ACCESS_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import Throttle
@@ -26,6 +26,8 @@ CONFIG_SCHEMA = vol.Schema(
                 {
                     vol.Required(CONF_USERNAME): cv.string,
                     vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Required(CONF_ACCESS_TOKEN): cv.string,
+                    vol.Required(CONF_AUTH_MFA_MODULES): cv.string,
                     vol.Optional(
                         CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                     ): cv.time_period,
@@ -46,10 +48,15 @@ def setup(hass, config):
     api_data_list = []
 
     for acc in acc_list:
-        user = acc[CONF_USERNAME]
-        password = acc[CONF_PASSWORD]
-
-        api = n26_api.Api(n26_config.Config(user, password))
+        conf = n26_config.Config(validate=False)
+        conf.USERNAME.value = acc[CONF_USERNAME]
+        conf.PASSWORD.value = acc[CONF_PASSWORD]
+        conf.DEVICE_TOKEN.value = acc[CONF_ACCESS_TOKEN]
+        conf.MFA_TYPE.value = acc[CONF_AUTH_MFA_MODULES]
+        conf.LOGIN_DATA_STORE_PATH.value = None
+        conf.MFA_TYPE.value = "app"
+        conf.validate()
+        api = n26_api.Api(conf)
 
         try:
             api.get_token()

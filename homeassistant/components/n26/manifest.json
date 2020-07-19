@@ -2,6 +2,6 @@
   "domain": "n26",
   "name": "N26",
   "documentation": "https://www.home-assistant.io/integrations/n26",
-  "requirements": ["n26==0.2.7"],
+  "requirements": ["n26==3.0.0"],
   "codeowners": []
 }

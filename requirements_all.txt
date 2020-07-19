@@ -926,7 +926,7 @@ mychevy==2.0.1
 mycroftapi==2.0
 
 # homeassistant.components.n26
-n26==0.2.7
+n26==3.0.0
 
 # homeassistant.components.nad
 nad_receiver==0.0.12
