@@ -30,8 +30,8 @@ COLOR_CHANNEL_COLD_WHITE = 0x02
 COLOR_CHANNEL_RED = 0x04
 COLOR_CHANNEL_GREEN = 0x08
 COLOR_CHANNEL_BLUE = 0x10
-TEMP_COLOR_MAX = 500  # mireds (inverted)
-TEMP_COLOR_MIN = 154
+TEMP_COLOR_MAX = 370   #mired equivalend of 2700K
+TEMP_COLOR_MIN = 154   #mired equivalent of 6500K
 TEMP_COLOR_DIFF = TEMP_COLOR_MAX - TEMP_COLOR_MIN
 
 
@@ -194,9 +194,11 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
 
         elif color_temp is not None:
             cold = round((TEMP_COLOR_MAX - round(color_temp)) / TEMP_COLOR_DIFF * 255)
+            if cold < 0:
+                cold = 0
+            if cold > 255:
+                cold = 255
             warm = 255 - cold
-            if warm < 0:
-                warm = 0
             rgbw = f"#000000{warm:02x}{cold:02x}"
 
         if rgbw and self.values.color:
