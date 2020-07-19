@@ -83,7 +83,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         gateway = hass.data[DOMAIN][config_entry.entry_id]
         # Gateway light sensor
         entities.append(
-            XiaomiGatewayLightSensor(
+            XiaomiGatewayIlluminanceSensor(
                 gateway, config_entry.title, config_entry.unique_id
             )
         )
@@ -260,7 +260,7 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice):
 
 
 class XiaomiGatewayIlluminanceSensor(Entity):
-    """Representation of the XiaomiGatewayLightSensor."""
+    """Representation of the XiaomiGatewayIlluminanceSensor."""
 
     def __init__(self, gateway_device, gateway_name, gateway_device_id):
         """Initialize the entity."""
