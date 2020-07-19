@@ -35,10 +35,7 @@ async def director_update_data(
         await refresh_tokens(hass, entry)
         director = hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR]
         data = await director.getAllItemVariableValue(var)
-    return_dict = {}
-    for key in data:
-        return_dict[key["id"]] = key
-    return return_dict
+    return {key["id"]: key for key in data}
 
 
 async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
