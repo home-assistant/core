@@ -8,7 +8,6 @@ from pyControl4.director import C4Director
 from pyControl4.error_handling import NotFound, Unauthorized
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
 from homeassistant import config_entries, exceptions
 from homeassistant.const import (
     CONF_HOST,
@@ -37,7 +36,7 @@ DATA_SCHEMA = vol.Schema(
 class Control4Validator:
     """Validates that config details can be used to authenticate and communicate with Control4."""
 
-    def __init__(self, host, username, password, hass: HomeAssistant):
+    def __init__(self, host, username, password, hass):
         """Initialize."""
         self.host = host
         self.username = username
