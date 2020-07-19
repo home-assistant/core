@@ -248,9 +248,7 @@ def register_services(hass):
     async def set_ch_ovrd(call):
         """Set the central heating override on the OpenTherm Gateway."""
         gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]]
-        hass.async_create_task(
-            gw_dev.gateway.set_ch_enable_bit(call.data[ATTR_CH_OVRD])
-        )
+        await gw_dev.gateway.set_ch_enable_bit(call.data[ATTR_CH_OVRD])
 
     hass.services.async_register(
         DOMAIN,
