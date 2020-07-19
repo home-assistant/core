@@ -20,11 +20,13 @@ CONF_WORKDAYS = "workdays"
 CONF_EXCLUDES = "excludes"
 CONF_OFFSET = "days_offset"
 CONF_ADD_HOLIDAYS = "add_holidays"
+CONF_WORKING_HOLIDAYS = "working_holidays"
 
 # By default, Monday - Friday are workdays
 DEFAULT_WORKDAYS = ["mon", "tue", "wed", "thu", "fri"]
 # By default, public holidays, Saturdays and Sundays are excluded from workdays
 DEFAULT_EXCLUDES = ["sat", "sun", "holiday"]
+DEFAULT_WORKING_HOLIDAYS = []
 DEFAULT_NAME = "Workday Sensor"
 DEFAULT_OFFSET = 0
 
@@ -60,6 +62,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             cv.ensure_list, [vol.In(ALLOWED_DAYS)]
         ),
         vol.Optional(CONF_ADD_HOLIDAYS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_WORKING_HOLIDAYS, default=DEFAULT_WORKING_HOLIDAYS): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
     }
 )
 
@@ -67,6 +72,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Workday sensor."""
     add_holidays = config.get(CONF_ADD_HOLIDAYS)
+    working_holidays = config.get(CONF_WORKING_HOLIDAYS)
     country = config[CONF_COUNTRY]
     days_offset = config[CONF_OFFSET]
     excludes = config[CONF_EXCLUDES]
@@ -95,6 +101,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         obj_holidays.append(add_holidays)
     except TypeError:
         _LOGGER.debug("No custom holidays or invalid holidays")
+
+    # Validate and remove working holidays
+    for holiday in working_holidays:
+        if holiday not in obj_holidays.values():
+            _LOGGER.error("There is no holiday %s in country %s", holiday, country)
+            return
+    obj_holidays = {k: v for k, v in obj_holidays.items() if v not in working_holidays}
 
     _LOGGER.debug("Found the following holidays for your configuration:")
     for date, name in sorted(obj_holidays.items()):
