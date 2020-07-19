@@ -1,9 +1,11 @@
 """Support for RFXtrx binary sensors."""
+from datetime import timedelta
 import logging
 
 import RFXtrx as rfxtrxmod
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_LIGHT,
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_SMOKE,
     BinarySensorEntity,
@@ -37,14 +39,17 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
 SENSOR_STATUS_ON = [
     "Panic",
     "Motion",
+    "Light Detected",
 ]
 
 SENSOR_STATUS_OFF = [
     "End Panic",
     "No Motion",
+    "Dark Detected",
 ]
 
 SENSOR_STATUS_DEVICE_CLASS = {
@@ -52,6 +57,15 @@ SENSOR_STATUS_DEVICE_CLASS = {
     "End Panic": DEVICE_CLASS_SMOKE,
     "Motion": DEVICE_CLASS_MOTION,
     "No Motion": DEVICE_CLASS_MOTION,
+    "Light Detected": DEVICE_CLASS_LIGHT,
+    "Dark Detected": DEVICE_CLASS_LIGHT,
+}
+
+SENSOR_STATUS_OFF_DELAY = {
+    "Panic": timedelta(seconds=60),
+    "End Panic": timedelta(seconds=60),
+    "Motion": timedelta(seconds=60),
+    "No Motion": timedelta(seconds=60),
 }
 
 
@@ -100,7 +114,10 @@ async def async_setup_entry(
                 CONF_DEVICE_CLASS,
                 SENSOR_STATUS_DEVICE_CLASS.get(event.values.get("Sensor Status")),
             ),
-            entity.get(CONF_OFF_DELAY),
+            entity.get(
+                CONF_OFF_DELAY,
+                SENSOR_STATUS_OFF_DELAY.get(event.values.get("Sensor Status")),
+            ),
             entity.get(CONF_DATA_BITS),
             entity.get(CONF_COMMAND_ON),
             entity.get(CONF_COMMAND_OFF),
@@ -126,7 +143,15 @@ async def async_setup_entry(
             event.device.subtype,
             "".join(f"{x:02x}" for x in event.data),
         )
-        sensor = RfxtrxBinarySensor(event.device, device_id, event=event)
+        sensor = RfxtrxBinarySensor(
+            event.device,
+            device_id,
+            event=event,
+            device_class=SENSOR_STATUS_DEVICE_CLASS.get(
+                event.values.get("Sensor Status")
+            ),
+            off_delay=SENSOR_STATUS_OFF_DELAY.get(event.values.get("Sensor Status")),
+        )
         async_add_entities([sensor])
 
     # Subscribe to main RFXtrx events
@@ -222,7 +247,11 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
 
         self.async_write_ha_state()
 
-        if self.is_on and self._off_delay is not None and self._delay_listener is None:
+        if self._delay_listener:
+            self._delay_listener()
+            self._delay_listener = None
+
+        if self.is_on and self._off_delay is not None:
 
             @callback
             def off_delay_listener(now):

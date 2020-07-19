@@ -101,14 +101,8 @@ async def test_repetitions(hass, rfxtrx, repetitions):
     assert rfxtrx.transport.send.call_count == repetitions
 
 
-async def test_discover_switch(hass, rfxtrx):
+async def test_discover_switch(hass, rfxtrx_automatic):
     """Test with discovery of switches."""
-    assert await async_setup_component(
-        hass, "rfxtrx", {"rfxtrx": {"device": "abcd", "automatic_add": True}},
-    )
-    await hass.async_block_till_done()
-    await hass.async_start()
-
     await _signal_event(hass, "0b1100100118cdea02010f70")
     state = hass.states.get("switch.ac_118cdea_2")
     assert state
