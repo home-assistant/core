@@ -15,8 +15,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
-    CONF_DISCOVERY,
-    CONF_USERNAME,
     CONF_WEBHOOK_ID,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
@@ -53,10 +51,6 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_CLIENT_ID): cv.string,
                 vol.Required(CONF_CLIENT_SECRET): cv.string,
-                cv.deprecated(CONF_SECRET_KEY): cv.match_all,
-                cv.deprecated(CONF_USERNAME): cv.match_all,
-                cv.deprecated(CONF_WEBHOOKS): cv.match_all,
-                cv.deprecated(CONF_DISCOVERY): cv.match_all,
             }
         )
     },
