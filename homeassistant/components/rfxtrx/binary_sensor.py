@@ -3,7 +3,11 @@ import logging
 
 import RFXtrx as rfxtrxmod
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_SMOKE,
+    BinarySensorEntity,
+)
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
@@ -33,6 +37,23 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+SENSOR_STATUS_ON = [
+    "Panic",
+    "Motion",
+]
+
+SENSOR_STATUS_OFF = [
+    "End Panic",
+    "No Motion",
+]
+
+SENSOR_STATUS_DEVICE_CLASS = {
+    "Panic": DEVICE_CLASS_SMOKE,
+    "End Panic": DEVICE_CLASS_SMOKE,
+    "Motion": DEVICE_CLASS_MOTION,
+    "No Motion": DEVICE_CLASS_MOTION,
+}
+
 
 async def async_setup_entry(
     hass, config_entry, async_add_entities,
@@ -46,7 +67,14 @@ async def async_setup_entry(
     discovery_info = hass.data[DATA_RFXTRX_CONFIG]
 
     def supported(event):
-        return isinstance(event, rfxtrxmod.ControlEvent)
+        if isinstance(event, rfxtrxmod.ControlEvent):
+            return True
+        if isinstance(event, rfxtrxmod.SensorEvent):
+            return event.values.get("Sensor Status") in [
+                *SENSOR_STATUS_ON,
+                *SENSOR_STATUS_OFF,
+            ]
+        return False
 
     for packet_id, entity in discovery_info[CONF_DEVICES].items():
         event = get_rfx_object(packet_id)
@@ -68,7 +96,10 @@ async def async_setup_entry(
         device = RfxtrxBinarySensor(
             event.device,
             device_id,
-            entity.get(CONF_DEVICE_CLASS),
+            entity.get(
+                CONF_DEVICE_CLASS,
+                SENSOR_STATUS_DEVICE_CLASS.get(event.values.get("Sensor Status")),
+            ),
             entity.get(CONF_OFF_DELAY),
             entity.get(CONF_DATA_BITS),
             entity.get(CONF_COMMAND_ON),
@@ -157,9 +188,13 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
             self._state = True
 
     def _apply_event_standard(self, event):
-        if event.values["Command"] in COMMAND_ON_LIST:
+        if event.values.get("Command") in COMMAND_ON_LIST:
             self._state = True
-        elif event.values["Command"] in COMMAND_OFF_LIST:
+        elif event.values.get("Command") in COMMAND_OFF_LIST:
+            self._state = False
+        elif event.values.get("Sensor Status") in SENSOR_STATUS_ON:
+            self._state = True
+        elif event.values.get("Sensor Status") in SENSOR_STATUS_OFF:
             self._state = False
 
     def _apply_event(self, event):
