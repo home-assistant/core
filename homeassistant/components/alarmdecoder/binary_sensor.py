@@ -2,20 +2,23 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.typing import HomeAssistantType
 
-from . import (
+from .const import (
     CONF_RELAY_ADDR,
     CONF_RELAY_CHAN,
     CONF_ZONE_LOOP,
     CONF_ZONE_NAME,
+    CONF_ZONE_NUMBER,
     CONF_ZONE_RFID,
     CONF_ZONE_TYPE,
-    CONF_ZONES,
+    DEFAULT_ZONE_OPTIONS,
+    OPTIONS_ZONES,
     SIGNAL_REL_MESSAGE,
     SIGNAL_RFX_MESSAGE,
     SIGNAL_ZONE_FAULT,
     SIGNAL_ZONE_RESTORE,
-    ZONE_SCHEMA,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,26 +33,28 @@ ATTR_RF_LOOP4 = "rf_loop4"
 ATTR_RF_LOOP1 = "rf_loop1"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the AlarmDecoder binary sensor devices."""
-    configured_zones = discovery_info[CONF_ZONES]
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+):
+    """Set up for AlarmDecoder sensor."""
+
+    zones = entry.options.get(OPTIONS_ZONES, DEFAULT_ZONE_OPTIONS)
 
     devices = []
-    for zone_num in configured_zones:
-        device_config_data = ZONE_SCHEMA(configured_zones[zone_num])
-        zone_type = device_config_data[CONF_ZONE_TYPE]
-        zone_name = device_config_data[CONF_ZONE_NAME]
-        zone_rfid = device_config_data.get(CONF_ZONE_RFID)
-        zone_loop = device_config_data.get(CONF_ZONE_LOOP)
-        relay_addr = device_config_data.get(CONF_RELAY_ADDR)
-        relay_chan = device_config_data.get(CONF_RELAY_CHAN)
+    for zone_num in zones:
+        zone_info = zones[zone_num]
+        zone_type = zone_info[CONF_ZONE_TYPE]
+        zone_name = zone_info[CONF_ZONE_NAME]
+        zone_rfid = zone_info.get(CONF_ZONE_RFID)
+        zone_loop = zone_info.get(CONF_ZONE_LOOP)
+        relay_addr = zone_info.get(CONF_RELAY_ADDR)
+        relay_chan = zone_info.get(CONF_RELAY_CHAN)
         device = AlarmDecoderBinarySensor(
             zone_num, zone_name, zone_type, zone_rfid, zone_loop, relay_addr, relay_chan
         )
         devices.append(device)
 
-    add_entities(devices)
-
+    async_add_entities(devices)
     return True
 
 
@@ -67,7 +72,7 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
         relay_chan,
     ):
         """Initialize the binary_sensor."""
-        self._zone_number = zone_number
+        self._zone_number = int(zone_number)
         self._zone_type = zone_type
         self._state = None
         self._name = zone_name
@@ -117,6 +122,7 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
     def device_state_attributes(self):
         """Return the state attributes."""
         attr = {}
+        attr[CONF_ZONE_NUMBER] = self._zone_number
         if self._rfid and self._rfstate is not None:
             attr[ATTR_RF_BIT0] = bool(self._rfstate & 0x01)
             attr[ATTR_RF_LOW_BAT] = bool(self._rfstate & 0x02)
