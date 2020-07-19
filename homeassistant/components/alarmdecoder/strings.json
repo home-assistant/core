@@ -12,8 +12,8 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "baudrate": "Device Baud Rate",
-          "path": "Device Path"
+          "device_baudrate": "Device Baud Rate",
+          "device_path": "Device Path"
         }
       }
     },

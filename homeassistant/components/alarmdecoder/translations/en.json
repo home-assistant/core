@@ -12,8 +12,8 @@
         "data": {
           "host": "Host",
           "port": "Port",
-          "baudrate": "Device Baud Rate",
-          "path": "Device Path"
+          "device_baudrate": "Device Baud Rate",
+          "device_path": "Device Path"
         }
       }
     },
