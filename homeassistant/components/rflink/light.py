@@ -280,11 +280,6 @@ class ToggleRflinkLight(SwitchableRflinkDevice, LightEntity):
     and if the light is off and 'on' gets sent, the light will turn on.
     """
 
-    @property
-    def entity_id(self):
-        """Return entity id."""
-        return f"light.{self.name}"
-
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""
         self.cancel_queued_send_commands()
