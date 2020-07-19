@@ -57,6 +57,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             "sensor_86sw1",
             "sensor_86sw1.aq1",
             "remote.b186acn01",
+            "remote.b186acn02",
         ]:
             if "proto" not in entity or int(entity["proto"][0:1]) == 1:
                 data_key = "channel_0"
@@ -72,6 +73,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             "sensor_86sw2",
             "sensor_86sw2.aq1",
             "remote.b286acn01",
+            "remote.b286acn02",
         ]:
             if "proto" not in entity or int(entity["proto"][0:1]) == 1:
                 data_key_left = "channel_0"
