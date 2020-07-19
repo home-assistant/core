@@ -163,16 +163,7 @@ class DeviceRegistry:
             device_index = self._devices_index[REGISTERED_DEVICE]
             self.devices[device.id] = device
 
-        self._add_device_to_index(device_index, device)
-
-    def _add_device_to_index(
-        self, device_index: dict, device: Union[DeviceEntry, DeletedDeviceEntry]
-    ) -> None:
-        """Add a device to the index."""
-        for identifier in device.identifiers:
-            device_index[IDX_IDENTIFIERS][identifier] = device.id
-        for connection in device.connections:
-            device_index[IDX_CONNECTIONS][connection] = device.id
+        _add_device_to_index(device_index, device)
 
     def _remove_device(self, device: Union[DeviceEntry, DeletedDeviceEntry]) -> None:
         """Remove a device and remove it from the index."""
@@ -183,26 +174,15 @@ class DeviceRegistry:
             device_index = self._devices_index[REGISTERED_DEVICE]
             self.devices.pop(device.id)
 
-        self._remove_device_from_index(device_index, device)
-
-    def _remove_device_from_index(
-        self, device_index: dict, device: Union[DeviceEntry, DeletedDeviceEntry]
-    ) -> None:
-        """Remove a device from the index."""
-        for identifier in device.identifiers:
-            if identifier in device_index[IDX_IDENTIFIERS]:
-                del device_index[IDX_IDENTIFIERS][identifier]
-        for connection in device.connections:
-            if connection in device_index[IDX_CONNECTIONS]:
-                del device_index[IDX_CONNECTIONS][connection]
+        _remove_device_from_index(device_index, device)
 
     def _update_device(self, old_device: DeviceEntry, new_device: DeviceEntry) -> None:
         """Update a device and the index."""
         self.devices[new_device.id] = new_device
 
         device_index = self._devices_index[REGISTERED_DEVICE]
-        self._remove_device_from_index(device_index, old_device)
-        self._add_device_to_index(device_index, new_device)
+        _remove_device_from_index(device_index, old_device)
+        _add_device_to_index(device_index, new_device)
 
     def _clear_index(self):
         """Clear the index."""
@@ -215,9 +195,9 @@ class DeviceRegistry:
         """Create the index after loading devices."""
         self._clear_index()
         for device in self.devices.values():
-            self._add_device_to_index(self._devices_index[REGISTERED_DEVICE], device)
+            _add_device_to_index(self._devices_index[REGISTERED_DEVICE], device)
         for device in self.deleted_devices.values():
-            self._add_device_to_index(self._devices_index[DELETED_DEVICE], device)
+            _add_device_to_index(self._devices_index[DELETED_DEVICE], device)
 
     @callback
     def async_get_or_create(
@@ -634,3 +614,25 @@ def _normalize_connections(connections: set) -> set:
         (key, format_mac(value)) if key == CONNECTION_NETWORK_MAC else (key, value)
         for key, value in connections
     }
+
+
+def _add_device_to_index(
+    device_index: dict, device: Union[DeviceEntry, DeletedDeviceEntry]
+) -> None:
+    """Add a device to the index."""
+    for identifier in device.identifiers:
+        device_index[IDX_IDENTIFIERS][identifier] = device.id
+    for connection in device.connections:
+        device_index[IDX_CONNECTIONS][connection] = device.id
+
+
+def _remove_device_from_index(
+    device_index: dict, device: Union[DeviceEntry, DeletedDeviceEntry]
+) -> None:
+    """Remove a device from the index."""
+    for identifier in device.identifiers:
+        if identifier in device_index[IDX_IDENTIFIERS]:
+            del device_index[IDX_IDENTIFIERS][identifier]
+    for connection in device.connections:
+        if connection in device_index[IDX_CONNECTIONS]:
+            del device_index[IDX_CONNECTIONS][connection]
