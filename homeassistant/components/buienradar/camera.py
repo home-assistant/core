@@ -95,7 +95,7 @@ class BuienradarCam(Camera):
         # deadline for image refresh - self.delta after last successful load
         self._deadline: Optional[datetime] = None
 
-        self._unique_id = f"br_cam_{self._dimension}_{self._country}"
+        self._unique_id = f"{self._dimension}_{self._country}"
 
     @property
     def name(self) -> str:

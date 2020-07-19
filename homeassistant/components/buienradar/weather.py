@@ -105,8 +105,8 @@ class BrWeather(WeatherEntity):
         self._forecast = config[CONF_FORECAST]
         self._data = data
 
-        self._unique_id = "{:2.6f}{:2.6f}{}".format(
-            coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE], "br_weather"
+        self._unique_id = "{:2.6f}{:2.6f}".format(
+            coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE]
         )
 
     @property
