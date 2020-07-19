@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import logging
 
 from miio import AirQualityMonitor, DeviceException  # pylint: disable=import-error
-from miio.gateway import DeviceType
+from miio.gateway import DeviceType, GatewayException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -319,7 +319,7 @@ class XiaomiGatewayIlluminanceSensor(Entity):
             self._state = await self.hass.async_add_executor_job(
                 self._gateway.get_illumination
             )
-        except DeviceException as ex:
+        except GatewayException as ex:
             self._available = False
             _LOGGER.error(
                 "Got exception while fetching the gateway illuminance state: %s", ex
