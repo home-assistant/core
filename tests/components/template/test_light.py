@@ -178,6 +178,54 @@ class TestTemplateLight:
         state = self.hass.states.get("light.test_template_light")
         assert state.state == expected_state
 
+    def test_attribute_templates(self):
+        """Test attribute_templates template."""
+        with assert_setup_component(1, "light"):
+            assert setup.setup_component(
+                self.hass,
+                "light",
+                {
+                    "light": {
+                        "platform": "template",
+                        "lights": {
+                            "test_template_light": {
+                                "value_template": "on",
+                                "turn_on": {
+                                    "service": "light.turn_on",
+                                    "entity_id": "light.test_state",
+                                },
+                                "turn_off": {
+                                    "service": "light.turn_off",
+                                    "entity_id": "light.test_state",
+                                },
+                                "set_level": {
+                                    "service": "light.turn_on",
+                                    "data_template": {
+                                        "entity_id": "light.test_state",
+                                        "brightness": "{{brightness}}",
+                                    },
+                                },
+                                "attribute_templates": {
+                                    "test_attribute": "Sensor is {{ states.sensor.some_sensor.state }}."
+                                },
+                            }
+                        },
+                    }
+                },
+            )
+
+        self.hass.block_till_done()
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("light.test_template_light")
+        assert state.attributes.get("test_attribute") == "Sensor is ."
+
+        self.hass.states.set("sensor.some_sensor", "42")
+        self.hass.block_till_done()
+        state = self.hass.states.get("light.test_template_light")
+        assert state.attributes.get("test_attribute") == "Sensor is 42."
+
     def test_template_syntax_error(self):
         """Test templating syntax error."""
         with assert_setup_component(0, "light"):
