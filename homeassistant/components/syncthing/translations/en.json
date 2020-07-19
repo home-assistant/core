@@ -10,6 +10,7 @@
         },
         "step": {
             "user": {
+                "title": "Setup Syncthing integration",
                 "data": {
                     "name": "Name",
                     "host": "[%key:common::config_flow::data::host%]",
@@ -19,5 +20,5 @@
             }
         }
     },
-    "title": "Setup Syncthing integration"
+    "title": "Syncthing"
 }

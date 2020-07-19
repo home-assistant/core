@@ -1,13 +1,14 @@
 """Config flow for syncthing integration."""
 import logging
 
+import requests
+import syncthing
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN
 
-from .const import DEFAULT_NAME, DEFAULT_PORT
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,21 +20,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
     }
 )
-
-
-class PlaceholderHub:
-    """Placeholder class to make tests pass.
-
-    TODO Remove this placeholder class and replace with things from your PyPI package.
-    """
-
-    def __init__(self, host):
-        """Initialize."""
-        self.host = host
-
-    async def authenticate(self, username, password) -> bool:
-        """Test if we can authenticate with the host."""
-        return True
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -49,18 +35,16 @@ async def validate_input(hass: core.HomeAssistant, data):
     #     your_validate_func, data["username"], data["password"]
     # )
 
-    hub = PlaceholderHub(data["host"])
+    try:
+        client = syncthing.System(data["token"], host=data["host"], port=data["port"])
+        await hass.async_add_executor_job(client.config)
+    except syncthing.SyncthingError as err:
+        if type(err.__cause__) is requests.exceptions.HTTPError:
+            if err.__cause__.response.status_code == 403:
+                raise InvalidAuth
+        raise CannotConnect
 
-    if not await hub.authenticate(data["username"], data["password"]):
-        raise InvalidAuth
-
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
-
-    # Return info that you want to store in the config entry.
-    return {"title": "Name of the device"}
+    return {"title": f"{DOMAIN}_{data['name']}"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

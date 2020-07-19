@@ -1,9 +1,10 @@
 {
-  "title": "Setup syncthing integration",
+  "title": "Syncthing",
   "config": {
     "step": {
       "user": {
         "data": {
+          "title": "Setup Syncthing integration",
           "name": "Name",
           "host": "[%key:common::config_flow::data::host%]",
           "token": "Token",
