@@ -4,13 +4,21 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN
 
+from .const import DEFAULT_NAME, DEFAULT_PORT
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
-DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_TOKEN): str,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+    }
+)
 
 
 class PlaceholderHub:
