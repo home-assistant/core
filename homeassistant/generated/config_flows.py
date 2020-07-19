@@ -29,6 +29,7 @@ FLOWS = [
     "bsblan",
     "cast",
     "cert_expiry",
+    "connectedcars",
     "coolmaster",
     "coronavirus",
     "daikin",
