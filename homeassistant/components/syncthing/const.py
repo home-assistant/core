@@ -2,4 +2,4 @@
 
 DOMAIN = "syncthing"
 DEFAULT_NAME = "syncthing"
-DEFAULT_PORT = 8123
+DEFAULT_PORT = 8384
