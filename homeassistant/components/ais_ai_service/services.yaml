@@ -24,6 +24,19 @@ mob_notify:
        description: 'Unikalny numer powiadomienia, jeśli wyślesz powiadomienie z tym samym numerem, to powiadomienie będzie nadpisywane.'
        example: '0'
 
+mob_request:
+   description: 'Wysłanie komendy (zapytania/żądania) do aplikacji mobilnej.'
+   fields:
+     device_id:
+       description: 'Identyfikator urządzenia.'
+       example: 'mobile_ais_dom_'
+     request:
+       description: 'Komenda np.: locationUpdate, micOn'
+       example: 'location_update'
+     data:
+       description: 'Opcjonalne dane komendy'
+       example: '{}'
+
 check_local_ip:
   description: 'Sprawdzenie lokalnego IP bramki i ustawienie go jako wartość encji sensor.internal_ip_address. Ta usługa wykonaywana jest automatycznie przy starcie urządzenia.'
 

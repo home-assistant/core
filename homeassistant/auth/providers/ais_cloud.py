@@ -5,24 +5,14 @@ from typing import Any, Dict, Optional, cast
 
 import voluptuous as vol
 
+from homeassistant.components.ais_dom import ais_global
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
 
-USER_SCHEMA = vol.Schema(
-    {
-        vol.Required("username"): str,
-        vol.Required("password"): str,
-        vol.Optional("name"): str,
-    }
-)
-
-
-CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
-    {vol.Required("users"): [USER_SCHEMA]}, extra=vol.PREVENT_EXTRA
-)
+CONFIG_SCHEMA = vol.All(AUTH_PROVIDER_SCHEMA)
 
 
 class InvalidAuthError(HomeAssistantError):
@@ -31,25 +21,24 @@ class InvalidAuthError(HomeAssistantError):
 
 @AUTH_PROVIDERS.register("ais_cloud")
 class AisCloudAuthProvider(AuthProvider):
-    """Example auth provider based on hardcoded usernames and passwords."""
+    """Auth provider based on AIS Portal."""
 
-    DEFAULT_TITLE = "AIS cloud"
+    DEFAULT_TITLE = "AIS Portal"
 
     async def async_login_flow(self, context: Optional[Dict]) -> LoginFlow:
         """Return a flow to login."""
-        return ExampleLoginFlow(self)
+        return AisLoginFlow(self)
 
     @callback
-    def async_validate_login(self, username: str, password: str) -> None:
+    def async_validate_login(self, username: str, password: str, gate_id: str) -> None:
         """Validate a username and password."""
         user = None
 
-        # Compare all users to avoid timing attacks.
-        for usr in self.config["users"]:
-            if hmac.compare_digest(
-                username.encode("utf-8"), usr["username"].encode("utf-8")
-            ):
-                user = usr
+        # Get user info from AIS
+        if gate_id is None:
+            # Do one more compare to make timing the same as if user was found.
+            hmac.compare_digest(password.encode("utf-8"), password.encode("utf-8"))
+            raise InvalidAuthError
 
         if user is None:
             # Do one more compare to make timing the same as if user was found.
@@ -92,7 +81,7 @@ class AisCloudAuthProvider(AuthProvider):
         return UserMeta(name=name, is_active=True)
 
 
-class ExampleLoginFlow(LoginFlow):
+class AisLoginFlow(LoginFlow):
     """Handler for the login flow."""
 
     async def async_step_init(
@@ -104,7 +93,9 @@ class ExampleLoginFlow(LoginFlow):
         if user_input is not None:
             try:
                 cast(AisCloudAuthProvider, self._auth_provider).async_validate_login(
-                    user_input["username"], user_input["password"]
+                    user_input["username"],
+                    user_input["password"],
+                    user_input["gate_id"],
                 )
             except InvalidAuthError:
                 errors["base"] = "invalid_auth"
@@ -113,10 +104,16 @@ class ExampleLoginFlow(LoginFlow):
                 user_input.pop("password")
                 return await self.async_finish(user_input)
 
-        schema: Dict[str, type] = OrderedDict()
-        schema["username"] = str
-        schema["password"] = str
+        sercure_android_id_dom = ais_global.get_sercure_android_id_dom()
 
         return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(schema), errors=errors
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("username"): str,
+                    vol.Required("password"): str,
+                    vol.Required("gate_id"): vol.In([sercure_android_id_dom]),
+                }
+            ),
+            errors=errors,
         )
