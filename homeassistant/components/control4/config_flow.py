@@ -8,6 +8,7 @@ from pyControl4.director import C4Director
 from pyControl4.error_handling import NotFound, Unauthorized
 import voluptuous as vol
 
+from homeassistant.core import HomeAssistant
 from homeassistant import config_entries, exceptions
 from homeassistant.const import (
     CONF_HOST,
@@ -16,7 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import CONF_CONTROLLER_UNIQUE_ID, DEFAULT_SCAN_INTERVAL, MIN_SCAN_INTERVAL
@@ -36,18 +37,20 @@ DATA_SCHEMA = vol.Schema(
 class Control4Validator:
     """Validates that config details can be used to authenticate and communicate with Control4."""
 
-    def __init__(self, host, username, password):
+    def __init__(self, host, username, password, hass: HomeAssistant):
         """Initialize."""
         self.host = host
         self.username = username
         self.password = password
         self.controller_unique_id = None
         self.director_bearer_token = None
+        self.hass = hass
 
     async def authenticate(self) -> bool:
         """Test if we can authenticate with the Control4 account API."""
         try:
-            account = C4Account(self.username, self.password)
+            account_session = aiohttp_client.async_get_clientsession(self.hass)
+            account = C4Account(self.username, self.password, account_session)
             # Authenticate with Control4 account
             await account.getAccountBearerToken()
 
@@ -66,7 +69,12 @@ class Control4Validator:
     async def connect_to_director(self) -> bool:
         """Test if we can connect to the local Control4 Director."""
         try:
-            director = C4Director(self.host, self.director_bearer_token)
+            director_session = aiohttp_client.async_get_clientsession(
+                self.hass, verify_ssl=False
+            )
+            director = C4Director(
+                self.host, self.director_bearer_token, director_session
+            )
             await director.getAllItemInfo()
             return True
         except (Unauthorized, ClientError, asyncioTimeoutError):
@@ -86,7 +94,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
 
             hub = Control4Validator(
-                user_input["host"], user_input["username"], user_input["password"]
+                user_input["host"],
+                user_input["username"],
+                user_input["password"],
+                self.hass,
             )
             try:
                 if not await hub.authenticate():
