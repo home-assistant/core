@@ -6,9 +6,15 @@ import syncthing
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_TOKEN,
+    HTTP_FORBIDDEN,
+)
 
-from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN  # pylint:disable=unused-import
+from .const import CONF_USE_HTTPS, DEFAULT_NAME, DEFAULT_PORT, DEFAULT_USE_HTTPS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,30 +23,26 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_TOKEN): str,
+        vol.Required(CONF_USE_HTTPS, default=DEFAULT_USE_HTTPS): bool,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
     }
 )
 
 
 async def validate_input(hass: core.HomeAssistant, data):
-    """Validate the user input allows us to connect.
-
-    Data has the keys from DATA_SCHEMA with values provided by the user.
-    """
-    # TODO validate the data can be used to set up a connection.
-
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data["username"], data["password"]
-    # )
+    """Validate the user input allows us to connect."""
 
     try:
-        system = syncthing.System(data["token"], host=data["host"], port=data["port"])
-        await hass.async_add_executor_job(system.config)
+        client = syncthing.Syncthing(
+            data[CONF_TOKEN],
+            host=data[CONF_HOST],
+            port=data[CONF_PORT],
+            is_https=data[CONF_USE_HTTPS],
+        )
+        await hass.async_add_executor_job(client.system.config)
     except syncthing.SyncthingError as err:
         if type(err.__cause__) is requests.exceptions.HTTPError:
-            if err.__cause__.response.status_code == 403:
+            if err.__cause__.response.status_code == HTTP_FORBIDDEN:
                 raise InvalidAuth
         raise CannotConnect
 
@@ -51,8 +53,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for syncthing."""
 
     VERSION = 1
-    # TODO pick one of the available connection classes in homeassistant/config_entries.py
-    CONNECTION_CLASS = config_entries.CONN_CLASS_UNKNOWN
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""

@@ -5,9 +5,10 @@ import syncthing
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import CONF_USE_HTTPS, DOMAIN
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -26,16 +27,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        "system": syncthing.System(data["token"], host=data["host"], port=data["port"]),
-        "database": syncthing.Database(
-            data["token"], host=data["host"], port=data["port"]
-        ),
-        "statistics": syncthing.Statistics(
-            data["token"], host=data["host"], port=data["port"]
-        ),
-        "events": syncthing.Events(data["token"], host=data["host"], port=data["port"]),
-    }
+    hass.data[DOMAIN][entry.entry_id] = syncthing.Syncthing(
+        data[CONF_TOKEN],
+        host=data[CONF_HOST],
+        port=data[CONF_PORT],
+        is_https=data[CONF_USE_HTTPS],
+    )
 
     for component in PLATFORMS:
         hass.async_create_task(
