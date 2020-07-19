@@ -12,8 +12,8 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
-          "password": "[%key:common::config_flow::data::username%]",
-          "username": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "description": "Please enter your Control4 account details and the IP address of your local controller."
       }
