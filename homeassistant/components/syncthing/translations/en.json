@@ -11,12 +11,13 @@
         "step": {
             "user": {
                 "data": {
+                    "name": "Name",
                     "host": "[%key:common::config_flow::data::host%]",
-                    "password": "[%key:common::config_flow::data::password%]",
-                    "username": "[%key:common::config_flow::data::username%]"
+                    "token": "Token",
+                    "port": "[%key:common::config_flow::data::port%]"
                 }
             }
         }
     },
-    "title": "syncthing"
+    "title": "Setup Syncthing integration"
 }
