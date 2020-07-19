@@ -6,7 +6,13 @@ from n26 import api as n26_api, config as n26_config
 from requests import HTTPError
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME, CONF_AUTH_MFA_MODULES, CONF_ACCESS_TOKEN
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+    CONF_AUTH_MFA_MODULES,
+    CONF_ACCESS_TOKEN,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import Throttle
