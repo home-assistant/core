@@ -1,0 +1,9 @@
+set_wifi_access_control_rule:
+  description: Set an Access Control Rule to a SSID
+  fields:
+    entity_id:
+      description: SSID of the wifi
+      example: "sensor.omada_ssid_mywifi"
+    access_control_rule:
+      description: "Access control rule name"
+      example: "No Internet"

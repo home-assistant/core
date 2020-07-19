@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+			"cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Omada name (just to identify your controller)",
+                    "host": "Host (Full URL ie. https://my_omada.local)",
+                    "username": "Username",
+                    "password": "Password",
+                    "ssl_verify": "Check ssl certificate",
+                    "timeout": "Http query timeout",
+                    "dns_resolve": "Try to resolve client IPs to get nicer device names"
+                },
+                "description": "Enter the TP-Link Omada Controller settings.",
+                "title": "Configure Omada Controller"
+            }
+        }
+    }
+}
