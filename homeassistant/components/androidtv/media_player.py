@@ -250,7 +250,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         device_name = config.get(CONF_NAME, "Fire TV")
 
     # Close the ADB connection when HA stops
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device._async_stop)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.async_close)
 
     async_add_entities([device])
     _LOGGER.debug("Setup %s at %s %s", device_name, address, adb_log)
@@ -495,7 +495,7 @@ class ADBDevice(MediaPlayerEntity):
         """Return the device unique id."""
         return self._unique_id
 
-    async def _async_stop(self, event):
+    async def async_close(self, event):
         """Close the ADB socket connection."""
         await self.aftv.adb_close()
 
