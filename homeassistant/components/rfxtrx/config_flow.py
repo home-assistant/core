@@ -5,15 +5,24 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON
 from homeassistant.core import callback
 
 from . import DOMAIN
+from .const import (
+    CONF_AUTOMATIC_ADD,
+    CONF_DATA_BITS,
+    CONF_DEBUG,
+    CONF_FIRE_EVENT,
+    CONF_OFF_DELAY,
+    CONF_SIGNAL_REPETITIONS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class OptionsFlow(config_entries.OptionsFlow):
-    """Handle Vizio options."""
+    """Handle Rfxtrx options."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize vizio options flow."""
@@ -26,77 +35,21 @@ class OptionsFlow(config_entries.OptionsFlow):
     async def async_step_prompt_options(self, user_input=None):
         """Prompt for options."""
         if user_input is not None:
-            if user_input["selected_option"] == "Set global options":
-                return await self.async_step_global_options()
-            if user_input["selected_option"] == "Add device from discovery":
-                return await self.async_step_discovered_devices()
             if user_input["selected_option"] == "Add device by id":
                 return await self.async_step_device_by_id()
             if user_input["selected_option"] == "Configure device options":
                 return await self.async_step_select_device_conf()
 
-        options = [
-            "Set global options",
-            "Add device from discovery",
-            "Add device by id",
-            "Configure device options",
-            "Update device id",
-        ]
+        options = ["Add device by id", "Configure device options"]
 
         options_scheme = {
-            vol.Required("selected_option"): vol.In(options),
+            vol.Optional(CONF_DEBUG): bool,
+            vol.Optional(CONF_AUTOMATIC_ADD): bool,
+            vol.Optional("selected_option"): vol.In(options),
         }
 
         return self.async_show_form(
             step_id="prompt_options", data_schema=vol.Schema(options_scheme)
-        )
-
-    async def async_step_global_options(self, user_input=None):
-        """Manage global options."""
-        if user_input is not None:
-            return None
-
-        data_scheme = {
-            vol.Optional("debug"): bool,
-        }
-
-        return self.async_show_form(
-            step_id="global_options", data_schema=vol.Schema(data_scheme)
-        )
-
-    async def async_step_discovered_devices(self, user_input=None):
-        """Show discovered devices options."""
-        if user_input is not None:
-            return await self.async_step_set_device_options()
-
-        dummy_device_list = ["test1", "test2", "test3"]
-        device_class = ["light", "power", "window"]
-
-        data_scheme = {
-            vol.Optional("discovered_devices"): vol.In(dummy_device_list),
-            vol.Optional("device_class"): vol.In(device_class),
-        }
-
-        return self.async_show_form(
-            step_id="discovered_devices", data_schema=vol.Schema(data_scheme)
-        )
-
-    async def async_step_set_device_options(self, user_input=None):
-        """Manage device options."""
-        if user_input is not None:
-            return None
-
-        data_scheme = {
-            vol.Optional("fire_event"): bool,
-            vol.Optional("off_delay"): int,
-            vol.Optional("data_bit"): int,
-            vol.Optional("command_on"): int,
-            vol.Optional("command_off"): int,
-            vol.Optional("signal_repetitions"): int,
-        }
-
-        return self.async_show_form(
-            step_id="set_device_options", data_schema=vol.Schema(data_scheme)
         )
 
     async def async_step_device_by_id(self, user_input=None):
@@ -104,11 +57,8 @@ class OptionsFlow(config_entries.OptionsFlow):
         if user_input is not None:
             return await self.async_step_set_device_options()
 
-        device_class = ["light", "power", "window"]
-
         data_scheme = {
             vol.Required("device_id"): int,
-            vol.Optional("device_class"): vol.In(device_class),
         }
 
         return self.async_show_form(
@@ -128,6 +78,27 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="select_device_conf", data_schema=vol.Schema(data_scheme)
+        )
+
+    async def async_step_set_device_options(self, user_input=None):
+        """Manage device options."""
+        if user_input is not None:
+            return None
+
+        device_class = ["light", "power", "window"]
+
+        data_scheme = {
+            vol.Optional("device_class"): vol.In(device_class),
+            vol.Optional(CONF_FIRE_EVENT): bool,
+            vol.Optional(CONF_OFF_DELAY): int,
+            vol.Optional(CONF_DATA_BITS): int,
+            vol.Optional(CONF_COMMAND_ON): int,
+            vol.Optional(CONF_COMMAND_OFF): int,
+            vol.Optional(CONF_SIGNAL_REPETITIONS): int,
+        }
+
+        return self.async_show_form(
+            step_id="set_device_options", data_schema=vol.Schema(data_scheme)
         )
 
 

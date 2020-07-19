@@ -3,15 +3,11 @@
         "step": {
             "prompt_options": {
                 "data": {
+                  "debug": "Enable debugging",
+                  "automatic_add": "Enable automatic add",
                   "selected_option": "Select configuration option"
                 },
                 "title": "Rfxtrx Options"
-            },
-            "global_options": {
-                "data": {
-                  "debug": "Enable debugging"
-                },
-                "title": "Global Rfxtrx Options"
             },
             "discovered_devices": {
                 "data": {
@@ -46,5 +42,5 @@
             }
         }
     },
-    "title": "Demo"
+    "title": "Rfxtrx"
 }
