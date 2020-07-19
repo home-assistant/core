@@ -231,6 +231,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
         raise PlatformNotReady
 
+    async def _async_close(event):
+        """Close the ADB socket connection when HA stops."""
+        await aftv.adb_close()
+
+    # Close the ADB connection when HA stops
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
+
     device_args = [
         aftv,
         config[CONF_NAME],
@@ -248,9 +255,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     else:
         device = FireTVDevice(*device_args)
         device_name = config.get(CONF_NAME, "Fire TV")
-
-    # Close the ADB connection when HA stops
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.async_close)
 
     async_add_entities([device])
     _LOGGER.debug("Setup %s at %s %s", device_name, address, adb_log)
@@ -494,10 +498,6 @@ class ADBDevice(MediaPlayerEntity):
     def unique_id(self):
         """Return the device unique id."""
         return self._unique_id
-
-    async def async_close(self, event):
-        """Close the ADB socket connection."""
-        await self.aftv.adb_close()
 
     @adb_decorator()
     async def async_get_media_image(self):
