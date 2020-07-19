@@ -240,7 +240,7 @@ class TestWorkdaySetup:
         entity = self.hass.states.get("binary_sensor.workday_sensor")
         assert entity.state == "on"
 
-    #Freeze time to a public holiday in the US - 2017-02-20
+    # Freeze time to a public holiday in the US - 2017-02-20
     @patch(FUNCTION_PATH, return_value=date(2017, 2, 20))
     def test_public_holiday_include_working_holiday(self, mock_date):
         """Test if public holidays are reported correctly."""
@@ -253,7 +253,7 @@ class TestWorkdaySetup:
         assert entity.state == "on"
 
     def test_setup_component_invalid_working_holiday(self):
-        """Set up workday component with invalid working holiday"""
+        """Set up workday component with invalid working holiday."""
         with assert_setup_component(1, "binary_sensor"):
             setup_component(self.hass, "binary_sensor", self.config_include_invalid_working_holiday)
 
