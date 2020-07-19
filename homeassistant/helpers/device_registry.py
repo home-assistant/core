@@ -143,46 +143,46 @@ class DeviceRegistry:
         self, index: str, identifiers: set, connections: set
     ) -> Optional[str]:
         """Check if device has previously been registered."""
-        _devices_index = self._devices_index[index]
+        devices_index = self._devices_index[index]
         for identifier in identifiers:
-            if identifier in _devices_index[IDX_IDENTIFIERS]:
-                return _devices_index[IDX_IDENTIFIERS][identifier]
+            if identifier in devices_index[IDX_IDENTIFIERS]:
+                return devices_index[IDX_IDENTIFIERS][identifier]
         if not connections:
             return None
         for connection in _normalize_connections(connections):
-            if connection in _devices_index[IDX_CONNECTIONS]:
-                return _devices_index[IDX_CONNECTIONS][connection]
+            if connection in devices_index[IDX_CONNECTIONS]:
+                return devices_index[IDX_CONNECTIONS][connection]
         return None
 
     def _add_device(self, device: Union[DeviceEntry, DeletedDeviceEntry]) -> None:
         """Add a device and index it."""
         if isinstance(device, DeletedDeviceEntry):
-            device_index = self._devices_index[DELETED_DEVICE]
+            devices_index = self._devices_index[DELETED_DEVICE]
             self.deleted_devices[device.id] = device
         else:
-            device_index = self._devices_index[REGISTERED_DEVICE]
+            devices_index = self._devices_index[REGISTERED_DEVICE]
             self.devices[device.id] = device
 
-        _add_device_to_index(device_index, device)
+        _add_device_to_index(devices_index, device)
 
     def _remove_device(self, device: Union[DeviceEntry, DeletedDeviceEntry]) -> None:
         """Remove a device and remove it from the index."""
         if isinstance(device, DeletedDeviceEntry):
-            device_index = self._devices_index[DELETED_DEVICE]
+            devices_index = self._devices_index[DELETED_DEVICE]
             self.deleted_devices.pop(device.id)
         else:
-            device_index = self._devices_index[REGISTERED_DEVICE]
+            devices_index = self._devices_index[REGISTERED_DEVICE]
             self.devices.pop(device.id)
 
-        _remove_device_from_index(device_index, device)
+        _remove_device_from_index(devices_index, device)
 
     def _update_device(self, old_device: DeviceEntry, new_device: DeviceEntry) -> None:
         """Update a device and the index."""
         self.devices[new_device.id] = new_device
 
-        device_index = self._devices_index[REGISTERED_DEVICE]
-        _remove_device_from_index(device_index, old_device)
-        _add_device_to_index(device_index, new_device)
+        devices_index = self._devices_index[REGISTERED_DEVICE]
+        _remove_device_from_index(devices_index, old_device)
+        _add_device_to_index(devices_index, new_device)
 
     def _clear_index(self):
         """Clear the index."""
@@ -617,22 +617,22 @@ def _normalize_connections(connections: set) -> set:
 
 
 def _add_device_to_index(
-    device_index: dict, device: Union[DeviceEntry, DeletedDeviceEntry]
+    devices_index: dict, device: Union[DeviceEntry, DeletedDeviceEntry]
 ) -> None:
     """Add a device to the index."""
     for identifier in device.identifiers:
-        device_index[IDX_IDENTIFIERS][identifier] = device.id
+        devices_index[IDX_IDENTIFIERS][identifier] = device.id
     for connection in device.connections:
-        device_index[IDX_CONNECTIONS][connection] = device.id
+        devices_index[IDX_CONNECTIONS][connection] = device.id
 
 
 def _remove_device_from_index(
-    device_index: dict, device: Union[DeviceEntry, DeletedDeviceEntry]
+    devices_index: dict, device: Union[DeviceEntry, DeletedDeviceEntry]
 ) -> None:
     """Remove a device from the index."""
     for identifier in device.identifiers:
-        if identifier in device_index[IDX_IDENTIFIERS]:
-            del device_index[IDX_IDENTIFIERS][identifier]
+        if identifier in devices_index[IDX_IDENTIFIERS]:
+            del devices_index[IDX_IDENTIFIERS][identifier]
     for connection in device.connections:
-        if connection in device_index[IDX_CONNECTIONS]:
-            del device_index[IDX_CONNECTIONS][connection]
+        if connection in devices_index[IDX_CONNECTIONS]:
+            del devices_index[IDX_CONNECTIONS][connection]
