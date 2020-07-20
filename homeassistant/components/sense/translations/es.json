@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "email": "Direcci\u00f3n de correo electr\u00f3nico",
+                    "email": "Correo electr\u00f3nico",
                     "password": "Contrase\u00f1a"
                 },
                 "title": "Conectar a tu Sense Energy Monitor"
