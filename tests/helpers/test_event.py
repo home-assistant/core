@@ -879,25 +879,25 @@ async def test_periodic_task_clock_rollback(hass):
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    # The event loop uses monotonic clocks to track time so it can't
-    # move backwards, only utcnow can
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 22, 0, 0))
-    await hass.async_block_till_done()
-    assert len(specific_runs) == 1
-
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 0, 0, 0))
-    await hass.async_block_till_done()
-    assert len(specific_runs) == 1
-
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 2, 0, 0))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 22, 0, 0), fire_all=True
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
+
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 0, 0, 0), fire_all=True)
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 3
+
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 2, 0, 0), fire_all=True)
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 4
 
     unsub()
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 2, 0, 0))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 2, 0, 0), fire_all=True)
     await hass.async_block_till_done()
-    assert len(specific_runs) == 2
+    assert len(specific_runs) == 4
 
 
 async def test_periodic_task_duplicate_time(hass):
@@ -1003,13 +1003,7 @@ async def test_periodic_task_leaving_dst(hass):
     assert len(specific_runs) == 1
 
     async_fire_time_changed(
-        hass, timezone.localize(datetime(now.year + 2, 10, 28, 1, 5, 0), is_dst=True)
-    )
-    await hass.async_block_till_done()
-    assert len(specific_runs) == 2
-
-    async_fire_time_changed(
-        hass, timezone.localize(datetime(now.year + 2, 10, 28, 1, 55, 0), is_dst=True)
+        hass, timezone.localize(datetime(now.year + 2, 10, 28, 2, 45, 0), is_dst=True)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
@@ -1018,7 +1012,13 @@ async def test_periodic_task_leaving_dst(hass):
         hass, timezone.localize(datetime(now.year + 2, 10, 28, 2, 55, 0), is_dst=True)
     )
     await hass.async_block_till_done()
-    assert len(specific_runs) == 3
+    assert len(specific_runs) == 2
+
+    async_fire_time_changed(
+        hass, timezone.localize(datetime(now.year + 2, 10, 28, 2, 55, 0), is_dst=True)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 2
 
     unsub()
 
