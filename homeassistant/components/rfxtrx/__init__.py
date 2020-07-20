@@ -104,7 +104,9 @@ DEVICE_DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-        vol.Optional(CONF_OFF_DELAY): vol.Any(cv.time_period, cv.positive_timedelta),
+        vol.Optional(CONF_OFF_DELAY): vol.All(
+            cv.time_period, cv.positive_timedelta, lambda value: value.total_seconds()
+        ),
         vol.Optional(CONF_DATA_BITS): cv.positive_int,
         vol.Optional(CONF_COMMAND_ON): cv.byte,
         vol.Optional(CONF_COMMAND_OFF): cv.byte,
@@ -144,12 +146,6 @@ async def async_setup(hass, config):
         CONF_AUTOMATIC_ADD: config[DOMAIN].get(CONF_AUTOMATIC_ADD),
         CONF_DEVICES: config[DOMAIN][CONF_DEVICES],
     }
-
-    for device in data[CONF_DEVICES]:
-        if data[CONF_DEVICES][device].get(CONF_OFF_DELAY) is not None:
-            data[CONF_DEVICES][device][CONF_OFF_DELAY] = data[CONF_DEVICES][device][
-                CONF_OFF_DELAY
-            ].total_seconds()
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
