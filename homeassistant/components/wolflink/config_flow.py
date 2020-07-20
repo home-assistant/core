@@ -9,7 +9,12 @@ from wolf_smartset.wolf_client import WolfClient
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import (  # pylint:disable=unused-import
+    DEVICE_GATEWAY,
+    DEVICE_ID,
+    DEVICE_NAME,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,18 +63,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Allow user to select device from devices connected to specified account."""
         errors = {}
         if user_input is not None:
+            device_name = user_input[DEVICE_NAME]
+            system = [
+                device for device in self.fetched_systems if device.name == device_name
+            ]
+            device_id = system[0].id
+            await self.async_set_unique_id(device_id)
+            self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=user_input["device_name"],
+                title=user_input[DEVICE_NAME],
                 data={
-                    "username": self.username,
-                    "password": self.password,
-                    "device_name": user_input["device_name"],
+                    CONF_USERNAME: self.username,
+                    CONF_PASSWORD: self.password,
+                    DEVICE_NAME: device_name,
+                    DEVICE_GATEWAY: system[0].gateway,
+                    DEVICE_ID: device_id,
                 },
             )
 
         data_schema = vol.Schema(
             {
-                vol.Required("device_name"): vol.In(
+                vol.Required(DEVICE_NAME): vol.In(
                     [info.name for info in self.fetched_systems]
                 )
             }

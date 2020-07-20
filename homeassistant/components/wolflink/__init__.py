@@ -7,14 +7,20 @@ from wolf_smartset.token_auth import InvalidAuth
 from wolf_smartset.wolf_client import WolfClient
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import COORDINATOR, DEVICE_ID, DOMAIN, PARAMETERS
+from .const import (
+    COORDINATOR,
+    DEVICE_GATEWAY,
+    DEVICE_ID,
+    DEVICE_NAME,
+    DOMAIN,
+    PARAMETERS,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -25,21 +31,20 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Wolf SmartSet Service from a config entry."""
-    username = entry.data["username"]
-    password = entry.data["password"]
-    device_name = entry.data["device_name"]
-    _LOGGER.debug("Setting up wolflink integration for device: %s", device_name)
+    username = entry.data[CONF_USERNAME]
+    password = entry.data[CONF_PASSWORD]
+    device_name = entry.data[DEVICE_NAME]
+    device_id = entry.data[DEVICE_ID]
+    gateway_id = entry.data[DEVICE_GATEWAY]
+    _LOGGER.debug(
+        "Setting up wolflink integration for device: %s (id: %s, gateway: %s)",
+        device_name,
+        device_id,
+        gateway_id,
+    )
+
     wolf_client = WolfClient(username, password)
 
-    try:
-        systems = await wolf_client.fetch_system_list()
-    except InvalidAuth:
-        _LOGGER.error("Could not set up wolflink integration due to wrong credentials")
-        return False
-
-    filtered_systems = [device for device in systems if device.name == device_name]
-    gateway_id = filtered_systems[0].gateway
-    device_id = filtered_systems[0].id
     parameters = await fetch_parameters(wolf_client, gateway_id, device_id)
 
     async def async_update_data():
@@ -57,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER,
         name="wolflink",
         update_method=async_update_data,
-        update_interval=timedelta(seconds=30),
+        update_interval=timedelta(minutes=1),
     )
 
     await coordinator.async_refresh()
@@ -89,5 +94,10 @@ async def fetch_parameters(client: WolfClient, gateway_id: int, device_id: int):
 
     By default Reglertyp entity is removed because API will not provide value for this parameter.
     """
-    fetched_parameters = await client.fetch_parameters(gateway_id, device_id)
-    return [param for param in fetched_parameters if param.name != "Reglertyp"]
+    try:
+        fetched_parameters = await client.fetch_parameters(gateway_id, device_id)
+        return [param for param in fetched_parameters if param.name != "Reglertyp"]
+    except ConnectError as exception:
+        raise UpdateFailed(f"Error communicating with API: {exception}")
+    except InvalidAuth:
+        raise UpdateFailed("Invalid authentication during update.")
