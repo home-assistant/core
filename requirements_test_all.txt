@@ -978,6 +978,9 @@ withings-api==2.1.6
 # homeassistant.components.wled
 wled==0.4.3
 
+# homeassistant.components.wolflink
+wolf_smartset==0.1.4
+
 # homeassistant.components.bluesound
 # homeassistant.components.rest
 # homeassistant.components.startca

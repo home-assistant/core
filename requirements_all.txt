@@ -1386,7 +1386,7 @@ pyialarm==0.3
 pyicloud==0.9.7
 
 # homeassistant.components.insteon
-pyinsteon==1.0.5
+pyinsteon==1.0.7
 
 # homeassistant.components.intesishome
 pyintesishome==1.7.5
@@ -2211,6 +2211,9 @@ withings-api==2.1.6
 
 # homeassistant.components.wled
 wled==0.4.3
+
+# homeassistant.components.wolflink
+wolf_smartset==0.1.4
 
 # homeassistant.components.xbee
 xbee-helper==0.0.7
