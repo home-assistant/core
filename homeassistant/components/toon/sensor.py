@@ -79,6 +79,7 @@ async def async_setup_entry(
                 "water_daily_usage",
                 "water_meter_reading",
                 "water_value",
+                "water_daily_cost"
             )
         ]
     )
