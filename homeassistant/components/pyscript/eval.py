@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 # Built-in functions available.  Certain functions are excluded
 # to avoid potential security issues.
 #
-builtinFuncs = {
+BUILTIN_FUNCS = {
     "abs": abs,
     "all": all,
     "any": any,
@@ -64,7 +64,7 @@ builtinFuncs = {
 }
 
 
-allowedImports = {
+ALLOWED_IMPORTS = {
     "cmath",
     "datetime",
     "decimal",
@@ -310,7 +310,7 @@ class AstEval:
     async def ast_import(self, arg):
         """Execute import."""
         for imp in arg.names:
-            if imp.name not in allowedImports:
+            if imp.name not in ALLOWED_IMPORTS:
                 raise ModuleNotFoundError(f"import of {imp.name} not allowed")
             if imp.name not in sys.modules:
                 mod = importlib.import_module(imp.name)
@@ -320,7 +320,7 @@ class AstEval:
 
     async def ast_importfrom(self, arg):
         """Execute from X import Y."""
-        if arg.module not in allowedImports:
+        if arg.module not in ALLOWED_IMPORTS:
             raise ModuleNotFoundError(f"import from {arg.module} not allowed")
         if arg.module not in sys.modules:
             mod = importlib.import_module(arg.module)
@@ -583,8 +583,8 @@ class AstEval:
                 return self.local_sym_table[arg.id]
             if arg.id in self.global_sym_table:
                 return self.global_sym_table[arg.id]
-            if arg.id in builtinFuncs:
-                return builtinFuncs[arg.id]
+            if arg.id in BUILTIN_FUNCS:
+                return BUILTIN_FUNCS[arg.id]
             if self.handler.get(arg.id):
                 return self.handler.get(arg.id)
             if self.state.exist(arg.id):
