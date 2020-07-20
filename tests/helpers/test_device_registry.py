@@ -562,6 +562,21 @@ async def test_update(registry):
     assert updated_entry.identifiers == new_identifiers
     assert updated_entry.via_device_id == "98765B"
 
+    assert registry.async_get_device({("hue", "456")}, {}) is None
+    assert registry.async_get_device({("bla", "123")}, {}) is None
+
+    assert registry.async_get_device({("hue", "654")}, {}) == updated_entry
+    assert registry.async_get_device({("bla", "321")}, {}) == updated_entry
+
+    assert (
+        registry.async_get_device(
+            {}, {(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")}
+        )
+        == updated_entry
+    )
+
+    assert registry.async_get(updated_entry.id) is not None
+
 
 async def test_update_remove_config_entries(hass, registry, update_events):
     """Make sure we do not get duplicate entries."""
