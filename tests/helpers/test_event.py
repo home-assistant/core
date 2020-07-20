@@ -1,5 +1,6 @@
 """Test event helpers."""
 # pylint: disable=protected-access
+import asyncio
 from datetime import datetime, timedelta
 
 from astral import Astral
@@ -9,6 +10,7 @@ from homeassistant.components import sun
 from homeassistant.const import MATCH_ALL
 import homeassistant.core as ha
 from homeassistant.core import callback
+from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.event import (
     async_call_later,
     async_track_point_in_time,
@@ -22,6 +24,7 @@ from homeassistant.helpers.event import (
     async_track_time_change,
     async_track_time_interval,
     async_track_utc_time_change,
+    track_point_in_utc_time,
 )
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
@@ -108,7 +111,9 @@ async def test_track_state_change_from_to_state_match(hass):
         hass, "light.Bowl", from_and_to_state_callback, "on", "off"
     )
     async_track_state_change(hass, "light.Bowl", only_from_state_callback, "on", None)
-    async_track_state_change(hass, "light.Bowl", only_to_state_callback, None, "off")
+    async_track_state_change(
+        hass, "light.Bowl", only_to_state_callback, None, ["off", "standby"]
+    )
     async_track_state_change(
         hass, "light.Bowl", match_all_callback, MATCH_ALL, MATCH_ALL
     )
@@ -1011,3 +1016,269 @@ async def test_async_call_later(hass):
     assert p_action is action
     assert p_point == now + timedelta(seconds=3)
     assert remove is mock()
+
+
+async def test_track_state_change_event_chain_multple_entity(hass):
+    """Test that adding a new state tracker inside a tracker does not fire right away."""
+    tracker_called = []
+    chained_tracker_called = []
+
+    chained_tracker_unsub = []
+    tracker_unsub = []
+
+    @ha.callback
+    def chained_single_run_callback(event):
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
+
+        chained_tracker_called.append((old_state, new_state))
+
+    @ha.callback
+    def single_run_callback(event):
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
+
+        tracker_called.append((old_state, new_state))
+
+        chained_tracker_unsub.append(
+            async_track_state_change_event(
+                hass, ["light.bowl", "light.top"], chained_single_run_callback
+            )
+        )
+
+    tracker_unsub.append(
+        async_track_state_change_event(
+            hass, ["light.bowl", "light.top"], single_run_callback
+        )
+    )
+
+    hass.states.async_set("light.bowl", "on")
+    hass.states.async_set("light.top", "on")
+    await hass.async_block_till_done()
+
+    assert len(tracker_called) == 2
+    assert len(chained_tracker_called) == 1
+    assert len(tracker_unsub) == 1
+    assert len(chained_tracker_unsub) == 2
+
+    hass.states.async_set("light.bowl", "off")
+    await hass.async_block_till_done()
+
+    assert len(tracker_called) == 3
+    assert len(chained_tracker_called) == 3
+    assert len(tracker_unsub) == 1
+    assert len(chained_tracker_unsub) == 3
+
+
+async def test_track_state_change_event_chain_single_entity(hass):
+    """Test that adding a new state tracker inside a tracker does not fire right away."""
+    tracker_called = []
+    chained_tracker_called = []
+
+    chained_tracker_unsub = []
+    tracker_unsub = []
+
+    @ha.callback
+    def chained_single_run_callback(event):
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
+
+        chained_tracker_called.append((old_state, new_state))
+
+    @ha.callback
+    def single_run_callback(event):
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
+
+        tracker_called.append((old_state, new_state))
+
+        chained_tracker_unsub.append(
+            async_track_state_change_event(
+                hass, "light.bowl", chained_single_run_callback
+            )
+        )
+
+    tracker_unsub.append(
+        async_track_state_change_event(hass, "light.bowl", single_run_callback)
+    )
+
+    hass.states.async_set("light.bowl", "on")
+    await hass.async_block_till_done()
+
+    assert len(tracker_called) == 1
+    assert len(chained_tracker_called) == 0
+    assert len(tracker_unsub) == 1
+    assert len(chained_tracker_unsub) == 1
+
+    hass.states.async_set("light.bowl", "off")
+    await hass.async_block_till_done()
+
+    assert len(tracker_called) == 2
+    assert len(chained_tracker_called) == 1
+    assert len(tracker_unsub) == 1
+    assert len(chained_tracker_unsub) == 2
+
+
+async def test_track_point_in_utc_time_cancel(hass):
+    """Test cancel of async track point in time."""
+
+    times = []
+
+    @ha.callback
+    def run_callback(utc_time):
+        nonlocal times
+        times.append(utc_time)
+
+    def _setup_listeners():
+        """Ensure we test the non-async version."""
+        utc_now = dt_util.utcnow()
+
+        with pytest.raises(TypeError):
+            track_point_in_utc_time("nothass", run_callback, utc_now)
+
+        unsub1 = hass.helpers.event.track_point_in_utc_time(
+            run_callback, utc_now + timedelta(seconds=0.1)
+        )
+        hass.helpers.event.track_point_in_utc_time(
+            run_callback, utc_now + timedelta(seconds=0.1)
+        )
+
+        unsub1()
+
+    await hass.async_add_executor_job(_setup_listeners)
+
+    await asyncio.sleep(0.2)
+
+    assert len(times) == 1
+    assert times[0].tzinfo == dt_util.UTC
+
+
+async def test_async_track_point_in_time_cancel(hass):
+    """Test cancel of async track point in time."""
+
+    times = []
+    hst_tz = dt_util.get_time_zone("US/Hawaii")
+    dt_util.set_default_time_zone(hst_tz)
+
+    @ha.callback
+    def run_callback(local_time):
+        nonlocal times
+        times.append(local_time)
+
+    utc_now = dt_util.utcnow()
+    hst_now = utc_now.astimezone(hst_tz)
+
+    unsub1 = hass.helpers.event.async_track_point_in_time(
+        run_callback, hst_now + timedelta(seconds=0.1)
+    )
+    hass.helpers.event.async_track_point_in_time(
+        run_callback, hst_now + timedelta(seconds=0.1)
+    )
+
+    unsub1()
+
+    await asyncio.sleep(0.2)
+
+    assert len(times) == 1
+    assert times[0].tzinfo.zone == "US/Hawaii"
+
+
+async def test_async_track_entity_registry_updated_event(hass):
+    """Test tracking entity registry updates for an entity_id."""
+
+    entity_id = "switch.puppy_feeder"
+    new_entity_id = "switch.dog_feeder"
+    untracked_entity_id = "switch.kitty_feeder"
+
+    hass.states.async_set(entity_id, "on")
+    await hass.async_block_till_done()
+    event_data = []
+
+    @ha.callback
+    def run_callback(event):
+        event_data.append(event.data)
+
+    unsub1 = hass.helpers.event.async_track_entity_registry_updated_event(
+        entity_id, run_callback
+    )
+    unsub2 = hass.helpers.event.async_track_entity_registry_updated_event(
+        new_entity_id, run_callback
+    )
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "entity_id": entity_id}
+    )
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED,
+        {"action": "create", "entity_id": untracked_entity_id},
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED,
+        {
+            "action": "update",
+            "entity_id": new_entity_id,
+            "old_entity_id": entity_id,
+            "changes": {},
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED, {"action": "remove", "entity_id": new_entity_id}
+    )
+    await hass.async_block_till_done()
+
+    unsub1()
+    unsub2()
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "entity_id": entity_id}
+    )
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "entity_id": new_entity_id}
+    )
+    await hass.async_block_till_done()
+
+    assert event_data[0] == {"action": "create", "entity_id": "switch.puppy_feeder"}
+    assert event_data[1] == {
+        "action": "update",
+        "changes": {},
+        "entity_id": "switch.dog_feeder",
+        "old_entity_id": "switch.puppy_feeder",
+    }
+    assert event_data[2] == {"action": "remove", "entity_id": "switch.dog_feeder"}
+
+
+async def test_async_track_entity_registry_updated_event_with_a_callback_that_throws(
+    hass,
+):
+    """Test tracking entity registry updates for an entity_id when one callback throws."""
+
+    entity_id = "switch.puppy_feeder"
+
+    hass.states.async_set(entity_id, "on")
+    await hass.async_block_till_done()
+    event_data = []
+
+    @ha.callback
+    def run_callback(event):
+        event_data.append(event.data)
+
+    @ha.callback
+    def failing_callback(event):
+        raise ValueError
+
+    unsub1 = hass.helpers.event.async_track_entity_registry_updated_event(
+        entity_id, failing_callback
+    )
+    unsub2 = hass.helpers.event.async_track_entity_registry_updated_event(
+        entity_id, run_callback
+    )
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "entity_id": entity_id}
+    )
+    await hass.async_block_till_done()
+    unsub1()
+    unsub2()
+
+    assert event_data[0] == {"action": "create", "entity_id": "switch.puppy_feeder"}

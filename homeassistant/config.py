@@ -511,8 +511,8 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
     elif LEGACY_CONF_WHITELIST_EXTERNAL_DIRS in config:
         _LOGGER.warning(
             "Key %s has been replaced with %s. Please update your config",
-            CONF_ALLOWLIST_EXTERNAL_DIRS,
             LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
+            CONF_ALLOWLIST_EXTERNAL_DIRS,
         )
         hac.allowlist_external_dirs.update(
             set(config[LEGACY_CONF_WHITELIST_EXTERNAL_DIRS])

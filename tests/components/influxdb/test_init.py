@@ -1077,6 +1077,148 @@ async def test_event_listener_component_override_measurement(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
+async def test_event_listener_ignore_attributes(
+    hass, mock_client, config_ext, get_write_api, get_mock_call
+):
+    """Test the event listener with overridden measurements."""
+    config = {
+        "ignore_attributes": ["ignore"],
+        "component_config": {
+            "sensor.fake_humidity": {"ignore_attributes": ["id_ignore"]}
+        },
+        "component_config_glob": {
+            "binary_sensor.*motion": {"ignore_attributes": ["glob_ignore"]}
+        },
+        "component_config_domain": {
+            "climate": {"ignore_attributes": ["domain_ignore"]}
+        },
+    }
+    config.update(config_ext)
+    handler_method = await _setup(hass, mock_client, config, get_write_api)
+
+    test_components = [
+        {
+            "domain": "sensor",
+            "id": "fake_humidity",
+            "attrs": {"glob_ignore": 1, "domain_ignore": 1},
+        },
+        {
+            "domain": "binary_sensor",
+            "id": "fake_motion",
+            "attrs": {"id_ignore": 1, "domain_ignore": 1},
+        },
+        {
+            "domain": "climate",
+            "id": "fake_thermostat",
+            "attrs": {"id_ignore": 1, "glob_ignore": 1},
+        },
+    ]
+    for comp in test_components:
+        entity_id = f"{comp['domain']}.{comp['id']}"
+        state = MagicMock(
+            state=1,
+            domain=comp["domain"],
+            entity_id=entity_id,
+            object_id=comp["id"],
+            attributes={
+                "ignore": 1,
+                "id_ignore": 1,
+                "glob_ignore": 1,
+                "domain_ignore": 1,
+            },
+        )
+        event = MagicMock(data={"new_state": state}, time_fired=12345)
+        fields = {"value": 1}
+        fields.update(comp["attrs"])
+        body = [
+            {
+                "measurement": entity_id,
+                "tags": {"domain": comp["domain"], "entity_id": comp["id"]},
+                "time": 12345,
+                "fields": fields,
+            }
+        ]
+        handler_method(event)
+        hass.data[influxdb.DOMAIN].block_till_done()
+
+        write_api = get_write_api(mock_client)
+        assert write_api.call_count == 1
+        assert write_api.call_args == get_mock_call(body)
+        write_api.reset_mock()
+
+
+@pytest.mark.parametrize(
+    "mock_client, config_ext, get_write_api, get_mock_call",
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
+async def test_event_listener_ignore_attributes_overlapping_entities(
+    hass, mock_client, config_ext, get_write_api, get_mock_call
+):
+    """Test the event listener with overridden measurements."""
+    config = {
+        "component_config": {"sensor.fake": {"override_measurement": "units"}},
+        "component_config_domain": {"sensor": {"ignore_attributes": ["ignore"]}},
+    }
+    config.update(config_ext)
+    handler_method = await _setup(hass, mock_client, config, get_write_api)
+
+    state = MagicMock(
+        state=1,
+        domain="sensor",
+        entity_id="sensor.fake",
+        object_id="fake",
+        attributes={"ignore": 1},
+    )
+    event = MagicMock(data={"new_state": state}, time_fired=12345)
+    body = [
+        {
+            "measurement": "units",
+            "tags": {"domain": "sensor", "entity_id": "fake"},
+            "time": 12345,
+            "fields": {"value": 1},
+        }
+    ]
+    handler_method(event)
+    hass.data[influxdb.DOMAIN].block_till_done()
+
+    write_api = get_write_api(mock_client)
+    assert write_api.call_count == 1
+    assert write_api.call_args == get_mock_call(body)
+    write_api.reset_mock()
+
+
+@pytest.mark.parametrize(
+    "mock_client, config_ext, get_write_api, get_mock_call",
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
 async def test_event_listener_scheduled_write(
     hass, mock_client, config_ext, get_write_api, get_mock_call
 ):

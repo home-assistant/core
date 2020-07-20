@@ -2,16 +2,15 @@
 import logging
 
 from homeassistant.components.cover import CoverEntity
-from homeassistant.const import CONF_DEVICES, STATE_OPEN
+from homeassistant.const import CONF_DEVICES
 from homeassistant.core import callback
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
     CONF_AUTOMATIC_ADD,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
     SIGNAL_EVENT,
-    RfxtrxDevice,
+    RfxtrxCommandEntity,
     get_device_id,
     get_rfx_object,
 )
@@ -79,27 +78,8 @@ async def async_setup_entry(
         hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, cover_update)
 
 
-class RfxtrxCover(RfxtrxDevice, CoverEntity, RestoreEntity):
+class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
     """Representation of a RFXtrx cover."""
-
-    async def async_added_to_hass(self):
-        """Restore RFXtrx cover device state (OPEN/CLOSE)."""
-        await super().async_added_to_hass()
-
-        old_state = await self.async_get_last_state()
-        if old_state is not None:
-            self._state = old_state.state == STATE_OPEN
-
-        self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_EVENT, self._handle_event
-            )
-        )
-
-    @property
-    def should_poll(self):
-        """Return the polling state. No polling available in RFXtrx cover."""
-        return False
 
     @property
     def is_closed(self):
@@ -120,6 +100,7 @@ class RfxtrxCover(RfxtrxDevice, CoverEntity, RestoreEntity):
 
     def _apply_event(self, event):
         """Apply command from rfxtrx."""
+        super()._apply_event(event)
         if event.values["Command"] in COMMAND_ON_LIST:
             self._state = True
         elif event.values["Command"] in COMMAND_OFF_LIST:

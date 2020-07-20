@@ -131,6 +131,37 @@ DISCOVERY_SCHEMAS = (
             },
         },
     },
+    {  # Z-Wave Thermostat device without mode support
+        const.DISC_COMPONENT: "climate",
+        const.DISC_GENERIC_DEVICE_CLASS: (const_ozw.GENERIC_TYPE_THERMOSTAT,),
+        const.DISC_SPECIFIC_DEVICE_CLASS: (
+            const_ozw.SPECIFIC_TYPE_SETPOINT_THERMOSTAT,
+        ),
+        const.DISC_VALUES: {
+            const.DISC_PRIMARY: {
+                const.DISC_COMMAND_CLASS: (CommandClass.THERMOSTAT_SETPOINT,)
+            },
+            "temperature": {
+                const.DISC_COMMAND_CLASS: (CommandClass.SENSOR_MULTILEVEL,),
+                const.DISC_INDEX: (1,),
+                const.DISC_OPTIONAL: True,
+            },
+            "operating_state": {
+                const.DISC_COMMAND_CLASS: (CommandClass.THERMOSTAT_OPERATING_STATE,),
+                const.DISC_OPTIONAL: True,
+            },
+            "valve_position": {
+                const.DISC_COMMAND_CLASS: (CommandClass.SWITCH_MULTILEVEL,),
+                const.DISC_INDEX: (0,),
+                const.DISC_OPTIONAL: True,
+            },
+            "setpoint_heating": {
+                const.DISC_COMMAND_CLASS: (CommandClass.THERMOSTAT_SETPOINT,),
+                const.DISC_INDEX: (1,),
+                const.DISC_OPTIONAL: True,
+            },
+        },
+    },
     {  # Rollershutter
         const.DISC_COMPONENT: "cover",
         const.DISC_GENERIC_DEVICE_CLASS: (const_ozw.GENERIC_TYPE_SWITCH_MULTILEVEL,),
@@ -194,6 +225,8 @@ DISCOVERY_SCHEMAS = (
         const.DISC_SPECIFIC_DEVICE_CLASS: (
             const_ozw.SPECIFIC_TYPE_POWER_SWITCH_MULTILEVEL,
             const_ozw.SPECIFIC_TYPE_SCENE_SWITCH_MULTILEVEL,
+            const_ozw.SPECIFIC_TYPE_COLOR_TUNABLE_BINARY,
+            const_ozw.SPECIFIC_TYPE_COLOR_TUNABLE_MULTILEVEL,
             const_ozw.SPECIFIC_TYPE_NOT_USED,
         ),
         const.DISC_VALUES: {

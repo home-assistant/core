@@ -23,8 +23,9 @@ from homeassistant.const import (
     UNIT_PERCENTAGE,
     UV_INDEX,
 )
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     ATTR_EVENT,
@@ -92,9 +93,15 @@ def _bytearray_string(data):
         raise vol.Invalid("Data must be a hex string with multiple of two characters")
 
 
+def _ensure_device(value):
+    if value is None:
+        return DEVICE_DATA_SCHEMA({})
+    return DEVICE_DATA_SCHEMA(value)
+
+
 SERVICE_SEND_SCHEMA = vol.Schema({ATTR_EVENT: _bytearray_string})
 
-DEVICE_SCHEMA = vol.Schema(
+DEVICE_DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
@@ -110,7 +117,7 @@ BASE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEBUG, default=False): cv.boolean,
         vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
-        vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
+        vol.Optional(CONF_DEVICES, default={}): {cv.string: _ensure_device},
     }
 )
 
@@ -337,23 +344,36 @@ def get_device_id(device, data_bits=None):
     return (f"{device.packettype:x}", f"{device.subtype:x}", id_string)
 
 
-class RfxtrxDevice(Entity):
+class RfxtrxEntity(RestoreEntity):
     """Represents a Rfxtrx device.
 
     Contains the common logic for Rfxtrx lights and switches.
     """
 
-    def __init__(self, device, device_id, signal_repetitions, event=None):
+    def __init__(self, device, device_id, event=None):
         """Initialize the device."""
-        self.signal_repetitions = signal_repetitions
         self._name = f"{device.type_string} {device.id_string}"
         self._device = device
-        self._state = None
+        self._event = event
         self._device_id = device_id
         self._unique_id = "_".join(x for x in self._device_id)
 
-        if event:
-            self._apply_event(event)
+    async def async_added_to_hass(self):
+        """Restore RFXtrx device state (ON/OFF)."""
+        if self._event:
+            self._apply_event(self._event)
+        else:
+            old_state = await self.async_get_last_state()
+            if old_state is not None:
+                event = old_state.attributes.get(ATTR_EVENT)
+                if event:
+                    self._apply_event(get_rfx_object(event))
+
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_EVENT, self._handle_event
+            )
+        )
 
     @property
     def should_poll(self):
@@ -366,9 +386,11 @@ class RfxtrxDevice(Entity):
         return self._name
 
     @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        if not self._event:
+            return None
+        return {ATTR_EVENT: "".join(f"{x:02x}" for x in self._event.data)}
 
     @property
     def assumed_state(self):
@@ -391,6 +413,24 @@ class RfxtrxDevice(Entity):
 
     def _apply_event(self, event):
         """Apply a received event."""
+        self._event = event
+
+    @callback
+    def _handle_event(self, event, device_id):
+        """Handle a reception of data, overridden by other classes."""
+
+
+class RfxtrxCommandEntity(RfxtrxEntity):
+    """Represents a Rfxtrx device.
+
+    Contains the common logic for Rfxtrx lights and switches.
+    """
+
+    def __init__(self, device, device_id, signal_repetitions=1, event=None):
+        """Initialzie a switch or light device."""
+        super().__init__(device, device_id, event=event)
+        self.signal_repetitions = signal_repetitions
+        self._state = None
 
     def _send_command(self, command, brightness=0):
         rfx_object = self.hass.data[DATA_RFXOBJECT]

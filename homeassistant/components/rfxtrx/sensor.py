@@ -11,13 +11,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_DEVICES
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 
 from . import (
     CONF_AUTOMATIC_ADD,
     DATA_TYPES,
-    DOMAIN,
     SIGNAL_EVENT,
+    RfxtrxEntity,
     get_device_id,
     get_rfx_object,
 )
@@ -113,58 +112,27 @@ async def async_setup_entry(
         hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, sensor_update)
 
 
-class RfxtrxSensor(Entity):
+class RfxtrxSensor(RfxtrxEntity):
     """Representation of a RFXtrx sensor."""
 
     def __init__(self, device, device_id, data_type, event=None):
         """Initialize the sensor."""
-        self.event = None
-        self._device = device
-        self._name = f"{device.type_string} {device.id_string} {data_type}"
+        super().__init__(device, device_id, event=event)
         self.data_type = data_type
         self._unit_of_measurement = DATA_TYPES.get(data_type, "")
-        self._device_id = device_id
+        self._name = f"{device.type_string} {device.id_string} {data_type}"
         self._unique_id = "_".join(x for x in (*self._device_id, data_type))
 
         self._device_class = DEVICE_CLASSES.get(data_type)
         self._convert_fun = CONVERT_FUNCTIONS.get(data_type, lambda x: x)
 
-        if event:
-            self._apply_event(event)
-
-    async def async_added_to_hass(self):
-        """Restore RFXtrx switch device state (ON/OFF)."""
-        await super().async_added_to_hass()
-
-        self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_EVENT, self._handle_event
-            )
-        )
-
-    def __str__(self):
-        """Return the name of the sensor."""
-        return self._name
-
     @property
     def state(self):
         """Return the state of the sensor."""
-        if not self.event:
+        if not self._event:
             return None
-        value = self.event.values.get(self.data_type)
+        value = self._event.values.get(self.data_type)
         return self._convert_fun(value)
-
-    @property
-    def name(self):
-        """Get the name of the sensor."""
-        return self._name
-
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        if not self.event:
-            return None
-        return self.event.values
 
     @property
     def unit_of_measurement(self):
@@ -172,27 +140,19 @@ class RfxtrxSensor(Entity):
         return self._unit_of_measurement
 
     @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def force_update(self) -> bool:
+        """We should force updates. Repeated states have meaning."""
+        return True
+
+    @property
     def device_class(self):
         """Return a device class for sensor."""
         return self._device_class
-
-    @property
-    def unique_id(self):
-        """Return unique identifier of remote device."""
-        return self._unique_id
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, *self._device_id)},
-            "name": f"{self._device.type_string} {self._device.id_string}",
-            "model": self._device.type_string,
-        }
-
-    def _apply_event(self, event):
-        """Apply command from rfxtrx."""
-        self.event = event
 
     @callback
     def _handle_event(self, event, device_id):
