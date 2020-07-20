@@ -1,9 +1,15 @@
-"""Support for Enphase Envoy solar energy monitor."""
+from datetime import timedelta
 import logging
 
+import async_timeout
+
 from envoy_reader.envoy_reader import EnvoyReader
+import httpcore
 import requests
 import voluptuous as vol
+
+from homeassistant.helpers import entity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -38,7 +44,6 @@ SENSORS = {
     "inverters": ("Envoy Inverter", POWER_WATT),
 }
 
-
 ICON = "mdi:flash"
 CONST_DEFAULT_HOST = "envoy"
 
@@ -65,6 +70,35 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     envoy_reader = EnvoyReader(ip_address, username, password)
 
+    async def async_update_data():
+        """Fetch data from API endpoint.
+
+        This is the place to pre-process the data to lookup tables
+        so entities can quickly look up their data.
+        """
+        try:
+            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
+            # handled by the data update coordinator.
+            async with async_timeout.timeout(10):
+                data = await envoy_reader.update()
+                _LOGGER.debug(data)
+                return data
+        except ApiError as err:
+            raise UpdateFailed(f"Error communicating with API: {err}")
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        # Name of the data. For logging purposes.
+        name="sensor",
+        update_method=async_update_data,
+        # Polling interval. Will only be polled if there are subscribers.
+        update_interval=timedelta(seconds=30),
+    )
+
+    # Fetch initial data so we have data when entities subscribe
+    await coordinator.async_refresh()
+
     entities = []
     # Iterate through the list of sensors
     for condition in monitored_conditions:
@@ -86,8 +120,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                             condition,
                             f"{name}{SENSORS[condition][0]} {inverter}",
                             SENSORS[condition][1],
+                            coordinator,
                         )
                     )
+                    _LOGGER.debug("Adding inverter SN: %s - Type: %s.", f"{name}{SENSORS[condition][0]} {inverter}", condition)
 
         else:
             entities.append(
@@ -96,22 +132,24 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     condition,
                     f"{name}{SENSORS[condition][0]}",
                     SENSORS[condition][1],
+                    coordinator,
                 )
             )
-    async_add_entities(entities)
+            _LOGGER.debug("Adding sensor: %s - Type: %s.", f"{name}{SENSORS[condition][0]})", condition)
+    async_add_entities(entities)    
 
 
 class Envoy(Entity):
-    """Implementation of the Enphase Envoy sensors."""
 
-    def __init__(self, envoy_reader, sensor_type, name, unit):
-        """Initialize the sensor."""
+    def __init__(self, envoy_reader, sensor_type, name, unit, coordinator):
         self._envoy_reader = envoy_reader
         self._type = sensor_type
         self._name = name
         self._unit_of_measurement = unit
         self._state = None
         self._last_reported = None
+
+        self.coordinator = coordinator
 
     @property
     def name(self):
@@ -141,28 +179,57 @@ class Envoy(Entity):
 
         return None
 
-    async def async_update(self):
-        """Get the energy production data from the Enphase Envoy."""
-        if self._type != "inverters":
-            _state = await getattr(self._envoy_reader, self._type)()
-            if isinstance(_state, int):
-                self._state = _state
-            else:
-                _LOGGER.error(_state)
-                self._state = None
+    @property
+    def should_poll(self):
+        """No need to poll. Coordinator notifies entity of updates."""
+        return True
 
-        elif self._type == "inverters":
-            try:
-                inverters = await (self._envoy_reader.inverters_production())
-            except requests.exceptions.HTTPError:
-                _LOGGER.warning(
-                    "Authentication for Inverter data failed during update: %s",
-                    self._envoy_reader.host,
+    @property
+    def available(self):
+        """Return if entity is available."""
+        return self.coordinator.last_update_success
+
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.async_on_remove(
+            self.coordinator.async_add_listener(
+                self.async_write_ha_state
+            )
+        )
+
+    async def async_update(self):
+        """Update the energy production data."""
+        if self._type != "inverters":
+            if isinstance(self.coordinator.data.get(self._type), int):
+                self._state = self.coordinator.data.get(self._type)
+                _LOGGER.debug(
+                    "Updating: %s - %s", self._type, self._state
+                )
+            else:
+                _LOGGER.debug(
+                    "Sensor %s isInstance(int) was %s.  Returning None for state.",
+                    self._type,
+                    isinstance(self.coordinator.data.get(self._type), int),
                 )
 
-            if isinstance(inverters, dict):
-                serial_number = self._name.split(" ")[2]
-                self._state = inverters[serial_number][0]
-                self._last_reported = inverters[serial_number][1]
+        elif self._type == "inverters":
+            serial_number = self._name.split(" ")[2]
+            if isinstance(self.coordinator.data.get("inverters_production"), dict):
+                self._state = self.coordinator.data.get("inverters_production").get(
+                    serial_number
+                )[0]
+                _LOGGER.debug(
+                    "Updating: %s (%s) - %s.",
+                    self._type,
+                    serial_number,
+                    self._state,
+                )
             else:
-                self._state = None
+                _LOGGER.debug(
+                    "Data inverter (%s) isInstance(dict) was %s.  Using previous state: %s",
+                    serial_number,
+                    isinstance(self.coordinator.data.get("inverters_production"), dict),
+                    self._state,
+                )
+
+        
