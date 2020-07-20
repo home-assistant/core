@@ -322,9 +322,12 @@ class Camera(HomeAccessory, PyhapCamera):
 
         session_info["stream"] = stream
         session_info[FFMPEG_PID] = stream.process.pid
+        async def watch_session(_):
+            await self._async_ffmpeg_watch(session_info["id"])
+
         session_info[FFMPEG_WATCHER] = async_track_time_interval(
             self.hass,
-            lambda _: self._async_ffmpeg_watch(session_info["id"]),
+            watch_session,
             FFMPEG_WATCH_INTERVAL,
         )
 
