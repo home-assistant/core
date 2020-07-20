@@ -300,7 +300,8 @@ def async_fire_time_changed(hass, datetime_):
 
         if mock_seconds_into_future >= future_seconds:
             with patch(
-                "homeassistant.util.dt.utcnow", return_value=date_util.as_utc(datetime_)
+                "homeassistant.helpers.event.pattern_utc_now",
+                return_value=date_util.as_utc(datetime_),
             ):
                 task._run()
                 task.cancel()
