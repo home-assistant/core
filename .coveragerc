@@ -934,6 +934,9 @@ omit =
     homeassistant/components/wiffi/*
     homeassistant/components/wink/*
     homeassistant/components/wirelesstag/*
+    homeassistant/components/wolflink/__init__.py
+    homeassistant/components/wolflink/sensor.py
+    homeassistant/components/wolflink/const.py
     homeassistant/components/worldtidesinfo/sensor.py
     homeassistant/components/worxlandroid/sensor.py
     homeassistant/components/x10/light.py
