@@ -148,13 +148,13 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             "client_id": self.client_id,
             "redirect_uri": self.redirect_uri,
             "state": _encode_jwt(
-                self.hass, {"flow_type": flow_type, "flow_id": flow_id}
+                self.hass, {"flow_id": flow_id, "flow_type": flow_type}
             ),
         }
-        if nonce:
-            query["nonce"] = nonce
         if scope:
             query["scope"] = scope
+        if nonce:
+            query["nonce"] = nonce
 
         return str(URL(self.authorize_url).with_query(query).update_query(self.extra_authorize_data))
 
