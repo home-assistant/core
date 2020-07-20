@@ -114,7 +114,8 @@ class BaseZhaEntity(LogMixin, entity.Entity):
             unsub()
             self._unsubs.remove(unsub)
 
-    async def async_accept_signal(
+    @callback
+    def async_accept_signal(
         self, channel: ChannelType, signal: str, func: CALLABLE_T, signal_override=False
     ):
         """Accept a signal from a channel."""
@@ -162,7 +163,7 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         self.remove_future = asyncio.Future()
-        await self.async_accept_signal(
+        self.async_accept_signal(
             None,
             f"{SIGNAL_REMOVE}_{self.zha_device.ieee}",
             self.async_remove,
@@ -175,7 +176,7 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
             if last_state:
                 self.async_restore_last_state(last_state)
 
-        await self.async_accept_signal(
+        self.async_accept_signal(
             None,
             f"{self.zha_device.available_signal}_entity",
             self.async_state_changed,
@@ -231,14 +232,14 @@ class ZhaGroupEntity(BaseZhaEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
-        await self.async_accept_signal(
+        self.async_accept_signal(
             None,
             f"{SIGNAL_REMOVE_GROUP}_0x{self._group_id:04x}",
             self.async_remove,
             signal_override=True,
         )
 
-        await self.async_accept_signal(
+        self.async_accept_signal(
             None,
             f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{self._group_id:04x}",
             self.async_remove,
