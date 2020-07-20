@@ -349,8 +349,7 @@ class Camera(HomeAccessory, PyhapCamera):
         """Cleanup a streaming session after stopping."""
         if FFMPEG_WATCHER not in self.sessions[session_id]:
             return
-        self.sessions[session_id][FFMPEG_WATCHER]()
-        del self.sessions[session_id][FFMPEG_WATCHER]
+        self.sessions[session_id].pop(FFMPEG_WATCHER)()
 
     async def stop_stream(self, session_info):
         """Stop the stream for the given ``session_id``."""
