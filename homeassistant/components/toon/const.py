@@ -365,7 +365,7 @@ SENSOR_ENTITIES = {
         ATTR_UNIT_OF_MEASUREMENT: VOLUME_M3,
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:water",
-        ATTR_DEFAULT_ENABLED: True,
+        ATTR_DEFAULT_ENABLED: False,
     },
     "water_meter_reading": {
         ATTR_NAME: "Water Meter",
@@ -383,16 +383,16 @@ SENSOR_ENTITIES = {
         ATTR_UNIT_OF_MEASUREMENT: VOLUME_LMIN,
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:water-pump",
-        ATTR_DEFAULT_ENABLED: True,
+        ATTR_DEFAULT_ENABLED: False,
     },
     "water_daily_cost": {
         ATTR_NAME: "Water Cost Today",
         ATTR_SECTION: "water_usage",
-        ATTR_MEASUREMENT: "dayCost",
+        ATTR_MEASUREMENT: "day_cost",
         ATTR_UNIT_OF_MEASUREMENT: CURRENCY_EUR,
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:water-pump",
-        ATTR_DEFAULT_ENABLED: True,
+        ATTR_DEFAULT_ENABLED: False,
     },
 }
 
