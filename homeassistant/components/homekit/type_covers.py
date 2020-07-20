@@ -25,6 +25,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
+from homeassistant.core import callback
 
 from .accessories import TYPES, HomeAccessory, debounce
 from .const import (
@@ -92,7 +93,7 @@ class GarageDoorOpener(HomeAccessory):
         self.char_target_state = serv_garage_door.configure_char(
             CHAR_TARGET_DOOR_STATE, value=0, setter_callback=self.set_state
         )
-        self.update_state(state)
+        self.async_update_state(state)
 
     def set_state(self, value):
         """Change garage state if call came from HomeKit."""
@@ -108,7 +109,8 @@ class GarageDoorOpener(HomeAccessory):
                 self.char_current_state.set_value(HK_DOOR_CLOSING)
             self.call_service(DOMAIN, SERVICE_CLOSE_COVER, params)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update cover state after state changed."""
         hass_state = new_state.state
         target_door_state = DOOR_TARGET_HASS_TO_HK.get(hass_state)
@@ -184,7 +186,8 @@ class WindowCoveringBase(HomeAccessory):
 
         self.call_service(DOMAIN, SERVICE_SET_COVER_TILT_POSITION, params, value)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update cover position and tilt after state changed."""
         # update tilt
         current_tilt = new_state.attributes.get(ATTR_CURRENT_TILT_POSITION)
@@ -230,7 +233,7 @@ class WindowCovering(WindowCoveringBase, HomeAccessory):
         self.char_position_state = self.serv_cover.configure_char(
             CHAR_POSITION_STATE, value=HK_POSITION_STOPPED
         )
-        self.update_state(state)
+        self.async_update_state(state)
 
     @debounce
     def move_cover(self, value):
@@ -241,7 +244,8 @@ class WindowCovering(WindowCoveringBase, HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_POSITION: value}
         self.call_service(DOMAIN, SERVICE_SET_COVER_POSITION, params, value)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update cover position and tilt after state changed."""
         current_position = new_state.attributes.get(ATTR_CURRENT_POSITION)
         if isinstance(current_position, (float, int)):
@@ -271,7 +275,7 @@ class WindowCovering(WindowCoveringBase, HomeAccessory):
             if self.char_position_state.value != HK_POSITION_STOPPED:
                 self.char_position_state.set_value(HK_POSITION_STOPPED)
 
-        super().update_state(new_state)
+        super().async_update_state(new_state)
 
 
 @TYPES.register("WindowCoveringBasic")
@@ -295,7 +299,7 @@ class WindowCoveringBasic(WindowCoveringBase, HomeAccessory):
         self.char_position_state = self.serv_cover.configure_char(
             CHAR_POSITION_STATE, value=HK_POSITION_STOPPED
         )
-        self.update_state(state)
+        self.async_update_state(state)
 
     @debounce
     def move_cover(self, value):
@@ -322,7 +326,8 @@ class WindowCoveringBasic(WindowCoveringBase, HomeAccessory):
         self.char_current_position.set_value(position)
         self.char_target_position.set_value(position)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update cover position after state changed."""
         position_mapping = {STATE_OPEN: 100, STATE_CLOSED: 0}
         hk_position = position_mapping.get(new_state.state)
@@ -341,4 +346,4 @@ class WindowCoveringBasic(WindowCoveringBase, HomeAccessory):
             if self.char_position_state.value != HK_POSITION_STOPPED:
                 self.char_position_state.set_value(HK_POSITION_STOPPED)
 
-        super().update_state(new_state)
+        super().async_update_state(new_state)

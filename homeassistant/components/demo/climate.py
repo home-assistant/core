@@ -134,8 +134,6 @@ class DemoClimate(ClimateEntity):
             self._support_flags = self._support_flags | SUPPORT_TARGET_HUMIDITY
         if swing_mode is not None:
             self._support_flags = self._support_flags | SUPPORT_SWING_MODE
-        if hvac_action is not None:
-            self._support_flags = self._support_flags
         if aux is not None:
             self._support_flags = self._support_flags | SUPPORT_AUX_HEAT
         if HVAC_MODE_HEAT_COOL in hvac_modes or HVAC_MODE_AUTO in hvac_modes:
@@ -311,12 +309,12 @@ class DemoClimate(ClimateEntity):
         self._preset = preset_mode
         self.async_write_ha_state()
 
-    def turn_aux_heat_on(self):
+    async def async_turn_aux_heat_on(self):
         """Turn auxiliary heater on."""
         self._aux = True
         self.async_write_ha_state()
 
-    def turn_aux_heat_off(self):
+    async def async_turn_aux_heat_off(self):
         """Turn auxiliary heater off."""
         self._aux = False
         self.async_write_ha_state()

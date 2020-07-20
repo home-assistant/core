@@ -288,7 +288,7 @@ class Thermostat(ClimateEntity):
         else:
             await self.data.update()
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
-        if self.hvac_mode is not HVAC_MODE_OFF:
+        if self.hvac_mode != HVAC_MODE_OFF:
             self._last_active_hvac_mode = self.hvac_mode
 
     @property
@@ -471,6 +471,16 @@ class Thermostat(ClimateEntity):
     def is_aux_heat(self):
         """Return true if aux heater."""
         return "auxHeat" in self.thermostat["equipmentStatus"]
+
+    async def async_turn_aux_heat_on(self) -> None:
+        """Turn auxiliary heater on."""
+        if not self.is_aux_heat:
+            _LOGGER.warning("# Changing aux heat is not supported")
+
+    async def async_turn_aux_heat_off(self) -> None:
+        """Turn auxiliary heater off."""
+        if self.is_aux_heat:
+            _LOGGER.warning("# Changing aux heat is not supported")
 
     def set_preset_mode(self, preset_mode):
         """Activate a preset."""

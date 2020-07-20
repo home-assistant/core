@@ -2,10 +2,13 @@
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.netatmo import config_flow
 from homeassistant.components.netatmo.const import (
+    CONF_NEW_AREA,
+    CONF_WEATHER_AREAS,
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.async_mock import patch
@@ -13,6 +16,8 @@ from tests.common import MockConfigEntry
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
+
+VALID_CONFIG = {}
 
 
 async def test_abort_if_existing_entry(hass):
@@ -26,7 +31,7 @@ async def test_abort_if_existing_entry(hass):
         "netatmo", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "missing_configuration"
 
     result = await hass.config_entries.flow.async_init(
         "netatmo",
@@ -34,7 +39,7 @@ async def test_abort_if_existing_entry(hass):
         data={"host": "0.0.0.0", "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "missing_configuration"
 
 
 async def test_full_flow(hass, aiohttp_client, aioclient_mock):
@@ -43,7 +48,7 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
         hass,
         "netatmo",
         {
-            "netatmo": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
+            "netatmo": {CONF_CLIENT_ID: CLIENT_ID, CONF_CLIENT_SECRET: CLIENT_SECRET},
             "http": {"base_url": "https://example.com"},
         },
     )
@@ -97,3 +102,47 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
+
+
+async def test_option_flow(hass):
+    """Test config flow options."""
+    valid_option = {
+        "lat_ne": 32.91336,
+        "lon_sw": -117.26743,
+        "show_on_map": False,
+        "area_name": "Home",
+        "lon_ne": -117.187429,
+        "lat_sw": 32.83336,
+        "mode": "avg",
+    }
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=DOMAIN, data=VALID_CONFIG, options={},
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "public_weather_areas"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_NEW_AREA: "Home"}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "public_weather"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input=valid_option
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "public_weather_areas"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options == {CONF_WEATHER_AREAS: {"Home": valid_option}}

@@ -1,6 +1,6 @@
 """Runtime entry data for ESPHome stored in hass.data."""
 import asyncio
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Set, Tuple
 
 from aioesphomeapi import (
     COMPONENT_TYPE_TO_INFO,
@@ -26,6 +26,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
 
+if TYPE_CHECKING:
+    from . import APIClient
+
 DATA_KEY = "esphome"
 
 # Mapping from ESPHome info type to HA platform
@@ -46,26 +49,26 @@ INFO_TYPE_TO_PLATFORM = {
 class RuntimeEntryData:
     """Store runtime data for esphome config entries."""
 
-    entry_id = attr.ib(type=str)
-    client = attr.ib(type="APIClient")
-    store = attr.ib(type=Store)
-    reconnect_task = attr.ib(type=Optional[asyncio.Task], default=None)
-    state = attr.ib(type=Dict[str, Dict[str, Any]], factory=dict)
-    info = attr.ib(type=Dict[str, Dict[str, Any]], factory=dict)
+    entry_id: str = attr.ib()
+    client: "APIClient" = attr.ib()
+    store: Store = attr.ib()
+    reconnect_task: Optional[asyncio.Task] = attr.ib(default=None)
+    state: Dict[str, Dict[str, Any]] = attr.ib(factory=dict)
+    info: Dict[str, Dict[str, Any]] = attr.ib(factory=dict)
 
     # A second list of EntityInfo objects
     # This is necessary for when an entity is being removed. HA requires
     # some static info to be accessible during removal (unique_id, maybe others)
     # If an entity can't find anything in the info array, it will look for info here.
-    old_info = attr.ib(type=Dict[str, Dict[str, Any]], factory=dict)
+    old_info: Dict[str, Dict[str, Any]] = attr.ib(factory=dict)
 
-    services = attr.ib(type=Dict[int, "UserService"], factory=dict)
-    available = attr.ib(type=bool, default=False)
-    device_info = attr.ib(type=DeviceInfo, default=None)
-    cleanup_callbacks = attr.ib(type=List[Callable[[], None]], factory=list)
-    disconnect_callbacks = attr.ib(type=List[Callable[[], None]], factory=list)
-    loaded_platforms = attr.ib(type=Set[str], factory=set)
-    platform_load_lock = attr.ib(type=asyncio.Lock, factory=asyncio.Lock)
+    services: Dict[int, "UserService"] = attr.ib(factory=dict)
+    available: bool = attr.ib(default=False)
+    device_info: Optional[DeviceInfo] = attr.ib(default=None)
+    cleanup_callbacks: List[Callable[[], None]] = attr.ib(factory=list)
+    disconnect_callbacks: List[Callable[[], None]] = attr.ib(factory=list)
+    loaded_platforms: Set[str] = attr.ib(factory=set)
+    platform_load_lock: asyncio.Lock = attr.ib(factory=asyncio.Lock)
 
     @callback
     def async_update_entity(

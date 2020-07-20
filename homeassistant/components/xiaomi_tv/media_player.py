@@ -87,14 +87,14 @@ class XiaomiTV(MediaPlayerEntity):
         because the TV won't accept any input when turned off. Thus, the user
         would be unable to turn the TV back on, unless it's done manually.
         """
-        if self._state is not STATE_OFF:
+        if self._state != STATE_OFF:
             self._tv.sleep()
 
             self._state = STATE_OFF
 
     def turn_on(self):
         """Wake the TV back up from sleep."""
-        if self._state is not STATE_ON:
+        if self._state != STATE_ON:
             self._tv.wake()
 
             self._state = STATE_ON

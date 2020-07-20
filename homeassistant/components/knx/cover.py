@@ -116,6 +116,10 @@ class KNXCover(CoverEntity):
         """Store register state change callback."""
         self.async_register_callbacks()
 
+    async def async_update(self):
+        """Request a state update from KNX bus."""
+        await self.device.sync()
+
     @property
     def name(self):
         """Return the name of the KNX device."""

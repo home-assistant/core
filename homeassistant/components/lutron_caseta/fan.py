@@ -13,7 +13,7 @@ from homeassistant.components.fan import (
     FanEntity,
 )
 
-from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice
+from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,10 +36,15 @@ SPEED_TO_VALUE = {
 FAN_SPEEDS = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up Lutron fan."""
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Lutron Caseta fan platform.
+
+    Adds fan controllers from the Caseta bridge associated with the config_entry
+    as fan entities.
+    """
+
     entities = []
-    bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
+    bridge = hass.data[CASETA_DOMAIN][config_entry.entry_id]
     fan_devices = bridge.get_devices_by_domain(DOMAIN)
 
     for fan_device in fan_devices:

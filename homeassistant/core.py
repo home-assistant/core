@@ -5,10 +5,10 @@ Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
 """
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 import datetime
 import enum
 import functools
+from ipaddress import ip_address
 import logging
 import os
 import pathlib
@@ -29,12 +29,14 @@ from typing import (
     Set,
     TypeVar,
     Union,
+    cast,
 )
 import uuid
 
 from async_timeout import timeout
 import attr
 import voluptuous as vol
+import yarl
 
 from homeassistant import block_async_io, loader, util
 from homeassistant.const import (
@@ -68,7 +70,7 @@ from homeassistant.exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
-from homeassistant.util import location
+from homeassistant.util import location, network
 from homeassistant.util.async_ import fire_coroutine_threadsafe, run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.thread import fix_threading_exception_logging
@@ -76,6 +78,7 @@ from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitS
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
+    from homeassistant.auth import AuthManager
     from homeassistant.config_entries import ConfigEntries
     from homeassistant.components.http import HomeAssistantHTTP
 
@@ -84,6 +87,7 @@ block_async_io.enable()
 fix_threading_exception_logging()
 
 T = TypeVar("T")
+_UNDEF: dict = {}
 # pylint: disable=invalid-name
 CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
 CALLBACK_TYPE = Callable[[], None]
@@ -140,19 +144,6 @@ def is_callback(func: Callable[..., Any]) -> bool:
     return getattr(func, "_hass_callback", False) is True
 
 
-@callback
-def async_loop_exception_handler(_: Any, context: Dict) -> None:
-    """Handle all exception inside the core loop."""
-    kwargs = {}
-    exception = context.get("exception")
-    if exception:
-        kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
-
-    _LOGGER.error(
-        "Error doing job: %s", context["message"], **kwargs  # type: ignore
-    )
-
-
 class CoreState(enum.Enum):
     """Represent the current state of Home Assistant."""
 
@@ -161,6 +152,7 @@ class CoreState(enum.Enum):
     running = "RUNNING"
     stopping = "STOPPING"
     final_write = "FINAL_WRITE"
+    stopped = "STOPPED"
 
     def __str__(self) -> str:
         """Return the event."""
@@ -170,21 +162,13 @@ class CoreState(enum.Enum):
 class HomeAssistant:
     """Root object of the Home Assistant home automation."""
 
+    auth: "AuthManager"
     http: "HomeAssistantHTTP" = None  # type: ignore
     config_entries: "ConfigEntries" = None  # type: ignore
 
-    def __init__(self, loop: Optional[asyncio.events.AbstractEventLoop] = None) -> None:
+    def __init__(self) -> None:
         """Initialize new Home Assistant object."""
-        self.loop: asyncio.events.AbstractEventLoop = (loop or asyncio.get_event_loop())
-
-        executor_opts: Dict[str, Any] = {
-            "max_workers": None,
-            "thread_name_prefix": "SyncWorker",
-        }
-
-        self.executor = ThreadPoolExecutor(**executor_opts)
-        self.loop.set_default_executor(self.executor)
-        self.loop.set_exception_handler(async_loop_exception_handler)
+        self.loop = asyncio.get_running_loop()
         self._pending_tasks: list = []
         self._track_task = True
         self.bus = EventBus(self)
@@ -204,6 +188,11 @@ class HomeAssistant:
     def is_running(self) -> bool:
         """Return if Home Assistant is running."""
         return self.state in (CoreState.starting, CoreState.running)
+
+    @property
+    def is_stopping(self) -> bool:
+        """Return if Home Assistant is stopping."""
+        return self.state in (CoreState.stopping, CoreState.final_write)
 
     def start(self) -> int:
         """Start Home Assistant.
@@ -252,9 +241,10 @@ class HomeAssistant:
         This method is a coroutine.
         """
         _LOGGER.info("Starting Home Assistant")
-        self.state = CoreState.starting
-
         setattr(self.loop, "_thread_ident", threading.get_ident())
+
+        self.state = CoreState.starting
+        self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
         try:
@@ -276,13 +266,14 @@ class HomeAssistant:
         if self.state != CoreState.starting:
             _LOGGER.warning(
                 "Home Assistant startup has been interrupted. "
-                "Its state may be inconsistent."
+                "Its state may be inconsistent"
             )
             return
 
         self.state = CoreState.running
-        _async_create_timer(self)
+        self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
         self.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        _async_create_timer(self)
 
     def add_job(self, target: Callable[..., Any], *args: Any) -> None:
         """Add job to the executor pool.
@@ -426,7 +417,7 @@ class HomeAssistant:
             # regardless of the state of the loop.
             if self.state == CoreState.not_running:  # just ignore
                 return
-            if self.state == CoreState.stopping or self.state == CoreState.final_write:
+            if self.state in [CoreState.stopping, CoreState.final_write]:
                 _LOGGER.info("async_stop called twice: ignored")
                 return
             if self.state == CoreState.starting:
@@ -448,9 +439,12 @@ class HomeAssistant:
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
         await self.async_block_till_done()
-        self.executor.shutdown()
+
+        # Python 3.9+ and backported in runner.py
+        await self.loop.shutdown_default_executor()  # type: ignore
 
         self.exit_code = exit_code
+        self.state = CoreState.stopped
 
         if self._stopped is not None:
             self._stopped.set()
@@ -462,9 +456,9 @@ class HomeAssistant:
 class Context:
     """The context that triggered something."""
 
-    user_id = attr.ib(type=str, default=None)
-    parent_id = attr.ib(type=Optional[str], default=None)
-    id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
+    user_id: str = attr.ib(default=None)
+    parent_id: Optional[str] = attr.ib(default=None)
+    id: str = attr.ib(factory=lambda: uuid.uuid4().hex)
 
     def as_dict(self) -> dict:
         """Return a dictionary representation of the context."""
@@ -726,14 +720,12 @@ class State:
         last_changed: Optional[datetime.datetime] = None,
         last_updated: Optional[datetime.datetime] = None,
         context: Optional[Context] = None,
-        # Temp, because database can still store invalid entity IDs
-        # Remove with 1.0 or in 2020.
-        temp_invalid_id_bypass: Optional[bool] = False,
+        validate_entity_id: Optional[bool] = True,
     ) -> None:
         """Initialize a new state."""
         state = str(state)
 
-        if not valid_entity_id(entity_id) and not temp_invalid_id_bypass:
+        if validate_entity_id and not valid_entity_id(entity_id):
             raise InvalidEntityFormatError(
                 f"Invalid entity id encountered: {entity_id}. "
                 "Format should be <domain>.<object_id>"
@@ -1141,7 +1133,7 @@ class ServiceRegistry:
         service = service.lower()
 
         if service not in self._services.get(domain, {}):
-            _LOGGER.warning("Unable to remove unknown service %s/%s.", domain, service)
+            _LOGGER.warning("Unable to remove unknown service %s/%s", domain, service)
             return
 
         self._services[domain].pop(service)
@@ -1208,7 +1200,16 @@ class ServiceRegistry:
             raise ServiceNotFound(domain, service) from None
 
         if handler.schema:
-            processed_data = handler.schema(service_data)
+            try:
+                processed_data = handler.schema(service_data)
+            except vol.Invalid:
+                _LOGGER.debug(
+                    "Invalid data for service call %s.%s: %s",
+                    domain,
+                    service,
+                    service_data,
+                )
+                raise
         else:
             processed_data = service_data
 
@@ -1301,6 +1302,8 @@ class Config:
         self.location_name: str = "Home"
         self.time_zone: datetime.tzinfo = dt_util.UTC
         self.units: UnitSystem = METRIC_SYSTEM
+        self.internal_url: Optional[str] = None
+        self.external_url: Optional[str] = None
 
         self.config_source: str = "default"
 
@@ -1317,7 +1320,10 @@ class Config:
         self.config_dir: Optional[str] = None
 
         # List of allowed external dirs to access
-        self.whitelist_external_dirs: Set[str] = set()
+        self.allowlist_external_dirs: Set[str] = set()
+
+        # List of allowed external URLs that integrations may use
+        self.allowlist_external_urls: Set[str] = set()
 
         # If Home Assistant is running in safe mode
         self.safe_mode: bool = False
@@ -1340,6 +1346,16 @@ class Config:
             raise HomeAssistantError("config_dir is not set")
         return os.path.join(self.config_dir, *path)
 
+    def is_allowed_external_url(self, url: str) -> bool:
+        """Check if an external URL is allowed."""
+        parsed_url = f"{str(yarl.URL(url))}/"
+
+        return any(
+            allowed
+            for allowed in self.allowlist_external_urls
+            if parsed_url.startswith(allowed)
+        )
+
     def is_allowed_path(self, path: str) -> bool:
         """Check if the path is valid for access from outside."""
         assert path is not None
@@ -1354,9 +1370,9 @@ class Config:
         except (FileNotFoundError, RuntimeError, PermissionError):
             return False
 
-        for whitelisted_path in self.whitelist_external_dirs:
+        for allowed_path in self.allowlist_external_dirs:
             try:
-                thepath.relative_to(whitelisted_path)
+                thepath.relative_to(allowed_path)
                 return True
             except ValueError:
                 pass
@@ -1381,10 +1397,16 @@ class Config:
             "time_zone": time_zone,
             "components": self.components,
             "config_dir": self.config_dir,
-            "whitelist_external_dirs": self.whitelist_external_dirs,
+            # legacy, backwards compat
+            "whitelist_external_dirs": self.allowlist_external_dirs,
+            "allowlist_external_dirs": self.allowlist_external_dirs,
+            "allowlist_external_urls": self.allowlist_external_urls,
             "version": __version__,
             "config_source": self.config_source,
             "safe_mode": self.safe_mode,
+            "state": self.hass.state.value,
+            "external_url": self.external_url,
+            "internal_url": self.internal_url,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:
@@ -1408,6 +1430,8 @@ class Config:
         unit_system: Optional[str] = None,
         location_name: Optional[str] = None,
         time_zone: Optional[str] = None,
+        external_url: Optional[Union[str, dict]] = _UNDEF,
+        internal_url: Optional[Union[str, dict]] = _UNDEF,
     ) -> None:
         """Update the configuration from a dictionary."""
         self.config_source = source
@@ -1426,6 +1450,10 @@ class Config:
             self.location_name = location_name
         if time_zone is not None:
             self.set_time_zone(time_zone)
+        if external_url is not _UNDEF:
+            self.external_url = cast(Optional[str], external_url)
+        if internal_url is not _UNDEF:
+            self.internal_url = cast(Optional[str], internal_url)
 
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
@@ -1439,10 +1467,51 @@ class Config:
             CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True
         )
         data = await store.async_load()
-        if not data:
-            return
 
-        self._update(source=SOURCE_STORAGE, **data)
+        async def migrate_base_url(_: Event) -> None:
+            """Migrate base_url to internal_url/external_url."""
+            if self.hass.config.api is None:
+                return
+
+            base_url = yarl.URL(self.hass.config.api.deprecated_base_url)
+
+            # Check if this is an internal URL
+            if str(base_url.host).endswith(".local") or (
+                network.is_ip_address(str(base_url.host))
+                and network.is_private(ip_address(base_url.host))
+            ):
+                await self.async_update(
+                    internal_url=network.normalize_url(str(base_url))
+                )
+                return
+
+            # External, ensure this is not a loopback address
+            if not (
+                network.is_ip_address(str(base_url.host))
+                and network.is_loopback(ip_address(base_url.host))
+            ):
+                await self.async_update(
+                    external_url=network.normalize_url(str(base_url))
+                )
+
+        if data:
+            # Try to migrate base_url to internal_url/external_url
+            if "external_url" not in data:
+                self.hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_START, migrate_base_url
+                )
+
+            self._update(
+                source=SOURCE_STORAGE,
+                latitude=data.get("latitude"),
+                longitude=data.get("longitude"),
+                elevation=data.get("elevation"),
+                unit_system=data.get("unit_system"),
+                location_name=data.get("location_name"),
+                time_zone=data.get("time_zone"),
+                external_url=data.get("external_url", _UNDEF),
+                internal_url=data.get("internal_url", _UNDEF),
+            )
 
     async def async_store(self) -> None:
         """Store [homeassistant] core config."""
@@ -1457,6 +1526,8 @@ class Config:
             "unit_system": self.units.name,
             "location_name": self.location_name,
             "time_zone": time_zone,
+            "external_url": self.external_url,
+            "internal_url": self.internal_url,
         }
 
         store = self.hass.helpers.storage.Store(

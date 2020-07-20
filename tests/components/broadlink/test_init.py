@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components.broadlink import async_setup_service, data_packet
 from homeassistant.components.broadlink.const import DOMAIN, SERVICE_LEARN, SERVICE_SEND
+from homeassistant.components.broadlink.device import BroadlinkDevice
 from homeassistant.util.dt import utcnow
 
 from tests.async_mock import MagicMock, call, patch
@@ -34,39 +35,37 @@ async def test_padding(hass):
 
 async def test_send(hass):
     """Test send service."""
-    mock_device = MagicMock()
-    mock_device.send_data.return_value = None
+    mock_api = MagicMock()
+    mock_api.send_data.return_value = None
+    device = BroadlinkDevice(hass, mock_api)
 
-    async_setup_service(hass, DUMMY_HOST, mock_device)
-    await hass.async_block_till_done()
-
+    await async_setup_service(hass, DUMMY_HOST, device)
     await hass.services.async_call(
         DOMAIN, SERVICE_SEND, {"host": DUMMY_HOST, "packet": (DUMMY_IR_PACKET)}
     )
     await hass.async_block_till_done()
 
-    assert mock_device.send_data.call_count == 1
-    assert mock_device.send_data.call_args == call(b64decode(DUMMY_IR_PACKET))
+    assert device.api.send_data.call_count == 1
+    assert device.api.send_data.call_args == call(b64decode(DUMMY_IR_PACKET))
 
 
 async def test_learn(hass):
     """Test learn service."""
-    mock_device = MagicMock()
-    mock_device.enter_learning.return_value = None
-    mock_device.check_data.return_value = b64decode(DUMMY_IR_PACKET)
+    mock_api = MagicMock()
+    mock_api.enter_learning.return_value = None
+    mock_api.check_data.return_value = b64decode(DUMMY_IR_PACKET)
+    device = BroadlinkDevice(hass, mock_api)
 
     with patch.object(
         hass.components.persistent_notification, "async_create"
     ) as mock_create:
 
-        async_setup_service(hass, DUMMY_HOST, mock_device)
-        await hass.async_block_till_done()
-
+        await async_setup_service(hass, DUMMY_HOST, device)
         await hass.services.async_call(DOMAIN, SERVICE_LEARN, {"host": DUMMY_HOST})
         await hass.async_block_till_done()
 
-        assert mock_device.enter_learning.call_count == 1
-        assert mock_device.enter_learning.call_args == call()
+        assert device.api.enter_learning.call_count == 1
+        assert device.api.enter_learning.call_args == call()
 
         assert mock_create.call_count == 1
         assert mock_create.call_args == call(
@@ -76,12 +75,12 @@ async def test_learn(hass):
 
 async def test_learn_timeout(hass):
     """Test learn service."""
-    mock_device = MagicMock()
-    mock_device.enter_learning.return_value = None
-    mock_device.check_data.return_value = None
+    mock_api = MagicMock()
+    mock_api.enter_learning.return_value = None
+    mock_api.check_data.return_value = None
+    device = BroadlinkDevice(hass, mock_api)
 
-    async_setup_service(hass, DUMMY_HOST, mock_device)
-    await hass.async_block_till_done()
+    await async_setup_service(hass, DUMMY_HOST, device)
 
     now = utcnow()
 
@@ -94,8 +93,8 @@ async def test_learn_timeout(hass):
         await hass.services.async_call(DOMAIN, SERVICE_LEARN, {"host": DUMMY_HOST})
         await hass.async_block_till_done()
 
-        assert mock_device.enter_learning.call_count == 1
-        assert mock_device.enter_learning.call_args == call()
+        assert device.api.enter_learning.call_count == 1
+        assert device.api.enter_learning.call_args == call()
 
         assert mock_create.call_count == 1
         assert mock_create.call_args == call(

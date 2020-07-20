@@ -1,14 +1,19 @@
 """Config flow for UPNP."""
+from datetime import timedelta
 from typing import Mapping, Optional
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
+from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.core import callback
 
 from .const import (  # pylint: disable=unused-import
+    CONFIG_ENTRY_SCAN_INTERVAL,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
+    DEFAULT_SCAN_INTERVAL,
     DISCOVERY_LOCATION,
     DISCOVERY_NAME,
     DISCOVERY_ST,
@@ -54,7 +59,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(
                 discovery[DISCOVERY_USN], raise_on_progress=False
             )
-            return await self._async_create_entry_from_data(discovery)
+            return await self._async_create_entry_from_discovery(discovery)
 
         # Discover devices.
         discoveries = await Device.async_discover(self.hass)
@@ -115,11 +120,11 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Ensure anything to add. If not, silently abort.
         if not self._discoveries:
-            _LOGGER.info("No UPnP devices discovered, aborting.")
+            _LOGGER.info("No UPnP devices discovered, aborting")
             return self.async_abort(reason="no_devices_found")
 
         discovery = self._discoveries[0]
-        return await self._async_create_entry_from_data(discovery)
+        return await self._async_create_entry_from_discovery(discovery)
 
     async def async_step_ssdp(self, discovery_info: Mapping):
         """Handle a discovered UPnP/IGD device.
@@ -128,6 +133,14 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host is already configured and delegate to the import step if not.
         """
         _LOGGER.debug("async_step_ssdp: discovery_info: %s", discovery_info)
+
+        # Ensure complete discovery.
+        if (
+            ssdp.ATTR_UPNP_UDN not in discovery_info
+            or ssdp.ATTR_SSDP_ST not in discovery_info
+        ):
+            _LOGGER.debug("Incomplete discovery, ignoring")
+            return self.async_abort(reason="incomplete_discovery")
 
         # Ensure not already configuring/configured.
         udn = discovery_info[ssdp.ATTR_UPNP_UDN]
@@ -160,11 +173,21 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(step_id="ssdp_confirm")
 
         discovery = self._discoveries[0]
-        return await self._async_create_entry_from_data(discovery)
+        return await self._async_create_entry_from_discovery(discovery)
 
-    async def _async_create_entry_from_data(self, discovery: Mapping):
-        """Create an entry from own _data."""
-        _LOGGER.debug("_async_create_entry_from_data: discovery: %s", discovery)
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Define the config flow to handle options."""
+        return UpnpOptionsFlowHandler(config_entry)
+
+    async def _async_create_entry_from_discovery(
+        self, discovery: Mapping,
+    ):
+        """Create an entry from discovery."""
+        _LOGGER.debug(
+            "_async_create_entry_from_data: discovery: %s", discovery,
+        )
         # Get name from device, if not found already.
         if DISCOVERY_NAME not in discovery and DISCOVERY_LOCATION in discovery:
             discovery[DISCOVERY_NAME] = await self._async_get_name_for_discovery(
@@ -185,3 +208,38 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass, discovery[DISCOVERY_LOCATION]
         )
         return device.name
+
+
+class UpnpOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a UPnP options flow."""
+
+    def __init__(self, config_entry):
+        """Initialize."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            udn = self.config_entry.data.get(CONFIG_ENTRY_UDN)
+            coordinator = self.hass.data[DOMAIN]["coordinators"][udn]
+            update_interval_sec = user_input.get(
+                CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+            )
+            update_interval = timedelta(seconds=update_interval_sec)
+            _LOGGER.debug("Updating coordinator, update_interval: %s", update_interval)
+            coordinator.update_interval = update_interval
+            return self.async_create_entry(title="", data=user_input)
+
+        scan_interval = self.config_entry.options.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+        )
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_SCAN_INTERVAL, default=scan_interval,): vol.All(
+                        vol.Coerce(int), vol.Range(min=30)
+                    ),
+                }
+            ),
+        )

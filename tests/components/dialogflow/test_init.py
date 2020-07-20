@@ -6,10 +6,9 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components import dialogflow, intent_script
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import Mock
 
 SESSION_ID = "a9b84cec-46b6-484e-8f31-f65dba03ae6d"
 INTENT_ID = "c6a74079-a8f0-46cd-b372-5a934d23591c"
@@ -79,7 +78,10 @@ async def fixture(hass, aiohttp_client):
         },
     )
 
-    hass.config.api = Mock(base_url="http://example.com")
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
+
     result = await hass.config_entries.flow.async_init(
         "dialogflow", context={"source": "user"}
     )

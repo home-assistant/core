@@ -68,6 +68,7 @@ from .const import (
     KEY_MONITORING_TRAFFIC_STATISTICS,
     KEY_NET_CURRENT_PLMN,
     KEY_NET_NET_MODE,
+    KEY_SMS_SMS_COUNT,
     KEY_WLAN_HOST_LIST,
     KEY_WLAN_WIFI_FEATURE_SWITCH,
     NOTIFY_SUPPRESS_TIMEOUT,
@@ -80,10 +81,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-# dicttoxml (used by huawei-lte-api) has uselessly verbose INFO level.
-# https://github.com/quandyfactory/dicttoxml/issues/60
-logging.getLogger("dicttoxml").setLevel(logging.WARNING)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -243,6 +240,7 @@ class Router:
         )
         self._get_data(KEY_NET_CURRENT_PLMN, self.client.net.current_plmn)
         self._get_data(KEY_NET_NET_MODE, self.client.net.net_mode)
+        self._get_data(KEY_SMS_SMS_COUNT, self.client.sms.sms_count)
         self._get_data(KEY_WLAN_HOST_LIST, self.client.wlan.host_list)
         self._get_data(
             KEY_WLAN_WIFI_FEATURE_SWITCH, self.client.wlan.wifi_feature_switch
@@ -457,6 +455,10 @@ async def async_unload_entry(
 
 async def async_setup(hass: HomeAssistantType, config) -> bool:
     """Set up Huawei LTE component."""
+
+    # dicttoxml (used by huawei-lte-api) has uselessly verbose INFO level.
+    # https://github.com/quandyfactory/dicttoxml/issues/60
+    logging.getLogger("dicttoxml").setLevel(logging.WARNING)
 
     # Arrange our YAML config to dict with normalized URLs as keys
     domain_config = {}

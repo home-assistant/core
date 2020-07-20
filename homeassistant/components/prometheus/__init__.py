@@ -7,14 +7,25 @@ import prometheus_client
 import voluptuous as vol
 
 from homeassistant import core as hacore
-from homeassistant.components.climate.const import ATTR_CURRENT_TEMPERATURE
+from homeassistant.components.climate.const import (
+    ATTR_CURRENT_TEMPERATURE,
+    ATTR_HVAC_ACTION,
+    CURRENT_HVAC_ACTIONS,
+)
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.humidifier.const import (
+    ATTR_AVAILABLE_MODES,
+    ATTR_HUMIDITY,
+    ATTR_MODE,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
     CONTENT_TYPE_TEXT_PLAIN,
     EVENT_STATE_CHANGED,
+    STATE_ON,
+    STATE_UNAVAILABLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     UNIT_PERCENTAGE,
@@ -143,17 +154,47 @@ class PrometheusMetrics:
 
         handler = f"_handle_{domain}"
 
-        if hasattr(self, handler):
+        if hasattr(self, handler) and state.state != STATE_UNAVAILABLE:
             getattr(self, handler)(state)
 
-        metric = self._metric(
+        labels = self._labels(state)
+        state_change = self._metric(
             "state_change", self.prometheus_cli.Counter, "The number of state changes"
         )
-        metric.labels(**self._labels(state)).inc()
+        state_change.labels(**labels).inc()
 
-    def _metric(self, metric, factory, documentation, labels=None):
-        if labels is None:
-            labels = ["entity", "friendly_name", "domain"]
+        entity_available = self._metric(
+            "entity_available",
+            self.prometheus_cli.Gauge,
+            "Entity is available (not in the unavailable state)",
+        )
+        entity_available.labels(**labels).set(float(state.state != STATE_UNAVAILABLE))
+
+        last_updated_time_seconds = self._metric(
+            "last_updated_time_seconds",
+            self.prometheus_cli.Gauge,
+            "The last_updated timestamp",
+        )
+        last_updated_time_seconds.labels(**labels).set(state.last_updated.timestamp())
+
+    def _handle_attributes(self, state):
+        for key, value in state.attributes.items():
+            metric = self._metric(
+                f"{state.domain}_attr_{key.lower()}",
+                self.prometheus_cli.Gauge,
+                f"{key} attribute of {state.domain} entity",
+            )
+
+            try:
+                value = float(value)
+                metric.labels(**self._labels(state)).set(value)
+            except (ValueError, TypeError):
+                pass
+
+    def _metric(self, metric, factory, documentation, extra_labels=None):
+        labels = ["entity", "friendly_name", "domain"]
+        if extra_labels is not None:
+            labels.extend(extra_labels)
 
         try:
             return self._metrics[metric]
@@ -184,7 +225,7 @@ class PrometheusMetrics:
         try:
             value = state_helper.state_as_number(state)
         except ValueError:
-            _LOGGER.warning("Could not convert %s to float", state)
+            _LOGGER.debug("Could not convert %s to float", state)
             value = 0
         return value
 
@@ -249,7 +290,7 @@ class PrometheusMetrics:
         )
 
         try:
-            if "brightness" in state.attributes:
+            if "brightness" in state.attributes and state.state == STATE_ON:
                 value = state.attributes["brightness"] / 255.0
             else:
                 value = self.state_as_number(state)
@@ -287,6 +328,51 @@ class PrometheusMetrics:
                 "Current Temperature in degrees Celsius",
             )
             metric.labels(**self._labels(state)).set(current_temp)
+
+        current_action = state.attributes.get(ATTR_HVAC_ACTION)
+        if current_action:
+            metric = self._metric(
+                "climate_action", self.prometheus_cli.Gauge, "HVAC action", ["action"],
+            )
+            for action in CURRENT_HVAC_ACTIONS:
+                metric.labels(**dict(self._labels(state), action=action)).set(
+                    float(action == current_action)
+                )
+
+    def _handle_humidifier(self, state):
+        humidifier_target_humidity_percent = state.attributes.get(ATTR_HUMIDITY)
+        if humidifier_target_humidity_percent:
+            metric = self._metric(
+                "humidifier_target_humidity_percent",
+                self.prometheus_cli.Gauge,
+                "Target Relative Humidity",
+            )
+            metric.labels(**self._labels(state)).set(humidifier_target_humidity_percent)
+
+        metric = self._metric(
+            "humidifier_state",
+            self.prometheus_cli.Gauge,
+            "State of the humidifier (0/1)",
+        )
+        try:
+            value = self.state_as_number(state)
+            metric.labels(**self._labels(state)).set(value)
+        except ValueError:
+            pass
+
+        current_mode = state.attributes.get(ATTR_MODE)
+        available_modes = state.attributes.get(ATTR_AVAILABLE_MODES)
+        if current_mode and available_modes:
+            metric = self._metric(
+                "humidifier_mode",
+                self.prometheus_cli.Gauge,
+                "Humidifier Mode",
+                ["mode"],
+            )
+            for mode in available_modes:
+                metric.labels(**dict(self._labels(state), mode=mode)).set(
+                    float(mode == current_mode)
+                )
 
     def _handle_sensor(self, state):
         unit = self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
@@ -366,6 +452,8 @@ class PrometheusMetrics:
             metric.labels(**self._labels(state)).set(value)
         except ValueError:
             pass
+
+        self._handle_attributes(state)
 
     def _handle_zwave(self, state):
         self._battery(state)

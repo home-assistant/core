@@ -12,12 +12,12 @@
     "flow_title": "BleBox device: {name} ({host})",
     "step": {
       "user": {
-          "description": "Set up your BleBox to integrate with Home Assistant.",
-          "data": {
-              "host": "IP address",
-              "port": "Port"
-          },
-          "title": "Set up your BleBox device"
+        "description": "Set up your BleBox to integrate with Home Assistant.",
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "title": "Set up your BleBox device"
       }
     }
   }

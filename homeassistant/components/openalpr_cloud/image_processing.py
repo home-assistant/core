@@ -122,7 +122,7 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
                 data = await request.json()
 
                 if request.status != HTTP_OK:
-                    _LOGGER.error("Error %d -> %s.", request.status, data.get("error"))
+                    _LOGGER.error("Error %d -> %s", request.status, data.get("error"))
                     return
 
         except (asyncio.TimeoutError, aiohttp.ClientError):

@@ -6,7 +6,13 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, STATE_ATTR_TORRENT_INFO
+from .const import (
+    CONF_LIMIT,
+    CONF_ORDER,
+    DOMAIN,
+    STATE_ATTR_TORRENT_INFO,
+    SUPPORTED_ORDER_MODES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -143,28 +149,45 @@ class TransmissionTorrentsSensor(TransmissionSensor):
     @property
     def device_state_attributes(self):
         """Return the state attributes, if any."""
+        limit = self._tm_client.config_entry.options[CONF_LIMIT]
+        order = self._tm_client.config_entry.options[CONF_ORDER]
+        torrents = self._tm_client.api.torrents[0:limit]
         info = _torrents_info(
-            self._tm_client.api.torrents, self.SUBTYPE_MODES[self._sub_type]
+            torrents, order=order, statuses=self.SUBTYPE_MODES[self._sub_type],
         )
-        return {STATE_ATTR_TORRENT_INFO: info}
+        return {
+            STATE_ATTR_TORRENT_INFO: info,
+        }
 
     def update(self):
         """Get the latest data from Transmission and updates the state."""
-        self._state = len(self.device_state_attributes[STATE_ATTR_TORRENT_INFO])
+        torrents = _filter_torrents(
+            self._tm_client.api.torrents, statuses=self.SUBTYPE_MODES[self._sub_type]
+        )
+        self._state = len(torrents)
 
 
-def _torrents_info(torrents, statuses=None):
+def _filter_torrents(torrents, statuses=None):
+    return [
+        torrent
+        for torrent in torrents
+        if statuses is None or torrent.status in statuses
+    ]
+
+
+def _torrents_info(torrents, order, statuses=None):
     infos = {}
-    for torrent in torrents:
-        if statuses is None or torrent.status in statuses:
-            info = infos[torrent.name] = {
-                "added_date": torrent.addedDate,
-                "percent_done": f"{torrent.percentDone * 100:.2f}",
-                "status": torrent.status,
-                "id": torrent.id,
-            }
-            try:
-                info["eta"] = str(torrent.eta)
-            except ValueError:
-                pass
+    torrents = _filter_torrents(torrents, statuses)
+    torrents = SUPPORTED_ORDER_MODES[order](torrents)
+    for torrent in _filter_torrents(torrents, statuses):
+        info = infos[torrent.name] = {
+            "added_date": torrent.addedDate,
+            "percent_done": f"{torrent.percentDone * 100:.2f}",
+            "status": torrent.status,
+            "id": torrent.id,
+        }
+        try:
+            info["eta"] = str(torrent.eta)
+        except ValueError:
+            pass
     return infos

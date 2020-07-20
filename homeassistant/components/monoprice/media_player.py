@@ -19,6 +19,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform, serv
 from .const import (
     CONF_SOURCES,
     DOMAIN,
+    FIRST_RUN,
     MONOPRICE_OBJECT,
     SERVICE_RESTORE,
     SERVICE_SNAPSHOT,
@@ -77,7 +78,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 MonopriceZone(monoprice, sources, config_entry.entry_id, zone_id)
             )
 
-    async_add_entities(entities, True)
+    # only call update before add if it's the first run so we can try to detect zones
+    first_run = hass.data[DOMAIN][config_entry.entry_id][FIRST_RUN]
+    async_add_entities(entities, first_run)
 
     platform = entity_platform.current_platform.get()
 
@@ -134,16 +137,19 @@ class MonopriceZone(MediaPlayerEntity):
         self._volume = None
         self._source = None
         self._mute = None
+        self._update_success = True
 
     def update(self):
         """Retrieve latest state."""
         try:
             state = self._monoprice.zone_status(self._zone_id)
         except SerialException:
+            self._update_success = False
             _LOGGER.warning("Could not update zone %d", self._zone_id)
             return
 
         if not state:
+            self._update_success = False
             return
 
         self._state = STATE_ON if state.power else STATE_OFF
@@ -158,7 +164,7 @@ class MonopriceZone(MediaPlayerEntity):
     @property
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry."""
-        return self._zone_id < 20
+        return self._zone_id < 20 or self._update_success
 
     @property
     def device_info(self):

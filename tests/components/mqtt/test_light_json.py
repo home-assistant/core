@@ -89,6 +89,8 @@ light:
 """
 import json
 
+import pytest
+
 from homeassistant.components import light
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -100,6 +102,7 @@ import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
+    help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_payload,
@@ -154,6 +157,7 @@ async def test_fail_setup_if_no_command_topic(hass, mqtt_mock):
         light.DOMAIN,
         {light.DOMAIN: {"platform": "mqtt", "schema": "json", "name": "test"}},
     )
+    await hass.async_block_till_done()
     assert hass.states.get("light.test") is None
 
 
@@ -172,6 +176,7 @@ async def test_no_color_brightness_color_temp_white_val_if_no_topics(hass, mqtt_
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
@@ -220,6 +225,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
@@ -344,6 +350,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
                 }
             },
         )
+        await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
@@ -455,6 +462,7 @@ async def test_sending_hs_color(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
@@ -517,6 +525,7 @@ async def test_sending_rgb_color_no_brightness(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
@@ -570,6 +579,7 @@ async def test_sending_rgb_color_with_brightness(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
@@ -639,6 +649,7 @@ async def test_sending_rgb_color_with_scaled_brightness(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
@@ -707,6 +718,7 @@ async def test_sending_xy_color(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
@@ -769,6 +781,7 @@ async def test_effect(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
@@ -828,6 +841,7 @@ async def test_flash_short_and_long(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
@@ -867,6 +881,7 @@ async def test_transition(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
@@ -914,6 +929,7 @@ async def test_brightness_scale(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
@@ -957,6 +973,7 @@ async def test_invalid_values(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
@@ -1049,6 +1066,13 @@ async def test_invalid_values(hass, mqtt_mock):
     assert state.attributes.get("color_temp") == 100
 
 
+async def test_availability_when_connection_lost(hass, mqtt_mock):
+    """Test availability after MQTT disconnection."""
+    await help_test_availability_when_connection_lost(
+        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG
+    )
+
+
 async def test_availability_without_topic(hass, mqtt_mock):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
@@ -1105,7 +1129,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     )
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass, mqtt_mock):
     """Test unique id option only creates one light per unique_id."""
     config = {
         light.DOMAIN: [
@@ -1127,7 +1151,7 @@ async def test_unique_id(hass):
             },
         ]
     }
-    await help_test_unique_id(hass, light.DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, light.DOMAIN, config)
 
 
 async def test_discovery_removal(hass, mqtt_mock, caplog):
@@ -1155,6 +1179,7 @@ async def test_discovery_update_light(hass, mqtt_mock, caplog):
     )
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
@@ -1214,5 +1239,26 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 async def test_entity_debug_info_message(hass, mqtt_mock):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
-        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG, payload='{"state":"ON"}'
     )
+
+
+async def test_max_mireds(hass, mqtt_mock):
+    """Test setting min_mireds and max_mireds."""
+    config = {
+        light.DOMAIN: {
+            "platform": "mqtt",
+            "schema": "json",
+            "name": "test",
+            "command_topic": "test_max_mireds/set",
+            "color_temp": True,
+            "max_mireds": 370,
+        }
+    }
+
+    assert await async_setup_component(hass, light.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test")
+    assert state.attributes.get("min_mireds") == 153
+    assert state.attributes.get("max_mireds") == 370

@@ -15,8 +15,7 @@
                     "port": "Porta",
                     "username": "Nome de usu\u00e1rio"
                 },
-                "description": "Por favor, insira as informa\u00e7\u00f5es de conex\u00e3o do seu agente MQTT.",
-                "title": "MQTT"
+                "description": "Por favor, insira as informa\u00e7\u00f5es de conex\u00e3o do seu agente MQTT."
             },
             "hassio_confirm": {
                 "data": {
@@ -25,6 +24,18 @@
                 "description": "Deseja configurar o Home Assistant para se conectar ao broker MQTT fornecido pelo complemento hass.io {addon}?",
                 "title": "MQTT Broker via add-on Hass.io"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Primeiro bot\u00e3o",
+            "button_2": "Segundo bot\u00e3o",
+            "button_3": "Terceiro bot\u00e3o",
+            "button_4": "Quarto bot\u00e3o",
+            "button_5": "Quinto bot\u00e3o",
+            "button_6": "Sexto bot\u00e3o",
+            "turn_off": "Desligar",
+            "turn_on": "Ligar"
         }
     }
 }

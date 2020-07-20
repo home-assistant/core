@@ -25,6 +25,7 @@ DATA_TYPE_CUSTOM = "custom"
 DATA_TYPE_FLOAT = "float"
 DATA_TYPE_INT = "int"
 DATA_TYPE_UINT = "uint"
+DATA_TYPE_STRING = "string"
 
 # call types
 CALL_TYPE_COIL = "coil"

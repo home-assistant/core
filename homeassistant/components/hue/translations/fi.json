@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Kaikki Philips Hue -sillat on jo m\u00e4\u00e4ritetty",
+            "already_configured": "Silta on jo m\u00e4\u00e4ritetty",
+            "cannot_connect": "Yhdist\u00e4minen siltaan ei onnistu",
+            "discover_timeout": "Hue-siltoja ei l\u00f6ydy",
+            "no_bridges": "Philips Hue -siltoja ei l\u00f6ydy",
+            "not_hue_bridge": "Ei Hue-silta",
+            "unknown": "Tapahtui tuntematon virhe"
+        },
+        "error": {
+            "linking": "Tuntematon linkitysvirhe.",
+            "register_failed": "Rekister\u00f6inti ep\u00e4onnistui. Yrit\u00e4 uudelleen"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Palvelin"
+                },
+                "title": "Valitse Hue-silta"
+            },
+            "link": {
+                "title": "Link Hub"
+            }
+        }
+    }
+}

@@ -17,6 +17,13 @@ from tests.common import (
     get_test_home_assistant,
     init_recorder_component,
 )
+from tests.components.recorder.common import wait_recording_done
+
+
+@pytest.fixture(autouse=True)
+def mock_legacy_time(legacy_patchable_time):
+    """Make time patchable for all the tests."""
+    yield
 
 
 class TestStatisticsSensor(unittest.TestCase):
@@ -37,10 +44,7 @@ class TestStatisticsSensor(unittest.TestCase):
         self.change = round(self.values[-1] - self.values[0], 2)
         self.average_change = round(self.change / (len(self.values) - 1), 2)
         self.change_rate = round(self.change / (60 * (self.count - 1)), 2)
-
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_binary_sensor_source(self):
         """Test if source is a sensor."""
@@ -57,6 +61,7 @@ class TestStatisticsSensor(unittest.TestCase):
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -82,6 +87,7 @@ class TestStatisticsSensor(unittest.TestCase):
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -121,6 +127,7 @@ class TestStatisticsSensor(unittest.TestCase):
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -150,6 +157,7 @@ class TestStatisticsSensor(unittest.TestCase):
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -176,7 +184,10 @@ class TestStatisticsSensor(unittest.TestCase):
 
     def test_max_age(self):
         """Test value deprecation."""
-        mock_data = {"return_time": datetime(2017, 8, 2, 12, 23, tzinfo=dt_util.UTC)}
+        now = dt_util.utcnow()
+        mock_data = {
+            "return_time": datetime(now.year + 1, 8, 2, 12, 23, tzinfo=dt_util.UTC)
+        }
 
         def mock_now():
             return mock_data["return_time"]
@@ -197,6 +208,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 },
             )
 
+            self.hass.block_till_done()
             self.hass.start()
             self.hass.block_till_done()
 
@@ -217,7 +229,10 @@ class TestStatisticsSensor(unittest.TestCase):
 
     def test_max_age_without_sensor_change(self):
         """Test value deprecation."""
-        mock_data = {"return_time": datetime(2017, 8, 2, 12, 23, tzinfo=dt_util.UTC)}
+        now = dt_util.utcnow()
+        mock_data = {
+            "return_time": datetime(now.year + 1, 8, 2, 12, 23, tzinfo=dt_util.UTC)
+        }
 
         def mock_now():
             return mock_data["return_time"]
@@ -238,6 +253,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 },
             )
 
+            self.hass.block_till_done()
             self.hass.start()
             self.hass.block_till_done()
 
@@ -269,8 +285,9 @@ class TestStatisticsSensor(unittest.TestCase):
 
     def test_change_rate(self):
         """Test min_age/max_age and change_rate."""
+        now = dt_util.utcnow()
         mock_data = {
-            "return_time": datetime(2017, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC)
+            "return_time": datetime(now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC)
         }
 
         def mock_now():
@@ -291,6 +308,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 },
             )
 
+            self.hass.block_till_done()
             self.hass.start()
             self.hass.block_till_done()
 
@@ -307,18 +325,19 @@ class TestStatisticsSensor(unittest.TestCase):
             state = self.hass.states.get("sensor.test")
 
         assert datetime(
-            2017, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC
+            now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC
         ) == state.attributes.get("min_age")
         assert datetime(
-            2017, 8, 2, 12, 23 + self.count - 1, 42, tzinfo=dt_util.UTC
+            now.year + 1, 8, 2, 12, 23 + self.count - 1, 42, tzinfo=dt_util.UTC
         ) == state.attributes.get("max_age")
         assert self.change_rate == state.attributes.get("change_rate")
 
-    @pytest.mark.skip("Flaky in CI")
     def test_initialize_from_database(self):
         """Test initializing the statistics from the database."""
         # enable the recorder
         init_recorder_component(self.hass)
+        self.hass.block_till_done()
+        self.hass.data[recorder.DATA_INSTANCE].block_till_done()
         # store some values
         for value in self.values:
             self.hass.states.set(
@@ -326,7 +345,7 @@ class TestStatisticsSensor(unittest.TestCase):
             )
             self.hass.block_till_done()
         # wait for the recorder to really store the data
-        self.hass.data[recorder.DATA_INSTANCE].block_till_done()
+        wait_recording_done(self.hass)
         # only now create the statistics component, so that it must read the
         # data from the database
         assert setup_component(
@@ -342,6 +361,7 @@ class TestStatisticsSensor(unittest.TestCase):
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -349,11 +369,11 @@ class TestStatisticsSensor(unittest.TestCase):
         state = self.hass.states.get("sensor.test")
         assert str(self.mean) == state.state
 
-    @pytest.mark.skip("Flaky in CI")
     def test_initialize_from_database_with_maxage(self):
         """Test initializing the statistics from the database."""
+        now = dt_util.utcnow()
         mock_data = {
-            "return_time": datetime(2017, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC)
+            "return_time": datetime(now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC)
         }
 
         def mock_now():
@@ -373,6 +393,8 @@ class TestStatisticsSensor(unittest.TestCase):
 
         # enable the recorder
         init_recorder_component(self.hass)
+        self.hass.block_till_done()
+        self.hass.data[recorder.DATA_INSTANCE].block_till_done()
 
         with patch(
             "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
@@ -389,7 +411,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 mock_data["return_time"] += timedelta(hours=1)
 
             # wait for the recorder to really store the data
-            self.hass.data[recorder.DATA_INSTANCE].block_till_done()
+            wait_recording_done(self.hass)
             # only now create the statistics component, so that it must read
             # the data from the database
             assert setup_component(
@@ -407,6 +429,7 @@ class TestStatisticsSensor(unittest.TestCase):
             )
             self.hass.block_till_done()
 
+            self.hass.block_till_done()
             self.hass.start()
             self.hass.block_till_done()
 

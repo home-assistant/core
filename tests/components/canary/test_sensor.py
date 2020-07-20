@@ -34,10 +34,7 @@ class TestCanarySensorSetup(unittest.TestCase):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
         self.config = copy.deepcopy(VALID_CONFIG)
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_setup_sensors(self):
         """Test the sensor setup."""

@@ -11,7 +11,10 @@
     },
     "step": {
       "user": {
-        "data": { "password": "Password", "username": "Username" },
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
         "description": "Enter your credentials.",
         "title": "Garmin Connect"
       }

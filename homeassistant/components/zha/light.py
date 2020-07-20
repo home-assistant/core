@@ -31,7 +31,11 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import State, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
 
@@ -71,6 +75,7 @@ UNSUPPORTED_ATTRIBUTE = 0x86
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, light.DOMAIN)
 GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, light.DOMAIN)
 PARALLEL_UPDATES = 0
+SIGNAL_LIGHT_GROUP_STATE_CHANGED = "zha_light_group_state_changed"
 
 SUPPORT_GROUP_LIGHT = (
     SUPPORT_BRIGHTNESS
@@ -378,6 +383,12 @@ class Light(BaseLight, ZhaEntity):
         self._cancel_refresh_handle = async_track_time_interval(
             self.hass, self._refresh, timedelta(seconds=refresh_interval)
         )
+        await self.async_accept_signal(
+            None,
+            SIGNAL_LIGHT_GROUP_STATE_CHANGED,
+            self._maybe_force_refresh,
+            signal_override=True,
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
@@ -406,7 +417,7 @@ class Light(BaseLight, ZhaEntity):
 
     async def async_get_state(self, from_cache=True):
         """Attempt to retrieve on off state from the light."""
-        self.debug("polling current state")
+        self.debug("polling current state - from cache: %s", from_cache)
         if self._on_off_channel:
             state = await self._on_off_channel.get_attribute_value(
                 "on_off", from_cache=from_cache
@@ -468,6 +479,12 @@ class Light(BaseLight, ZhaEntity):
         await self.async_get_state(from_cache=False)
         self.async_write_ha_state()
 
+    async def _maybe_force_refresh(self, signal):
+        """Force update the state if the signal contains the entity id for this entity."""
+        if self.entity_id in signal["entity_ids"]:
+            await self.async_get_state(from_cache=False)
+            self.async_write_ha_state()
+
 
 @STRICT_MATCH(
     channel_names=CHANNEL_ON_OFF,
@@ -494,6 +511,30 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         self._level_channel = group.endpoint[LevelControl.cluster_id]
         self._color_channel = group.endpoint[Color.cluster_id]
         self._identify_channel = group.endpoint[Identify.cluster_id]
+        self._debounced_member_refresh = None
+
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+        if self._debounced_member_refresh is None:
+            force_refresh_debouncer = Debouncer(
+                self.hass,
+                _LOGGER,
+                cooldown=3,
+                immediate=True,
+                function=self._force_member_updates,
+            )
+            self._debounced_member_refresh = force_refresh_debouncer
+
+    async def async_turn_on(self, **kwargs):
+        """Turn the entity on."""
+        await super().async_turn_on(**kwargs)
+        await self._debounced_member_refresh.async_call()
+
+    async def async_turn_off(self, **kwargs):
+        """Turn the entity off."""
+        await super().async_turn_off(**kwargs)
+        await self._debounced_member_refresh.async_call()
 
     async def async_update(self) -> None:
         """Query all members and determine the light group state."""
@@ -541,3 +582,11 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         # Bitwise-and the supported features with the GroupedLight's features
         # so that we don't break in the future when a new feature is added.
         self._supported_features &= SUPPORT_GROUP_LIGHT
+
+    async def _force_member_updates(self):
+        """Force the update of member entities to ensure the states are correct for bulbs that don't report their state."""
+        async_dispatcher_send(
+            self.hass,
+            SIGNAL_LIGHT_GROUP_STATE_CHANGED,
+            {"entity_ids": self._entity_ids},
+        )

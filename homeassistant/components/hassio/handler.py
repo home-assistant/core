@@ -68,12 +68,20 @@ class HassIO:
         return self.send_command("/supervisor/ping", method="get", timeout=15)
 
     @_api_data
-    def get_homeassistant_info(self):
-        """Return data for Home Assistant.
+    def get_info(self):
+        """Return generic Supervisor information.
 
         This method return a coroutine.
         """
-        return self.send_command("/homeassistant/info", method="get")
+        return self.send_command("/info", method="get")
+
+    @_api_data
+    def get_host_info(self):
+        """Return data for Host.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/host/info", method="get")
 
     @_api_data
     def get_addon_info(self, addon):
@@ -168,7 +176,7 @@ class HassIO:
                 )
 
                 if request.status not in (HTTP_OK, HTTP_BAD_REQUEST):
-                    _LOGGER.error("%s return code %d.", command, request.status)
+                    _LOGGER.error("%s return code %d", command, request.status)
                     raise HassioAPIError()
 
                 answer = await request.json()

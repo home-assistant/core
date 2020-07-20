@@ -19,7 +19,7 @@ ATTR_USERNAME = "username"
 DEFAULT_NAME = "Gitter messages"
 DEFAULT_ROOM = "home-assistant/home-assistant"
 
-ICON = "mdi:message-settings-variant"
+ICON = "mdi:message-cog"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

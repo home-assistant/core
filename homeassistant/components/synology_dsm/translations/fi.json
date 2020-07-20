@@ -10,5 +10,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Minuutit skannausten v\u00e4lill\u00e4"
+                }
+            }
+        }
     }
 }

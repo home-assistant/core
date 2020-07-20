@@ -165,7 +165,7 @@ def setup(hass, config):
             "WARNING: This may poll your Leaf too often, and drain the 12V"
             " battery.  If you drain your cars 12V battery it WILL NOT START"
             " as the drive train battery won't connect."
-            " Don't set the intervals too low."
+            " Don't set the intervals too low"
         )
 
         data_store = LeafDataStore(hass, leaf, car_config)

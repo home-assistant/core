@@ -1,9 +1,11 @@
 {
     "config": {
         "step": {
-            "start_website_auth": {
-                "description": "Pokra\u010dujte v autorizaci na plex.tv.",
-                "title": "P\u0159ipojit server plex"
+            "manual_setup": {
+                "data": {
+                    "host": "Hostitel",
+                    "port": "Port"
+                }
             }
         }
     }

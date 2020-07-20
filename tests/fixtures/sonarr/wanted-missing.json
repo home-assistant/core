@@ -1,0 +1,253 @@
+{
+  "page": 1,
+  "pageSize": 10,
+  "sortKey": "airDateUtc",
+  "sortDirection": "descending",
+  "totalRecords": 2,
+  "records": [
+    {
+      "seriesId": 3,
+      "episodeFileId": 0,
+      "seasonNumber": 4,
+      "episodeNumber": 11,
+      "title": "Easy Com-mercial, Easy Go-mercial",
+      "airDate": "2014-01-26",
+      "airDateUtc": "2014-01-27T01:30:00Z",
+      "overview": "To compete with fellow \"restaurateur,\" Jimmy Pesto, and his blowout Super Bowl event, Bob is determined to create a Bob's Burgers commercial to air during the \"big game.\" In an effort to outshine Pesto, the Belchers recruit Randy, a documentarian, to assist with the filmmaking and hire on former pro football star Connie Frye to be the celebrity endorser.",
+      "hasFile": false,
+      "monitored": true,
+      "sceneEpisodeNumber": 0,
+      "sceneSeasonNumber": 0,
+      "tvDbEpisodeId": 0,
+      "series": {
+        "tvdbId": 194031,
+        "tvRageId": 24607,
+        "imdbId": "tt1561755",
+        "title": "Bob's Burgers",
+        "sortTitle": "bob burgers",
+        "cleanTitle": "bobsburgers",
+        "seasonCount": 4,
+        "status": "continuing",
+        "overview": "Bob's Burgers follows a third-generation restaurateur, Bob, as he runs Bob's Burgers with the help of his wife and their three kids. Bob and his quirky family have big ideas about burgers, but fall short on service and sophistication. Despite the greasy counters, lousy location and a dearth of customers, Bob and his family are determined to make Bob's Burgers \"grand re-re-re-opening\" a success.",
+        "airTime": "17:30",
+        "monitored": true,
+        "qualityProfileId": 1,
+        "seasonFolder": true,
+        "lastInfoSync": "2014-01-26T19:25:55.455594Z",
+        "runtime": 30,
+        "images": [
+          {
+            "coverType": "banner",
+            "url": "http://slurm.trakt.us/images/banners/1387.6.jpg"
+          },
+          {
+            "coverType": "poster",
+            "url": "http://slurm.trakt.us/images/posters/1387.6-300.jpg"
+          },
+          {
+            "coverType": "fanart",
+            "url": "http://slurm.trakt.us/images/fanart/1387.6.jpg"
+          }
+        ],
+        "seriesType": "standard",
+        "network": "FOX",
+        "useSceneNumbering": false,
+        "titleSlug": "bobs-burgers",
+        "certification": "TV-14",
+        "path": "T:\\Bob's Burgers",
+        "year": 2011,
+        "firstAired": "2011-01-10T01:30:00Z",
+        "genres": [
+          "Animation",
+          "Comedy"
+        ],
+        "tags": [],
+        "added": "2011-01-26T19:25:55.455594Z",
+        "qualityProfile": {
+          "value": {
+            "name": "SD",
+            "allowed": [
+              {
+                "id": 1,
+                "name": "SDTV",
+                "weight": 1
+              },
+              {
+                "id": 8,
+                "name": "WEBDL-480p",
+                "weight": 2
+              },
+              {
+                "id": 2,
+                "name": "DVD",
+                "weight": 3
+              }
+            ],
+            "cutoff": {
+              "id": 1,
+              "name": "SDTV",
+              "weight": 1
+            },
+            "id": 1
+          },
+          "isLoaded": true
+        },
+        "seasons": [
+          {
+            "seasonNumber": 4,
+            "monitored": true
+          },
+          {
+            "seasonNumber": 3,
+            "monitored": true
+          },
+          {
+            "seasonNumber": 2,
+            "monitored": true
+          },
+          {
+            "seasonNumber": 1,
+            "monitored": true
+          },
+          {
+            "seasonNumber": 0,
+            "monitored": false
+          }
+        ],
+        "id": 66
+      },
+      "downloading": false,
+      "id": 14402
+    },
+    {
+      "seriesId": 17,
+      "episodeFileId": 0,
+      "seasonNumber": 1,
+      "episodeNumber": 1,
+      "title": "The New Housekeeper",
+      "airDate": "1960-10-03",
+      "airDateUtc": "1960-10-03T01:00:00Z",
+      "overview": "Sheriff Andy Taylor and his young son Opie are in need of a new housekeeper. Andy's Aunt Bee looks like the perfect candidate and moves in, but her presence causes friction with Opie.",
+      "hasFile": false,
+      "monitored": true,
+      "sceneEpisodeNumber": 0,
+      "sceneSeasonNumber": 0,
+      "tvDbEpisodeId": 0,
+      "series": {
+        "imdbId": "",
+        "tvdbId": 77754,
+        "tvRageId": 5574,
+        "tvMazeId": 3853,
+        "title": "The Andy Griffith Show",
+        "sortTitle": "andy griffith show",
+        "cleanTitle": "theandygriffithshow",
+        "seasonCount": 8,
+        "status": "ended",
+        "overview": "Down-home humor and an endearing cast of characters helped make The Andy Griffith Show one of the most beloved comedies in the history of TV. The show centered around widower Andy Taylor, who divided his time between raising his young son Opie, and his job as sheriff of the sleepy North Carolina town, Mayberry. Andy and Opie live with Andy's Aunt Bee, who serves as a surrogate mother to both father and son. Andy's nervous cousin, Barney Fife, is his deputy sheriff whose incompetence is tolerated because Mayberry is virtually crime-free.",
+        "airTime": "21:30",
+        "monitored": true,
+        "qualityProfileId": 1,
+        "seasonFolder": true,
+        "lastInfoSync": "2016-02-05T16:40:11.614176Z",
+        "runtime": 25,
+        "images": [
+          {
+            "coverType": "fanart",
+            "url": "https://artworks.thetvdb.com/banners/fanart/original/77754-5.jpg"
+          },
+          {
+            "coverType": "banner",
+            "url": "https://artworks.thetvdb.com/banners/graphical/77754-g.jpg"
+          },
+          {
+            "coverType": "poster",
+            "url": "https://artworks.thetvdb.com/banners/posters/77754-4.jpg"
+          }
+        ],
+        "seriesType": "standard",
+        "network": "CBS",
+        "useSceneNumbering": false,
+        "titleSlug": "the-andy-griffith-show",
+        "certification": "TV-G",
+        "path": "F:\\The Andy Griffith Show",
+        "year": 1960,
+        "firstAired": "1960-02-15T06:00:00Z",
+        "genres": [
+          "Comedy"
+        ],
+        "tags": [],
+        "added": "2008-02-04T13:44:24.204583Z",
+        "qualityProfile": {
+          "value": {
+            "name": "SD",
+            "allowed": [
+              {
+                "id": 1,
+                "name": "SDTV",
+                "weight": 1
+              },
+              {
+                "id": 8,
+                "name": "WEBDL-480p",
+                "weight": 2
+              },
+              {
+                "id": 2,
+                "name": "DVD",
+                "weight": 3
+              }
+            ],
+            "cutoff": {
+              "id": 1,
+              "name": "SDTV",
+              "weight": 1
+            },
+            "id": 1
+          },
+          "isLoaded": true
+        },
+        "seasons": [
+          {
+            "seasonNumber": 0,
+            "monitored": false
+          },
+          {
+            "seasonNumber": 1,
+            "monitored": false
+          },
+          {
+            "seasonNumber": 2,
+            "monitored": true
+          },
+          {
+            "seasonNumber": 3,
+            "monitored": false
+          },
+          {
+            "seasonNumber": 4,
+            "monitored": false
+          },
+          {
+            "seasonNumber": 5,
+            "monitored": true
+          },
+          {
+            "seasonNumber": 6,
+            "monitored": true
+          },
+          {
+            "seasonNumber": 7,
+            "monitored": true
+          },
+          {
+            "seasonNumber": 8,
+            "monitored": true
+          }
+        ],
+        "id": 17
+      },
+      "downloading": false,
+      "id": 889
+    }
+  ]
+}

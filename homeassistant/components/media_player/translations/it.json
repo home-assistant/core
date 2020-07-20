@@ -15,7 +15,7 @@
             "on": "Acceso",
             "paused": "In pausa",
             "playing": "In riproduzione",
-            "standby": "Pausa"
+            "standby": "In attesa"
         }
     },
     "title": "Lettore multimediale"

@@ -5,10 +5,10 @@
       "user": {
         "title": "Set up Axis device",
         "data": {
-          "host": "Host",
-          "username": "Username",
-          "password": "Password",
-          "port": "Port"
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]"
         }
       }
     },
@@ -23,6 +23,16 @@
       "bad_config_file": "Bad data from configuration file",
       "link_local_address": "Link local addresses are not supported",
       "not_axis_device": "Discovered device not an Axis device"
+    }
+  },
+  "options": {
+    "step": {
+      "configure_stream": {
+        "data": {
+          "stream_profile": "Select stream profile to use"
+        },
+        "title": "Axis device video stream options"
+      }
     }
   }
 }

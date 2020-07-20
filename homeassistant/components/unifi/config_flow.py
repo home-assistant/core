@@ -32,12 +32,7 @@ from .const import (
     LOGGER,
 )
 from .controller import get_controller
-from .errors import (
-    AlreadyConfigured,
-    AuthenticationRequired,
-    CannotConnect,
-    NoLocalUser,
-)
+from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
 
 DEFAULT_PORT = 8443
 DEFAULT_SITE_ID = "default"
@@ -134,8 +129,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
                 for site in self.sites.values():
                     if desc == site["desc"]:
-                        if "role" not in site:
-                            raise NoLocalUser
                         self.config[CONF_SITE_ID] = site["name"]
                         break
 
@@ -153,9 +146,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
             except AlreadyConfigured:
                 return self.async_abort(reason="already_configured")
-
-            except NoLocalUser:
-                return self.async_abort(reason="no_local_user")
 
         if len(self.sites) == 1:
             self.desc = next(iter(self.sites.values()))["desc"]
@@ -229,12 +219,21 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
             self.options.update(user_input)
             return await self.async_step_client_control()
 
-        ssids = list(self.controller.api.wlans) + [
-            f"{wlan.name}{wlan.name_combine_suffix}"
-            for wlan in self.controller.api.wlans.values()
-            if not wlan.name_combine_enabled
-        ]
-        ssid_filter = {ssid: ssid for ssid in sorted(ssids)}
+        ssids = (
+            set(self.controller.api.wlans)
+            | {
+                f"{wlan.name}{wlan.name_combine_suffix}"
+                for wlan in self.controller.api.wlans.values()
+                if not wlan.name_combine_enabled
+            }
+            | {
+                wlan["name"]
+                for ap in self.controller.api.devices.values()
+                for wlan in ap.wlan_overrides
+                if "name" in wlan
+            }
+        )
+        ssid_filter = {ssid: ssid for ssid in sorted(list(ssids))}
 
         return self.async_show_form(
             step_id="device_tracker",

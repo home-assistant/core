@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Impossibile connettersi"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Indirizzo IP",
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "description": "Fornire le informazioni richieste di seguito.",
+                "title": "Configurazione GogoGate2"
+            }
+        }
+    }
+}

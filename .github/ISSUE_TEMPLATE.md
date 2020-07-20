@@ -21,7 +21,7 @@
 
 - Home Assistant Core release with the issue: 
 - Last working Home Assistant Core release (if known): 
-- Operating environment (Home Assistant/Supervised/Docker/venv): 
+- Operating environment (OS/Container/Supervised/Core): 
 - Integration causing this issue: 
 - Link to integration documentation on our website: 
 

@@ -11,8 +11,8 @@
         "step": {
             "user": {
                 "data": {
-                    "password": "Contrasenya de MELCloud.",
-                    "username": "Correu electr\u00f2nic d'inici de sessi\u00f3 a MELCloud."
+                    "password": "Contrasenya",
+                    "username": "Correu electr\u00f2nic"
                 },
                 "description": "Connecta't amb el teu compte de MELCloud.",
                 "title": "Connexi\u00f3 amb MELCloud"

@@ -2,6 +2,14 @@
     "config": {
         "abort": {
             "already_configured": "\u00da\u010det je ji\u017e nakonfigurov\u00e1n"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Heslo",
+                    "username": "E-mail"
+                }
+            }
         }
     }
 }

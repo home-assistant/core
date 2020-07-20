@@ -1,16 +1,13 @@
 """Config flow for ONVIF."""
-import os
 from pprint import pformat
 from typing import List
 from urllib.parse import urlparse
 
-import onvif
-from onvif import ONVIFCamera, exceptions
+from onvif.exceptions import ONVIFError
 import voluptuous as vol
 from wsdiscovery.discovery import ThreadedWSDiscovery as WSDiscovery
 from wsdiscovery.scope import Scope
 from wsdiscovery.service import Service
-from zeep.asyncio import AsyncTransport
 from zeep.exceptions import Fault
 
 from homeassistant import config_entries
@@ -23,12 +20,10 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 # pylint: disable=unused-import
 from .const import (
     CONF_DEVICE_ID,
-    CONF_PROFILE,
     CONF_RTSP_TRANSPORT,
     DEFAULT_ARGUMENTS,
     DEFAULT_PORT,
@@ -36,6 +31,7 @@ from .const import (
     LOGGER,
     RTSP_TRANS_PROTOCOLS,
 )
+from .device import get_device
 
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
@@ -173,10 +169,16 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.onvif_config[CONF_PASSWORD] = user_input[CONF_PASSWORD]
             return await self.async_step_profiles()
 
+        # Password is optional and default empty due to some cameras not
+        # allowing you to change ONVIF user settings.
+        # See https://github.com/home-assistant/core/issues/35904
         return self.async_show_form(
             step_id="auth",
             data_schema=vol.Schema(
-                {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+                {
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Optional(CONF_PASSWORD, default=""): str,
+                }
             ),
         )
 
@@ -199,15 +201,31 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await device.update_xaddrs()
 
         try:
+            device_mgmt = device.create_devicemgmt_service()
+
             # Get the MAC address to use as the unique ID for the config flow
             if not self.device_id:
-                devicemgmt = device.create_devicemgmt_service()
-                network_interfaces = await devicemgmt.GetNetworkInterfaces()
-                for interface in network_interfaces:
-                    if interface.Enabled:
-                        self.device_id = interface.Info.HwAddress
+                try:
+                    network_interfaces = await device_mgmt.GetNetworkInterfaces()
+                    for interface in network_interfaces:
+                        if interface.Enabled:
+                            self.device_id = interface.Info.HwAddress
+                except Fault as fault:
+                    if "not implemented" not in fault.message:
+                        raise fault
 
-            if self.device_id is None:
+                    LOGGER.debug(
+                        "Couldn't get network interfaces from ONVIF deivice '%s'. Error: %s",
+                        self.onvif_config[CONF_NAME],
+                        fault,
+                    )
+
+            # If no network interfaces are exposed, fallback to serial number
+            if not self.device_id:
+                device_info = await device_mgmt.GetDeviceInformation()
+                self.device_id = device_info.SerialNumber
+
+            if not self.device_id:
                 return self.async_abort(reason="no_mac")
 
             await self.async_set_unique_id(self.device_id, raise_on_progress=False)
@@ -219,23 +237,22 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             )
 
-            if not self.onvif_config.get(CONF_PROFILE):
-                self.onvif_config[CONF_PROFILE] = []
-                media_service = device.create_media_service()
-                profiles = await media_service.GetProfiles()
-                LOGGER.debug("Media Profiles %s", pformat(profiles))
-                for key, profile in enumerate(profiles):
-                    if profile.VideoEncoderConfiguration.Encoding != "H264":
-                        continue
-                    self.onvif_config[CONF_PROFILE].append(key)
+            # Verify there is an H264 profile
+            media_service = device.create_media_service()
+            profiles = await media_service.GetProfiles()
+            h264 = any(
+                profile.VideoEncoderConfiguration
+                and profile.VideoEncoderConfiguration.Encoding == "H264"
+                for profile in profiles
+            )
 
-            if not self.onvif_config[CONF_PROFILE]:
+            if not h264:
                 return self.async_abort(reason="no_h264")
 
             title = f"{self.onvif_config[CONF_NAME]} - {self.device_id}"
             return self.async_create_entry(title=title, data=self.onvif_config)
 
-        except exceptions.ONVIFError as err:
+        except ONVIFError as err:
             LOGGER.error(
                 "Couldn't setup ONVIF device '%s'. Error: %s",
                 self.onvif_config[CONF_NAME],
@@ -292,17 +309,3 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
                 }
             ),
         )
-
-
-def get_device(hass, host, port, username, password) -> ONVIFCamera:
-    """Get ONVIFCamera instance."""
-    session = async_get_clientsession(hass)
-    transport = AsyncTransport(None, session=session)
-    return ONVIFCamera(
-        host,
-        port,
-        username,
-        password,
-        f"{os.path.dirname(onvif.__file__)}/wsdl/",
-        transport=transport,
-    )

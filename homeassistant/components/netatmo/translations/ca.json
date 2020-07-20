@@ -1,16 +1,41 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Nom\u00e9s pots configurar un \u00fanic compte Netatmo.",
-            "authorize_url_timeout": "S'ha acabat el temps d'espera durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
-            "missing_configuration": "El component Netatmo no est\u00e0 configurat. Mira'n la documentaci\u00f3."
+            "already_setup": "[%key::common::config_flow::abort::single_instance_allowed%]",
+            "authorize_url_timeout": "[%key::common::config_flow::abort::oauth2_authorize_url_timeout%]",
+            "missing_configuration": "[%key::common::config_flow::abort::oauth2_missing_configuration%]"
         },
         "create_entry": {
-            "default": "Autenticaci\u00f3 exitosa amb Netatmo."
+            "default": "[%key::common::config_flow::create_entry::authenticated%]"
         },
         "step": {
             "pick_implementation": {
-                "title": "Selecci\u00f3 del m\u00e8tode d'autenticaci\u00f3"
+                "title": "[%key::common::config_flow::title::oauth2_pick_implementation%]"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Nom de l'\u00e0rea",
+                    "lat_ne": "Latitud cantonada nord-est",
+                    "lat_sw": "Latitud cantonada sud-oest",
+                    "lon_ne": "Longitud cantonada nord-est",
+                    "lon_sw": "Longitud cantonada sud-oest",
+                    "mode": "C\u00e0lcul",
+                    "show_on_map": "Mostra al mapa"
+                },
+                "description": "Configura un sensor meteorol\u00f2gic p\u00fablic per a una \u00e0rea.",
+                "title": "Sensor meteorol\u00f2gic p\u00fablic de Netatmo"
+            },
+            "public_weather_areas": {
+                "data": {
+                    "new_area": "Nom d'\u00e0rea",
+                    "weather_areas": "\u00c0rees meteorol\u00f2giques"
+                },
+                "description": "Configura sensors meteorol\u00f2gics p\u00fablics.",
+                "title": "Sensor meteorol\u00f2gic p\u00fablic de Netatmo"
             }
         }
     }

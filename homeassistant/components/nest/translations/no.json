@@ -2,9 +2,9 @@
     "config": {
         "abort": {
             "already_setup": "Du kan bare konfigurere en Nest konto.",
-            "authorize_url_fail": "Ukjent feil ved generering av autoriseringsadresse.",
-            "authorize_url_timeout": "Tidsavbrudd ved generering av autoriseringsadresse.",
-            "no_flows": "Du m\u00e5 konfigurere Nest f\u00f8r du kan autentisere med den. [Vennligst les instruksjonene](https://www.home-assistant.io/components/nest/)."
+            "authorize_url_fail": "Ukjent feil ved oppretting av godkjenningsadresse.",
+            "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse.",
+            "no_flows": "Du m\u00e5 konfigurere Nest f\u00f8r du kan godkjenne den. [Vennligst les instruksjonene](https://www.home-assistant.io/components/nest/)."
         },
         "error": {
             "internal_error": "Intern feil ved validering av kode",
@@ -17,14 +17,14 @@
                 "data": {
                     "flow_impl": "Tilbyder"
                 },
-                "description": "Velg via hvilken autentiseringstilbyder du vil godkjenne med Nest.",
-                "title": "Autentiseringstilbyder"
+                "description": "Velg fra hvilken godkjenningsleverand\u00f8r du vil godkjenne med Nest.",
+                "title": "Godkjenningsleverand\u00f8r"
             },
             "link": {
                 "data": {
                     "code": "PIN kode"
                 },
-                "description": "For \u00e5 koble din Nest-konto, [autoriser kontoen din]({url}). \n\n Etter godkjenning, kopier og lim inn den oppgitte PIN koden nedenfor.",
+                "description": "For \u00e5 koble din Nest-konto, [bekreft kontoen din]({url}). \n\nEtter bekreftelse, kopier og lim inn den oppgitte PIN koden nedenfor.",
                 "title": "Koble til Nest konto"
             }
         }

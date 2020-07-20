@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "email": "Email Address",
+                    "email": "Email",
                     "password": "Password"
                 },
                 "title": "Connect to your Sense Energy Monitor"

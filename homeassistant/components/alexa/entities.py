@@ -1,7 +1,6 @@
 """Alexa entity adapters."""
 import logging
 from typing import List
-from urllib.parse import urlparse
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -548,7 +547,11 @@ class MediaPlayerCapabilities(AlexaEntity):
             yield AlexaChannelController(self.entity)
 
         if supported & media_player.const.SUPPORT_SELECT_SOUND_MODE:
-            yield AlexaEqualizerController(self.entity)
+            inputs = AlexaInputController.get_valid_inputs(
+                self.entity.attributes.get(media_player.const.ATTR_SOUND_MODE_LIST, [])
+            )
+            if len(inputs) > 0:
+                yield AlexaEqualizerController(self.entity)
 
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)
@@ -587,9 +590,8 @@ class ScriptCapabilities(AlexaEntity):
 
     def interfaces(self):
         """Yield the supported interfaces."""
-        can_cancel = bool(self.entity.attributes.get("can_cancel"))
         return [
-            AlexaSceneController(self.entity, supports_deactivation=can_cancel),
+            AlexaSceneController(self.entity, supports_deactivation=True),
             Alexa(self.hass),
         ]
 
@@ -799,8 +801,15 @@ class CameraCapabilities(AlexaEntity):
             )
             return False
 
-        url = urlparse(network.async_get_external_url(self.hass))
-        if url.scheme != "https":
+        try:
+            network.get_url(
+                self.hass,
+                allow_internal=False,
+                allow_ip=False,
+                require_ssl=True,
+                require_standard_port=True,
+            )
+        except network.NoURLAvailableError:
             _LOGGER.debug(
                 "%s requires HTTPS for AlexaCameraStreamController", self.entity_id
             )

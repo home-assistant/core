@@ -21,19 +21,19 @@ PROVIDERS = Registry()
 class StreamBuffer:
     """Represent a segment."""
 
-    segment = attr.ib(type=io.BytesIO)
+    segment: io.BytesIO = attr.ib()
     output = attr.ib()  # type=av.OutputContainer
     vstream = attr.ib()  # type=av.VideoStream
-    astream = attr.ib(default=None)  # type=av.AudioStream
+    astream = attr.ib(default=None)  # type=Optional[av.AudioStream]
 
 
 @attr.s
 class Segment:
     """Represent a segment."""
 
-    sequence = attr.ib(type=int)
-    segment = attr.ib(type=io.BytesIO)
-    duration = attr.ib(type=float)
+    sequence: int = attr.ib()
+    segment: io.BytesIO = attr.ib()
+    duration: float = attr.ib()
 
 
 class StreamOutput:
@@ -79,8 +79,11 @@ class StreamOutput:
     @property
     def target_duration(self) -> int:
         """Return the average duration of the segments in seconds."""
+        segment_length = len(self._segments)
+        if not segment_length:
+            return 0
         durations = [s.duration for s in self._segments]
-        return round(sum(durations) // len(self._segments)) or 1
+        return round(sum(durations) // segment_length) or 1
 
     def get_segment(self, sequence: int = None) -> Any:
         """Retrieve a specific segment, or the whole list."""

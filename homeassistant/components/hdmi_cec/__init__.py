@@ -353,7 +353,7 @@ def setup(hass: HomeAssistant, base_config):
     return True
 
 
-class CecDevice(Entity):
+class CecEntity(Entity):
     """Representation of a HDMI CEC device entity."""
 
     def __init__(self, device, logical) -> None:
@@ -387,6 +387,15 @@ class CecDevice(Entity):
     def _update(self, device=None):
         """Device status changed, schedule an update."""
         self.schedule_update_ha_state(True)
+
+    @property
+    def should_poll(self):
+        """
+        Return false.
+
+        CecEntity.update() is called by the HDMI network when there is new data.
+        """
+        return False
 
     @property
     def name(self):

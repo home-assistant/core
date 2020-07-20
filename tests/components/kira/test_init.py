@@ -45,8 +45,9 @@ class TestKiraSetup(unittest.TestCase):
         self._module_patcher.start()
 
         self.work_dir = tempfile.mkdtemp()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
         self._module_patcher.stop()
