@@ -5,8 +5,17 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON
+from homeassistant.const import (
+    CONF_COMMAND_OFF,
+    CONF_COMMAND_ON,
+    CONF_DEVICE,
+    CONF_DEVICE_ID,
+)
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import (
+    async_entries_for_config_entry,
+    async_get_registry,
+)
 
 from . import DOMAIN
 from .const import (
@@ -35,49 +44,27 @@ class OptionsFlow(config_entries.OptionsFlow):
     async def async_step_prompt_options(self, user_input=None):
         """Prompt for options."""
         if user_input is not None:
-            if user_input["selected_option"] == "Add device by id":
-                return await self.async_step_device_by_id()
-            if user_input["selected_option"] == "Configure device options":
-                return await self.async_step_select_device_conf()
+            return None
 
-        options = ["Add device by id", "Configure device options"]
+        device_registry = await async_get_registry(self.hass)
+        device_entries = async_entries_for_config_entry(
+            device_registry, self.config_entry.entry_id
+        )
 
-        options_scheme = {
+        devices = {
+            entry.id: entry.name_by_user if entry.name_by_user else entry.name
+            for entry in device_entries
+        }
+
+        options = {
             vol.Optional(CONF_DEBUG): bool,
             vol.Optional(CONF_AUTOMATIC_ADD): bool,
-            vol.Optional("selected_option"): vol.In(options),
+            vol.Optional(CONF_DEVICE_ID): str,
+            vol.Optional(CONF_DEVICE): vol.In(devices),
         }
 
         return self.async_show_form(
-            step_id="prompt_options", data_schema=vol.Schema(options_scheme)
-        )
-
-    async def async_step_device_by_id(self, user_input=None):
-        """Prompt for device id."""
-        if user_input is not None:
-            return await self.async_step_set_device_options()
-
-        data_scheme = {
-            vol.Required("device_id"): int,
-        }
-
-        return self.async_show_form(
-            step_id="device_by_id", data_schema=vol.Schema(data_scheme)
-        )
-
-    async def async_step_select_device_conf(self, user_input=None):
-        """Select device from list."""
-        if user_input is not None:
-            return await self.async_step_set_device_options()
-
-        dummy_device_list = ["test1", "test2", "test3"]
-
-        data_scheme = {
-            vol.Optional("configured_devices"): vol.In(dummy_device_list),
-        }
-
-        return self.async_show_form(
-            step_id="select_device_conf", data_schema=vol.Schema(data_scheme)
+            step_id="prompt_options", data_schema=vol.Schema(options)
         )
 
     async def async_step_set_device_options(self, user_input=None):
@@ -85,10 +72,7 @@ class OptionsFlow(config_entries.OptionsFlow):
         if user_input is not None:
             return None
 
-        device_class = ["light", "power", "window"]
-
         data_scheme = {
-            vol.Optional("device_class"): vol.In(device_class),
             vol.Optional(CONF_FIRE_EVENT): bool,
             vol.Optional(CONF_OFF_DELAY): int,
             vol.Optional(CONF_DATA_BITS): int,
