@@ -564,6 +564,9 @@ def async_track_sunset(
 
 track_sunset = threaded_listener_factory(async_track_sunset)
 
+# For targeted patching in tests
+pattern_utc_now = dt_util.utcnow
+
 
 @callback
 @bind_hass
@@ -613,7 +616,7 @@ def async_track_utc_time_change(
         """Listen for matching time_changed events."""
         nonlocal next_time, last_now, cancel_callback
 
-        now = dt_util.utcnow()
+        now = pattern_utc_now()
 
         if now < last_now:
             # Time rolled back
