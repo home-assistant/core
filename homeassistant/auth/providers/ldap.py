@@ -16,26 +16,26 @@ from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
 
 CONF_ACTIVE_DIRECTORY = "active_directory"
-CONF_BASE_DN = "base_dn"
-CONF_DISABLE_CERT_VALIDATION = "disable_cert_validation"
-CONF_DISABLE_TLS = "disable_tls"
 CONF_ALLOWED_GROUP_DNS = "allowed_group_dns"
+CONF_BASE_DN = "base_dn"
+CONF_CERT_VALIDATION = "validate_certificates"
 CONF_PORT = "port"
 CONF_SERVER = "server"
 CONF_TIMEOUT = "timeout"
+CONF_TLS = "tls"
 
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
     {
         vol.Required(CONF_ACTIVE_DIRECTORY, default=False): bool,
-        vol.Required(CONF_BASE_DN): str,
-        vol.Required(CONF_DISABLE_CERT_VALIDATION, default=False): bool,
-        vol.Required(CONF_DISABLE_TLS, default=False): bool,
-        vol.Required(CONF_PORT, default=636): int,
-        vol.Required(CONF_SERVER): str,
-        vol.Required(CONF_TIMEOUT, default=10): int,
         vol.Optional(CONF_ALLOWED_GROUP_DNS, default=[]): vol.All(
             cv.ensure_list, [str]
         ),
+        vol.Required(CONF_BASE_DN): str,
+        vol.Required(CONF_CERT_VALIDATION, default=True): bool,
+        vol.Required(CONF_PORT, default=636): int,
+        vol.Required(CONF_SERVER): str,
+        vol.Required(CONF_TIMEOUT, default=10): int,
+        vol.Required(CONF_TLS, default=True): bool,
     },
     extra=vol.PREVENT_EXTRA,
 )
@@ -67,13 +67,13 @@ class LdapAuthProvider(AuthProvider):
         try:
             # Server setup
             tls = ldap3.Tls()
-            if self.config[CONF_DISABLE_CERT_VALIDATION]:
+            if not self.config[CONF_CERT_VALIDATION]:
                 # Disable cert validation
                 tls.validate = ssl.CERT_NONE
             server = ldap3.Server(
                 self.config[CONF_SERVER],
                 port=self.config[CONF_PORT],
-                use_ssl=not self.config[CONF_DISABLE_TLS],
+                use_ssl=self.config[CONF_TLS],
                 tls=tls,
                 connect_timeout=self.config[CONF_TIMEOUT],
                 get_info=ldap3.ALL,
