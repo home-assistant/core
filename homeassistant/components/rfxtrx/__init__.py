@@ -29,7 +29,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     ATTR_EVENT,
-    DATA_RFXTRX_CONFIG,
     DEVICE_PACKET_TYPE_LIGHTING4,
     EVENT_RFXTRX_EVENT,
     SERVICE_SEND,
@@ -135,21 +134,26 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the RFXtrx component."""
     if DOMAIN not in config:
-        hass.data[DATA_RFXTRX_CONFIG] = BASE_SCHEMA({})
         return True
 
-    hass.data[DATA_RFXTRX_CONFIG] = config[DOMAIN]
+    data = {
+        CONF_HOST: config[DOMAIN].get(CONF_HOST),
+        CONF_PORT: config[DOMAIN].get(CONF_PORT),
+        CONF_DEVICE: config[DOMAIN].get(CONF_DEVICE),
+        CONF_DEBUG: config[DOMAIN].get(CONF_DEBUG),
+        CONF_AUTOMATIC_ADD: config[DOMAIN].get(CONF_AUTOMATIC_ADD),
+        CONF_DEVICES: config[DOMAIN][CONF_DEVICES],
+    }
+
+    for device in data[CONF_DEVICES]:
+        if data[CONF_DEVICES][device].get(CONF_OFF_DELAY) is not None:
+            data[CONF_DEVICES][device][CONF_OFF_DELAY] = data[CONF_DEVICES][device][
+                CONF_OFF_DELAY
+            ].total_seconds()
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_HOST: config[DOMAIN].get(CONF_HOST),
-                CONF_PORT: config[DOMAIN].get(CONF_PORT),
-                CONF_DEVICE: config[DOMAIN].get(CONF_DEVICE),
-                CONF_DEBUG: config[DOMAIN][CONF_DEBUG],
-            },
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data,
         )
     )
     return True
@@ -169,11 +173,10 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
 
 def setup_internal(hass, config):
     """Set up the RFXtrx component."""
-
     # Setup some per device config
     device_events = set()
     device_bits = {}
-    for event_code, event_config in hass.data[DATA_RFXTRX_CONFIG][CONF_DEVICES].items():
+    for event_code, event_config in config[CONF_DEVICES].items():
         event = get_rfx_object(event_code)
         device_id = get_device_id(
             event.device, data_bits=event_config.get(CONF_DATA_BITS)
