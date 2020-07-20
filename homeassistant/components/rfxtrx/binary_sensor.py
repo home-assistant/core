@@ -5,7 +5,6 @@ import logging
 import RFXtrx as rfxtrxmod
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_LIGHT,
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_SMOKE,
     BinarySensorEntity,
@@ -52,20 +51,18 @@ SENSOR_STATUS_OFF = [
     "Dark Detected",
 ]
 
-SENSOR_STATUS_DEVICE_CLASS = {
-    "Panic": DEVICE_CLASS_SMOKE,
-    "End Panic": DEVICE_CLASS_SMOKE,
-    "Motion": DEVICE_CLASS_MOTION,
-    "No Motion": DEVICE_CLASS_MOTION,
-    "Light Detected": DEVICE_CLASS_LIGHT,
-    "Dark Detected": DEVICE_CLASS_LIGHT,
+DEVICE_TYPE_DEVICE_CLASS = {
+    "X10 Security Motion Detector": DEVICE_CLASS_MOTION,
+    "KD101 Smoke Detector": DEVICE_CLASS_SMOKE,
+    "Visonic Powercode Motion Detector": DEVICE_CLASS_MOTION,
+    "Alecto SA30 Smoke Detector": DEVICE_CLASS_SMOKE,
+    "RM174RF Smoke Detector": DEVICE_CLASS_SMOKE,
 }
 
-SENSOR_STATUS_OFF_DELAY = {
-    "Panic": timedelta(seconds=60),
-    "End Panic": timedelta(seconds=60),
-    "Motion": timedelta(seconds=60),
-    "No Motion": timedelta(seconds=60),
+DEVICE_TYPE_OFF_DELAY = {
+    "RM174RF Smoke Detector": timedelta(seconds=60),
+    "KD101 Smoke Detector": timedelta(seconds=60),
+    "Alecto SA30 Smoke Detector": timedelta(seconds=60),
 }
 
 
@@ -112,11 +109,10 @@ async def async_setup_entry(
             device_id,
             entity.get(
                 CONF_DEVICE_CLASS,
-                SENSOR_STATUS_DEVICE_CLASS.get(event.values.get("Sensor Status")),
+                DEVICE_TYPE_DEVICE_CLASS.get(event.device.type_string),
             ),
             entity.get(
-                CONF_OFF_DELAY,
-                SENSOR_STATUS_OFF_DELAY.get(event.values.get("Sensor Status")),
+                CONF_OFF_DELAY, DEVICE_TYPE_OFF_DELAY.get(event.device.type_string),
             ),
             entity.get(CONF_DATA_BITS),
             entity.get(CONF_COMMAND_ON),
@@ -147,10 +143,8 @@ async def async_setup_entry(
             event.device,
             device_id,
             event=event,
-            device_class=SENSOR_STATUS_DEVICE_CLASS.get(
-                event.values.get("Sensor Status")
-            ),
-            off_delay=SENSOR_STATUS_OFF_DELAY.get(event.values.get("Sensor Status")),
+            device_class=DEVICE_TYPE_DEVICE_CLASS.get(event.device.type_string),
+            off_delay=DEVICE_TYPE_OFF_DELAY.get(event.device.type_string),
         )
         async_add_entities([sensor])
 

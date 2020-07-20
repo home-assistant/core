@@ -203,7 +203,6 @@ async def test_light(hass, rfxtrx_automatic):
 
     await _signal_event(hass, EVENT_LIGHT_DETECTOR_LIGHT)
     assert hass.states.get(entity_id).state == "on"
-    assert hass.states.get(entity_id).attributes.get("device_class") == "light"
 
     await _signal_event(hass, EVENT_LIGHT_DETECTOR_DARK)
     assert hass.states.get(entity_id).state == "off"
