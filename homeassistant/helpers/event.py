@@ -615,10 +615,10 @@ def async_track_utc_time_change(
         now = pattern_utc_now()
         hass.async_run_job(action, dt_util.as_local(now) if local else now)
 
-        # We only want second level precision for time patterns
-        # as we do not want to fire them multiple times in
-        # the same second.
-        next_time = calculate_next(now + timedelta(seconds=1))
+        if next_time <= now:
+            next_time = calculate_next(now + timedelta(seconds=1))
+        else:
+            next_time = calculate_next(now)
 
         cancel_callback = hass.loop.call_at(
             hass.loop.time() + next_time.timestamp() - time.time(),
