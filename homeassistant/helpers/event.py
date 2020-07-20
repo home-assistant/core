@@ -1,4 +1,5 @@
 """Helpers for listening to events."""
+import asyncio
 from datetime import datetime, timedelta
 import functools as ft
 import logging
@@ -590,7 +591,8 @@ def async_track_utc_time_change(
     matching_minutes = dt_util.parse_time_expression(minute, 0, 59)
     matching_hours = dt_util.parse_time_expression(hour, 0, 23)
 
-    next_time = None
+    last_now: datetime = dt_util.utcnow()
+    next_time: datetime = last_now
 
     def calculate_next(now: datetime) -> None:
         """Calculate and set the next time the trigger should fire."""
@@ -603,29 +605,44 @@ def async_track_utc_time_change(
 
     # Make sure rolling back the clock doesn't prevent the timer from
     # triggering.
-    last_now: Optional[datetime] = None
+    cancel_callback: Optional[asyncio.TimerHandle] = None
+    calculate_next(last_now)
 
     @callback
-    def pattern_time_change_listener(event: Event) -> None:
+    def pattern_time_change_listener() -> None:
         """Listen for matching time_changed events."""
-        nonlocal next_time, last_now
+        nonlocal next_time, last_now, cancel_callback
 
-        now = event.data[ATTR_NOW]
+        now = dt_util.utcnow()
 
-        if last_now is None or now < last_now:
-            # Time rolled back or next time not yet calculated
+        if now < last_now:
+            # Time rolled back
             calculate_next(now)
-
-        last_now = now
 
         if next_time <= now:
             hass.async_run_job(action, dt_util.as_local(now) if local else now)
             calculate_next(now + timedelta(seconds=1))
 
-    # We can't use async_track_point_in_utc_time here because it would
-    # break in the case that the system time abruptly jumps backwards.
-    # Our custom last_now logic takes care of resolving that scenario.
-    return hass.bus.async_listen(EVENT_TIME_CHANGED, pattern_time_change_listener)
+        last_now = now
+
+        cancel_callback = hass.loop.call_at(
+            hass.loop.time() + next_time.timestamp() - time.time(),
+            pattern_time_change_listener,
+        )
+
+    cancel_callback = hass.loop.call_at(
+        hass.loop.time() + next_time.timestamp() - time.time(),
+        pattern_time_change_listener,
+    )
+
+    @callback
+    def unsub_pattern_time_change_listener() -> None:
+        """Cancel the call_later."""
+        nonlocal cancel_callback
+        assert cancel_callback is not None
+        cancel_callback.cancel()
+
+    return unsub_pattern_time_change_listener
 
 
 track_utc_time_change = threaded_listener_factory(async_track_utc_time_change)

@@ -299,8 +299,11 @@ def async_fire_time_changed(hass, datetime_):
         mock_seconds_into_future = datetime_.timestamp() - time.time()
 
         if mock_seconds_into_future >= future_seconds:
-            task._run()
-            task.cancel()
+            with patch(
+                "homeassistant.util.dt.utcnow", return_value=date_util.as_utc(datetime_)
+            ):
+                task._run()
+                task.cancel()
 
 
 fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
