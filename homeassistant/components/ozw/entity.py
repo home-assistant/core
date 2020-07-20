@@ -247,16 +247,6 @@ class ZWaveDeviceEntity(Entity):
         self.on_value_update()
         self.async_write_ha_state()
 
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def force_update(self) -> bool:
-        """Force updates."""
-        return True
-
     async def _delete_callback(self, values_id):
         """Remove this entity."""
         if not self.values:
