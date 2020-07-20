@@ -1515,7 +1515,7 @@ pynx584==0.5
 pynzbgetapi==0.2.0
 
 # homeassistant.components.obihai
-pyobihai==1.2.1
+pyobihai==1.2.3
 
 # homeassistant.components.ombi
 pyombi==0.1.10
