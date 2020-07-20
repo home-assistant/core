@@ -181,7 +181,7 @@ class Envoy(Entity):
 
     @property
     def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
+        """Poll to retrieve lastest data from Envoy endpoint."""
         return True
 
     @property
