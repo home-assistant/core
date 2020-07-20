@@ -62,7 +62,7 @@ class TestWorkdaySetup:
                 "province": "BW",
                 "workdays": ["mon", "tue", "wed", "thu", "fri"],
                 "excludes": ["sat", "sun", "holiday"],
-                "working_holidays": ["Pfingstmontag"]
+                "working_holidays": ["Pfingstmontag"],
             }
         }
 
@@ -72,7 +72,7 @@ class TestWorkdaySetup:
                 "country": "US",
                 "workdays": ["mon", "tue", "wed", "thu", "fri"],
                 "excludes": ["sat", "sun", "holiday"],
-                "working_holidays": ["Not a holiday"]
+                "working_holidays": ["Not a holiday"],
             }
         }
 
@@ -245,7 +245,9 @@ class TestWorkdaySetup:
     def test_public_holiday_include_working_holiday(self, mock_date):
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, "binary_sensor"):
-            setup_component(self.hass, "binary_sensor", self.config_include_working_holiday)
+            setup_component(
+                self.hass, "binary_sensor", self.config_include_working_holiday
+            )
 
         self.hass.start()
 
@@ -255,7 +257,9 @@ class TestWorkdaySetup:
     def test_setup_component_invalid_working_holiday(self):
         """Set up workday component with invalid working holiday."""
         with assert_setup_component(1, "binary_sensor"):
-            setup_component(self.hass, "binary_sensor", self.config_include_invalid_working_holiday)
+            setup_component(
+                self.hass, "binary_sensor", self.config_include_invalid_working_holiday
+            )
 
         entity = self.hass.states.get("binary_sensor.workday_sensor")
         assert entity is None
