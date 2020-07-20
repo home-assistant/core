@@ -1,0 +1,4 @@
+# Describes the format for available pyscript services
+
+reload:
+  description: Reload all available pyscripts and restart triggers
