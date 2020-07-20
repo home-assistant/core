@@ -135,6 +135,5 @@ async def test_already_configured_error(hass):
             result["flow_id"], {"device_name": CONFIG[DEVICE_NAME]},
         )
 
-    print(result_create_entry)
     assert result_create_entry["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result_create_entry["reason"] == "already_configured"
