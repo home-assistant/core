@@ -112,6 +112,16 @@ class AccuWeatherEntity(WeatherEntity):
         return self.coordinator.data["Visibility"][self._unit_system]["Value"]
 
     @property
+    def ozone(self):
+        """Return the ozone level."""
+        # We only have ozone data for certain locations and only in the forecast data.
+        if self.coordinator.forecast and self.coordinator.data[ATTR_FORECAST][0].get(
+            "Ozone"
+        ):
+            return self.coordinator.data[ATTR_FORECAST][0]["Ozone"]["Value"]
+        return None
+
+    @property
     def forecast(self):
         """Return the forecast array."""
         if self.coordinator.forecast:
