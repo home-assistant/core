@@ -6,7 +6,6 @@ import io
 import logging
 import os
 
-import voluptuous as vol
 import yaml
 
 from homeassistant.components.pyscript.eval import AstEval, EvalFunc
@@ -30,8 +29,6 @@ DOMAIN = "pyscript"
 
 FOLDER = "pyscript"
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema(dict)}, extra=vol.ALLOW_EXTRA)
-
 
 async def async_setup(hass, config):
     """Initialize the pyscript component."""
@@ -44,7 +41,10 @@ async def async_setup(hass, config):
 
     path = hass.config.path(FOLDER)
 
-    if not os.path.isdir(path):
+    def check_isdir(path):
+        return os.path.isdir(path)
+
+    if not await hass.async_add_executor_job(check_isdir, path):
         _LOGGER.error("Folder %s not found in configuration folder", FOLDER)
         return False
 
@@ -150,11 +150,21 @@ async def compile_scripts(
 
     triggers = {}
     services = set()
-    for file in glob.iglob(os.path.join(path, "*.py")):
-        name = os.path.splitext(os.path.basename(file))[0]
-        _LOGGER.debug("parsing %s", file)
-        with open(file) as file_desc:
+
+    def glob_files(path, match):
+        return glob.iglob(os.path.join(path, match))
+
+    def read_file(path):
+        with open(path) as file_desc:
             source = file_desc.read()
+        return source
+
+    source_files = await hass.async_add_executor_job(glob_files, path, "*.py")
+
+    for file in source_files:
+        _LOGGER.debug("reading and parsing %s", file)
+        name = os.path.splitext(os.path.basename(file))[0]
+        source = await hass.async_add_executor_job(read_file, file)
 
         global_sym_table = {}
         ast_ctx = AstEval(
@@ -270,24 +280,26 @@ async def compile_scripts(
                 if arg_cnt == 1:
                     trig_args[dec_name] = trig_args[dec_name][0]
 
-            if len(trig_args) > 0:
-                trig_args["action"] = func
-                trig_args["action_ast_ctx"] = AstEval(
-                    name,
-                    global_sym_table=global_sym_table,
-                    state_func=state_func,
-                    event_func=event_func,
-                    handler_func=handler_func,
-                )
-                handler_func.install_ast_funcs(trig_args["action_ast_ctx"])
-                trig_args["global_sym_table"] = global_sym_table
-                triggers[name] = TrigInfo(
-                    name,
-                    trig_args,
-                    event_func=event_func,
-                    state_func=state_func,
-                    handler_func=handler_func,
-                    trig_time=trig_time_func,
-                )
+            if len(trig_args) == 0:
+                continue
+
+            trig_args["action"] = func
+            trig_args["action_ast_ctx"] = AstEval(
+                name,
+                global_sym_table=global_sym_table,
+                state_func=state_func,
+                event_func=event_func,
+                handler_func=handler_func,
+            )
+            handler_func.install_ast_funcs(trig_args["action_ast_ctx"])
+            trig_args["global_sym_table"] = global_sym_table
+            triggers[name] = TrigInfo(
+                name,
+                trig_args,
+                event_func=event_func,
+                state_func=state_func,
+                handler_func=handler_func,
+                trig_time=trig_time_func,
+            )
 
     return triggers, services
