@@ -42,13 +42,19 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_STATUS_ON = [
     "Panic",
     "Motion",
+    "Motion Tamper",
     "Light Detected",
+    "Alarm",
+    "Alarm Tamper",
 ]
 
 SENSOR_STATUS_OFF = [
     "End Panic",
     "No Motion",
+    "No Motion Tamper",
     "Dark Detected",
+    "Normal",
+    "Normal Tamper",
 ]
 
 DEVICE_TYPE_DEVICE_CLASS = {
