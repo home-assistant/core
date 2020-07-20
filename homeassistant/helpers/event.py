@@ -594,37 +594,31 @@ def async_track_utc_time_change(
     matching_minutes = dt_util.parse_time_expression(minute, 0, 59)
     matching_hours = dt_util.parse_time_expression(hour, 0, 23)
 
-    last_now: datetime = dt_util.utcnow()
-    next_time: datetime = last_now
-
-    def calculate_next(now: datetime) -> None:
+    def calculate_next(now: datetime) -> datetime:
         """Calculate and set the next time the trigger should fire."""
-        nonlocal next_time
 
         localized_now = dt_util.as_local(now) if local else now
-        next_time = dt_util.find_next_time_expression_time(
+        return dt_util.find_next_time_expression_time(
             localized_now, matching_seconds, matching_minutes, matching_hours
         )
 
     # Make sure rolling back the clock doesn't prevent the timer from
     # triggering.
     cancel_callback: Optional[asyncio.TimerHandle] = None
-    calculate_next(last_now)
+    next_time: datetime = calculate_next(dt_util.utcnow())
 
     @callback
     def pattern_time_change_listener() -> None:
         """Listen for matching time_changed events."""
-        nonlocal next_time, last_now, cancel_callback
+        nonlocal next_time, cancel_callback
 
         now = pattern_utc_now()
         hass.async_run_job(action, dt_util.as_local(now) if local else now)
 
         if next_time <= now:
-            calculate_next(now + timedelta(seconds=1))
+            next_time = calculate_next(now + timedelta(seconds=1))
         else:
-            calculate_next(now)
-
-        last_now = now
+            next_time = calculate_next(now)
 
         cancel_callback = hass.loop.call_at(
             hass.loop.time() + next_time.timestamp() - time.time(),
