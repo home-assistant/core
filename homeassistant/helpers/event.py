@@ -617,14 +617,12 @@ def async_track_utc_time_change(
         nonlocal next_time, last_now, cancel_callback
 
         now = pattern_utc_now()
-
-        if now < last_now:
-            # Time rolled back
-            calculate_next(now)
+        hass.async_run_job(action, dt_util.as_local(now) if local else now)
 
         if next_time <= now:
-            hass.async_run_job(action, dt_util.as_local(now) if local else now)
             calculate_next(now + timedelta(seconds=1))
+        else:
+            calculate_next(now)
 
         last_now = now
 
