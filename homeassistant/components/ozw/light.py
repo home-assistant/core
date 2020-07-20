@@ -193,6 +193,7 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
                 rgbw = f"#00000000{white:02x}"
 
         elif color_temp is not None:
+            """ Limit color temp to min/max values """
             cold = max(
                 0,
                 min(
