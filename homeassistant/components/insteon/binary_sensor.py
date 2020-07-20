@@ -29,7 +29,9 @@ from homeassistant.components.binary_sensor import (
     DOMAIN,
     BinarySensorEntity,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from .const import SIGNAL_ADD_ENTITIES
 from .insteon_entity import InsteonEntity
 from .utils import async_add_insteon_entities
 
@@ -50,11 +52,18 @@ SENSOR_TYPES = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the INSTEON entity class for the hass platform."""
-    async_add_insteon_entities(
-        hass, DOMAIN, InsteonBinarySensorEntity, async_add_entities, discovery_info
-    )
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Insteon binary sensors from a config entry."""
+
+    def add_entities(discovery_info=None):
+        """Add the Insteon entities for the platform."""
+        async_add_insteon_entities(
+            hass, DOMAIN, InsteonBinarySensorEntity, async_add_entities, discovery_info
+        )
+
+    signal = f"{SIGNAL_ADD_ENTITIES}_{DOMAIN}"
+    async_dispatcher_connect(hass, signal, add_entities)
+    add_entities()
 
 
 class InsteonBinarySensorEntity(InsteonEntity, BinarySensorEntity):
