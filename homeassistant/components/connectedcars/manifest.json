@@ -3,7 +3,7 @@
   "name": "ConnectedCars.io",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/connectedcars",
-  "requirements": ["connectedcars==0.1.3", "nest-asyncio==1.4.0"],
+  "requirements": ["connectedcars==0.1.3"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},

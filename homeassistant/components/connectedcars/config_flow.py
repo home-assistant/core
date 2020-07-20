@@ -2,7 +2,6 @@
 import logging
 
 from connectedcars import ConnectedCarsClient, ConnectedCarsException
-import nest_asyncio
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -73,7 +72,6 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    nest_asyncio.apply()
 
     ccah = ConnectedcarsApiHandler(data["namespace"])
 

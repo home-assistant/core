@@ -940,9 +940,6 @@ ndms2_client==0.0.11
 # homeassistant.components.ness_alarm
 nessclient==0.9.15
 
-# homeassistant.components.connectedcars
-nest-asyncio==1.4.0
-
 # homeassistant.components.netdata
 netdata==0.2.0
 
