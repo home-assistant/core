@@ -316,6 +316,39 @@ async def test_light(hass, light_data, light_msg, light_rgb_msg, sent_messages):
     assert state.state == "on"
     assert state.attributes["color_temp"] == 465
 
+    # Test setting invalid color temp
+    new_color = 120
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": "light.led_bulb_6_multi_colour_level", "color_temp": new_color},
+        blocking=True,
+    )
+    assert len(sent_messages) == 19
+    msg = sent_messages[-1]
+    assert msg["topic"] == "OpenZWave/1/command/setvalue/"
+    assert msg["payload"] == {"Value": 255, "ValueIDKey": 659128337}
+
+    msg = sent_messages[-2]
+    assert msg["topic"] == "OpenZWave/1/command/setvalue/"
+    assert msg["payload"] == {"Value": "#00000000ff", "ValueIDKey": 659341335}
+
+    # Feedback on state
+    light_msg.decode()
+    light_msg.payload["Value"] = byte_to_zwave_brightness(255)
+    light_msg.encode()
+    light_rgb_msg.decode()
+    light_rgb_msg.payload["Value"] = "#00000000ff"
+    light_rgb_msg.encode()
+    receive_message(light_msg)
+    receive_message(light_rgb_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.led_bulb_6_multi_colour_level")
+    assert state is not None
+    assert state.state == "on"
+    assert state.attributes["color_temp"] == 154
+
 
 async def test_no_rgb_light(hass, light_no_rgb_data, light_no_rgb_msg, sent_messages):
     """Test setting up config entry."""
