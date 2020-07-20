@@ -44,3 +44,4 @@ async def test_import_update(hass):
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
+    assert entry.data["debug"]
