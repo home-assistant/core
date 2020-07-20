@@ -349,6 +349,7 @@ async def test_light(hass, light_data, light_msg, light_rgb_msg, sent_messages):
     assert state.state == "on"
     assert state.attributes["color_temp"] == 154
 
+
 async def test_no_rgb_light(hass, light_no_rgb_data, light_no_rgb_msg, sent_messages):
     """Test setting up config entry."""
     receive_message = await setup_ozw(hass, fixture=light_no_rgb_data)
