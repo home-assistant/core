@@ -25,14 +25,14 @@ mob_notify:
        example: '0'
 
 mob_request:
-   description: 'Wysłanie komendy (zapytania/żądania) do aplikacji mobilnej.'
+   description: 'Wysłanie komendy (zapytania/żądania) do aplikacji mobilnej. Ta usługa wymaga aplikacji AIS dom w wersji 1.3.0 lub nowszej.'
    fields:
      device_id:
        description: 'Identyfikator urządzenia.'
        example: 'mobile_ais_dom_'
      request:
        description: 'Komenda np.: locationUpdate, micOn'
-       example: 'location_update'
+       example: 'micOn'
      data:
        description: 'Opcjonalne dane komendy'
        example: '{}'
