@@ -879,23 +879,25 @@ async def test_periodic_task_clock_rollback(hass):
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
+    # The event loop uses monotonic clocks to track time so it can't
+    # move backwards, only utcnow can
     async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 22, 0, 0))
     await hass.async_block_till_done()
-    assert len(specific_runs) == 2
+    assert len(specific_runs) == 1
 
     async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 0, 0, 0))
     await hass.async_block_till_done()
-    assert len(specific_runs) == 3
+    assert len(specific_runs) == 1
 
     async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 2, 0, 0))
     await hass.async_block_till_done()
-    assert len(specific_runs) == 4
+    assert len(specific_runs) == 2
 
     unsub()
 
     async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 2, 0, 0))
     await hass.async_block_till_done()
-    assert len(specific_runs) == 4
+    assert len(specific_runs) == 2
 
 
 async def test_periodic_task_duplicate_time(hass):
@@ -930,10 +932,16 @@ async def test_periodic_task_entering_dst(hass):
     specific_runs = []
 
     now = dt_util.utcnow()
-
-    unsub = async_track_time_change(
-        hass, lambda x: specific_runs.append(1), hour=2, minute=30, second=0
+    time_that_will_not_match_right_away = timezone.localize(
+        datetime(now.year + 1, 3, 25, 2, 31, 0)
     )
+
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        unsub = async_track_time_change(
+            hass, lambda x: specific_runs.append(1), hour=2, minute=30, second=0
+        )
 
     async_fire_time_changed(
         hass, timezone.localize(datetime(now.year + 1, 3, 25, 1, 50, 0))
@@ -970,9 +978,17 @@ async def test_periodic_task_leaving_dst(hass):
 
     now = dt_util.utcnow()
 
-    unsub = async_track_time_change(
-        hass, lambda x: specific_runs.append(1), hour=2, minute=30, second=0
+    now = dt_util.utcnow()
+    time_that_will_not_match_right_away = timezone.localize(
+        datetime(now.year + 1, 10, 28, 2, 28, 0), is_dst=True
     )
+
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        unsub = async_track_time_change(
+            hass, lambda x: specific_runs.append(1), hour=2, minute=30, second=0
+        )
 
     async_fire_time_changed(
         hass, timezone.localize(datetime(now.year + 1, 10, 28, 2, 5, 0), is_dst=False)
@@ -987,16 +1003,22 @@ async def test_periodic_task_leaving_dst(hass):
     assert len(specific_runs) == 1
 
     async_fire_time_changed(
-        hass, timezone.localize(datetime(now.year + 1, 10, 28, 2, 5, 0), is_dst=True)
-    )
-    await hass.async_block_till_done()
-    assert len(specific_runs) == 1
-
-    async_fire_time_changed(
-        hass, timezone.localize(datetime(now.year + 1, 10, 28, 2, 55, 0), is_dst=True)
+        hass, timezone.localize(datetime(now.year + 2, 10, 28, 1, 5, 0), is_dst=True)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
+
+    async_fire_time_changed(
+        hass, timezone.localize(datetime(now.year + 2, 10, 28, 1, 55, 0), is_dst=True)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 2
+
+    async_fire_time_changed(
+        hass, timezone.localize(datetime(now.year + 2, 10, 28, 2, 55, 0), is_dst=True)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 3
 
     unsub()
 
