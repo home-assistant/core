@@ -889,13 +889,13 @@ async def test_periodic_task_clock_rollback(hass):
     await hass.async_block_till_done()
     assert len(specific_runs) == 3
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 2, 0, 0), fire_all=True)
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 2, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 4
 
     unsub()
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 2, 0, 0), fire_all=True)
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 2, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 4
 
