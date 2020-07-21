@@ -1,15 +1,12 @@
+"""Support for Enphase Envoy solar energy monitor."""
+
 from datetime import timedelta
 import logging
 
 import async_timeout
-
 from envoy_reader.envoy_reader import EnvoyReader
 import httpcore
-import requests
 import voluptuous as vol
-
-from homeassistant.helpers import entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -23,6 +20,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +58,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    homeassistant, config, async_add_entities, discovery_info=None
+):
     """Set up the Enphase Envoy sensor."""
     ip_address = config[CONF_IP_ADDRESS]
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
@@ -81,13 +81,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             # handled by the data update coordinator.
             async with async_timeout.timeout(10):
                 data = await envoy_reader.update()
-                _LOGGER.debug(data)
+                _LOGGER.debug("Retrieved data from API: %s", data)
                 return data
-        except ApiError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+        except httpcore.ProtocolError as err:
+            _LOGGER.warning("Error communicating with API: %s", err)
 
     coordinator = DataUpdateCoordinator(
-        hass,
+        homeassistant,
         _LOGGER,
         # Name of the data. For logging purposes.
         name="sensor",
@@ -103,15 +103,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # Iterate through the list of sensors
     for condition in monitored_conditions:
         if condition == "inverters":
-            try:
-                inverters = await envoy_reader.inverters_production()
-            except requests.exceptions.HTTPError:
-                _LOGGER.warning(
-                    "Authentication for Inverter data failed during setup: %s",
-                    ip_address,
-                )
-                continue
-
+            inverters = coordinator.data.get("inverters_production")
+            _LOGGER.debug("Inverter data: %s", inverters)
             if isinstance(inverters, dict):
                 for inverter in inverters:
                     entities.append(
@@ -123,7 +116,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                             coordinator,
                         )
                     )
-                    _LOGGER.debug("Adding inverter SN: %s - Type: %s.", f"{name}{SENSORS[condition][0]} {inverter}", condition)
+                    _LOGGER.debug(
+                        "Adding inverter SN: %s - Type: %s.",
+                        f"{name}{SENSORS[condition][0]} {inverter}",
+                        condition,
+                    )
 
         else:
             entities.append(
@@ -135,13 +132,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     coordinator,
                 )
             )
-            _LOGGER.debug("Adding sensor: %s - Type: %s.", f"{name}{SENSORS[condition][0]})", condition)
-    async_add_entities(entities)    
+            _LOGGER.debug(
+                "Adding sensor: %s - Type: %s.",
+                f"{name}{SENSORS[condition][0]})",
+                condition,
+            )
+    async_add_entities(entities)
 
 
 class Envoy(Entity):
+    """Envoy entity."""
 
     def __init__(self, envoy_reader, sensor_type, name, unit, coordinator):
+        """Initialize Envoy entity."""
         self._envoy_reader = envoy_reader
         self._type = sensor_type
         self._name = name
@@ -181,7 +184,7 @@ class Envoy(Entity):
 
     @property
     def should_poll(self):
-        """Poll to retrieve lastest data from Envoy endpoint."""
+        """Poll to retrieve latest data from Envoy endpoint."""
         return True
 
     @property
@@ -190,11 +193,9 @@ class Envoy(Entity):
         return self.coordinator.last_update_success
 
     async def async_added_to_hass(self):
-        """When entity is added to hass."""
+        """When entity is added to Home Assistant."""
         self.async_on_remove(
-            self.coordinator.async_add_listener(
-                self.async_write_ha_state
-            )
+            self.coordinator.async_add_listener(self.async_write_ha_state)
         )
 
     async def async_update(self):
@@ -202,9 +203,7 @@ class Envoy(Entity):
         if self._type != "inverters":
             if isinstance(self.coordinator.data.get(self._type), int):
                 self._state = self.coordinator.data.get(self._type)
-                _LOGGER.debug(
-                    "Updating: %s - %s", self._type, self._state
-                )
+                _LOGGER.debug("Updating: %s - %s", self._type, self._state)
             else:
                 _LOGGER.debug(
                     "Sensor %s isInstance(int) was %s.  Returning None for state.",
@@ -219,10 +218,7 @@ class Envoy(Entity):
                     serial_number
                 )[0]
                 _LOGGER.debug(
-                    "Updating: %s (%s) - %s.",
-                    self._type,
-                    serial_number,
-                    self._state,
+                    "Updating: %s (%s) - %s.", self._type, serial_number, self._state,
                 )
             else:
                 _LOGGER.debug(
@@ -231,5 +227,3 @@ class Envoy(Entity):
                     isinstance(self.coordinator.data.get("inverters_production"), dict),
                     self._state,
                 )
-
-        
