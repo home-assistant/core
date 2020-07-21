@@ -618,10 +618,7 @@ def async_track_utc_time_change(
         now = pattern_utc_now()
         hass.async_run_job(action, dt_util.as_local(now) if local else now)
 
-        if next_time <= now:
-            calculate_next(now + timedelta(seconds=1))
-        else:
-            calculate_next(now)
+        calculate_next(now + timedelta(seconds=1))
 
         cancel_callback = hass.loop.call_at(
             hass.loop.time() + next_time.timestamp() - time.time(),
