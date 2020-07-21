@@ -6,6 +6,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import discovery
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.util.dt import utcnow
 
 from tests.async_mock import patch
@@ -36,10 +37,12 @@ def netdisco_mock():
 
 async def mock_discovery(hass, discoveries, config=BASE_CONFIG):
     """Mock discoveries."""
-    result = await async_setup_component(hass, "discovery", config)
-    assert result
-
-    await hass.async_start()
+    with patch("homeassistant.components.zeroconf.async_get_instance"):
+        assert await async_setup_component(hass, "discovery", config)
+        await hass.async_block_till_done()
+        await hass.async_start()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
 
     with patch.object(discovery, "_discover", discoveries), patch(
         "homeassistant.components.discovery.async_discover", return_value=mock_coro()
