@@ -184,9 +184,9 @@ async def async_unload_entry(hass, entry: config_entries.ConfigEntry):
         )
     )
 
-    await hass.async_add_executor_job(unload_internal, hass, entry.data)
-
     if unload_ok:
+        await hass.async_add_executor_job(unload_internal, hass, entry.data)
+
         hass.data.pop(DOMAIN)
 
     return unload_ok
