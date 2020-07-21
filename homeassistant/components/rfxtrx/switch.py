@@ -4,7 +4,7 @@ import logging
 import RFXtrx as rfxtrxmod
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import CONF_DEVICES
+from homeassistant.const import CONF_DEVICES, STATE_ON
 from homeassistant.core import callback
 
 from . import (
@@ -90,6 +90,15 @@ async def async_setup_entry(
 
 class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
     """Representation of a RFXtrx switch."""
+
+    async def async_added_to_hass(self):
+        """Restore device state."""
+        await super().async_added_to_hass()
+
+        if self._event is None:
+            old_state = await self.async_get_last_state()
+            if old_state is not None:
+                self._state = old_state.state == STATE_ON
 
     def _apply_event(self, event):
         """Apply command from rfxtrx."""
