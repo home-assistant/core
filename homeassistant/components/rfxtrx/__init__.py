@@ -191,7 +191,7 @@ async def async_unload_entry(hass, entry: config_entries.ConfigEntry):
 
 def unload_internal(hass, config):
     """Unload the RFXtrx component."""
-    hass.services.async_remove(DOMAIN, SERVICE_SEND)
+    hass.services.remove(DOMAIN, SERVICE_SEND)
 
     listener = hass.data[DOMAIN][DATA_LISTENER]
     listener()
