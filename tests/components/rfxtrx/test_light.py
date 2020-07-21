@@ -5,8 +5,6 @@ import pytest
 
 from homeassistant.setup import async_setup_component
 
-from . import _signal_event
-
 
 async def test_one_light(hass, rfxtrx):
     """Test with 1 light."""
@@ -150,13 +148,13 @@ async def test_discover_light(hass, rfxtrx):
     await hass.async_block_till_done()
     await hass.async_start()
 
-    await _signal_event(hass, "0b11009e00e6116202020070")
+    await rfxtrx.signal("0b11009e00e6116202020070")
     state = hass.states.get("light.ac_0e61162_2")
     assert state
     assert state.state == "on"
     assert state.attributes.get("friendly_name") == "AC 0e61162:2"
 
-    await _signal_event(hass, "0b1100120118cdea02020070")
+    await rfxtrx.signal("0b1100120118cdea02020070")
     state = hass.states.get("light.ac_118cdea_2")
     assert state
     assert state.state == "on"
