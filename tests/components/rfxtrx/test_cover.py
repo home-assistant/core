@@ -1,9 +1,14 @@
 """The tests for the Rfxtrx cover platform."""
 from unittest.mock import call
 
+import pytest
+
+from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
 from . import _signal_event
+
+from tests.common import mock_restore_cache
 
 
 async def test_one_cover(hass, rfxtrx):
@@ -44,6 +49,24 @@ async def test_one_cover(hass, rfxtrx):
         call(bytearray(b"\n\x14\x00\x00\x02\x13\xc7\xf2\r\x00\x00")),
         call(bytearray(b"\n\x14\x00\x00\x02\x13\xc7\xf2\x0e\x00\x00")),
     ]
+
+
+@pytest.mark.parametrize("state", ["open", "closed"])
+async def test_state_restore(hass, rfxtrx, state):
+    """State restoration."""
+
+    entity_id = "cover.lightwaverf_siemens_0213c7_242"
+
+    mock_restore_cache(hass, [State(entity_id, state)])
+
+    assert await async_setup_component(
+        hass,
+        "rfxtrx",
+        {"rfxtrx": {"device": "abcd", "devices": {"0b1400cd0213c7f20d010f51": {}}}},
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == state
 
 
 async def test_several_covers(hass, rfxtrx):
