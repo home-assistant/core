@@ -46,7 +46,11 @@ async def test_if_fires_using_at(hass, calls):
         },
     )
 
-    async_fire_time_changed(hass, dt_util.utcnow().replace(hour=5, minute=0, second=0))
+    now = dt_util.utcnow()
+
+    async_fire_time_changed(
+        hass, now.replace(year=now.year + 1, hour=5, minute=0, second=0)
+    )
 
     await hass.async_block_till_done()
     assert len(calls) == 1

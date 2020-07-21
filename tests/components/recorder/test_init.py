@@ -17,14 +17,18 @@ from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import Events, RecorderRuns, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import MATCH_ALL, STATE_LOCKED, STATE_UNLOCKED
-from homeassistant.core import ATTR_NOW, EVENT_TIME_CHANGED, Context, callback
+from homeassistant.core import Context, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import wait_recording_done
 
 from tests.async_mock import patch
-from tests.common import get_test_home_assistant, init_recorder_component
+from tests.common import (
+    async_fire_time_changed,
+    get_test_home_assistant,
+    init_recorder_component,
+)
 
 
 class TestRecorder(unittest.TestCase):
@@ -335,15 +339,15 @@ def test_auto_purge(hass_recorder):
     tz = dt_util.get_time_zone("Europe/Copenhagen")
     dt_util.set_default_time_zone(tz)
 
-    test_time = tz.localize(datetime(2020, 1, 1, 4, 12, 0))
+    now = dt_util.utcnow()
+    test_time = tz.localize(datetime(now.year + 1, 1, 1, 4, 12, 0))
+    async_fire_time_changed(hass, test_time)
 
     with patch(
         "homeassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data:
         for delta in (-1, 0, 1):
-            hass.bus.fire(
-                EVENT_TIME_CHANGED, {ATTR_NOW: test_time + timedelta(seconds=delta)}
-            )
+            async_fire_time_changed(hass, test_time + timedelta(seconds=delta))
             hass.block_till_done()
             hass.data[DATA_INSTANCE].block_till_done()
 
