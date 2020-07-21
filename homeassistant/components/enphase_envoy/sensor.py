@@ -122,7 +122,14 @@ async def async_setup_platform(
                         f"{name}{SENSORS[condition][0]} {inverter}",
                         condition,
                     )
-
+            elif "Unable to connect to Envoy" in inverters:
+                _LOGGER.error(
+                    "Unable to connect to Enphase Envoy during setup. Inverter entities not added. Please check IP address and credentials are correct."
+                )
+            elif "can't handle event type ConnectionClosed" in inverters:
+                _LOGGER.error(
+                    "Communication error with Enphase Envoy during setup. Inverter entities not added."
+                )
         else:
             entities.append(
                 Envoy(
