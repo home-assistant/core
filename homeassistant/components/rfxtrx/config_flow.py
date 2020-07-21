@@ -35,7 +35,10 @@ class OptionsFlow(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize vizio options flow."""
-        self.config_entry = config_entry
+        self._config_entry = config_entry
+        self._global_options = None
+        self._selected_device = None
+        self._device_entries = None
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
@@ -44,12 +47,23 @@ class OptionsFlow(config_entries.OptionsFlow):
     async def async_step_prompt_options(self, user_input=None):
         """Prompt for options."""
         if user_input is not None:
-            return None
+            self._global_options = {
+                CONF_DEBUG: user_input[CONF_DEBUG],
+                CONF_AUTOMATIC_ADD: user_input[CONF_AUTOMATIC_ADD],
+            }
+            if CONF_DEVICE in user_input:
+                self._selected_device = user_input[CONF_DEVICE]
+                return await self.async_step_set_device_options()
+            if CONF_DEVICE_ID in user_input:
+                return None
+
+            return self.async_create_entry(title="", data=self._global_options)
 
         device_registry = await async_get_registry(self.hass)
         device_entries = async_entries_for_config_entry(
-            device_registry, self.config_entry.entry_id
+            device_registry, self._config_entry.entry_id
         )
+        self._device_entries = device_entries
 
         devices = {
             entry.id: entry.name_by_user if entry.name_by_user else entry.name
@@ -57,8 +71,10 @@ class OptionsFlow(config_entries.OptionsFlow):
         }
 
         options = {
-            vol.Optional(CONF_DEBUG): bool,
-            vol.Optional(CONF_AUTOMATIC_ADD): bool,
+            vol.Optional(CONF_DEBUG, default=self._config_entry.data[CONF_DEBUG]): bool,
+            vol.Optional(
+                CONF_AUTOMATIC_ADD, default=self._config_entry.data[CONF_AUTOMATIC_ADD],
+            ): bool,
             vol.Optional(CONF_DEVICE_ID): str,
             vol.Optional(CONF_DEVICE): vol.In(devices),
         }
