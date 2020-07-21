@@ -146,7 +146,8 @@ def preprocess_turn_on_alternatives(params):
     if profile is not None:
         params.setdefault(ATTR_XY_COLOR, profile[:2])
         params.setdefault(ATTR_BRIGHTNESS, profile[2])
-        params.setdefault(ATTR_TRANSITION, profile[3] if len(profile) > 3 else 0)
+        if len(profile) > 3:
+            params.setdefault(ATTR_TRANSITION, profile[3])
 
     color_name = params.pop(ATTR_COLOR_NAME, None)
     if color_name is not None:
