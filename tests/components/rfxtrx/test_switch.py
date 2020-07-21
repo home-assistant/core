@@ -6,8 +6,6 @@ import pytest
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
-from . import _signal_event
-
 from tests.common import mock_restore_cache
 
 
@@ -130,12 +128,12 @@ async def test_discover_switch(hass, rfxtrx):
     await hass.async_block_till_done()
     await hass.async_start()
 
-    await _signal_event(hass, "0b1100100118cdea02010f70")
+    await rfxtrx.signal("0b1100100118cdea02010f70")
     state = hass.states.get("switch.ac_118cdea_2")
     assert state
     assert state.state == "on"
 
-    await _signal_event(hass, "0b1100100118cdeb02010f70")
+    await rfxtrx.signal("0b1100100118cdeb02010f70")
     state = hass.states.get("switch.ac_118cdeb_2")
     assert state
     assert state.state == "on"
