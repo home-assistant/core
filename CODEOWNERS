@@ -77,6 +77,7 @@ homeassistant/components/cloudflare/* @ludeeus
 homeassistant/components/comfoconnect/* @michaelarnauts
 homeassistant/components/config/* @home-assistant/core
 homeassistant/components/configurator/* @home-assistant/core
+homeassistant/components/control4/* @lawtancool
 homeassistant/components/conversation/* @home-assistant/core
 homeassistant/components/coolmaster/* @OnFreund
 homeassistant/components/coronavirus/* @home_assistant/core
@@ -458,6 +459,7 @@ homeassistant/components/websocket_api/* @home-assistant/core
 homeassistant/components/wiffi/* @mampfes
 homeassistant/components/withings/* @vangorra
 homeassistant/components/wled/* @frenck
+homeassistant/components/wolflink/* @adamkrol93
 homeassistant/components/workday/* @fabaff
 homeassistant/components/worldclock/* @fabaff
 homeassistant/components/xbox_live/* @MartinHjelmare

@@ -1167,6 +1167,9 @@ py17track==2.2.2
 # homeassistant.components.hdmi_cec
 pyCEC==0.4.13
 
+# homeassistant.components.control4
+pyControl4==0.0.6
+
 # homeassistant.components.tplink
 pyHS100==0.3.5.1
 
@@ -1247,7 +1250,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==7.0.1
+pychromecast==7.1.2
 
 # homeassistant.components.cmus
 pycmus==0.1.1
@@ -1383,7 +1386,7 @@ pyialarm==0.3
 pyicloud==0.9.7
 
 # homeassistant.components.insteon
-pyinsteon==1.0.5
+pyinsteon==1.0.7
 
 # homeassistant.components.intesishome
 pyintesishome==1.7.5
@@ -1512,7 +1515,7 @@ pynx584==0.5
 pynzbgetapi==0.2.0
 
 # homeassistant.components.obihai
-pyobihai==1.2.1
+pyobihai==1.2.3
 
 # homeassistant.components.ombi
 pyombi==0.1.10
@@ -2208,6 +2211,9 @@ withings-api==2.1.6
 
 # homeassistant.components.wled
 wled==0.4.3
+
+# homeassistant.components.wolflink
+wolf_smartset==0.1.4
 
 # homeassistant.components.xbee
 xbee-helper==0.0.7

@@ -28,7 +28,6 @@ from .const import (
     ATTR_EVENT,
     COMMAND_OFF_LIST,
     COMMAND_ON_LIST,
-    DATA_RFXTRX_CONFIG,
     DEVICE_PACKET_TYPE_LIGHTING4,
 )
 
@@ -44,7 +43,7 @@ async def async_setup_entry(
     device_ids = set()
     pt2262_devices = []
 
-    discovery_info = hass.data[DATA_RFXTRX_CONFIG]
+    discovery_info = config_entry.data
 
     def supported(event):
         return isinstance(event, rfxtrxmod.ControlEvent)
@@ -209,5 +208,5 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
                 self.async_write_ha_state()
 
             self._delay_listener = evt.async_call_later(
-                self.hass, self._off_delay.total_seconds(), off_delay_listener
+                self.hass, self._off_delay, off_delay_listener
             )
