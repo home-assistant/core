@@ -1,4 +1,5 @@
 """Support for RFXtrx devices."""
+import asyncio
 import binascii
 from collections import OrderedDict
 import logging
@@ -82,6 +83,7 @@ DATA_TYPES = OrderedDict(
 
 _LOGGER = logging.getLogger(__name__)
 DATA_RFXOBJECT = "rfxobject"
+DATA_LISTENER = "ha_stop"
 
 
 def _bytearray_string(data):
@@ -132,6 +134,8 @@ CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Any(DEVICE_SCHEMA, PORT_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
 
+DOMAINS = ["switch", "sensor", "light", "binary_sensor", "cover"]
+
 
 async def async_setup(hass, config):
     """Set up the RFXtrx component."""
@@ -157,14 +161,46 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
     """Set up the RFXtrx component."""
+    hass.data.setdefault(DOMAIN, {})
+
     await hass.async_add_executor_job(setup_internal, hass, entry.data)
 
-    for domain in ["switch", "sensor", "light", "binary_sensor", "cover"]:
+    for domain in DOMAINS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, domain)
         )
 
     return True
+
+
+async def async_unload_entry(hass, entry: config_entries.ConfigEntry):
+    """Unload RFXtrx component."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in DOMAINS
+            ]
+        )
+    )
+
+    if unload_ok:
+        await hass.async_add_executor_job(unload_internal, hass, entry.data)
+
+        hass.data.pop(DOMAIN)
+
+    return unload_ok
+
+
+def unload_internal(hass, config):
+    """Unload the RFXtrx component."""
+    hass.services.remove(DOMAIN, SERVICE_SEND)
+
+    listener = hass.data[DOMAIN][DATA_LISTENER]
+    listener()
+
+    rfx_object = hass.data[DOMAIN][DATA_RFXOBJECT]
+    rfx_object.close_connection()
 
 
 def setup_internal(hass, config):
@@ -234,9 +270,10 @@ def setup_internal(hass, config):
         """Close connection with RFXtrx."""
         rfx_object.close_connection()
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_rfxtrx)
+    listener = hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_rfxtrx)
 
-    hass.data[DATA_RFXOBJECT] = rfx_object
+    hass.data[DOMAIN][DATA_LISTENER] = listener
+    hass.data[DOMAIN][DATA_RFXOBJECT] = rfx_object
 
     def send(call):
         event = call.data[ATTR_EVENT]
@@ -432,7 +469,7 @@ class RfxtrxCommandEntity(RfxtrxEntity):
         self._state = None
 
     def _send_command(self, command, brightness=0):
-        rfx_object = self.hass.data[DATA_RFXOBJECT]
+        rfx_object = self.hass.data[DOMAIN][DATA_RFXOBJECT]
 
         if command == "turn_on":
             for _ in range(self.signal_repetitions):

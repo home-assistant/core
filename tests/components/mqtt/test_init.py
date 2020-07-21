@@ -799,13 +799,15 @@ async def test_no_birth_message(hass, mqtt_client_mock, mqtt_mock):
 )
 async def test_custom_will_message(hass, mqtt_client_mock, mqtt_mock):
     """Test will message."""
-    mqtt_client_mock.will_set.assert_called_with("death", "death", 0, False)
+    mqtt_client_mock.will_set.assert_called_with(
+        topic="death", payload="death", qos=0, retain=False
+    )
 
 
 async def test_default_will_message(hass, mqtt_client_mock, mqtt_mock):
     """Test will message."""
     mqtt_client_mock.will_set.assert_called_with(
-        "homeassistant/status", "offline", 0, False
+        topic="homeassistant/status", payload="offline", qos=0, retain=False
     )
 
 

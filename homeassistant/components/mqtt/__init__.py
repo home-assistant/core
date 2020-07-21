@@ -714,11 +714,10 @@ class MQTT:
 
         if will_message is not None:
             self._mqttc.will_set(  # pylint: disable=no-value-for-parameter
-                *attr.astuple(
-                    will_message,
-                    filter=lambda attr, value: attr.name
-                    not in ["subscribed_topic", "timestamp"],
-                )
+                topic=will_message.topic,
+                payload=will_message.payload,
+                qos=will_message.qos,
+                retain=will_message.retain,
             )
 
     async def async_publish(
@@ -865,11 +864,10 @@ class MQTT:
             birth_message = Message(**self.conf[CONF_BIRTH_MESSAGE])
             self.hass.add_job(
                 self.async_publish(  # pylint: disable=no-value-for-parameter
-                    *attr.astuple(
-                        birth_message,
-                        filter=lambda attr, value: attr.name
-                        not in ["subscribed_topic", "timestamp"],
-                    )
+                    topic=birth_message.topic,
+                    payload=birth_message.payload,
+                    qos=birth_message.qos,
+                    retain=birth_message.retain,
                 )
             )
 
