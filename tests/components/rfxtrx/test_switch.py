@@ -3,9 +3,12 @@ from unittest.mock import call
 
 import pytest
 
+from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
 from . import _signal_event
+
+from tests.common import mock_restore_cache
 
 
 async def test_one_switch(hass, rfxtrx):
@@ -40,6 +43,24 @@ async def test_one_switch(hass, rfxtrx):
         call(bytearray(b"\x0b\x11\x00\x00\x02\x13\xc7\xf2\x10\x01\x00\x00")),
         call(bytearray(b"\x0b\x11\x00\x00\x02\x13\xc7\xf2\x10\x00\x00\x00")),
     ]
+
+
+@pytest.mark.parametrize("state", ["on", "off"])
+async def test_state_restore(hass, rfxtrx, state):
+    """State restoration."""
+
+    entity_id = "switch.ac_213c7f2_16"
+
+    mock_restore_cache(hass, [State(entity_id, state)])
+
+    assert await async_setup_component(
+        hass,
+        "rfxtrx",
+        {"rfxtrx": {"device": "abcd", "devices": {"0b1100cd0213c7f210010f51": {}}}},
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == state
 
 
 async def test_several_switches(hass, rfxtrx):
