@@ -716,7 +716,8 @@ class MQTT:
             self._mqttc.will_set(  # pylint: disable=no-value-for-parameter
                 *attr.astuple(
                     will_message,
-                    filter=lambda attr, value: attr.name != "subscribed_topic",
+                    filter=lambda attr, value: attr.name
+                    not in ["subscribed_topic", "timestamp"],
                 )
             )
 
