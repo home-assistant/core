@@ -145,8 +145,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
             hass.data[DOMAIN][department] = True
         else:
-            _LOGGER.info(
-                "Weather alert for departmen n°%s won't be added with city %s as it has already been added whitin another city",
+            _LOGGER.warning(
+                "Weather alert for department %s won't be added with city %, as it has already been added within another city",
                 department,
                 entry.title,
             )
