@@ -978,7 +978,6 @@ async def test_periodic_task_leaving_dst(hass):
 
     now = dt_util.utcnow()
 
-    now = dt_util.utcnow()
     time_that_will_not_match_right_away = timezone.localize(
         datetime(now.year + 1, 10, 28, 2, 28, 0), is_dst=True
     )
