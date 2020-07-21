@@ -18,6 +18,7 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     POWER_WATT,
 )
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -79,12 +80,14 @@ async def async_setup_platform(
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(30):
                 data = await envoy_reader.update()
                 _LOGGER.debug("Retrieved data from API: %s", data)
                 return data
         except httpcore.ProtocolError as err:
-            _LOGGER.warning("Error communicating with API: %s", err)
+            _LOGGER.error("Error communicating with API: %s", err)
+        except httpcore.ConnectTimeout as err:
+            _LOGGER.error("Timeout error with API: %s", err)
 
     coordinator = DataUpdateCoordinator(
         homeassistant,
@@ -98,6 +101,9 @@ async def async_setup_platform(
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
+
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady
 
     entities = []
     # Iterate through the list of sensors
