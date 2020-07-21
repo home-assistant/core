@@ -70,9 +70,7 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await validate_input(self.hass, self.auth)
-                return self.async_create_entry(
-                    title=DOMAIN, data=self.auth.login_attributes,
-                )
+                return await self.async_step_finish()
             except Require2FA:
                 return await self.async_step_2fa()
             except InvalidAuth:
@@ -99,7 +97,7 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if await self.hass.async_add_executor_job(
                     _send_blink_2fa_pin, self.auth, pin
                 ):
-                    return await self.async_step_user(user_input=self.data)
+                    return await self.async_step_finish()
                 errors["base"] = "invalid_access_token"
             except BlinkSetupError:
                 errors["base"] = "cannot_connect"
@@ -114,6 +112,10 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_finish(self):
+        """Finish with setup."""
+        return self.async_create_entry(title=DOMAIN, data=self.auth.login_attributes)
 
 
 class BlinkOptionsFlowHandler(config_entries.OptionsFlow):

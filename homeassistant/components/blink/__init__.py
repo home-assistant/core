@@ -1,5 +1,6 @@
 """Support for Blink Home Camera System."""
 import asyncio
+from copy import deepcopy
 import logging
 
 from blinkpy.auth import Auth
@@ -29,7 +30,7 @@ SERVICE_SEND_PIN_SCHEMA = vol.Schema({vol.Optional(CONF_PIN): cv.string})
 def _blink_startup_wrapper(entry):
     """Startup wrapper for blink."""
     blink = Blink()
-    blink.auth = Auth(entry.data, no_prompt=True)
+    blink.auth = Auth(deepcopy(dict(entry.data)), no_prompt=True)
     blink.refresh_rate = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     if blink.start():
