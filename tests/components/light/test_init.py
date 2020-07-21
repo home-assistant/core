@@ -258,7 +258,7 @@ class TestLight(unittest.TestCase):
         assert {
             light.ATTR_BRIGHTNESS: prof_bri,
             light.ATTR_HS_COLOR: (prof_h, prof_s),
-            light.ATTR_TRANSITION: (prof_t),
+            light.ATTR_TRANSITION: prof_t,
         } == data
 
         _, data = ent2.last_call("turn_on")
