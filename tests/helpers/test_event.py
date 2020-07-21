@@ -748,22 +748,24 @@ async def test_async_track_time_change(hass):
     wildcard_runs = []
     specific_runs = []
 
+    now = dt_util.utcnow()
+
     unsub = async_track_time_change(hass, lambda x: wildcard_runs.append(1))
     unsub_utc = async_track_utc_time_change(
         hass, lambda x: specific_runs.append(1), second=[0, 30]
     )
 
-    async_fire_time_changed(hass, datetime(2014, 5, 24, 12, 0, 0))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 1
 
-    async_fire_time_changed(hass, datetime(2014, 5, 24, 12, 0, 15))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 0, 15))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 2
 
-    async_fire_time_changed(hass, datetime(2014, 5, 24, 12, 0, 30))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 0, 30))
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
     assert len(wildcard_runs) == 3
@@ -771,7 +773,7 @@ async def test_async_track_time_change(hass):
     unsub()
     unsub_utc()
 
-    async_fire_time_changed(hass, datetime(2014, 5, 24, 12, 0, 30))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 0, 30))
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
     assert len(wildcard_runs) == 3
@@ -781,25 +783,27 @@ async def test_periodic_task_minute(hass):
     """Test periodic tasks per minute."""
     specific_runs = []
 
+    now = dt_util.utcnow()
+
     unsub = async_track_utc_time_change(
         hass, lambda x: specific_runs.append(1), minute="/5", second=0
     )
 
-    async_fire_time_changed(hass, datetime(2014, 5, 24, 12, 0, 0))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(hass, datetime(2014, 5, 24, 12, 3, 0))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 3, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(hass, datetime(2014, 5, 24, 12, 5, 0))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 5, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
     unsub()
 
-    async_fire_time_changed(hass, datetime(2014, 5, 24, 12, 5, 0))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 5, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
@@ -808,33 +812,35 @@ async def test_periodic_task_hour(hass):
     """Test periodic tasks per hour."""
     specific_runs = []
 
+    now = dt_util.utcnow()
+
     unsub = async_track_utc_time_change(
         hass, lambda x: specific_runs.append(1), hour="/2", minute=0, second=0
     )
 
-    async_fire_time_changed(hass, datetime(2014, 5, 24, 22, 0, 0))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 22, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(hass, datetime(2014, 5, 24, 23, 0, 0))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 23, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(hass, datetime(2014, 5, 25, 0, 0, 0))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 0, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
-    async_fire_time_changed(hass, datetime(2014, 5, 25, 1, 0, 0))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 1, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
-    async_fire_time_changed(hass, datetime(2014, 5, 25, 2, 0, 0))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 2, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 3
 
     unsub()
 
-    async_fire_time_changed(hass, datetime(2014, 5, 25, 2, 0, 0))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 2, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 3
 
@@ -843,12 +849,14 @@ async def test_periodic_task_wrong_input(hass):
     """Test periodic tasks with wrong input."""
     specific_runs = []
 
+    now = dt_util.utcnow()
+
     with pytest.raises(ValueError):
         async_track_utc_time_change(
             hass, lambda x: specific_runs.append(1), hour="/two"
         )
 
-    async_fire_time_changed(hass, datetime(2014, 5, 2, 0, 0, 0))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 2, 0, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
@@ -857,33 +865,37 @@ async def test_periodic_task_clock_rollback(hass):
     """Test periodic tasks with the time rolling backwards."""
     specific_runs = []
 
+    now = dt_util.utcnow()
+
     unsub = async_track_utc_time_change(
         hass, lambda x: specific_runs.append(1), hour="/2", minute=0, second=0
     )
 
-    async_fire_time_changed(hass, datetime(2014, 5, 24, 22, 0, 0))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 22, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(hass, datetime(2014, 5, 24, 23, 0, 0))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 23, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(hass, datetime(2014, 5, 24, 22, 0, 0))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 22, 0, 0), fire_all=True
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
-    async_fire_time_changed(hass, datetime(2014, 5, 24, 0, 0, 0))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 0, 0, 0), fire_all=True)
     await hass.async_block_till_done()
     assert len(specific_runs) == 3
 
-    async_fire_time_changed(hass, datetime(2014, 5, 25, 2, 0, 0))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 2, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 4
 
     unsub()
 
-    async_fire_time_changed(hass, datetime(2014, 5, 25, 2, 0, 0))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 2, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 4
 
@@ -892,19 +904,21 @@ async def test_periodic_task_duplicate_time(hass):
     """Test periodic tasks not triggering on duplicate time."""
     specific_runs = []
 
+    now = dt_util.utcnow()
+
     unsub = async_track_utc_time_change(
         hass, lambda x: specific_runs.append(1), hour="/2", minute=0, second=0
     )
 
-    async_fire_time_changed(hass, datetime(2014, 5, 24, 22, 0, 0))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 22, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(hass, datetime(2014, 5, 24, 22, 0, 0))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 22, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(hass, datetime(2014, 5, 25, 0, 0, 0))
+    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 0, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
@@ -917,23 +931,39 @@ async def test_periodic_task_entering_dst(hass):
     dt_util.set_default_time_zone(timezone)
     specific_runs = []
 
-    unsub = async_track_time_change(
-        hass, lambda x: specific_runs.append(1), hour=2, minute=30, second=0
+    now = dt_util.utcnow()
+    time_that_will_not_match_right_away = timezone.localize(
+        datetime(now.year + 1, 3, 25, 2, 31, 0)
     )
 
-    async_fire_time_changed(hass, timezone.localize(datetime(2018, 3, 25, 1, 50, 0)))
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        unsub = async_track_time_change(
+            hass, lambda x: specific_runs.append(1), hour=2, minute=30, second=0
+        )
+
+    async_fire_time_changed(
+        hass, timezone.localize(datetime(now.year + 1, 3, 25, 1, 50, 0))
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    async_fire_time_changed(hass, timezone.localize(datetime(2018, 3, 25, 3, 50, 0)))
+    async_fire_time_changed(
+        hass, timezone.localize(datetime(now.year + 1, 3, 25, 3, 50, 0))
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    async_fire_time_changed(hass, timezone.localize(datetime(2018, 3, 26, 1, 50, 0)))
+    async_fire_time_changed(
+        hass, timezone.localize(datetime(now.year + 1, 3, 26, 1, 50, 0))
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    async_fire_time_changed(hass, timezone.localize(datetime(2018, 3, 26, 2, 50, 0)))
+    async_fire_time_changed(
+        hass, timezone.localize(datetime(now.year + 1, 3, 26, 2, 50, 0))
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
@@ -946,30 +976,45 @@ async def test_periodic_task_leaving_dst(hass):
     dt_util.set_default_time_zone(timezone)
     specific_runs = []
 
-    unsub = async_track_time_change(
-        hass, lambda x: specific_runs.append(1), hour=2, minute=30, second=0
+    now = dt_util.utcnow()
+
+    time_that_will_not_match_right_away = timezone.localize(
+        datetime(now.year + 1, 10, 28, 2, 28, 0), is_dst=True
     )
 
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        unsub = async_track_time_change(
+            hass, lambda x: specific_runs.append(1), hour=2, minute=30, second=0
+        )
+
     async_fire_time_changed(
-        hass, timezone.localize(datetime(2018, 10, 28, 2, 5, 0), is_dst=False)
+        hass, timezone.localize(datetime(now.year + 1, 10, 28, 2, 5, 0), is_dst=False)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
     async_fire_time_changed(
-        hass, timezone.localize(datetime(2018, 10, 28, 2, 55, 0), is_dst=False)
+        hass, timezone.localize(datetime(now.year + 1, 10, 28, 2, 55, 0), is_dst=False)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
     async_fire_time_changed(
-        hass, timezone.localize(datetime(2018, 10, 28, 2, 5, 0), is_dst=True)
+        hass, timezone.localize(datetime(now.year + 2, 10, 28, 2, 45, 0), is_dst=True)
     )
     await hass.async_block_till_done()
-    assert len(specific_runs) == 1
+    assert len(specific_runs) == 2
 
     async_fire_time_changed(
-        hass, timezone.localize(datetime(2018, 10, 28, 2, 55, 0), is_dst=True)
+        hass, timezone.localize(datetime(now.year + 2, 10, 28, 2, 55, 0), is_dst=True)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 2
+
+    async_fire_time_changed(
+        hass, timezone.localize(datetime(now.year + 2, 10, 28, 2, 55, 0), is_dst=True)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
