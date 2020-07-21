@@ -20,7 +20,6 @@ from . import (
     get_device_id,
     get_rfx_object,
 )
-from .const import DATA_RFXTRX_CONFIG
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +56,7 @@ async def async_setup_entry(
     hass, config_entry, async_add_entities,
 ):
     """Set up platform."""
-    discovery_info = hass.data[DATA_RFXTRX_CONFIG]
+    discovery_info = config_entry.data
     data_ids = set()
 
     def supported(event):

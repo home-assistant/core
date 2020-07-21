@@ -29,7 +29,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     ATTR_EVENT,
-    DATA_RFXTRX_CONFIG,
     DEVICE_PACKET_TYPE_LIGHTING4,
     EVENT_RFXTRX_EVENT,
     SERVICE_SEND,
@@ -105,7 +104,9 @@ DEVICE_DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-        vol.Optional(CONF_OFF_DELAY): vol.Any(cv.time_period, cv.positive_timedelta),
+        vol.Optional(CONF_OFF_DELAY): vol.All(
+            cv.time_period, cv.positive_timedelta, lambda value: value.total_seconds()
+        ),
         vol.Optional(CONF_DATA_BITS): cv.positive_int,
         vol.Optional(CONF_COMMAND_ON): cv.byte,
         vol.Optional(CONF_COMMAND_OFF): cv.byte,
@@ -135,21 +136,20 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the RFXtrx component."""
     if DOMAIN not in config:
-        hass.data[DATA_RFXTRX_CONFIG] = BASE_SCHEMA({})
         return True
 
-    hass.data[DATA_RFXTRX_CONFIG] = config[DOMAIN]
+    data = {
+        CONF_HOST: config[DOMAIN].get(CONF_HOST),
+        CONF_PORT: config[DOMAIN].get(CONF_PORT),
+        CONF_DEVICE: config[DOMAIN].get(CONF_DEVICE),
+        CONF_DEBUG: config[DOMAIN].get(CONF_DEBUG),
+        CONF_AUTOMATIC_ADD: config[DOMAIN].get(CONF_AUTOMATIC_ADD),
+        CONF_DEVICES: config[DOMAIN][CONF_DEVICES],
+    }
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_HOST: config[DOMAIN].get(CONF_HOST),
-                CONF_PORT: config[DOMAIN].get(CONF_PORT),
-                CONF_DEVICE: config[DOMAIN].get(CONF_DEVICE),
-                CONF_DEBUG: config[DOMAIN][CONF_DEBUG],
-            },
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data,
         )
     )
     return True
@@ -169,11 +169,10 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
 
 def setup_internal(hass, config):
     """Set up the RFXtrx component."""
-
     # Setup some per device config
     device_events = set()
     device_bits = {}
-    for event_code, event_config in hass.data[DATA_RFXTRX_CONFIG][CONF_DEVICES].items():
+    for event_code, event_config in config[CONF_DEVICES].items():
         event = get_rfx_object(event_code)
         device_id = get_device_id(
             event.device, data_bits=event_config.get(CONF_DATA_BITS)
