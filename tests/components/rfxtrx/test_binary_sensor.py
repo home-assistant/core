@@ -8,8 +8,6 @@ from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from . import _signal_event
-
 from tests.common import async_fire_time_changed, mock_restore_cache
 
 
@@ -54,11 +52,11 @@ async def test_one_pt2262(hass, rfxtrx):
     assert state.state == "off"  # probably aught to be unknown
     assert state.attributes.get("friendly_name") == "PT2262 22670e"
 
-    await _signal_event(hass, "0913000022670e013970")
+    await rfxtrx.signal("0913000022670e013970")
     state = hass.states.get("binary_sensor.pt2262_22670e")
     assert state.state == "on"
 
-    await _signal_event(hass, "09130000226707013d70")
+    await rfxtrx.signal("09130000226707013d70")
     state = hass.states.get("binary_sensor.pt2262_22670e")
     assert state.state == "off"
 
@@ -138,12 +136,12 @@ async def test_discover(hass, rfxtrx):
     await hass.async_block_till_done()
     await hass.async_start()
 
-    await _signal_event(hass, "0b1100100118cdea02010f70")
+    await rfxtrx.signal("0b1100100118cdea02010f70")
     state = hass.states.get("binary_sensor.ac_118cdea_2")
     assert state
     assert state.state == "on"
 
-    await _signal_event(hass, "0b1100100118cdeb02010f70")
+    await rfxtrx.signal("0b1100100118cdeb02010f70")
     state = hass.states.get("binary_sensor.ac_118cdeb_2")
     assert state
     assert state.state == "on"
@@ -168,7 +166,7 @@ async def test_off_delay(hass, rfxtrx):
     assert state
     assert state.state == "off"
 
-    await _signal_event(hass, "0b1100100118cdea02010f70")
+    await rfxtrx.signal("0b1100100118cdea02010f70")
     state = hass.states.get("binary_sensor.ac_118cdea_2")
     assert state
     assert state.state == "on"
