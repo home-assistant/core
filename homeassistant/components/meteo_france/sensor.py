@@ -54,7 +54,7 @@ async def async_setup_entry(
             if coordinator_forecast.data.probability_forecast:
                 entities.append(MeteoFranceSensor(sensor_type, coordinator_forecast))
             else:
-                _LOGGER.info(
+                _LOGGER.warning(
                     "Sensor %s skipped for %s as data is missing in the API",
                     sensor_type,
                     coordinator_forecast.data.position["name"],
