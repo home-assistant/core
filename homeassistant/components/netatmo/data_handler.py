@@ -26,6 +26,8 @@ HOMEDATA_DATA_CLASS_NAME = "HomeData"
 HOMESTATUS_DATA_CLASS_NAME = "HomeStatus"
 PUBLICDATA_DATA_CLASS_NAME = "PublicData"
 
+NEXT_SCAN = "next_scan"
+
 DATA_CLASSES = {
     WEATHERSTATION_DATA_CLASS_NAME: pyatmo.WeatherStationData,
     HOMECOACH_DATA_CLASS_NAME: pyatmo.HomeCoachData,
@@ -82,9 +84,9 @@ class NetatmoDataHandler:
         to minimize the calls on the api service.
         """
         for data_class in islice(self._queue, 0, BATCH_SIZE):
-            if data_class["next_scan"] > time():
+            if data_class[NEXT_SCAN] > time():
                 continue
-            self._data_classes[data_class["name"]]["next_scan"] = (
+            self._data_classes[data_class["name"]][NEXT_SCAN] = (
                 time() + data_class["interval"]
             )
 
@@ -104,6 +106,10 @@ class NetatmoDataHandler:
         if event.data["data"]["push_type"] == "webhook_activation":
             _LOGGER.info("%s webhook successfully registered", MANUFACTURER)
             self._webhook = True
+
+        elif event.data["data"]["push_type"] == "NACamera-connection":
+            _LOGGER.debug("%s camera reconnected", MANUFACTURER)
+            self._data_classes[CAMERA_DATA_CLASS_NAME][NEXT_SCAN] = time()
 
     async def async_fetch_data(self, data_class, data_class_entry, **kwargs):
         """Fetch data and notify."""
@@ -130,7 +136,7 @@ class NetatmoDataHandler:
                     "class": DATA_CLASSES[data_class_name],
                     "name": data_class_entry,
                     "interval": DEFAULT_INTERVALS[data_class_name],
-                    "next_scan": time() + DEFAULT_INTERVALS[data_class_name],
+                    NEXT_SCAN: time() + DEFAULT_INTERVALS[data_class_name],
                     "kwargs": kwargs,
                     "registered": 1,
                 }
