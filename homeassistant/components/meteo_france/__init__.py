@@ -119,7 +119,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         if not coordinator_rain.last_update_success:
             raise ConfigEntryNotReady
     else:
-        _LOGGER.info(
+        _LOGGER.warning(
             "1 hour rain forecast not available. %s is not in covered zone",
             entry.title,
         )
