@@ -86,7 +86,9 @@ omit =
     homeassistant/components/asuswrt/__init__.py
     homeassistant/components/asuswrt/diagnostics.py
     homeassistant/components/asuswrt/router.py
-    homeassistant/components/aten_pe/*
+    homeassistant/components/aten_pe/__init__.py
+    homeassistant/components/aten_pe/const.py
+    homeassistant/components/aten_pe/switch.py
     homeassistant/components/atome/*
     homeassistant/components/aurora/__init__.py
     homeassistant/components/aurora/binary_sensor.py

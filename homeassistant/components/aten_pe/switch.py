@@ -11,6 +11,7 @@ from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -20,14 +21,17 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    CONF_AUTH_KEY,
+    CONF_COMMUNITY,
+    CONF_PRIV_KEY,
+    DEFAULT_COMMUNITY,
+    DEFAULT_PORT,
+    DEFAULT_USERNAME,
+    DOMAIN,
+)
 
-CONF_AUTH_KEY = "auth_key"
-CONF_COMMUNITY = "community"
-CONF_PRIV_KEY = "priv_key"
-DEFAULT_COMMUNITY = "private"
-DEFAULT_PORT = "161"
-DEFAULT_USERNAME = "administrator"
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -47,7 +51,18 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
+    """Import YAML configuration when available."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
+        )
+    )
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the ATEN PE switch."""
+    config = entry.data
+
     node = config[CONF_HOST]
     serv = config[CONF_PORT]
 
@@ -84,6 +99,7 @@ async def async_setup_platform(
         switches.append(AtenSwitch(dev, info, mac, outlet.id, outlet.name))
 
     async_add_entities(switches, True)
+    return True
 
 
 class AtenSwitch(SwitchEntity):

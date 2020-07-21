@@ -1,0 +1,8 @@
+"""Constants for aten_pe."""
+CONF_AUTH_KEY = "auth_key"
+CONF_COMMUNITY = "community"
+CONF_PRIV_KEY = "priv_key"
+DEFAULT_COMMUNITY = "private"
+DEFAULT_PORT = "161"
+DEFAULT_USERNAME = "administrator"
+DOMAIN = "aten_pe"
