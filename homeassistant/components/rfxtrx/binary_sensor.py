@@ -24,7 +24,12 @@ from . import (
     get_pt2262_cmd,
     get_rfx_object,
 )
-from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST, DEVICE_PACKET_TYPE_LIGHTING4
+from .const import (
+    ATTR_EVENT,
+    COMMAND_OFF_LIST,
+    COMMAND_ON_LIST,
+    DEVICE_PACKET_TYPE_LIGHTING4,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -123,6 +128,17 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
         self._delay_listener = None
         self._cmd_on = cmd_on
         self._cmd_off = cmd_off
+
+    async def async_added_to_hass(self):
+        """Restore device state."""
+        await super().async_added_to_hass()
+
+        if self._event is None:
+            old_state = await self.async_get_last_state()
+            if old_state is not None:
+                event = old_state.attributes.get(ATTR_EVENT)
+                if event:
+                    self._apply_event(get_rfx_object(event))
 
     @property
     def force_update(self) -> bool:
