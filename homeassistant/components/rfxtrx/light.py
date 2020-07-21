@@ -8,7 +8,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     LightEntity,
 )
-from homeassistant.const import CONF_DEVICES
+from homeassistant.const import CONF_DEVICES, STATE_ON
 from homeassistant.core import callback
 
 from . import (
@@ -96,6 +96,16 @@ class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
     """Representation of a RFXtrx light."""
 
     _brightness = 0
+
+    async def async_added_to_hass(self):
+        """Restore RFXtrx device state (ON/OFF)."""
+        await super().async_added_to_hass()
+
+        if self._event is None:
+            old_state = await self.async_get_last_state()
+            if old_state is not None:
+                self._state = old_state.state == STATE_ON
+                self._brightness = old_state.attributes.get(ATTR_BRIGHTNESS)
 
     @property
     def brightness(self):
