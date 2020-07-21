@@ -26,6 +26,9 @@
                 "title": "Hub Link"
             },
             "manual": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP"
+                },
                 "title": "R\u0119czna konfiguracja mostu Hue"
             }
         }

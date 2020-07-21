@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+        },
         "flow_title": "Konfiguracja ENOcean",
         "step": {
             "detect": {
