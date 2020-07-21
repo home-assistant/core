@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.components.cover import CoverEntity
-from homeassistant.const import CONF_DEVICES
+from homeassistant.const import CONF_DEVICES, STATE_OPEN
 from homeassistant.core import callback
 
 from . import (
@@ -80,6 +80,15 @@ async def async_setup_entry(
 
 class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
     """Representation of a RFXtrx cover."""
+
+    async def async_added_to_hass(self):
+        """Restore device state."""
+        await super().async_added_to_hass()
+
+        if self._event is None:
+            old_state = await self.async_get_last_state()
+            if old_state is not None:
+                self._state = old_state.state == STATE_OPEN
 
     @property
     def is_closed(self):

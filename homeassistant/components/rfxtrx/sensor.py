@@ -20,6 +20,7 @@ from . import (
     get_device_id,
     get_rfx_object,
 )
+from .const import ATTR_EVENT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,6 +125,17 @@ class RfxtrxSensor(RfxtrxEntity):
 
         self._device_class = DEVICE_CLASSES.get(data_type)
         self._convert_fun = CONVERT_FUNCTIONS.get(data_type, lambda x: x)
+
+    async def async_added_to_hass(self):
+        """Restore device state."""
+        await super().async_added_to_hass()
+
+        if self._event is None:
+            old_state = await self.async_get_last_state()
+            if old_state is not None:
+                event = old_state.attributes.get(ATTR_EVENT)
+                if event:
+                    self._apply_event(get_rfx_object(event))
 
     @property
     def state(self):
