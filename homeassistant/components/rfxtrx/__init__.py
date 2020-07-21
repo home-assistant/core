@@ -175,8 +175,6 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
 
 async def async_unload_entry(hass, entry: config_entries.ConfigEntry):
     """Unload RFXtrx component."""
-    await hass.async_add_executor_job(unload_internal, hass, entry.data)
-
     unload_ok = all(
         await asyncio.gather(
             *[
@@ -185,6 +183,8 @@ async def async_unload_entry(hass, entry: config_entries.ConfigEntry):
             ]
         )
     )
+
+    await hass.async_add_executor_job(unload_internal, hass, entry.data)
 
     if unload_ok:
         hass.data.pop(DOMAIN)
