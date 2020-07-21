@@ -30,21 +30,30 @@ def setup_comp(hass):
 
 async def test_if_fires_using_at(hass, calls):
     """Test for firing at."""
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {"platform": "time", "at": "5:00:00"},
-                "action": {
-                    "service": "test.automation",
-                    "data_template": {
-                        "some": "{{ trigger.platform }} - {{ trigger.now.hour }}"
-                    },
-                },
-            }
-        },
+    now = dt_util.utcnow()
+
+    time_that_will_not_match_right_away = now.replace(
+        year=now.year + 1, hour=4, minute=59, second=0
     )
+
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "trigger": {"platform": "time", "at": "5:00:00"},
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "{{ trigger.platform }} - {{ trigger.now.hour }}"
+                        },
+                    },
+                }
+            },
+        )
 
     now = dt_util.utcnow()
 
@@ -62,23 +71,34 @@ async def test_if_not_fires_using_wrong_at(hass, calls):
 
     This should break the before rule.
     """
-    with assert_setup_component(0, automation.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            automation.DOMAIN,
-            {
-                automation.DOMAIN: {
-                    "trigger": {
-                        "platform": "time",
-                        "at": 3605,
-                        # Total seconds. Hour = 3600 second
-                    },
-                    "action": {"service": "test.automation"},
-                }
-            },
-        )
+    now = dt_util.utcnow()
 
-    async_fire_time_changed(hass, dt_util.utcnow().replace(hour=1, minute=0, second=5))
+    time_that_will_not_match_right_away = now.replace(
+        year=now.year + 1, hour=1, minute=0, second=0
+    )
+
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        with assert_setup_component(0, automation.DOMAIN):
+            assert await async_setup_component(
+                hass,
+                automation.DOMAIN,
+                {
+                    automation.DOMAIN: {
+                        "trigger": {
+                            "platform": "time",
+                            "at": 3605,
+                            # Total seconds. Hour = 3600 second
+                        },
+                        "action": {"service": "test.automation"},
+                    }
+                },
+            )
+
+    async_fire_time_changed(
+        hass, now.replace(year=now.year + 1, hour=1, minute=0, second=5)
+    )
 
     await hass.async_block_till_done()
     assert len(calls) == 0
