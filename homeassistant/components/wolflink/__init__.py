@@ -1,5 +1,5 @@
 """The Wolf SmartSet Service integration."""
-from _datetime import timedelta
+from datetime import timedelta
 import logging
 
 from httpcore import ConnectError
