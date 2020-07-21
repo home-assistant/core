@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Only a single configuration of ComfoAir is allowed."
+        },
+        "error": {
+            "cannot_connect": "Unable to connect to ComfoAir device."
+        },
+        "step": {
+            "port_config": {
+                "data": {
+                    "name": "Name",
+                    "serial_port": "Serial device path"
+                },
+                "description": "Enter port specific settings",
+                "title": "Settings"
+            },
+            "user": {
+                "data": {
+                    "name": "Name",
+                    "serial_port": "Serial device path"
+                },
+                "description": "Select serial port",
+                "title": "ComfoAir"
+            }
+        }
+    }
+}

@@ -1,0 +1,5 @@
+"""Constants shared by ComfoAir modules."""
+CONF_SERIAL_PORT = "serial_port"
+DEFAULT_NAME = "ComfoAir"
+DEFAULT_PORT = "/dev/ttyUSB0"
+DOMAIN = "comfoair"

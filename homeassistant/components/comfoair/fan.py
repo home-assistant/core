@@ -1,6 +1,6 @@
 """Platform to control a Zehnder ComfoAir 350 ventilation unit."""
 import logging
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from comfoair.asyncio import ComfoAir
 
@@ -12,9 +12,11 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DOMAIN, ComfoAirModule
+from . import ComfoAirModule
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,13 +24,14 @@ SPEED_MAPPING = {1: SPEED_OFF, 2: SPEED_LOW, 3: SPEED_MEDIUM, 4: SPEED_HIGH}
 SPEED_VALUES = list(SPEED_MAPPING.values())
 
 
-async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
-) -> None:
-    """Set up the ComfoAir fan platform."""
+async def async_setup_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
+) -> bool:
+    """Set up the ComfoAir fan config entry."""
     unit = hass.data[DOMAIN]
 
     async_add_entities([ComfoAirFan(ca=unit)], True)
+    return True
 
 
 class ComfoAirFan(FanEntity):
@@ -40,11 +43,12 @@ class ComfoAirFan(FanEntity):
         self._numeric_speed = 1
         self._poweron_speed = SPEED_LOW
         self._attr = ComfoAir.FAN_SPEED_MODE
+        self._handler = None
 
     async def async_added_to_hass(self):
         """Register for sensor updates."""
 
-        async def async_handle_update(attr, value):
+        async def _async_handle_update(attr, value):
             _LOGGER.debug("Dispatcher update for %s: %s", attr, value)
             assert attr == self._attr
             if value in SPEED_MAPPING:
@@ -53,7 +57,12 @@ class ComfoAirFan(FanEntity):
                     self._poweron_speed = self.speed
             self.async_schedule_update_ha_state()
 
-        self._ca.add_cooked_listener(self._attr, async_handle_update)
+        self._handler = _async_handle_update
+        self._ca.add_cooked_listener(self._attr, self._handler)
+
+    async def async_will_remove_from_hass(self):
+        """Unregister sensor updates."""
+        self._ca.remove_cooked_listener(self._attr, self._handler)
 
     @property
     def should_poll(self) -> bool:
@@ -104,3 +113,8 @@ class ComfoAirFan(FanEntity):
                 break
         else:
             _LOGGER.warning("Invalid fan speed: %s", speed)
+
+    @property
+    def device_info(self) -> Optional[Dict[str, Any]]:
+        """Return device specific attributes."""
+        return self._ca.device_info

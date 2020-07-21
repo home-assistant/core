@@ -31,6 +31,7 @@ FLOWS = [
     "bsblan",
     "cast",
     "cert_expiry",
+    "comfoair",
     "control4",
     "coolmaster",
     "coronavirus",
