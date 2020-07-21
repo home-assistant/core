@@ -72,11 +72,7 @@ async def async_setup_platform(
     envoy_reader = EnvoyReader(ip_address, username, password)
 
     async def async_update_data():
-        """Fetch data from API endpoint.
-
-        This is the place to pre-process the data to lookup tables
-        so entities can quickly look up their data.
-        """
+        """Fetch data from API endpoint."""
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
@@ -92,7 +88,6 @@ async def async_setup_platform(
     coordinator = DataUpdateCoordinator(
         homeassistant,
         _LOGGER,
-        # Name of the data. For logging purposes.
         name="sensor",
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
