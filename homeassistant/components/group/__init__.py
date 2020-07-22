@@ -39,6 +39,7 @@ from homeassistant.loader import bind_hass
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 DOMAIN = "group"
+GROUP_ORDER = "group_order"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -407,15 +408,22 @@ class Group(Entity):
 
         This method must be run in the event loop.
         """
+        hass.data.setdefault(GROUP_ORDER, 0)
+
         group = Group(
             hass,
             name,
-            order=len(hass.states.async_entity_ids(DOMAIN)),
+            order=hass.data[GROUP_ORDER],
             icon=icon,
             user_defined=user_defined,
             entity_ids=entity_ids,
             mode=mode,
         )
+
+        # Keep track of the group order without iterating
+        # every state in the state machine every time
+        # we setup a new group
+        hass.data[GROUP_ORDER] += 1
 
         group.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id or name, hass=hass
