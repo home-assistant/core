@@ -229,7 +229,7 @@ def setup_internal(hass, config):
             "sub_type": event.device.subtype,
             "type_string": event.device.type_string,
             "id_string": event.device.id_string,
-            "data": "".join(f"{x:02x}" for x in event.data),
+            "data": binascii.hexlify(event.data).decode("ASCII"),
             "values": getattr(event, "values", None),
         }
 
@@ -375,7 +375,7 @@ def get_device_id(device, data_bits=None):
     if data_bits and device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
         masked_id = get_pt2262_deviceid(id_string, data_bits)
         if masked_id:
-            id_string = str(masked_id)
+            id_string = masked_id.decode("ASCII")
 
     return (f"{device.packettype:x}", f"{device.subtype:x}", id_string)
 
