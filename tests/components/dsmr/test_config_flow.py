@@ -141,10 +141,6 @@ async def test_config_flow_manual_usb_success(hass, mock_connection_factory):
 
     await hass.async_block_till_done()
 
-    conf_entries = hass.config_entries.async_entries(DOMAIN)
-    await hass.config_entries.async_unload(conf_entries[0].entry_id)
-    await hass.async_block_till_done()
-
 
 async def test_config_flow_manual_host_success(hass, mock_connection_factory):
     """
@@ -202,10 +198,6 @@ async def test_config_flow_manual_host_success(hass, mock_connection_factory):
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
     }
 
-    await hass.async_block_till_done()
-
-    conf_entries = hass.config_entries.async_entries(DOMAIN)
-    await hass.config_entries.async_unload(conf_entries[0].entry_id)
     await hass.async_block_till_done()
 
 
@@ -445,10 +437,6 @@ async def test_config_flow_manual_usb_no_gas(hass, mock_connection_factory):
     assert not registry.async_is_registered("sensor.gas_consumption")
     assert not registry.async_is_registered("sensor.hourly_gas_consumption")
 
-    conf_entries = hass.config_entries.async_entries(DOMAIN)
-    await hass.config_entries.async_unload(conf_entries[0].entry_id)
-    await hass.async_block_till_done()
-
 
 async def test_config_flow_manual_usb_already_configured(hass, mock_connection_factory):
     """
@@ -531,10 +519,6 @@ async def test_config_flow_manual_usb_already_configured(hass, mock_connection_f
     assert result["type"] == "form"
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {"base": "already_configured"}
-
-    conf_entries = hass.config_entries.async_entries(DOMAIN)
-    await hass.config_entries.async_unload(conf_entries[0].entry_id)
-    await hass.async_block_till_done()
 
 
 async def test_config_flow_manual_host_already_configured(
@@ -620,7 +604,3 @@ async def test_config_flow_manual_host_already_configured(
     assert result["type"] == "form"
     assert result["step_id"] == "setup_host"
     assert result["errors"] == {"base": "already_configured"}
-
-    conf_entries = hass.config_entries.async_entries(DOMAIN)
-    await hass.config_entries.async_unload(conf_entries[0].entry_id)
-    await hass.async_block_till_done()

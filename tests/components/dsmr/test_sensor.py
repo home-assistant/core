@@ -185,9 +185,6 @@ async def test_default_setup(hass, mock_connection_factory):
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get("unit_of_measurement") == VOLUME_CUBIC_METERS
 
-    await hass.config_entries.async_unload(mock_entry.entry_id)
-    await hass.async_block_till_done()
-
 
 async def test_power_in_watt(hass, mock_connection_factory):
     """Test the setup with power in watt."""
@@ -285,9 +282,6 @@ async def test_power_in_watt(hass, mock_connection_factory):
 
     assert entry
     assert entry.unique_id
-
-    await hass.config_entries.async_unload(mock_entry.entry_id)
-    await hass.async_block_till_done()
 
 
 async def test_derivative():
@@ -388,9 +382,6 @@ async def test_v4_meter(hass, mock_connection_factory):
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get("unit_of_measurement") == VOLUME_CUBIC_METERS
 
-    await hass.config_entries.async_unload(mock_entry.entry_id)
-    await hass.async_block_till_done()
-
 
 async def test_v5_meter(hass, mock_connection_factory):
     """Test if v5 meter is correctly parsed."""
@@ -449,9 +440,6 @@ async def test_v5_meter(hass, mock_connection_factory):
     gas_consumption = hass.states.get("sensor.gas_consumption")
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get("unit_of_measurement") == VOLUME_CUBIC_METERS
-
-    await hass.config_entries.async_unload(mock_entry.entry_id)
-    await hass.async_block_till_done()
 
 
 async def test_belgian_meter(hass, mock_connection_factory):
@@ -512,9 +500,6 @@ async def test_belgian_meter(hass, mock_connection_factory):
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get("unit_of_measurement") == VOLUME_CUBIC_METERS
 
-    await hass.config_entries.async_unload(mock_entry.entry_id)
-    await hass.async_block_till_done()
-
 
 async def test_belgian_meter_low(hass, mock_connection_factory):
     """Test if Belgian meter is correctly parsed."""
@@ -558,9 +543,6 @@ async def test_belgian_meter_low(hass, mock_connection_factory):
     assert power_tariff.state == "low"
     assert power_tariff.attributes.get("unit_of_measurement") == ""
 
-    await hass.config_entries.async_unload(mock_entry.entry_id)
-    await hass.async_block_till_done()
-
 
 async def test_tcp(hass, mock_connection_factory):
     """If proper config provided TCP connection should be made."""
@@ -589,9 +571,6 @@ async def test_tcp(hass, mock_connection_factory):
 
     assert connection_factory.call_args_list[0][0][0] == "localhost"
     assert connection_factory.call_args_list[0][0][1] == "1234"
-
-    await hass.config_entries.async_unload(mock_entry.entry_id)
-    await hass.async_block_till_done()
 
 
 async def test_connection_errors_retry(hass, monkeypatch, mock_connection_factory):
@@ -631,9 +610,6 @@ async def test_connection_errors_retry(hass, monkeypatch, mock_connection_factor
     # wait for sleep to resolve
     await hass.async_block_till_done()
     assert first_fail_connection_factory.call_count >= 2, "connecting not retried"
-
-    await hass.config_entries.async_unload(mock_entry.entry_id)
-    await hass.async_block_till_done()
 
 
 async def test_reconnect(hass, monkeypatch, mock_connection_factory):
@@ -686,5 +662,4 @@ async def test_reconnect(hass, monkeypatch, mock_connection_factory):
     # setting it so teardown can be successful
     closed.set()
 
-    await hass.config_entries.async_unload(mock_entry.entry_id)
     await hass.async_block_till_done()

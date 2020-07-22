@@ -14,11 +14,12 @@ from homeassistant.const import (
     CONF_FORCE_UPDATE,
     CONF_HOST,
     CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
     POWER_KILO_WATT,
     POWER_WATT,
     TIME_HOURS,
 )
-from homeassistant.core import callback
+from homeassistant.core import CoreState, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -157,8 +158,21 @@ async def async_setup_entry(
                 transport, protocol = await hass.loop.create_task(reader_factory())
 
                 if transport:
+                    # Register listener to close transport on HA shutdown
+                    stop_listener = hass.bus.async_listen_once(
+                        EVENT_HOMEASSISTANT_STOP, transport.close
+                    )
+
                     # Wait for reader to close
                     await protocol.wait_closed()
+
+                if hass.state == CoreState.stopping:
+                    return
+
+                # Unexpected disconnect
+                if transport:
+                    # remove listener
+                    stop_listener()
 
                 transport = None
                 protocol = None
@@ -182,6 +196,9 @@ async def async_setup_entry(
                 transport = None
                 protocol = None
             except CancelledError:
+                if stop_listener:
+                    stop_listener()
+
                 if transport:
                     transport.close()
 
