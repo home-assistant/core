@@ -4,6 +4,7 @@ import json
 
 base_url = "https://xapi.us"
 
+
 class XboxApi:
     # XboxApi key
     api_key = ""
@@ -91,20 +92,16 @@ class XboxApi:
 
     def send_message(self, message, xuids=[]):
         """Send a message to a set of user(s)"""
-        headers = {
-            "X-AUTH": self.api_key,
-            "Content-Type": "application/json"
-        }
+        headers = {"X-AUTH": self.api_key, "Content-Type": "application/json"}
 
-        payload = {
-            "message": message,
-            "to": []
-        }
+        payload = {"message": message, "to": []}
 
         for xuid in xuids:
             payload["to"].append(xuid)
 
-        res = requests.post(base_url + "/v2/messages", headers=headers, data=json.dumps(payload))
+        res = requests.post(
+            base_url + "/v2/messages", headers=headers, data=json.dumps(payload)
+        )
         res.json()
 
     def request(self, url):
