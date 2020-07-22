@@ -18,7 +18,6 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     POWER_WATT,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -73,38 +72,44 @@ async def async_setup_platform(
 
     async def async_update_data():
         """Fetch data from API endpoint."""
-        try:
-            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
-            # handled by the data update coordinator.
-            async with async_timeout.timeout(30):
-                data = await envoy_reader.update()
+        async with async_timeout.timeout(30):
+            i = 0
+            while i < 2:
+                try:
+                    data = await envoy_reader.update()
+                except httpcore.ProtocolError as err:
+                    _LOGGER.error("Error communicating with API: %s", err)
+                    break
+                except httpcore.ConnectTimeout as err:
+                    _LOGGER.error("Timeout error with API: %s", err)
+                    break
+
                 _LOGGER.debug("Retrieved data from API: %s", data)
+
                 if "can't handle event type ConnectionClosed" in str(
                     data.get("inverters_production")
                 ):
-                    _LOGGER.warning(
-                        "Communication error with Enphase Envoy.  Will retrieve data on the next poll."
-                    )
-                return data
-        except httpcore.ProtocolError as err:
-            _LOGGER.error("Error communicating with API: %s", err)
-        except httpcore.ConnectTimeout as err:
-            _LOGGER.error("Timeout error with API: %s", err)
+                    _LOGGER.debug("Retry polling Envoy.  Previous attempt failed.")
+                    i += 1
+                else:
+                    _LOGGER.debug("Returning API data.")
+                    return data
+
+            # After 3 communication errors log the message and wait
+            # for the next polling cycle
+            _LOGGER.warning(
+                "Communication error with Enphase Envoy.  Will retrieve data on the next poll."
+            )
 
     coordinator = DataUpdateCoordinator(
         homeassistant,
         _LOGGER,
         name="sensor",
         update_method=async_update_data,
-        # Polling interval. Will only be polled if there are subscribers.
         update_interval=timedelta(seconds=30),
     )
 
-    # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
 
     entities = []
     # Iterate through the list of sensors
@@ -225,7 +230,10 @@ class Envoy(Entity):
                     isinstance(self.coordinator.data.get(self._type), int),
                 )
 
-        elif self._type == "inverters":
+        elif (
+            self._type == "inverters"
+            and self.coordinator.data.get("inverters_production") is not None
+        ):
             serial_number = self._name.split(" ")[2]
             if isinstance(self.coordinator.data.get("inverters_production"), dict):
                 self._state = self.coordinator.data.get("inverters_production").get(
