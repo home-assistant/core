@@ -1,8 +1,9 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import TEMP_FAHRENHEIT, UNIT_PERCENTAGE
+from homeassistant.helpers.entity import Entity
+
 from .const import DOMAIN
 
 PERCENT_UNITS = [UNIT_PERCENTAGE, UNIT_PERCENTAGE]
@@ -28,7 +29,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     for backyard in coordinator.data:
-        for bow in backyard["Telemetry"][0]["BOWS"]:
+        for bow in backyard["BOWS"]:
 
             sensors = [
                 OmnilogicSensor(
@@ -83,23 +84,21 @@ class OmnilogicSensor(Entity):
         await self.coordinator.async_request_refresh()
 
         if self._kind == "pool_temperature":
-            self._state = self.coordinator.data[0]["Telemetry"][0]["BOWS"][0].get(
-                "waterTemp"
-            )
+            self._state = self.coordinator.data[0]["BOWS"][0].get("waterTemp")
         elif self._kind == "pump_speed":
-            self._state = self.coordinator.data[0]["Telemetry"][0]["BOWS"][0][
-                "Filter"
-            ].get("filterSpeed")
+            self._state = self.coordinator.data[0]["BOWS"][0]["Filter"].get(
+                "filterSpeed"
+            )
         elif self._kind == "salt_level":
-            self._state = self.coordinator.data[0]["Telemetry"][0]["BOWS"][0][
-                "Chlorinator"
-            ].get("avgSaltLevel")
+            self._state = self.coordinator.data[0]["BOWS"][0]["Chlorinator"].get(
+                "avgSaltLevel"
+            )
         elif self._kind == "pool_chlorinator":
-            self._state = self.coordinator.data[0]["Telemetry"][0]["BOWS"][0][
-                "Chlorinator"
-            ].get("Timed-Percent")
+            self._state = self.coordinator.data[0][0]["BOWS"][0]["Chlorinator"].get(
+                "Timed-Percent"
+            )
         elif self._kind == "air_temperature":
-            self._state = self.coordinator.data[0]["Telemetry"][0].get("airTemp")
+            self._state = self.coordinator.data[0].get("airTemp")
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
