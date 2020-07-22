@@ -59,12 +59,8 @@ class HassEventLoopPolicy(PolicyBase):  # type: ignore
 
         executor = ThreadPoolExecutor(thread_name_prefix="SyncWorker")
         loop.set_default_executor(executor)
-        setattr(
-            loop,
-            "set_default_executor",
-            warn_use(
-                loop.set_default_executor, "sets default executor on the event loop"
-            ),
+        loop.set_default_executor = warn_use(  # type: ignore
+            loop.set_default_executor, "sets default executor on the event loop"
         )
 
         # Python 3.9+
