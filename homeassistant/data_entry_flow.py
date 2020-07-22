@@ -111,8 +111,6 @@ class FlowManager(abc.ABC):
         if context is None:
             context = {}
 
-        _LOGGER.error("flow.async_init: handler=%s data=%s", handler, data)
-
         init_done: asyncio.Future = asyncio.Future()
         self._initializing.setdefault(handler, []).append(init_done)
 
