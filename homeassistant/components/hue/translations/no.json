@@ -47,5 +47,15 @@
             "remote_double_button_long_press": "Begge \" {subtype} \" utgitt etter lang trykk",
             "remote_double_button_short_press": "Begge \" {subtype} \" utgitt"
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_how_groups": "Tillat Hue-grupper",
+                    "allow_hue_groups": "Tillat Hue-grupper"
+                }
+            }
+        }
     }
 }

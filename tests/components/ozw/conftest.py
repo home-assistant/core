@@ -27,6 +27,18 @@ def light_data_fixture():
     return load_fixture("ozw/light_network_dump.csv")
 
 
+@pytest.fixture(name="cover_data", scope="session")
+def cover_data_fixture():
+    """Load cover MQTT data and return it."""
+    return load_fixture("ozw/cover_network_dump.csv")
+
+
+@pytest.fixture(name="cover_gdo_data", scope="session")
+def cover_gdo_data_fixture():
+    """Load cover_gdo MQTT data and return it."""
+    return load_fixture("ozw/cover_gdo_network_dump.csv")
+
+
 @pytest.fixture(name="climate_data", scope="session")
 def climate_data_fixture():
     """Load climate MQTT data and return it."""
@@ -113,6 +125,28 @@ async def binary_sensor_alt_msg_fixture(hass):
     """Return a mock MQTT msg with a binary_sensor change message."""
     sensor_json = json.loads(
         await hass.async_add_executor_job(load_fixture, "ozw/binary_sensor_alt.json")
+    )
+    message = MQTTMessage(topic=sensor_json["topic"], payload=sensor_json["payload"])
+    message.encode()
+    return message
+
+
+@pytest.fixture(name="cover_msg")
+async def cover_msg_fixture(hass):
+    """Return a mock MQTT msg with a cover level change message."""
+    sensor_json = json.loads(
+        await hass.async_add_executor_job(load_fixture, "ozw/cover.json")
+    )
+    message = MQTTMessage(topic=sensor_json["topic"], payload=sensor_json["payload"])
+    message.encode()
+    return message
+
+
+@pytest.fixture(name="cover_gdo_msg")
+async def cover_gdo_msg_fixture(hass):
+    """Return a mock MQTT msg with a cover barrier state change message."""
+    sensor_json = json.loads(
+        await hass.async_add_executor_job(load_fixture, "ozw/cover_gdo.json")
     )
     message = MQTTMessage(topic=sensor_json["topic"], payload=sensor_json["payload"])
     message.encode()

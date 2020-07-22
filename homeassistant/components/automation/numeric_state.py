@@ -14,7 +14,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers import condition, config_validation as cv, template
-from homeassistant.helpers.event import async_track_same_state, async_track_state_change
+from homeassistant.helpers.event import (
+    async_track_same_state,
+    async_track_state_change_event,
+)
 
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs
@@ -94,8 +97,11 @@ async def async_attach_trigger(
         )
 
     @callback
-    def state_automation_listener(entity, from_s, to_s):
+    def state_automation_listener(event):
         """Listen for state changes and calls action."""
+        entity = event.data.get("entity_id")
+        from_s = event.data.get("old_state")
+        to_s = event.data.get("new_state")
 
         @callback
         def call_action():
@@ -168,7 +174,7 @@ async def async_attach_trigger(
             else:
                 call_action()
 
-    unsub = async_track_state_change(hass, entity_id, state_automation_listener)
+    unsub = async_track_state_change_event(hass, entity_id, state_automation_listener)
 
     @callback
     def async_remove():

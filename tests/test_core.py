@@ -915,6 +915,8 @@ class TestConfig(unittest.TestCase):
             "components": set(),
             "config_dir": "/test/ha-config",
             "whitelist_external_dirs": set(),
+            "allowlist_external_dirs": set(),
+            "allowlist_external_urls": set(),
             "version": __version__,
             "config_source": "default",
             "safe_mode": False,
@@ -930,7 +932,7 @@ class TestConfig(unittest.TestCase):
         with TemporaryDirectory() as tmp_dir:
             # The created dir is in /tmp. This is a symlink on OS X
             # causing this test to fail unless we resolve path first.
-            self.config.whitelist_external_dirs = {os.path.realpath(tmp_dir)}
+            self.config.allowlist_external_dirs = {os.path.realpath(tmp_dir)}
 
             test_file = os.path.join(tmp_dir, "test.jpg")
             with open(test_file, "w") as tmp_file:
@@ -940,7 +942,7 @@ class TestConfig(unittest.TestCase):
             for path in valid:
                 assert self.config.is_allowed_path(path)
 
-            self.config.whitelist_external_dirs = {"/home", "/var"}
+            self.config.allowlist_external_dirs = {"/home", "/var"}
 
             unvalid = [
                 "/hass/config/secure",
@@ -954,6 +956,33 @@ class TestConfig(unittest.TestCase):
 
             with pytest.raises(AssertionError):
                 self.config.is_allowed_path(None)
+
+    def test_is_allowed_external_url(self):
+        """Test is_allowed_external_url method."""
+        self.config.allowlist_external_urls = [
+            "http://x.com/",
+            "https://y.com/bla/",
+            "https://z.com/images/1.jpg/",
+        ]
+
+        valid = [
+            "http://x.com/1.jpg",
+            "http://x.com",
+            "https://y.com/bla/",
+            "https://y.com/bla/2.png",
+            "https://z.com/images/1.jpg",
+        ]
+        for url in valid:
+            assert self.config.is_allowed_external_url(url)
+
+        invalid = [
+            "https://a.co",
+            "https://y.com/bla_wrong",
+            "https://y.com/bla/../image.jpg",
+            "https://z.com/images",
+        ]
+        for url in invalid:
+            assert not self.config.is_allowed_external_url(url)
 
 
 async def test_event_on_update(hass):
@@ -1076,14 +1105,13 @@ def test_timer_out_of_sync(mock_monotonic, loop):
     assert abs(target - 14.2) < 0.001
 
 
-@asyncio.coroutine
-def test_hass_start_starts_the_timer(loop):
+async def test_hass_start_starts_the_timer(loop):
     """Test when hass starts, it starts the timer."""
-    hass = ha.HomeAssistant(loop=loop)
+    hass = ha.HomeAssistant()
 
     try:
         with patch("homeassistant.core._async_create_timer") as mock_timer:
-            yield from hass.async_start()
+            await hass.async_start()
 
         assert hass.state == ha.CoreState.running
         assert not hass._track_task
@@ -1091,21 +1119,20 @@ def test_hass_start_starts_the_timer(loop):
         assert mock_timer.mock_calls[0][1][0] is hass
 
     finally:
-        yield from hass.async_stop()
-        assert hass.state == ha.CoreState.not_running
+        await hass.async_stop()
+        assert hass.state == ha.CoreState.stopped
 
 
-@asyncio.coroutine
-def test_start_taking_too_long(loop, caplog):
+async def test_start_taking_too_long(loop, caplog):
     """Test when async_start takes too long."""
-    hass = ha.HomeAssistant(loop=loop)
+    hass = ha.HomeAssistant()
     caplog.set_level(logging.WARNING)
 
     try:
         with patch(
             "homeassistant.core.timeout", side_effect=asyncio.TimeoutError
         ), patch("homeassistant.core._async_create_timer") as mock_timer:
-            yield from hass.async_start()
+            await hass.async_start()
 
         assert hass.state == ha.CoreState.running
         assert len(mock_timer.mock_calls) == 1
@@ -1113,14 +1140,13 @@ def test_start_taking_too_long(loop, caplog):
         assert "Something is blocking Home Assistant" in caplog.text
 
     finally:
-        yield from hass.async_stop()
-        assert hass.state == ha.CoreState.not_running
+        await hass.async_stop()
+        assert hass.state == ha.CoreState.stopped
 
 
-@asyncio.coroutine
-def test_track_task_functions(loop):
+async def test_track_task_functions(loop):
     """Test function to start/stop track task and initial state."""
-    hass = ha.HomeAssistant(loop=loop)
+    hass = ha.HomeAssistant()
     try:
         assert hass._track_task
 
@@ -1130,7 +1156,7 @@ def test_track_task_functions(loop):
         hass.async_track_tasks()
         assert hass._track_task
     finally:
-        yield from hass.async_stop()
+        await hass.async_stop()
 
 
 async def test_service_executed_with_subservices(hass):

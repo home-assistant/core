@@ -5,15 +5,18 @@ import logging
 import os
 
 from adb_shell.auth.keygen import keygen
+from adb_shell.auth.sign_pythonrsa import PythonRSASigner
 from adb_shell.exceptions import (
+    AdbTimeoutError,
     InvalidChecksumError,
     InvalidCommandError,
     InvalidResponseError,
     TcpTimeoutException,
 )
-from androidtv import ha_state_detection_rules_validator, setup
+from androidtv import ha_state_detection_rules_validator
 from androidtv.constants import APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
+from androidtv.setup_async import setup
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
@@ -44,7 +47,7 @@ from homeassistant.const import (
     STATE_STANDBY,
 )
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.storage import STORAGE_DIR
 
 ANDROIDTV_DOMAIN = "androidtv"
@@ -103,6 +106,7 @@ DEVICE_CLASSES = [DEFAULT_DEVICE_CLASS, DEVICE_ANDROIDTV, DEVICE_FIRETV]
 
 SERVICE_ADB_COMMAND = "adb_command"
 SERVICE_DOWNLOAD = "download"
+SERVICE_LEARN_SENDEVENT = "learn_sendevent"
 SERVICE_UPLOAD = "upload"
 
 SERVICE_ADB_COMMAND_SCHEMA = vol.Schema(
@@ -161,7 +165,30 @@ ANDROIDTV_STATES = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_androidtv(hass, config):
+    """Generate an ADB key (if needed) and load it."""
+    adbkey = config.get(CONF_ADBKEY, hass.config.path(STORAGE_DIR, "androidtv_adbkey"))
+    if CONF_ADB_SERVER_IP not in config:
+        # Use "adb_shell" (Python ADB implementation)
+        if not os.path.isfile(adbkey):
+            # Generate ADB key files
+            keygen(adbkey)
+
+        # Load the ADB key
+        with open(adbkey) as priv_key:
+            priv = priv_key.read()
+        signer = PythonRSASigner("", priv)
+        adb_log = f"using Python ADB implementation with adbkey='{adbkey}'"
+
+    else:
+        # Use "pure-python-adb" (communicate with ADB server)
+        signer = None
+        adb_log = f"using ADB server at {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
+
+    return adbkey, signer, adb_log
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Android TV / Fire TV platform."""
     hass.data.setdefault(ANDROIDTV_DOMAIN, {})
 
@@ -171,51 +198,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.warning("Platform already setup on %s, skipping", address)
         return
 
-    if CONF_ADB_SERVER_IP not in config:
-        # Use "adb_shell" (Python ADB implementation)
-        if CONF_ADBKEY not in config:
-            # Generate ADB key files (if they don't exist)
-            adbkey = hass.config.path(STORAGE_DIR, "androidtv_adbkey")
-            if not os.path.isfile(adbkey):
-                keygen(adbkey)
+    adbkey, signer, adb_log = await hass.async_add_executor_job(
+        setup_androidtv, hass, config
+    )
 
-            adb_log = f"using Python ADB implementation with adbkey='{adbkey}'"
-
-            aftv = setup(
-                config[CONF_HOST],
-                config[CONF_PORT],
-                adbkey,
-                device_class=config[CONF_DEVICE_CLASS],
-                state_detection_rules=config[CONF_STATE_DETECTION_RULES],
-                auth_timeout_s=10.0,
-            )
-
-        else:
-            adb_log = (
-                f"using Python ADB implementation with adbkey='{config[CONF_ADBKEY]}'"
-            )
-
-            aftv = setup(
-                config[CONF_HOST],
-                config[CONF_PORT],
-                config[CONF_ADBKEY],
-                device_class=config[CONF_DEVICE_CLASS],
-                state_detection_rules=config[CONF_STATE_DETECTION_RULES],
-                auth_timeout_s=10.0,
-            )
-
-    else:
-        # Use "pure-python-adb" (communicate with ADB server)
-        adb_log = f"using ADB server at {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
-
-        aftv = setup(
-            config[CONF_HOST],
-            config[CONF_PORT],
-            adb_server_ip=config[CONF_ADB_SERVER_IP],
-            adb_server_port=config[CONF_ADB_SERVER_PORT],
-            device_class=config[CONF_DEVICE_CLASS],
-            state_detection_rules=config[CONF_STATE_DETECTION_RULES],
-        )
+    aftv = await setup(
+        config[CONF_HOST],
+        config[CONF_PORT],
+        adbkey,
+        config.get(CONF_ADB_SERVER_IP, ""),
+        config[CONF_ADB_SERVER_PORT],
+        config[CONF_STATE_DETECTION_RULES],
+        config[CONF_DEVICE_CLASS],
+        10.0,
+        signer,
+    )
 
     if not aftv.available:
         # Determine the name that will be used for the device in the log
@@ -251,14 +248,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         device = FireTVDevice(*device_args)
         device_name = config.get(CONF_NAME, "Fire TV")
 
-    add_entities([device])
+    async_add_entities([device])
     _LOGGER.debug("Setup %s at %s %s", device_name, address, adb_log)
     hass.data[ANDROIDTV_DOMAIN][address] = device
 
     if hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_ADB_COMMAND):
         return
 
-    def service_adb_command(service):
+    platform = entity_platform.current_platform.get()
+
+    async def service_adb_command(service):
         """Dispatch service calls to target entities."""
         cmd = service.data[ATTR_COMMAND]
         entity_id = service.data[ATTR_ENTITY_ID]
@@ -269,7 +268,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ]
 
         for target_device in target_devices:
-            output = target_device.adb_command(cmd)
+            output = await target_device.adb_command(cmd)
 
             # log the output, if there is any
             if output:
@@ -280,14 +279,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     output,
                 )
 
-    hass.services.register(
+    hass.services.async_register(
         ANDROIDTV_DOMAIN,
         SERVICE_ADB_COMMAND,
         service_adb_command,
         schema=SERVICE_ADB_COMMAND_SCHEMA,
     )
 
-    def service_download(service):
+    platform.async_register_entity_service(
+        SERVICE_LEARN_SENDEVENT, {}, "learn_sendevent"
+    )
+
+    async def service_download(service):
         """Download a file from your Android TV / Fire TV device to your Home Assistant instance."""
         local_path = service.data[ATTR_LOCAL_PATH]
         if not hass.config.is_allowed_path(local_path):
@@ -302,16 +305,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if dev.entity_id in entity_id
         ][0]
 
-        target_device.adb_pull(local_path, device_path)
+        await target_device.adb_pull(local_path, device_path)
 
-    hass.services.register(
+    hass.services.async_register(
         ANDROIDTV_DOMAIN,
         SERVICE_DOWNLOAD,
         service_download,
         schema=SERVICE_DOWNLOAD_SCHEMA,
     )
 
-    def service_upload(service):
+    async def service_upload(service):
         """Upload a file from your Home Assistant instance to an Android TV / Fire TV device."""
         local_path = service.data[ATTR_LOCAL_PATH]
         if not hass.config.is_allowed_path(local_path):
@@ -327,9 +330,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ]
 
         for target_device in target_devices:
-            target_device.adb_push(local_path, device_path)
+            await target_device.adb_push(local_path, device_path)
 
-    hass.services.register(
+    hass.services.async_register(
         ANDROIDTV_DOMAIN, SERVICE_UPLOAD, service_upload, schema=SERVICE_UPLOAD_SCHEMA
     )
 
@@ -345,13 +348,13 @@ def adb_decorator(override_available=False):
         """Wrap the provided ADB method and catch exceptions."""
 
         @functools.wraps(func)
-        def _adb_exception_catcher(self, *args, **kwargs):
+        async def _adb_exception_catcher(self, *args, **kwargs):
             """Call an ADB-related method and catch exceptions."""
             if not self.available and not override_available:
                 return None
 
             try:
-                return func(self, *args, **kwargs)
+                return await func(self, *args, **kwargs)
             except LockNotAcquiredException:
                 # If the ADB lock could not be acquired, skip this command
                 _LOGGER.info(
@@ -364,7 +367,7 @@ def adb_decorator(override_available=False):
                     "establishing attempt in the next update. Error: %s",
                     err,
                 )
-                self.aftv.adb_close()
+                await self.aftv.adb_close()
                 self._available = False  # pylint: disable=protected-access
                 return None
 
@@ -411,6 +414,7 @@ class ADBDevice(MediaPlayerEntity):
         if not self.aftv.adb_server_ip:
             # Using "adb_shell" (Python ADB implementation)
             self.exceptions = (
+                AdbTimeoutError,
                 AttributeError,
                 BrokenPipeError,
                 ConnectionResetError,
@@ -487,64 +491,60 @@ class ADBDevice(MediaPlayerEntity):
         """Return the device unique id."""
         return self._unique_id
 
+    @adb_decorator()
     async def async_get_media_image(self):
         """Fetch current playing image."""
         if not self._screencap or self.state in [STATE_OFF, None] or not self.available:
             return None, None
 
-        media_data = await self.hass.async_add_executor_job(self.get_raw_media_data)
+        media_data = await self.aftv.adb_screencap()
         if media_data:
             return media_data, "image/png"
         return None, None
 
     @adb_decorator()
-    def get_raw_media_data(self):
-        """Raw image data."""
-        return self.aftv.adb_screencap()
-
-    @adb_decorator()
-    def media_play(self):
+    async def async_media_play(self):
         """Send play command."""
-        self.aftv.media_play()
+        await self.aftv.media_play()
 
     @adb_decorator()
-    def media_pause(self):
+    async def async_media_pause(self):
         """Send pause command."""
-        self.aftv.media_pause()
+        await self.aftv.media_pause()
 
     @adb_decorator()
-    def media_play_pause(self):
+    async def async_media_play_pause(self):
         """Send play/pause command."""
-        self.aftv.media_play_pause()
+        await self.aftv.media_play_pause()
 
     @adb_decorator()
-    def turn_on(self):
+    async def async_turn_on(self):
         """Turn on the device."""
         if self.turn_on_command:
-            self.aftv.adb_shell(self.turn_on_command)
+            await self.aftv.adb_shell(self.turn_on_command)
         else:
-            self.aftv.turn_on()
+            await self.aftv.turn_on()
 
     @adb_decorator()
-    def turn_off(self):
+    async def async_turn_off(self):
         """Turn off the device."""
         if self.turn_off_command:
-            self.aftv.adb_shell(self.turn_off_command)
+            await self.aftv.adb_shell(self.turn_off_command)
         else:
-            self.aftv.turn_off()
+            await self.aftv.turn_off()
 
     @adb_decorator()
-    def media_previous_track(self):
+    async def async_media_previous_track(self):
         """Send previous track command (results in rewind)."""
-        self.aftv.media_previous_track()
+        await self.aftv.media_previous_track()
 
     @adb_decorator()
-    def media_next_track(self):
+    async def async_media_next_track(self):
         """Send next track command (results in fast-forward)."""
-        self.aftv.media_next_track()
+        await self.aftv.media_next_track()
 
     @adb_decorator()
-    def select_source(self, source):
+    async def async_select_source(self, source):
         """Select input source.
 
         If the source starts with a '!', then it will close the app instead of
@@ -552,50 +552,58 @@ class ADBDevice(MediaPlayerEntity):
         """
         if isinstance(source, str):
             if not source.startswith("!"):
-                self.aftv.launch_app(self._app_name_to_id.get(source, source))
+                await self.aftv.launch_app(self._app_name_to_id.get(source, source))
             else:
                 source_ = source[1:].lstrip()
-                self.aftv.stop_app(self._app_name_to_id.get(source_, source_))
+                await self.aftv.stop_app(self._app_name_to_id.get(source_, source_))
 
     @adb_decorator()
-    def adb_command(self, cmd):
+    async def adb_command(self, cmd):
         """Send an ADB command to an Android TV / Fire TV device."""
         key = self._keys.get(cmd)
         if key:
-            self.aftv.adb_shell(f"input keyevent {key}")
-            self._adb_response = None
-            self.schedule_update_ha_state()
+            await self.aftv.adb_shell(f"input keyevent {key}")
             return
 
         if cmd == "GET_PROPERTIES":
-            self._adb_response = str(self.aftv.get_properties_dict())
-            self.schedule_update_ha_state()
+            self._adb_response = str(await self.aftv.get_properties_dict())
+            self.async_write_ha_state()
             return self._adb_response
 
         try:
-            response = self.aftv.adb_shell(cmd)
+            response = await self.aftv.adb_shell(cmd)
         except UnicodeDecodeError:
-            self._adb_response = None
-            self.schedule_update_ha_state()
             return
 
         if isinstance(response, str) and response.strip():
             self._adb_response = response.strip()
-        else:
-            self._adb_response = None
+            self.async_write_ha_state()
 
-        self.schedule_update_ha_state()
         return self._adb_response
 
     @adb_decorator()
-    def adb_pull(self, local_path, device_path):
-        """Download a file from your Android TV / Fire TV device to your Home Assistant instance."""
-        self.aftv.adb_pull(local_path, device_path)
+    async def learn_sendevent(self):
+        """Translate a key press on a remote to ADB 'sendevent' commands."""
+        output = await self.aftv.learn_sendevent()
+        if output:
+            self._adb_response = output
+            self.async_write_ha_state()
+
+            msg = f"Output from service '{SERVICE_LEARN_SENDEVENT}' from {self.entity_id}: '{output}'"
+            self.hass.components.persistent_notification.async_create(
+                msg, title="Android TV",
+            )
+            _LOGGER.info("%s", msg)
 
     @adb_decorator()
-    def adb_push(self, local_path, device_path):
+    async def adb_pull(self, local_path, device_path):
+        """Download a file from your Android TV / Fire TV device to your Home Assistant instance."""
+        await self.aftv.adb_pull(local_path, device_path)
+
+    @adb_decorator()
+    async def adb_push(self, local_path, device_path):
         """Upload a file from your Home Assistant instance to an Android TV / Fire TV device."""
-        self.aftv.adb_push(local_path, device_path)
+        await self.aftv.adb_push(local_path, device_path)
 
 
 class AndroidTVDevice(ADBDevice):
@@ -628,17 +636,12 @@ class AndroidTVDevice(ADBDevice):
         self._volume_level = None
 
     @adb_decorator(override_available=True)
-    def update(self):
+    async def async_update(self):
         """Update the device state and, if necessary, re-connect."""
         # Check if device is disconnected.
         if not self._available:
             # Try to connect
-            self._available = self.aftv.adb_connect(always_log_errors=False)
-
-            # To be safe, wait until the next update to run ADB commands if
-            # using the Python ADB implementation.
-            if not self.aftv.adb_server_ip:
-                return
+            self._available = await self.aftv.adb_connect(always_log_errors=False)
 
         # If the ADB connection is not intact, don't update.
         if not self._available:
@@ -652,7 +655,7 @@ class AndroidTVDevice(ADBDevice):
             _,
             self._is_volume_muted,
             self._volume_level,
-        ) = self.aftv.update(self._get_sources)
+        ) = await self.aftv.update(self._get_sources)
 
         self._state = ANDROIDTV_STATES.get(state)
         if self._state is None:
@@ -685,53 +688,50 @@ class AndroidTVDevice(ADBDevice):
         return self._volume_level
 
     @adb_decorator()
-    def media_stop(self):
+    async def async_media_stop(self):
         """Send stop command."""
-        self.aftv.media_stop()
+        await self.aftv.media_stop()
 
     @adb_decorator()
-    def mute_volume(self, mute):
+    async def async_mute_volume(self, mute):
         """Mute the volume."""
-        self.aftv.mute_volume()
+        await self.aftv.mute_volume()
 
     @adb_decorator()
-    def set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume):
         """Set the volume level."""
-        self.aftv.set_volume_level(volume)
+        await self.aftv.set_volume_level(volume)
 
     @adb_decorator()
-    def volume_down(self):
+    async def async_volume_down(self):
         """Send volume down command."""
-        self._volume_level = self.aftv.volume_down(self._volume_level)
+        self._volume_level = await self.aftv.volume_down(self._volume_level)
 
     @adb_decorator()
-    def volume_up(self):
+    async def async_volume_up(self):
         """Send volume up command."""
-        self._volume_level = self.aftv.volume_up(self._volume_level)
+        self._volume_level = await self.aftv.volume_up(self._volume_level)
 
 
 class FireTVDevice(ADBDevice):
     """Representation of a Fire TV device."""
 
     @adb_decorator(override_available=True)
-    def update(self):
+    async def async_update(self):
         """Update the device state and, if necessary, re-connect."""
         # Check if device is disconnected.
         if not self._available:
             # Try to connect
-            self._available = self.aftv.adb_connect(always_log_errors=False)
-
-            # To be safe, wait until the next update to run ADB commands if
-            # using the Python ADB implementation.
-            if not self.aftv.adb_server_ip:
-                return
+            self._available = await self.aftv.adb_connect(always_log_errors=False)
 
         # If the ADB connection is not intact, don't update.
         if not self._available:
             return
 
         # Get the `state`, `current_app`, and `running_apps`.
-        state, self._current_app, running_apps = self.aftv.update(self._get_sources)
+        state, self._current_app, running_apps = await self.aftv.update(
+            self._get_sources
+        )
 
         self._state = ANDROIDTV_STATES.get(state)
         if self._state is None:
@@ -754,6 +754,6 @@ class FireTVDevice(ADBDevice):
         return SUPPORT_FIRETV
 
     @adb_decorator()
-    def media_stop(self):
+    async def async_media_stop(self):
         """Send stop (back) command."""
-        self.aftv.back()
+        await self.aftv.back()

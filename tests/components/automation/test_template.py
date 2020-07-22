@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 
 import homeassistant.components.automation as automation
-from homeassistant.core import Context
+from homeassistant.core import Context, callback
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -435,6 +435,7 @@ async def test_wait_template_with_trigger(hass, calls):
                     "value_template": "{{ states.test.entity.state == 'world' }}",
                 },
                 "action": [
+                    {"event": "test_event"},
                     {"wait_template": "{{ is_state(trigger.entity_id, 'hello') }}"},
                     {
                         "service": "test.automation",
@@ -458,9 +459,13 @@ async def test_wait_template_with_trigger(hass, calls):
 
     await hass.async_block_till_done()
 
+    @callback
+    def event_handler(event):
+        hass.states.async_set("test.entity", "hello")
+
+    hass.bus.async_listen_once("test_event", event_handler)
+
     hass.states.async_set("test.entity", "world")
-    await hass.async_block_till_done()
-    hass.states.async_set("test.entity", "hello")
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == "template - test.entity - hello - world - None"

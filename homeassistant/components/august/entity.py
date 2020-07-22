@@ -5,7 +5,8 @@ import logging
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
-from . import DEFAULT_NAME, DOMAIN
+from . import DOMAIN
+from .const import MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ class AugustEntityMixin(Entity):
         return {
             "identifiers": {(DOMAIN, self._device_id)},
             "name": self._device.device_name,
-            "manufacturer": DEFAULT_NAME,
+            "manufacturer": MANUFACTURER,
             "sw_version": self._detail.firmware_version,
             "model": self._detail.model,
         }

@@ -853,7 +853,7 @@ async def test_if_not_fires_on_entities_change_with_for_after_stop(hass, calls):
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert len(calls) == 2
+    assert len(calls) == 1
 
     hass.states.async_set("test.entity_1", 15)
     hass.states.async_set("test.entity_2", 15)
@@ -866,7 +866,7 @@ async def test_if_not_fires_on_entities_change_with_for_after_stop(hass, calls):
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert len(calls) == 2
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_entity_change_with_for_attribute_change(hass, calls):
@@ -961,9 +961,7 @@ async def test_wait_template_with_trigger(hass, calls):
     await hass.async_block_till_done()
 
     hass.states.async_set("test.entity", "12")
-    await hass.async_block_till_done()
     hass.states.async_set("test.entity", "8")
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert "numeric_state - test.entity - 12" == calls[0].data["some"]

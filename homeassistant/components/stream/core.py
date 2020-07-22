@@ -21,19 +21,19 @@ PROVIDERS = Registry()
 class StreamBuffer:
     """Represent a segment."""
 
-    segment = attr.ib(type=io.BytesIO)
+    segment: io.BytesIO = attr.ib()
     output = attr.ib()  # type=av.OutputContainer
     vstream = attr.ib()  # type=av.VideoStream
-    astream = attr.ib(default=None)  # type=av.AudioStream
+    astream = attr.ib(default=None)  # type=Optional[av.AudioStream]
 
 
 @attr.s
 class Segment:
     """Represent a segment."""
 
-    sequence = attr.ib(type=int)
-    segment = attr.ib(type=io.BytesIO)
-    duration = attr.ib(type=float)
+    sequence: int = attr.ib()
+    segment: io.BytesIO = attr.ib()
+    duration: float = attr.ib()
 
 
 class StreamOutput:

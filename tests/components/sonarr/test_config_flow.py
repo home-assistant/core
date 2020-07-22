@@ -38,10 +38,13 @@ async def test_options(hass, aioclient_mock: AiohttpClientMocker):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_UPCOMING_DAYS: 2, CONF_WANTED_MAX_ITEMS: 100},
-    )
+    with patch(
+        "homeassistant.components.sonarr.async_setup_entry", return_value=True
+    ), patch("homeassistant.components.sonarr.async_setup", return_value=True):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_UPCOMING_DAYS: 2, CONF_WANTED_MAX_ITEMS: 100},
+        )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_UPCOMING_DAYS] == 2
@@ -114,6 +117,7 @@ async def test_full_import_flow_implementation(
     mock_connection(aioclient_mock)
 
     user_input = MOCK_USER_INPUT.copy()
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=user_input,
     )
@@ -143,9 +147,12 @@ async def test_full_user_flow_implementation(
     assert result["step_id"] == "user"
 
     user_input = MOCK_USER_INPUT.copy()
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=user_input,
-    )
+    with patch(
+        "homeassistant.components.sonarr.async_setup_entry", return_value=True
+    ), patch("homeassistant.components.sonarr.async_setup", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=user_input,
+        )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == HOST
@@ -171,9 +178,13 @@ async def test_full_user_flow_advanced_options(
         **MOCK_USER_INPUT,
         CONF_VERIFY_SSL: True,
     }
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=user_input,
-    )
+
+    with patch(
+        "homeassistant.components.sonarr.async_setup_entry", return_value=True
+    ), patch("homeassistant.components.sonarr.async_setup", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=user_input,
+        )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == HOST

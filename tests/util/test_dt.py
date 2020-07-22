@@ -162,6 +162,9 @@ def test_get_age():
     diff = dt_util.now() - timedelta(minutes=320)
     assert dt_util.get_age(diff) == "5 hours"
 
+    diff = dt_util.now() - timedelta(minutes=1.6 * 60 * 24)
+    assert dt_util.get_age(diff) == "2 days"
+
     diff = dt_util.now() - timedelta(minutes=2 * 60 * 24)
     assert dt_util.get_age(diff) == "2 days"
 

@@ -167,7 +167,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     def media_content_id(self) -> Optional[str]:
         """Return the media URL."""
         item = self._currently_playing.get("item") or {}
-        return item.get("name")
+        return item.get("uri")
 
     @property
     def media_content_type(self) -> Optional[str]:
