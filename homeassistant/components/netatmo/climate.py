@@ -127,9 +127,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         """Retrieve Netatmo entities."""
         entities = []
 
-        home_ids = get_all_home_ids(home_data)
-
-        for home_id in home_ids:
+        for home_id in get_all_home_ids(home_data):
             _LOGGER.debug("Setting up home %s ...", home_id)
             for room_id in home_data.rooms[home_id].keys():
                 room_name = home_data.rooms[home_id][room_id]["name"]
