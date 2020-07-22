@@ -1255,3 +1255,22 @@ async def test_shutdown_after(hass, caplog):
             "Stopping scripts running too long after shutdown: test script"
             in caplog.text
         )
+
+
+async def test_update_logger(hass, caplog):
+    """Test updating logger."""
+    sequence = cv.SCRIPT_SCHEMA({"event": "test_event"})
+    script_obj = script.Script(hass, sequence)
+
+    await script_obj.async_run()
+    await hass.async_block_till_done()
+
+    assert script.__name__ in caplog.text
+
+    log_name = "testing.123"
+    script_obj.update_logger(logging.getLogger(log_name))
+
+    await script_obj.async_run()
+    await hass.async_block_till_done()
+
+    assert log_name in caplog.text
