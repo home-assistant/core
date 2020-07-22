@@ -3,9 +3,13 @@ from unittest.mock import call
 
 import pytest
 
+from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
 from . import _signal_event
+
+from tests.common import mock_restore_cache
 
 
 async def test_one_light(hass, rfxtrx):
@@ -81,6 +85,27 @@ async def test_one_light(hass, rfxtrx):
         call(bytearray(b"\x0b\x11\x00\x00\x02\x13\xc7\xf2\x10\x02\x0f\x00")),
         call(bytearray(b"\x0b\x11\x00\x00\x02\x13\xc7\xf2\x10\x00\x00\x00")),
     ]
+
+
+@pytest.mark.parametrize("state,brightness", [["on", 100], ["on", 50], ["off", None]])
+async def test_state_restore(hass, rfxtrx, state, brightness):
+    """State restoration."""
+
+    entity_id = "light.ac_213c7f2_16"
+
+    mock_restore_cache(
+        hass, [State(entity_id, state, attributes={ATTR_BRIGHTNESS: brightness})]
+    )
+
+    assert await async_setup_component(
+        hass,
+        "rfxtrx",
+        {"rfxtrx": {"device": "abcd", "devices": {"0b1100cd0213c7f210020f51": {}}}},
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == state
+    assert hass.states.get(entity_id).attributes.get(ATTR_BRIGHTNESS) == brightness
 
 
 async def test_several_lights(hass, rfxtrx):
