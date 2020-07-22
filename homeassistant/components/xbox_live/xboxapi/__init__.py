@@ -1,1 +1,1 @@
-from . import *
+"""xboxapi wrapper."""
