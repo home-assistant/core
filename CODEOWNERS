@@ -364,6 +364,7 @@ homeassistant/components/signal_messenger/* @bbernhard
 homeassistant/components/simplisafe/* @bachya
 homeassistant/components/sinch/* @bendikrb
 homeassistant/components/sisyphus/* @jkeljo
+homeassistant/components/sky_hub/* @rogerselwyn
 homeassistant/components/slide/* @ualex73
 homeassistant/components/sma/* @kellerza
 homeassistant/components/smappee/* @bsmappee
