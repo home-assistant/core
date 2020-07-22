@@ -3,7 +3,6 @@ import logging
 from typing import Dict, List
 
 from homeassistant.core import CALLBACK_TYPE, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, MANUFACTURER, MODELS, SIGNAL_NAME
@@ -57,14 +56,6 @@ class NetatmoBase(Entity):
                     data_class["name"], signal_name, self.async_update_callback
                 )
 
-            self.data_handler.listeners.append(
-                async_dispatcher_connect(
-                    self.hass,
-                    f"netatmo-config-{self.device_info['name']}",
-                    self.async_config_update_callback,
-                )
-            )
-
         self.async_update_callback()
 
     async def async_will_remove_from_hass(self):
@@ -95,11 +86,6 @@ class NetatmoBase(Entity):
             return
 
         entity_registry.async_remove(self.entity_id)
-
-    @callback
-    def async_config_update_callback(self):
-        """Update the entity's config."""
-        raise NotImplementedError
 
     @callback
     def async_update_callback(self):

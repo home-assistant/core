@@ -526,6 +526,18 @@ class NetatmoPublicSensor(NetatmoBase):
     def _data(self):
         return self.data_handler.data[self._signal_name]
 
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        await super().async_added_to_hass()
+
+        self.data_handler.listeners.append(
+            async_dispatcher_connect(
+                self.hass,
+                f"netatmo-config-{self.device_info['name']}",
+                self.async_config_update_callback,
+            )
+        )
+
     @callback
     async def async_config_update_callback(self, area):
         """Update the entity's config."""
