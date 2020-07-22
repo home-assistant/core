@@ -479,7 +479,7 @@ class EventOrigin(enum.Enum):
 class Event:
     """Representation of an event within the bus."""
 
-    __slots__ = ["event_type", "data", "origin", "time_fired", "context"]
+    __slots__ = ["event_type", "data", "origin", "time_fired", "_context"]
 
     def __init__(
         self,
@@ -494,7 +494,21 @@ class Event:
         self.data = data or {}
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
-        self.context: Context = context or Context()
+        self._context = context
+
+    @property
+    def context(self) -> Context:
+        """Context of the event.
+
+        If a context was not provided, we wait
+        to generate one until context is called
+        in order to avoid the overhead of uuid.uuid4()
+        which has to make a syscall to get random
+        data.
+        """
+        if not self._context:
+            self._context = Context()
+        return self._context
 
     def as_dict(self) -> Dict:
         """Create a dict representation of this Event.
