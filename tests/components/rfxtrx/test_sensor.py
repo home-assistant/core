@@ -1,8 +1,14 @@
 """The tests for the Rfxtrx sensor platform."""
+import pytest
+
+from homeassistant.components.rfxtrx.const import ATTR_EVENT
 from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE
+from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
 from . import _signal_event
+
+from tests.common import mock_restore_cache
 
 
 async def test_default_config(hass, rfxtrx):
@@ -32,6 +38,27 @@ async def test_one_sensor(hass, rfxtrx):
         == "WT260,WT260H,WT440H,WT450,WT450H 05:02 Temperature"
     )
     assert state.attributes.get("unit_of_measurement") == TEMP_CELSIUS
+
+
+@pytest.mark.parametrize(
+    "state,event",
+    [["18.4", "0a520801070100b81b0279"], ["17.9", "0a52085e070100b31b0279"]],
+)
+async def test_state_restore(hass, rfxtrx, state, event):
+    """State restoration."""
+
+    entity_id = "sensor.wt260_wt260h_wt440h_wt450_wt450h_07_01_temperature"
+
+    mock_restore_cache(hass, [State(entity_id, state, attributes={ATTR_EVENT: event})])
+
+    assert await async_setup_component(
+        hass,
+        "rfxtrx",
+        {"rfxtrx": {"device": "abcd", "devices": {"0a520801070100b81b0279": {}}}},
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == state
 
 
 async def test_one_sensor_no_datatype(hass, rfxtrx):

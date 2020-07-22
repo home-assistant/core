@@ -8,7 +8,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     LightEntity,
 )
-from homeassistant.const import CONF_DEVICES
+from homeassistant.const import CONF_DEVICES, STATE_ON
 from homeassistant.core import callback
 
 from . import (
@@ -16,7 +16,7 @@ from . import (
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
     SIGNAL_EVENT,
-    RfxtrxDevice,
+    RfxtrxCommandEntity,
     get_device_id,
     get_rfx_object,
 )
@@ -48,7 +48,7 @@ async def async_setup_entry(
             _LOGGER.error("Invalid device: %s", packet_id)
             continue
         if not supported(event):
-            return
+            continue
 
         device_id = get_device_id(event.device)
         if device_id in device_ids:
@@ -92,7 +92,7 @@ async def async_setup_entry(
         hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, light_update)
 
 
-class RfxtrxLight(RfxtrxDevice, LightEntity):
+class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
     """Representation of a RFXtrx light."""
 
     _brightness = 0
@@ -101,11 +101,11 @@ class RfxtrxLight(RfxtrxDevice, LightEntity):
         """Restore RFXtrx device state (ON/OFF)."""
         await super().async_added_to_hass()
 
-        self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_EVENT, self._handle_event
-            )
-        )
+        if self._event is None:
+            old_state = await self.async_get_last_state()
+            if old_state is not None:
+                self._state = old_state.state == STATE_ON
+                self._brightness = old_state.attributes.get(ATTR_BRIGHTNESS)
 
     @property
     def brightness(self):
@@ -116,6 +116,11 @@ class RfxtrxLight(RfxtrxDevice, LightEntity):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_RFXTRX
+
+    @property
+    def is_on(self):
+        """Return true if device is on."""
+        return self._state
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
