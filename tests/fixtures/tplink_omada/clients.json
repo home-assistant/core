@@ -1,0 +1,50 @@
+{
+  "errorCode": 0,
+  "msg": null,
+  "result": {
+    "totalRows": 23,
+    "queryData": {
+      "currentPage": 1,
+      "currentPageSize": 10,
+      "sortName": "",
+      "sortOrder": "asc",
+      "searchKey": "",
+      "filters": {
+        "type": "all"
+      }
+    },
+    "data": [
+      {
+        "id": "cccccbbdf8acb61bf93ccccc",
+        "name": "client1",
+        "mac": "AA-AA-AA-AA-AA-AB",
+        "apMac": "AA-AA-AA-AA-AA-AA",
+        "apName": "ap1",
+        "ssid": "wifi1",
+        "snr": 54,
+        "ccq": 0,
+        "rssi": -41,
+        "rate": 130,
+        "download": 54060782291,
+        "upload": 1092183471,
+        "duration": 87873,
+        "firstSeen": 1595166391224,
+        "lastSeen": 1595254264806,
+        "radioId": 0,
+        "authDuration": null,
+        "ip": "192.168.15.65",
+        "longIp": 3232239425,
+        "site": "Default",
+        "clientType": "unknown",
+        "totalTraffic": 55152965762,
+        "slc": null,
+        "clientRateLimitSetting": null,
+        "signalLevel": 5,
+        "active": true,
+        "block": false,
+        "guest": false
+      }
+    ]
+  }
+}
+

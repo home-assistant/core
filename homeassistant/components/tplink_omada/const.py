@@ -16,13 +16,8 @@ SERVICE_WIFIACRULE = "set_wifi_access_control_rule"
 SERVICE_WIFIACRULE_ATTR_RULE = "access_control_rule"
 
 LOGIN_PATH = "/api/user/login?ajax"
-SSID_STATS_PATH = "/web/v1/controller?ssidStatsStore&token="
-SSID_SETTINGS_PATH = "/web/v1/controller?wlBasicSsidGridS&token="
-GLOBAL_STATS_PATH = "/web/v1/controller?globalStat&token="
-ABOUT_PATH = "/web/v1/controller?aboutInfo&token="
-AP_STATS_PATH = "/web/v1/controller?apsStore&token="
-CLIENTS_PATH = "/web/v1/controller?userStore&token="
-SSID_EDIT_SETTINGS_PATH = "/web/v1/controller?wlBasicSsid24SettingsM&token="
+CONTROLLER_PATH = "/web/v1/controller"
+LOGIN_PATH = "/api/user/login"
 
 SSID_SETTING_KEYS = [
     "accessControlRuleName",

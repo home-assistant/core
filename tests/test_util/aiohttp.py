@@ -50,6 +50,7 @@ class AiohttpClientMocker:
         exc=None,
         cookies=None,
         side_effect=None,
+        history=None,
     ):
         """Mock a request."""
         if not isinstance(url, RETYPE):
@@ -57,6 +58,7 @@ class AiohttpClientMocker:
         if params:
             url = url.with_query(params)
 
+        print("REGISTERING {}".format(url))
         self._mocks.append(
             AiohttpClientMockResponse(
                 method=method,
@@ -69,6 +71,7 @@ class AiohttpClientMocker:
                 exc=exc,
                 headers=headers,
                 side_effect=side_effect,
+                history=history,
             )
         )
 
@@ -134,9 +137,10 @@ class AiohttpClientMocker:
         url = URL(url)
         if params:
             url = url.with_query(params)
-
         for response in self._mocks:
             if response.match_request(method, url, params):
+                print("FFFFFFFFFFFF")
+                print(method, url, params)
                 self.mock_calls.append((method, url, data, headers))
                 if response.side_effect:
                     response = await response.side_effect(method, url, data)
@@ -164,6 +168,7 @@ class AiohttpClientMockResponse:
         exc=None,
         headers=None,
         side_effect=None,
+        history=None,
     ):
         """Initialize a fake response."""
         if json is not None:
@@ -179,6 +184,7 @@ class AiohttpClientMockResponse:
         self.response = response
         self.exc = exc
         self.side_effect = side_effect
+        self.history = history
         self._headers = headers or {}
         self._cookies = {}
 
@@ -205,8 +211,8 @@ class AiohttpClientMockResponse:
             return False
 
         # Ensure all query components in matcher are present in the request
-        request_qs = parse_qs(url.query_string)
-        matcher_qs = parse_qs(self._url.query_string)
+        request_qs = parse_qs(url.query_string, keep_blank_values=True)
+        matcher_qs = parse_qs(self._url.query_string, keep_blank_values=True)
         for key, vals in matcher_qs.items():
             for val in vals:
                 try:

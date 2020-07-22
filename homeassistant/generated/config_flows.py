@@ -167,6 +167,7 @@ FLOWS = [
     "toon",
     "totalconnect",
     "tplink",
+    "tplink_omada",
     "traccar",
     "tradfri",
     "transmission",

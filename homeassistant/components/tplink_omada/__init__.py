@@ -1,4 +1,5 @@
-"""Support for TP-Link Omada Controller."""
+"""The TP-Link Omada integration."""
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -12,6 +13,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
 
 from .const import (
     DOMAIN,
@@ -22,6 +24,7 @@ from .common import OmadaData
 
 
 LOGGER = logging.getLogger(__name__)
+PLATFORMS = ["sensor"]
 
 
 async def async_setup(hass, config):
@@ -80,3 +83,19 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     )
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok

@@ -6,6 +6,7 @@ import json
 import logging
 
 from homeassistant.util import Throttle
+from homeassistant import exceptions
 from homeassistant.const import (
     CONF_TIMEOUT, CONF_NAME, ATTR_ENTITY_ID,
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
@@ -15,17 +16,11 @@ from aiodns.error import DNSError
 
 from .const import (
     MIN_TIME_BETWEEN_UPDATES,
-    GLOBAL_STATS_PATH,
-    ABOUT_PATH,
     LOGIN_PATH,
-    SSID_STATS_PATH,
-    SSID_SETTINGS_PATH,
-    AP_STATS_PATH,
-    CLIENTS_PATH,
+    CONTROLLER_PATH,
     SENSOR_DICT,
     SENSOR_SSID_STATS_DICT,
     SENSOR_SSID_SETTINGS_DICT,
-    SSID_EDIT_SETTINGS_PATH,
     SENSOR_AP_STATS_DICT,
     SENSOR_AP_SETTINGS_DICT,
     SERVICE_WIFIACRULE_ATTR_RULE,
@@ -49,6 +44,12 @@ async def login(host, username, password, timeout, httpsession):
     # Get SessionID
     with async_timeout.timeout(timeout):
         res = await httpsession.get(host)
+
+    if 'location' not in res.history[-1].headers:
+        _LOGGER.exception("Can not find actual base host of the "
+                          "Omada Controller.")
+        raise InvalidAuth("Can not find actual base host of the "
+                          "Omada Controller.")
     # Get actual URL
     actual_location = urlparse(res.history[-1].headers['location'])
     base_url = actual_location.scheme + "://" + actual_location.netloc
@@ -58,16 +59,18 @@ async def login(host, username, password, timeout, httpsession):
                              "password": password
                              }
                   }
+    params = {"ajax": ""}
     with async_timeout.timeout(timeout):
         res = await httpsession.post(base_url + LOGIN_PATH,
+                                     params=params,
                                      data=json.dumps(login_data),
                                      )
     res_json = await res.json()
     if res_json.get('msg') != 'Log in successfully.':
-        _LOGGER.error("Omada Controller didn't respond with JSON. "
-                      "Check if credentials are correct")
-        return False
-
+        _LOGGER.exception("Omada Controller didn't respond with JSON. "
+                          "Check if credentials are correct")
+        raise InvalidAuth("Omada Controller didn't respond with JSON. "
+                          "Check if credentials are correct")
     # Get token
     res_json = await res.json()
     token = res_json['result']['token']
@@ -104,28 +107,42 @@ class OmadaData:
 
     async def login(self):
         """Login to the Omada Controller."""
-        return await login(self.host, self.username, self.password, self.timeout, self.httpsession)
+        logged = await login(self.host, self.username, self.password, self.timeout, self.httpsession)
+        if not isinstance(logged, tuple) or len(logged) != 2:
+            _LOGGER.error("Unable to login to Omada Controller %s", self.host)
+            return False
+        self._base_url = logged[0]
+        self._token = logged[1]
+
+        return True
 
     async def fetch_version(self):
         """Get the current version of the Omada Controller."""
         data = {"method": "getAboutInfo", "params": {}}
+        params = {"aboutInfo": "", "token": self._token}
         with async_timeout.timeout(self.timeout):
-            res = await self.httpsession.post(self._base_url + ABOUT_PATH + self._token,
-                                              data=json.dumps(data),
-                                              )
+            res = await self.httpsession.post(
+                self._base_url + CONTROLLER_PATH,
+                params=params,
+                data=json.dumps(data),
+            )
             res_json = await res.json()
         if res_json['errorCode'] != 0:
             _LOGGER.error("Error fetching version: %s", res_json['msg'])
             return
+
         self.version = res_json['result']['version']
 
     async def fetch_global_stats(self):
         """Fetch the global statistics of the Omada Controller."""
         data = {"method": "getGlobalStat", "params": {}}
+        params = {"globalStat": "", "token": self._token}
         with async_timeout.timeout(self.timeout):
-            res = await self.httpsession.post(self._base_url + GLOBAL_STATS_PATH + self._token,
-                                              data=json.dumps(data),
-                                              )
+            res = await self.httpsession.post(
+                self._base_url + CONTROLLER_PATH,
+                params=params,
+                data=json.dumps(data),
+            )
             res_json = await res.json()
 
         if res_json['errorCode'] != 0:
@@ -139,10 +156,13 @@ class OmadaData:
     async def fetch_ssid_stats(self):
         """Get statistics for each SSID."""
         data = {"method": "getSsidStats", "params": {}}
+        params = {"ssidStatsStore": "", "token": self._token}
         with async_timeout.timeout(self.timeout):
-            res = await self.httpsession.post(self._base_url + SSID_STATS_PATH + self._token,
-                                              data=json.dumps(data),
-                                              )
+            res = await self.httpsession.post(
+                self._base_url + CONTROLLER_PATH,
+                params=params,
+                data=json.dumps(data),
+            )
             res_json = await res.json()
 
         if res_json['errorCode'] != 0:
@@ -165,10 +185,13 @@ class OmadaData:
                            "filters": {"status": "All"},
                            },
                 }
+        params = {"apsStore": "", "token": self._token}
         with async_timeout.timeout(self.timeout):
-            res = await self.httpsession.post(self._base_url + AP_STATS_PATH + self._token,
-                                              data=json.dumps(data),
-                                              )
+            res = await self.httpsession.post(
+                self._base_url + CONTROLLER_PATH,
+                params=params,
+                data=json.dumps(data),
+            )
             res_json = await res.json()
 
         if res_json['errorCode'] != 0:
@@ -196,35 +219,41 @@ class OmadaData:
         total_rows = current_page_size + 1
         list_of_devices = {}
         while (current_page - 1) * current_page_size <= total_rows:
-            clients_data = {"method": "getGridActiveClients",
-                            "params": {"sortOrder": "asc",
-                                       "currentPage": current_page,
-                                       "currentPageSize": current_page_size,
-                                       "filters": {"type": "all"}
-                                       }
-                            }
+            data = {"method": "getGridActiveClients",
+                    "params": {"sortOrder": "asc",
+                               "currentPage": current_page,
+                               "currentPageSize": current_page_size,
+                               "filters": {"type": "all"}
+                               }
+                    }
+            params = {"userStore": "", "token": self._token}
             with async_timeout.timeout(self.timeout):
-                res = await self.httpsession.post(self._base_url + CLIENTS_PATH + self._token,
-                                                  data=json.dumps(clients_data),
-                                                  )
+                res = await self.httpsession.post(
+                    self._base_url + CONTROLLER_PATH,
+                    params=params,
+                    data=json.dumps(data),
+                )
                 res_json = await res.json()
-                results = res_json['result']
-                total_rows = results['totalRows']
-                for data in results['data']:
-                    key = data['mac'].replace('-', ':')
-                    name = data['name']
-                    # Search for a better device name
-                    if self.dns_resolver:
-                        try:
-                            result = await self.dns_resolver.gethostbyaddr(data['ip'])
-                            name = result.name.split('.', 1)[0]
-                        except DNSError:
-                            _LOGGER.debug("Can not resolve %s", data['ip'])
-                    # Set default name from the mac address
-                    if not name:
-                        name = data['mac'].replace("-", "_").lower()
+            if res_json['errorCode'] != 0:
+                _LOGGER.error("Error fetching client list: %s", res_json['msg'])
+                return
+            results = res_json['result']
+            total_rows = results['totalRows']
+            for data in results['data']:
+                key = data['mac'].replace('-', ':')
+                name = data['name']
+                # Search for a better device name
+                if self.dns_resolver:
+                    try:
+                        result = await self.dns_resolver.gethostbyaddr(data['ip'])
+                        name = result.name.split('.', 1)[0]
+                    except DNSError:
+                        _LOGGER.debug("Can not resolve %s", data['ip'])
+                # Set default name from the mac address
+                if not name:
+                    name = data['mac'].replace("-", "_").lower()
 
-                    list_of_devices[key] = name.lower()
+                list_of_devices[key] = name.lower()
             current_page += 1
 
         if _LOGGER.level <= logging.DEBUG:
@@ -254,11 +283,18 @@ class OmadaData:
                            "filters": {}
                            }
                 }
+        params = {"wlBasicSsidGridS": "", "token": self._token}
         with async_timeout.timeout(self.timeout):
-            res = await self.httpsession.post(self._base_url + SSID_SETTINGS_PATH + self._token,
-                                              data=json.dumps(data),
-                                              )
+            res = await self.httpsession.post(
+                self._base_url + CONTROLLER_PATH,
+                params=params,
+                data=json.dumps(data),
+            )
         res_json = await res.json()
+        if res_json['errorCode'] != 0:
+            _LOGGER.error("Error fetching ssid settings: %s", res_json['msg'])
+            return
+
         ssid_id_dict = {}
 
         for ssid in res_json['result']['data']:
@@ -275,32 +311,40 @@ class OmadaData:
             return
 
         data = {"method": "getSsid", "params": {"id": ssid_id_dict[ssid]["id"]}}
+        params = {"wlBasicSsid24SettingsM": "", "token": self._token}
         with async_timeout.timeout(self.timeout):
-            res = await self.httpsession.post(self._base_url + SSID_EDIT_SETTINGS_PATH + self._token,
-                                              data=json.dumps(data),
-                                              )
+            res = await self.httpsession.post(
+                self._base_url + CONTROLLER_PATH,
+                params=params,
+                data=json.dumps(data),
+            )
         res_json = await res.json()
+        if res_json['errorCode'] != 0:
+            _LOGGER.error("Error fetching ssid parame: %s", res_json['msg'])
+            return
 
         ssid_settings = res_json['result']
 
-        params = {}
+        ssid_params = {}
         for setting, value in ssid_settings.items():
             if setting in SSID_SETTING_KEYS:
-                params[setting] = value
+                ssid_params[setting] = value
 
-        params['accessControlRuleName'] = access_control_rule
-        data = {"method": "modifySsid", "params": params}
+        ssid_params['accessControlRuleName'] = access_control_rule
+        data = {"method": "modifySsid", "params": ssid_params}
+        params = {"wlBasicSsid24SettingsM": "", "token": self._token}
         with async_timeout.timeout(self.timeout):
-            res = await self.httpsession.post(self._base_url + SSID_EDIT_SETTINGS_PATH + self._token,
-                                              data=json.dumps(data),
-                                              )
-
+            res = await self.httpsession.post(
+                self._base_url + CONTROLLER_PATH,
+                params=params,
+                data=json.dumps(data),
+            )
         res_json = await res.json()
         if res_json['errorCode'] == -1001:
             _LOGGER.error("Access Controller Rule `%s` doesn't exist", access_control_rule)
             return False
         if res_json['errorCode'] != 0:
-            _LOGGER.error("Error fetching access points stats: %s", res_json['msg'])
+            _LOGGER.error("Can not set access controller rule: %s", res_json['msg'])
             return False
         _LOGGER.debug("Access Controller Rule `%s` affected to SSID %s", access_control_rule, ssid)
 
@@ -324,11 +368,9 @@ class OmadaData:
         """Get the latest data from the Omada Controller."""
         try:
             logged = await self.login()
-            if not isinstance(logged, tuple) or len(logged) != 2:
-                _LOGGER.error("Unable to fetch data from Omada Controller %s", self.host)
+            if not logged:
                 self.available = False
-            self._base_url = logged[0]
-            self._token = logged[1]
+                return
             # Fetch data
             await self.fetch_version()
             await self.fetch_global_stats()
@@ -339,3 +381,12 @@ class OmadaData:
         except Exception as exp:  # pylint: disable=broad-except
             _LOGGER.error("Unable to fetch data from Omada Controller %s. Error: %s", self.host, exp)
             self.available = False
+        return True
+
+
+class CannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class InvalidAuth(exceptions.HomeAssistantError):
+    """Error to indicate there is invalid auth."""

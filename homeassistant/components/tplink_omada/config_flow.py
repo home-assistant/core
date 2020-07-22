@@ -3,13 +3,13 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import config_entries, exceptions
 from homeassistant.const import (
     CONF_TIMEOUT, CONF_NAME,
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
+from .const import (  # pylint:disable=unused-import
     DOMAIN as OMADA_DOMAIN,
     CONF_DNSRESOLVE,
     CONF_SSLVERIFY,
@@ -26,15 +26,14 @@ _LOGGER = logging.getLogger(__name__)
 class OmadaConfigFlow(config_entries.ConfigFlow, domain=OMADA_DOMAIN):
     """TP-Link Omada Controller Conflig flow."""
 
+    VERSION = 1
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         return await self.async_step_init(user_input)
 
-    async def async_step_import(self, user_input=None):
-        """Handle a flow initiated by import."""
-        return await self.async_step_init(user_input, is_import=True)
-
-    async def async_step_init(self, user_input, is_import=False):
+    async def async_step_init(self, user_input):
         """Handle init step of a flow."""
         errors = {}
 
@@ -51,9 +50,6 @@ class OmadaConfigFlow(config_entries.ConfigFlow, domain=OMADA_DOMAIN):
                 return self.async_abort(reason="already_configured")
 
             if not await self._async_try_connect(host, username, password, timeout, verify_tls):
-                if is_import:
-                    _LOGGER.error("Failed to import: Can not connect to %s", host)
-                    return self.async_abort(reason="cannot_connect")
                 errors["base"] = "cannot_connect"
 
             if not errors:
@@ -70,11 +66,12 @@ class OmadaConfigFlow(config_entries.ConfigFlow, domain=OMADA_DOMAIN):
                             CONF_DNSRESOLVE: dns_resolve,
                         },
                     )
+                except CannotConnect:
+                    errors["base"] = "cannot_connect"
+                except InvalidAuth:
+                    errors["base"] = "invalid_auth"
                 except Exception as exp:  # pylint: disable=broad-except
-                    _LOGGER.debug("Connection failed: %s", exp)
-                    if is_import:
-                        _LOGGER.error("Failed to import: %s", exp)
-                        return self.async_abort(reason="cannot_connect")
+                    _LOGGER.exception("Unexpected exception: %s", exp)
                     errors["base"] = "cannot_connect"
 
         user_input = user_input or {}
@@ -102,9 +99,8 @@ class OmadaConfigFlow(config_entries.ConfigFlow, domain=OMADA_DOMAIN):
                 vol.Optional(CONF_DNSRESOLVE,
                              default=user_input.get(CONF_DNSRESOLVE) or DEFAULT_DNSRESOLVE
                              ): bool,
-
             }),
-            errors=errors
+            errors=errors,
         )
 
     async def _async_controller_existed(self, host):
@@ -115,3 +111,11 @@ class OmadaConfigFlow(config_entries.ConfigFlow, domain=OMADA_DOMAIN):
         http_session = async_get_clientsession(self.hass, verify_tls)
         logged = await login(host, username, password, timeout, http_session)
         return logged is not False
+
+
+class CannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class InvalidAuth(exceptions.HomeAssistantError):
+    """Error to indicate there is invalid auth."""

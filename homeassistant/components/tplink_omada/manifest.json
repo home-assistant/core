@@ -1,9 +1,16 @@
 {
   "domain": "tplink_omada",
   "name": "TP-Link Omada",
-  "documentation": "https://www.home-assistant.io/components/tplink",
-  "requirements": ["aiodns==2.0.0"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/tplink_omada",
+  "requirements": [
+    "aiodns==2.0.0"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
   "dependencies": [],
-  "codeowners": [],
-  "config_flow": true
+  "codeowners": [
+    "@titilambert"
+  ]
 }

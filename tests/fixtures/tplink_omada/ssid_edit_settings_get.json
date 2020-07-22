@@ -1,0 +1,54 @@
+{
+  "errorCode": 0,
+  "msg": null,
+  "result": {
+    "totalRows": 5,
+    "queryData": {
+      "currentPage": 1,
+      "currentPageSize": 5,
+      "sortName": "id",
+      "sortOrder": "asc",
+      "searchKey": "",
+      "filters": {
+      }
+    },
+    "data": [
+      {
+        "id": "ccccc730fb58b61b9e5ccccc",
+        "name": "wifi1",
+        "bandInfo": 3,
+        "index": 1,
+        "securityMode": 3,
+        "isolation": false,
+        "setting": "config&delete",
+        "vlanId": null,
+        "broadcast": true,
+        "portalEnable": null,
+        "portal": "disable",
+        "versionEnt": 2,
+        "encryptionEnt": 3,
+        "radiusServerIp": null,
+        "radiusPort": null,
+        "radiusPasswordEnt": null,
+        "updatePeriodEnt": 0,
+        "versionPsk": 2,
+        "encryptionPsk": 3,
+        "wirelessPasswordPsk": "mypasssword",
+        "updatePeriodPsk": 0,
+        "macListId": null,
+        "filteringAction": null,
+        "profileId": null,
+        "schedulerAction": null,
+        "rateLimit": {
+          "enable": false,
+          "downLimit": 0,
+          "upLimit": 0
+        },
+        "accessControl": false,
+        "accessControlRuleName": "None",
+        "wlanId": "AAAAaaaa"
+      }
+    ]
+  }
+}
+
