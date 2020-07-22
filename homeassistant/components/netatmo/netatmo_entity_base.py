@@ -35,13 +35,17 @@ class NetatmoBase(Entity):
 
             if "home_id" in data_class:
                 await self.data_handler.register_data_class(
-                    data_class["name"], signal_name, home_id=data_class["home_id"]
+                    data_class["name"],
+                    signal_name,
+                    self.async_update_callback,
+                    home_id=data_class["home_id"],
                 )
 
             elif data_class["name"] == "PublicData":
                 await self.data_handler.register_data_class(
                     data_class["name"],
                     signal_name,
+                    self.async_update_callback,
                     LAT_NE=data_class["LAT_NE"],
                     LON_NE=data_class["LON_NE"],
                     LAT_SW=data_class["LAT_SW"],
@@ -50,16 +54,9 @@ class NetatmoBase(Entity):
 
             else:
                 await self.data_handler.register_data_class(
-                    data_class["name"], signal_name
+                    data_class["name"], signal_name, self.async_update_callback
                 )
 
-            self.data_handler.listeners.append(
-                async_dispatcher_connect(
-                    self.hass,
-                    f"netatmo-update-{signal_name}",
-                    self.async_update_callback,
-                )
-            )
             self.data_handler.listeners.append(
                 async_dispatcher_connect(
                     self.hass,
@@ -78,7 +75,9 @@ class NetatmoBase(Entity):
             listener()
 
         for data_class in self._data_classes:
-            await self.data_handler.unregister_data_class(data_class[SIGNAL_NAME])
+            await self.data_handler.unregister_data_class(
+                data_class[SIGNAL_NAME], self.async_update_callback
+            )
 
     async def async_remove(self):
         """Clean up when removing entity.

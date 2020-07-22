@@ -68,7 +68,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async def get_entities():
         """Retrieve Netatmo entities."""
         await data_handler.register_data_class(
-            CAMERA_DATA_CLASS_NAME, CAMERA_DATA_CLASS_NAME
+            CAMERA_DATA_CLASS_NAME, CAMERA_DATA_CLASS_NAME, None
         )
 
         data = data_handler.data
@@ -106,7 +106,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         except pyatmo.NoDevice:
             _LOGGER.debug("No cameras found")
 
-        await data_handler.unregister_data_class(CAMERA_DATA_CLASS_NAME)
+        await data_handler.unregister_data_class(CAMERA_DATA_CLASS_NAME, None)
         return entities
 
     async_add_entities(await get_entities(), True)

@@ -112,7 +112,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async def find_entities(data_class_name):
         """Find all entities."""
-        await data_handler.register_data_class(data_class_name, data_class_name)
+        await data_handler.register_data_class(data_class_name, data_class_name, None)
 
         all_module_infos = {}
         data = data_handler.data
@@ -146,7 +146,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     )
                 )
 
-        await data_handler.unregister_data_class(data_class_name)
+        await data_handler.unregister_data_class(data_class_name, None)
         return entities
 
     async def get_entities():
@@ -192,6 +192,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             await data_handler.register_data_class(
                 PUBLICDATA_DATA_CLASS_NAME,
                 signal_name,
+                None,
                 LAT_NE=area.lat_ne,
                 LON_NE=area.lon_ne,
                 LAT_SW=area.lat_sw,
@@ -201,7 +202,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 new_entities.append(
                     NetatmoPublicSensor(data_handler, area, sensor_type)
                 )
-            await data_handler.unregister_data_class(signal_name)
+            await data_handler.unregister_data_class(signal_name, None)
 
         for device in entities.values():
             device_registry.async_remove_device(device.id)
@@ -523,7 +524,9 @@ class NetatmoPublicSensor(NetatmoBase):
         if self.area == area:
             return
 
-        await self.data_handler.unregister_data_class(self._signal_name)
+        await self.data_handler.unregister_data_class(
+            self._signal_name, self.async_update_callback
+        )
 
         self.area = area
         self._signal_name = f"{PUBLICDATA_DATA_CLASS_NAME}-{area.uuid}"
@@ -543,17 +546,11 @@ class NetatmoPublicSensor(NetatmoBase):
         await self.data_handler.register_data_class(
             PUBLICDATA_DATA_CLASS_NAME,
             self._signal_name,
+            self.async_update_callback,
             LAT_NE=area.lat_ne,
             LON_NE=area.lon_ne,
             LAT_SW=area.lat_sw,
             LON_SW=area.lon_sw,
-        )
-        self.data_handler.listeners.append(
-            async_dispatcher_connect(
-                self.hass,
-                f"netatmo-update-{self._signal_name}",
-                self.async_update_callback,
-            )
         )
 
     @callback

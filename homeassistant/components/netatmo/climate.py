@@ -114,7 +114,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
     await data_handler.register_data_class(
-        HOMEDATA_DATA_CLASS_NAME, HOMEDATA_DATA_CLASS_NAME
+        HOMEDATA_DATA_CLASS_NAME, HOMEDATA_DATA_CLASS_NAME, None
     )
     home_data = data_handler.data.get(HOMEDATA_DATA_CLASS_NAME)
 
@@ -134,12 +134,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 _LOGGER.debug("Setting up room %s (%s) ...", room_name, room_id)
                 signal_name = f"{HOMESTATUS_DATA_CLASS_NAME}-{home_id}"
                 await data_handler.register_data_class(
-                    HOMESTATUS_DATA_CLASS_NAME, signal_name, home_id=home_id
+                    HOMESTATUS_DATA_CLASS_NAME, signal_name, None, home_id=home_id
                 )
                 home_status = data_handler.data.get(signal_name)
                 if home_status and room_id in home_status.rooms:
                     entities.append(NetatmoThermostat(data_handler, home_id, room_id))
-                await data_handler.unregister_data_class(signal_name)
+                await data_handler.unregister_data_class(signal_name, None)
 
             hass.data[DOMAIN][DATA_SCHEDULES][home_id] = {
                 schedule_id: schedule_data.get("name")
@@ -159,7 +159,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
         return entities
 
-    await data_handler.unregister_data_class(HOMEDATA_DATA_CLASS_NAME)
+    await data_handler.unregister_data_class(HOMEDATA_DATA_CLASS_NAME, None)
     async_add_entities(await get_entities(), True)
 
     platform = entity_platform.current_platform.get()

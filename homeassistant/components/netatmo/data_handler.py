@@ -117,11 +117,17 @@ class NetatmoDataHandler:
             self.data[data_class_entry] = await self.hass.async_add_executor_job(
                 partial(data_class, **kwargs), self._auth,
             )
-            async_dispatcher_send(self.hass, f"netatmo-update-{data_class_entry}")
+            for update_callback in self._data_classes[data_class_entry][
+                "subscriptions"
+            ]:
+                if update_callback:
+                    update_callback()
         except (pyatmo.NoDevice, pyatmo.ApiError) as err:
             _LOGGER.debug(err)
 
-    async def register_data_class(self, data_class_name, data_class_entry, **kwargs):
+    async def register_data_class(
+        self, data_class_name, data_class_entry, update_callback, **kwargs
+    ):
         """Register data class."""
         async with self.lock:
             if data_class_entry not in self._data_classes:
@@ -131,7 +137,7 @@ class NetatmoDataHandler:
                     "interval": DEFAULT_INTERVALS[data_class_name],
                     NEXT_SCAN: time() + DEFAULT_INTERVALS[data_class_name],
                     "kwargs": kwargs,
-                    "registered": 1,
+                    "subscriptions": [update_callback],
                 }
 
                 await self.async_fetch_data(
@@ -142,18 +148,18 @@ class NetatmoDataHandler:
                 _LOGGER.debug("Data class %s added", data_class_entry)
 
             else:
-                self._data_classes[data_class_entry].update(
-                    registered=self._data_classes[data_class_entry]["registered"] + 1
+                self._data_classes[data_class_entry]["subscriptions"].append(
+                    update_callback
                 )
 
-    async def unregister_data_class(self, data_class_entry):
+    async def unregister_data_class(self, data_class_entry, update_callback):
         """Unregister data class."""
         async with self.lock:
-            registered = self._data_classes[data_class_entry]["registered"]
+            self._data_classes[data_class_entry]["subscriptions"].remove(
+                update_callback
+            )
 
-            if registered > 1:
-                self._data_classes[data_class_entry].update(registered=registered - 1)
-            else:
+            if not self._data_classes[data_class_entry].get("subscriptions"):
                 self._queue.remove(self._data_classes[data_class_entry])
                 self._data_classes.pop(data_class_entry)
                 _LOGGER.debug("Data class %s removed", data_class_entry)
