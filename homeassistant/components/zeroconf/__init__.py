@@ -21,6 +21,7 @@ from homeassistant import util
 from homeassistant.const import (
     ATTR_NAME,
     EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     __version__,
 )
@@ -181,6 +182,21 @@ def setup(hass, config):
         properties=params,
     )
 
+    def zeroconf_hass_start(_event):
+        """Expose Home Assistant on zeroconf when it starts.
+
+        Wait till started or otherwise HTTP is not up and running.
+        """
+        _LOGGER.info("Starting Zeroconf broadcast")
+        try:
+            zeroconf.register_service(info)
+        except NonUniqueNameException:
+            _LOGGER.error(
+                "Home Assistant instance with identical name present in the local network"
+            )
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, zeroconf_hass_start)
+
     def service_update(zeroconf, service_type, name, state_change):
         """Service state changed."""
         if state_change != ServiceStateChange.Added:
@@ -232,22 +248,13 @@ def setup(hass, config):
     if HOMEKIT_TYPE not in ZEROCONF:
         types.append(HOMEKIT_TYPE)
 
-    def zeroconf_hass_start(_event):
-        """Expose Home Assistant on zeroconf when it starts.
+    def zeroconf_hass_started(_event):
+        """Start the service browser."""
 
-        Wait till started or otherwise HTTP is not up and running.
-        """
-        _LOGGER.info("Starting Zeroconf browser and broadcast")
+        _LOGGER.debug("Starting Zeroconf browser")
         HaServiceBrowser(zeroconf, types, handlers=[service_update])
 
-        try:
-            zeroconf.register_service(info)
-        except NonUniqueNameException:
-            _LOGGER.error(
-                "Home Assistant instance with identical name present in the local network"
-            )
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, zeroconf_hass_start)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STARTED, zeroconf_hass_started)
 
     return True
 
