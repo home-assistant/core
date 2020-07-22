@@ -29,8 +29,8 @@ async def async_get_scanner(hass, config):
     if hub.success_init:
         scanner = SkyHubDeviceScanner(config[DOMAIN], hub)
         return scanner
-    else:
-        return None
+
+    return None
 
 
 class SkyHubDeviceScanner(DeviceScanner):
