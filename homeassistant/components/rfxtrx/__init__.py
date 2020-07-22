@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_COMMAND_ON,
     CONF_DEVICE,
     CONF_DEVICE_CLASS,
+    CONF_DEVICE_ID,
     CONF_DEVICES,
     CONF_HOST,
     CONF_PORT,
@@ -151,6 +152,14 @@ async def async_setup(hass, config):
         CONF_DEVICES: config[DOMAIN][CONF_DEVICES],
     }
 
+    # Read device_id from the event code add to the data that will end up in the ConfigEntry
+    for event_code, event_config in data[CONF_DEVICES].items():
+        event = get_rfx_object(event_code)
+        device_id = get_device_id(
+            event.device, data_bits=event_config.get(CONF_DATA_BITS)
+        )
+        data[CONF_DEVICES][event_code][CONF_DEVICE_ID] = device_id
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data,
@@ -163,7 +172,7 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
     """Set up the RFXtrx component."""
     hass.data.setdefault(DOMAIN, {})
 
-    await hass.async_add_executor_job(setup_internal, hass, entry.data)
+    await hass.async_add_executor_job(setup_internal, hass, entry)
 
     for domain in DOMAINS:
         hass.async_create_task(
@@ -203,9 +212,12 @@ def unload_internal(hass, config):
     rfx_object.close_connection()
 
 
-def setup_internal(hass, config):
+def setup_internal(hass, entry: config_entries.ConfigEntry):
     """Set up the RFXtrx component."""
+    config = entry.data
+
     # Setup some per device config
+    devices = set()
     device_events = set()
     device_bits = {}
     for event_code, event_config in config[CONF_DEVICES].items():
@@ -213,6 +225,7 @@ def setup_internal(hass, config):
         device_id = get_device_id(
             event.device, data_bits=event_config.get(CONF_DATA_BITS)
         )
+        devices.add(device_id)
         device_bits[device_id] = event_config.get(CONF_DATA_BITS)
         if event_config[CONF_FIRE_EVENT]:
             device_events.add(device_id)
@@ -244,6 +257,20 @@ def setup_internal(hass, config):
         # Signal event to any other listeners
         if device_id in device_events:
             hass.bus.fire(EVENT_RFXTRX_EVENT, event_data)
+
+        if config[CONF_AUTOMATIC_ADD]:
+            if device_id not in devices:
+                data = entry.data
+                data[CONF_DEVICES][event_data["data"]] = device_id
+
+                asyncio.run_coroutine_threadsafe(
+                    async_add_device(hass, entry, data), hass.loop
+                )
+
+                devices.add(device_id)
+
+    async def async_add_device(hass, entry: config_entries.ConfigEntry, data):
+        return hass.config_entries.async_update_entry(entry=entry, data=data)
 
     device = config[CONF_DEVICE]
     host = config[CONF_HOST]
