@@ -95,8 +95,9 @@ class XboxApi:
 
     # continue with #16
 
-    def send_message(self, message, xuids=[]):
+    def send_message(self, message, xuids=None):
         """Send a message to a set of user(s)."""
+        xuids = xuids or []
         headers = {"X-AUTH": self.api_key, "Content-Type": "application/json"}
 
         payload = {"message": message, "to": []}
