@@ -322,7 +322,7 @@ beautifulsoup4==4.9.0
 beewi_smartclim==0.0.7
 
 # homeassistant.components.zha
-bellows==0.17.0
+bellows==0.18.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.7.7
@@ -1515,7 +1515,7 @@ pynx584==0.5
 pynzbgetapi==0.2.0
 
 # homeassistant.components.obihai
-pyobihai==1.2.1
+pyobihai==1.2.3
 
 # homeassistant.components.ombi
 pyombi==0.1.10
@@ -2211,6 +2211,9 @@ withings-api==2.1.6
 
 # homeassistant.components.wled
 wled==0.4.3
+
+# homeassistant.components.wolflink
+wolf_smartset==0.1.4
 
 # homeassistant.components.xbee
 xbee-helper==0.0.7

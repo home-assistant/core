@@ -55,7 +55,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         if self._battery_channel:
-            await self.async_accept_signal(
+            self.async_accept_signal(
                 self._battery_channel,
                 SIGNAL_ATTR_UPDATED,
                 self.async_battery_percentage_remaining_updated,

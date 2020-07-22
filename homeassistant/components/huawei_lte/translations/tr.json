@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "track_new_devices": "Yeni cihazlar\u0131 izle"
+                }
+            }
+        }
+    }
+}

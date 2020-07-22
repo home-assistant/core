@@ -6,6 +6,13 @@
         },
         "error": {
             "cannot_connect": "Kon niet verbinden"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "location": "Locatie"
+                }
+            }
         }
     }
 }

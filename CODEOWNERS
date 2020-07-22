@@ -459,6 +459,7 @@ homeassistant/components/websocket_api/* @home-assistant/core
 homeassistant/components/wiffi/* @mampfes
 homeassistant/components/withings/* @vangorra
 homeassistant/components/wled/* @frenck
+homeassistant/components/wolflink/* @adamkrol93
 homeassistant/components/workday/* @fabaff
 homeassistant/components/worldclock/* @fabaff
 homeassistant/components/xbox_live/* @MartinHjelmare

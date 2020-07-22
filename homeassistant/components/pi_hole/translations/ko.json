@@ -10,8 +10,9 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API \ud0a4 (\uc120\ud0dd \uc0ac\ud56d)",
+                    "api_key": "API \ud0a4",
                     "host": "\ud638\uc2a4\ud2b8",
+                    "location": "\uc704\uce58",
                     "name": "\uc774\ub984",
                     "port": "\ud3ec\ud2b8",
                     "ssl": "SSL \uc0ac\uc6a9",

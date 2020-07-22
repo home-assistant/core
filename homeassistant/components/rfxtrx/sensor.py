@@ -20,7 +20,7 @@ from . import (
     get_device_id,
     get_rfx_object,
 )
-from .const import DATA_RFXTRX_CONFIG
+from .const import ATTR_EVENT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ async def async_setup_entry(
     hass, config_entry, async_add_entities,
 ):
     """Set up platform."""
-    discovery_info = hass.data[DATA_RFXTRX_CONFIG]
+    discovery_info = config_entry.data
     data_ids = set()
 
     def supported(event):
@@ -125,6 +125,17 @@ class RfxtrxSensor(RfxtrxEntity):
 
         self._device_class = DEVICE_CLASSES.get(data_type)
         self._convert_fun = CONVERT_FUNCTIONS.get(data_type, lambda x: x)
+
+    async def async_added_to_hass(self):
+        """Restore device state."""
+        await super().async_added_to_hass()
+
+        if self._event is None:
+            old_state = await self.async_get_last_state()
+            if old_state is not None:
+                event = old_state.attributes.get(ATTR_EVENT)
+                if event:
+                    self._apply_event(get_rfx_object(event))
 
     @property
     def state(self):

@@ -252,7 +252,7 @@ async def test_light_without_brightness_supported(hass_hue, hue_client):
     )
 
     assert light_without_brightness_json["state"][HUE_API_STATE_ON] is True
-    assert light_without_brightness_json["type"] == "Dimmable light"
+    assert light_without_brightness_json["type"] == "On/Off light"
 
 
 async def test_light_without_brightness_can_be_turned_off(hass_hue, hue_client):

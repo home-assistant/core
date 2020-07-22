@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane.",
+            "no_devices": "Nie znaleziono urz\u0105dze\u0144 w sieci.",
+            "reauth_successful": "Token dost\u0119pu pomy\u015blnie zaktualizowano."
+        },
+        "error": {
+            "auth": "Token dost\u0119pu"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "access_token": "Token dost\u0119pu",
+                    "email": "Adres e-mail"
+                }
+            },
+            "user": {
+                "data": {
+                    "access_token": "Token dost\u0119pu",
+                    "email": "Adres e-mail"
+                }
+            }
+        }
+    }
+}
