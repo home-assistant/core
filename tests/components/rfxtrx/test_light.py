@@ -3,9 +3,11 @@ from unittest.mock import call
 
 import pytest
 
+from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
-from . import _signal_event
+from tests.common import mock_restore_cache
 
 
 async def test_one_light(hass, rfxtrx):
@@ -83,6 +85,27 @@ async def test_one_light(hass, rfxtrx):
     ]
 
 
+@pytest.mark.parametrize("state,brightness", [["on", 100], ["on", 50], ["off", None]])
+async def test_state_restore(hass, rfxtrx, state, brightness):
+    """State restoration."""
+
+    entity_id = "light.ac_213c7f2_16"
+
+    mock_restore_cache(
+        hass, [State(entity_id, state, attributes={ATTR_BRIGHTNESS: brightness})]
+    )
+
+    assert await async_setup_component(
+        hass,
+        "rfxtrx",
+        {"rfxtrx": {"device": "abcd", "devices": {"0b1100cd0213c7f210020f51": {}}}},
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == state
+    assert hass.states.get(entity_id).attributes.get(ATTR_BRIGHTNESS) == brightness
+
+
 async def test_several_lights(hass, rfxtrx):
     """Test with 3 lights."""
     assert await async_setup_component(
@@ -144,13 +167,15 @@ async def test_repetitions(hass, rfxtrx, repetitions):
 
 async def test_discover_light(hass, rfxtrx_automatic):
     """Test with discovery of lights."""
-    await _signal_event(hass, "0b11009e00e6116202020070")
+    rfxtrx = rfxtrx_automatic
+
+    await rfxtrx.signal("0b11009e00e6116202020070")
     state = hass.states.get("light.ac_0e61162_2")
     assert state
     assert state.state == "on"
     assert state.attributes.get("friendly_name") == "AC 0e61162:2"
 
-    await _signal_event(hass, "0b1100120118cdea02020070")
+    await rfxtrx.signal("0b1100120118cdea02020070")
     state = hass.states.get("light.ac_118cdea_2")
     assert state
     assert state.state == "on"

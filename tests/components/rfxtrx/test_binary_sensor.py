@@ -1,7 +1,11 @@
 """The tests for the Rfxtrx sensor platform."""
+import pytest
+
+from homeassistant.components.rfxtrx.const import ATTR_EVENT
+from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
-from . import _signal_event
+from tests.common import mock_restore_cache
 
 EVENT_SMOKE_DETECTOR_PANIC = "08200300a109000670"
 EVENT_SMOKE_DETECTOR_NO_PANIC = "08200300a109000770"
@@ -54,13 +58,34 @@ async def test_one_pt2262(hass, rfxtrx):
     assert state.state == "off"  # probably aught to be unknown
     assert state.attributes.get("friendly_name") == "PT2262 22670e"
 
-    await _signal_event(hass, "0913000022670e013970")
+    await rfxtrx.signal("0913000022670e013970")
     state = hass.states.get("binary_sensor.pt2262_22670e")
     assert state.state == "on"
 
-    await _signal_event(hass, "09130000226707013d70")
+    await rfxtrx.signal("09130000226707013d70")
     state = hass.states.get("binary_sensor.pt2262_22670e")
     assert state.state == "off"
+
+
+@pytest.mark.parametrize(
+    "state,event",
+    [["on", "0b1100cd0213c7f230010f71"], ["off", "0b1100cd0213c7f230000f71"]],
+)
+async def test_state_restore(hass, rfxtrx, state, event):
+    """State restoration."""
+
+    entity_id = "binary_sensor.ac_213c7f2_48"
+
+    mock_restore_cache(hass, [State(entity_id, state, attributes={ATTR_EVENT: event})])
+
+    assert await async_setup_component(
+        hass,
+        "rfxtrx",
+        {"rfxtrx": {"device": "abcd", "devices": {"0b1100cd0213c7f230010f71": {}}}},
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == state
 
 
 async def test_several(hass, rfxtrx):
@@ -99,12 +124,14 @@ async def test_several(hass, rfxtrx):
 
 async def test_discover(hass, rfxtrx_automatic):
     """Test with discovery."""
-    await _signal_event(hass, "0b1100100118cdea02010f70")
+    rfxtrx = rfxtrx_automatic
+
+    await rfxtrx.signal("0b1100100118cdea02010f70")
     state = hass.states.get("binary_sensor.ac_118cdea_2")
     assert state
     assert state.state == "on"
 
-    await _signal_event(hass, "0b1100100118cdeb02010f70")
+    await rfxtrx.signal("0b1100100118cdeb02010f70")
     state = hass.states.get("binary_sensor.ac_118cdeb_2")
     assert state
     assert state.state == "on"
@@ -129,7 +156,7 @@ async def test_off_delay(hass, rfxtrx, timestep):
     assert state
     assert state.state == "off"
 
-    await _signal_event(hass, "0b1100100118cdea02010f70")
+    await rfxtrx.signal("0b1100100118cdea02010f70")
     state = hass.states.get("binary_sensor.ac_118cdea_2")
     assert state
     assert state.state == "on"
@@ -147,24 +174,26 @@ async def test_off_delay(hass, rfxtrx, timestep):
 
 async def test_panic(hass, rfxtrx_automatic):
     """Test panic entities."""
+    rfxtrx = rfxtrx_automatic
 
     entity_id = "binary_sensor.kd101_smoke_detector_a10900_32"
 
-    await _signal_event(hass, EVENT_SMOKE_DETECTOR_PANIC)
+    await rfxtrx.signal(EVENT_SMOKE_DETECTOR_PANIC)
     assert hass.states.get(entity_id).state == "on"
     assert hass.states.get(entity_id).attributes.get("device_class") == "smoke"
 
-    await _signal_event(hass, EVENT_SMOKE_DETECTOR_NO_PANIC)
+    await rfxtrx.signal(EVENT_SMOKE_DETECTOR_NO_PANIC)
     assert hass.states.get(entity_id).state == "off"
 
 
 async def test_panic_delay_off(hass, rfxtrx_automatic, timestep):
     """Test with discovery."""
+    rfxtrx = rfxtrx_automatic
 
     entity_id = "binary_sensor.kd101_smoke_detector_a10900_32"
     delay_off = 60
 
-    await _signal_event(hass, EVENT_SMOKE_DETECTOR_PANIC)
+    await rfxtrx.signal(EVENT_SMOKE_DETECTOR_PANIC)
     assert hass.states.get(entity_id).state == "on"
 
     # check for premature off
@@ -172,7 +201,7 @@ async def test_panic_delay_off(hass, rfxtrx_automatic, timestep):
     assert hass.states.get(entity_id).state == "on"
 
     # signal restart internal timer
-    await _signal_event(hass, EVENT_SMOKE_DETECTOR_PANIC)
+    await rfxtrx.signal(EVENT_SMOKE_DETECTOR_PANIC)
 
     # check for premature off
     await timestep(delay_off * 0.9)
@@ -185,24 +214,26 @@ async def test_panic_delay_off(hass, rfxtrx_automatic, timestep):
 
 async def test_motion(hass, rfxtrx_automatic):
     """Test motion entities."""
+    rfxtrx = rfxtrx_automatic
 
     entity_id = "binary_sensor.x10_security_motion_detector_a10900_32"
 
-    await _signal_event(hass, EVENT_MOTION_DETECTOR_MOTION)
+    await rfxtrx.signal(EVENT_MOTION_DETECTOR_MOTION)
     assert hass.states.get(entity_id).state == "on"
     assert hass.states.get(entity_id).attributes.get("device_class") == "motion"
 
-    await _signal_event(hass, EVENT_MOTION_DETECTOR_NO_MOTION)
+    await rfxtrx.signal(EVENT_MOTION_DETECTOR_NO_MOTION)
     assert hass.states.get(entity_id).state == "off"
 
 
 async def test_light(hass, rfxtrx_automatic):
     """Test light entities."""
+    rfxtrx = rfxtrx_automatic
 
     entity_id = "binary_sensor.x10_security_motion_detector_a10900_32"
 
-    await _signal_event(hass, EVENT_LIGHT_DETECTOR_LIGHT)
+    await rfxtrx.signal(EVENT_LIGHT_DETECTOR_LIGHT)
     assert hass.states.get(entity_id).state == "on"
 
-    await _signal_event(hass, EVENT_LIGHT_DETECTOR_DARK)
+    await rfxtrx.signal(EVENT_LIGHT_DETECTOR_DARK)
     assert hass.states.get(entity_id).state == "off"

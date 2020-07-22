@@ -61,7 +61,6 @@ YOUTUBE_PLAYER_SUPPORT = (
     | SUPPORT_PLAY
     | SUPPORT_SHUFFLE_SET
     | SUPPORT_SELECT_SOUND_MODE
-    | SUPPORT_SELECT_SOURCE
     | SUPPORT_SEEK
 )
 
@@ -397,6 +396,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         self._cur_episode = 1
         self._episode_count = 13
         self._source = "dvd"
+        self._source_list = ["dvd", "youtube"]
 
     @property
     def media_content_id(self):
@@ -447,6 +447,11 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     def source(self):
         """Return the current input source."""
         return self._source
+
+    @property
+    def source_list(self):
+        """List of available sources."""
+        return self._source_list
 
     @property
     def supported_features(self):
