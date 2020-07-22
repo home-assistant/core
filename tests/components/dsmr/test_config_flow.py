@@ -141,6 +141,11 @@ async def test_config_flow_manual_usb_success(hass, mock_connection_factory):
 
     await hass.async_block_till_done()
 
+    # Test if integration can be unloaded correctly
+    conf_entries = hass.config_entries.async_entries(DOMAIN)
+    await hass.config_entries.async_unload(conf_entries[0].entry_id)
+    await hass.async_block_till_done()
+
 
 async def test_config_flow_manual_host_success(hass, mock_connection_factory):
     """
