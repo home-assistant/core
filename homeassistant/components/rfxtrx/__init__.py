@@ -229,7 +229,7 @@ def setup_internal(hass, config):
             "sub_type": event.device.subtype,
             "type_string": event.device.type_string,
             "id_string": event.device.id_string,
-            "data": "".join(f"{x:02x}" for x in event.data),
+            "data": binascii.hexlify(event.data).decode("ASCII"),
             "values": getattr(event, "values", None),
         }
 
