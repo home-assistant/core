@@ -476,7 +476,7 @@ directv==0.3.0
 discogs_client==2.2.2
 
 # homeassistant.components.discord
-discord.py==1.3.3
+discord.py==1.3.4
 
 # homeassistant.components.updater
 distro==1.5.0
@@ -1606,6 +1606,9 @@ pysher==1.0.1
 
 # homeassistant.components.signal_messenger
 pysignalclirestapi==0.3.4
+
+# homeassistant.components.sky_hub
+pyskyqhub==0.1.0
 
 # homeassistant.components.sma
 pysma==0.3.5

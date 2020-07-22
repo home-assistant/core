@@ -23,7 +23,13 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import Context, CoreState, HomeAssistant, callback
+from homeassistant.core import (
+    Context,
+    CoreState,
+    HomeAssistant,
+    callback,
+    split_entity_id,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, extract_domain_configs
 import homeassistant.helpers.config_validation as cv
@@ -260,6 +266,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._is_enabled = False
         self._referenced_entities: Optional[Set[str]] = None
         self._referenced_devices: Optional[Set[str]] = None
+        self._logger = _LOGGER
 
     @property
     def name(self):
@@ -337,13 +344,18 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         """Startup with initial state or previous state."""
         await super().async_added_to_hass()
 
+        self._logger = logging.getLogger(
+            f"{__name__}.{split_entity_id(self.entity_id)[1]}"
+        )
+        self.action_script.update_logger(self._logger)
+
         state = await self.async_get_last_state()
         if state:
             enable_automation = state.state == STATE_ON
             last_triggered = state.attributes.get("last_triggered")
             if last_triggered is not None:
                 self._last_triggered = parse_datetime(last_triggered)
-            _LOGGER.debug(
+            self._logger.debug(
                 "Loaded automation %s with state %s from state "
                 " storage last state %s",
                 self.entity_id,
@@ -352,7 +364,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             )
         else:
             enable_automation = DEFAULT_INITIAL_STATE
-            _LOGGER.debug(
+            self._logger.debug(
                 "Automation %s not in state storage, state %s from default is used",
                 self.entity_id,
                 enable_automation,
@@ -360,7 +372,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 
         if self._initial_state is not None:
             enable_automation = self._initial_state
-            _LOGGER.debug(
+            self._logger.debug(
                 "Automation %s initial state %s overridden from "
                 "config initial_state",
                 self.entity_id,
@@ -403,12 +415,12 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             context=trigger_context,
         )
 
-        _LOGGER.info("Executing %s", self._name)
+        self._logger.info("Executing %s", self._name)
 
         try:
             await self.action_script.async_run(variables, trigger_context)
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("While executing automation %s", self.entity_id)
+            self._logger.exception("While executing automation %s", self.entity_id)
 
     async def async_will_remove_from_hass(self):
         """Remove listeners when removing automation from Home Assistant."""
@@ -476,13 +488,13 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         results = await asyncio.gather(*triggers)
 
         if None in results:
-            _LOGGER.error("Error setting up trigger %s", self._name)
+            self._logger.error("Error setting up trigger %s", self._name)
 
         removes = [remove for remove in results if remove is not None]
         if not removes:
             return None
 
-        _LOGGER.info("Initialized trigger %s", self._name)
+        self._logger.info("Initialized trigger %s", self._name)
 
         @callback
         def remove_triggers():
