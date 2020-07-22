@@ -21,6 +21,7 @@ from homeassistant import util
 from homeassistant.const import (
     ATTR_NAME,
     EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     __version__,
 )
@@ -247,7 +248,13 @@ def setup(hass, config):
     if HOMEKIT_TYPE not in ZEROCONF:
         types.append(HOMEKIT_TYPE)
 
-    HaServiceBrowser(zeroconf, types, handlers=[service_update])
+    def zeroconf_hass_started(_event):
+        """Start the service browser."""
+
+        _LOGGER.debug("Starting Zeroconf browser")
+        HaServiceBrowser(zeroconf, types, handlers=[service_update])
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STARTED, zeroconf_hass_started)
 
     return True
 
