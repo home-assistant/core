@@ -225,6 +225,9 @@ class Envoy(Entity):
                 self._state = self.coordinator.data.get("inverters_production").get(
                     serial_number
                 )[0]
+                self._last_reported = self.coordinator.data.get(
+                    "inverters_production"
+                ).get(serial_number)[1]
                 _LOGGER.debug(
                     "Updating: %s (%s) - %s.", self._type, serial_number, self._state,
                 )
