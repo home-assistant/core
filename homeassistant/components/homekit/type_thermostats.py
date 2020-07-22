@@ -496,7 +496,7 @@ class WaterHeater(HomeAccessory):
         """Initialize a WaterHeater accessory object."""
         super().__init__(*args, category=CATEGORY_THERMOSTAT)
         self._unit = self.hass.config.units.temperature_unit
-        hc_min_temp, hc_max_temp = self.get_temperature_range()
+        min_temp, max_temp = self.get_temperature_range()
 
         serv_thermostat = self.add_preload_service(SERV_THERMOSTAT)
 
@@ -519,7 +519,7 @@ class WaterHeater(HomeAccessory):
             # We do not set PROP_MIN_STEP here and instead use the HomeKit
             # default of 0.1 in order to have enough precision to convert
             # temperature units and avoid setting to 73F will result in 74F
-            properties={PROP_MIN_VALUE: hc_min_temp, PROP_MAX_VALUE: hc_max_temp},
+            properties={PROP_MIN_VALUE: min_temp, PROP_MAX_VALUE: max_temp},
             setter_callback=self.set_target_temperature,
         )
 
