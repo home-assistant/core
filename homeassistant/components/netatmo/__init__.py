@@ -57,7 +57,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["camera", "climate", "light", "sensor"]
+PLATFORMS = ["camera", "climate", "sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -151,6 +151,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 hass.data[DOMAIN][entry.entry_id][AUTH].addwebhook, webhook_url
             )
             _LOGGER.info("Register Netatmo webhook: %s", webhook_url)
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(entry, "light")
+            )
         except pyatmo.ApiError as err:
             _LOGGER.error("Error during webhook registration - %s", err)
 
