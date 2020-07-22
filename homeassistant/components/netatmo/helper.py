@@ -1,5 +1,6 @@
 """Helper for Netatmo integration."""
 from dataclasses import dataclass
+from uuid import uuid4
 
 
 @dataclass
@@ -13,4 +14,4 @@ class NetatmoArea:
     lon_sw: float
     mode: str
     show_on_map: bool
-    uuid: str
+    uuid: str = uuid4()
