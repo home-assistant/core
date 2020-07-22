@@ -1,12 +1,16 @@
 """The tests for the Rfxtrx sensor platform."""
 from datetime import timedelta
 
+import pytest
+
+from homeassistant.components.rfxtrx.const import ATTR_EVENT
+from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import _signal_event
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, mock_restore_cache
 
 
 async def test_one(hass, rfxtrx):
@@ -57,6 +61,27 @@ async def test_one_pt2262(hass, rfxtrx):
     await _signal_event(hass, "09130000226707013d70")
     state = hass.states.get("binary_sensor.pt2262_22670e")
     assert state.state == "off"
+
+
+@pytest.mark.parametrize(
+    "state,event",
+    [["on", "0b1100cd0213c7f230010f71"], ["off", "0b1100cd0213c7f230000f71"]],
+)
+async def test_state_restore(hass, rfxtrx, state, event):
+    """State restoration."""
+
+    entity_id = "binary_sensor.ac_213c7f2_48"
+
+    mock_restore_cache(hass, [State(entity_id, state, attributes={ATTR_EVENT: event})])
+
+    assert await async_setup_component(
+        hass,
+        "rfxtrx",
+        {"rfxtrx": {"device": "abcd", "devices": {"0b1100cd0213c7f230010f71": {}}}},
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == state
 
 
 async def test_several(hass, rfxtrx):
