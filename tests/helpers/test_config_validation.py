@@ -260,18 +260,49 @@ def test_time_period():
     """Test time_period validation."""
     schema = vol.Schema(cv.time_period)
 
-    options = (None, "", "hello:world", "12:", "12:34:56:78", {}, {"wrong_key": -10})
+    options = (
+        None,
+        "",
+        "hello:world",
+        "12:",
+        "12:34:56:78",
+        {},
+        {"wrong_key": -10},
+        "12.5:30",
+        "12:30.5",
+        "12.5:30:30",
+        "12:30.5:30",
+    )
     for value in options:
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-    options = ("8:20", "23:59", "-8:20", "-23:59:59", "-48:00", {"minutes": 5}, 1, "5")
-    for value in options:
-        schema(value)
-
-    assert timedelta(seconds=180) == schema("180")
-    assert timedelta(hours=23, minutes=59) == schema("23:59")
-    assert -1 * timedelta(hours=1, minutes=15) == schema("-1:15")
+    options = (
+        ("8:20", timedelta(hours=8, minutes=20)),
+        ("23:59", timedelta(hours=23, minutes=59)),
+        ("-8:20", -1 * timedelta(hours=8, minutes=20)),
+        ("-1:15", -1 * timedelta(hours=1, minutes=15)),
+        ("-23:59:59", -1 * timedelta(hours=23, minutes=59, seconds=59)),
+        ("-48:00", -1 * timedelta(days=2)),
+        ({"minutes": 5}, timedelta(minutes=5)),
+        (1, timedelta(seconds=1)),
+        ("5", timedelta(seconds=5)),
+        ("180", timedelta(seconds=180)),
+        ("00:08:20.5", timedelta(minutes=8, seconds=20, milliseconds=500)),
+        ("00:23:59.999", timedelta(minutes=23, seconds=59, milliseconds=999)),
+        ("-00:08:20.5", -1 * timedelta(minutes=8, seconds=20, milliseconds=500)),
+        (
+            "-12:59:59.999",
+            -1 * timedelta(hours=12, minutes=59, seconds=59, milliseconds=999),
+        ),
+        ({"milliseconds": 1.5}, timedelta(milliseconds=1, microseconds=500)),
+        ({"seconds": "1.5"}, timedelta(seconds=1, milliseconds=500)),
+        ({"minutes": "1.5"}, timedelta(minutes=1, seconds=30)),
+        ({"hours": -1.5}, -1 * timedelta(hours=1, minutes=30)),
+        ({"days": "-1.5"}, -1 * timedelta(days=1, hours=12)),
+    )
+    for value, result in options:
+        assert schema(value) == result
 
 
 def test_remove_falsy():
