@@ -58,7 +58,6 @@ class AiohttpClientMocker:
         if params:
             url = url.with_query(params)
 
-        print("REGISTERING {}".format(url))
         self._mocks.append(
             AiohttpClientMockResponse(
                 method=method,
@@ -139,8 +138,6 @@ class AiohttpClientMocker:
             url = url.with_query(params)
         for response in self._mocks:
             if response.match_request(method, url, params):
-                print("FFFFFFFFFFFF")
-                print(method, url, params)
                 self.mock_calls.append((method, url, data, headers))
                 if response.side_effect:
                     response = await response.side_effect(method, url, data)

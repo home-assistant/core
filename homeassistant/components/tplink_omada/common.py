@@ -262,7 +262,7 @@ class OmadaData:
         if _LOGGER.level <= logging.DEBUG:
             msgs = []
             for mac, name in list_of_devices.items():
-                msgs.append("{}: {}".format(mac, name))
+                msgs.append(f"{mac}: {name}")
             _LOGGER.debug("\nDevice count: %s\n%s", len(msgs), "\n".join(msgs))
 
         return list_of_devices
@@ -359,18 +359,14 @@ class OmadaData:
         rule = service.data.get(SERVICE_WIFIACRULE_ATTR_RULE)
         # Check if the entity is a ssid
         if self._hass.data["sensor"].get_entity(entity_id) is None:
-            raise Exception(
-                "The entity `{}` doesn't seems to be an SSID".format(entity_id)
-            )
+            raise Exception(f"The entity `{entity_id}` doesn't seems to be an SSID")
         if (
             "ssid"
             not in self._hass.data["sensor"]
             .get_entity(entity_id)
             .device_state_attributes
         ):
-            raise Exception(
-                "The entity `{}` doesn't seems to be an SSID".format(entity_id)
-            )
+            raise Exception(f"The entity `{entity_id}` doesn't seems to be an SSID")
         ssid = (
             self._hass.data["sensor"]
             .get_entity(entity_id)

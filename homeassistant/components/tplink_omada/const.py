@@ -45,10 +45,10 @@ SENSOR_LIST = list(SENSOR_DICT)
 
 
 SENSOR_SSID_STATS_DICT = {
-    "totalDownload": ["traffic_received", "bits", "mdi:download",],
-    "totalUpload": ["traffic_sent", "bits", "mdi:upload",],
-    "totalTraffic": ["traffic_total", "bits", "mdi:swap-vertical-bold",],
-    "totalClient": ["connected_clients", "clients", "mdi:account-group",],
+    "totalDownload": ["traffic_received", "bits", "mdi:download"],
+    "totalUpload": ["traffic_sent", "bits", "mdi:upload"],
+    "totalTraffic": ["traffic_total", "bits", "mdi:swap-vertical-bold"],
+    "totalClient": ["connected_clients", "clients", "mdi:account-group"],
 }
 SENSOR_SSID_SETTINGS_DICT = {
     "bandInfo": "band_info",
@@ -67,10 +67,10 @@ SENSOR_AP_SETTINGS_DICT = {
     "name": "Name",
 }
 SENSOR_AP_STATS_DICT = {
-    "clientNum": ["Connected clients", "clients", "mdi:account-group",],
-    "clientNum2g": ["Connected 2G clients", "clients", "mdi:account-group",],
-    "clientNum5g": ["Connected 5G clients", "clients", "mdi:account-group",],
-    "needUpgrade": ["Need update", "", "mdi:update",],
-    "download": ["Traffic received", "bits", "mdi:download",],
-    "upload": ["Traffic sent", "bits", "mdi:upload",],
+    "clientNum": ["Connected clients", "clients", "mdi:account-group"],
+    "clientNum2g": ["Connected 2G clients", "clients", "mdi:account-group"],
+    "clientNum5g": ["Connected 5G clients", "clients", "mdi:account-group"],
+    "needUpgrade": ["Need update", "", "mdi:update"],
+    "download": ["Traffic received", "bits", "mdi:download"],
+    "upload": ["Traffic sent", "bits", "mdi:upload"],
 }

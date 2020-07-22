@@ -77,7 +77,6 @@ aiobotocore==0.11.1
 
 # homeassistant.components.dnsip
 # homeassistant.components.minecraft_server
-# homeassistant.components.omada
 # homeassistant.components.tplink_omada
 aiodns==2.0.0
 
