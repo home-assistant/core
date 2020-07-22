@@ -49,7 +49,7 @@ from homeassistant.helpers.service import (
     CONF_SERVICE_DATA,
     async_prepare_call_from_config,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
@@ -134,7 +134,7 @@ class _ScriptRun:
         self,
         hass: HomeAssistant,
         script: "Script",
-        variables: Optional[Sequence],
+        variables: TemplateVarsType,
         context: Optional[Context],
         log_exceptions: bool,
     ) -> None:
@@ -724,14 +724,16 @@ class Script:
         self._referenced_entities = referenced
         return referenced
 
-    def run(self, variables=None, context=None):
+    def run(
+        self, variables: TemplateVarsType = None, context: Optional[Context] = None
+    ) -> None:
         """Run script."""
         asyncio.run_coroutine_threadsafe(
             self.async_run(variables, context), self._hass.loop
         ).result()
 
     async def async_run(
-        self, variables: Optional[Sequence] = None, context: Optional[Context] = None
+        self, variables: TemplateVarsType = None, context: Optional[Context] = None
     ) -> None:
         """Run script."""
         if self.is_running:
