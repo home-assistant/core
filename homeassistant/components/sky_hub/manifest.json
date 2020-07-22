@@ -3,5 +3,5 @@
   "name": "Sky Hub",
   "documentation": "https://www.home-assistant.io/integrations/sky_hub",
   "requirements": ["pyskyqhub==0.1.0"],
-  "codeowners": []
+  "codeowners": ["@rogerselwyn"],
 }
