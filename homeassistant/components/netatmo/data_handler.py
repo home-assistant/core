@@ -11,8 +11,7 @@ from typing import Deque, Dict, List
 import pyatmo
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import AUTH, DOMAIN, MANUFACTURER
@@ -172,14 +171,3 @@ class NetatmoDataHandler:
     def webhook(self) -> bool:
         """Return the webhook state."""
         return self._webhook
-
-
-@callback
-def add_entities(entities, async_add_entities, hass):
-    """Add new sensor entities."""
-    async_add_entities(entities)
-
-
-async def async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle signals of config entry being updated."""
-    async_dispatcher_send(hass, "signal_update")
