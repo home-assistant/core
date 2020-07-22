@@ -16,7 +16,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config=None):
         """Handle the initial step."""
-
         await self.async_set_unique_id(DOMAIN)
         self._abort_if_unique_id_configured(import_config)
         return self.async_create_entry(title="RFXTRX", data=import_config)

@@ -169,7 +169,7 @@ azure-eventhub==5.1.0
 base36==0.1.1
 
 # homeassistant.components.zha
-bellows==0.17.0
+bellows==0.18.0
 
 # homeassistant.components.blebox
 blebox_uniapi==1.3.2
@@ -539,6 +539,9 @@ py-melissa-climate==2.0.0
 # homeassistant.components.seventeentrack
 py17track==2.2.2
 
+# homeassistant.components.control4
+pyControl4==0.0.6
+
 # homeassistant.components.tplink
 pyHS100==0.3.5.1
 
@@ -580,7 +583,7 @@ pyblackbird==0.5
 pybotvac==0.0.17
 
 # homeassistant.components.cast
-pychromecast==7.0.1
+pychromecast==7.1.2
 
 # homeassistant.components.coolmaster
 pycoolmasternet==0.0.4
@@ -974,6 +977,9 @@ withings-api==2.1.6
 
 # homeassistant.components.wled
 wled==0.4.3
+
+# homeassistant.components.wolflink
+wolf_smartset==0.1.4
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest

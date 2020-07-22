@@ -1,0 +1,13 @@
+{
+  "domain": "control4",
+  "name": "Control4",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/control4",
+  "requirements": ["pyControl4==0.0.6"],
+  "ssdp": [
+    {
+      "st": "c4:director"
+    }
+  ],
+  "codeowners": ["@lawtancool"]
+}
