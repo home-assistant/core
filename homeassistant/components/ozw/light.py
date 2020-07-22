@@ -80,11 +80,10 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         if self.values.dimming_duration is not None:
             self._supported_features |= SUPPORT_TRANSITION
 
-        if self.values.color is None and self.values.color_channels is None:
+        if self.values.color is None or self.values.color_channels is None:
             return
 
-        if self.values.color is not None:
-            self._supported_features |= SUPPORT_COLOR
+        self._supported_features |= SUPPORT_COLOR
 
         # Support Color Temp if both white channels
         if (self.values.color_channels.value & COLOR_CHANNEL_WARM_WHITE) and (
