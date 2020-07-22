@@ -7,6 +7,7 @@ import os
 import sys
 from typing import List, Optional, Sequence, Text
 
+from homeassistant import runner
 from homeassistant.bootstrap import async_mount_local_lib_path
 from homeassistant.config import get_default_config_dir
 from homeassistant.requirements import pip_kwargs
@@ -58,6 +59,8 @@ def run(args: List) -> int:
         if not install_package(req, **_pip_kwargs):
             print("Aborting script, could not install dependency", req)
             return 1
+
+    asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 
     return script.run(args[1:])  # type: ignore
 

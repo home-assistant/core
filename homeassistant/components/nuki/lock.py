@@ -51,7 +51,7 @@ LOCK_N_GO_SERVICE_SCHEMA = vol.Schema(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nuki lock platform."""
     bridge = NukiBridge(
-        config[CONF_HOST], config[CONF_TOKEN], config[CONF_PORT], DEFAULT_TIMEOUT,
+        config[CONF_HOST], config[CONF_TOKEN], config[CONF_PORT], True, DEFAULT_TIMEOUT,
     )
 
     devices = [NukiLockEntity(lock) for lock in bridge.locks]

@@ -2,7 +2,6 @@
 import os
 from typing import Dict
 
-from asynctest import MagicMock
 import pytest
 
 from homeassistant.components import zeroconf
@@ -42,13 +41,16 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PORT,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     STATE_ON,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import State
 from homeassistant.helpers import device_registry
@@ -59,11 +61,16 @@ from homeassistant.util import json as json_util
 
 from .util import PATH_HOMEKIT, async_init_entry, async_init_integration
 
-from tests.async_mock import ANY, AsyncMock, Mock, patch
+from tests.async_mock import ANY, AsyncMock, MagicMock, Mock, patch
 from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 from tests.components.homekit.common import patch_debounce
 
 IP_ADDRESS = "127.0.0.1"
+
+
+@pytest.fixture(autouse=True)
+def always_patch_driver(hk_driver):
+    """Load the hk_driver fixture."""
 
 
 @pytest.fixture(name="device_reg")
@@ -208,6 +215,7 @@ async def test_homekit_setup(hass, hk_driver):
         hass,
         entry.entry_id,
         BRIDGE_NAME,
+        loop=hass.loop,
         address=IP_ADDRESS,
         port=DEFAULT_PORT,
         persist_file=path,
@@ -249,6 +257,7 @@ async def test_homekit_setup_ip_address(hass, hk_driver):
         hass,
         entry.entry_id,
         BRIDGE_NAME,
+        loop=hass.loop,
         address="172.0.0.0",
         port=DEFAULT_PORT,
         persist_file=path,
@@ -286,6 +295,7 @@ async def test_homekit_setup_advertise_ip(hass, hk_driver):
         hass,
         entry.entry_id,
         BRIDGE_NAME,
+        loop=hass.loop,
         address="0.0.0.0",
         port=DEFAULT_PORT,
         persist_file=path,
@@ -492,7 +502,7 @@ async def test_homekit_start(hass, hk_driver, device_reg, debounce_patcher):
     ) as mock_setup_msg, patch(
         "pyhap.accessory_driver.AccessoryDriver.add_accessory"
     ) as hk_driver_add_acc, patch(
-        "pyhap.accessory_driver.AccessoryDriver.start"
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
     ) as hk_driver_start:
         await homekit.async_start()
 
@@ -525,7 +535,7 @@ async def test_homekit_start(hass, hk_driver, device_reg, debounce_patcher):
     ) as mock_setup_msg, patch(
         "pyhap.accessory_driver.AccessoryDriver.add_accessory"
     ) as hk_driver_add_acc, patch(
-        "pyhap.accessory_driver.AccessoryDriver.start"
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
     ) as hk_driver_start:
         await homekit.async_start()
 
@@ -572,7 +582,7 @@ async def test_homekit_start_with_a_broken_accessory(hass, hk_driver, debounce_p
     ) as mock_setup_msg, patch(
         "pyhap.accessory_driver.AccessoryDriver.add_accessory",
     ) as hk_driver_add_acc, patch(
-        "pyhap.accessory_driver.AccessoryDriver.start"
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
     ) as hk_driver_start:
         await homekit.async_start()
 
@@ -605,8 +615,9 @@ async def test_homekit_stop(hass):
         entry_id=entry.entry_id,
     )
     homekit.driver = Mock()
-
-    await async_init_integration(hass)
+    homekit.driver.async_stop = AsyncMock()
+    homekit.bridge = Mock()
+    homekit.bridge.accessories = {}
 
     assert homekit.status == STATUS_READY
     await homekit.async_stop()
@@ -617,13 +628,13 @@ async def test_homekit_stop(hass):
     homekit.status = STATUS_STOPPED
     await homekit.async_stop()
     await hass.async_block_till_done()
-    assert homekit.driver.stop.called is False
+    assert homekit.driver.async_stop.called is False
 
     # Test if driver is started
     homekit.status = STATUS_RUNNING
     await homekit.async_stop()
     await hass.async_block_till_done()
-    assert homekit.driver.stop.called is True
+    assert homekit.driver.async_stop.called is True
 
 
 async def test_homekit_reset_accessories(hass):
@@ -651,7 +662,7 @@ async def test_homekit_reset_accessories(hass):
     ), patch("pyhap.accessory.Bridge.add_accessory") as mock_add_accessory, patch(
         "pyhap.accessory_driver.AccessoryDriver.config_changed"
     ) as hk_driver_config_changed, patch(
-        "pyhap.accessory_driver.AccessoryDriver.start"
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
     ):
         await async_init_entry(hass, entry)
 
@@ -698,7 +709,7 @@ async def test_homekit_too_many_accessories(hass, hk_driver):
 
     hass.states.async_set("light.demo", "on")
 
-    with patch("pyhap.accessory_driver.AccessoryDriver.start"), patch(
+    with patch("pyhap.accessory_driver.AccessoryDriver.start_service"), patch(
         "pyhap.accessory_driver.AccessoryDriver.add_accessory"
     ), patch("homeassistant.components.homekit._LOGGER.warning") as mock_warn, patch(
         f"{PATH_HOMEKIT}.show_setup_message"
@@ -774,7 +785,7 @@ async def test_homekit_finds_linked_batteries(
     with patch.object(homekit.bridge, "add_accessory"), patch(
         f"{PATH_HOMEKIT}.show_setup_message"
     ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
-        "pyhap.accessory_driver.AccessoryDriver.start"
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
     ):
         await homekit.async_start()
     await hass.async_block_till_done()
@@ -912,7 +923,7 @@ async def test_raise_config_entry_not_ready(hass):
         await hass.async_block_till_done()
 
 
-async def test_homekit_uses_system_zeroconf(hass, mock_zeroconf):
+async def test_homekit_uses_system_zeroconf(hass, hk_driver, mock_zeroconf):
     """Test HomeKit uses system zeroconf."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -921,15 +932,15 @@ async def test_homekit_uses_system_zeroconf(hass, mock_zeroconf):
     )
     system_zc = await zeroconf.async_get_instance(hass)
 
-    with patch(f"{PATH_HOMEKIT}.HomeKit.add_bridge_accessory"), patch(
-        f"{PATH_HOMEKIT}.show_setup_message"
-    ), patch("pyhap.accessory_driver.AccessoryDriver.add_accessory"), patch(
-        "pyhap.accessory_driver.AccessoryDriver.start"
+    with patch("pyhap.accessory_driver.AccessoryDriver.start_service"), patch(
+        f"{PATH_HOMEKIT}.HomeKit.async_stop"
     ):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert hass.data[DOMAIN][entry.entry_id][HOMEKIT].driver.advertiser == system_zc
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
 
 
 def _write_data(path: str, data: Dict) -> None:
@@ -1001,7 +1012,7 @@ async def test_homekit_ignored_missing_devices(
     with patch.object(homekit.bridge, "add_accessory"), patch(
         f"{PATH_HOMEKIT}.show_setup_message"
     ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
-        "pyhap.accessory_driver.AccessoryDriver.start"
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
     ):
         await homekit.async_start()
     await hass.async_block_till_done()
@@ -1075,7 +1086,7 @@ async def test_homekit_finds_linked_motion_sensors(
     with patch.object(homekit.bridge, "add_accessory"), patch(
         f"{PATH_HOMEKIT}.show_setup_message"
     ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
-        "pyhap.accessory_driver.AccessoryDriver.start"
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
     ):
         await homekit.async_start()
     await hass.async_block_till_done()
@@ -1090,5 +1101,82 @@ async def test_homekit_finds_linked_motion_sensors(
             "model": "Camera Server",
             "sw_version": "0.16.0",
             "linked_motion_sensor": "binary_sensor.camera_motion_sensor",
+        },
+    )
+
+
+async def test_homekit_finds_linked_humidity_sensors(
+    hass, hk_driver, debounce_patcher, device_reg, entity_reg
+):
+    """Test HomeKit start method."""
+    entry = await async_init_integration(hass)
+
+    homekit = HomeKit(
+        hass,
+        None,
+        None,
+        None,
+        {},
+        {"humidifier.humidifier": {}},
+        DEFAULT_SAFE_MODE,
+        advertise_ip=None,
+        entry_id=entry.entry_id,
+    )
+    homekit.driver = hk_driver
+    homekit._filter = Mock(return_value=True)
+    homekit.bridge = HomeBridge(hass, hk_driver, "mock_bridge")
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        sw_version="0.16.1",
+        model="Smart Brainy Clever Humidifier",
+        manufacturer="Home Assistant",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    humidity_sensor = entity_reg.async_get_or_create(
+        "sensor",
+        "humidifier",
+        "humidity_sensor",
+        device_id=device_entry.id,
+        device_class=DEVICE_CLASS_HUMIDITY,
+    )
+    humidifier = entity_reg.async_get_or_create(
+        "humidifier", "humidifier", "demo", device_id=device_entry.id
+    )
+
+    hass.states.async_set(
+        humidity_sensor.entity_id,
+        "42",
+        {
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
+            ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+        },
+    )
+    hass.states.async_set(humidifier.entity_id, STATE_ON)
+
+    def _mock_get_accessory(*args, **kwargs):
+        return [None, "acc", None]
+
+    with patch.object(homekit.bridge, "add_accessory"), patch(
+        f"{PATH_HOMEKIT}.show_setup_message"
+    ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
+    ):
+        await homekit.async_start()
+    await hass.async_block_till_done()
+
+    mock_get_acc.assert_called_with(
+        hass,
+        hk_driver,
+        ANY,
+        ANY,
+        {
+            "manufacturer": "Home Assistant",
+            "model": "Smart Brainy Clever Humidifier",
+            "sw_version": "0.16.1",
+            "linked_humidity_sensor": "sensor.humidifier_humidity_sensor",
         },
     )

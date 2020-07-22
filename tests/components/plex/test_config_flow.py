@@ -18,7 +18,6 @@ from homeassistant.components.plex.const import (
     DOMAIN,
     MANUAL_SETUP_STRING,
     PLEX_SERVER_CONFIG,
-    PLEX_UPDATE_PLATFORMS_SIGNAL,
     SERVERS,
 )
 from homeassistant.config import async_process_ha_core_config
@@ -34,9 +33,9 @@ from homeassistant.const import (
     CONF_URL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN
+from .helpers import trigger_plex_update
 from .mock_classes import MockGDM, MockPlexAccount, MockPlexServer, MockResource
 
 from tests.async_mock import patch
@@ -368,12 +367,10 @@ async def test_option_flow(hass):
 
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
         "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
-    ), patch("homeassistant.components.plex.PlexWebsocket.listen") as mock_listen:
+    ), patch("homeassistant.components.plex.PlexWebsocket", autospec=True):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-
-    assert mock_listen.called
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state == ENTRY_STATE_LOADED
@@ -418,12 +415,10 @@ async def test_missing_option_flow(hass):
 
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
         "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
-    ), patch("homeassistant.components.plex.PlexWebsocket.listen") as mock_listen:
+    ), patch("homeassistant.components.plex.PlexWebsocket", autospec=True):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-
-    assert mock_listen.called
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state == ENTRY_STATE_LOADED
@@ -472,17 +467,17 @@ async def test_option_flow_new_users_available(hass, caplog):
 
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
         "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
-    ), patch("homeassistant.components.plex.PlexWebsocket.listen"):
+    ), patch(
+        "homeassistant.components.plex.PlexWebsocket", autospec=True
+    ) as mock_websocket:
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
+    trigger_plex_update(mock_websocket)
+    await hass.async_block_till_done()
+
     server_id = mock_plex_server.machineIdentifier
-
-    with patch("plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()):
-        async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
-        await hass.async_block_till_done()
-
     monitored_users = hass.data[DOMAIN][SERVERS][server_id].option_monitored_users
 
     new_users = [x for x in mock_plex_server.accounts if x not in monitored_users]
@@ -677,8 +672,8 @@ async def test_manual_config(hass):
     assert result["errors"]["base"] == "ssl_error"
 
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "homeassistant.components.plex.PlexWebsocket.listen"
-    ):
+        "homeassistant.components.plex.PlexWebsocket", autospec=True
+    ), patch("plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MANUAL_SERVER
         )
@@ -712,7 +707,7 @@ async def test_manual_config_with_token(hass):
 
     with patch("plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()), patch(
         "plexapi.server.PlexServer", return_value=mock_plex_server
-    ), patch("homeassistant.components.plex.PlexWebsocket.listen"):
+    ), patch("homeassistant.components.plex.PlexWebsocket", autospec=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_TOKEN: MOCK_TOKEN}
         )
@@ -743,13 +738,12 @@ async def test_setup_with_limited_credentials(hass):
     ) as mock_accounts, patch(
         "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
     ), patch(
-        "homeassistant.components.plex.PlexWebsocket.listen"
-    ) as mock_listen:
+        "homeassistant.components.plex.PlexWebsocket", autospec=True
+    ):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_listen.called
     assert mock_accounts.called
 
     plex_server = hass.data[DOMAIN][SERVERS][mock_plex_server.machineIdentifier]

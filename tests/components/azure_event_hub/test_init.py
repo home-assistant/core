@@ -1,5 +1,5 @@
 """The tests for the Azure Event Hub component."""
-from collections import namedtuple
+from dataclasses import dataclass
 
 import pytest
 
@@ -17,7 +17,14 @@ MIN_CONFIG = {
     "event_hub_sas_policy": "policy",
     "event_hub_sas_key": "key",
 }
-FilterTest = namedtuple("FilterTest", "id should_pass")
+
+
+@dataclass
+class FilterTest:
+    """Class for capturing a filter test."""
+
+    id: str
+    should_pass: bool
 
 
 @pytest.fixture(autouse=True, name="mock_client", scope="module")
