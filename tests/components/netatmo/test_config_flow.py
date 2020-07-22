@@ -155,4 +155,5 @@ async def test_option_flow(hass):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert config_entry.options == {CONF_WEATHER_AREAS: {"Home": expected_result}}
+    for k, v in expected_result.items():
+        assert config_entry.options[CONF_WEATHER_AREAS]["Home"][k] == v
