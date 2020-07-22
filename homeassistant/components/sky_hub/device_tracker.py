@@ -44,7 +44,7 @@ class SkyHubDeviceScanner(DeviceScanner):
     async def async_scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         await self._async_update_info()
-        return [device for device in self.last_results]
+        return list(self.last_results)
 
     async def async_get_device_name(self, device):
         """Return the name of the given device."""
