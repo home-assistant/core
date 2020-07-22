@@ -106,7 +106,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
 
         if agent_user_id is None:
             _LOGGER.warning(
-                "No agent_user_id supplied for request_sync. Call as a user or pass in user id as agent_user_id."
+                "No agent_user_id supplied for request_sync. Call as a user or pass in user id as agent_user_id"
             )
             return
 

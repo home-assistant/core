@@ -53,6 +53,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             step_id="options_1",
             data_schema=vol.Schema(
                 {
+                    vol.Required("constant"): "Constant Value",
                     vol.Optional(
                         CONF_BOOLEAN,
                         default=self.config_entry.options.get(CONF_BOOLEAN, False),

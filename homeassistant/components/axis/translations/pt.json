@@ -1,5 +1,15 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado",
+            "bad_config_file": "Dados incorretos do arquivo de configura\u00e7\u00e3o",
+            "link_local_address": "Eendere\u00e7os de liga\u00e7\u00e3o local n\u00e3o s\u00e3o suportados"
+        },
+        "error": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado",
+            "device_unavailable": "Dispositivo n\u00e3o est\u00e1 dispon\u00edvel",
+            "faulty_credentials": "Credenciais do utilizador erradas"
+        },
         "step": {
             "user": {
                 "data": {

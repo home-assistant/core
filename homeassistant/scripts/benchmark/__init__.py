@@ -36,18 +36,19 @@ def run(args):
     args = parser.parse_args()
 
     bench = BENCHMARKS[args.name]
-
-    print("Using event loop:", asyncio.get_event_loop_policy().__module__)
+    print("Using event loop:", asyncio.get_event_loop_policy().loop_name)
 
     with suppress(KeyboardInterrupt):
         while True:
-            loop = asyncio.new_event_loop()
-            hass = core.HomeAssistant(loop)
-            hass.async_stop_track_tasks()
-            runtime = loop.run_until_complete(bench(hass))
-            print(f"Benchmark {bench.__name__} done in {runtime}s")
-            loop.run_until_complete(hass.async_stop())
-            loop.close()
+            asyncio.run(run_benchmark(bench))
+
+
+async def run_benchmark(bench):
+    """Run a benchmark."""
+    hass = core.HomeAssistant()
+    runtime = await bench(hass)
+    print(f"Benchmark {bench.__name__} done in {runtime}s")
+    await hass.async_stop()
 
 
 def benchmark(func: CALLABLE_T) -> CALLABLE_T:
@@ -114,7 +115,7 @@ async def time_changed_helper(hass):
 
 @benchmark
 async def state_changed_helper(hass):
-    """Run a million events through state changed helper."""
+    """Run a million events through state changed helper with 1000 entities."""
     count = 0
     entity_id = "light.kitchen"
     event = asyncio.Event()
@@ -128,9 +129,48 @@ async def state_changed_helper(hass):
         if count == 10 ** 6:
             event.set()
 
-    hass.helpers.event.async_track_state_change(entity_id, listener, "off", "on")
+    for idx in range(1000):
+        hass.helpers.event.async_track_state_change(
+            f"{entity_id}{idx}", listener, "off", "on"
+        )
     event_data = {
-        "entity_id": entity_id,
+        "entity_id": f"{entity_id}0",
+        "old_state": core.State(entity_id, "off"),
+        "new_state": core.State(entity_id, "on"),
+    }
+
+    for _ in range(10 ** 6):
+        hass.bus.async_fire(EVENT_STATE_CHANGED, event_data)
+
+    start = timer()
+
+    await event.wait()
+
+    return timer() - start
+
+
+@benchmark
+async def state_changed_event_helper(hass):
+    """Run a million events through state changed event helper with 1000 entities."""
+    count = 0
+    entity_id = "light.kitchen"
+    event = asyncio.Event()
+
+    @core.callback
+    def listener(*args):
+        """Handle event."""
+        nonlocal count
+        count += 1
+
+        if count == 10 ** 6:
+            event.set()
+
+    hass.helpers.event.async_track_state_change_event(
+        [f"{entity_id}{idx}" for idx in range(1000)], listener
+    )
+
+    event_data = {
+        "entity_id": f"{entity_id}0",
         "old_state": core.State(entity_id, "off"),
         "new_state": core.State(entity_id, "on"),
     }

@@ -68,7 +68,7 @@ SENSOR_TYPES = {
     "storage_power": ["STORAGE", "Storage Power", None, "mdi:car-battery", False],
     "purchased_power": ["Purchased", "Imported Power", None, "mdi:flash", False],
     "production_power": ["Production", "Production Power", None, "mdi:flash", False],
-    "consumption_power": ["Consumption", "Cosumption Power", None, "mdi:flash", False],
+    "consumption_power": ["Consumption", "Consumption Power", None, "mdi:flash", False],
     "selfconsumption_power": [
         "SelfConsumption",
         "SelfConsumption Power",

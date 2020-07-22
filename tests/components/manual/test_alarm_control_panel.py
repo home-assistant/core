@@ -1450,7 +1450,7 @@ async def test_armed_custom_bypass_with_specific_pending(hass):
     assert STATE_ALARM_ARMED_CUSTOM_BYPASS == hass.states.get(entity_id).state
 
 
-async def test_arm_away_after_disabled_disarmed(hass):
+async def test_arm_away_after_disabled_disarmed(hass, legacy_patchable_time):
     """Test pending state with and without zero trigger time."""
     assert await async_setup_component(
         hass,
