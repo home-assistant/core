@@ -79,6 +79,12 @@ async def async_setup_platform(
             async with async_timeout.timeout(30):
                 data = await envoy_reader.update()
                 _LOGGER.debug("Retrieved data from API: %s", data)
+                if "can't handle event type ConnectionClosed" in str(
+                    data.get("inverters_production")
+                ):
+                    _LOGGER.warning(
+                        "Communication error with Enphase Envoy.  Will retrieve data on the next poll."
+                    )
                 return data
         except httpcore.ProtocolError as err:
             _LOGGER.error("Error communicating with API: %s", err)
