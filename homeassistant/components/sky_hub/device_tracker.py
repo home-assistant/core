@@ -24,10 +24,10 @@ async def async_get_scanner(hass, config):
     websession = async_get_clientsession(hass)
     hub = SkyQHub(websession, host)
 
-    _LOGGER.info("Initialising Sky Hub")
+    _LOGGER.debug("Initialising Sky Hub")
     await hub.async_connect()
     if hub.success_init:
-        scanner = SkyHubDeviceScanner(config[DOMAIN], hub)
+        scanner = SkyHubDeviceScanner(hub)
         return scanner
 
     return None
@@ -36,7 +36,7 @@ async def async_get_scanner(hass, config):
 class SkyHubDeviceScanner(DeviceScanner):
     """This class queries a Sky Hub router."""
 
-    def __init__(self, config, hub):
+    def __init__(self, hub):
         """Initialise the scanner."""
         self._hub = hub
         self.last_results = {}
@@ -44,7 +44,7 @@ class SkyHubDeviceScanner(DeviceScanner):
     async def async_scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         await self._async_update_info()
-        return list(device for device in self.last_results)
+        return [device for device in self.last_results]
 
     async def async_get_device_name(self, device):
         """Return the name of the given device."""
@@ -52,7 +52,7 @@ class SkyHubDeviceScanner(DeviceScanner):
 
     async def _async_update_info(self):
         """Ensure the information from the Sky Hub is up to date."""
-        _LOGGER.info("Scanning")
+        _LOGGER.debug("Scanning")
 
         data = await self._hub.async_get_skyhub_data()
 
