@@ -12,8 +12,11 @@
             "user": {
                 "data": {
                     "password": "[%key_id:common::config_flow::data::password%]",
+                    "server": "Serwer",
                     "username": "[%key_id:common::config_flow::data::username%]"
-                }
+                },
+                "description": "Wprowad\u017a dane uwierzytelniaj\u0105ce Dexcom",
+                "title": "Skonfiguruj integracj\u0119 Dexcom"
             }
         }
     },
