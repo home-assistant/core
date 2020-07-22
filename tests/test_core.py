@@ -1090,9 +1090,20 @@ def test_timer_out_of_sync(mock_monotonic, loop):
     ):
         callback(target)
 
-        event_type, event_data = hass.bus.async_fire.mock_calls[1][1]
-        assert event_type == EVENT_TIMER_OUT_OF_SYNC
-        assert abs(event_data[ATTR_SECONDS] - 2.433333) < 0.001
+        _, event_0_args, event_0_kwargs = hass.bus.async_fire.mock_calls[0]
+        event_context_0 = event_0_kwargs["context"]
+
+        event_type_0, _ = event_0_args
+        assert event_type_0 == EVENT_TIME_CHANGED
+
+        _, event_1_args, event_1_kwargs = hass.bus.async_fire.mock_calls[1]
+        event_type_1, event_data_1 = event_1_args
+        event_context_1 = event_1_kwargs["context"]
+
+        assert event_type_1 == EVENT_TIMER_OUT_OF_SYNC
+        assert abs(event_data_1[ATTR_SECONDS] - 2.433333) < 0.001
+
+        assert event_context_0 == event_context_1
 
         assert len(funcs) == 2
         fire_time_event, _ = funcs
