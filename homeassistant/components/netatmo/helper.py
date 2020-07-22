@@ -13,3 +13,4 @@ class NetatmoArea:
     lon_sw: float
     mode: str
     show_on_map: bool
+    uuid: str

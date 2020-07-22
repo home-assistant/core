@@ -38,6 +38,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
     SERVICE_SETSCHEDULE,
+    SIGNAL_NAME,
 )
 from .data_handler import HOMEDATA_DATA_CLASS_NAME, HOMESTATUS_DATA_CLASS_NAME
 from .netatmo_entity_base import NetatmoBase
@@ -112,7 +113,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Netatmo energy platform."""
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    await data_handler.register_data_class(HOMEDATA_DATA_CLASS_NAME)
+    await data_handler.register_data_class(
+        HOMEDATA_DATA_CLASS_NAME, HOMEDATA_DATA_CLASS_NAME
+    )
     home_data = data_handler.data.get(HOMEDATA_DATA_CLASS_NAME)
 
     if not home_data:
@@ -129,17 +132,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
             for room_id in home_data.rooms[home_id].keys():
                 room_name = home_data.rooms[home_id][room_id]["name"]
                 _LOGGER.debug("Setting up room %s (%s) ...", room_name, room_id)
+                signal_name = f"{HOMESTATUS_DATA_CLASS_NAME}-{home_id}"
                 await data_handler.register_data_class(
-                    HOMESTATUS_DATA_CLASS_NAME, home_id=home_id
+                    HOMESTATUS_DATA_CLASS_NAME, signal_name, home_id=home_id
                 )
-                home_status = data_handler.data.get(
-                    f"{HOMESTATUS_DATA_CLASS_NAME}-{home_id}"
-                )
+                home_status = data_handler.data.get(signal_name)
                 if home_status and room_id in home_status.rooms:
                     entities.append(NetatmoThermostat(data_handler, home_id, room_id))
-                await data_handler.unregister_data_class(
-                    f"{HOMESTATUS_DATA_CLASS_NAME}-{home_id}"
-                )
+                await data_handler.unregister_data_class(signal_name)
 
             hass.data[DOMAIN][DATA_SCHEDULES][home_id] = {
                 schedule_id: schedule_data.get("name")
@@ -190,8 +190,15 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
 
         self._data_classes.extend(
             [
-                {"name": HOMEDATA_DATA_CLASS_NAME},
-                {"name": HOMESTATUS_DATA_CLASS_NAME, "home_id": self._home_id},
+                {
+                    "name": HOMEDATA_DATA_CLASS_NAME,
+                    SIGNAL_NAME: HOMEDATA_DATA_CLASS_NAME,
+                },
+                {
+                    "name": HOMESTATUS_DATA_CLASS_NAME,
+                    "home_id": self._home_id,
+                    SIGNAL_NAME: self._home_status_class,
+                },
             ]
         )
 

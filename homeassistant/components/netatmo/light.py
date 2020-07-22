@@ -7,7 +7,7 @@ from homeassistant.components.light import LightEntity
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 
-from .const import DATA_HANDLER, DOMAIN, MANUFACTURER
+from .const import DATA_HANDLER, DOMAIN, MANUFACTURER, SIGNAL_NAME
 from .data_handler import CAMERA_DATA_CLASS_NAME, NetatmoDataHandler
 from .netatmo_entity_base import NetatmoBase
 
@@ -26,7 +26,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async def get_entities():
         """Retrieve Netatmo entities."""
-        await data_handler.register_data_class(CAMERA_DATA_CLASS_NAME)
+        await data_handler.register_data_class(
+            CAMERA_DATA_CLASS_NAME, CAMERA_DATA_CLASS_NAME
+        )
 
         entities = []
         try:
@@ -80,7 +82,9 @@ class NetatmoLight(NetatmoBase, LightEntity):
         LightEntity.__init__(self)
         super().__init__(data_handler)
 
-        self._data_classes.append({"name": CAMERA_DATA_CLASS_NAME})
+        self._data_classes.append(
+            {"name": CAMERA_DATA_CLASS_NAME, SIGNAL_NAME: CAMERA_DATA_CLASS_NAME}
+        )
         self._id = camera_id
         self._home_id = home_id
         self._model = camera_type

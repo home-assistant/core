@@ -25,6 +25,7 @@ from .const import (
     MODELS,
     SERVICE_SETPERSONAWAY,
     SERVICE_SETPERSONSHOME,
+    SIGNAL_NAME,
 )
 from .data_handler import CAMERA_DATA_CLASS_NAME
 from .netatmo_entity_base import NetatmoBase
@@ -66,7 +67,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async def get_entities():
         """Retrieve Netatmo entities."""
-        await data_handler.register_data_class(CAMERA_DATA_CLASS_NAME)
+        await data_handler.register_data_class(
+            CAMERA_DATA_CLASS_NAME, CAMERA_DATA_CLASS_NAME
+        )
 
         data = data_handler.data
 
@@ -138,7 +141,9 @@ class NetatmoCamera(NetatmoBase, Camera):
         Camera.__init__(self)
         super().__init__(data_handler)
 
-        self._data_classes.append({"name": CAMERA_DATA_CLASS_NAME})
+        self._data_classes.append(
+            {"name": CAMERA_DATA_CLASS_NAME, SIGNAL_NAME: CAMERA_DATA_CLASS_NAME}
+        )
 
         self._id = camera_id
         self._home_id = home_id

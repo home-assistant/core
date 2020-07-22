@@ -1,5 +1,6 @@
 """Config flow for Netatmo."""
 import logging
+import uuid
 
 import voluptuous as vol
 
@@ -16,6 +17,7 @@ from .const import (
     CONF_LON_SW,
     CONF_NEW_AREA,
     CONF_PUBLIC_MODE,
+    CONF_UUID,
     CONF_WEATHER_AREAS,
     DOMAIN,
 )
@@ -136,6 +138,11 @@ class NetatmoOptionsFlowHandler(config_entries.OptionsFlow):
             self.options[CONF_WEATHER_AREAS][
                 user_input[CONF_AREA_NAME]
             ] = fix_coordinates(user_input)
+
+            self.options[CONF_WEATHER_AREAS][user_input[CONF_AREA_NAME]][
+                CONF_UUID
+            ] = str(uuid.uuid4())
+
             return await self.async_step_public_weather_areas()
 
         orig_options = self.config_entry.options.get(CONF_WEATHER_AREAS, {}).get(

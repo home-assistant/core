@@ -121,15 +121,8 @@ class NetatmoDataHandler:
         except (pyatmo.NoDevice, pyatmo.ApiError) as err:
             _LOGGER.debug(err)
 
-    async def register_data_class(self, data_class_name, **kwargs):
+    async def register_data_class(self, data_class_name, data_class_entry, **kwargs):
         """Register data class."""
-        if "home_id" in kwargs:
-            data_class_entry = f"{data_class_name}-{kwargs['home_id']}"
-        elif "area_name" in kwargs:
-            data_class_entry = f"{data_class_name}-{kwargs.pop('area_name')}"
-        else:
-            data_class_entry = data_class_name
-
         async with self.lock:
             if data_class_entry not in self._data_classes:
                 self._data_classes[data_class_entry] = {
