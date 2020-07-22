@@ -5,20 +5,23 @@ import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
 from homeassistant.const import (
-    CONF_TIMEOUT, CONF_NAME,
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TIMEOUT,
+    CONF_USERNAME,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .common import login
 from .const import (  # pylint:disable=unused-import
-    DOMAIN as OMADA_DOMAIN,
     CONF_DNSRESOLVE,
     CONF_SSLVERIFY,
-    DEFAULT_SSLVERIFY,
     DEFAULT_DNSRESOLVE,
+    DEFAULT_SSLVERIFY,
     DEFAULT_TIMEOUT,
+    DOMAIN as OMADA_DOMAIN,
 )
-from .common import login
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +52,9 @@ class OmadaConfigFlow(config_entries.ConfigFlow, domain=OMADA_DOMAIN):
             if await self._async_controller_existed(host):
                 return self.async_abort(reason="already_configured")
 
-            if not await self._async_try_connect(host, username, password, timeout, verify_tls):
+            if not await self._async_try_connect(
+                host, username, password, timeout, verify_tls
+            ):
                 errors["base"] = "cannot_connect"
 
             if not errors:
@@ -77,34 +82,41 @@ class OmadaConfigFlow(config_entries.ConfigFlow, domain=OMADA_DOMAIN):
         user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({
-                vol.Required(CONF_NAME,
-                             default=user_input.get(CONF_NAME) or ""
-                             ): str,
-                vol.Required(CONF_HOST,
-                             default=user_input.get(CONF_HOST) or ""
-                             ): str,
-                vol.Required(CONF_USERNAME,
-                             default=user_input.get(CONF_USERNAME) or ""
-                             ): str,
-                vol.Required(CONF_PASSWORD,
-                             default=user_input.get(CONF_PASSWORD) or ""
-                             ): str,
-                vol.Optional(CONF_SSLVERIFY,
-                             default=user_input.get(CONF_SSLVERIFY) or DEFAULT_SSLVERIFY
-                             ): bool,
-                vol.Optional(CONF_TIMEOUT,
-                             default=user_input.get(CONF_TIMEOUT) or DEFAULT_TIMEOUT
-                             ): int,
-                vol.Optional(CONF_DNSRESOLVE,
-                             default=user_input.get(CONF_DNSRESOLVE) or DEFAULT_DNSRESOLVE
-                             ): bool,
-            }),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_NAME, default=user_input.get(CONF_NAME) or ""
+                    ): str,
+                    vol.Required(
+                        CONF_HOST, default=user_input.get(CONF_HOST) or ""
+                    ): str,
+                    vol.Required(
+                        CONF_USERNAME, default=user_input.get(CONF_USERNAME) or ""
+                    ): str,
+                    vol.Required(
+                        CONF_PASSWORD, default=user_input.get(CONF_PASSWORD) or ""
+                    ): str,
+                    vol.Optional(
+                        CONF_SSLVERIFY,
+                        default=user_input.get(CONF_SSLVERIFY) or DEFAULT_SSLVERIFY,
+                    ): bool,
+                    vol.Optional(
+                        CONF_TIMEOUT,
+                        default=user_input.get(CONF_TIMEOUT) or DEFAULT_TIMEOUT,
+                    ): int,
+                    vol.Optional(
+                        CONF_DNSRESOLVE,
+                        default=user_input.get(CONF_DNSRESOLVE) or DEFAULT_DNSRESOLVE,
+                    ): bool,
+                }
+            ),
             errors=errors,
         )
 
     async def _async_controller_existed(self, host):
-        existing_hosts = [entry.data.get(CONF_NAME) for entry in self._async_current_entries()]
+        existing_hosts = [
+            entry.data.get(CONF_NAME) for entry in self._async_current_entries()
+        ]
         return host in existing_hosts
 
     async def _async_try_connect(self, host, username, password, timeout, verify_tls):

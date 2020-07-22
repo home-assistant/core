@@ -20,8 +20,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
         scanner = TplinkOmadaDeviceScanner(omada)
         await scanner.async_connect()
         if not scanner.success_init:
-            _LOGGER.warning("Omada device tracker failed at the first connection try."
-                            "It could be due to bad credentials or just a network issue.")
+            _LOGGER.warning(
+                "Omada device tracker failed at the first connection try."
+                "It could be due to bad credentials or just a network issue."
+            )
         return scanner
     except Exception:  # pylint: disable=broad-except
         return False

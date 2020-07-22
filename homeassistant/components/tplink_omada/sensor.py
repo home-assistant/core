@@ -1,15 +1,10 @@
 """Add sensors for TP-Link Omada Controller."""
 import logging
 
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_NAME
+from homeassistant.helpers.entity import Entity
 
-from .const import (
-    DOMAIN as OMADA_DOMAIN,
-    SENSOR_DICT,
-    SENSOR_AP_STATS_DICT,
-)
-
+from .const import DOMAIN as OMADA_DOMAIN, SENSOR_AP_STATS_DICT, SENSOR_DICT
 
 LOGGER = logging.getLogger(__name__)
 
@@ -19,8 +14,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     # Get Main Sensors
     omada = hass.data[OMADA_DOMAIN][entry.data[CONF_NAME]]
     sensors = [
-        OmadaSensor(omada, sensor_name, entry.entry_id)
-        for sensor_name in SENSOR_DICT
+        OmadaSensor(omada, sensor_name, entry.entry_id) for sensor_name in SENSOR_DICT
     ]
     async_add_entities(sensors, True)
     # Get SSID Sensors
@@ -31,7 +25,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(sensors, True)
     # Get AP Sensors
     sensors = [
-        OmadaAPSensor(omada, ap_mac, omada.access_points_settings[ap_mac], sensor_name, entry.entry_id)
+        OmadaAPSensor(
+            omada,
+            ap_mac,
+            omada.access_points_settings[ap_mac],
+            sensor_name,
+            entry.entry_id,
+        )
         for ap_mac, ap_data in omada.access_points_stats.items()
         for sensor_name, sensor_params in ap_data.items()
     ]
@@ -156,8 +156,8 @@ class OmadaSSIDSensor(OmadaBaseSensor):
     def device_state_attributes(self):
         """Return the state attributes of the Omada Controller."""
         tmp_data = self.data.copy()
-        if 'connected_clients' in tmp_data:
-            tmp_data.pop('connected_clients')
+        if "connected_clients" in tmp_data:
+            tmp_data.pop("connected_clients")
         return tmp_data
 
     @property
@@ -184,7 +184,7 @@ class OmadaSSIDSensor(OmadaBaseSensor):
         await self.omada.async_update()
         self.data = self.omada.ssid_stats.get(self._ssid_name, {})
         self.data.update(self.omada.ssid_attrs[self._ssid_name])
-        self.value = self.data.get('connected_clients', 0)
+        self.value = self.data.get("connected_clients", 0)
 
 
 class OmadaAPSensor(OmadaBaseSensor):
@@ -196,7 +196,7 @@ class OmadaAPSensor(OmadaBaseSensor):
         self._name = omada.name
         self._ap_mac = ap_mac
         self._ap_ids = ap_ids
-        self._ap_name = ap_ids['Name']
+        self._ap_name = ap_ids["Name"]
         self._condition = sensor_name
         self._server_unique_id = server_unique_id
 
@@ -223,9 +223,9 @@ class OmadaAPSensor(OmadaBaseSensor):
             "identifiers": {(OMADA_DOMAIN, self._ap_mac)},
             "name": self._ap_name,
             "manufacturer": "TP-Link",
-            "model": self.omada.access_points_settings[self._ap_mac]['Model'],
+            "model": self.omada.access_points_settings[self._ap_mac]["Model"],
             "connections": [["mac", self._ap_mac]],
-            "sw_version": self.omada.access_points_settings[self._ap_mac]['Version'],
+            "sw_version": self.omada.access_points_settings[self._ap_mac]["Version"],
             "via_device": (OMADA_DOMAIN, self.omada.name),
         }
 

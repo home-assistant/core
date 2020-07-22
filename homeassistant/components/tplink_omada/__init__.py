@@ -4,24 +4,17 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_NAME, ATTR_ENTITY_ID,
-    CONF_HOST)
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.device_tracker import DOMAIN as DT_DOMAIN
-from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import (
-    DOMAIN,
-    SERVICE_WIFIACRULE,
-    SERVICE_WIFIACRULE_ATTR_RULE,
-)
 from .common import OmadaData
-
+from .const import DOMAIN, SERVICE_WIFIACRULE, SERVICE_WIFIACRULE_ATTR_RULE
 
 LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor"]
@@ -77,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         schema=vol.Schema(
             {
                 vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-                vol.Optional(SERVICE_WIFIACRULE_ATTR_RULE): str
+                vol.Optional(SERVICE_WIFIACRULE_ATTR_RULE): str,
             }
         ),
     )

@@ -1,34 +1,38 @@
 """Support for TP-Link routers."""
-import async_timeout
-import aiodns
-from urllib.parse import urlparse
 import json
 import logging
+from urllib.parse import urlparse
 
-from homeassistant.util import Throttle
+import aiodns
+from aiodns.error import DNSError
+import async_timeout
+
 from homeassistant import exceptions
 from homeassistant.const import (
-    CONF_TIMEOUT, CONF_NAME, ATTR_ENTITY_ID,
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TIMEOUT,
+    CONF_USERNAME,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-from aiodns.error import DNSError
+from homeassistant.util import Throttle
 
 from .const import (
-    MIN_TIME_BETWEEN_UPDATES,
-    LOGIN_PATH,
-    CONTROLLER_PATH,
-    SENSOR_DICT,
-    SENSOR_SSID_STATS_DICT,
-    SENSOR_SSID_SETTINGS_DICT,
-    SENSOR_AP_STATS_DICT,
-    SENSOR_AP_SETTINGS_DICT,
-    SERVICE_WIFIACRULE_ATTR_RULE,
-    SSID_SETTING_KEYS,
     CONF_DNSRESOLVE,
     CONF_SSLVERIFY,
+    CONTROLLER_PATH,
+    LOGIN_PATH,
+    MIN_TIME_BETWEEN_UPDATES,
+    SENSOR_AP_SETTINGS_DICT,
+    SENSOR_AP_STATS_DICT,
+    SENSOR_DICT,
+    SENSOR_SSID_SETTINGS_DICT,
+    SENSOR_SSID_STATS_DICT,
+    SERVICE_WIFIACRULE_ATTR_RULE,
+    SSID_SETTING_KEYS,
 )
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,35 +49,32 @@ async def login(host, username, password, timeout, httpsession):
     with async_timeout.timeout(timeout):
         res = await httpsession.get(host)
 
-    if 'location' not in res.history[-1].headers:
-        _LOGGER.exception("Can not find actual base host of the "
-                          "Omada Controller.")
-        raise InvalidAuth("Can not find actual base host of the "
-                          "Omada Controller.")
+    if "location" not in res.history[-1].headers:
+        _LOGGER.exception("Can not find actual base host of the " "Omada Controller.")
+        raise InvalidAuth("Can not find actual base host of the " "Omada Controller.")
     # Get actual URL
-    actual_location = urlparse(res.history[-1].headers['location'])
+    actual_location = urlparse(res.history[-1].headers["location"])
     base_url = actual_location.scheme + "://" + actual_location.netloc
     # Login
-    login_data = {"method": "login",
-                  "params": {"name": username,
-                             "password": password
-                             }
-                  }
+    login_data = {"method": "login", "params": {"name": username, "password": password}}
     params = {"ajax": ""}
     with async_timeout.timeout(timeout):
-        res = await httpsession.post(base_url + LOGIN_PATH,
-                                     params=params,
-                                     data=json.dumps(login_data),
-                                     )
+        res = await httpsession.post(
+            base_url + LOGIN_PATH, params=params, data=json.dumps(login_data),
+        )
     res_json = await res.json()
-    if res_json.get('msg') != 'Log in successfully.':
-        _LOGGER.exception("Omada Controller didn't respond with JSON. "
-                          "Check if credentials are correct")
-        raise InvalidAuth("Omada Controller didn't respond with JSON. "
-                          "Check if credentials are correct")
+    if res_json.get("msg") != "Log in successfully.":
+        _LOGGER.exception(
+            "Omada Controller didn't respond with JSON. "
+            "Check if credentials are correct"
+        )
+        raise InvalidAuth(
+            "Omada Controller didn't respond with JSON. "
+            "Check if credentials are correct"
+        )
     # Get token
     res_json = await res.json()
-    token = res_json['result']['token']
+    token = res_json["result"]["token"]
     return base_url, token
 
 
@@ -107,7 +108,9 @@ class OmadaData:
 
     async def login(self):
         """Login to the Omada Controller."""
-        logged = await login(self.host, self.username, self.password, self.timeout, self.httpsession)
+        logged = await login(
+            self.host, self.username, self.password, self.timeout, self.httpsession
+        )
         if not isinstance(logged, tuple) or len(logged) != 2:
             _LOGGER.error("Unable to login to Omada Controller %s", self.host)
             return False
@@ -122,16 +125,14 @@ class OmadaData:
         params = {"aboutInfo": "", "token": self._token}
         with async_timeout.timeout(self.timeout):
             res = await self.httpsession.post(
-                self._base_url + CONTROLLER_PATH,
-                params=params,
-                data=json.dumps(data),
+                self._base_url + CONTROLLER_PATH, params=params, data=json.dumps(data),
             )
             res_json = await res.json()
-        if res_json['errorCode'] != 0:
-            _LOGGER.error("Error fetching version: %s", res_json['msg'])
+        if res_json["errorCode"] != 0:
+            _LOGGER.error("Error fetching version: %s", res_json["msg"])
             return
 
-        self.version = res_json['result']['version']
+        self.version = res_json["result"]["version"]
 
     async def fetch_global_stats(self):
         """Fetch the global statistics of the Omada Controller."""
@@ -139,19 +140,17 @@ class OmadaData:
         params = {"globalStat": "", "token": self._token}
         with async_timeout.timeout(self.timeout):
             res = await self.httpsession.post(
-                self._base_url + CONTROLLER_PATH,
-                params=params,
-                data=json.dumps(data),
+                self._base_url + CONTROLLER_PATH, params=params, data=json.dumps(data),
             )
             res_json = await res.json()
 
-        if res_json['errorCode'] != 0:
-            _LOGGER.error("Error fetching global stats: %s", res_json['msg'])
+        if res_json["errorCode"] != 0:
+            _LOGGER.error("Error fetching global stats: %s", res_json["msg"])
             return
 
         for sensor_name in SENSOR_DICT:
-            if sensor_name in res_json['result']:
-                self.data[sensor_name] = res_json['result'][sensor_name]
+            if sensor_name in res_json["result"]:
+                self.data[sensor_name] = res_json["result"][sensor_name]
 
     async def fetch_ssid_stats(self):
         """Get statistics for each SSID."""
@@ -159,18 +158,16 @@ class OmadaData:
         params = {"ssidStatsStore": "", "token": self._token}
         with async_timeout.timeout(self.timeout):
             res = await self.httpsession.post(
-                self._base_url + CONTROLLER_PATH,
-                params=params,
-                data=json.dumps(data),
+                self._base_url + CONTROLLER_PATH, params=params, data=json.dumps(data),
             )
             res_json = await res.json()
 
-        if res_json['errorCode'] != 0:
-            _LOGGER.error("Error fetching ssid stats: %s", res_json['msg'])
+        if res_json["errorCode"] != 0:
+            _LOGGER.error("Error fetching ssid stats: %s", res_json["msg"])
             return
 
-        for ssid_data in res_json['result']['ssidList']:
-            ssid_name = ssid_data.pop('ssid')
+        for ssid_data in res_json["result"]["ssidList"]:
+            ssid_name = ssid_data.pop("ssid")
             self.ssid_stats[ssid_name] = {}
             for stat_id, stat_data in SENSOR_SSID_STATS_DICT.items():
                 if stat_id in ssid_data:
@@ -178,37 +175,41 @@ class OmadaData:
 
     async def fetch_ap_stats(self):
         """Get Access point stats."""
-        data = {"method": "getGridAps",
-                "params": {"sortOrder": "asc",
-                           "currentPage": 1,
-                           "currentPageSize": 10,
-                           "filters": {"status": "All"},
-                           },
-                }
+        data = {
+            "method": "getGridAps",
+            "params": {
+                "sortOrder": "asc",
+                "currentPage": 1,
+                "currentPageSize": 10,
+                "filters": {"status": "All"},
+            },
+        }
         params = {"apsStore": "", "token": self._token}
         with async_timeout.timeout(self.timeout):
             res = await self.httpsession.post(
-                self._base_url + CONTROLLER_PATH,
-                params=params,
-                data=json.dumps(data),
+                self._base_url + CONTROLLER_PATH, params=params, data=json.dumps(data),
             )
             res_json = await res.json()
 
-        if res_json['errorCode'] != 0:
-            _LOGGER.error("Error fetching access points stats: %s", res_json['msg'])
+        if res_json["errorCode"] != 0:
+            _LOGGER.error("Error fetching access points stats: %s", res_json["msg"])
             return
 
-        for access_point in res_json['result']['data']:
-            ap_mac = access_point.pop('mac')
+        for access_point in res_json["result"]["data"]:
+            ap_mac = access_point.pop("mac")
 
             for sensor_name in access_point:
                 if sensor_name in SENSOR_AP_STATS_DICT:
                     self.access_points_stats.setdefault(ap_mac, {})
-                    self.access_points_stats[ap_mac][sensor_name] = access_point[sensor_name]
+                    self.access_points_stats[ap_mac][sensor_name] = access_point[
+                        sensor_name
+                    ]
                 elif sensor_name in SENSOR_AP_SETTINGS_DICT:
                     self.access_points_settings.setdefault(ap_mac, {})
                     setting_name = SENSOR_AP_SETTINGS_DICT[sensor_name]
-                    self.access_points_settings[ap_mac][setting_name] = access_point[sensor_name]
+                    self.access_points_settings[ap_mac][setting_name] = access_point[
+                        sensor_name
+                    ]
 
     async def fetch_clients_list(self):
         """Get the list of the connected clients to the access points."""
@@ -219,13 +220,15 @@ class OmadaData:
         total_rows = current_page_size + 1
         list_of_devices = {}
         while (current_page - 1) * current_page_size <= total_rows:
-            data = {"method": "getGridActiveClients",
-                    "params": {"sortOrder": "asc",
-                               "currentPage": current_page,
-                               "currentPageSize": current_page_size,
-                               "filters": {"type": "all"}
-                               }
-                    }
+            data = {
+                "method": "getGridActiveClients",
+                "params": {
+                    "sortOrder": "asc",
+                    "currentPage": current_page,
+                    "currentPageSize": current_page_size,
+                    "filters": {"type": "all"},
+                },
+            }
             params = {"userStore": "", "token": self._token}
             with async_timeout.timeout(self.timeout):
                 res = await self.httpsession.post(
@@ -234,24 +237,24 @@ class OmadaData:
                     data=json.dumps(data),
                 )
                 res_json = await res.json()
-            if res_json['errorCode'] != 0:
-                _LOGGER.error("Error fetching client list: %s", res_json['msg'])
+            if res_json["errorCode"] != 0:
+                _LOGGER.error("Error fetching client list: %s", res_json["msg"])
                 return
-            results = res_json['result']
-            total_rows = results['totalRows']
-            for data in results['data']:
-                key = data['mac'].replace('-', ':')
-                name = data['name']
+            results = res_json["result"]
+            total_rows = results["totalRows"]
+            for data in results["data"]:
+                key = data["mac"].replace("-", ":")
+                name = data["name"]
                 # Search for a better device name
                 if self.dns_resolver:
                     try:
-                        result = await self.dns_resolver.gethostbyaddr(data['ip'])
-                        name = result.name.split('.', 1)[0]
+                        result = await self.dns_resolver.gethostbyaddr(data["ip"])
+                        name = result.name.split(".", 1)[0]
                     except DNSError:
-                        _LOGGER.debug("Can not resolve %s", data['ip'])
+                        _LOGGER.debug("Can not resolve %s", data["ip"])
                 # Set default name from the mac address
                 if not name:
-                    name = data['mac'].replace("-", "_").lower()
+                    name = data["mac"].replace("-", "_").lower()
 
                 list_of_devices[key] = name.lower()
             current_page += 1
@@ -276,29 +279,29 @@ class OmadaData:
 
     async def fetch_ssid_settings(self):
         """Get the list of the SSIDs and their IDs."""
-        data = {"method": "getGridSsid",
-                "params": {"sortOrder": "asc",
-                           "currentPage": 1,
-                           "currentPageSize": 5,
-                           "filters": {}
-                           }
-                }
+        data = {
+            "method": "getGridSsid",
+            "params": {
+                "sortOrder": "asc",
+                "currentPage": 1,
+                "currentPageSize": 5,
+                "filters": {},
+            },
+        }
         params = {"wlBasicSsidGridS": "", "token": self._token}
         with async_timeout.timeout(self.timeout):
             res = await self.httpsession.post(
-                self._base_url + CONTROLLER_PATH,
-                params=params,
-                data=json.dumps(data),
+                self._base_url + CONTROLLER_PATH, params=params, data=json.dumps(data),
             )
         res_json = await res.json()
-        if res_json['errorCode'] != 0:
-            _LOGGER.error("Error fetching ssid settings: %s", res_json['msg'])
+        if res_json["errorCode"] != 0:
+            _LOGGER.error("Error fetching ssid settings: %s", res_json["msg"])
             return
 
         ssid_id_dict = {}
 
-        for ssid in res_json['result']['data']:
-            ssid_id_dict[ssid['name']] = ssid
+        for ssid in res_json["result"]["data"]:
+            ssid_id_dict[ssid["name"]] = ssid
 
         return ssid_id_dict
 
@@ -314,39 +317,39 @@ class OmadaData:
         params = {"wlBasicSsid24SettingsM": "", "token": self._token}
         with async_timeout.timeout(self.timeout):
             res = await self.httpsession.post(
-                self._base_url + CONTROLLER_PATH,
-                params=params,
-                data=json.dumps(data),
+                self._base_url + CONTROLLER_PATH, params=params, data=json.dumps(data),
             )
         res_json = await res.json()
-        if res_json['errorCode'] != 0:
-            _LOGGER.error("Error fetching ssid parame: %s", res_json['msg'])
+        if res_json["errorCode"] != 0:
+            _LOGGER.error("Error fetching ssid parame: %s", res_json["msg"])
             return
 
-        ssid_settings = res_json['result']
+        ssid_settings = res_json["result"]
 
         ssid_params = {}
         for setting, value in ssid_settings.items():
             if setting in SSID_SETTING_KEYS:
                 ssid_params[setting] = value
 
-        ssid_params['accessControlRuleName'] = access_control_rule
+        ssid_params["accessControlRuleName"] = access_control_rule
         data = {"method": "modifySsid", "params": ssid_params}
         params = {"wlBasicSsid24SettingsM": "", "token": self._token}
         with async_timeout.timeout(self.timeout):
             res = await self.httpsession.post(
-                self._base_url + CONTROLLER_PATH,
-                params=params,
-                data=json.dumps(data),
+                self._base_url + CONTROLLER_PATH, params=params, data=json.dumps(data),
             )
         res_json = await res.json()
-        if res_json['errorCode'] == -1001:
-            _LOGGER.error("Access Controller Rule `%s` doesn't exist", access_control_rule)
+        if res_json["errorCode"] == -1001:
+            _LOGGER.error(
+                "Access Controller Rule `%s` doesn't exist", access_control_rule
+            )
             return False
-        if res_json['errorCode'] != 0:
-            _LOGGER.error("Can not set access controller rule: %s", res_json['msg'])
+        if res_json["errorCode"] != 0:
+            _LOGGER.error("Can not set access controller rule: %s", res_json["msg"])
             return False
-        _LOGGER.debug("Access Controller Rule `%s` affected to SSID %s", access_control_rule, ssid)
+        _LOGGER.debug(
+            "Access Controller Rule `%s` affected to SSID %s", access_control_rule, ssid
+        )
 
         return True
 
@@ -355,11 +358,24 @@ class OmadaData:
         entity_id = service.data[ATTR_ENTITY_ID]
         rule = service.data.get(SERVICE_WIFIACRULE_ATTR_RULE)
         # Check if the entity is a ssid
-        if self._hass.data['sensor'].get_entity(entity_id) is None:
-            raise Exception("The entity `{}` doesn't seems to be an SSID".format(entity_id))
-        if 'ssid' not in self._hass.data['sensor'].get_entity(entity_id).device_state_attributes:
-            raise Exception("The entity `{}` doesn't seems to be an SSID".format(entity_id))
-        ssid = self._hass.data['sensor'].get_entity(entity_id).device_state_attributes['ssid']
+        if self._hass.data["sensor"].get_entity(entity_id) is None:
+            raise Exception(
+                "The entity `{}` doesn't seems to be an SSID".format(entity_id)
+            )
+        if (
+            "ssid"
+            not in self._hass.data["sensor"]
+            .get_entity(entity_id)
+            .device_state_attributes
+        ):
+            raise Exception(
+                "The entity `{}` doesn't seems to be an SSID".format(entity_id)
+            )
+        ssid = (
+            self._hass.data["sensor"]
+            .get_entity(entity_id)
+            .device_state_attributes["ssid"]
+        )
 
         return await self.set_ssid_access_control_rule(ssid, rule)
 
@@ -379,7 +395,11 @@ class OmadaData:
             await self.fetch_ssid_attributes()
             self.available = True
         except Exception as exp:  # pylint: disable=broad-except
-            _LOGGER.error("Unable to fetch data from Omada Controller %s. Error: %s", self.host, exp)
+            _LOGGER.error(
+                "Unable to fetch data from Omada Controller %s. Error: %s",
+                self.host,
+                exp,
+            )
             self.available = False
         return True
 
