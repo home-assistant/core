@@ -243,12 +243,14 @@ class TestLight(unittest.TestCase):
         assert {} == data
 
         # One of the light profiles
-        prof_name, prof_h, prof_s, prof_bri = "relax", 35.932, 69.412, 144
+        prof_name, prof_h, prof_s, prof_bri, prof_t = "relax", 35.932, 69.412, 144, 0
 
         # Test light profiles
         common.turn_on(self.hass, ent1.entity_id, profile=prof_name)
         # Specify a profile and a brightness attribute to overwrite it
-        common.turn_on(self.hass, ent2.entity_id, profile=prof_name, brightness=100)
+        common.turn_on(
+            self.hass, ent2.entity_id, profile=prof_name, brightness=100, transition=1
+        )
 
         self.hass.block_till_done()
 
@@ -256,12 +258,14 @@ class TestLight(unittest.TestCase):
         assert {
             light.ATTR_BRIGHTNESS: prof_bri,
             light.ATTR_HS_COLOR: (prof_h, prof_s),
+            light.ATTR_TRANSITION: prof_t,
         } == data
 
         _, data = ent2.last_call("turn_on")
         assert {
             light.ATTR_BRIGHTNESS: 100,
             light.ATTR_HS_COLOR: (prof_h, prof_s),
+            light.ATTR_TRANSITION: 1,
         } == data
 
         # Test toggle with parameters
@@ -271,6 +275,7 @@ class TestLight(unittest.TestCase):
         assert {
             light.ATTR_BRIGHTNESS: 255,
             light.ATTR_HS_COLOR: (prof_h, prof_s),
+            light.ATTR_TRANSITION: prof_t,
         } == data
 
         # Test bad data
@@ -314,8 +319,8 @@ class TestLight(unittest.TestCase):
 
         # Setup a wrong light file
         with open(user_light_file, "w") as user_file:
-            user_file.write("id,x,y,brightness\n")
-            user_file.write("I,WILL,NOT,WORK\n")
+            user_file.write("id,x,y,brightness,transition\n")
+            user_file.write("I,WILL,NOT,WORK,EVER\n")
 
         assert not setup_component(
             self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -347,7 +352,11 @@ class TestLight(unittest.TestCase):
         _, data = ent1.last_call("turn_on")
 
         assert light.is_on(self.hass, ent1.entity_id)
-        assert {light.ATTR_HS_COLOR: (71.059, 100), light.ATTR_BRIGHTNESS: 100} == data
+        assert {
+            light.ATTR_HS_COLOR: (71.059, 100),
+            light.ATTR_BRIGHTNESS: 100,
+            light.ATTR_TRANSITION: 0,
+        } == data
 
         common.turn_on(self.hass, ent1.entity_id, profile="test_off")
 
@@ -356,7 +365,48 @@ class TestLight(unittest.TestCase):
         _, data = ent1.last_call("turn_off")
 
         assert not light.is_on(self.hass, ent1.entity_id)
-        assert {} == data
+        assert {light.ATTR_TRANSITION: 0} == data
+
+    def test_light_profiles_with_transition(self):
+        """Test light profiles with transition."""
+        platform = getattr(self.hass.components, "test.light")
+        platform.init()
+
+        user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
+
+        with open(user_light_file, "w") as user_file:
+            user_file.write("id,x,y,brightness,transition\n")
+            user_file.write("test,.4,.6,100,2\n")
+            user_file.write("test_off,0,0,0,0\n")
+
+        assert setup_component(
+            self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
+        )
+        self.hass.block_till_done()
+
+        ent1, _, _ = platform.ENTITIES
+
+        common.turn_on(self.hass, ent1.entity_id, profile="test")
+
+        self.hass.block_till_done()
+
+        _, data = ent1.last_call("turn_on")
+
+        assert light.is_on(self.hass, ent1.entity_id)
+        assert {
+            light.ATTR_HS_COLOR: (71.059, 100),
+            light.ATTR_BRIGHTNESS: 100,
+            light.ATTR_TRANSITION: 2,
+        } == data
+
+        common.turn_on(self.hass, ent1.entity_id, profile="test_off")
+
+        self.hass.block_till_done()
+
+        _, data = ent1.last_call("turn_off")
+
+        assert not light.is_on(self.hass, ent1.entity_id)
+        assert {light.ATTR_TRANSITION: 0} == data
 
     def test_default_profiles_group(self):
         """Test default turn-on light profile for all lights."""
@@ -377,7 +427,9 @@ class TestLight(unittest.TestCase):
                 return StringIO(profile_data)
             return real_open(path, *args, **kwargs)
 
-        profile_data = "id,x,y,brightness\ngroup.all_lights.default,.4,.6,99\n"
+        profile_data = (
+            "id,x,y,brightness,transition\ngroup.all_lights.default,.4,.6,99,2\n"
+        )
         with mock.patch("os.path.isfile", side_effect=_mock_isfile), mock.patch(
             "builtins.open", side_effect=_mock_open
         ), mock_storage():
@@ -390,7 +442,11 @@ class TestLight(unittest.TestCase):
         common.turn_on(self.hass, ent.entity_id)
         self.hass.block_till_done()
         _, data = ent.last_call("turn_on")
-        assert {light.ATTR_HS_COLOR: (71.059, 100), light.ATTR_BRIGHTNESS: 99} == data
+        assert {
+            light.ATTR_HS_COLOR: (71.059, 100),
+            light.ATTR_BRIGHTNESS: 99,
+            light.ATTR_TRANSITION: 2,
+        } == data
 
     def test_default_profiles_light(self):
         """Test default turn-on light profile for a specific light."""
@@ -412,9 +468,9 @@ class TestLight(unittest.TestCase):
             return real_open(path, *args, **kwargs)
 
         profile_data = (
-            "id,x,y,brightness\n"
-            + "group.all_lights.default,.3,.5,200\n"
-            + "light.ceiling_2.default,.6,.6,100\n"
+            "id,x,y,brightness,transition\n"
+            + "group.all_lights.default,.3,.5,200,0\n"
+            + "light.ceiling_2.default,.6,.6,100,3\n"
         )
         with mock.patch("os.path.isfile", side_effect=_mock_isfile), mock.patch(
             "builtins.open", side_effect=_mock_open
@@ -430,7 +486,11 @@ class TestLight(unittest.TestCase):
         common.turn_on(self.hass, dev.entity_id)
         self.hass.block_till_done()
         _, data = dev.last_call("turn_on")
-        assert {light.ATTR_HS_COLOR: (50.353, 100), light.ATTR_BRIGHTNESS: 100} == data
+        assert {
+            light.ATTR_HS_COLOR: (50.353, 100),
+            light.ATTR_BRIGHTNESS: 100,
+            light.ATTR_TRANSITION: 3,
+        } == data
 
 
 async def test_light_context(hass, hass_admin_user):
