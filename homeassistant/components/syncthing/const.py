@@ -29,3 +29,4 @@ FOLDER_SENSOR_ICONS = {
 }
 
 FOLDER_SENSOR_ALERT_ICON = "mdi:folder-alert"
+FOLDER_SENSOR_DEFAULT_ICON = "mdi:folder"

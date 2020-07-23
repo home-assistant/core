@@ -13,6 +13,7 @@ from .const import (
     DOMAIN,
     FOLDER_PAUSED_RECEIVED,
     FOLDER_SENSOR_ALERT_ICON,
+    FOLDER_SENSOR_DEFAULT_ICON,
     FOLDER_SENSOR_ICONS,
     FOLDER_SUMMARY_RECEIVED,
     STATE_CHANGED_RECEIVED,
@@ -32,7 +33,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     dev = []
 
     for folder in config["folders"]:
-        dev.append(FolderSensor(hass, client, name, folder))
+        sensor = FolderSensor(hass, client, name, folder)
+        hass.add_job(sensor.async_update_status)
+        await sensor.async_update_status()
+        dev.append(sensor)
 
     async_add_entities(dev, True)
 
@@ -71,6 +75,8 @@ class FolderSensor(Entity):
     @property
     def icon(self):
         """Return the icon for this sensor."""
+        if self._state is None:
+            return FOLDER_SENSOR_DEFAULT_ICON
         if self.state in FOLDER_SENSOR_ICONS:
             return FOLDER_SENSOR_ICONS[self.state]
         return FOLDER_SENSOR_ALERT_ICON
@@ -85,12 +91,8 @@ class FolderSensor(Entity):
         """Return the polling requirement for this sensor."""
         return False
 
-    async def async_update(self):
-        """Update device state."""
-
-        if self._state is not None:
-            return
-
+    async def async_update_status(self):
+        """Request folder status and update state."""
         try:
             _LOGGER.info(f"Folder {self._folder['id']} is updating...")
             state = await self._hass.async_add_executor_job(
