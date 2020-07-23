@@ -65,7 +65,7 @@ async def async_setup_entry(
         return isinstance(event, (ControlEvent, SensorEvent))
 
     entities = []
-    for packet_id, entity in discovery_info[CONF_DEVICES].items():
+    for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
         event = get_rfx_object(packet_id)
         if event is None:
             _LOGGER.error("Invalid device: %s", packet_id)
@@ -73,7 +73,9 @@ async def async_setup_entry(
         if not supported(event):
             continue
 
-        device_id = get_device_id(event.device, data_bits=entity.get(CONF_DATA_BITS))
+        device_id = get_device_id(
+            event.device, data_bits=entity_info.get(CONF_DATA_BITS)
+        )
         for data_type in set(event.values) & set(DATA_TYPES):
             data_id = (*device_id, data_type)
             if data_id in data_ids:
