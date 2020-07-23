@@ -12,6 +12,8 @@ from homeassistant.helpers.entity import Entity
 from .const import (
     DOMAIN,
     FOLDER_PAUSED_RECEIVED,
+    FOLDER_SENSOR_ALERT_ICON,
+    FOLDER_SENSOR_ICONS,
     FOLDER_SUMMARY_RECEIVED,
     STATE_CHANGED_RECEIVED,
 )
@@ -49,9 +51,7 @@ class FolderSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return (
-            f"{DOMAIN} {self._client_name} {self._folder['id']} {self._folder['label']}"
-        )
+        return f"{self._client_name} {self._folder['id']} {self._folder['label']}"
 
     @property
     def unique_id(self):
@@ -71,7 +71,9 @@ class FolderSensor(Entity):
     @property
     def icon(self):
         """Return the icon for this sensor."""
-        return "mdi:folder"
+        if self.state in FOLDER_SENSOR_ICONS:
+            return FOLDER_SENSOR_ICONS[self.state]
+        return FOLDER_SENSOR_ALERT_ICON
 
     @property
     def device_state_attributes(self):
