@@ -65,6 +65,7 @@ FLOWS = [
     "gpslogger",
     "griddy",
     "guardian",
+    "haiku",
     "hangouts",
     "harmony",
     "heos",
