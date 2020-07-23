@@ -9,7 +9,7 @@ homeassistant:
   - type: homeassistant
   - type: legacy_api_password
     api_password: dom
-  whitelist_external_dirs:
+  allowlist_external_dirs:
   - /data/data/pl.sviete.dom/files/home/AIS/
   - /data/data/pl.sviete.dom/files/home/AIS/www/
 
