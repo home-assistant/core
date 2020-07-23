@@ -88,6 +88,10 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="reauth_successful")
         return self.async_create_entry(title=self._username, data=user_input)
 
+    async def async_step_import(self, import_config):
+        """Import a config entry from configuration.yaml."""
+        return await self.async_step_user(import_config)
+
     async def async_step_mfa(self, user_input=None):
         """Handle multi-factor auth confirmation."""
         if user_input is None:

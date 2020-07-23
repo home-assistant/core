@@ -16,7 +16,14 @@ from simplipy.websocket import (
 )
 import voluptuous as vol
 
-from homeassistant.const import ATTR_CODE, CONF_CODE, CONF_TOKEN, CONF_USERNAME
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import (
+    ATTR_CODE,
+    CONF_CODE,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -123,6 +130,27 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     }
 )
 
+ACCOUNT_CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_CODE): cv.string,
+    }
+)
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_ACCOUNTS): vol.All(
+                    cv.ensure_list, [ACCOUNT_CONFIG_SCHEMA]
+                )
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
 
 @callback
 def _async_save_refresh_token(hass, config_entry, token):
@@ -156,6 +184,24 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_CLIENT] = {}
     hass.data[DOMAIN][DATA_LISTENER] = {}
+
+    if DOMAIN not in config:
+        return True
+
+    conf = config[DOMAIN]
+
+    for account in conf[CONF_ACCOUNTS]:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={
+                    CONF_USERNAME: account[CONF_USERNAME],
+                    CONF_PASSWORD: account[CONF_PASSWORD],
+                    CONF_CODE: account.get(CONF_CODE),
+                },
+            )
+        )
 
     return True
 
