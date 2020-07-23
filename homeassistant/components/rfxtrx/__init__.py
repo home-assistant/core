@@ -255,16 +255,12 @@ def setup_internal(hass, entry: config_entries.ConfigEntry):
             hass.bus.fire(EVENT_RFXTRX_EVENT, event_data)
 
     @callback
-    def async_add_device_to_config(hass, event, device_id):
-        data = entry.data.copy()
-        event_code = binascii.hexlify(event.data).decode("ASCII")
-        data[CONF_DEVICES][event_code] = device_id
-        hass.config_entries.async_update_entry(entry=entry, data=data)
-
-    @callback
     def device_update(event, device_id):
         if device_id not in devices:
-            async_add_device_to_config(hass, event, device_id)
+            data = entry.data.copy()
+            event_code = binascii.hexlify(event.data).decode("ASCII")
+            data[CONF_DEVICES][event_code] = device_id
+            hass.config_entries.async_update_entry(entry=entry, data=data)
             devices[device_id] = {}
 
     if config[CONF_AUTOMATIC_ADD]:
