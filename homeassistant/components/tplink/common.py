@@ -11,6 +11,7 @@ from kasa import (
     SmartDevice,
     SmartDeviceException,
     SmartDimmer,
+    SmartLightStrip,
     SmartPlug,
     SmartStrip,
 )
@@ -28,6 +29,7 @@ CONF_DISCOVERY = "discovery"
 CONF_LIGHT = "light"
 CONF_STRIP = "strip"
 CONF_SWITCH = "switch"
+CONF_LIGHTSTRIP = "lightstrip"
 
 
 class SmartDevices:
@@ -83,7 +85,7 @@ async def async_discover_devices(
 
         if dev.is_strip or dev.is_plug:
             switches.append(dev)
-        elif dev.is_dimmer or dev.is_bulb:
+        elif dev.is_dimmer or dev.is_bulb or dev.is_lightstrip:
             lights.append(dev)
         else:
             _LOGGER.error("Unknown smart device type: %s", dev.device_type)
@@ -97,7 +99,7 @@ def get_static_devices(config_data) -> SmartDevices:
     lights = []
     switches = []
 
-    for type_ in [CONF_LIGHT, CONF_SWITCH, CONF_STRIP, CONF_DIMMER]:
+    for type_ in [CONF_LIGHT, CONF_SWITCH, CONF_STRIP, CONF_DIMMER, CONF_LIGHTSTRIP]:
         for entry in config_data[type_]:
             host = entry["host"]
 
@@ -109,6 +111,8 @@ def get_static_devices(config_data) -> SmartDevices:
                 switches.append(SmartStrip(host))
             elif type_ == CONF_DIMMER:
                 lights.append(SmartDimmer(host))
+            elif type_ == CONF_LIGHTSTRIP:
+                lights.append(SmartLightStrip(host))
 
     return SmartDevices(lights, switches)
 
