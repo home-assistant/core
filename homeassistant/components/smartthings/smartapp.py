@@ -44,6 +44,7 @@ from .const import (
     DATA_BROKERS,
     DATA_MANAGER,
     DOMAIN,
+    IGNORED_CAPABILITIES,
     SETTINGS_INSTANCE_ID,
     SIGNAL_SMARTAPP_PREFIX,
     STORAGE_KEY,
@@ -356,6 +357,8 @@ async def smartapp_sync_subscriptions(
     for device in devices:
         capabilities.update(device.capabilities)
     capabilities.intersection_update(CAPABILITIES)
+    # Remove non-useful/junk capabilities
+    capabilities.difference_update(IGNORED_CAPABILITIES)
 
     # Get current subscriptions and find differences
     subscriptions = await api.subscriptions(installed_app_id)

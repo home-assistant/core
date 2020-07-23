@@ -89,7 +89,7 @@ async def test_smartapp_webhook(hass):
 async def test_smartapp_sync_subscriptions(
     hass, smartthings_mock, device_factory, subscription_factory
 ):
-    """Test synchronization adds and removes."""
+    """Test synchronization adds and removes and ignores unused."""
     smartthings_mock.subscriptions.return_value = [
         subscription_factory(Capability.thermostat),
         subscription_factory(Capability.switch),
@@ -98,7 +98,7 @@ async def test_smartapp_sync_subscriptions(
     devices = [
         device_factory("", [Capability.battery, "ping"]),
         device_factory("", [Capability.switch, Capability.switch_level]),
-        device_factory("", [Capability.switch]),
+        device_factory("", [Capability.switch, Capability.execute]),
     ]
 
     await smartapp.smartapp_sync_subscriptions(
