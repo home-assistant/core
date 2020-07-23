@@ -266,7 +266,6 @@ async def test_template_with_unavailable_parameters(hass, calls):
                     "platform": "template",
                     "fans": {
                         "test_fan": {
-                            "availability_template": "{{ is_state('availability_boolean.state', 'on') }}",
                             "value_template": "{{ 'on' }}",
                             "speed_template": "{{ 'unavailable' }}",
                             "oscillating_template": "{{ 'unavailable' }}",
