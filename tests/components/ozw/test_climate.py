@@ -6,13 +6,14 @@ from homeassistant.components.climate.const import (
     ATTR_FAN_MODES,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODES,
+    ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_IDLE,
-    HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
 )
 
@@ -32,7 +33,7 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg, caplog):
         HVAC_MODE_OFF,
         HVAC_MODE_HEAT,
         HVAC_MODE_COOL,
-        HVAC_MODE_AUTO,
+        HVAC_MODE_HEAT_COOL,
     ]
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 23.1
@@ -60,7 +61,7 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg, caplog):
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
-        {"entity_id": "climate.ct32_thermostat_mode", "hvac_mode": HVAC_MODE_AUTO},
+        {"entity_id": "climate.ct32_thermostat_mode", "hvac_mode": HVAC_MODE_HEAT_COOL},
         blocking=True,
     )
     assert len(sent_messages) == 2
@@ -106,7 +107,7 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg, caplog):
     await hass.async_block_till_done()
     state = hass.states.get("climate.ct32_thermostat_mode")
     assert state is not None
-    assert state.state == HVAC_MODE_AUTO
+    assert state.state == HVAC_MODE_HEAT_COOL
     assert state.attributes.get(ATTR_TEMPERATURE) is None
     assert state.attributes[ATTR_TARGET_TEMP_LOW] == 21.1
     assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 25.6
@@ -218,3 +219,47 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg, caplog):
     )
     assert len(sent_messages) == 8
     assert "Received an invalid preset mode: invalid preset mode" in caplog.text
+
+    # test thermostat device without a mode commandclass
+    state = hass.states.get("climate.danfoss_living_connect_z_v1_06_014g0013_heating_1")
+    assert state is not None
+    assert state.state == HVAC_MODE_HEAT
+    assert state.attributes[ATTR_HVAC_MODES] == [
+        HVAC_MODE_HEAT,
+    ]
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) is None
+    assert round(state.attributes[ATTR_TEMPERATURE], 0) == 21
+    assert state.attributes.get(ATTR_TARGET_TEMP_LOW) is None
+    assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) is None
+    assert state.attributes.get(ATTR_PRESET_MODE) is None
+    assert state.attributes.get(ATTR_PRESET_MODES) is None
+
+    # Test set target temperature
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {
+            "entity_id": "climate.danfoss_living_connect_z_v1_06_014g0013_heating_1",
+            "temperature": 28.0,
+        },
+        blocking=True,
+    )
+    assert len(sent_messages) == 9
+    msg = sent_messages[-1]
+    assert msg["topic"] == "OpenZWave/1/command/setvalue/"
+    assert msg["payload"] == {
+        "Value": 28.0,
+        "ValueIDKey": 281475116220434,
+    }
+
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {
+            "entity_id": "climate.danfoss_living_connect_z_v1_06_014g0013_heating_1",
+            "hvac_mode": HVAC_MODE_HEAT,
+        },
+        blocking=True,
+    )
+    assert len(sent_messages) == 9
+    assert "does not support setting a mode" in caplog.text

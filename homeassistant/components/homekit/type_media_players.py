@@ -335,7 +335,7 @@ class TelevisionMediaPlayer(HomeAccessory):
                 input_type = 3 if "hdmi" in source.lower() else 0
                 serv_input.configure_char(CHAR_INPUT_SOURCE_TYPE, value=input_type)
                 serv_input.configure_char(CHAR_CURRENT_VISIBILITY_STATE, value=False)
-                _LOGGER.debug("%s: Added source %s.", self.entity_id, source)
+                _LOGGER.debug("%s: Added source %s", self.entity_id, source)
 
         self.async_update_state(state)
 

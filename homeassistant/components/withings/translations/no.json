@@ -20,12 +20,12 @@
                 "data": {
                     "profile": "Profil"
                 },
-                "description": "Hvilken profil valgte du p\u00e5 Withings nettsted? Det er viktig at profilene samsvarer, ellers blir data feilmerket.",
+                "description": "Oppgi et unikt profilnavn for disse dataene. Dette er vanligvis navnet p\u00e5 profilen du valgte i forrige trinn.",
                 "title": "Brukerprofil."
             },
             "reauth": {
                 "description": "Profilen {profile} m\u00e5 godkjennes p\u00e5 nytt for \u00e5 kunne fortsette \u00e5 motta Withings-data.",
-                "title": "Re-autentisere {profil}"
+                "title": "Autentiser profil p\u00e5 nytt"
             }
         }
     }

@@ -163,7 +163,7 @@ SENSOR_TYPES = {
         ATTR_UNIT: UNIT_PERCENTAGE,
     },
     ATTR_UPTIME: {
-        ATTR_ICON: "mdi:timer",
+        ATTR_ICON: "mdi:timer-outline",
         ATTR_LABEL: ATTR_UPTIME.title(),
         ATTR_UNIT: TIME_DAYS,
     },

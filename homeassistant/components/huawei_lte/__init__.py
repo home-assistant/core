@@ -82,10 +82,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# dicttoxml (used by huawei-lte-api) has uselessly verbose INFO level.
-# https://github.com/quandyfactory/dicttoxml/issues/60
-logging.getLogger("dicttoxml").setLevel(logging.WARNING)
-
 SCAN_INTERVAL = timedelta(seconds=10)
 
 NOTIFY_SCHEMA = vol.Any(
@@ -459,6 +455,10 @@ async def async_unload_entry(
 
 async def async_setup(hass: HomeAssistantType, config) -> bool:
     """Set up Huawei LTE component."""
+
+    # dicttoxml (used by huawei-lte-api) has uselessly verbose INFO level.
+    # https://github.com/quandyfactory/dicttoxml/issues/60
+    logging.getLogger("dicttoxml").setLevel(logging.WARNING)
 
     # Arrange our YAML config to dict with normalized URLs as keys
     domain_config = {}

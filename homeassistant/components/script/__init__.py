@@ -10,6 +10,8 @@ from homeassistant.const import (
     ATTR_NAME,
     CONF_ALIAS,
     CONF_ICON,
+    CONF_MODE,
+    CONF_SEQUENCE,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -21,14 +23,22 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.script import Script
+from homeassistant.helpers.script import (
+    ATTR_CUR,
+    ATTR_MAX,
+    ATTR_MODE,
+    CONF_MAX,
+    SCRIPT_MODE_SINGLE,
+    Script,
+    make_script_schema,
+)
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "script"
-ATTR_CAN_CANCEL = "can_cancel"
+
 ATTR_LAST_ACTION = "last_action"
 ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_VARIABLES = "variables"
@@ -36,13 +46,13 @@ ATTR_VARIABLES = "variables"
 CONF_DESCRIPTION = "description"
 CONF_EXAMPLE = "example"
 CONF_FIELDS = "fields"
-CONF_SEQUENCE = "sequence"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 EVENT_SCRIPT_STARTED = "script_started"
 
-SCRIPT_ENTRY_SCHEMA = vol.Schema(
+
+SCRIPT_ENTRY_SCHEMA = make_script_schema(
     {
         vol.Optional(CONF_ALIAS): cv.string,
         vol.Optional(CONF_ICON): cv.icon,
@@ -54,7 +64,8 @@ SCRIPT_ENTRY_SCHEMA = vol.Schema(
                 vol.Optional(CONF_EXAMPLE): cv.string,
             }
         },
-    }
+    },
+    SCRIPT_MODE_SINGLE,
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -91,7 +102,7 @@ def scripts_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
 
 @callback
 def entities_in_script(hass: HomeAssistant, entity_id: str) -> List[str]:
-    """Return all entities in a scene."""
+    """Return all entities in script."""
     if DOMAIN not in hass.data:
         return []
 
@@ -122,7 +133,7 @@ def scripts_with_device(hass: HomeAssistant, device_id: str) -> List[str]:
 
 @callback
 def devices_in_script(hass: HomeAssistant, entity_id: str) -> List[str]:
-    """Return all devices in a scene."""
+    """Return all devices in script."""
     if DOMAIN not in hass.data:
         return []
 
@@ -152,28 +163,28 @@ async def async_setup(hass, config):
 
     async def turn_on_service(service):
         """Call a service to turn script on."""
-        # We could turn on script directly here, but we only want to offer
-        # one way to do it. Otherwise no easy way to detect invocations.
-        var = service.data.get(ATTR_VARIABLES)
-        for script in await component.async_extract_from_service(service):
-            await hass.services.async_call(
-                DOMAIN, script.object_id, var, context=service.context
+        variables = service.data.get(ATTR_VARIABLES)
+        for script_entity in await component.async_extract_from_service(service):
+            await script_entity.async_turn_on(
+                variables=variables, context=service.context, wait=False
             )
 
     async def turn_off_service(service):
         """Cancel a script."""
         # Stopping a script is ok to be done in parallel
-        scripts = await component.async_extract_from_service(service)
+        script_entities = await component.async_extract_from_service(service)
 
-        if not scripts:
+        if not script_entities:
             return
 
-        await asyncio.wait([script.async_turn_off() for script in scripts])
+        await asyncio.wait(
+            [script_entity.async_turn_off() for script_entity in script_entities]
+        )
 
     async def toggle_service(service):
         """Toggle a script."""
-        for script in await component.async_extract_from_service(service):
-            await script.async_toggle(context=service.context)
+        for script_entity in await component.async_extract_from_service(service):
+            await script_entity.async_toggle(context=service.context, wait=False)
 
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, reload_service, schema=RELOAD_SERVICE_SCHEMA
@@ -197,24 +208,27 @@ async def _async_process_config(hass, config, component):
     async def service_handler(service):
         """Execute a service call to script.<script name>."""
         entity_id = ENTITY_ID_FORMAT.format(service.service)
-        script = component.get_entity(entity_id)
-        if script.is_on:
-            _LOGGER.warning("Script %s already running.", entity_id)
-            return
-        await script.async_turn_on(variables=service.data, context=service.context)
-
-    scripts = []
-
-    for object_id, cfg in config.get(DOMAIN, {}).items():
-        scripts.append(
-            ScriptEntity(
-                hass,
-                object_id,
-                cfg.get(CONF_ALIAS, object_id),
-                cfg.get(CONF_ICON),
-                cfg[CONF_SEQUENCE],
-            )
+        script_entity = component.get_entity(entity_id)
+        await script_entity.async_turn_on(
+            variables=service.data, context=service.context
         )
+
+    script_entities = [
+        ScriptEntity(hass, object_id, cfg)
+        for object_id, cfg in config.get(DOMAIN, {}).items()
+    ]
+
+    await component.async_add_entities(script_entities)
+
+    # Register services for all entities that were created successfully.
+    for script_entity in script_entities:
+        object_id = script_entity.object_id
+        if component.get_entity(script_entity.entity_id) is None:
+            _LOGGER.error("Couldn't load script %s", object_id)
+            continue
+
+        cfg = config[DOMAIN][object_id]
+
         hass.services.async_register(
             DOMAIN, object_id, service_handler, schema=SCRIPT_SERVICE_SCHEMA
         )
@@ -226,22 +240,27 @@ async def _async_process_config(hass, config, component):
         }
         async_set_service_schema(hass, DOMAIN, object_id, service_desc)
 
-    await component.async_add_entities(scripts)
-
 
 class ScriptEntity(ToggleEntity):
     """Representation of a script entity."""
 
     icon = None
 
-    def __init__(self, hass, object_id, name, icon, sequence):
+    def __init__(self, hass, object_id, cfg):
         """Initialize the script."""
         self.object_id = object_id
-        self.icon = icon
+        self.icon = cfg.get(CONF_ICON)
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self.script = Script(
-            hass, sequence, name, self.async_write_ha_state, logger=_LOGGER
+            hass,
+            cfg[CONF_SEQUENCE],
+            cfg.get(CONF_ALIAS, object_id),
+            self.async_change_listener,
+            cfg[CONF_MODE],
+            cfg[CONF_MAX],
+            logging.getLogger(f"{__name__}.{object_id}"),
         )
+        self._changed = asyncio.Event()
 
     @property
     def should_poll(self):
@@ -256,9 +275,14 @@ class ScriptEntity(ToggleEntity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        attrs = {ATTR_LAST_TRIGGERED: self.script.last_triggered}
-        if self.script.can_cancel:
-            attrs[ATTR_CAN_CANCEL] = self.script.can_cancel
+        attrs = {
+            ATTR_LAST_TRIGGERED: self.script.last_triggered,
+            ATTR_MODE: self.script.script_mode,
+        }
+        if self.script.supports_max:
+            attrs[ATTR_MAX] = self.script.max_runs
+            if self.is_on:
+                attrs[ATTR_CUR] = self.script.runs
         if self.script.last_action:
             attrs[ATTR_LAST_ACTION] = self.script.last_action
         return attrs
@@ -268,16 +292,34 @@ class ScriptEntity(ToggleEntity):
         """Return true if script is on."""
         return self.script.is_running
 
+    @callback
+    def async_change_listener(self):
+        """Update state."""
+        self.async_write_ha_state()
+        self._changed.set()
+
     async def async_turn_on(self, **kwargs):
         """Turn the script on."""
+        variables = kwargs.get("variables")
         context = kwargs.get("context")
+        wait = kwargs.get("wait", True)
         self.async_set_context(context)
         self.hass.bus.async_fire(
             EVENT_SCRIPT_STARTED,
             {ATTR_NAME: self.script.name, ATTR_ENTITY_ID: self.entity_id},
             context=context,
         )
-        await self.script.async_run(kwargs.get(ATTR_VARIABLES), context)
+        coro = self.script.async_run(variables, context)
+        if wait:
+            await coro
+            return
+
+        # Caller does not want to wait for called script to finish so let script run in
+        # separate Task. However, wait for first state change so we can guarantee that
+        # it is written to the State Machine before we return.
+        self._changed.clear()
+        self.hass.async_create_task(coro)
+        await self._changed.wait()
 
     async def async_turn_off(self, **kwargs):
         """Turn script off."""

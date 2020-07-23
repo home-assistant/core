@@ -1,7 +1,7 @@
 {
     "device_automation": {
         "action_type": {
-            "set_hvac_mode": "zmie\u0144 tryb HVAC na {entity_name}",
+            "set_hvac_mode": "zmie\u0144 tryb pracy dla {entity_name}",
             "set_preset_mode": "zmie\u0144 ustawienia dla {entity_name}"
         },
         "condition_type": {

@@ -1,7 +1,8 @@
 """Constants for the SolarEdge Monitoring API."""
 from datetime import timedelta
 
-from homeassistant.const import ENERGY_WATT_HOUR, POWER_WATT
+from homeassistant.const import ENERGY_WATT_HOUR, POWER_WATT, ENERGY_KILO_WATT_HOUR, POWER_KILO_WATT, \
+    ENERGY_MEGA_WATT_HOUR
 
 DOMAIN = "solaredge"
 
@@ -24,35 +25,35 @@ SENSOR_TYPES = {
     "lifetime_energy": [
         "lifeTimeData",
         "Lifetime energy",
-        ENERGY_WATT_HOUR,
+        ENERGY_MEGA_WATT_HOUR,
         "mdi:solar-power",
         False,
     ],
     "energy_this_year": [
         "lastYearData",
         "Energy this year",
-        ENERGY_WATT_HOUR,
+        ENERGY_MEGA_WATT_HOUR,
         "mdi:solar-power",
         False,
     ],
     "energy_this_month": [
         "lastMonthData",
         "Energy this month",
-        ENERGY_WATT_HOUR,
+        ENERGY_KILO_WATT_HOUR,
         "mdi:solar-power",
         False,
     ],
     "energy_today": [
         "lastDayData",
         "Energy today",
-        ENERGY_WATT_HOUR,
+        ENERGY_KILO_WATT_HOUR,
         "mdi:solar-power",
         False,
     ],
     "current_power": [
         "currentPower",
         "Current Power",
-        POWER_WATT,
+        POWER_KILO_WATT,
         "mdi:solar-power",
         True,
     ],
@@ -68,7 +69,7 @@ SENSOR_TYPES = {
     "storage_power": ["STORAGE", "Storage Power", None, "mdi:car-battery", False],
     "purchased_power": ["Purchased", "Imported Power", None, "mdi:flash", False],
     "production_power": ["Production", "Production Power", None, "mdi:flash", False],
-    "consumption_power": ["Consumption", "Cosumption Power", None, "mdi:flash", False],
+    "consumption_power": ["Consumption", "Consumption Power", None, "mdi:flash", False],
     "selfconsumption_power": [
         "SelfConsumption",
         "SelfConsumption Power",
