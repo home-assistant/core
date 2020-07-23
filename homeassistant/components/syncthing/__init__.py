@@ -18,7 +18,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import dispatcher_send
 
-from .const import CONF_USE_HTTPS, DOMAIN, EVENTS, RECONNECT_INTERVAL
+from .const import (
+    CONF_USE_HTTPS,
+    DOMAIN,
+    EVENTS,
+    RECONNECT_INTERVAL,
+    SERVER_UNAVAILABLE,
+)
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -123,6 +129,7 @@ class EventListenerThread(threading.Thread):
                 _LOGGER.info(
                     f"The syncthing event listener crashed. Probably, the server is not available. Sleeping {RECONNECT_INTERVAL.seconds} seconds and retrying..."
                 )
+                dispatcher_send(self._hass, f"{SERVER_UNAVAILABLE}-{self._client_name}")
                 time.sleep(RECONNECT_INTERVAL.seconds)
                 continue
             break
