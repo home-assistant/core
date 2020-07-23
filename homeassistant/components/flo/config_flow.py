@@ -1,31 +1,17 @@
 """Config flow for flo integration."""
 import logging
 
+from aioflo import async_get_api
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import CONF_PASSWORD, CONF_USERNAME, DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 # TODO adjust the data schema to the data that you need
-DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
-
-
-class PlaceholderHub:
-    """Placeholder class to make tests pass.
-
-    TODO Remove this placeholder class and replace with things from your PyPI package.
-    """
-
-    def __init__(self, host):
-        """Initialize."""
-        self.host = host
-
-    async def authenticate(self, username, password) -> bool:
-        """Test if we can authenticate with the host."""
-        return True
+DATA_SCHEMA = vol.Schema({"username": str, "password": str})
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -33,23 +19,21 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    # TODO validate the data can be used to set up a connection.
 
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data["username"], data["password"]
-    # )
+    api = await async_get_api(data[CONF_USERNAME], data[CONF_PASSWORD])
 
-    hub = PlaceholderHub(data["host"])
-
-    if not await hub.authenticate(data["username"], data["password"]):
+    if not api:
         raise InvalidAuth
 
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
+    user_info = await api.user.get_info()
+    a_location_id = user_info["locations"][0]["id"]
+
+    # Get location (i.e., device) information:
+    location_info = await api.location.get_info(a_location_id)
+
+    _LOGGER.info("Flo Data: %s", location_info)
+
+    raise CannotConnect
 
     # Return info that you want to store in the config entry.
     return {"title": "Name of the device"}
@@ -59,8 +43,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for flo."""
 
     VERSION = 1
-    # TODO pick one of the available connection classes in homeassistant/config_entries.py
-    CONNECTION_CLASS = config_entries.CONN_CLASS_UNKNOWN
+    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""

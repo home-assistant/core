@@ -1,18 +1,19 @@
 """The flo integration."""
 import asyncio
 
+from aioflo import async_get_api
+from aiohttp import ClientSession
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import CONF_PASSWORD, CONF_USERNAME, DOMAIN
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-# TODO List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
-PLATFORMS = ["light"]
+
+PLATFORMS = ["sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -23,7 +24,10 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up flo from a config entry."""
     # TODO Store an API object for your platforms to access
-    # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
+    async with ClientSession() as websession:
+        hass.data[DOMAIN][entry.entry_id] = await async_get_api(
+            websession, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+        )
 
     for component in PLATFORMS:
         hass.async_create_task(
