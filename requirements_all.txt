@@ -696,6 +696,9 @@ ha-philipsjs==0.0.8
 # homeassistant.components.habitica
 habitipy==0.2.0
 
+# homeassistant.components.haiku
+Haiku-package==0.3
+
 # homeassistant.components.hangouts
 hangups==0.4.9
 
