@@ -17,6 +17,9 @@
                 },
                 "description": "Welk profiel hebt u op de website van Withings selecteren? Het is belangrijk dat de profielen overeenkomen, anders worden gegevens verkeerd gelabeld.",
                 "title": "Gebruikersprofiel."
+            },
+            "reauth": {
+                "title": "Profiel opnieuw verifi\u00ebren"
             }
         }
     }
