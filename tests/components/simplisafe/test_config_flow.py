@@ -21,13 +21,15 @@ async def test_duplicate_error(hass):
     """Test that errors are shown when duplicates are added."""
     conf = {
         CONF_USERNAME: "user@email.com",
-        CONF_TOKEN: "12345",
+        CONF_PASSWORD: "password",
         CONF_CODE: "1234",
     }
 
-    MockConfigEntry(domain=DOMAIN, unique_id="user@email.com", data=conf).add_to_hass(
-        hass
-    )
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="user@email.com",
+        data={CONF_USERNAME: "user@email.com", CONF_TOKEN: "12345", CONF_CODE: "1234"},
+    ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=conf
@@ -111,15 +113,11 @@ async def test_step_import(hass):
 
 async def test_step_reauth(hass):
     """Test that the reauth step works."""
-    conf = {
-        CONF_USERNAME: "user@email.com",
-        CONF_TOKEN: "12345",
-        CONF_CODE: "1234",
-    }
-
-    MockConfigEntry(domain=DOMAIN, unique_id="user@email.com", data=conf).add_to_hass(
-        hass
-    )
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="user@email.com",
+        data={CONF_USERNAME: "user@email.com", CONF_TOKEN: "12345", CONF_CODE: "1234"},
+    ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
