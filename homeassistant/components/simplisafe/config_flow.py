@@ -84,24 +84,22 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(user_input[CONF_USERNAME])
         self._abort_if_unique_id_configured()
 
+        errors = {}
         try:
             simplisafe = await self._async_get_simplisafe_api(user_input)
         except PendingAuthorizationError:
             LOGGER.info("Awaiting confirmation of MFA email click")
             self._post_mfa_user_input = user_input
-            return self.async_show_form(step_id="mfa")
+            return await self.async_step_mfa()
         except InvalidCredentialsError:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=self.data_schema,
-                errors={"base": "invalid_credentials"},
-            )
+            errors = {"base": "invalid_credentials"}
         except SimplipyError as err:
             LOGGER.error("Unknown error while logging into SimpliSafe: %s", err)
+            errors = {"base": "unknown"}
+
+        if errors:
             return self.async_show_form(
-                step_id="user",
-                data_schema=self.data_schema,
-                errors={"base": "unknown"},
+                step_id="user", data_schema=self.data_schema, errors=errors,
             )
 
         return self.async_create_entry(
