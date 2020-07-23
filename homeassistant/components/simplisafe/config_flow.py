@@ -1,6 +1,10 @@
 """Config flow to configure the SimpliSafe component."""
 from simplipy import API
-from simplipy.errors import SimplipyError
+from simplipy.errors import (
+    InvalidCredentialsError,
+    PendingAuthorizationError,
+    SimplipyError,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -8,7 +12,8 @@ from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERN
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from . import async_get_client_id
+from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
 
 
 class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -27,13 +32,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-    async def _show_form(self, errors=None):
-        """Show the form to the user."""
-        return self.async_show_form(
-            step_id="user",
-            data_schema=self.data_schema,
-            errors=errors if errors else {},
-        )
+        self._post_mfa_user_input = {}
 
     @staticmethod
     @callback
@@ -41,26 +40,69 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Define the config flow to handle options."""
         return SimpliSafeOptionsFlowHandler(config_entry)
 
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
+    async def _async_get_simplisafe_api(self, user_input):
+        """Attempt to log into SimpliSafe."""
+        client_id = await async_get_client_id(self.hass)
+        websession = aiohttp_client.async_get_clientsession(self.hass)
+
+        return await API.login_via_credentials(
+            user_input[CONF_USERNAME],
+            user_input[CONF_PASSWORD],
+            client_id=client_id,
+            session=websession,
+        )
+
+    async def async_step_mfa(self, user_input=None):
+        """Handle the start of the config flow."""
+        if user_input is None:
+            return self.async_show_form(step_id="mfa")
+
+        try:
+            simplisafe = await self._async_get_simplisafe_api(self._post_mfa_user_input)
+        except SimplipyError as err:
+            LOGGER.error("Unknown error while logging into SimpliSafe: %s", err)
+            return self.async_show_form(
+                step_id="user",
+                data_schema=self.data_schema,
+                errors={"base": "unknown"},
+            )
+
+        return self.async_create_entry(
+            title=self._post_mfa_user_input[CONF_USERNAME],
+            data={
+                CONF_USERNAME: self._post_mfa_user_input[CONF_USERNAME],
+                CONF_TOKEN: simplisafe.refresh_token,
+                CONF_CODE: self._post_mfa_user_input.get(CONF_CODE),
+            },
+        )
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
         if not user_input:
-            return await self._show_form()
+            return self.async_show_form(step_id="user", data_schema=self.data_schema)
 
         await self.async_set_unique_id(user_input[CONF_USERNAME])
         self._abort_if_unique_id_configured()
 
-        websession = aiohttp_client.async_get_clientsession(self.hass)
-
         try:
-            simplisafe = await API.login_via_credentials(
-                user_input[CONF_USERNAME], user_input[CONF_PASSWORD], session=websession
+            simplisafe = await self._async_get_simplisafe_api(user_input)
+        except PendingAuthorizationError:
+            LOGGER.info("Awaiting confirmation of MFA email click")
+            self._post_mfa_user_input = user_input
+            return self.async_show_form(step_id="mfa")
+        except InvalidCredentialsError:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=self.data_schema,
+                errors={"base": "invalid_credentials"},
             )
-        except SimplipyError:
-            return await self._show_form(errors={"base": "invalid_credentials"})
+        except SimplipyError as err:
+            LOGGER.error("Unknown error while logging into SimpliSafe: %s", err)
+            return self.async_show_form(
+                step_id="user",
+                data_schema=self.data_schema,
+                errors={"base": "unknown"},
+            )
 
         return self.async_create_entry(
             title=user_input[CONF_USERNAME],

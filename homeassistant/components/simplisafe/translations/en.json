@@ -5,14 +5,19 @@
         },
         "error": {
             "identifier_exists": "Account already registered",
-            "invalid_credentials": "Invalid credentials"
+            "invalid_credentials": "Invalid credentials",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
         },
         "step": {
+            "mfa": {
+                "description": "Check your email for a link from SimpliSafe. After verifying the link, return here to complete the installation of the integration.",
+                "title": "SimpliSafe Multi-Factor Authentication"
+            },
             "user": {
                 "data": {
                     "code": "Code (used in Home Assistant UI)",
-                    "password": "Password",
-                    "username": "Email"
+                    "password": "[%key:common::config_flow::data::password%]",
+                    "username": "[%key:common::config_flow::data::email%]"
                 },
                 "title": "Fill in your information."
             }

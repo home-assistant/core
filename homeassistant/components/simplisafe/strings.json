@@ -1,6 +1,10 @@
 {
   "config": {
     "step": {
+      "mfa": {
+        "title": "SimpliSafe Multi-Factor Authentication",
+        "description": "Check your email for a link from SimpliSafe. After verifying the link, return here to complete the installation of the integration."
+      },
       "user": {
         "title": "Fill in your information.",
         "data": {
@@ -12,7 +16,8 @@
     },
     "error": {
       "identifier_exists": "Account already registered",
-      "invalid_credentials": "Invalid credentials"
+      "invalid_credentials": "Invalid credentials",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "This SimpliSafe account is already in use."
