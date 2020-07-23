@@ -2,6 +2,7 @@
 import asyncio
 import logging
 import threading
+import time
 
 import syncthing
 import voluptuous as vol
@@ -16,7 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_USE_HTTPS, DOMAIN
+from .const import CONF_USE_HTTPS, DOMAIN, RECONNECT_INTERVAL
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -90,23 +91,30 @@ class EventThread(threading.Thread):
         super().__init__()
         self._hass = hass
         self._client = client
-        self._events_stream = None
+        self._events_stream = self._client.events()
 
     def run(self):
         """Listen to syncthing events."""
         _LOGGER.info("Starting the syncthing event listener...")
-        self._events_stream = self._client.events()
-        for event in self._events_stream:
-            pass
-            _LOGGER.warn("EVENT ARRIVED!")
+
+        while (
+            True
+        ):  # Python does not have the `retry` keyword, emulating it with a while loop
+            try:
+                for event in self._events_stream:
+                    _LOGGER.warn("EVENT ARRIVED!")
+            except syncthing.SyncthingError:
+                _LOGGER.info(
+                    f"The syncthing event listener crashed. Probably, the server is not available. Sleeping {RECONNECT_INTERVAL.seconds} seconds and retrying..."
+                )
+                time.sleep(RECONNECT_INTERVAL.seconds)
+                continue
+            else:
+                break
 
     def stop(self):
         """Stop listening to syncthing events."""
         _LOGGER.info("Stopping the syncthing event listener...")
-        if self._events_stream is None:
-            _LOGGER.info("The syncthing event listener was not running.")
-            return
 
         self._events_stream.stop()
-        self._events_stream = None
         _LOGGER.info("The syncthing event listener stopped.")
