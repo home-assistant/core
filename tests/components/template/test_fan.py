@@ -235,9 +235,6 @@ async def test_template_with_unavailable_entities(hass, calls):
                     "fans": {
                         "test_fan": {
                             "value_template": "{{ 'unavailable' }}",
-                            "speed_template": "{{ 'unavailable' }}",
-                            "oscillating_template": "{{ 'unavailable' }}",
-                            "direction_template": "{{ 'unavailable' }}",
                             "turn_on": {"service": "script.fan_on"},
                             "turn_off": {"service": "script.fan_off"},
                         }
