@@ -1,7 +1,7 @@
 """Define tests for the SimpliSafe config flow."""
 import json
 
-from simplipy.errors import SimplipyError
+from simplipy.errors import InvalidCredentialsError, PendingAuthorizationError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.simplisafe import DOMAIN
@@ -40,7 +40,7 @@ async def test_invalid_credentials(hass):
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
     with patch(
-        "simplipy.API.login_via_credentials", side_effect=SimplipyError,
+        "simplipy.API.login_via_credentials", side_effect=InvalidCredentialsError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=conf
@@ -119,7 +119,7 @@ async def test_step_import(hass):
 
 
 async def test_step_user(hass):
-    """Test that the user step works."""
+    """Test that the user step works (without MFA)."""
     conf = {
         CONF_USERNAME: "user@email.com",
         CONF_PASSWORD: "password",
@@ -139,6 +139,62 @@ async def test_step_user(hass):
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=conf
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == "user@email.com"
+        assert result["data"] == {
+            CONF_USERNAME: "user@email.com",
+            CONF_TOKEN: "12345abc",
+            CONF_CODE: "1234",
+        }
+
+
+async def test_step_user_mfa(hass):
+    """Test that the user step works when MFA is in the middle."""
+    conf = {
+        CONF_USERNAME: "user@email.com",
+        CONF_PASSWORD: "password",
+        CONF_CODE: "1234",
+    }
+
+    with patch(
+        "simplipy.API.login_via_credentials", side_effect=PendingAuthorizationError
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=conf
+        )
+        assert result["step_id"] == "mfa"
+
+    with patch(
+        "simplipy.API.login_via_credentials", side_effect=PendingAuthorizationError
+    ):
+        # Simulate the user pressing the MFA submit button without having clicked
+        # the link in the MFA email:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["step_id"] == "mfa"
+
+    with patch(
+        "simplipy.API.login_via_credentials", side_effect=PendingAuthorizationError
+    ):
+        # Simulate the user pressing the MFA submit button without having clicked
+        # the link in the MFA email:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["step_id"] == "mfa"
+
+    mop = mock_open(read_data=json.dumps({"refresh_token": "12345"}))
+
+    with patch(
+        "homeassistant.components.simplisafe.async_setup_entry", return_value=True
+    ), patch("simplipy.API.login_via_credentials", return_value=mock_api()), patch(
+        "homeassistant.util.json.open", mop, create=True
+    ), patch(
+        "homeassistant.util.json.os.open", return_value=0
+    ), patch(
+        "homeassistant.util.json.os.replace"
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
