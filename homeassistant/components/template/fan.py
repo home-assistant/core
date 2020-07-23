@@ -26,6 +26,7 @@ from homeassistant.const import (
     MATCH_ALL,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
@@ -344,6 +345,9 @@ class TemplateFan(FanEntity):
         # Validate state
         if state in _VALID_STATES:
             self._state = state
+        elif state == STATE_UNAVAILABLE:
+            self._state = state
+            self._available = False
         elif state == STATE_UNKNOWN:
             self._state = None
         else:
@@ -366,7 +370,7 @@ class TemplateFan(FanEntity):
             # Validate speed
             if speed in self._speed_list:
                 self._speed = speed
-            elif speed == STATE_UNKNOWN:
+            elif speed in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
                 self._speed = None
             else:
                 _LOGGER.error(
@@ -388,7 +392,7 @@ class TemplateFan(FanEntity):
                 self._oscillating = True
             elif oscillating == "False" or oscillating is False:
                 self._oscillating = False
-            elif oscillating == STATE_UNKNOWN:
+            elif oscillating in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
                 self._oscillating = None
             else:
                 _LOGGER.error(
@@ -409,7 +413,7 @@ class TemplateFan(FanEntity):
             # Validate speed
             if direction in _VALID_DIRECTIONS:
                 self._direction = direction
-            elif direction == STATE_UNKNOWN:
+            elif direction in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
                 self._direction = None
             else:
                 _LOGGER.error(
