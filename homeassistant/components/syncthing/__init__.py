@@ -12,7 +12,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     CONF_TOKEN,
-    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
@@ -45,24 +44,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         is_https=data[CONF_USE_HTTPS],
     )
 
-    hass.data[DOMAIN][entry.entry_id] = client
-
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
-    event_thread = EventListenerThread(hass, client)
+    event_listener = EventListenerThread(hass, client)
 
-    def start_event_thread(_):
-        event_thread.start()
+    event_listener.start()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_event_thread)
+    def stop_event_listener(_):
+        event_listener.stop()
 
-    def stop_event_thread(_):
-        event_thread.stop()
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_event_listener)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_event_thread)
+    hass.data[DOMAIN][entry.entry_id] = {
+        "client": client,
+        "event_listener": event_listener,
+    }
 
     return True
 
@@ -78,6 +77,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
+        hass.data[DOMAIN][entry.entry_id]["event_listener"].stop()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
@@ -101,11 +101,13 @@ class EventListenerThread(threading.Thread):
         while True:
             try:
                 for event in self._events_stream:
-                    _LOGGER.warn(event)
-            except syncthing.SyncthingError:
+                    pass
+                    # _LOGGER.warn(event)
+            except syncthing.SyncthingError as e:
                 _LOGGER.info(
                     f"The syncthing event listener crashed. Probably, the server is not available. Sleeping {RECONNECT_INTERVAL.seconds} seconds and retrying..."
                 )
+                _LOGGER.exception(e)
                 time.sleep(RECONNECT_INTERVAL.seconds)
                 continue
             break
