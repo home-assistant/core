@@ -1539,6 +1539,7 @@ class Config:
 def _async_create_timer(hass: HomeAssistant) -> None:
     """Create a timer that will start on HOMEASSISTANT_START."""
     handle = None
+    timer_context = Context()
 
     def schedule_tick(now: datetime.datetime) -> None:
         """Schedule a timer tick when the next second rolls around."""
@@ -1553,12 +1554,14 @@ def _async_create_timer(hass: HomeAssistant) -> None:
         """Fire next time event."""
         now = dt_util.utcnow()
 
-        hass.bus.async_fire(EVENT_TIME_CHANGED, {ATTR_NOW: now})
+        hass.bus.async_fire(EVENT_TIME_CHANGED, {ATTR_NOW: now}, context=timer_context)
 
         # If we are more than a second late, a tick was missed
         late = monotonic() - target
         if late > 1:
-            hass.bus.async_fire(EVENT_TIMER_OUT_OF_SYNC, {ATTR_SECONDS: late})
+            hass.bus.async_fire(
+                EVENT_TIMER_OUT_OF_SYNC, {ATTR_SECONDS: late}, context=timer_context
+            )
 
         schedule_tick(now)
 
