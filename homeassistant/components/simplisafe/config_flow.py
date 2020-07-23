@@ -113,10 +113,10 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, config):
         """Handle configuration by re-auth."""
-        self._code = user_input.get(CONF_CODE)
-        self._username = user_input[CONF_USERNAME]
+        self._code = config.get(CONF_CODE)
+        self._username = config[CONF_USERNAME]
 
         return await self.async_step_reauth_confirm()
 
