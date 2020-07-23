@@ -46,7 +46,7 @@ class BondEntity(Entity):
     @property
     def assumed_state(self) -> bool:
         """Let HA know this entity relies on an assumed state tracked by Bond."""
-        return True
+        return self._hub.is_bridge and not self._device.trust_state
 
     @property
     def available(self) -> bool:
