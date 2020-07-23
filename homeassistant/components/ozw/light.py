@@ -213,16 +213,6 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
             else:
                 rgbw = f"#00000000{white:02x}"
 
-        # Update color temp limits.
-        if self.values.min_kelvin:
-            self._max_mireds = color_util.color_temperature_kelvin_to_mired(
-                self.values.min_kelvin.data[ATTR_VALUE]
-            )
-        if self.values.max_kelvin:
-            self._min_mireds = color_util.color_temperature_kelvin_to_mired(
-                self.values.max_kelvin.data[ATTR_VALUE]
-            )
-
         elif color_temp is not None:
             # Limit color temp to min/max values
             cold = max(
@@ -274,6 +264,16 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         index = 7
         temp_warm = 0
         temp_cold = 0
+
+        # Update color temp limits.
+        if self.values.min_kelvin:
+            self._max_mireds = color_util.color_temperature_kelvin_to_mired(
+                self.values.min_kelvin.data[ATTR_VALUE]
+            )
+        if self.values.max_kelvin:
+            self._min_mireds = color_util.color_temperature_kelvin_to_mired(
+                self.values.max_kelvin.data[ATTR_VALUE]
+            )
 
         # Warm white
         if self._color_channels & COLOR_CHANNEL_WARM_WHITE:
