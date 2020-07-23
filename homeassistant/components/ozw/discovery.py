@@ -250,6 +250,16 @@ DISCOVERY_SCHEMAS = (
                 const.DISC_INDEX: ValueIndex.SWITCH_COLOR_CHANNELS,
                 const.DISC_OPTIONAL: True,
             },
+            "min_kelvin": {
+                const.DISC_COMMAND_CLASS: (CommandClass.CONFIGURATION,),
+                const.DISC_INDEX: ValueIndex.SENSOR_MULTILEVEL_OZONE,  # PR for upstream to add LIGHT_COLOR_KELVIN_MIN
+                const.DISC_OPTIONAL: True,
+            },
+            "max_kelvin": {
+                const.DISC_COMMAND_CLASS: (CommandClass.CONFIGURATION,),
+                const.DISC_INDEX: ValueIndex.SENSOR_MULTILEVEL_SULFUR_DIOXIDE,  # PR for upstream to add LIGHT_COLOR_KELVIN_MAX
+                const.DISC_OPTIONAL: True,
+            },
         },
     },
     {  # All other text/numeric sensors
