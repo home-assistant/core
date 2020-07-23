@@ -10,13 +10,21 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
+    CONF_NAME,
     CONF_PORT,
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import dispatcher_send
 
-from .const import CONF_USE_HTTPS, DOMAIN, RECONNECT_INTERVAL
+from .const import (
+    CONF_USE_HTTPS,
+    DOMAIN,
+    FOLDER_SUMMARY_RECEIVED,
+    RECONNECT_INTERVAL,
+    STATE_CHANGED_RECEIVED,
+)
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -49,10 +57,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
-    event_listener = EventListenerThread(hass, client)
+    event_listener = EventListenerThread(hass, client, data[CONF_NAME])
 
     event_listener.start()
 
+    @callback
     def stop_event_listener(_):
         event_listener.stop()
 
@@ -86,11 +95,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class EventListenerThread(threading.Thread):
     """A threaded event listener class."""
 
-    def __init__(self, hass, client):
+    def __init__(self, hass, client, client_name):
         """Initialize the listener."""
         super().__init__()
         self._hass = hass
         self._client = client
+        self._client_name = client_name
         self._events_stream = self._client.events()
 
     def run(self):
@@ -101,13 +111,22 @@ class EventListenerThread(threading.Thread):
         while True:
             try:
                 for event in self._events_stream:
-                    pass
-                    # _LOGGER.warn(event)
-            except syncthing.SyncthingError as e:
+                    if event["type"] == "FolderSummary":
+                        dispatcher_send(
+                            self._hass,
+                            f"{FOLDER_SUMMARY_RECEIVED}-{self._client_name}-{event['data']['folder']}",
+                            event,
+                        )
+                    if event["type"] == "StateChanged":
+                        dispatcher_send(
+                            self._hass,
+                            f"{STATE_CHANGED_RECEIVED}-{self._client_name}-{event['data']['folder']}",
+                            event,
+                        )
+            except syncthing.SyncthingError:
                 _LOGGER.info(
                     f"The syncthing event listener crashed. Probably, the server is not available. Sleeping {RECONNECT_INTERVAL.seconds} seconds and retrying..."
                 )
-                _LOGGER.exception(e)
                 time.sleep(RECONNECT_INTERVAL.seconds)
                 continue
             break
