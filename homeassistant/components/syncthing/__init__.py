@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
-    event_thread = EventThread(hass, client)
+    event_thread = EventListenerThread(hass, client)
 
     def start_event_thread(_):
         event_thread.start()
@@ -83,8 +83,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-class EventThread(threading.Thread):
-    """A threaded event handler class."""
+class EventListenerThread(threading.Thread):
+    """A threaded event listener class."""
 
     def __init__(self, hass, client):
         """Initialize the listener."""
@@ -97,20 +97,18 @@ class EventThread(threading.Thread):
         """Listen to syncthing events."""
         _LOGGER.info("Starting the syncthing event listener...")
 
-        while (
-            True
-        ):  # Python does not have the `retry` keyword, emulating it with a while loop
+        # Python does not have the `retry` keyword, emulating it with a while loop
+        while True:
             try:
                 for event in self._events_stream:
-                    _LOGGER.warn("EVENT ARRIVED!")
+                    _LOGGER.warn(event)
             except syncthing.SyncthingError:
                 _LOGGER.info(
                     f"The syncthing event listener crashed. Probably, the server is not available. Sleeping {RECONNECT_INTERVAL.seconds} seconds and retrying..."
                 )
                 time.sleep(RECONNECT_INTERVAL.seconds)
                 continue
-            else:
-                break
+            break
 
     def stop(self):
         """Stop listening to syncthing events."""
