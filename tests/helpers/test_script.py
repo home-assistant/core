@@ -854,6 +854,34 @@ async def test_repeat_conditional(hass, condition):
         assert event.data.get("index") == str(index + 1)
 
 
+@pytest.mark.parametrize("condition", ["while", "until"])
+async def test_repeat_var_in_condition(hass, condition):
+    """Test repeat action w/ while option."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+
+    sequence = {"repeat": {"sequence": {"event": event}}}
+    if condition == "while":
+        sequence["repeat"]["while"] = {
+            "condition": "template",
+            "value_template": "{{ repeat.index <= 2 }}",
+        }
+    else:
+        sequence["repeat"]["until"] = {
+            "condition": "template",
+            "value_template": "{{ repeat.index == 2 }}",
+        }
+    script_obj = script.Script(hass, cv.SCRIPT_SCHEMA(sequence))
+
+    with mock.patch(
+        "homeassistant.helpers.condition._LOGGER.error",
+        side_effect=AssertionError("Template Error"),
+    ):
+        await script_obj.async_run()
+
+    assert len(events) == 2
+
+
 @pytest.mark.parametrize("var,result", [(1, "first"), (2, "second"), (3, "default")])
 async def test_choose(hass, var, result):
     """Test choose action."""
