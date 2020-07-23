@@ -346,7 +346,6 @@ class TemplateFan(FanEntity):
         if state in _VALID_STATES:
             self._state = state
         elif state == STATE_UNAVAILABLE:
-            self._state = state
             self._available = False
         elif state == STATE_UNKNOWN:
             self._state = None
