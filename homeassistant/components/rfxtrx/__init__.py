@@ -264,7 +264,7 @@ def setup_internal(hass, entry: config_entries.ConfigEntry):
     @callback
     def device_update(event, device_id):
         if device_id not in devices:
-            hass.add_job(async_add_device_to_config, hass, event, device_id)
+            async_add_device_to_config(hass, event, device_id)
             devices[device_id] = {}
 
     if config[CONF_AUTOMATIC_ADD]:
