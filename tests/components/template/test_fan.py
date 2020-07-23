@@ -253,6 +253,7 @@ async def test_template_with_unavailable_entities(hass, calls):
 
     _verify(hass, STATE_UNAVAILABLE, None, None, None)
 
+
 async def test_template_with_unavailable_parameters(hass, calls):
     """Test unavailability of speed, direction and oscillating parameters."""
 
