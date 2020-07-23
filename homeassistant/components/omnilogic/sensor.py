@@ -90,7 +90,6 @@ class OmnilogicSensor(Entity):
         """Return the right unit of measure"""
         return self._unit
         
-
     @property
     def icon(self):
         """Return the icon for the entity."""
@@ -122,7 +121,7 @@ class OmnilogicSensor(Entity):
             temp_return = float(self.coordinator.data[0]["BOWS"][0].get("waterTemp"))
             unit_of_measurement = TEMP_FAHRENHEIT
             if self.coordinator.data[0]["Unit-of-Measurement"] == "Metric":
-                temp_return = round((temp_return - 32) * 5/9, 1)
+                temp_return = round((temp_return - 32) * 5 / 9, 1)
                 unit_of_measurement = TEMP_CELSIUS
             
             self._attributes["hayward_temperature"] = temp_return
@@ -143,7 +142,7 @@ class OmnilogicSensor(Entity):
             unit_of_measurement = "ppm"
 
             if self.coordinator.data[0]["Unit-of-Measurement"] == "Metric":
-                salt_return = round(salt_return/1000, 2)
+                salt_return = round(salt_return / 1000, 2)
                 unit_of_measurement = "g/L"
             
             self._state = salt_return
@@ -162,7 +161,7 @@ class OmnilogicSensor(Entity):
             temp_return = float(self.coordinator.data[0].get("airTemp"))
             unit_of_measurement = TEMP_FAHRENHEIT
             if self.coordinator.data[0]["Unit-of-Measurement"] == "Metric":
-                temp_return = round((temp_return - 32) * 5/9, 1)
+                temp_return = round((temp_return - 32) * 5 / 9, 1)
                 unit_of_measurement = TEMP_CELSIUS
             
             self._attributes["hayward_temperature"] = temp_return
@@ -177,3 +176,4 @@ class OmnilogicSensor(Entity):
         self.async_on_remove(
             self.coordinator.async_add_listener(self.async_write_ha_state)
         )
+    
