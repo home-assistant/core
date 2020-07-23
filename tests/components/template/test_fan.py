@@ -234,7 +234,6 @@ async def test_template_with_unavailable_entities(hass, calls):
                     "platform": "template",
                     "fans": {
                         "test_fan": {
-                            "availability_template": "{{ is_state('availability_boolean.state', 'on') }}",
                             "value_template": "{{ 'unavailable' }}",
                             "speed_template": "{{ 'unavailable' }}",
                             "oscillating_template": "{{ 'unavailable' }}",
@@ -251,7 +250,7 @@ async def test_template_with_unavailable_entities(hass, calls):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    _verify(hass, STATE_UNAVAILABLE, None, None, None)
+    assert hass.states.get(_TEST_FAN).state == STATE_UNAVAILABLE
 
 
 async def test_template_with_unavailable_parameters(hass, calls):
