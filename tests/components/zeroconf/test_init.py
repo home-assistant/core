@@ -49,6 +49,20 @@ def get_service_info_mock(service_type, name):
     )
 
 
+def get_service_info_mock_without_an_address(service_type, name):
+    """Return service info for get_service_info without any addresses."""
+    return ServiceInfo(
+        service_type,
+        name,
+        addresses=[],
+        port=80,
+        weight=0,
+        priority=0,
+        server="name.local.",
+        properties=PROPERTIES,
+    )
+
+
 def get_homekit_info_mock(model, pairing_status):
     """Return homekit info for get_service_info for an homekit device."""
 
@@ -306,6 +320,15 @@ async def test_info_from_service_non_utf8(hass):
     assert len(info["properties"]) <= len(raw_info)
     assert "non-utf8-value" not in info["properties"]
     assert raw_info["non-utf8-value"] is NON_UTF8_VALUE
+
+
+async def test_info_from_service_with_addresses(hass):
+    """Test info_from_service does not throw when there are no addresses."""
+    service_type = "_test._tcp.local."
+    info = zeroconf.info_from_service(
+        get_service_info_mock_without_an_address(service_type, f"test.{service_type}")
+    )
+    assert info is None
 
 
 async def test_get_instance(hass, mock_zeroconf):
