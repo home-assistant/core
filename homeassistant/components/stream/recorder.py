@@ -24,7 +24,7 @@ def recorder_save_worker(file_out: str, segments: List[Segment]):
     for segment in segments:
         # Seek to beginning and open segment
         segment.segment.seek(0)
-        source = av.open(segment.segment, "r", format="mpegts")
+        source = av.open(segment.segment, "r", format="mp4")
         source_v = source.streams.video[0]
 
         # Add output streams
@@ -67,7 +67,7 @@ class RecorderOutput(StreamOutput):
     @property
     def format(self) -> str:
         """Return container format."""
-        return "mpegts"
+        return "mp4"
 
     @property
     def audio_codec(self) -> str:
@@ -75,9 +75,9 @@ class RecorderOutput(StreamOutput):
         return "aac"
 
     @property
-    def video_codec(self) -> str:
-        """Return desired video codec."""
-        return "h264"
+    def video_codecs(self) -> tuple:
+        """Return desired video codecs."""
+        return {"hevc", "h264"}
 
     def prepend(self, segments: List[Segment]) -> None:
         """Prepend segments to existing list."""

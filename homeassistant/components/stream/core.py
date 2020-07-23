@@ -34,6 +34,7 @@ class Segment:
     sequence: int = attr.ib()
     segment: io.BytesIO = attr.ib()
     duration: float = attr.ib()
+    start_pts: tuple = attr.ib()
 
 
 class StreamOutput:
@@ -67,8 +68,13 @@ class StreamOutput:
         return None
 
     @property
-    def video_codec(self) -> str:
-        """Return desired video codec."""
+    def video_codecs(self) -> tuple:
+        """Return desired video codecs."""
+        return None
+
+    @property
+    def container_options(self) -> dict:
+        """Return container options."""
         return None
 
     @property
