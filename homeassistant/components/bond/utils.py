@@ -60,6 +60,11 @@ class BondDevice:
             ]
         )
 
+    def supports_set_brightness(self) -> bool:
+        """Return True if this device supports setting a light brightness."""
+        actions: List[str] = self._attrs["actions"]
+        return bool([action for action in actions if action in [Action.SET_BRIGHTNESS]])
+
 
 class BondHub:
     """Hub device representing Bond Bridge."""

@@ -36,6 +36,15 @@ def ceiling_fan(name: str):
     }
 
 
+def dimmable_ceiling_fan(name: str):
+    """Create a ceiling fan (that has built-in light) with given name."""
+    return {
+        "name": name,
+        "type": DeviceType.CEILING_FAN,
+        "actions": [Action.TURN_LIGHT_ON, Action.TURN_LIGHT_OFF, Action.SET_BRIGHTNESS],
+    }
+
+
 def fireplace(name: str):
     """Create a fireplace with given name."""
     return {"name": name, "type": DeviceType.FIREPLACE}
@@ -126,6 +135,24 @@ async def test_turn_off_light(hass: core.HomeAssistant):
     mock_turn_light_off.assert_called_once_with(
         "test-device-id", Action.turn_light_off()
     )
+
+
+async def test_turn_on_light_with_brightness(hass: core.HomeAssistant):
+    """Tests that turn on command delegates to set flame API."""
+    await setup_platform(
+        hass, LIGHT_DOMAIN, dimmable_ceiling_fan("name-1"), bond_device_id="test-device-id"
+    )
+
+    with patch_bond_action() as mock_set_brightness, patch_bond_device_state():
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 128},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_set_brightness.assert_called_once_with("test-device-id", Action(Action.SET_BRIGHTNESS, 50))
 
 
 async def test_update_reports_light_is_on(hass: core.HomeAssistant):
