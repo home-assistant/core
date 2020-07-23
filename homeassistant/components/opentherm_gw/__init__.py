@@ -133,9 +133,7 @@ def register_services(hass):
             vol.Required(ATTR_GW_ID): vol.All(
                 cv.string, vol.In(hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS])
             ),
-            vol.Required(ATTR_CH_OVRD): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=1)
-            ),
+            vol.Required(ATTR_CH_OVRD): cv.boolean,
         }
     )
     service_set_clock_schema = vol.Schema(
@@ -248,7 +246,7 @@ def register_services(hass):
     async def set_ch_ovrd(call):
         """Set the central heating override on the OpenTherm Gateway."""
         gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]]
-        await gw_dev.gateway.set_ch_enable_bit(call.data[ATTR_CH_OVRD])
+        await gw_dev.gateway.set_ch_enable_bit(1 if call.data[ATTR_CH_OVRD] else 0)
 
     hass.services.async_register(
         DOMAIN,

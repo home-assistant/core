@@ -20,8 +20,8 @@ set_central_heating_ovrd:
       example: "opentherm_gateway"
     ch_override:
       description: >
-        The desired value for the central heating override. Use 0 to disable or 1 to enable.
-      example: "1"
+        The desired boolean value for the central heating override.
+      example: "on"
 
 set_clock:
   description: Set the clock and day of the week on the connected thermostat.
