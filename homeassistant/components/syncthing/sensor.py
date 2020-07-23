@@ -16,6 +16,7 @@ from .const import (
     FOLDER_SENSOR_DEFAULT_ICON,
     FOLDER_SENSOR_ICONS,
     FOLDER_SUMMARY_RECEIVED,
+    SERVER_UNAVAILABLE,
     STATE_CHANGED_RECEIVED,
 )
 
@@ -110,7 +111,6 @@ class FolderSensor(Entity):
 
         @callback
         def handle_folder_summary(event):
-            """Update the state."""
             if self._state is not None:
                 # A workaround, for some reason, state of paused folder is an empty string
                 if event["data"]["summary"]["state"] == "":
@@ -129,7 +129,6 @@ class FolderSensor(Entity):
 
         @callback
         def handle_state_chaged(event):
-            """Update the state."""
             if self._state is not None:
                 self._state["state"] = event["data"]["to"]
                 self.async_schedule_update_ha_state(True)
@@ -144,7 +143,6 @@ class FolderSensor(Entity):
 
         @callback
         def handle_folder_paused(event):
-            """Update the state."""
             if self._state is not None:
                 self._state["state"] = "paused"
                 self.async_schedule_update_ha_state(True)
@@ -154,5 +152,18 @@ class FolderSensor(Entity):
                 self.hass,
                 f"{FOLDER_PAUSED_RECEIVED}-{self._client_name}-{self._folder['id']}",
                 handle_folder_paused,
+            )
+        )
+
+        @callback
+        def handle_server_unavailable():
+            self._state = None
+            self.async_schedule_update_ha_state(True)
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SERVER_UNAVAILABLE}-{self._client_name}",
+                handle_server_unavailable,
             )
         )
