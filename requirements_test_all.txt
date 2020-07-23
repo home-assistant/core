@@ -181,7 +181,7 @@ blinkpy==0.15.1
 bomradarloop==0.1.4
 
 # homeassistant.components.bond
-bond-home==0.0.9
+bond-api==0.1.4
 
 # homeassistant.components.braviatv
 bravia-tv==1.0.6
