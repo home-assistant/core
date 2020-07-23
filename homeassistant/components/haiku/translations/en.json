@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "[ERROR]: No devices found",
+            "single_instance_allowed": "[ERROR]: Single instance allowed"
+        },
+        "step": {
+            "confirm": {
+                "description": "The discovery takes about 6 seconds. Would you like to continue? "
+            }
+        }
+    },
+    "title": "Haiku"
+}

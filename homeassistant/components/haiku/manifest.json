@@ -1,0 +1,12 @@
+{
+  "domain": "haiku",
+  "name": "Haiku",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/haiku",
+  "requirements": ["Haiku-package==0.3"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@Josh-codes"]
+}
