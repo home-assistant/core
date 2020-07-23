@@ -24,15 +24,18 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the config flow."""
-        self.data_schema = vol.Schema(
+        self.full_data_schema = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
                 vol.Optional(CONF_CODE): str,
             }
         )
+        self.password_data_schema = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
-        self._post_mfa_user_input = {}
+        self._code = None
+        self._password = None
+        self._username = None
 
     @staticmethod
     @callback
@@ -40,56 +43,83 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Define the config flow to handle options."""
         return SimpliSafeOptionsFlowHandler(config_entry)
 
-    async def _async_get_simplisafe_api(self, user_input):
+    async def _async_get_simplisafe_api(self):
         """Attempt to log into SimpliSafe."""
         client_id = await async_get_client_id(self.hass)
         websession = aiohttp_client.async_get_clientsession(self.hass)
 
         return await API.login_via_credentials(
-            user_input[CONF_USERNAME],
-            user_input[CONF_PASSWORD],
-            client_id=client_id,
-            session=websession,
+            self._username, self._password, client_id=client_id, session=websession,
         )
 
     async def async_step_mfa(self, user_input=None):
-        """Handle the start of the config flow."""
+        """Handle multi-factor auth confirmation."""
         if user_input is None:
             return self.async_show_form(step_id="mfa")
 
         try:
-            simplisafe = await self._async_get_simplisafe_api(self._post_mfa_user_input)
+            simplisafe = await self._async_get_simplisafe_api()
+        except PendingAuthorizationError:
+            LOGGER.error("Still awaiting confirmation of MFA email click")
+            return self.async_show_form(
+                step_id="mfa", errors={"base": "still_awaiting_mfa"}
+            )
         except SimplipyError as err:
             LOGGER.error("Unknown error while logging into SimpliSafe: %s", err)
             return self.async_show_form(
                 step_id="user",
-                data_schema=self.data_schema,
+                data_schema=self.full_data_schema,
                 errors={"base": "unknown"},
             )
 
         return self.async_create_entry(
-            title=self._post_mfa_user_input[CONF_USERNAME],
+            title=self._username,
             data={
-                CONF_USERNAME: self._post_mfa_user_input[CONF_USERNAME],
+                CONF_USERNAME: self._username,
                 CONF_TOKEN: simplisafe.refresh_token,
-                CONF_CODE: self._post_mfa_user_input.get(CONF_CODE),
+                CONF_CODE: self._code,
             },
         )
+
+    async def async_step_reauth(self, user_input=None):
+        """Handle configuration by re-auth."""
+        self._code = user_input.get(CONF_CODE)
+        self._username = user_input[CONF_USERNAME]
+
+        await self.async_set_unique_id(self._username)
+
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input=None):
+        """Handle re-auth completion."""
+        if not user_input:
+            return self.async_show_form(
+                step_id="reauth_confirm", data_schema=self.password_data_schema
+            )
+
+        self._password = user_input[CONF_PASSWORD]
+
+        return await self.async_step_mfa()
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
         if not user_input:
-            return self.async_show_form(step_id="user", data_schema=self.data_schema)
+            return self.async_show_form(
+                step_id="user", data_schema=self.full_data_schema
+            )
 
         await self.async_set_unique_id(user_input[CONF_USERNAME])
         self._abort_if_unique_id_configured()
 
+        self._code = user_input.get(CONF_CODE)
+        self._password = user_input[CONF_PASSWORD]
+        self._username = user_input[CONF_USERNAME]
+
         errors = {}
         try:
-            simplisafe = await self._async_get_simplisafe_api(user_input)
+            await self._async_get_simplisafe_api()
         except PendingAuthorizationError:
             LOGGER.info("Awaiting confirmation of MFA email click")
-            self._post_mfa_user_input = user_input
             return await self.async_step_mfa()
         except InvalidCredentialsError:
             errors = {"base": "invalid_credentials"}
@@ -99,17 +129,8 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if errors:
             return self.async_show_form(
-                step_id="user", data_schema=self.data_schema, errors=errors,
+                step_id="user", data_schema=self.full_data_schema, errors=errors,
             )
-
-        return self.async_create_entry(
-            title=user_input[CONF_USERNAME],
-            data={
-                CONF_USERNAME: user_input[CONF_USERNAME],
-                CONF_TOKEN: simplisafe.refresh_token,
-                CONF_CODE: user_input.get(CONF_CODE),
-            },
-        )
 
 
 class SimpliSafeOptionsFlowHandler(config_entries.OptionsFlow):
