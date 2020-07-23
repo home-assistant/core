@@ -50,15 +50,13 @@ class BondLight(BondEntity, LightEntity):
 
         self._light: Optional[int] = None
 
+    def _apply_state(self, state: dict):
+        self._light = state.get("light")
+
     @property
     def is_on(self) -> bool:
         """Return if light is currently on."""
         return self._light == 1
-
-    async def async_update(self):
-        """Fetch assumed state of the light from the hub using API."""
-        state: dict = await self._hub.bond.device_state(self._device.device_id)
-        self._light = state.get("light")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -79,6 +77,10 @@ class BondFireplace(BondEntity, LightEntity):
         self._power: Optional[bool] = None
         # Bond flame level, 0-100
         self._flame: Optional[int] = None
+
+    def _apply_state(self, state: dict):
+        self._power = state.get("power")
+        self._flame = state.get("flame")
 
     @property
     def supported_features(self) -> Optional[int]:
@@ -112,9 +114,3 @@ class BondFireplace(BondEntity, LightEntity):
     def icon(self) -> Optional[str]:
         """Show fireplace icon for the entity."""
         return "mdi:fireplace" if self._power == 1 else "mdi:fireplace-off"
-
-    async def async_update(self):
-        """Fetch assumed state of the device from the hub using API."""
-        state: dict = await self._hub.bond.device_state(self._device.device_id)
-        self._power = state.get("power")
-        self._flame = state.get("flame")
