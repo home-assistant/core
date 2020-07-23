@@ -244,7 +244,6 @@ async def setup_and_run_hass(config_dir: str, args: argparse.Namespace) -> int:
     """Set up Home Assistant and run."""
     # pylint: disable=import-outside-toplevel
     from homeassistant import bootstrap
-
     hass = await bootstrap.async_setup_hass(
         config_dir=config_dir,
         verbose=args.verbose,
@@ -352,8 +351,8 @@ def main() -> int:
         daemonize()
     if args.pid_file:
         write_pid(args.pid_file)
-
-    exit_code = asyncio.run(setup_and_run_hass(config_dir, args), debug=args.debug)
+    os.environ['PYTHONASYNCIODEBUG'] = '1'
+    exit_code = asyncio.run(setup_and_run_hass(config_dir, args), debug=True)#args.debug
     if exit_code == RESTART_EXIT_CODE and not args.runner:
         try_to_restart()
 

@@ -135,3 +135,4 @@ tmp_cache
 
 # python-language-server / Rope
 .ropeproject
+*.pem

@@ -40,6 +40,7 @@ import voluptuous as vol
 import yarl
 
 from homeassistant import block_async_io, loader, util
+from homeassistant.__main__ import try_to_restart
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -76,6 +77,7 @@ from homeassistant.util.async_ import fire_coroutine_threadsafe, run_callback_th
 import homeassistant.util.dt as dt_util
 from homeassistant.util.thread import fix_threading_exception_logging
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
+from homeassistant.__main__ import try_to_restart
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
@@ -156,6 +158,9 @@ def async_loop_exception_handler(_: Any, context: Dict) -> None:
     _LOGGER.error(
         "Error doing job: %s", context["message"], **kwargs  # type: ignore
     )
+    if exception.strerror:
+        if "available" in exception.strerror:
+            quit(0)
 
 
 class CoreState(enum.Enum):

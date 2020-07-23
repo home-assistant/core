@@ -417,6 +417,7 @@ class Recorder(threading.Thread):
         try:
             _LOGGER.debug("Sending keepalive")
             self.event_session.connection().scalar(select([1]))
+            _LOGGER.debug("Done Sending keepalive")
             return
         except Exception as err:  # pylint: disable=broad-except
             # Must catch the exception to prevent the loop from collapsing
