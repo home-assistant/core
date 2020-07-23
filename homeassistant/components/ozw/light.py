@@ -255,11 +255,11 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         # Color Data String
         data = self.values.color.data[ATTR_VALUE]
 
-        # RGB is always present in the openzwave color data string.
+        # RGB is always present in the OpenZWave color data string.
         rgb = [int(data[1:3], 16), int(data[3:5], 16), int(data[5:7], 16)]
         self._hs = color_util.color_RGB_to_hs(*rgb)
 
-        # Parse remaining color channels. Openzwave appends white channels
+        # Parse remaining color channels. OpenZWave appends white channels
         # that are present.
         index = 7
         temp_warm = 0
