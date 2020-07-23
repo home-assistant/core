@@ -18,13 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import dispatcher_send
 
-from .const import (
-    CONF_USE_HTTPS,
-    DOMAIN,
-    FOLDER_SUMMARY_RECEIVED,
-    RECONNECT_INTERVAL,
-    STATE_CHANGED_RECEIVED,
-)
+from .const import CONF_USE_HTTPS, DOMAIN, EVENTS, RECONNECT_INTERVAL
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -111,18 +105,20 @@ class EventListenerThread(threading.Thread):
         while True:
             try:
                 for event in self._events_stream:
-                    if event["type"] == "FolderSummary":
-                        dispatcher_send(
-                            self._hass,
-                            f"{FOLDER_SUMMARY_RECEIVED}-{self._client_name}-{event['data']['folder']}",
-                            event,
-                        )
-                    if event["type"] == "StateChanged":
-                        dispatcher_send(
-                            self._hass,
-                            f"{STATE_CHANGED_RECEIVED}-{self._client_name}-{event['data']['folder']}",
-                            event,
-                        )
+                    if event["type"] not in EVENTS:
+                        continue
+
+                    signal_name = EVENTS[event["type"]]
+                    folder = None
+                    if "folder" in event["data"]:
+                        folder = event["data"]["folder"]
+                    else:  # A workaround, some events store folder id under `id` key
+                        folder = event["data"]["id"]
+                    dispatcher_send(
+                        self._hass,
+                        f"{signal_name}-{self._client_name}-{folder}",
+                        event,
+                    )
             except syncthing.SyncthingError:
                 _LOGGER.info(
                     f"The syncthing event listener crashed. Probably, the server is not available. Sleeping {RECONNECT_INTERVAL.seconds} seconds and retrying..."

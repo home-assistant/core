@@ -12,3 +12,10 @@ RECONNECT_INTERVAL = timedelta(seconds=10)
 
 FOLDER_SUMMARY_RECEIVED = "syncthing_folder_summary_received"
 STATE_CHANGED_RECEIVED = "syncthing_state_changed_received"
+FOLDER_PAUSED_RECEIVED = "syncthing_folder_paused_received"
+
+EVENTS = {
+    "FolderSummary": FOLDER_SUMMARY_RECEIVED,
+    "StateChanged": STATE_CHANGED_RECEIVED,
+    "FolderPaused": FOLDER_PAUSED_RECEIVED,
+}

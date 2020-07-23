@@ -9,7 +9,12 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, FOLDER_SUMMARY_RECEIVED, STATE_CHANGED_RECEIVED
+from .const import (
+    DOMAIN,
+    FOLDER_PAUSED_RECEIVED,
+    FOLDER_SUMMARY_RECEIVED,
+    STATE_CHANGED_RECEIVED,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,12 +129,26 @@ class FolderSensor(Entity):
             if self._state is not None:
                 self._state["state"] = event["data"]["to"]
                 self.async_schedule_update_ha_state(True)
-            pass
 
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 f"{STATE_CHANGED_RECEIVED}-{self._client_name}-{self._folder['id']}",
                 handle_state_chaged,
+            )
+        )
+
+        @callback
+        def handle_folder_paused(event):
+            """Update the state."""
+            if self._state is not None:
+                self._state["state"] = "paused"
+                self.async_schedule_update_ha_state(True)
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{FOLDER_PAUSED_RECEIVED}-{self._client_name}-{self._folder['id']}",
+                handle_folder_paused,
             )
         )
