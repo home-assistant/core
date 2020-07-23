@@ -1,14 +1,15 @@
 """An abstract class common to all Bond entities."""
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import Any, Dict, Optional
 
 from homeassistant.const import ATTR_NAME
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 from .utils import BondDevice, BondHub
 
 
-class BondEntity(ABC):
+class BondEntity(Entity):
     """Generic Bond entity encapsulating common features of any Bond controlled device."""
 
     def __init__(self, hub: BondHub, device: BondDevice):
