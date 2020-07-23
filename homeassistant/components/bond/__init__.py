@@ -1,7 +1,7 @@
 """The Bond integration."""
 import asyncio
 
-from bond import Bond
+from bond_api import Bond
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
@@ -25,9 +25,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_ACCESS_TOKEN]
 
-    bond = Bond(bondIp=host, bondToken=token)
+    bond = Bond(host=host, token=token)
     hub = BondHub(bond)
-    await hass.async_add_executor_job(hub.setup)
+    await hub.setup()
     hass.data[DOMAIN][entry.entry_id] = hub
 
     device_registry = await dr.async_get_registry(hass)

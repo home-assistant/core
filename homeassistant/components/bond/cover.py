@@ -1,7 +1,7 @@
 """Support for Bond covers."""
 from typing import Any, Callable, List, Optional
 
-from bond import DeviceTypes
+from bond_api import Action, DeviceType
 
 from homeassistant.components.cover import DEVICE_CLASS_SHADE, CoverEntity
 from homeassistant.config_entries import ConfigEntry
@@ -24,7 +24,7 @@ async def async_setup_entry(
     covers = [
         BondCover(hub, device)
         for device in hub.devices
-        if device.type == DeviceTypes.MOTORIZED_SHADES
+        if device.type == DeviceType.MOTORIZED_SHADES
     ]
 
     async_add_entities(covers, True)
@@ -44,9 +44,9 @@ class BondCover(BondEntity, CoverEntity):
         """Get device class."""
         return DEVICE_CLASS_SHADE
 
-    def update(self):
+    async def async_update(self):
         """Fetch assumed state of the cover from the hub using API."""
-        state: dict = self._hub.bond.getDeviceState(self._device.device_id)
+        state: dict = await self._hub.bond.device_state(self._device.device_id)
         cover_open = state.get("open")
         self._closed = True if cover_open == 0 else False if cover_open == 1 else None
 
@@ -55,14 +55,14 @@ class BondCover(BondEntity, CoverEntity):
         """Return if the cover is closed or not."""
         return self._closed
 
-    def open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        self._hub.bond.open(self._device.device_id)
+        await self._hub.bond.action(self._device.device_id, Action.open())
 
-    def close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        self._hub.bond.close(self._device.device_id)
+        await self._hub.bond.action(self._device.device_id, Action.close())
 
-    def stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs):
         """Hold cover."""
-        self._hub.bond.hold(self._device.device_id)
+        await self._hub.bond.action(self._device.device_id, Action.hold())
