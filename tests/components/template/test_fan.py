@@ -15,7 +15,7 @@ from homeassistant.components.fan import (
     SPEED_LOW,
     SPEED_MEDIUM,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 
 from tests.common import assert_setup_component, async_mock_service
 from tests.components.fan import common
