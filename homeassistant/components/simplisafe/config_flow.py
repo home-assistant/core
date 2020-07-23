@@ -64,29 +64,23 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="mfa", errors={"base": "still_awaiting_mfa"}
             )
-        except SimplipyError as err:
-            LOGGER.error("Unknown error while logging into SimpliSafe: %s", err)
-            return self.async_show_form(
-                step_id="user",
-                data_schema=self.full_data_schema,
-                errors={"base": "unknown"},
-            )
 
-        return self.async_create_entry(
-            title=self._username,
-            data={
-                CONF_USERNAME: self._username,
-                CONF_TOKEN: simplisafe.refresh_token,
-                CONF_CODE: self._code,
-            },
-        )
+        data = {
+            CONF_USERNAME: self._username,
+            CONF_TOKEN: simplisafe.refresh_token,
+            CONF_CODE: self._code,
+        }
+
+        existing_entry = await self.async_set_unique_id(self._username)
+        if existing_entry:
+            self.hass.config_entries.async_update_entry(existing_entry, data=data)
+            return self.async_abort(reason="reauth_successful")
+        return self.async_create_entry(title=self._username, data=data)
 
     async def async_step_reauth(self, user_input=None):
         """Handle configuration by re-auth."""
         self._code = user_input.get(CONF_CODE)
         self._username = user_input[CONF_USERNAME]
-
-        await self.async_set_unique_id(self._username)
 
         return await self.async_step_reauth_confirm()
 
