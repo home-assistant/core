@@ -488,21 +488,13 @@ class SimpliSafe:
                         "Token disconnected or invalid. Please re-auth the "
                         "SimpliSafe integration in HASS"
                     )
-
-                    remove_listener = self._hass.data[DOMAIN][DATA_LISTENER].pop(
-                        self._config_entry.entry_id
-                    )
-                    remove_listener()
-
-                    self._hass.async_create_task(
+                    return self._hass.async_create_task(
                         self._hass.config_entries.flow.async_init(
                             DOMAIN,
                             context={"source": "reauth"},
                             data=self._config_entry.data,
                         )
                     )
-
-                    return
 
                 LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
                 self._emergency_refresh_token_used = True
