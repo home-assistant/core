@@ -51,6 +51,7 @@ FLOWS = [
     "enocean",
     "esphome",
     "flick_electric",
+    "flo",
     "flume",
     "flunearyou",
     "forked_daapd",

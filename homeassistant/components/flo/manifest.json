@@ -1,0 +1,16 @@
+{
+  "domain": "flo",
+  "name": "flo",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/flo",
+  "requirements": [
+    "aioflo==0.1.5"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@dmulcahey"
+  ]
+}
