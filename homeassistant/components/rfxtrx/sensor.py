@@ -1,157 +1,189 @@
 """Support for RFXtrx sensors."""
 import logging
 
-from RFXtrx import SensorEvent
-import voluptuous as vol
+from RFXtrx import ControlEvent, SensorEvent
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, CONF_NAME
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import slugify
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_TEMPERATURE,
+)
+from homeassistant.const import CONF_DEVICES
+from homeassistant.core import callback
 
 from . import (
-    ATTR_DATA_TYPE,
-    ATTR_FIRE_EVENT,
     CONF_AUTOMATIC_ADD,
-    CONF_DATA_TYPE,
-    CONF_DEVICES,
-    CONF_FIRE_EVENT,
     DATA_TYPES,
-    RECEIVED_EVT_SUBSCRIBERS,
-    RFX_DEVICES,
+    SIGNAL_EVENT,
+    RfxtrxEntity,
+    get_device_id,
     get_rfx_object,
 )
+from .const import ATTR_EVENT, DATA_RFXTRX_CONFIG
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_DEVICES, default={}): {
-            cv.string: vol.Schema(
-                {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-                    vol.Optional(CONF_DATA_TYPE, default=[]): vol.All(
-                        cv.ensure_list, [vol.In(DATA_TYPES.keys())]
-                    ),
-                }
-            )
-        },
-        vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+
+def _battery_convert(value):
+    """Battery is given as a value between 0 and 9."""
+    if value is None:
+        return None
+    return value * 10
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the RFXtrx platform."""
-    sensors = []
-    for packet_id, entity_info in config[CONF_DEVICES].items():
+def _rssi_convert(value):
+    """Rssi is given as dBm value."""
+    if value is None:
+        return None
+    return f"{value*8-120}"
+
+
+DEVICE_CLASSES = {
+    "Battery numeric": DEVICE_CLASS_BATTERY,
+    "Rssi numeric": DEVICE_CLASS_SIGNAL_STRENGTH,
+    "Humidity": DEVICE_CLASS_HUMIDITY,
+    "Temperature": DEVICE_CLASS_TEMPERATURE,
+}
+
+
+CONVERT_FUNCTIONS = {
+    "Battery numeric": _battery_convert,
+    "Rssi numeric": _rssi_convert,
+}
+
+
+async def async_setup_entry(
+    hass, config_entry, async_add_entities,
+):
+    """Set up platform."""
+    discovery_info = hass.data[DATA_RFXTRX_CONFIG]
+    data_ids = set()
+
+    def supported(event):
+        return isinstance(event, (ControlEvent, SensorEvent))
+
+    entities = []
+    for packet_id in discovery_info[CONF_DEVICES]:
         event = get_rfx_object(packet_id)
-        device_id = "sensor_{}".format(slugify(event.device.id_string.lower()))
-        if device_id in RFX_DEVICES:
+        if event is None:
+            _LOGGER.error("Invalid device: %s", packet_id)
             continue
-        _LOGGER.info("Add %s rfxtrx.sensor", entity_info[ATTR_NAME])
+        if not supported(event):
+            continue
 
-        sub_sensors = {}
-        data_types = entity_info[ATTR_DATA_TYPE]
-        if not data_types:
-            data_types = [""]
-            for data_type in DATA_TYPES:
-                if data_type in event.values:
-                    data_types = [data_type]
-                    break
-        for _data_type in data_types:
-            new_sensor = RfxtrxSensor(
-                None, entity_info[ATTR_NAME], _data_type, entity_info[ATTR_FIRE_EVENT]
-            )
-            sensors.append(new_sensor)
-            sub_sensors[_data_type] = new_sensor
-        RFX_DEVICES[device_id] = sub_sensors
-    add_entities(sensors)
+        device_id = get_device_id(event.device)
+        for data_type in set(event.values) & set(DATA_TYPES):
+            data_id = (*device_id, data_type)
+            if data_id in data_ids:
+                continue
+            data_ids.add(data_id)
 
-    def sensor_update(event):
+            entity = RfxtrxSensor(event.device, device_id, data_type)
+            entities.append(entity)
+
+    async_add_entities(entities)
+
+    @callback
+    def sensor_update(event, device_id):
         """Handle sensor updates from the RFXtrx gateway."""
-        if not isinstance(event, SensorEvent):
+        if not supported(event):
             return
 
-        device_id = f"sensor_{slugify(event.device.id_string.lower())}"
+        for data_type in set(event.values) & set(DATA_TYPES):
+            data_id = (*device_id, data_type)
+            if data_id in data_ids:
+                continue
+            data_ids.add(data_id)
 
-        if device_id in RFX_DEVICES:
-            sensors = RFX_DEVICES[device_id]
-            for data_type in sensors:
-                # Some multi-sensor devices send individual messages for each
-                # of their sensors. Update only if event contains the
-                # right data_type for the sensor.
-                if data_type not in event.values:
-                    continue
-                sensor = sensors[data_type]
-                sensor.event = event
-                # Fire event
-                if sensor.should_fire_event:
-                    sensor.hass.bus.fire(
-                        "signal_received", {ATTR_ENTITY_ID: sensor.entity_id}
-                    )
-            return
+            _LOGGER.info(
+                "Added sensor (Device ID: %s Class: %s Sub: %s, Event: %s)",
+                event.device.id_string.lower(),
+                event.device.__class__.__name__,
+                event.device.subtype,
+                "".join(f"{x:02x}" for x in event.data),
+            )
 
-        # Add entity if not exist and the automatic_add is True
-        if not config[CONF_AUTOMATIC_ADD]:
-            return
+            entity = RfxtrxSensor(event.device, device_id, data_type, event=event)
+            async_add_entities([entity])
 
-        pkt_id = "".join(f"{x:02x}" for x in event.data)
-        _LOGGER.info("Automatic add rfxtrx.sensor: %s", pkt_id)
-
-        data_type = ""
-        for _data_type in DATA_TYPES:
-            if _data_type in event.values:
-                data_type = _data_type
-                break
-        new_sensor = RfxtrxSensor(event, pkt_id, data_type)
-        sub_sensors = {}
-        sub_sensors[new_sensor.data_type] = new_sensor
-        RFX_DEVICES[device_id] = sub_sensors
-        add_entities([new_sensor])
-
-    if sensor_update not in RECEIVED_EVT_SUBSCRIBERS:
-        RECEIVED_EVT_SUBSCRIBERS.append(sensor_update)
+    # Subscribe to main RFXtrx events
+    if discovery_info[CONF_AUTOMATIC_ADD]:
+        hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, sensor_update)
 
 
-class RfxtrxSensor(Entity):
+class RfxtrxSensor(RfxtrxEntity):
     """Representation of a RFXtrx sensor."""
 
-    def __init__(self, event, name, data_type, should_fire_event=False):
+    def __init__(self, device, device_id, data_type, event=None):
         """Initialize the sensor."""
-        self.event = event
-        self._name = name
-        self.should_fire_event = should_fire_event
+        super().__init__(device, device_id, event=event)
         self.data_type = data_type
         self._unit_of_measurement = DATA_TYPES.get(data_type, "")
+        self._name = f"{device.type_string} {device.id_string} {data_type}"
+        self._unique_id = "_".join(x for x in (*self._device_id, data_type))
 
-    def __str__(self):
-        """Return the name of the sensor."""
-        return self._name
+        self._device_class = DEVICE_CLASSES.get(data_type)
+        self._convert_fun = CONVERT_FUNCTIONS.get(data_type, lambda x: x)
+
+    async def async_added_to_hass(self):
+        """Restore device state."""
+        await super().async_added_to_hass()
+
+        if self._event is None:
+            old_state = await self.async_get_last_state()
+            if old_state is not None:
+                event = old_state.attributes.get(ATTR_EVENT)
+                if event:
+                    self._apply_event(get_rfx_object(event))
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        if not self.event:
+        if not self._event:
             return None
-        return self.event.values.get(self.data_type)
-
-    @property
-    def name(self):
-        """Get the name of the sensor."""
-        return f"{self._name} {self.data_type}"
-
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        if not self.event:
-            return None
-        return self.event.values
+        value = self._event.values.get(self.data_type)
+        return self._convert_fun(value)
 
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def force_update(self) -> bool:
+        """We should force updates. Repeated states have meaning."""
+        return True
+
+    @property
+    def device_class(self):
+        """Return a device class for sensor."""
+        return self._device_class
+
+    @callback
+    def _handle_event(self, event, device_id):
+        """Check if event applies to me and update."""
+        if not isinstance(event, SensorEvent):
+            return
+
+        if device_id != self._device_id:
+            return
+
+        if self.data_type not in event.values:
+            return
+
+        _LOGGER.debug(
+            "Sensor update (Device ID: %s Class: %s Sub: %s)",
+            event.device.id_string,
+            event.device.__class__.__name__,
+            event.device.subtype,
+        )
+
+        self._apply_event(event)
+
+        self.async_write_ha_state()

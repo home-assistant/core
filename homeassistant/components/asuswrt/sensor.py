@@ -69,9 +69,7 @@ class AsuswrtSensor(Entity):
             self._speed = await self._api.async_get_current_transfer_rates()
             if self._connect_error:
                 self._connect_error = False
-                _LOGGER.error(
-                    "Reconnected to ASUS router for %s update", self.entity_id
-                )
+                _LOGGER.info("Reconnected to ASUS router for %s update", self.entity_id)
         except OSError as err:
             if not self._connect_error:
                 self._connect_error = True

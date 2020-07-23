@@ -60,18 +60,20 @@ class NeatoCleaningMap(Camera):
     def update(self):
         """Check the contents of the map list."""
         if self.neato is None:
-            _LOGGER.error("Error while updating camera")
+            _LOGGER.error("Error while updating '%s'", self.entity_id)
             self._image = None
             self._image_url = None
             self._available = False
             return
 
-        _LOGGER.debug("Running camera update")
+        _LOGGER.debug("Running camera update for '%s'", self.entity_id)
         try:
             self.neato.update_robots()
         except NeatoRobotException as ex:
             if self._available:  # Print only once when available
-                _LOGGER.error("Neato camera connection error: %s", ex)
+                _LOGGER.error(
+                    "Neato camera connection error for '%s': %s", self.entity_id, ex
+                )
             self._image = None
             self._image_url = None
             self._available = False
@@ -81,14 +83,18 @@ class NeatoCleaningMap(Camera):
         map_data = self._mapdata[self._robot_serial]["maps"][0]
         image_url = map_data["url"]
         if image_url == self._image_url:
-            _LOGGER.debug("The map image_url is the same as old")
+            _LOGGER.debug(
+                "The map image_url for '%s' is the same as old", self.entity_id
+            )
             return
 
         try:
             image = self.neato.download_map(image_url)
         except NeatoRobotException as ex:
             if self._available:  # Print only once when available
-                _LOGGER.error("Neato camera connection error: %s", ex)
+                _LOGGER.error(
+                    "Neato camera connection error for '%s': %s", self.entity_id, ex
+                )
             self._image = None
             self._image_url = None
             self._available = False

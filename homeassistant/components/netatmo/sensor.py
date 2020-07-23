@@ -4,8 +4,12 @@ import logging
 
 import pyatmo
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     CONCENTRATION_PARTS_PER_MILLION,
+    CONF_SHOW_ON_MAP,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
@@ -13,23 +17,30 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     UNIT_PERCENTAGE,
 )
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import async_entries_for_config_entry
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from .const import AUTH, DOMAIN, MANUFACTURER, MODELS
+from .const import (
+    AUTH,
+    CONF_AREA_NAME,
+    CONF_LAT_NE,
+    CONF_LAT_SW,
+    CONF_LON_NE,
+    CONF_LON_SW,
+    CONF_PUBLIC_MODE,
+    CONF_WEATHER_AREAS,
+    DOMAIN,
+    MANUFACTURER,
+    MODELS,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_MODULES = "modules"
-CONF_STATION = "station"
-CONF_AREAS = "areas"
-CONF_LAT_NE = "lat_ne"
-CONF_LON_NE = "lon_ne"
-CONF_LAT_SW = "lat_sw"
-CONF_LON_SW = "lon_sw"
-
-DEFAULT_MODE = "avg"
-MODE_TYPES = {"max", "avg"}
 
 # This is the Netatmo data upload interval in seconds
 NETATMO_UPDATE_INTERVAL = 600
@@ -55,7 +66,7 @@ SENSOR_TYPES = {
         "mdi:thermometer",
         DEVICE_CLASS_TEMPERATURE,
     ],
-    "co2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, "mdi:periodic-table-co2", None],
+    "co2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, "mdi:molecule-co2", None],
     "pressure": ["Pressure", "mbar", "mdi:gauge", None],
     "noise": ["Noise", "dB", "mdi:volume-high", None],
     "humidity": [
@@ -107,10 +118,15 @@ NETATMO_DEVICE_TYPES = {
     "HomeCoachData": "home coach",
 }
 
+PUBLIC = "public"
 
-async def async_setup_entry(hass, entry, async_add_entities):
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
     """Set up the Netatmo weather and homecoach platform."""
     auth = hass.data[DOMAIN][entry.entry_id][AUTH]
+    device_registry = await hass.helpers.device_registry.async_get_registry()
 
     def find_entities(data):
         """Find all entities."""
@@ -144,6 +160,41 @@ async def async_setup_entry(hass, entry, async_add_entities):
         return entities
 
     async_add_entities(await hass.async_add_executor_job(get_entities), True)
+
+    @callback
+    def add_public_entities():
+        """Retrieve Netatmo public weather entities."""
+        entities = []
+        for area in entry.options.get(CONF_WEATHER_AREAS, {}).values():
+            data = NetatmoPublicData(
+                auth,
+                lat_ne=area[CONF_LAT_NE],
+                lon_ne=area[CONF_LON_NE],
+                lat_sw=area[CONF_LAT_SW],
+                lon_sw=area[CONF_LON_SW],
+            )
+            for sensor_type in SUPPORTED_PUBLIC_SENSOR_TYPES:
+                entities.append(NetatmoPublicSensor(area, data, sensor_type,))
+
+        for device in async_entries_for_config_entry(device_registry, entry.entry_id):
+            if device.model == "Public Weather stations":
+                device_registry.async_remove_device(device.id)
+
+        if entities:
+            async_add_entities(entities)
+
+    async_dispatcher_connect(
+        hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}", add_public_entities
+    )
+
+    entry.add_update_listener(async_config_entry_updated)
+
+    add_public_entities()
+
+
+async def async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle signals of config entry being updated."""
+    async_dispatcher_send(hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}")
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -403,20 +454,48 @@ class NetatmoSensor(Entity):
             return
 
 
+class NetatmoData:
+    """Get the latest data from Netatmo."""
+
+    def __init__(self, auth, station_data):
+        """Initialize the data object."""
+        self.data = {}
+        self.station_data = station_data
+        self.auth = auth
+
+    def get_module_infos(self):
+        """Return all modules available on the API as a dict."""
+        return self.station_data.getModules()
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """Call the Netatmo API to update the data."""
+        self.station_data = self.station_data.__class__(self.auth)
+
+        data = self.station_data.lastData(exclude=3600, byId=True)
+        if not data:
+            _LOGGER.debug("No data received when updating station data")
+            return
+        self.data = data
+
+
 class NetatmoPublicSensor(Entity):
     """Represent a single sensor in a Netatmo."""
 
-    def __init__(self, area_name, data, sensor_type, mode):
+    def __init__(self, area, data, sensor_type):
         """Initialize the sensor."""
         self.netatmo_data = data
         self.type = sensor_type
-        self._mode = mode
-        self._name = f"{MANUFACTURER} {area_name} {SENSOR_TYPES[self.type][0]}"
-        self._area_name = area_name
+        self._mode = area[CONF_PUBLIC_MODE]
+        self._area_name = area[CONF_AREA_NAME]
+        self._name = f"{MANUFACTURER} {self._area_name} {SENSOR_TYPES[self.type][0]}"
         self._state = None
         self._device_class = SENSOR_TYPES[self.type][3]
         self._icon = SENSOR_TYPES[self.type][2]
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
+        self._show_on_map = area[CONF_SHOW_ON_MAP]
+        self._unique_id = f"{self._name.replace(' ', '-')}"
+        self._module_type = PUBLIC
 
     @property
     def name(self):
@@ -440,8 +519,23 @@ class NetatmoPublicSensor(Entity):
             "identifiers": {(DOMAIN, self._area_name)},
             "name": self._area_name,
             "manufacturer": MANUFACTURER,
-            "model": "public",
+            "model": MODELS[self._module_type],
         }
+
+    @property
+    def device_state_attributes(self):
+        """Return the attributes of the device."""
+        attrs = {}
+
+        if self._show_on_map:
+            attrs[ATTR_LATITUDE] = (
+                self.netatmo_data.lat_ne + self.netatmo_data.lat_sw
+            ) / 2
+            attrs[ATTR_LONGITUDE] = (
+                self.netatmo_data.lon_ne + self.netatmo_data.lon_sw
+            ) / 2
+
+        return attrs
 
     @property
     def state(self):
@@ -454,9 +548,14 @@ class NetatmoPublicSensor(Entity):
         return self._unit_of_measurement
 
     @property
+    def unique_id(self):
+        """Return the unique ID for this sensor."""
+        return self._unique_id
+
+    @property
     def available(self):
         """Return True if entity is available."""
-        return bool(self._state)
+        return self._state is not None
 
     def update(self):
         """Get the latest data from Netatmo API and updates the states."""
@@ -532,32 +631,7 @@ class NetatmoPublicData:
             return
 
         if data.CountStationInArea() == 0:
-            _LOGGER.warning("No Stations available in this area.")
+            _LOGGER.warning("No Stations available in this area")
             return
 
-        self.data = data
-
-
-class NetatmoData:
-    """Get the latest data from Netatmo."""
-
-    def __init__(self, auth, station_data):
-        """Initialize the data object."""
-        self.data = {}
-        self.station_data = station_data
-        self.auth = auth
-
-    def get_module_infos(self):
-        """Return all modules available on the API as a dict."""
-        return self.station_data.getModules()
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Call the Netatmo API to update the data."""
-        self.station_data = self.station_data.__class__(self.auth)
-
-        data = self.station_data.lastData(exclude=3600, byId=True)
-        if not data:
-            _LOGGER.debug("No data received when updating station data")
-            return
         self.data = data

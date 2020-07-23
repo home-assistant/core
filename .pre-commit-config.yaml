@@ -22,7 +22,7 @@ repos:
           - --quiet-level=2
         exclude_types: [csv, json]
   - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.8.1
+    rev: 3.8.3
     hooks:
       - id: flake8
         additional_dependencies:

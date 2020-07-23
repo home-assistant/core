@@ -3,7 +3,7 @@
         "abort": {
             "already_setup": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3.",
             "authorize_url_fail": "S'ha produ\u00eft un error desconegut al generar l'URL d'autoritzaci\u00f3.",
-            "authorize_url_timeout": "S'ha acabat el temps d'espera durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
+            "authorize_url_timeout": "Temps d'espera durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3 esgotat.",
             "external_setup": "Point s'ha configurat correctament des d'un altre flux de dades.",
             "no_flows": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3."
         },

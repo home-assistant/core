@@ -56,9 +56,14 @@ from .const import (
     CONF_RETAIN,
     CONF_STATE_TOPIC,
     CONF_WILL_MESSAGE,
+    DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
+    DEFAULT_PAYLOAD_AVAILABLE,
+    DEFAULT_PAYLOAD_NOT_AVAILABLE,
+    DEFAULT_PREFIX,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
+    DEFAULT_WILL,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
     PROTOCOL_311,
@@ -88,6 +93,8 @@ CONF_TLS_INSECURE = "tls_insecure"
 CONF_TLS_VERSION = "tls_version"
 
 CONF_COMMAND_TOPIC = "command_topic"
+CONF_TOPIC = "topic"
+CONF_AVAILABILITY = "availability"
 CONF_AVAILABILITY_TOPIC = "availability_topic"
 CONF_PAYLOAD_AVAILABLE = "payload_available"
 CONF_PAYLOAD_NOT_AVAILABLE = "payload_not_available"
@@ -108,10 +115,7 @@ PROTOCOL_31 = "3.1"
 DEFAULT_PORT = 1883
 DEFAULT_KEEPALIVE = 60
 DEFAULT_PROTOCOL = PROTOCOL_311
-DEFAULT_DISCOVERY_PREFIX = "homeassistant"
 DEFAULT_TLS_PROTOCOL = "auto"
-DEFAULT_PAYLOAD_AVAILABLE = "online"
-DEFAULT_PAYLOAD_NOT_AVAILABLE = "offline"
 
 ATTR_PAYLOAD_TEMPLATE = "payload_template"
 
@@ -139,8 +143,8 @@ CLIENT_KEY_AUTH_MSG = (
 
 MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_TOPIC): valid_publish_topic,
-        vol.Required(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
+        vol.Inclusive(ATTR_TOPIC, "topic_payload"): valid_publish_topic,
+        vol.Inclusive(ATTR_PAYLOAD, "topic_payload"): cv.string,
         vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
         vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     },
@@ -186,13 +190,17 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.All(
                         cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])
                     ),
-                    vol.Optional(CONF_WILL_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
-                    vol.Optional(CONF_BIRTH_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
+                    vol.Optional(
+                        CONF_WILL_MESSAGE, default=DEFAULT_WILL
+                    ): MQTT_WILL_BIRTH_SCHEMA,
+                    vol.Optional(
+                        CONF_BIRTH_MESSAGE, default=DEFAULT_BIRTH
+                    ): MQTT_WILL_BIRTH_SCHEMA,
                     vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
                     # discovery_prefix must be a valid publish topic because if no
                     # state topic is specified, it will be created with the given prefix.
                     vol.Optional(
-                        CONF_DISCOVERY_PREFIX, default=DEFAULT_DISCOVERY_PREFIX
+                        CONF_DISCOVERY_PREFIX, default=DEFAULT_PREFIX
                     ): valid_publish_topic,
                 }
             ),
@@ -203,9 +211,9 @@ CONFIG_SCHEMA = vol.Schema(
 
 SCHEMA_BASE = {vol.Optional(CONF_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA}
 
-MQTT_AVAILABILITY_SCHEMA = vol.Schema(
+MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_AVAILABILITY_TOPIC): valid_subscribe_topic,
+        vol.Exclusive(CONF_AVAILABILITY_TOPIC, "availability"): valid_subscribe_topic,
         vol.Optional(
             CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
         ): cv.string,
@@ -213,6 +221,30 @@ MQTT_AVAILABILITY_SCHEMA = vol.Schema(
             CONF_PAYLOAD_NOT_AVAILABLE, default=DEFAULT_PAYLOAD_NOT_AVAILABLE
         ): cv.string,
     }
+)
+
+MQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
+    {
+        vol.Exclusive(CONF_AVAILABILITY, "availability"): vol.All(
+            cv.ensure_list,
+            [
+                {
+                    vol.Optional(CONF_TOPIC): valid_subscribe_topic,
+                    vol.Optional(
+                        CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
+                    ): cv.string,
+                    vol.Optional(
+                        CONF_PAYLOAD_NOT_AVAILABLE,
+                        default=DEFAULT_PAYLOAD_NOT_AVAILABLE,
+                    ): cv.string,
+                }
+            ],
+        ),
+    }
+)
+
+MQTT_AVAILABILITY_SCHEMA = MQTT_AVAILABILITY_SINGLE_SCHEMA.extend(
+    MQTT_AVAILABILITY_LIST_SCHEMA.schema
 )
 
 MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
@@ -568,10 +600,10 @@ async def async_setup_entry(hass, entry):
 class Subscription:
     """Class to hold data about an active subscription."""
 
-    topic = attr.ib(type=str)
-    callback = attr.ib(type=MessageCallbackType)
-    qos = attr.ib(type=int, default=0)
-    encoding = attr.ib(type=str, default="utf-8")
+    topic: str = attr.ib()
+    callback: MessageCallbackType = attr.ib()
+    qos: int = attr.ib(default=0)
+    encoding: str = attr.ib(default="utf-8")
 
 
 class MQTT:
@@ -672,17 +704,20 @@ class MQTT:
         self._mqttc.on_disconnect = self._mqtt_on_disconnect
         self._mqttc.on_message = self._mqtt_on_message
 
-        if CONF_WILL_MESSAGE in self.conf:
+        if (
+            CONF_WILL_MESSAGE in self.conf
+            and ATTR_TOPIC in self.conf[CONF_WILL_MESSAGE]
+        ):
             will_message = Message(**self.conf[CONF_WILL_MESSAGE])
         else:
             will_message = None
 
         if will_message is not None:
             self._mqttc.will_set(  # pylint: disable=no-value-for-parameter
-                *attr.astuple(
-                    will_message,
-                    filter=lambda attr, value: attr.name != "subscribed_topic",
-                )
+                topic=will_message.topic,
+                payload=will_message.payload,
+                qos=will_message.qos,
+                retain=will_message.retain,
             )
 
     async def async_publish(
@@ -723,7 +758,7 @@ class MQTT:
 
         def stop():
             """Stop the MQTT client."""
-            self._mqttc.disconnect()
+            # Do not disconnect, we want the broker to always publish will
             self._mqttc.loop_stop()
 
         await self.hass.async_add_executor_job(stop)
@@ -822,15 +857,17 @@ class MQTT:
             max_qos = max(subscription.qos for subscription in subs)
             self.hass.add_job(self._async_perform_subscription, topic, max_qos)
 
-        if CONF_BIRTH_MESSAGE in self.conf:
+        if (
+            CONF_BIRTH_MESSAGE in self.conf
+            and ATTR_TOPIC in self.conf[CONF_BIRTH_MESSAGE]
+        ):
             birth_message = Message(**self.conf[CONF_BIRTH_MESSAGE])
             self.hass.add_job(
                 self.async_publish(  # pylint: disable=no-value-for-parameter
-                    *attr.astuple(
-                        birth_message,
-                        filter=lambda attr, value: attr.name
-                        not in ["subscribed_topic", "timestamp"],
-                    )
+                    topic=birth_message.topic,
+                    payload=birth_message.payload,
+                    qos=birth_message.qos,
+                    retain=birth_message.retain,
                 )
             )
 
@@ -989,23 +1026,43 @@ class MqttAvailability(Entity):
         """Initialize the availability mixin."""
         self._availability_sub_state = None
         self._available = False
-
-        self._avail_config = config
+        self._availability_setup_from_config(config)
 
     async def async_added_to_hass(self) -> None:
         """Subscribe MQTT events."""
         await super().async_added_to_hass()
         await self._availability_subscribe_topics()
-        async_dispatcher_connect(self.hass, MQTT_CONNECTED, self.async_mqtt_connect)
-        async_dispatcher_connect(self.hass, MQTT_DISCONNECTED, self.async_mqtt_connect)
         self.async_on_remove(
             async_dispatcher_connect(self.hass, MQTT_CONNECTED, self.async_mqtt_connect)
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, MQTT_DISCONNECTED, self.async_mqtt_connect
+            )
         )
 
     async def availability_discovery_update(self, config: dict):
         """Handle updated discovery message."""
-        self._avail_config = config
+        self._availability_setup_from_config(config)
         await self._availability_subscribe_topics()
+
+    def _availability_setup_from_config(self, config):
+        """(Re)Setup."""
+        self._avail_topics = {}
+        if CONF_AVAILABILITY_TOPIC in config:
+            self._avail_topics[config[CONF_AVAILABILITY_TOPIC]] = {
+                CONF_PAYLOAD_AVAILABLE: config[CONF_PAYLOAD_AVAILABLE],
+                CONF_PAYLOAD_NOT_AVAILABLE: config[CONF_PAYLOAD_NOT_AVAILABLE],
+            }
+
+        if CONF_AVAILABILITY in config:
+            for avail in config[CONF_AVAILABILITY]:
+                self._avail_topics[avail[CONF_TOPIC]] = {
+                    CONF_PAYLOAD_AVAILABLE: avail[CONF_PAYLOAD_AVAILABLE],
+                    CONF_PAYLOAD_NOT_AVAILABLE: avail[CONF_PAYLOAD_NOT_AVAILABLE],
+                }
+
+        self._avail_config = config
 
     async def _availability_subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -1014,29 +1071,30 @@ class MqttAvailability(Entity):
         @log_messages(self.hass, self.entity_id)
         def availability_message_received(msg: Message) -> None:
             """Handle a new received MQTT availability message."""
-            if msg.payload == self._avail_config[CONF_PAYLOAD_AVAILABLE]:
+            topic = msg.topic
+            if msg.payload == self._avail_topics[topic][CONF_PAYLOAD_AVAILABLE]:
                 self._available = True
-            elif msg.payload == self._avail_config[CONF_PAYLOAD_NOT_AVAILABLE]:
+            elif msg.payload == self._avail_topics[topic][CONF_PAYLOAD_NOT_AVAILABLE]:
                 self._available = False
 
             self.async_write_ha_state()
 
+        topics = {}
+        for topic in self._avail_topics:
+            topics[f"availability_{topic}"] = {
+                "topic": topic,
+                "msg_callback": availability_message_received,
+                "qos": self._avail_config[CONF_QOS],
+            }
+
         self._availability_sub_state = await async_subscribe_topics(
-            self.hass,
-            self._availability_sub_state,
-            {
-                "availability_topic": {
-                    "topic": self._avail_config.get(CONF_AVAILABILITY_TOPIC),
-                    "msg_callback": availability_message_received,
-                    "qos": self._avail_config[CONF_QOS],
-                }
-            },
+            self.hass, self._availability_sub_state, topics,
         )
 
     @callback
     def async_mqtt_connect(self):
         """Update state on connection/disconnection to MQTT broker."""
-        if self.hass.is_running:
+        if not self.hass.is_stopping:
             self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self):
@@ -1048,10 +1106,9 @@ class MqttAvailability(Entity):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        availability_topic = self._avail_config.get(CONF_AVAILABILITY_TOPIC)
-        if not self.hass.data[DATA_MQTT].connected:
+        if not self.hass.data[DATA_MQTT].connected and not self.hass.is_stopping:
             return False
-        return availability_topic is None or self._available
+        return not self._avail_topics or self._available
 
 
 async def cleanup_device_registry(hass, device_id):

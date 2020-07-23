@@ -78,15 +78,14 @@ ENTITY_DESCRIBING_ATTRIBUTES = {
 class RegistryEntry:
     """Entity Registry Entry."""
 
-    entity_id = attr.ib(type=str)
-    unique_id = attr.ib(type=str)
-    platform = attr.ib(type=str)
-    name = attr.ib(type=str, default=None)
-    icon = attr.ib(type=str, default=None)
+    entity_id: str = attr.ib()
+    unique_id: str = attr.ib()
+    platform: str = attr.ib()
+    name: Optional[str] = attr.ib(default=None)
+    icon: Optional[str] = attr.ib(default=None)
     device_id: Optional[str] = attr.ib(default=None)
     config_entry_id: Optional[str] = attr.ib(default=None)
-    disabled_by = attr.ib(
-        type=Optional[str],
+    disabled_by: Optional[str] = attr.ib(
         default=None,
         validator=attr.validators.in_(
             (
@@ -105,7 +104,7 @@ class RegistryEntry:
     # As set by integration
     original_name: Optional[str] = attr.ib(default=None)
     original_icon: Optional[str] = attr.ib(default=None)
-    domain = attr.ib(type=str, init=False, repr=False)
+    domain: str = attr.ib(init=False, repr=False)
 
     @domain.default
     def _domain_default(self) -> str:

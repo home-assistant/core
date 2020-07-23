@@ -1,15 +1,34 @@
 # Describes the format for available Elexa Guardians services
 disable_ap:
   description: Disable the device's onboard access point.
+  fields:
+    entity_id:
+      description: The Guardian valve controller to affect.
+      example: switch.guardian_abcde_valve
 enable_ap:
   description: Enable the device's onboard access point.
+  fields:
+    entity_id:
+      description: The Guardian valve controller to affect.
+      example: switch.guardian_abcde_valve
 reboot:
   description: Reboot the device.
+  fields:
+    entity_id:
+      description: The Guardian valve controller to affect.
+      example: switch.guardian_abcde_valve
 reset_valve_diagnostics:
   description: Fully (and irrecoverably) reset all valve diagnostics.
+  fields:
+    entity_id:
+      description: The Guardian valve controller to affect.
+      example: switch.guardian_abcde_valve
 upgrade_firmware:
   description: Upgrade the device firmware.
   fields:
+    entity_id:
+      description: The Guardian valve controller to affect.
+      example: switch.guardian_abcde_valve
     url:
       description: (optional) The URL of the server hosting the firmware file.
       example: https://repo.guardiancloud.services/gvc/fw

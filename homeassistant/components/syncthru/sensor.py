@@ -6,14 +6,18 @@ from pysyncthru import SyncThru
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_RESOURCE, UNIT_PERCENTAGE
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_NAME, CONF_RESOURCE, CONF_URL, UNIT_PERCENTAGE
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
+from .const import DEFAULT_MODEL, DEFAULT_NAME_TEMPLATE, DOMAIN
+from .exceptions import SyncThruNotSupported
+
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Samsung Printer"
 COLORS = ["black", "cyan", "magenta", "yellow"]
 DRUM_COLORS = COLORS
 TONER_COLORS = COLORS
@@ -28,30 +32,38 @@ DEFAULT_MONITORED_CONDITIONS.extend([f"output_tray_{key}" for key in OUTPUT_TRAY
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_RESOURCE): cv.url,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(
+            CONF_NAME, default=DEFAULT_NAME_TEMPLATE.format(DEFAULT_MODEL)
+        ): cv.string,
     }
 )
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the SyncThru component."""
-
-    if discovery_info is not None:
-        _LOGGER.info(
-            "Discovered a new Samsung Printer at %s", discovery_info.get(CONF_HOST)
+    _LOGGER.warning(
+        "Loading syncthru via platform config is deprecated and no longer "
+        "necessary as of 0.113. Please remove it from your configuration YAML."
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_URL: config.get(CONF_RESOURCE),
+                CONF_NAME: config.get(CONF_NAME),
+            },
         )
-        host = discovery_info.get(CONF_HOST)
-        name = discovery_info.get(CONF_NAME, DEFAULT_NAME)
-        # Main device, always added
-    else:
-        host = config.get(CONF_RESOURCE)
-        name = config.get(CONF_NAME)
-    # always pass through all of the obtained information
-    monitored = DEFAULT_MONITORED_CONDITIONS
+    )
+    return True
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up from config entry."""
 
     session = aiohttp_client.async_get_clientsession(hass)
 
-    printer = SyncThru(host, session)
+    printer = SyncThru(config_entry.data[CONF_URL], session)
     # Test if the discovered device actually is a syncthru printer
     # and fetch the available toner/drum/etc
     try:
@@ -63,34 +75,23 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         supp_drum = printer.drum_status(filter_supported=True)
         supp_tray = printer.input_tray_status(filter_supported=True)
         supp_output_tray = printer.output_tray_status()
-    except ValueError:
-        # if an exception is thrown, printer does not support syncthru
-        # and should not be set up
-        # If the printer was discovered automatically, no warning or error
-        # should be issued and printer should not be set up
-        if discovery_info is not None:
-            _LOGGER.info("Samsung printer at %s does not support SyncThru", host)
-            return
-        # Otherwise, emulate printer that supports everything
-        supp_toner = TONER_COLORS
-        supp_drum = DRUM_COLORS
-        supp_tray = TRAYS
-        supp_output_tray = OUTPUT_TRAYS
+    except ValueError as ex:
+        raise SyncThruNotSupported from ex
+    else:
+        if printer.is_unknown_state():
+            raise PlatformNotReady
 
+    name = config_entry.data[CONF_NAME]
     devices = [SyncThruMainSensor(printer, name)]
 
     for key in supp_toner:
-        if f"toner_{key}" in monitored:
-            devices.append(SyncThruTonerSensor(printer, name, key))
+        devices.append(SyncThruTonerSensor(printer, name, key))
     for key in supp_drum:
-        if f"drum_{key}" in monitored:
-            devices.append(SyncThruDrumSensor(printer, name, key))
+        devices.append(SyncThruDrumSensor(printer, name, key))
     for key in supp_tray:
-        if f"tray_{key}" in monitored:
-            devices.append(SyncThruInputTraySensor(printer, name, key))
+        devices.append(SyncThruInputTraySensor(printer, name, key))
     for key in supp_output_tray:
-        if f"output_tray_{key}" in monitored:
-            devices.append(SyncThruOutputTraySensor(printer, name, key))
+        devices.append(SyncThruOutputTraySensor(printer, name, key))
 
     async_add_entities(devices, True)
 
