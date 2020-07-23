@@ -158,7 +158,7 @@ async def async_setup(hass, config):
         device_id = get_device_id(
             event.device, data_bits=event_config.get(CONF_DATA_BITS)
         )
-        data[CONF_DEVICES][event_code][CONF_DEVICE_ID] = device_id
+        event_config[CONF_DEVICE_ID] = device_id
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -217,18 +217,13 @@ def setup_internal(hass, entry: config_entries.ConfigEntry):
     config = entry.data
 
     # Setup some per device config
-    devices = set()
-    device_events = set()
-    device_bits = {}
+    devices = dict()
     for event_code, event_config in config[CONF_DEVICES].items():
         event = get_rfx_object(event_code)
         device_id = get_device_id(
             event.device, data_bits=event_config.get(CONF_DATA_BITS)
         )
-        devices.add(device_id)
-        device_bits[device_id] = event_config.get(CONF_DATA_BITS)
-        if event_config[CONF_FIRE_EVENT]:
-            device_events.add(device_id)
+        devices[device_id] = event_config
 
     # Declare the Handle event
     def handle_receive(event):
@@ -248,29 +243,32 @@ def setup_internal(hass, entry: config_entries.ConfigEntry):
 
         _LOGGER.debug("Receive RFXCOM event: %s", event_data)
 
-        data_bits = get_device_data_bits(event.device, device_bits)
+        data_bits = get_device_data_bits(event.device, devices)
         device_id = get_device_id(event.device, data_bits=data_bits)
 
         # Callback to HA registered components.
         hass.helpers.dispatcher.dispatcher_send(SIGNAL_EVENT, event, device_id)
 
         # Signal event to any other listeners
-        if device_id in device_events:
+        fire_event = devices.get(device_id, {}).get(CONF_FIRE_EVENT)
+        if fire_event:
             hass.bus.fire(EVENT_RFXTRX_EVENT, event_data)
 
-        if config[CONF_AUTOMATIC_ADD]:
-            if device_id not in devices:
-                data = entry.data
-                data[CONF_DEVICES][event_data["data"]] = device_id
+    @callback
+    def async_add_device_to_config(hass, event, device_id):
+        data = entry.data.copy()
+        event_code = binascii.hexlify(event.data).decode("ASCII")
+        data[CONF_DEVICES][event_code] = device_id
+        hass.config_entries.async_update_entry(entry=entry, data=data)
 
-                asyncio.run_coroutine_threadsafe(
-                    async_add_device(hass, entry, data), hass.loop
-                )
+    @callback
+    def device_update(event, device_id):
+        if device_id not in devices:
+            hass.add_job(async_add_device_to_config, hass, event, device_id)
+            devices[device_id] = {}
 
-                devices.add(device_id)
-
-    async def async_add_device(hass, entry: config_entries.ConfigEntry, data):
-        return hass.config_entries.async_update_entry(entry=entry, data=data)
+    if config[CONF_AUTOMATIC_ADD]:
+        hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, device_update)
 
     device = config[CONF_DEVICE]
     host = config[CONF_HOST]
@@ -358,11 +356,12 @@ def get_pt2262_cmd(device_id, data_bits):
     return hex(data[-1] & mask)
 
 
-def get_device_data_bits(device, device_bits):
+def get_device_data_bits(device, devices):
     """Deduce data bits for device based on a cache of device bits."""
     data_bits = None
     if device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
-        for device_id, bits in device_bits.items():
+        for device_id, entity_config in devices.items():
+            bits = entity_config.get(CONF_DATA_BITS)
             if get_device_id(device, bits) == device_id:
                 data_bits = bits
                 break
