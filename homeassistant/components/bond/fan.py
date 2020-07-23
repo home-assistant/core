@@ -50,6 +50,11 @@ class BondFan(BondEntity, FanEntity):
         self._speed: Optional[int] = None
         self._direction: Optional[int] = None
 
+    def _apply_state(self, state: dict):
+        self._power = state.get("power")
+        self._speed = state.get("speed")
+        self._direction = state.get("direction")
+
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
@@ -89,13 +94,6 @@ class BondFan(BondEntity, FanEntity):
             direction = DIRECTION_REVERSE
 
         return direction
-
-    async def async_update(self):
-        """Fetch assumed state of the fan from the hub using API."""
-        state: dict = await self._hub.bond.device_state(self._device.device_id)
-        self._power = state.get("power")
-        self._speed = state.get("speed")
-        self._direction = state.get("direction")
 
     async def async_set_speed(self, speed: str) -> None:
         """Set the desired speed for the fan."""

@@ -39,6 +39,9 @@ class BondSwitch(BondEntity, SwitchEntity):
 
         self._power: Optional[bool] = None
 
+    def _apply_state(self, state: dict):
+        self._power = state.get("power")
+
     @property
     def is_on(self) -> bool:
         """Return True if power is on."""
@@ -51,8 +54,3 @@ class BondSwitch(BondEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._hub.bond.action(self._device.device_id, Action.turn_off())
-
-    async def async_update(self):
-        """Fetch assumed state of the device from the hub using API."""
-        state: dict = await self._hub.bond.device_state(self._device.device_id)
-        self._power = state.get("power")
