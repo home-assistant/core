@@ -12,6 +12,7 @@ from ipaddress import ip_address
 import logging
 import os
 import pathlib
+import random
 import re
 import threading
 from time import monotonic
@@ -458,7 +459,13 @@ class Context:
 
     user_id: str = attr.ib(default=None)
     parent_id: Optional[str] = attr.ib(default=None)
-    id: str = attr.ib(factory=lambda: uuid.uuid4().hex)
+    # The uuid1 uses a random multicast MAC address instead of the real MAC address
+    # of the machine without the overhead of calling the getrandom() system call.
+    #
+    # This is effectively equivalent to PostgreSQL's uuid_generate_v1mc() function
+    id: str = attr.ib(
+        factory=lambda: uuid.uuid1(node=random.getrandbits(48) | (1 << 40)).hex
+    )
 
     def as_dict(self) -> dict:
         """Return a dictionary representation of the context."""
