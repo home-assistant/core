@@ -136,7 +136,7 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         self._name = name
         self.host = host
         self._state = None
-        self._current_activity = None
+        self._current_activity = ACTIVITY_POWER_OFF
         self.default_activity = activity
         self._client = HarmonyClient(ip_address=host)
         self._config_path = out_path
