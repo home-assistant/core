@@ -5,9 +5,11 @@ import logging
 import syncthing
 
 from homeassistant.const import CONF_NAME
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
+from .const import DOMAIN, FOLDER_SUMMARY_RECEIVED, STATE_CHANGED_RECEIVED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,11 +73,63 @@ class FolderSensor(Entity):
         """Return the state attributes."""
         return self._state
 
+    @property
+    def should_poll(self):
+        """Return the polling requirement for this sensor."""
+        return False
+
     async def async_update(self):
         """Update device state."""
+
+        if self._state is not None:
+            return
+
         try:
-            self._state = await self._hass.async_add_executor_job(
+            _LOGGER.info(f"Folder {self._folder['id']} is updating...")
+            state = await self._hass.async_add_executor_job(
                 self._client.database.status, self._folder["id"]
             )
+            # A workaround, for some reason, state of paused folder is an empty string
+            if state["state"] == "":
+                state["state"] = "paused"
+            self._state = state
         except syncthing.SyncthingError:
             self._state = None
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+
+        @callback
+        def handle_folder_summary(event):
+            """Update the state."""
+            if self._state is not None:
+                # A workaround, for some reason, state of paused folder is an empty string
+                if event["data"]["summary"]["state"] == "":
+                    event["data"]["summary"]["state"] = "paused"
+                self._state = event["data"]["summary"]
+                self.async_schedule_update_ha_state(True)
+            pass
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{FOLDER_SUMMARY_RECEIVED}-{self._client_name}-{self._folder['id']}",
+                handle_folder_summary,
+            )
+        )
+
+        @callback
+        def handle_state_chaged(event):
+            """Update the state."""
+            if self._state is not None:
+                self._state["state"] = event["data"]["to"]
+                self.async_schedule_update_ha_state(True)
+            pass
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{STATE_CHANGED_RECEIVED}-{self._client_name}-{self._folder['id']}",
+                handle_state_chaged,
+            )
+        )
