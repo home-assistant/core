@@ -2,7 +2,7 @@
 import math
 from typing import Any, Callable, List, Optional
 
-from bond import DeviceTypes, Directions
+from bond_api import Action, DeviceType, Direction
 
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
@@ -33,9 +33,7 @@ async def async_setup_entry(
     hub: BondHub = hass.data[DOMAIN][entry.entry_id]
 
     fans = [
-        BondFan(hub, device)
-        for device in hub.devices
-        if device.type == DeviceTypes.CEILING_FAN
+        BondFan(hub, device) for device in hub.devices if DeviceType.is_fan(device.type)
     ]
 
     async_add_entities(fans, True)
@@ -85,21 +83,21 @@ class BondFan(BondEntity, FanEntity):
     def current_direction(self) -> Optional[str]:
         """Return fan rotation direction."""
         direction = None
-        if self._direction == Directions.FORWARD:
+        if self._direction == Direction.FORWARD:
             direction = DIRECTION_FORWARD
-        elif self._direction == Directions.REVERSE:
+        elif self._direction == Direction.REVERSE:
             direction = DIRECTION_REVERSE
 
         return direction
 
-    def update(self):
+    async def async_update(self):
         """Fetch assumed state of the fan from the hub using API."""
-        state: dict = self._hub.bond.getDeviceState(self._device.device_id)
+        state: dict = await self._hub.bond.device_state(self._device.device_id)
         self._power = state.get("power")
         self._speed = state.get("speed")
         self._direction = state.get("direction")
 
-    def set_speed(self, speed: str) -> None:
+    async def async_set_speed(self, speed: str) -> None:
         """Set the desired speed for the fan."""
         max_speed = self._device.props.get("max_speed", 3)
         if speed == SPEED_LOW:
@@ -108,21 +106,27 @@ class BondFan(BondEntity, FanEntity):
             bond_speed = max_speed
         else:
             bond_speed = math.ceil(max_speed / 2)
-        self._hub.bond.setSpeed(self._device.device_id, speed=bond_speed)
 
-    def turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
+        await self._hub.bond.action(
+            self._device.device_id, Action.set_speed(bond_speed)
+        )
+
+    async def async_turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
         """Turn on the fan."""
         if speed is not None:
-            self.set_speed(speed)
-        self._hub.bond.turnOn(self._device.device_id)
+            await self.async_set_speed(speed)
+        else:
+            await self._hub.bond.action(self._device.device_id, Action.turn_on())
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        self._hub.bond.turnOff(self._device.device_id)
+        await self._hub.bond.action(self._device.device_id, Action.turn_off())
 
-    def set_direction(self, direction: str) -> None:
+    async def async_set_direction(self, direction: str):
         """Set fan rotation direction."""
         bond_direction = (
-            Directions.REVERSE if direction == DIRECTION_REVERSE else Directions.FORWARD
+            Direction.REVERSE if direction == DIRECTION_REVERSE else Direction.FORWARD
         )
-        self._hub.bond.setDirection(self._device.device_id, bond_direction)
+        await self._hub.bond.action(
+            self._device.device_id, Action.set_direction(bond_direction)
+        )
