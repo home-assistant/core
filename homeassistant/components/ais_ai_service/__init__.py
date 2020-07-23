@@ -21,14 +21,6 @@ from homeassistant.components.conversation.default_agent import (
     DefaultAgent,
     async_register,
 )
-from homeassistant.components.mobile_app.const import (
-    ATTR_APP_DATA,
-    ATTR_APP_ID,
-    ATTR_APP_VERSION,
-    ATTR_OS_VERSION,
-    ATTR_PUSH_TOKEN,
-    ATTR_PUSH_URL,
-)
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -2497,7 +2489,84 @@ async def async_setup(hass, config):
                         },
                     )
 
+    async def async_mob_request(service):
+        from homeassistant.components.mobile_app.const import (
+            ATTR_APP_DATA,
+            ATTR_APP_ID,
+            ATTR_APP_VERSION,
+            ATTR_OS_VERSION,
+            ATTR_PUSH_TOKEN,
+            ATTR_PUSH_URL,
+        )
+
+        if "request" not in service.data:
+            _LOGGER.error("No request in service.data")
+            return
+        if "device_id" not in service.data:
+            _LOGGER.error("No device_id in service.data")
+            return
+
+        session = async_get_clientsession(hass)
+
+        device_id = service.data["device_id"]
+        entry_data = None
+        data = {"request": service.data["request"]}
+        if "data" in service.data:
+            data["data"] = service.data["data"]
+        else:
+            data["data"] = {}
+
+        for entry in hass.config_entries.async_entries("mobile_app"):
+            if entry.data["device_name"] == device_id:
+                entry_data = entry.data
+
+        if entry_data is None:
+            _LOGGER.error("No mob id from " + device_id)
+            return
+
+        app_data = entry_data[ATTR_APP_DATA]
+        push_token = app_data[ATTR_PUSH_TOKEN]
+        push_url = app_data[ATTR_PUSH_URL]
+
+        data[ATTR_PUSH_TOKEN] = push_token
+
+        reg_info = {
+            ATTR_APP_ID: entry_data[ATTR_APP_ID],
+            ATTR_APP_VERSION: entry_data[ATTR_APP_VERSION],
+        }
+        if ATTR_OS_VERSION in entry_data:
+            reg_info[ATTR_OS_VERSION] = entry_data[ATTR_OS_VERSION]
+
+        data["registration_info"] = reg_info
+
+        try:
+            with async_timeout.timeout(10):
+                response = await session.post(push_url, json=data)
+                result = await response.json()
+
+            if response.status in [200, 201, 202]:
+                return
+
+            fallback_error = result.get("errorMessage", "Unknown error")
+            fallback_message = (
+                f"Internal server error, please try again later: {fallback_error}"
+            )
+            message = result.get("message", fallback_message)
+            _LOGGER.error(message)
+
+        except asyncio.TimeoutError:
+            _LOGGER.error("Timeout sending notification to %s", push_url)
+
     async def async_mob_notify(service):
+        from homeassistant.components.mobile_app.const import (
+            ATTR_APP_DATA,
+            ATTR_APP_ID,
+            ATTR_APP_VERSION,
+            ATTR_OS_VERSION,
+            ATTR_PUSH_TOKEN,
+            ATTR_PUSH_URL,
+        )
+
         session = async_get_clientsession(hass)
 
         device_id = service.data["device_id"]
@@ -2712,6 +2781,7 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "switch_ui", switch_ui)
     hass.services.async_register(DOMAIN, "check_night_mode", check_night_mode)
     hass.services.async_register(DOMAIN, "mob_notify", async_mob_notify)
+    hass.services.async_register(DOMAIN, "mob_request", async_mob_request)
 
     # register intents
     hass.helpers.intent.async_register(GetTimeIntent())

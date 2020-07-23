@@ -8,7 +8,7 @@
         },
         "one": {
           "title": "Konfiguracja połączenia WiFi.",
-          "description": "![AIS logo](/static/icons/wifi_router.png)\n\nUpewnij się, że urządzenie znajduje się **w zasięgu Twojego routera WiFi**. Następnie rozpocznij wyszukiwanie sieci WiFi, naciskając **SUBMIT**.\n\n *Jeżeli sieć z którą chcesz się połączyć jest ukryta to zaznacz, że chcesz przejść do opcji zaawansowanych i naciśnij SUBMIT*",
+          "description": "![AIS logo](/static/icons/wifi_router.png)\n\nUpewnij się, że urządzenie znajduje się **w zasięgu Twojego routera WiFi**. Następnie rozpocznij wyszukiwanie sieci WiFi, naciskając **ZATWIERDŹ**.\n\n *Jeżeli sieć z którą chcesz się połączyć jest ukryta to zaznacz, że chcesz przejść do opcji zaawansowanych i naciśnij ZATWIERDŹ*",
           "data": { "connect_to_hidden_ssid": "Moja sieć jest ukryta, przejdź do opcji zaawansowanych."}
         },
         "search_wifi": {

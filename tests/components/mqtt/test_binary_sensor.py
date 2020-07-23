@@ -18,6 +18,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from .test_common import (
+    help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_payload,
@@ -40,11 +41,7 @@ from .test_common import (
 )
 
 from tests.async_mock import patch
-from tests.common import (
-    MockConfigEntry,
-    async_fire_mqtt_message,
-    async_fire_time_changed,
-)
+from tests.common import async_fire_mqtt_message, async_fire_time_changed
 
 DEFAULT_CONFIG = {
     binary_sensor.DOMAIN: {
@@ -298,6 +295,13 @@ async def test_invalid_device_class(hass, mqtt_mock):
     assert state is None
 
 
+async def test_availability_when_connection_lost(hass, mqtt_mock):
+    """Test availability after MQTT disconnection."""
+    await help_test_availability_when_connection_lost(
+        hass, mqtt_mock, binary_sensor.DOMAIN, DEFAULT_CONFIG
+    )
+
+
 async def test_availability_without_topic(hass, mqtt_mock):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
@@ -472,7 +476,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     )
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass, mqtt_mock):
     """Test unique id option only creates one sensor per unique_id."""
     config = {
         binary_sensor.DOMAIN: [
@@ -490,7 +494,7 @@ async def test_unique_id(hass):
             },
         ]
     }
-    await help_test_unique_id(hass, binary_sensor.DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, binary_sensor.DOMAIN, config)
 
 
 async def test_discovery_removal_binary_sensor(hass, mqtt_mock, caplog):
@@ -519,8 +523,8 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
     hass, mqtt_mock, caplog
 ):
     """Test that binary_sensor with expire_after set behaves correctly on discovery and discovery update."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, "homeassistant", {}, entry)
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    await async_start(hass, "homeassistant", entry)
 
     config = {
         "name": "Test",

@@ -298,7 +298,7 @@ class SpotifyData:
     ):
         items_info = {}
         idx = 0
-        if item_type == "album":
+        if (item_type == "album") or (item_type == "user_albums"):
             response = self._spotify.album_tracks(item_uri)
             for track in response["items"]:
                 items_info[idx] = {}
@@ -313,7 +313,7 @@ class SpotifyData:
                 items_info[idx]["type"] = track["type"]
                 items_info[idx]["icon"] = "mdi:play"
                 idx = idx + 1
-        elif item_type == "artist":
+        elif (item_type == "artist") or (item_type == "user_artists"):
             response = self._spotify.artist_top_tracks(item_uri)
             for track in response["tracks"]:
                 items_info[idx] = {}
@@ -328,7 +328,7 @@ class SpotifyData:
                 items_info[idx]["type"] = track["type"]
                 items_info[idx]["icon"] = "mdi:play"
                 idx = idx + 1
-        else:
+        elif (item_type == "playlist") or (item_type == "user_playlists"):
             response = self._spotify.user_playlist(item_owner_id, item_uri)
             for items in response["tracks"]["items"]:
                 items_info[idx] = {}

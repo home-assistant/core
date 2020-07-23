@@ -4,16 +4,19 @@ import asyncio
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
+from homeassistant.components.auth import indieauth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import HTTP_FORBIDDEN
+from homeassistant.const import HTTP_BAD_REQUEST, HTTP_FORBIDDEN
 from homeassistant.core import callback
 
 from .const import (
     DEFAULT_AREAS,
     DOMAIN,
+    STEP_AIS_RESTORE_BACKUP,
     STEP_CORE_CONFIG,
     STEP_INTEGRATION,
+    STEP_MOB_INTEGRATION,
     STEP_USER,
     STEPS,
 )
@@ -25,6 +28,8 @@ async def async_setup(hass, data, store):
     hass.http.register_view(UserOnboardingView(data, store))
     hass.http.register_view(CoreConfigOnboardingView(data, store))
     hass.http.register_view(IntegrationOnboardingView(data, store))
+    hass.http.register_view(MobIntegrationOnboardingView(data, store))
+    hass.http.register_view(AisRestoreBackupOnboardingView(data, store))
 
 
 class OnboardingView(HomeAssistantView):
@@ -161,6 +166,58 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
             return self.json({})
 
 
+class MobIntegrationOnboardingView(_BaseOnboardingView):
+    """View to finish mob integration onboarding step."""
+
+    url = "/api/onboarding/mob_integration"
+    name = "api:onboarding:mob_integration"
+    step = STEP_MOB_INTEGRATION
+
+    async def post(self, request):
+        """Handle finishing core config step."""
+        hass = request.app["hass"]
+
+        async with self._lock:
+            if self._async_is_done():
+                return self.json_message(
+                    "Core config step already done", HTTP_FORBIDDEN
+                )
+
+            await self._async_mark_done(hass)
+
+            await hass.config_entries.flow.async_init(
+                "met", context={"source": "onboarding"}
+            )
+
+            return self.json({})
+
+
+class AisRestoreBackupOnboardingView(_BaseOnboardingView):
+    """View to finish ais restore onboarding step."""
+
+    url = "/api/onboarding/ais_restore_backup"
+    name = "api:onboarding:ais_restore_backup"
+    step = STEP_AIS_RESTORE_BACKUP
+
+    async def post(self, request):
+        """Handle finishing core config step."""
+        hass = request.app["hass"]
+
+        async with self._lock:
+            if self._async_is_done():
+                return self.json_message(
+                    "Core config step already done", HTTP_FORBIDDEN
+                )
+
+            await self._async_mark_done(hass)
+
+            await hass.config_entries.flow.async_init(
+                "met", context={"source": "onboarding"}
+            )
+
+            return self.json({})
+
+
 class IntegrationOnboardingView(_BaseOnboardingView):
     """View to finish integration onboarding step."""
 
@@ -168,7 +225,9 @@ class IntegrationOnboardingView(_BaseOnboardingView):
     name = "api:onboarding:integration"
     step = STEP_INTEGRATION
 
-    @RequestDataValidator(vol.Schema({vol.Required("client_id"): str}))
+    @RequestDataValidator(
+        vol.Schema({vol.Required("client_id"): str, vol.Required("redirect_uri"): str})
+    )
     async def post(self, request, data):
         """Handle token creation."""
         hass = request.app["hass"]
@@ -181,6 +240,14 @@ class IntegrationOnboardingView(_BaseOnboardingView):
                 )
 
             await self._async_mark_done(hass)
+
+            # Validate client ID and redirect uri
+            if not await indieauth.verify_redirect_uri(
+                request.app["hass"], data["client_id"], data["redirect_uri"]
+            ):
+                return self.json_message(
+                    "invalid client id or redirect uri", HTTP_BAD_REQUEST
+                )
 
             # Return authorization code so we can redirect user and log them in
             auth_code = hass.components.auth.create_auth_code(data["client_id"], user)

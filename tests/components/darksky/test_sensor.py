@@ -105,8 +105,9 @@ class TestDarkSkySetup(unittest.TestCase):
         self.lat = self.hass.config.latitude = 37.8267
         self.lon = self.hass.config.longitude = -122.423
         self.entities = []
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 

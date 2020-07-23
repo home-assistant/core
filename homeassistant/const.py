@@ -1,7 +1,7 @@
 """Constants used by Home Assistant components."""
 
 MAJOR_VERSION = 0
-MINOR_VERSION = 111
+MINOR_VERSION = 112
 PATCH_VERSION = "6"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
@@ -13,7 +13,7 @@ REQUIRED_NEXT_PYTHON_DATE = ""
 # Format for platform files
 PLATFORM_FORMAT = "{platform}.{domain}"
 
-# Can be used to specify a catch all when registering state or event listeners.2
+# Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL = "*"
 
 # Entity target all constant
@@ -47,6 +47,7 @@ CONF_BINARY_SENSORS = "binary_sensors"
 CONF_BLACKLIST = "blacklist"
 CONF_BRIGHTNESS = "brightness"
 CONF_BROADCAST_ADDRESS = "broadcast_address"
+CONF_BROADCAST_PORT = "broadcast_port"
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
 CONF_CODE = "code"
@@ -191,7 +192,6 @@ EVENT_HOMEASSISTANT_STOP = "homeassistant_stop"
 EVENT_HOMEASSISTANT_FINAL_WRITE = "homeassistant_final_write"
 EVENT_LOGBOOK_ENTRY = "logbook_entry"
 EVENT_PLATFORM_DISCOVERED = "platform_discovered"
-EVENT_SCRIPT_STARTED = "script_started"
 EVENT_SERVICE_REGISTERED = "service_registered"
 EVENT_SERVICE_REMOVED = "service_removed"
 EVENT_STATE_CHANGED = "state_changed"

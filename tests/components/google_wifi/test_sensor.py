@@ -40,10 +40,7 @@ class TestGoogleWifiSetup(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     @requests_mock.Mocker()
     def test_setup_minimum(self, mock_req):
@@ -92,10 +89,7 @@ class TestGoogleWifiSensor(unittest.TestCase):
         self.hass = get_test_home_assistant()
         with requests_mock.Mocker() as mock_req:
             self.setup_api(MOCK_DATA, mock_req)
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def setup_api(self, data, mock_req):
         """Set up API with fake data."""

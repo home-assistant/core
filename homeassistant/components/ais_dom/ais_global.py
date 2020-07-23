@@ -161,7 +161,7 @@ def get_sercure_android_id_dom():
     import subprocess
 
     android_id = ""
-    if platform.machine() == "x86_64":
+    if not has_root():
         # to suport local test
         from uuid import getnode as get_mac
 
@@ -261,6 +261,12 @@ def get_audio_speed_name(speed):
         return "wolniej o " + str(100 - l_speed) + "%"
     elif l_speed > 100:
         return "szybciej o " + str(l_speed) + "%"
+
+
+def has_root():
+    if platform.machine() == "x86_64":
+        return False
+    return True
 
 
 set_global_my_ip(None)

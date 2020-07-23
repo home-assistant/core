@@ -10,6 +10,7 @@ rm -rf ~/.cache/pip/*
 
 # 2. stop HA and flush pm2 logs
 pm2 delete tunnel
+pm2 delete ssh-tunnel
 pm2 delete zigbee
 pm2 save
 pm2 stop ais

@@ -35,8 +35,9 @@ class TestScene(unittest.TestCase):
 
         assert not self.light_1.is_on
         assert not self.light_2.is_on
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 

@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_UNIT_SYSTEM,
+    LENGTH_FEET,
     MASS_KILOGRAMS,
     MASS_MILLIGRAMS,
     TIME_MILLISECONDS,
@@ -117,7 +118,7 @@ FITBIT_MEASUREMENTS = {
     "en_US": {
         "duration": TIME_MILLISECONDS,
         "distance": "mi",
-        "elevation": "ft",
+        "elevation": LENGTH_FEET,
         "height": "in",
         "weight": "lbs",
         "body": "in",

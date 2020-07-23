@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import functools as ft
 import logging
 import sys
-from typing import Callable, Container, Optional, Set, Union, cast
+from typing import Callable, Container, List, Optional, Set, Union, cast
 
 from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import (
@@ -238,7 +238,7 @@ def async_numeric_state_from_config(
     """Wrap action method with state based condition."""
     if config_validation:
         config = cv.NUMERIC_STATE_CONDITION_SCHEMA(config)
-    entity_id = config.get(CONF_ENTITY_ID)
+    entity_ids = config.get(CONF_ENTITY_ID, [])
     below = config.get(CONF_BELOW)
     above = config.get(CONF_ABOVE)
     value_template = config.get(CONF_VALUE_TEMPLATE)
@@ -250,8 +250,11 @@ def async_numeric_state_from_config(
         if value_template is not None:
             value_template.hass = hass
 
-        return async_numeric_state(
-            hass, entity_id, below, above, value_template, variables
+        return all(
+            async_numeric_state(
+                hass, entity_id, below, above, value_template, variables
+            )
+            for entity_id in entity_ids
         )
 
     return if_numeric_state
@@ -260,7 +263,7 @@ def async_numeric_state_from_config(
 def state(
     hass: HomeAssistant,
     entity: Union[None, str, State],
-    req_state: str,
+    req_state: Union[str, List[str]],
     for_period: Optional[timedelta] = None,
 ) -> bool:
     """Test if state matches requirements.
@@ -274,7 +277,10 @@ def state(
         return False
     assert isinstance(entity, State)
 
-    is_state = entity.state == req_state
+    if isinstance(req_state, str):
+        req_state = [req_state]
+
+    is_state = entity.state in req_state
 
     if for_period is None or not is_state:
         return is_state
@@ -288,13 +294,18 @@ def state_from_config(
     """Wrap action method with state based condition."""
     if config_validation:
         config = cv.STATE_CONDITION_SCHEMA(config)
-    entity_id = config.get(CONF_ENTITY_ID)
-    req_state = cast(str, config.get(CONF_STATE))
+    entity_ids = config.get(CONF_ENTITY_ID, [])
+    req_states: Union[str, List[str]] = config.get(CONF_STATE, [])
     for_period = config.get("for")
+
+    if not isinstance(req_states, list):
+        req_states = [req_states]
 
     def if_state(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Test if condition."""
-        return state(hass, entity_id, req_state, for_period)
+        return all(
+            state(hass, entity_id, req_states, for_period) for entity_id in entity_ids
+        )
 
     return if_state
 
@@ -506,12 +517,18 @@ def zone_from_config(
     """Wrap action method with zone based condition."""
     if config_validation:
         config = cv.ZONE_CONDITION_SCHEMA(config)
-    entity_id = config.get(CONF_ENTITY_ID)
-    zone_entity_id = config.get(CONF_ZONE)
+    entity_ids = config.get(CONF_ENTITY_ID, [])
+    zone_entity_ids = config.get(CONF_ZONE, [])
 
     def if_in_zone(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Test if condition."""
-        return zone(hass, zone_entity_id, entity_id)
+        return all(
+            any(
+                zone(hass, zone_entity_id, entity_id)
+                for zone_entity_id in zone_entity_ids
+            )
+            for entity_id in entity_ids
+        )
 
     return if_in_zone
 
@@ -556,7 +573,7 @@ async def async_validate_condition_config(
 @callback
 def async_extract_entities(config: ConfigType) -> Set[str]:
     """Extract entities from a condition."""
-    referenced = set()
+    referenced: Set[str] = set()
     to_process = deque([config])
 
     while to_process:
@@ -567,10 +584,13 @@ def async_extract_entities(config: ConfigType) -> Set[str]:
             to_process.extend(config["conditions"])
             continue
 
-        entity_id = config.get(CONF_ENTITY_ID)
+        entity_ids = config.get(CONF_ENTITY_ID)
 
-        if entity_id is not None:
-            referenced.add(entity_id)
+        if isinstance(entity_ids, str):
+            entity_ids = [entity_ids]
+
+        if entity_ids is not None:
+            referenced.update(entity_ids)
 
     return referenced
 

@@ -280,6 +280,7 @@ class AisCloudWS:
         self.hass = hass
         self.cloud_ws_token = ais_global.get_sercure_android_id_dom()
         self.cloud_ws_header = {"Authorization": f"{self.cloud_ws_token}"}
+        self.cache_key_path = "/data/data/pl.sviete.dom/files/home/AIS/.dom/"
 
     def gh_ais_add_device(self, oauth_json):
         payload = {
@@ -361,8 +362,26 @@ class AisCloudWS:
 
     def key(self, service):
         rest_url = self.url + "key?service=" + service
-        ws_resp = requests.get(rest_url, headers=self.cloud_ws_header, timeout=5)
-        return ws_resp.json()
+        try:
+            ws_resp = requests.get(rest_url, headers=self.cloud_ws_header, timeout=5)
+            # store in cache file
+            json_resp = ws_resp.json()
+            with open(self.cache_key_path + "." + service + ".json", "w") as outfile:
+                json.dump(json_resp, outfile)
+            return json_resp
+        except Exception as e:
+            _LOGGER.warning("Couldn't fetch data for: " + service + " " + str(e))
+            try:
+                with open(self.cache_key_path + "." + service + ".json") as file:
+                    data = json.loads(file.read())
+                    return data
+            except Exception as e:
+                _LOGGER.error(
+                    "Couldn't fetch data from local store for : "
+                    + service
+                    + " "
+                    + str(e)
+                )
 
     async def async_key(self, service):
         web_session = aiohttp_client.async_get_clientsession(self.hass)
@@ -371,9 +390,27 @@ class AisCloudWS:
             # during the system start lot of things is done 300 sec should be enough
             with async_timeout.timeout(300):
                 ws_resp = await web_session.get(rest_url, headers=self.cloud_ws_header)
-                return await ws_resp.json()
+                # store in cache file
+                json_resp = await ws_resp.json()
+                with open(
+                    self.cache_key_path + "." + service + ".json", "w"
+                ) as outfile:
+                    json.dump(json_resp, outfile)
+                return json_resp
         except Exception as e:
-            _LOGGER.error("Couldn't fetch data for: " + service + " " + str(e))
+            _LOGGER.warning("Couldn't fetch data for: " + service + " " + str(e))
+            # try to get from local store
+            try:
+                with open(self.cache_key_path + "." + service + ".json") as file:
+                    data = json.loads(file.read())
+                    return data
+            except Exception as e:
+                _LOGGER.error(
+                    "Couldn't fetch data from local store for : "
+                    + service
+                    + " "
+                    + str(e)
+                )
             # import traceback
             # traceback.print_exc()
 
@@ -1559,13 +1596,14 @@ class AisColudData:
         # HA backup
         if backup_type in ("all", "ha"):
             # 0. chmod
-            try:
-                ret = subprocess.check_output(
-                    'su -c "chmod -R 755 /data/data/pl.sviete.dom/files/home/AIS"',
-                    shell=True,  # nosec
-                )
-            except Exception as e:
-                _LOGGER.error("do_backup chmod: " + str(e))
+            if ais_global.has_root():
+                try:
+                    subprocess.check_output(
+                        'su -c "chmod -R 755 /data/data/pl.sviete.dom/files/home/AIS"',
+                        shell=True,  # nosec
+                    )
+                except Exception as e:
+                    _LOGGER.error("do_backup chmod: " + str(e))
 
             # 1. zip files
             self.get_backup_info(

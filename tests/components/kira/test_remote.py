@@ -30,10 +30,7 @@ class TestKiraSensor(unittest.TestCase):
         self.mock_kira = MagicMock()
         self.hass.data[kira.DOMAIN] = {kira.CONF_REMOTE: {}}
         self.hass.data[kira.DOMAIN][kira.CONF_REMOTE]["kira"] = self.mock_kira
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_service_call(self):
         """Test Kira's ability to send commands."""

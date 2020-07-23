@@ -96,9 +96,11 @@ async def prepare_usb_device(hass, device_info):
         # fix permitions
         uid = str(os.getuid())
         gid = str(os.getgid())
-        await _run("su -c 'chown " + uid + ":" + gid + " /dev/ttyACM0'")
+        if ais_global.has_root():
+            await _run("su -c 'chown " + uid + ":" + gid + " /dev/ttyACM0'")
         # TODO check the /dev/ttyACM.. number
-        await _run("su -c 'chmod 777 /dev/ttyACM0'")
+        if ais_global.has_root():
+            await _run("su -c 'chmod 777 /dev/ttyACM0'")
 
         # restart-delay 150000 milisecond == 2.5 minutes
         cmd_to_run = (
