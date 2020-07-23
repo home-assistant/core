@@ -141,6 +141,8 @@ async def test_step_reauth(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "reauth_successful"
 
+    assert len(hass.config_entries.async_entries()) == 1
+
 
 async def test_step_user(hass):
     """Test that the user step works (without MFA)."""
