@@ -491,7 +491,7 @@ class SimpliSafe:
                 )
             )
 
-            # Future events will come from the websocket, but since ssubscription to the
+            # Future events will come from the websocket, but since subscription to the
             # websocket doesn't provide the most recent event, we grab it from the REST
             # API to ensure event-related attributes aren't empty on startup:
             try:
@@ -534,21 +534,23 @@ class SimpliSafe:
                         "Token disconnected or invalid. Please re-auth the "
                         "SimpliSafe integration in HASS"
                     )
-                    return self._hass.async_create_task(
+                    self._hass.async_create_task(
                         self._hass.config_entries.flow.async_init(
                             DOMAIN,
                             context={"source": "reauth"},
                             data=self._config_entry.data,
                         )
                     )
+                    return
 
                 LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
                 self._emergency_refresh_token_used = True
 
                 try:
-                    return await self._api.refresh_access_token(
+                    await self._api.refresh_access_token(
                         self._config_entry.data[CONF_TOKEN]
                     )
+                    return
                 except SimplipyError as err:
                     LOGGER.error("Error while using stored refresh token: %s", err)
                     return
