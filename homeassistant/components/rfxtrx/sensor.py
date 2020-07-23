@@ -171,9 +171,6 @@ class RfxtrxSensor(RfxtrxEntity):
     @callback
     def _handle_event(self, event, device_id):
         """Check if event applies to me and update."""
-        if not isinstance(event, SensorEvent):
-            return
-
         if device_id != self._device_id:
             return
 

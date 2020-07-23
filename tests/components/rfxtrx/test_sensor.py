@@ -290,3 +290,60 @@ async def test_update_of_sensors(hass, rfxtrx):
     state = hass.states.get("sensor.wt260_wt260h_wt440h_wt450_wt450h_06_01_humidity")
     assert state
     assert state.state == "15"
+
+
+async def test_rssi_sensor(hass, rfxtrx):
+    """Test with 1 sensor."""
+    assert await async_setup_component(
+        hass,
+        "rfxtrx",
+        {
+            "rfxtrx": {
+                "device": "abcd",
+                "devices": {
+                    "0913000022670e013b70": {
+                        "data_bits": 4,
+                        "command_on": 0xE,
+                        "command_off": 0x7,
+                    },
+                    "0b1100cd0213c7f230010f71": {},
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    state = hass.states.get("sensor.pt2262_22670e_rssi_numeric")
+    assert state
+    assert state.state == "unknown"
+    assert state.attributes.get("friendly_name") == "PT2262 22670e Rssi numeric"
+    assert state.attributes.get("unit_of_measurement") == "dBm"
+
+    state = hass.states.get("sensor.ac_213c7f2_48_rssi_numeric")
+    assert state
+    assert state.state == "unknown"
+    assert state.attributes.get("friendly_name") == "AC 213c7f2:48 Rssi numeric"
+    assert state.attributes.get("unit_of_measurement") == "dBm"
+
+    await rfxtrx.signal("0913000022670e013b70")
+    await rfxtrx.signal("0b1100cd0213c7f230010f71")
+
+    state = hass.states.get("sensor.pt2262_22670e_rssi_numeric")
+    assert state
+    assert state.state == "-64"
+
+    state = hass.states.get("sensor.ac_213c7f2_48_rssi_numeric")
+    assert state
+    assert state.state == "-64"
+
+    await rfxtrx.signal("0913000022670e013b60")
+    await rfxtrx.signal("0b1100cd0213c7f230010f61")
+
+    state = hass.states.get("sensor.pt2262_22670e_rssi_numeric")
+    assert state
+    assert state.state == "-72"
+
+    state = hass.states.get("sensor.ac_213c7f2_48_rssi_numeric")
+    assert state
+    assert state.state == "-72"
