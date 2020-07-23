@@ -139,19 +139,11 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        if self.values.max_kelvin:
-            self._min_mireds = color_util.color_temperature_kelvin_to_mired(
-                self.values.max_kelvin.data[ATTR_VALUE]
-            )
         return self._min_mireds
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        if self.values.min_kelvin:
-            self._max_mireds = color_util.color_temperature_kelvin_to_mired(
-                self.values.min_kelvin.data[ATTR_VALUE]
-            )
         return self._max_mireds
 
     @callback
@@ -222,14 +214,24 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
                 rgbw = f"#00000000{white:02x}"
 
         elif color_temp is not None:
+            # Update color temp limits.
+            if self.values.min_kelvin:
+                self._max_mireds = color_util.color_temperature_kelvin_to_mired(
+                    self.values.min_kelvin.data[ATTR_VALUE]
+                )
+            if self.values.max_kelvin:
+                self._min_mireds = color_util.color_temperature_kelvin_to_mired(
+                    self.values.max_kelvin.data[ATTR_VALUE]
+                )
+
             # Limit color temp to min/max values
             cold = max(
                 0,
                 min(
                     255,
                     round(
-                        (self.max_mireds - color_temp)
-                        / (self.max_mireds - self.min_mireds)
+                        (self._max_mireds - color_temp)
+                        / (self._max_mireds - self._min_mireds)
                         * 255
                     ),
                 ),
@@ -288,8 +290,8 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         # Calculate color temps based on white LED status
         if temp_cold or temp_warm:
             self._ct = round(
-                self.max_mireds
-                - ((temp_cold / 255) * (self.max_mireds - self.min_mireds))
+                self._max_mireds
+                - ((temp_cold / 255) * (self._max_mireds - self._min_mireds))
             )
 
         if not (
