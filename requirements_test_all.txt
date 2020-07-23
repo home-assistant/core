@@ -125,6 +125,9 @@ aioswitcher==1.2.0
 # homeassistant.components.unifi
 aiounifi==23
 
+# homeassistant.components.yandex_transport
+aioymaps==1.0.0
+
 # homeassistant.components.airly
 airly==0.0.2
 
@@ -166,7 +169,7 @@ azure-eventhub==5.1.0
 base36==0.1.1
 
 # homeassistant.components.zha
-bellows==0.17.0
+bellows==0.18.0
 
 # homeassistant.components.blebox
 blebox_uniapi==1.3.2
@@ -178,7 +181,7 @@ blinkpy==0.15.1
 bomradarloop==0.1.4
 
 # homeassistant.components.bond
-bond-home==0.0.9
+bond-api==0.1.4
 
 # homeassistant.components.braviatv
 bravia-tv==1.0.6
@@ -536,6 +539,9 @@ py-melissa-climate==2.0.0
 # homeassistant.components.seventeentrack
 py17track==2.2.2
 
+# homeassistant.components.control4
+pyControl4==0.0.6
+
 # homeassistant.components.tplink
 pyHS100==0.3.5.1
 
@@ -577,7 +583,7 @@ pyblackbird==0.5
 pybotvac==0.0.17
 
 # homeassistant.components.cast
-pychromecast==7.0.1
+pychromecast==7.1.2
 
 # homeassistant.components.coolmaster
 pycoolmasternet==0.0.4
@@ -740,7 +746,7 @@ pysmappee==0.1.5
 pysmartapp==0.3.2
 
 # homeassistant.components.smartthings
-pysmartthings==0.7.1
+pysmartthings==0.7.2
 
 # homeassistant.components.soma
 pysoma==0.0.10
@@ -972,6 +978,9 @@ withings-api==2.1.6
 # homeassistant.components.wled
 wled==0.4.3
 
+# homeassistant.components.wolflink
+wolf_smartset==0.1.4
+
 # homeassistant.components.bluesound
 # homeassistant.components.rest
 # homeassistant.components.startca
@@ -980,11 +989,8 @@ wled==0.4.3
 # homeassistant.components.zestimate
 xmltodict==0.12.0
 
-# homeassistant.components.yandex_transport
-ya_ma==0.3.8
-
 # homeassistant.components.zeroconf
-zeroconf==0.27.1
+zeroconf==0.28.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.42

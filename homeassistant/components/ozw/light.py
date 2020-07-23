@@ -30,8 +30,8 @@ COLOR_CHANNEL_COLD_WHITE = 0x02
 COLOR_CHANNEL_RED = 0x04
 COLOR_CHANNEL_GREEN = 0x08
 COLOR_CHANNEL_BLUE = 0x10
-TEMP_COLOR_MAX = 500  # mireds (inverted)
-TEMP_COLOR_MIN = 154
+TEMP_COLOR_MAX = 500  # mired equivalent to 2000K
+TEMP_COLOR_MIN = 154  # mired equivalent to 6500K
 TEMP_COLOR_DIFF = TEMP_COLOR_MAX - TEMP_COLOR_MIN
 
 
@@ -80,11 +80,10 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         if self.values.dimming_duration is not None:
             self._supported_features |= SUPPORT_TRANSITION
 
-        if self.values.color is None and self.values.color_channels is None:
+        if self.values.color is None or self.values.color_channels is None:
             return
 
-        if self.values.color is not None:
-            self._supported_features |= SUPPORT_COLOR
+        self._supported_features |= SUPPORT_COLOR
 
         # Support Color Temp if both white channels
         if (self.values.color_channels.value & COLOR_CHANNEL_WARM_WHITE) and (
@@ -193,10 +192,15 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
                 rgbw = f"#00000000{white:02x}"
 
         elif color_temp is not None:
-            cold = round((TEMP_COLOR_MAX - round(color_temp)) / TEMP_COLOR_DIFF * 255)
+            # Limit color temp to min/max values
+            cold = max(
+                0,
+                min(
+                    255,
+                    round((TEMP_COLOR_MAX - round(color_temp)) / TEMP_COLOR_DIFF * 255),
+                ),
+            )
             warm = 255 - cold
-            if warm < 0:
-                warm = 0
             rgbw = f"#000000{warm:02x}{cold:02x}"
 
         if rgbw and self.values.color:

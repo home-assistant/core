@@ -4,7 +4,7 @@ from zeroconf import InterfaceChoice, IPVersion, ServiceInfo, ServiceStateChange
 
 from homeassistant.components import zeroconf
 from homeassistant.components.zeroconf import CONF_DEFAULT_INTERFACE, CONF_IPV6
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.generated import zeroconf as zc_gen
 from homeassistant.setup import async_setup_component
 
@@ -49,6 +49,20 @@ def get_service_info_mock(service_type, name):
     )
 
 
+def get_service_info_mock_without_an_address(service_type, name):
+    """Return service info for get_service_info without any addresses."""
+    return ServiceInfo(
+        service_type,
+        name,
+        addresses=[],
+        port=80,
+        weight=0,
+        priority=0,
+        server="name.local.",
+        properties=PROPERTIES,
+    )
+
+
 def get_homekit_info_mock(model, pairing_status):
     """Return homekit info for get_service_info for an homekit device."""
 
@@ -76,6 +90,8 @@ async def test_setup(hass, mock_zeroconf):
     ) as mock_service_browser:
         mock_zeroconf.get_service_info.side_effect = get_service_info_mock
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
     expected_flow_calls = 0
@@ -97,6 +113,8 @@ async def test_setup_with_default_interface(hass, mock_zeroconf):
         assert await async_setup_component(
             hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {CONF_DEFAULT_INTERFACE: True}}
         )
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
 
     assert mock_zeroconf.called_with(interface_choice=InterfaceChoice.Default)
 
@@ -123,6 +141,8 @@ async def test_setup_without_ipv6(hass, mock_zeroconf):
         assert await async_setup_component(
             hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {CONF_IPV6: False}}
         )
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
 
     assert mock_zeroconf.called_with(ip_version=IPVersion.V4Only)
 
@@ -136,6 +156,8 @@ async def test_setup_with_ipv6(hass, mock_zeroconf):
         assert await async_setup_component(
             hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {CONF_IPV6: True}}
         )
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
 
     assert mock_zeroconf.called_with()
 
@@ -147,6 +169,8 @@ async def test_setup_with_ipv6_default(hass, mock_zeroconf):
     ):
         mock_zeroconf.get_service_info.side_effect = get_service_info_mock
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
 
     assert mock_zeroconf.called_with()
 
@@ -164,6 +188,8 @@ async def test_homekit_match_partial_space(hass, mock_zeroconf):
             "LIFX bulb", HOMEKIT_STATUS_UNPAIRED
         )
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
     assert len(mock_config_flow.mock_calls) == 1
@@ -183,6 +209,8 @@ async def test_homekit_match_partial_dash(hass, mock_zeroconf):
             "Rachio-fa46ba", HOMEKIT_STATUS_UNPAIRED
         )
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
     assert len(mock_config_flow.mock_calls) == 1
@@ -202,6 +230,8 @@ async def test_homekit_match_full(hass, mock_zeroconf):
             "BSB002", HOMEKIT_STATUS_UNPAIRED
         )
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
 
     homekit_mock = get_homekit_info_mock("BSB002", HOMEKIT_STATUS_UNPAIRED)
     info = homekit_mock("_hap._tcp.local.", "BSB002._hap._tcp.local.")
@@ -226,6 +256,8 @@ async def test_homekit_already_paired(hass, mock_zeroconf):
             "tado", HOMEKIT_STATUS_PAIRED
         )
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
     assert len(mock_config_flow.mock_calls) == 2
@@ -246,6 +278,8 @@ async def test_homekit_invalid_paring_status(hass, mock_zeroconf):
             "tado", b"invalid"
         )
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
     assert len(mock_config_flow.mock_calls) == 1
@@ -265,6 +299,8 @@ async def test_homekit_not_paired(hass, mock_zeroconf):
             "this_will_not_match_any_integration", HOMEKIT_STATUS_UNPAIRED
         )
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
     assert len(mock_config_flow.mock_calls) == 1
@@ -284,6 +320,15 @@ async def test_info_from_service_non_utf8(hass):
     assert len(info["properties"]) <= len(raw_info)
     assert "non-utf8-value" not in info["properties"]
     assert raw_info["non-utf8-value"] is NON_UTF8_VALUE
+
+
+async def test_info_from_service_with_addresses(hass):
+    """Test info_from_service does not throw when there are no addresses."""
+    service_type = "_test._tcp.local."
+    info = zeroconf.info_from_service(
+        get_service_info_mock_without_an_address(service_type, f"test.{service_type}")
+    )
+    assert info is None
 
 
 async def test_get_instance(hass, mock_zeroconf):

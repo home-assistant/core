@@ -21,6 +21,7 @@ from homeassistant import util
 from homeassistant.const import (
     ATTR_NAME,
     EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     __version__,
 )
@@ -209,6 +210,11 @@ def setup(hass, config):
             return
 
         info = info_from_service(service_info)
+        if not info:
+            # Prevent the browser thread from collapsing
+            _LOGGER.debug("Failed to get addresses for device %s", name)
+            return
+
         _LOGGER.debug("Discovered new device %s %s", name, info)
 
         # If we can handle it as a HomeKit discovery, we do that here.
@@ -247,7 +253,13 @@ def setup(hass, config):
     if HOMEKIT_TYPE not in ZEROCONF:
         types.append(HOMEKIT_TYPE)
 
-    HaServiceBrowser(zeroconf, types, handlers=[service_update])
+    def zeroconf_hass_started(_event):
+        """Start the service browser."""
+
+        _LOGGER.debug("Starting Zeroconf browser")
+        HaServiceBrowser(zeroconf, types, handlers=[service_update])
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STARTED, zeroconf_hass_started)
 
     return True
 
@@ -309,6 +321,9 @@ def info_from_service(service):
                 properties[key] = value.decode("utf-8")
         except UnicodeDecodeError:
             pass
+
+    if not service.addresses:
+        return None
 
     address = service.addresses[0]
 

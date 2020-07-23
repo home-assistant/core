@@ -1,12 +1,11 @@
 """Config flow for Bond integration."""
-from json import JSONDecodeError
 import logging
 
-from bond import Bond
-from requests.exceptions import ConnectionError as RequestConnectionError
+from aiohttp import ClientConnectionError, ClientResponseError
+from bond_api import Bond
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 
 from .const import DOMAIN  # pylint:disable=unused-import
@@ -18,24 +17,20 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(data):
     """Validate the user input allows us to connect."""
 
-    def authenticate(bond_hub: Bond) -> bool:
-        try:
-            bond_hub.getDeviceIds()
-            return True
-        except RequestConnectionError:
-            raise CannotConnect
-        except JSONDecodeError:
-            return False
+    try:
+        bond = Bond(data[CONF_HOST], data[CONF_ACCESS_TOKEN])
+        await bond.devices()
+    except ClientConnectionError:
+        raise CannotConnect
+    except ClientResponseError as error:
+        if error.status == 401:
+            raise InvalidAuth
+        raise
 
-    bond = Bond(data[CONF_HOST], data[CONF_ACCESS_TOKEN])
-
-    if not await hass.async_add_executor_job(authenticate, bond):
-        raise InvalidAuth
-
-    # Return info that you want to store in the config entry.
+    # Return info to be stored in the config entry.
     return {"title": data[CONF_HOST]}
 
 
@@ -50,7 +45,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
+                info = await validate_input(user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
