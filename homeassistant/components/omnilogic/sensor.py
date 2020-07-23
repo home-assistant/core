@@ -1,22 +1,24 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.const import TEMP_FAHRENHEIT, UNIT_PERCENTAGE
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import ENTITY_ID_FORMAT
 
 from .const import DOMAIN
 
+TEMP_UNITS = [TEMP_CELSIUS, TEMP_FAHRENHEIT]
 PERCENT_UNITS = [UNIT_PERCENTAGE, UNIT_PERCENTAGE]
-SALT_UNITS = ["g/L", "PPM"]
+SALT_UNITS = ["g/L", "ppm"]
 
 SENSORS = [
-    ("pool_temperature", "Pool Temperature", "temperature", TEMP_FAHRENHEIT),
-    ("air_temperature", "Air Temperature", "temperature", TEMP_FAHRENHEIT),
-    ("spa_temperature", "Spa Temperature", "temperature", TEMP_FAHRENHEIT),
-    ("pool_chlorinator", "Pool Chlorinator", PERCENT_UNITS, "mdi:gauge"),
-    ("spa_chlorinator", "Spa Chlorinator", PERCENT_UNITS, "mdi:gauge"),
-    ("salt_level", "Salt Level", SALT_UNITS, "mdi:gauge"),
-    ("pump_speed", "Pump Speed", PERCENT_UNITS, "mdi:speedometer"),
+    ("pool_temperature", "Pool Temperature", "temperature", "mdi:thermometer", TEMP_UNITS),
+    ("air_temperature", "Air Temperature", "temperature", "mdi:thermometer", TEMP_UNITS),
+    ("spa_temperature", "Spa Temperature", "temperature", "mdi:thermometer", TEMP_UNITS),
+    ("pool_chlorinator", "Pool Chlorinator", "none", "mdi:gauge", PERCENT_UNITS),
+    ("spa_chlorinator", "Spa Chlorinator", "none", "mdi:gauge", PERCENT_UNITS),
+    ("salt_level", "Salt Level", "none", "mdi:gauge", SALT_UNITS),
+    ("pump_speed", "Pump Speed", "none", "mdi:speedometer", PERCENT_UNITS),
 ]
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -30,12 +32,11 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
 
     for backyard in coordinator.data:
         for bow in backyard["BOWS"]:
-
             sensors = [
                 OmnilogicSensor(
-                    coordinator, kind, name, backyard, bow, device_class, unit
+                    coordinator, kind, name, backyard, bow, device_class, icon, unit
                 )
-                for kind, name, device_class, unit in SENSORS
+                for kind, name, device_class, icon, unit in SENSORS
             ]
     async_add_entities(sensors, update_before_add=True)
 
@@ -43,15 +44,24 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
 class OmnilogicSensor(Entity):
     """Defines an Omnilogic sensor entity"""
 
-    def __init__(self, coordinator, kind, name, backyard, bow, icon, unit):
+    def __init__(self, coordinator, kind, name, backyard, bow, device_class, icon, unit):
+
+        sensorname = "omni_" + backyard["BackyardName"].replace(" ", "_") + "_" + bow["Name"].replace(" ", "_") + "_" + kind
         self._kind = kind
-        self._name = name
+        self._name = None
+        self.entity_id = ENTITY_ID_FORMAT.format(sensorname)
         self._backyard = backyard
         self._backyardName = backyard["BackyardName"]
         self._state = None
-        self._unit = unit
+        self._unit_type = backyard["Unit-of-Measurement"]
+        self._device_class = device_class
+        self._icon = icon
         self._bow = bow
+        self._unit = None
         self.coordinator = coordinator
+        self._MSPSystemId = backyard["systemId"]
+        self._SystemId = None
+        self._attributes = {}
 
     @property
     def should_poll(self) -> bool:
@@ -62,12 +72,37 @@ class OmnilogicSensor(Entity):
     def unique_id(self) -> str:
         """Return a unique, Home Assistant friendly identifier for this entity."""
         # need a more unique id
-        return self._backyardName + "." + self._name
+        return self._name
 
     @property
     def name(self) -> str:
         """Return the name of the entity."""
         return self._name
+
+    @property
+    def device_class(self):
+        """Return the device class of the entity."""
+        if self._device_class != "none":
+            return self._device_class
+    
+    @property
+    def unit_of_measurement(self):
+        """Return the right unit of measure"""
+        return self._unit
+        
+
+    @property
+    def icon(self):
+        """Return the icon for the entity."""
+        return self._icon
+
+    @property
+    def device_state_attributes(self):
+        """Return the attributes"""
+        attributes = self._attributes
+        attributes["MspSystemId"] = self._MSPSystemId
+        attributes["SystemId"] = self._SystemId
+        return attributes
 
     @property
     def force_update(self):
@@ -84,21 +119,58 @@ class OmnilogicSensor(Entity):
         await self.coordinator.async_request_refresh()
 
         if self._kind == "pool_temperature":
-            self._state = self.coordinator.data[0]["BOWS"][0].get("waterTemp")
+            temp_return = float(self.coordinator.data[0]["BOWS"][0].get("waterTemp"))
+            unit_of_measurement = TEMP_FAHRENHEIT
+            if self.coordinator.data[0]["Unit-of-Measurement"] == "Metric":
+                temp_return = round((temp_return - 32) * 5/9, 1)
+                unit_of_measurement = TEMP_CELSIUS
+            
+            self._attributes["hayward_temperature"] = temp_return
+            self._attributes["hayward_unit_of_measure"] = unit_of_measurement
+            self._state = float(self.coordinator.data[0]["BOWS"][0].get("waterTemp"))
+            self._unit = TEMP_FAHRENHEIT
+            self._SystemId = self.coordinator.data[0]["BOWS"][0].get("systemId")
+            self._name = self.coordinator.data[0]["BOWS"][0].get("Name") + " Water Temperature"
+
         elif self._kind == "pump_speed":
             self._state = self.coordinator.data[0]["BOWS"][0]["Filter"].get(
                 "filterSpeed"
             )
+            self._unit = "%"
+            self._name = self.coordinator.data[0]["BOWS"][0].get("Name") + " " + self.coordinator.data[0]["BOWS"][0]["Filter"].get("Name")
         elif self._kind == "salt_level":
-            self._state = self.coordinator.data[0]["BOWS"][0]["Chlorinator"].get(
-                "avgSaltLevel"
-            )
+            salt_return = float(self.coordinator.data[0]["BOWS"][0]["Chlorinator"].get("avgSaltLevel"))
+            unit_of_measurement = "ppm"
+
+            if self.coordinator.data[0]["Unit-of-Measurement"] == "Metric":
+                salt_return = round(salt_return/1000, 2)
+                unit_of_measurement = "g/L"
+            
+            self._state = salt_return
+            self._unit = unit_of_measurement
+            self._SystemId = self.coordinator.data[0]["BOWS"][0]["Chlorinator"].get("systemId")
+            self._name = self.coordinator.data[0]["BOWS"][0].get("Name") + " " + self.coordinator.data[0]["BOWS"][0]["Chlorinator"].get("Name") + " Salt Level"
+
         elif self._kind == "pool_chlorinator":
-            self._state = self.coordinator.data[0][0]["BOWS"][0]["Chlorinator"].get(
+            self._state = self.coordinator.data[0]["BOWS"][0]["Chlorinator"].get(
                 "Timed-Percent"
             )
+            self._unit = "%"
+            self._name = self.coordinator.data[0]["BOWS"][0].get("Name") + " " + self.coordinator.data[0]["BOWS"][0]["Chlorinator"].get("Name") + " Setting"
+
         elif self._kind == "air_temperature":
-            self._state = self.coordinator.data[0].get("airTemp")
+            temp_return = float(self.coordinator.data[0].get("airTemp"))
+            unit_of_measurement = TEMP_FAHRENHEIT
+            if self.coordinator.data[0]["Unit-of-Measurement"] == "Metric":
+                temp_return = round((temp_return - 32) * 5/9, 1)
+                unit_of_measurement = TEMP_CELSIUS
+            
+            self._attributes["hayward_temperature"] = temp_return
+            self._attributes["hayward_unit_of_measure"] = unit_of_measurement
+            self._state = float(self.coordinator.data[0].get("airTemp"))
+            self._unit = TEMP_FAHRENHEIT
+            self._SystemId = self.coordinator.data[0]["BOWS"][0].get("systemId")
+            self._name = self.coordinator.data[0]["BOWS"][0].get("Name") + " Air Temperature"
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
