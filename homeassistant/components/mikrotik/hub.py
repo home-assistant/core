@@ -390,7 +390,7 @@ def get_api(hass, entry):
     _LOGGER.debug("Connecting to Mikrotik hub [%s]", entry[CONF_HOST])
 
     _login_method = (login_plain, login_token)
-    kwargs = {"login_methods": _login_method, "port": entry["port"]}
+    kwargs = {"login_methods": _login_method, "port": entry["port"], "encoding": "utf8"}
 
     if entry[CONF_VERIFY_SSL]:
         ssl_context = ssl.create_default_context()
