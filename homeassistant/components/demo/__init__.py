@@ -1,7 +1,6 @@
 """Set up the demo environment that mimics interaction with devices."""
 import asyncio
 import logging
-import time
 
 from homeassistant import bootstrap, config_entries
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
@@ -135,37 +134,6 @@ async def async_setup(hass, config):
     hass.components.persistent_notification.async_create(
         "This is an example of a persistent notification.", title="Example Notification"
     )
-
-    # Set up configurator
-    configurator_ids = []
-    configurator = hass.components.configurator
-
-    def hue_configuration_callback(data):
-        """Fake callback, mark config as done."""
-        time.sleep(2)
-
-        # First time it is called, pretend it failed.
-        if len(configurator_ids) == 1:
-            configurator.notify_errors(
-                configurator_ids[0], "Failed to register, please try again."
-            )
-
-            configurator_ids.append(0)
-        else:
-            configurator.request_done(configurator_ids[0])
-
-    request_id = configurator.async_request_config(
-        "Philips Hue",
-        hue_configuration_callback,
-        description=(
-            "Press the button on the bridge to register Philips "
-            "Hue with Home Assistant."
-        ),
-        description_image="/static/images/config_philips_hue.jpg",
-        fields=[{"id": "username", "name": "Username"}],
-        submit_caption="I have pressed the button",
-    )
-    configurator_ids.append(request_id)
 
     async def demo_start_listener(_event):
         """Finish set up."""

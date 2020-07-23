@@ -104,14 +104,6 @@ class PlexServer:
                 raise
         return self._plex_account
 
-    @property
-    def plextv_resources(self):
-        """Return all resources linked to Plex account."""
-        if self.account is None:
-            return []
-
-        return self.account.resources()
-
     def plextv_clients(self):
         """Return available clients linked to Plex account."""
         if self.account is None:
@@ -122,7 +114,7 @@ class PlexServer:
             self._plextv_client_timestamp = now
             self._plextv_clients = [
                 x
-                for x in self.plextv_resources
+                for x in self.account.resources()
                 if "player" in x.provides and x.presence
             ]
             _LOGGER.debug(
@@ -137,7 +129,7 @@ class PlexServer:
         def _connect_with_token():
             available_servers = [
                 (x.name, x.clientIdentifier)
-                for x in self.plextv_resources
+                for x in self.account.resources()
                 if "server" in x.provides
             ]
 
@@ -165,7 +157,7 @@ class PlexServer:
         def _update_plexdirect_hostname():
             matching_servers = [
                 x.name
-                for x in self.plextv_resources
+                for x in self.account.resources()
                 if x.clientIdentifier == self._server_id
             ]
             if matching_servers:
@@ -188,7 +180,7 @@ class PlexServer:
                         f"hostname '{domain}' doesn't match"
                     ):
                         _LOGGER.warning(
-                            "Plex SSL certificate's hostname changed, updating."
+                            "Plex SSL certificate's hostname changed, updating"
                         )
                         if _update_plexdirect_hostname():
                             config_entry_update_needed = True
@@ -207,7 +199,7 @@ class PlexServer:
             system_accounts = self._plex_server.systemAccounts()
         except Unauthorized:
             _LOGGER.warning(
-                "Plex account has limited permissions, shared account filtering will not be available."
+                "Plex account has limited permissions, shared account filtering will not be available"
             )
         else:
             self._accounts = [

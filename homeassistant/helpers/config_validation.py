@@ -38,8 +38,12 @@ from homeassistant.const import (
     CONF_ABOVE,
     CONF_ALIAS,
     CONF_BELOW,
+    CONF_CHOOSE,
     CONF_CONDITION,
+    CONF_CONDITIONS,
     CONF_CONTINUE_ON_TIMEOUT,
+    CONF_COUNT,
+    CONF_DEFAULT,
     CONF_DELAY,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -50,16 +54,20 @@ from homeassistant.const import (
     CONF_EVENT_DATA_TEMPLATE,
     CONF_FOR,
     CONF_PLATFORM,
+    CONF_REPEAT,
     CONF_SCAN_INTERVAL,
     CONF_SCENE,
+    CONF_SEQUENCE,
     CONF_SERVICE,
     CONF_SERVICE_TEMPLATE,
     CONF_STATE,
     CONF_TIMEOUT,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
+    CONF_UNTIL,
     CONF_VALUE_TEMPLATE,
     CONF_WAIT_TEMPLATE,
+    CONF_WHILE,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
     SUN_EVENT_SUNRISE,
@@ -79,7 +87,6 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM' or 'HH:MM:SS'"
-
 
 # Home Assistant types
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
@@ -817,6 +824,16 @@ def make_entity_service_schema(
     )
 
 
+def script_action(value: Any) -> dict:
+    """Validate a script action."""
+    if not isinstance(value, dict):
+        raise vol.Invalid("expected dictionary")
+
+    return ACTION_TYPE_SCHEMAS[determine_script_action(value)](value)
+
+
+SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
+
 EVENT_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ALIAS): string,
@@ -916,7 +933,7 @@ ZONE_CONDITION_SCHEMA = vol.Schema(
 AND_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONDITION): "and",
-        vol.Required("conditions"): vol.All(
+        vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
             # pylint: disable=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
@@ -927,7 +944,7 @@ AND_CONDITION_SCHEMA = vol.Schema(
 OR_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONDITION): "or",
-        vol.Required("conditions"): vol.All(
+        vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
             # pylint: disable=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
@@ -938,7 +955,7 @@ OR_CONDITION_SCHEMA = vol.Schema(
 NOT_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONDITION): "not",
-        vol.Required("conditions"): vol.All(
+        vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
             # pylint: disable=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
@@ -998,6 +1015,43 @@ DEVICE_ACTION_SCHEMA = DEVICE_ACTION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTR
 
 _SCRIPT_SCENE_SCHEMA = vol.Schema({vol.Required(CONF_SCENE): entity_domain("scene")})
 
+_SCRIPT_REPEAT_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ALIAS): string,
+        vol.Required(CONF_REPEAT): vol.All(
+            {
+                vol.Exclusive(CONF_COUNT, "repeat"): vol.Any(vol.Coerce(int), template),
+                vol.Exclusive(CONF_WHILE, "repeat"): vol.All(
+                    ensure_list, [CONDITION_SCHEMA]
+                ),
+                vol.Exclusive(CONF_UNTIL, "repeat"): vol.All(
+                    ensure_list, [CONDITION_SCHEMA]
+                ),
+                vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
+            },
+            has_at_least_one_key(CONF_COUNT, CONF_WHILE, CONF_UNTIL),
+        ),
+    }
+)
+
+_SCRIPT_CHOOSE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ALIAS): string,
+        vol.Required(CONF_CHOOSE): vol.All(
+            ensure_list,
+            [
+                {
+                    vol.Required(CONF_CONDITIONS): vol.All(
+                        ensure_list, [CONDITION_SCHEMA]
+                    ),
+                    vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
+                }
+            ],
+        ),
+        vol.Optional(CONF_DEFAULT): SCRIPT_SCHEMA,
+    }
+)
+
 SCRIPT_ACTION_DELAY = "delay"
 SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
 SCRIPT_ACTION_CHECK_CONDITION = "condition"
@@ -1005,6 +1059,8 @@ SCRIPT_ACTION_FIRE_EVENT = "event"
 SCRIPT_ACTION_CALL_SERVICE = "call_service"
 SCRIPT_ACTION_DEVICE_AUTOMATION = "device"
 SCRIPT_ACTION_ACTIVATE_SCENE = "scene"
+SCRIPT_ACTION_REPEAT = "repeat"
+SCRIPT_ACTION_CHOOSE = "choose"
 
 
 def determine_script_action(action: dict) -> str:
@@ -1027,6 +1083,12 @@ def determine_script_action(action: dict) -> str:
     if CONF_SCENE in action:
         return SCRIPT_ACTION_ACTIVATE_SCENE
 
+    if CONF_REPEAT in action:
+        return SCRIPT_ACTION_REPEAT
+
+    if CONF_CHOOSE in action:
+        return SCRIPT_ACTION_CHOOSE
+
     return SCRIPT_ACTION_CALL_SERVICE
 
 
@@ -1038,15 +1100,6 @@ ACTION_TYPE_SCHEMAS: Dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_CHECK_CONDITION: CONDITION_SCHEMA,
     SCRIPT_ACTION_DEVICE_AUTOMATION: DEVICE_ACTION_SCHEMA,
     SCRIPT_ACTION_ACTIVATE_SCENE: _SCRIPT_SCENE_SCHEMA,
+    SCRIPT_ACTION_REPEAT: _SCRIPT_REPEAT_SCHEMA,
+    SCRIPT_ACTION_CHOOSE: _SCRIPT_CHOOSE_SCHEMA,
 }
-
-
-def script_action(value: Any) -> dict:
-    """Validate a script action."""
-    if not isinstance(value, dict):
-        raise vol.Invalid("expected dictionary")
-
-    return ACTION_TYPE_SCHEMAS[determine_script_action(value)](value)
-
-
-SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])

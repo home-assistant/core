@@ -196,7 +196,7 @@ async def async_setup(hass, config):
     for env in ("HASSIO", "HASSIO_TOKEN"):
         if os.environ.get(env):
             continue
-        _LOGGER.error("Missing %s environment variable.", env)
+        _LOGGER.error("Missing %s environment variable", env)
         return False
 
     host = os.environ["HASSIO"]

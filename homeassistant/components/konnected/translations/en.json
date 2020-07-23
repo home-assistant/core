@@ -20,7 +20,7 @@
             },
             "user": {
                 "data": {
-                    "host": "IP address",
+                    "host": "IP Address",
                     "port": "Port"
                 },
                 "description": "Please enter the host information for your Konnected Panel."

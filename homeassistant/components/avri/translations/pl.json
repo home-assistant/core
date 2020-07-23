@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "invalid_house_number": "Nieprawid\u0142owy numer domu"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "Dwuliterowy kod kraju",
+                    "house_number": "Numer domu",
+                    "zip_code": "Kod pocztowy"
+                }
+            }
+        }
+    }
+}

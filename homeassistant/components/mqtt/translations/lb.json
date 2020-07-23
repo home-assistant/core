@@ -47,5 +47,37 @@
             "button_short_release": "\"{subtype}\" lassgelooss",
             "button_triple_press": "\"{subtype}\" dr\u00e4imol gedr\u00e9ckt"
         }
+    },
+    "options": {
+        "error": {
+            "bad_birth": "Ong\u00ebltege birth topic.",
+            "bad_will": "Ong\u00ebltege will topic.",
+            "cannot_connect": "Kann sech net mam Broker verbannen."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "password": "Passwuert",
+                    "port": "Port",
+                    "username": "Benotzernumm"
+                },
+                "description": "G\u00ebff Verbindungs Informatioune vun dengem MQTT Broker an."
+            },
+            "options": {
+                "data": {
+                    "birth_payload": "Birth message payload",
+                    "birth_qos": "Birth message QoS",
+                    "birth_retain": "Birth message retain",
+                    "birth_topic": "Birth message topic",
+                    "discovery": "Entdeckung aktiv\u00e9ieren",
+                    "will_payload": "Will message payload",
+                    "will_qos": "Will message QoS",
+                    "will_retain": "Will message retain",
+                    "will_topic": "Will message topic"
+                },
+                "description": "Wiel MQTT Optiounen aus."
+            }
+        }
     }
 }
