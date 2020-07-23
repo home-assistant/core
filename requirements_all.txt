@@ -2065,7 +2065,7 @@ surepy==0.2.5
 swisshydrodata==0.0.3
 
 # homeassistant.components.syncthing
-syncthing==2.4.0
+syncthing==2.4.1
 
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
