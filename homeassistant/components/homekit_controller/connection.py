@@ -275,7 +275,7 @@ class HKDevice:
     async def async_update(self, now=None):
         """Poll state of all entities attached to this bridge/accessory."""
         if not self.pollable_characteristics:
-            _LOGGER.debug("HomeKit connection not polling any characteristics.")
+            _LOGGER.debug("HomeKit connection not polling any characteristics")
             return
 
         if self._polling_lock.locked():

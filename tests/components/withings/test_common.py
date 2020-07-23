@@ -5,7 +5,6 @@ from typing import Any
 from urllib.parse import urlparse
 
 from aiohttp.test_utils import TestClient
-from asynctest import MagicMock
 import pytest
 import requests_mock
 from withings_api.common import NotifyAppli, NotifyListProfile, NotifyListResponse
@@ -18,6 +17,7 @@ from homeassistant.components.withings.common import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2Implementation
 
+from tests.async_mock import MagicMock
 from tests.common import MockConfigEntry
 from tests.components.withings.common import (
     ComponentFactory,

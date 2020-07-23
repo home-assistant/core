@@ -651,8 +651,8 @@ class YeelightGenericLight(LightEntity):
     def set_flash(self, flash) -> None:
         """Activate flash."""
         if flash:
-            if self._bulb.last_properties["color_mode"] != 1:
-                _LOGGER.error("Flash supported currently only in RGB mode.")
+            if int(self._bulb.last_properties["color_mode"]) != 1:
+                _LOGGER.error("Flash supported currently only in RGB mode")
                 return
 
             transition = int(self.config[CONF_TRANSITION])

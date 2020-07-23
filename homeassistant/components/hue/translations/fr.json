@@ -17,13 +17,19 @@
         "step": {
             "init": {
                 "data": {
-                    "host": "H\u00f4te"
+                    "host": "Nom d'h\u00f4te ou adresse IP"
                 },
                 "title": "Choisissez le pont Philips Hue"
             },
             "link": {
                 "description": "Appuyez sur le bouton du pont pour lier Philips Hue avec Home Assistant. \n\n ![Emplacement du bouton sur le pont](/static/images/config_philips_hue.jpg)",
                 "title": "Hub de liaison"
+            },
+            "manual": {
+                "data": {
+                    "host": "H\u00f4te"
+                },
+                "title": "Configurer manuellement un pont Hue"
             }
         }
     },
@@ -44,6 +50,17 @@
             "remote_button_long_release": "Bouton \" {subtype} \" rel\u00e2ch\u00e9 apr\u00e8s un appui long",
             "remote_button_short_press": "bouton \"{subtype}\" est press\u00e9",
             "remote_button_short_release": "Bouton \" {subtype} \" est rel\u00e2ch\u00e9"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_how_groups": "Autoriser les groupes Hue",
+                    "allow_hue_groups": "Autoriser les groupes Hue",
+                    "allow_unreachable": "Autoriser les ampoules inaccessibles \u00e0 signaler correctement leur \u00e9tat"
+                }
+            }
         }
     }
 }

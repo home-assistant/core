@@ -1,0 +1,25 @@
+set_climate_timer:
+  description: Turn on cliate entities for a set time.
+  fields:
+    entity_id:
+      description: Entity ID for the tado component to turn on for a set time.
+      example: climate.heating
+    time_period:
+      description: Set the time period for the boost.
+      example: "01:30:00"
+    temperature:
+      description: Temperature to set climate entity to
+      example: 25
+
+set_water_heater_timer:
+  description: Turn on water heater for a set time.
+  fields:
+    entity_id:
+      description: Entity ID for the tado component to turn on for a set time.
+      example: water_heater.hot_water
+    time_period:
+      description: Set the time period for the boost.
+      example: "01:30:00"
+    temperature:
+      description: Temperature to set heater to
+      example: 25

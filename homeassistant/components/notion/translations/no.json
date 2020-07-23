@@ -11,7 +11,7 @@
             "user": {
                 "data": {
                     "password": "Passord",
-                    "username": "Brukernavn / E-postadresse"
+                    "username": "Brukernavn"
                 },
                 "title": "Fyll ut informasjonen din"
             }

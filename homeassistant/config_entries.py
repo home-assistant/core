@@ -230,7 +230,7 @@ class ConfigEntry:
             wait_time = 2 ** min(tries, 4) * 5
             tries += 1
             _LOGGER.warning(
-                "Config entry for %s not ready yet. Retrying in %d seconds.",
+                "Config entry for %s not ready yet. Retrying in %d seconds",
                 self.domain,
                 wait_time,
             )
@@ -1025,7 +1025,7 @@ class OptionsFlow(data_entry_flow.FlowHandler):
 class SystemOptions:
     """Config entry system options."""
 
-    disable_new_entities = attr.ib(type=bool, default=False)
+    disable_new_entities: bool = attr.ib(default=False)
 
     def update(self, *, disable_new_entities: bool) -> None:
         """Update properties."""

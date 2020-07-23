@@ -332,7 +332,7 @@ class TemplateVacuum(StateVacuumEntity):
             )
         else:
             _LOGGER.error(
-                "Received invalid fan speed: %s. Expected: %s.",
+                "Received invalid fan speed: %s. Expected: %s",
                 fan_speed,
                 self._fan_speed_list,
             )
@@ -341,7 +341,7 @@ class TemplateVacuum(StateVacuumEntity):
         """Register callbacks."""
 
         @callback
-        def template_vacuum_state_listener(entity, old_state, new_state):
+        def template_vacuum_state_listener(event):
             """Handle target device state changes."""
             self.async_schedule_update_ha_state(True)
 
@@ -350,7 +350,7 @@ class TemplateVacuum(StateVacuumEntity):
             """Update template on startup."""
             if self._entities != MATCH_ALL:
                 # Track state changes only for valid templates
-                self.hass.helpers.event.async_track_state_change(
+                self.hass.helpers.event.async_track_state_change_event(
                     self._entities, template_vacuum_state_listener
                 )
 
@@ -378,7 +378,7 @@ class TemplateVacuum(StateVacuumEntity):
                 self._state = None
             else:
                 _LOGGER.error(
-                    "Received invalid vacuum state: %s. Expected: %s.",
+                    "Received invalid vacuum state: %s. Expected: %s",
                     state,
                     ", ".join(_VALID_STATES),
                 )
@@ -417,7 +417,7 @@ class TemplateVacuum(StateVacuumEntity):
                 self._fan_speed = None
             else:
                 _LOGGER.error(
-                    "Received invalid fan speed: %s. Expected: %s.",
+                    "Received invalid fan speed: %s. Expected: %s",
                     fan_speed,
                     self._fan_speed_list,
                 )

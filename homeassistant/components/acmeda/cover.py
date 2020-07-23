@@ -61,7 +61,7 @@ class AcmedaCover(AcmedaBase, CoverEntity):
         None is unknown, 0 is closed, 100 is fully open.
         """
         position = None
-        if self.roller.type == 7 or self.roller.type == 10:
+        if self.roller.type in [7, 10]:
             position = 100 - self.roller.closed_percent
         return position
 
@@ -86,37 +86,36 @@ class AcmedaCover(AcmedaBase, CoverEntity):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        is_closed = self.roller.closed_percent == 100
-        return is_closed
+        return self.roller.closed_percent == 100
 
-    async def close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs):
         """Close the roller."""
         await self.roller.move_down()
 
-    async def open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs):
         """Open the roller."""
         await self.roller.move_up()
 
-    async def stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs):
         """Stop the roller."""
         await self.roller.move_stop()
 
-    async def set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs):
         """Move the roller shutter to a specific position."""
         await self.roller.move_to(100 - kwargs[ATTR_POSITION])
 
-    async def close_cover_tilt(self, **kwargs):
+    async def async_close_cover_tilt(self, **kwargs):
         """Close the roller."""
         await self.roller.move_down()
 
-    async def open_cover_tilt(self, **kwargs):
+    async def async_open_cover_tilt(self, **kwargs):
         """Open the roller."""
         await self.roller.move_up()
 
-    async def stop_cover_tilt(self, **kwargs):
+    async def async_stop_cover_tilt(self, **kwargs):
         """Stop the roller."""
         await self.roller.move_stop()
 
-    async def set_cover_tilt(self, **kwargs):
+    async def async_set_cover_tilt(self, **kwargs):
         """Tilt the roller shutter to a specific position."""
         await self.roller.move_to(100 - kwargs[ATTR_POSITION])

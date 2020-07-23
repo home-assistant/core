@@ -89,7 +89,7 @@ def valid_stations(stations, given_stations):
         if station is None:
             continue
         if not any(s.code == station.upper() for s in stations):
-            _LOGGER.warning("Station '%s' is not a valid station.", station)
+            _LOGGER.warning("Station '%s' is not a valid station", station)
             return False
     return True
 

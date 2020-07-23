@@ -7,10 +7,22 @@
             "user": {
                 "data": {
                     "host": "Servidor",
+                    "limit": "Limite",
                     "name": "Nome",
+                    "order": "Ordem",
                     "password": "Palavra-passe",
                     "port": "Porta",
                     "username": "Nome de Utilizador"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "limit": "Limite",
+                    "order": "Ordem"
                 }
             }
         }
