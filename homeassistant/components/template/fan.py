@@ -346,7 +346,10 @@ class TemplateFan(FanEntity):
         if state in _VALID_STATES:
             self._state = state
         elif state == STATE_UNAVAILABLE:
+<<<<<<< HEAD
             self._state = state
+=======
+>>>>>>> 79b64033d1b23aef4680b4516e00d9fbf4c43224
             self._available = False
         elif state == STATE_UNKNOWN:
             self._state = None
