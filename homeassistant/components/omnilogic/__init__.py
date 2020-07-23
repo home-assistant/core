@@ -1,22 +1,22 @@
 """The Omnilogic integration."""
 import asyncio
-import json
+#import json
 import logging
 from datetime import timedelta
 
-import async_timeout
+#import async_timeout
 from homeassistant.exceptions import ConfigEntryNotReady
 
 
-import aiohttp
+#import aiohttp
 from omnilogic import OmniLogic
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+#from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator #, UpdateFailed
 
 
 from .const import DOMAIN
