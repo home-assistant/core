@@ -82,11 +82,11 @@ class XboxSensor(Entity):
         self._presence = []
         self._xuid = xuid
         self._api = api
-        self._gamertag = gamercard.get("gamertag")
-        self._gamerscore = gamercard.get("gamerscore")
+        self._gamertag = gamercard["gamertag"]
+        self._gamerscore = gamercard["gamerscore"]
         self._interval = interval
-        self._picture = gamercard.get("gamerpicSmallSslImagePath")
-        self._tier = gamercard.get("tier")
+        self._picture = gamercard["gamerpicSmallSslImagePath"]
+        self._tier = gamercard["tier"]
 
     @property
     def name(self):
@@ -111,10 +111,8 @@ class XboxSensor(Entity):
         attributes["tier"] = self._tier
 
         for device in self._presence:
-            for title in device.get("titles"):
-                attributes[
-                    f'{device.get("type")} {title.get("placement")}'
-                ] = title.get("name")
+            for title in device["titles"]:
+                attributes[f'{device["type"]} {title["placement"]}'] = title["name"]
 
         return attributes
 
@@ -142,5 +140,5 @@ class XboxSensor(Entity):
         """Update state data from Xbox API."""
         presence = self._api.gamer(gamertag="", xuid=self._xuid).get("presence")
         _LOGGER.debug("User presence: %s", presence)
-        self._state = presence.get("state")
+        self._state = presence["state"]
         self._presence = presence.get("devices", [])
