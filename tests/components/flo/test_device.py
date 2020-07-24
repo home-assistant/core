@@ -1,13 +1,18 @@
 """Define tests for device-related endpoints."""
+from datetime import timedelta
+
 from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
 from homeassistant.components.flo.device import FloDevice
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt
 
 from .common import TEST_PASSWORD, TEST_USER_ID
 
+from tests.common import async_fire_time_changed
 
-async def test_device(hass, config_entry):
+
+async def test_device(hass, config_entry, aioclient_mock):
     """Test Flo by Moen device."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(
@@ -25,9 +30,9 @@ async def test_device(hass, config_entry):
     assert device.current_system_mode == "home"
     assert device.firmware_version == "6.1.1"
     assert device.device_type == "flo_device_v2"
-    assert device.id == "xxxxx"
+    assert device.id == "98765"
     assert device.last_heard_from_time == "2020-07-24T12:45:00Z"
-    assert device.location_id == "xxxxx"
+    assert device.location_id == "12345abcde"
     assert device.hass is not None
     assert device.temperature == 70
     assert device.mac_address == "111111111111"
@@ -35,3 +40,10 @@ async def test_device(hass, config_entry):
     assert device.manufacturer == "Flo by Moen"
     assert device.name == "Flo by Moen flo_device_075_v2"
     assert device.rssi == -47
+
+    call_count = aioclient_mock.call_count
+
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=90))
+    await hass.async_block_till_done()
+
+    assert aioclient_mock.call_count == call_count + 2

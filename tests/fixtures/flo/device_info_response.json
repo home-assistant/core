@@ -173,7 +173,7 @@
     "zit_auto_count": 2363,
     "zit_manual_count": 0
   },
-  "id": "xxxxx",
+  "id": "98765",
   "macAddress": "111111111111",
   "nickname": "Smart Water Shutoff",
   "isPaired": true,
@@ -234,5 +234,5 @@
   },
   "shutoff": { "scheduledAt": "1970-01-01T00:00:00.000Z" },
   "actionRules": [],
-  "location": { "id": "xxxxx" }
+  "location": { "id": "12345abcde" }
 }
