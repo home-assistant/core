@@ -49,7 +49,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Import the platform into a config entry."""
-
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
@@ -59,7 +58,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Flume sensor."""
-
     flume_domain_data = hass.data[DOMAIN][config_entry.entry_id]
 
     flume_auth = flume_domain_data[FLUME_AUTH]
@@ -103,6 +101,7 @@ class FlumeSensor(Entity):
         self._undo_track_sensor = None
         self._available = False
         self._state = None
+        self._attributes = None
 
     @property
     def device_info(self):
@@ -140,6 +139,11 @@ class FlumeSensor(Entity):
         """Device unique ID."""
         return self._device_id
 
+    @property
+    def device_state_attributes(self):
+        """Return Flume state attributes."""
+        return self._attributes
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data and updates the states."""
@@ -152,7 +156,8 @@ class FlumeSensor(Entity):
             self._available = False
             return
         _LOGGER.debug("Successful update of flume sensor: %s", self._name)
-        self._state = self._flume_device.value
+        self._state = self._flume_device.values["current_interval"]
+        self._attributes = self._flume_device.values
         self._available = True
 
     async def async_added_to_hass(self):
