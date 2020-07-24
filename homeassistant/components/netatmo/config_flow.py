@@ -129,10 +129,24 @@ class NetatmoOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None and CONF_NEW_AREA not in user_input:
 
             def fix_coordinates(user_input):
-                """Ensure coordinates have acceptable length for the Netatmo API."""
+                """Fix coordinates if they don't comply with the Netatmo API."""
+                # Ensure coordinates have acceptable length for the Netatmo API
                 for coordinate in [CONF_LAT_NE, CONF_LAT_SW, CONF_LON_NE, CONF_LON_SW]:
                     if len(str(user_input[coordinate]).split(".")[1]) < 7:
                         user_input[coordinate] = user_input[coordinate] + 0.0000001
+
+                # Swap coordinates if entered in wrong order
+                if user_input[CONF_LAT_NE] < user_input[CONF_LAT_SW]:
+                    user_input[CONF_LAT_NE], user_input[CONF_LAT_SW] = (
+                        user_input[CONF_LAT_SW],
+                        user_input[CONF_LAT_NE],
+                    )
+                if user_input[CONF_LON_NE] < user_input[CONF_LON_SW]:
+                    user_input[CONF_LON_NE], user_input[CONF_LON_SW] = (
+                        user_input[CONF_LON_SW],
+                        user_input[CONF_LON_NE],
+                    )
+
                 return user_input
 
             self.options[CONF_WEATHER_AREAS][
