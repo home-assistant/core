@@ -20,6 +20,7 @@ from .entity import FloEntity
 DEPENDENCIES = ["flo"]
 
 WATER_ICON = "mdi:water"
+GAUGE_ICON = "mdi:gauge"
 NAME_DAILY_USAGE = "Today's Water Usage"
 NAME_CURRENT_SYSTEM_MODE = "Current System Mode"
 NAME_FLOW_RATE = "Water Flow Rate"
@@ -98,6 +99,11 @@ class FloCurrentFlowRateSensor(FloEntity):
             f"{device.mac_address}_current_flow_rate", NAME_FLOW_RATE, device
         )
         self._state: float = None
+
+    @property
+    def icon(self) -> str:
+        """Return the daily usage icon."""
+        return GAUGE_ICON
 
     @property
     def state(self) -> Optional[float]:
