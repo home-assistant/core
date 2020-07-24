@@ -30,19 +30,16 @@ async def setup_bond_entity(
     """Set up Bond entity."""
     config_entry.add_to_hass(hass)
 
-    with patch_bond_version() if patch_version else nullcontext():
-        with patch_bond_device_ids() if patch_device_ids else nullcontext():
-            with patch_setup_entry("cover") if patch_platforms else nullcontext():
-                with patch_setup_entry("fan") if patch_platforms else nullcontext():
-                    with patch_setup_entry(
-                        "light"
-                    ) if patch_platforms else nullcontext():
-                        with patch_setup_entry(
-                            "switch"
-                        ) if patch_platforms else nullcontext():
-                            return await hass.config_entries.async_setup(
-                                config_entry.entry_id
-                            )
+    with patch_bond_version() if patch_version else nullcontext(), patch_bond_device_ids() if patch_device_ids else nullcontext(), patch_setup_entry(
+        "cover"
+    ) if patch_platforms else nullcontext(), patch_setup_entry(
+        "fan"
+    ) if patch_platforms else nullcontext(), patch_setup_entry(
+        "light"
+    ) if patch_platforms else nullcontext(), patch_setup_entry(
+        "switch"
+    ) if patch_platforms else nullcontext():
+        return await hass.config_entries.async_setup(config_entry.entry_id)
 
 
 async def setup_platform(
@@ -60,16 +57,15 @@ async def setup_platform(
     mock_entry.add_to_hass(hass)
 
     with patch("homeassistant.components.bond.PLATFORMS", [platform]):
-        with patch_bond_version():
-            with patch_bond_device_ids(return_value=[bond_device_id]):
-                with patch_bond_device(return_value=discovered_device):
-                    with patch_bond_device_state():
-                        with patch_bond_device_properties(return_value=props):
-                            with patch_bond_device_state():
-                                assert await async_setup_component(
-                                    hass, BOND_DOMAIN, {}
-                                )
-                                await hass.async_block_till_done()
+        with patch_bond_version(), patch_bond_device_ids(
+            return_value=[bond_device_id]
+        ), patch_bond_device(
+            return_value=discovered_device
+        ), patch_bond_device_state(), patch_bond_device_properties(
+            return_value=props
+        ), patch_bond_device_state():
+            assert await async_setup_component(hass, BOND_DOMAIN, {})
+            await hass.async_block_till_done()
 
     return mock_entry
 

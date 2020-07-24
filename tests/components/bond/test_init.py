@@ -31,15 +31,18 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAss
             "fw_ver": "test-version",
         }
     ):
-        with patch_setup_entry("cover") as mock_cover_async_setup_entry:
-            with patch_setup_entry("fan") as mock_fan_async_setup_entry:
-                with patch_setup_entry("light") as mock_light_async_setup_entry:
-                    with patch_setup_entry("switch") as mock_switch_async_setup_entry:
-                        result = await setup_bond_entity(
-                            hass, config_entry, patch_device_ids=True
-                        )
-                        assert result is True
-                        await hass.async_block_till_done()
+        with patch_setup_entry(
+            "cover"
+        ) as mock_cover_async_setup_entry, patch_setup_entry(
+            "fan"
+        ) as mock_fan_async_setup_entry, patch_setup_entry(
+            "light"
+        ) as mock_light_async_setup_entry, patch_setup_entry(
+            "switch"
+        ) as mock_switch_async_setup_entry:
+            result = await setup_bond_entity(hass, config_entry, patch_device_ids=True)
+            assert result is True
+            await hass.async_block_till_done()
 
     assert config_entry.entry_id in hass.data[DOMAIN]
     assert config_entry.state == ENTRY_STATE_LOADED
