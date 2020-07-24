@@ -323,6 +323,8 @@ class Zone(entity.Entity):
 
     async def async_update_config(self, config: Dict) -> None:
         """Handle when the config is updated."""
+        if self._config == config:
+            return
         self._config = config
         self._generate_attrs()
         self.async_write_ha_state()
