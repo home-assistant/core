@@ -13,7 +13,7 @@ jinja2>=2.11.1
 PyJWT==1.7.1
 cryptography==2.9.2
 pip>=8.0.3
-python-slugify==4.0.0
+python-slugify==4.0.1
 pytz>=2020.1
 pyyaml==5.3.1
 requests==2.24.0

@@ -19,7 +19,7 @@ jinja2>=2.11.1
 netdisco==2.8.0
 paho-mqtt==1.5.0
 pip>=8.0.3
-python-slugify==4.0.0
+python-slugify==4.0.1
 pytz>=2020.1
 pyyaml==5.3.1
 requests==2.24.0
