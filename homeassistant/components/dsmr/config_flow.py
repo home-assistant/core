@@ -21,6 +21,7 @@ from .const import (
     CONF_SERIAL_ID_GAS,
     DEFAULT_POWER_WATT,
     DEFAULT_PRECISION,
+    DEFAULT_RECONNECT_INTERVAL,
     DOMAIN,
 )
 
@@ -168,7 +169,21 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     self._serial_id = info[CONF_SERIAL_ID]
                     self._serial_id_gas = info[CONF_SERIAL_ID_GAS]
 
-                    return await self.async_step_setup_options()
+                    name = self._port
+
+                    return self.async_create_entry(
+                        title=name,
+                        data={
+                            CONF_DSMR_VERSION: self._dsmr_version,
+                            CONF_HOST: self._host,
+                            CONF_PORT: self._port,
+                            CONF_RECONNECT_INTERVAL: DEFAULT_RECONNECT_INTERVAL,
+                            CONF_PRECISION: DEFAULT_PRECISION,
+                            CONF_POWER_WATT: DEFAULT_POWER_WATT,
+                            CONF_SERIAL_ID: self._serial_id,
+                            CONF_SERIAL_ID_GAS: self._serial_id_gas,
+                        },
+                    )
 
                 except CannotConnect:
                     errors["base"] = "cannot_connect"
@@ -207,7 +222,21 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     self._serial_id = info[CONF_SERIAL_ID]
                     self._serial_id_gas = info[CONF_SERIAL_ID_GAS]
 
-                    return await self.async_step_setup_options()
+                    name = f"{self._host}:{self._port}"
+
+                    return self.async_create_entry(
+                        title=name,
+                        data={
+                            CONF_DSMR_VERSION: self._dsmr_version,
+                            CONF_HOST: self._host,
+                            CONF_PORT: self._port,
+                            CONF_RECONNECT_INTERVAL: DEFAULT_RECONNECT_INTERVAL,
+                            CONF_PRECISION: DEFAULT_PRECISION,
+                            CONF_POWER_WATT: DEFAULT_POWER_WATT,
+                            CONF_SERIAL_ID: self._serial_id,
+                            CONF_SERIAL_ID_GAS: self._serial_id_gas,
+                        },
+                    )
 
                 except CannotConnect:
                     errors["base"] = "cannot_connect"
@@ -222,41 +251,6 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(
             step_id="setup_host", data_schema=schema, errors=errors
-        )
-
-    async def async_step_setup_options(self, user_input=None):
-        """Select optional options."""
-        errors = {}
-        if user_input is not None:
-            if self._host is None:
-                name = self._port
-            else:
-                name = f"{self._host}:{self._port}"
-
-            return self.async_create_entry(
-                title=name,
-                data={
-                    CONF_DSMR_VERSION: self._dsmr_version,
-                    CONF_HOST: self._host,
-                    CONF_PORT: self._port,
-                    CONF_RECONNECT_INTERVAL: user_input.get(CONF_RECONNECT_INTERVAL),
-                    CONF_PRECISION: user_input.get(CONF_PRECISION),
-                    CONF_POWER_WATT: user_input.get(CONF_POWER_WATT),
-                    CONF_SERIAL_ID: self._serial_id,
-                    CONF_SERIAL_ID_GAS: self._serial_id_gas,
-                },
-            )
-
-        schema = vol.Schema(
-            {
-                vol.Optional(CONF_RECONNECT_INTERVAL, default=30): int,
-                vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): int,
-                vol.Optional(CONF_POWER_WATT, default=DEFAULT_POWER_WATT): bool,
-            }
-        )
-
-        return self.async_show_form(
-            step_id="setup_options", data_schema=schema, errors=errors
         )
 
     def usb_already_configured(self, port):

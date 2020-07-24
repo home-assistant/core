@@ -12,6 +12,9 @@ from homeassistant.components.dsmr.const import (
     CONF_RECONNECT_INTERVAL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
+    DEFAULT_POWER_WATT,
+    DEFAULT_PRECISION,
+    DEFAULT_RECONNECT_INTERVAL,
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
@@ -110,28 +113,15 @@ async def test_config_flow_manual_usb_success(hass, mock_connection_factory):
         result["flow_id"], {CONF_PORT: TEST_USB_PATH}
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "setup_options"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_PRECISION: TEST_PRECISION,
-            CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-            CONF_POWER_WATT: TEST_POWER_WATT,
-        },
-    )
-
     assert result["type"] == "create_entry"
     assert result["title"] == TEST_USB_PATH
     assert result["data"] == {
         CONF_HOST: None,
         CONF_PORT: TEST_USB_PATH,
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
-        CONF_PRECISION: TEST_PRECISION,
-        CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-        CONF_POWER_WATT: TEST_POWER_WATT,
+        CONF_PRECISION: DEFAULT_PRECISION,
+        CONF_RECONNECT_INTERVAL: DEFAULT_RECONNECT_INTERVAL,
+        CONF_POWER_WATT: DEFAULT_POWER_WATT,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
     }
@@ -172,28 +162,15 @@ async def test_config_flow_manual_host_success(hass, mock_connection_factory):
         result["flow_id"], {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "setup_options"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_PRECISION: TEST_PRECISION,
-            CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-            CONF_POWER_WATT: TEST_POWER_WATT,
-        },
-    )
-
     assert result["type"] == "create_entry"
     assert result["title"] == f"{TEST_HOST}:{TEST_PORT}"
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_PORT: TEST_PORT,
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
-        CONF_PRECISION: TEST_PRECISION,
-        CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-        CONF_POWER_WATT: TEST_POWER_WATT,
+        CONF_PRECISION: DEFAULT_PRECISION,
+        CONF_RECONNECT_INTERVAL: DEFAULT_RECONNECT_INTERVAL,
+        CONF_POWER_WATT: DEFAULT_POWER_WATT,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
     }
@@ -407,28 +384,15 @@ async def test_config_flow_manual_usb_no_gas(hass, mock_connection_factory):
         result["flow_id"], {CONF_PORT: TEST_USB_PATH}
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "setup_options"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_PRECISION: TEST_PRECISION,
-            CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-            CONF_POWER_WATT: TEST_POWER_WATT,
-        },
-    )
-
     assert result["type"] == "create_entry"
     assert result["title"] == TEST_USB_PATH
     assert result["data"] == {
         CONF_HOST: None,
         CONF_PORT: TEST_USB_PATH,
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
-        CONF_PRECISION: TEST_PRECISION,
-        CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-        CONF_POWER_WATT: TEST_POWER_WATT,
+        CONF_PRECISION: DEFAULT_PRECISION,
+        CONF_RECONNECT_INTERVAL: DEFAULT_RECONNECT_INTERVAL,
+        CONF_POWER_WATT: DEFAULT_POWER_WATT,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: None,
     }
@@ -468,28 +432,15 @@ async def test_config_flow_manual_usb_already_configured(hass, mock_connection_f
         result["flow_id"], {CONF_PORT: TEST_USB_PATH}
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "setup_options"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_PRECISION: TEST_PRECISION,
-            CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-            CONF_POWER_WATT: TEST_POWER_WATT,
-        },
-    )
-
     assert result["type"] == "create_entry"
     assert result["title"] == TEST_USB_PATH
     assert result["data"] == {
         CONF_HOST: None,
         CONF_PORT: TEST_USB_PATH,
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
-        CONF_PRECISION: TEST_PRECISION,
-        CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-        CONF_POWER_WATT: TEST_POWER_WATT,
+        CONF_PRECISION: DEFAULT_PRECISION,
+        CONF_RECONNECT_INTERVAL: DEFAULT_RECONNECT_INTERVAL,
+        CONF_POWER_WATT: DEFAULT_POWER_WATT,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
     }
@@ -555,28 +506,15 @@ async def test_config_flow_manual_host_already_configured(
         result["flow_id"], {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "setup_options"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_PRECISION: TEST_PRECISION,
-            CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-            CONF_POWER_WATT: TEST_POWER_WATT,
-        },
-    )
-
     assert result["type"] == "create_entry"
     assert result["title"] == f"{TEST_HOST}:{TEST_PORT}"
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_PORT: TEST_PORT,
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
-        CONF_PRECISION: TEST_PRECISION,
-        CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-        CONF_POWER_WATT: TEST_POWER_WATT,
+        CONF_PRECISION: DEFAULT_PRECISION,
+        CONF_RECONNECT_INTERVAL: DEFAULT_RECONNECT_INTERVAL,
+        CONF_POWER_WATT: DEFAULT_POWER_WATT,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
     }
