@@ -289,7 +289,7 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
     @callback
     def _start_rfxtrx(event):
         """Start receiving events."""
-        rfx_object.event_callback = lambda event: hass.async_add_job(
+        rfx_object.event_callback = lambda event: hass.add_job(
             async_handle_receive, event
         )
 
