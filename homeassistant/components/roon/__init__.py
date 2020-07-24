@@ -26,35 +26,6 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN] = {}
     hass.data[DATA_CONFIGS] = {}
-    configured_servers = configured_hosts(hass)
-
-    if CONF_HOST not in conf:
-        # User has component configured but with no configured host
-        if not configured_servers:
-            # trigger config flow (can be removed once roon is added as official component to hass)
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-                )
-            )
-        return True
-    # setup component with config from configfile
-    host = conf[CONF_HOST]
-    # Store config in hass.data so the config entry can find it
-    hass.data[DATA_CONFIGS][host] = conf
-    # If configured, the server will be set up during config entry phase
-    if host in configured_servers:
-        return True
-    # No existing config entry found, try importing it or trigger link
-    # config flow if no existing auth. Because we're inside the setup of
-    # this component we'll have to use hass.async_add_job to avoid a
-    # deadlock: creating a config entry will set up the component but the
-    # setup would block till the entry is created!
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
-        )
-    )
     return True
 
 
