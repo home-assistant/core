@@ -1,4 +1,6 @@
 """The tests for the automation component."""
+import asyncio
+
 import pytest
 
 from homeassistant.components import logbook
@@ -12,10 +14,11 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
     EVENT_HOMEASSISTANT_STARTED,
+    SERVICE_TURN_OFF,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Context, CoreState, State
+from homeassistant.core import Context, CoreState, State, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -551,6 +554,58 @@ async def test_reload_config_handles_load_fails(hass, calls):
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 2
+
+
+@pytest.mark.parametrize("service", ["turn_off", "reload"])
+async def test_automation_stops(hass, calls, service):
+    """Test that turning off / reloading an automation stops any running actions."""
+    entity_id = "automation.hello"
+    test_entity = "test.entity"
+
+    config = {
+        automation.DOMAIN: {
+            "alias": "hello",
+            "trigger": {"platform": "event", "event_type": "test_event"},
+            "action": [
+                {"event": "running"},
+                {"wait_template": "{{ is_state('test.entity', 'goodbye') }}"},
+                {"service": "test.automation"},
+            ],
+        }
+    }
+    assert await async_setup_component(hass, automation.DOMAIN, config,)
+
+    running = asyncio.Event()
+
+    @callback
+    def running_cb(event):
+        running.set()
+
+    hass.bus.async_listen_once("running", running_cb)
+    hass.states.async_set(test_entity, "hello")
+
+    hass.bus.async_fire("test_event")
+    await running.wait()
+
+    if service == "turn_off":
+        await hass.services.async_call(
+            automation.DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    else:
+        with patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value=config,
+        ):
+            await common.async_reload(hass)
+
+    hass.states.async_set(test_entity, "goodbye")
+    await hass.async_block_till_done()
+
+    assert len(calls) == 0
 
 
 async def test_automation_restore_state(hass):
