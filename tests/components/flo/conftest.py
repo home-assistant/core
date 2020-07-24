@@ -74,3 +74,10 @@ def aioclient_mock_fixture(aioclient_mock):
         headers={"Content-Type": "application/json"},
         params={"expand": "locations"},
     )
+    # Mocks the user info for flo.
+    aioclient_mock.get(
+        "https://api-gw.meetflo.com/api/v2/users/12345abcde",
+        text=load_fixture("flo/user_info_expand_locations_response.json"),
+        status=200,
+        headers={"Content-Type": "application/json"},
+    )

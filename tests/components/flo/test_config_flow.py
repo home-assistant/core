@@ -16,9 +16,6 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.flo.config_flow.validate_input",
-        return_value={"title": "Some fake title"},
-    ), patch(
         "homeassistant.components.flo.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.flo.async_setup_entry", return_value=True
@@ -29,7 +26,7 @@ async def test_form(hass):
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Some fake title"
+    assert result2["title"] == "Home"
     assert result2["data"] == {"username": "test-username", "password": "test-password"}
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
