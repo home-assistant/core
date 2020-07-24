@@ -937,9 +937,11 @@ nessclient==0.9.15
 # homeassistant.components.netdata
 netdata==0.2.0
 
-# homeassistant.components.discovery
 # homeassistant.components.ssdp
 netdisco==2.8.0
+
+# homeassistant.components.discovery
+netdisco==2.8.1
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
