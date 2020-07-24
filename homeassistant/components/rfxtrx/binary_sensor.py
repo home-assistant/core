@@ -64,12 +64,6 @@ DEVICE_TYPE_DEVICE_CLASS = {
     "RM174RF Smoke Detector": DEVICE_CLASS_SMOKE,
 }
 
-DEVICE_TYPE_OFF_DELAY = {
-    "RM174RF Smoke Detector": 60,
-    "KD101 Smoke Detector": 60,
-    "Alecto SA30 Smoke Detector": 60,
-}
-
 
 async def async_setup_entry(
     hass, config_entry, async_add_entities,
@@ -118,9 +112,7 @@ async def async_setup_entry(
                 CONF_DEVICE_CLASS,
                 DEVICE_TYPE_DEVICE_CLASS.get(event.device.type_string),
             ),
-            entity_info.get(
-                CONF_OFF_DELAY, DEVICE_TYPE_OFF_DELAY.get(event.device.type_string),
-            ),
+            entity_info.get(CONF_OFF_DELAY),
             entity_info.get(CONF_DATA_BITS),
             entity_info.get(CONF_COMMAND_ON),
             entity_info.get(CONF_COMMAND_OFF),
@@ -151,7 +143,6 @@ async def async_setup_entry(
             device_id,
             event=event,
             device_class=DEVICE_TYPE_DEVICE_CLASS.get(event.device.type_string),
-            off_delay=DEVICE_TYPE_OFF_DELAY.get(event.device.type_string),
         )
         async_add_entities([sensor])
 

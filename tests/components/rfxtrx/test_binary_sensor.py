@@ -186,32 +186,6 @@ async def test_panic(hass, rfxtrx_automatic):
     assert hass.states.get(entity_id).state == "off"
 
 
-async def test_panic_delay_off(hass, rfxtrx_automatic, timestep):
-    """Test with discovery."""
-    rfxtrx = rfxtrx_automatic
-
-    entity_id = "binary_sensor.kd101_smoke_detector_a10900_32"
-    delay_off = 60
-
-    await rfxtrx.signal(EVENT_SMOKE_DETECTOR_PANIC)
-    assert hass.states.get(entity_id).state == "on"
-
-    # check for premature off
-    await timestep(delay_off * 0.9)
-    assert hass.states.get(entity_id).state == "on"
-
-    # signal restart internal timer
-    await rfxtrx.signal(EVENT_SMOKE_DETECTOR_PANIC)
-
-    # check for premature off
-    await timestep(delay_off * 0.9)
-    assert hass.states.get(entity_id).state == "on"
-
-    # check for delayed off
-    await timestep(delay_off * 0.2)
-    assert hass.states.get(entity_id).state == "off"
-
-
 async def test_motion(hass, rfxtrx_automatic):
     """Test motion entities."""
     rfxtrx = rfxtrx_automatic
