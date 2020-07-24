@@ -1,12 +1,16 @@
 {
   "domain": "roon",
   "name": "RoonLabs music player",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/roon",
-  "codeowners": [
-    "@pavoni"
-  ],
   "requirements": [
     "roonapi==0.0.20"
   ],
-  "config_flow": true
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@pavoni"
+  ]
 }
