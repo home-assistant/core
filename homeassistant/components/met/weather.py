@@ -19,7 +19,6 @@ from homeassistant.const import (
     PRESSURE_INHG,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_call_later
@@ -82,27 +81,25 @@ class MetWeather(WeatherEntity):
         self._unsub_fetch_data = None
         self._weather_data = None
         self._current_weather_data = {}
+        self._coordinates = {}
         self._forecast_data = None
 
     async def async_added_to_hass(self):
         """Start fetching data."""
-        self._init_data()
-        await self._fetch_data()
+        await self._init_data()
         if self._config.get(CONF_TRACK_HOME):
             self._unsub_track_home = self.hass.bus.async_listen(
-                EVENT_CORE_CONFIG_UPDATE, self._core_config_updated
+                EVENT_CORE_CONFIG_UPDATE, self._init_data
             )
 
-    @callback
-    def _init_data(self):
-        """Initialize a data object."""
-        conf = self._config
-
+    async def _init_data(self, _event=None):
+        """Initialize and fetch data object."""
         if self.track_home:
             latitude = self.hass.config.latitude
             longitude = self.hass.config.longitude
             elevation = self.hass.config.elevation
         else:
+            conf = self._config
             latitude = conf[CONF_LATITUDE]
             longitude = conf[CONF_LONGITUDE]
             elevation = conf[CONF_ELEVATION]
@@ -116,16 +113,13 @@ class MetWeather(WeatherEntity):
             "lon": str(longitude),
             "msl": str(elevation),
         }
+        if coordinates == self._coordinates:
+            return
+        self._coordinates = coordinates
+
         self._weather_data = metno.MetWeatherData(
             coordinates, async_get_clientsession(self.hass), URL
         )
-
-    async def _core_config_updated(self, _event):
-        """Handle core config updated."""
-        self._init_data()
-        if self._unsub_fetch_data:
-            self._unsub_fetch_data()
-            self._unsub_fetch_data = None
         await self._fetch_data()
 
     async def will_remove_from_hass(self):
@@ -140,6 +134,10 @@ class MetWeather(WeatherEntity):
 
     async def _fetch_data(self, *_):
         """Get the latest data from met.no."""
+        if self._unsub_fetch_data:
+            self._unsub_fetch_data()
+            self._unsub_fetch_data = None
+
         if not await self._weather_data.fetching_data():
             # Retry in 15 to 20 minutes.
             minutes = 15 + randrange(6)
@@ -155,10 +153,7 @@ class MetWeather(WeatherEntity):
         self._unsub_fetch_data = async_call_later(
             self.hass, randrange(55, 65) * 60, self._fetch_data
         )
-        self._update()
 
-    def _update(self, *_):
-        """Get the latest data from Met.no."""
         self._current_weather_data = self._weather_data.get_current_weather()
         time_zone = dt_util.DEFAULT_TIME_ZONE
         self._forecast_data = self._weather_data.get_forecast(time_zone)
