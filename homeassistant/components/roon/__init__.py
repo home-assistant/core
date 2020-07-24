@@ -27,12 +27,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Set up a roonserver from a config entry."""
     host = entry.data[CONF_HOST]
-    config = hass.data[DATA_CONFIGS].get(host)
-    if config is None:
-        custom_play_action = None
-    else:
-        custom_play_action = config[CONF_CUSTOM_PLAY_ACTION]
-    roonserver = RoonServer(hass, entry, custom_play_action)
+    roonserver = RoonServer(hass, entry, None)
 
     if not await roonserver.async_setup():
         return False
