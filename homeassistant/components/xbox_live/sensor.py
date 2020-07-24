@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 
 import voluptuous as vol
-from xboxapi import xbox_api
+from xboxapi import Client
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_API_KEY, CONF_SCAN_INTERVAL
@@ -28,17 +28,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Xbox platform."""
-    api = xbox_api.XboxApi(config[CONF_API_KEY])
+    api = Client(api_key=config[CONF_API_KEY])
     entities = []
 
-    # request personal profile to check api connection
-    profile = api.get_profile()
-    if profile.get("error_code") is not None:
+    # request profile info to check api connection
+    response = api.api_get("profile")
+    if not response.ok:
         _LOGGER.error(
-            "Can't setup XboxAPI connection. Check your account or "
-            "api key on xboxapi.com. Code: %s Description: %s ",
-            profile.get("error_code", "unknown"),
-            profile.get("error_message", "unknown"),
+            "Can't setup X API connection. Check your account or "
+            "api key on xapi.us. Code: %s Description: %s ",
+            response.status_code,
+            response.reason,
         )
         return
 
@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def get_user_gamercard(api, xuid):
     """Get profile info."""
-    gamercard = api.get_user_gamercard(xuid)
+    gamercard = api.gamer(gamertag="", xuid=xuid).get("gamercard")
     _LOGGER.debug("User gamercard: %s", gamercard)
 
     if gamercard.get("success", True) and gamercard.get("code") is None:
@@ -82,11 +82,11 @@ class XboxSensor(Entity):
         self._presence = []
         self._xuid = xuid
         self._api = api
-        self._gamertag = gamercard.get("gamertag")
-        self._gamerscore = gamercard.get("gamerscore")
+        self._gamertag = gamercard["gamertag"]
+        self._gamerscore = gamercard["gamerscore"]
         self._interval = interval
-        self._picture = gamercard.get("gamerpicSmallSslImagePath")
-        self._tier = gamercard.get("tier")
+        self._picture = gamercard["gamerpicSmallSslImagePath"]
+        self._tier = gamercard["tier"]
 
     @property
     def name(self):
@@ -111,10 +111,8 @@ class XboxSensor(Entity):
         attributes["tier"] = self._tier
 
         for device in self._presence:
-            for title in device.get("titles"):
-                attributes[
-                    f'{device.get("type")} {title.get("placement")}'
-                ] = title.get("name")
+            for title in device["titles"]:
+                attributes[f'{device["type"]} {title["placement"]}'] = title["name"]
 
         return attributes
 
@@ -140,7 +138,7 @@ class XboxSensor(Entity):
 
     def update(self):
         """Update state data from Xbox API."""
-        presence = self._api.get_user_presence(self._xuid)
+        presence = self._api.gamer(gamertag="", xuid=self._xuid).get("presence")
         _LOGGER.debug("User presence: %s", presence)
-        self._state = presence.get("state")
+        self._state = presence["state"]
         self._presence = presence.get("devices", [])

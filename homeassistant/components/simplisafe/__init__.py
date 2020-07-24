@@ -1,6 +1,6 @@
 """Support for SimpliSafe alarm systems."""
 import asyncio
-import logging
+from uuid import UUID
 
 from simplipy import API
 from simplipy.errors import InvalidCredentialsError, SimplipyError
@@ -55,10 +55,9 @@ from .const import (
     DATA_CLIENT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    LOGGER,
     VOLUMES,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_ACCOUNTS = "accounts"
 
@@ -161,6 +160,13 @@ def _async_save_refresh_token(hass, config_entry, token):
     )
 
 
+async def async_get_client_id(hass):
+    """Get a client ID (based on the HASS unique ID) for the SimpliSafe API."""
+    hass_id = await hass.helpers.instance_id.async_get()
+    # SimpliSafe requires full, "dashed" versions of UUIDs:
+    return str(UUID(hass_id))
+
+
 async def async_register_base_station(hass, system, config_entry_id):
     """Register a new bridge."""
     device_registry = await dr.async_get_registry(hass)
@@ -220,17 +226,18 @@ async def async_setup_entry(hass, config_entry):
 
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
+    client_id = await async_get_client_id(hass)
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
         api = await API.login_via_token(
-            config_entry.data[CONF_TOKEN], session=websession
+            config_entry.data[CONF_TOKEN], client_id=client_id, session=websession
         )
     except InvalidCredentialsError:
-        _LOGGER.error("Invalid credentials provided")
+        LOGGER.error("Invalid credentials provided")
         return False
     except SimplipyError as err:
-        _LOGGER.error("Config entry failed: %s", err)
+        LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady
 
     _async_save_refresh_token(hass, config_entry, api.refresh_token)
@@ -252,7 +259,7 @@ async def async_setup_entry(hass, config_entry):
             """Decorate."""
             system_id = int(call.data[ATTR_SYSTEM_ID])
             if system_id not in simplisafe.systems:
-                _LOGGER.error("Unknown system ID in service call: %s", system_id)
+                LOGGER.error("Unknown system ID in service call: %s", system_id)
                 return
             await coro(call)
 
@@ -266,7 +273,7 @@ async def async_setup_entry(hass, config_entry):
             """Decorate."""
             system = simplisafe.systems[int(call.data[ATTR_SYSTEM_ID])]
             if system.version != 3:
-                _LOGGER.error("Service only available on V3 systems")
+                LOGGER.error("Service only available on V3 systems")
                 return
             await coro(call)
 
@@ -280,7 +287,7 @@ async def async_setup_entry(hass, config_entry):
         try:
             await system.clear_notifications()
         except SimplipyError as err:
-            _LOGGER.error("Error during service call: %s", err)
+            LOGGER.error("Error during service call: %s", err)
             return
 
     @verify_system_exists
@@ -291,7 +298,7 @@ async def async_setup_entry(hass, config_entry):
         try:
             await system.remove_pin(call.data[ATTR_PIN_LABEL_OR_VALUE])
         except SimplipyError as err:
-            _LOGGER.error("Error during service call: %s", err)
+            LOGGER.error("Error during service call: %s", err)
             return
 
     @verify_system_exists
@@ -302,7 +309,7 @@ async def async_setup_entry(hass, config_entry):
         try:
             await system.set_pin(call.data[ATTR_PIN_LABEL], call.data[ATTR_PIN_VALUE])
         except SimplipyError as err:
-            _LOGGER.error("Error during service call: %s", err)
+            LOGGER.error("Error during service call: %s", err)
             return
 
     @verify_system_exists
@@ -320,7 +327,7 @@ async def async_setup_entry(hass, config_entry):
                 }
             )
         except SimplipyError as err:
-            _LOGGER.error("Error during service call: %s", err)
+            LOGGER.error("Error during service call: %s", err)
             return
 
     for service, method, schema in [
@@ -373,16 +380,16 @@ class SimpliSafeWebsocket:
     @staticmethod
     def _on_connect():
         """Define a handler to fire when the websocket is connected."""
-        _LOGGER.info("Connected to websocket")
+        LOGGER.info("Connected to websocket")
 
     @staticmethod
     def _on_disconnect():
         """Define a handler to fire when the websocket is disconnected."""
-        _LOGGER.info("Disconnected from websocket")
+        LOGGER.info("Disconnected from websocket")
 
     def _on_event(self, event):
         """Define a handler to fire when a new SimpliSafe event arrives."""
-        _LOGGER.debug("New websocket event: %s", event)
+        LOGGER.debug("New websocket event: %s", event)
         async_dispatcher_send(
             self._hass, TOPIC_UPDATE_WEBSOCKET.format(event.system_id), event
         )
@@ -451,7 +458,7 @@ class SimpliSafe:
         if not to_add:
             return
 
-        _LOGGER.debug("New system notifications: %s", to_add)
+        LOGGER.debug("New system notifications: %s", to_add)
 
         self._system_notifications[system.system_id].update(to_add)
 
@@ -492,7 +499,7 @@ class SimpliSafe:
                     system.system_id
                 ] = await system.get_latest_event()
             except SimplipyError as err:
-                _LOGGER.error("Error while fetching initial event: %s", err)
+                LOGGER.error("Error while fetching initial event: %s", err)
                 self.initial_event_to_use[system.system_id] = {}
 
         async def refresh(event_time):
@@ -512,7 +519,7 @@ class SimpliSafe:
             """Update a system."""
             await system.update()
             self._async_process_new_notifications(system)
-            _LOGGER.debug('Updated REST API data for "%s"', system.address)
+            LOGGER.debug('Updated REST API data for "%s"', system.address)
             async_dispatcher_send(
                 self._hass, TOPIC_UPDATE_REST_API.format(system.system_id)
             )
@@ -523,27 +530,37 @@ class SimpliSafe:
         for result in results:
             if isinstance(result, InvalidCredentialsError):
                 if self._emergency_refresh_token_used:
-                    _LOGGER.error(
-                        "SimpliSafe authentication disconnected. Please restart HASS"
+                    LOGGER.error(
+                        "Token disconnected or invalid. Please re-auth the "
+                        "SimpliSafe integration in HASS"
                     )
-                    remove_listener = self._hass.data[DOMAIN][DATA_LISTENER].pop(
-                        self._config_entry.entry_id
+                    self._hass.async_create_task(
+                        self._hass.config_entries.flow.async_init(
+                            DOMAIN,
+                            context={"source": "reauth"},
+                            data=self._config_entry.data,
+                        )
                     )
-                    remove_listener()
                     return
 
-                _LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
+                LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
                 self._emergency_refresh_token_used = True
-                return await self._api.refresh_access_token(
-                    self._config_entry.data[CONF_TOKEN]
-                )
+
+                try:
+                    await self._api.refresh_access_token(
+                        self._config_entry.data[CONF_TOKEN]
+                    )
+                    return
+                except SimplipyError as err:
+                    LOGGER.error("Error while using stored refresh token: %s", err)
+                    return
 
             if isinstance(result, SimplipyError):
-                _LOGGER.error("SimpliSafe error while updating: %s", result)
+                LOGGER.error("SimpliSafe error while updating: %s", result)
                 return
 
-            if isinstance(result, SimplipyError):
-                _LOGGER.error("Unknown error while updating: %s", result)
+            if isinstance(result, Exception):  # pylint: disable=broad-except
+                LOGGER.error("Unknown error while updating: %s", result)
                 return
 
         if self._api.refresh_token != self._config_entry.data[CONF_TOKEN]:
