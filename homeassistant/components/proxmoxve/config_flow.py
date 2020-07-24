@@ -19,6 +19,7 @@ import homeassistant.helpers.config_validation as cv
 
 from . import ProxmoxClient
 from .const import (  # pylint: disable=unused-import
+    CONF_CONTAINERS,
     CONF_NODE,
     CONF_NODES,
     CONF_REALM,
@@ -46,6 +47,73 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._config = {}
         self.proxmox_client = None
+
+    # pylint: disable=signature-differs
+    async def async_step_import(self, user_input=None):
+        """Import config from configuration yaml file."""
+        # the schema used in async_step_user differs from the deprecated CONFIG_SCHEMA, need to translate between the two.
+
+        self._config[CONF_HOST] = user_input[CONF_HOST]
+        self._config[CONF_USERNAME] = user_input[CONF_USERNAME]
+        self._config[CONF_PASSWORD] = user_input[CONF_PASSWORD]
+
+        self._config[CONF_VMS] = []
+
+        virtual_machines = []
+
+        for node in self._config[CONF_NODES]:
+            for entity in node[CONF_VMS]:
+                virtual_machines.append(
+                    {
+                        CONF_NODE: node[CONF_NODE],
+                        CONF_VMID: entity[CONF_VMID],
+                        CONF_TYPE: "qemu",
+                    }
+                )
+
+            for entity in node[CONF_CONTAINERS]:
+                virtual_machines.append(
+                    {
+                        CONF_NODE: node[CONF_NODE],
+                        CONF_VMID: entity[CONF_VMID],
+                        CONF_TYPE: "lxc",
+                    }
+                )
+
+        title = self._config[CONF_HOST]
+
+        # make sure vms exist before importing
+
+        self.proxmox_client = ProxmoxClient(
+            self._config[CONF_HOST],
+            self._config[CONF_PORT],
+            self._config[CONF_USERNAME],
+            self._config[CONF_REALM],
+            self._config[CONF_PASSWORD],
+            self._config[CONF_VERIFY_SSL],
+        )
+
+        try:
+            await self.hass.async_add_executor_job(self.proxmox_client.build_client)
+        except Exception:  # pylint: disable=broad-except
+            return self.async_abort(reason="connection_error")
+
+        all_vms = await self.hass.async_add_executor_job(
+            self.proxmox_client.get_all_vms
+        )
+
+        for virt_man in virtual_machines:
+            found = next((x for x in all_vms if virt_man[CONF_VMID] == x["id"]), None)
+
+            if found:
+                self._config[CONF_VMS].append(virt_man)
+            else:
+                _LOGGER.warning(
+                    "Virtual machine %d not found in proxmox, make sure it exists.",
+                    virt_man[CONF_VMID],
+                )
+
+        return self.async_create_entry(title=title, data=self._config)
 
     # pylint: disable=signature-differs
     async def async_step_user(self, user_input):
