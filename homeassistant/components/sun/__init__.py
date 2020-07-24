@@ -100,7 +100,10 @@ class Sun(Entity):
         self._next_change = None
 
         def update_location(_event):
-            self.location = get_astral_location(self.hass)
+            location = get_astral_location(self.hass)
+            if location == self.location:
+                return
+            self.location = location
             self.update_events(dt_util.utcnow())
 
         update_location(None)
