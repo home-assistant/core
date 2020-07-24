@@ -1,7 +1,6 @@
 """Config flow for Omnilogic integration."""
 import logging
 
-#from omnilogic import OmniLogic
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -10,7 +9,6 @@ from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
 DATA_SCHEMA = vol.Schema({"username": str, "password": str})
 
 

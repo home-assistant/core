@@ -1,3 +1,4 @@
+"""Support for Omnilogic Sensors."""
 from datetime import timedelta
 import logging
 
@@ -42,16 +43,16 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
 
 
 class OmnilogicSensor(Entity):
-    """Defines an Omnilogic sensor entity"""
+    """Defines an Omnilogic sensor entity."""
 
     def __init__(self, coordinator, kind, name, backyard, bow, device_class, icon, unit):
-
+        """Initialize Entities."""
         sensorname = "omni_" + backyard["BackyardName"].replace(" ", "_") + "_" + bow["Name"].replace(" ", "_") + "_" + kind
         self._kind = kind
         self._name = None
         self.entity_id = ENTITY_ID_FORMAT.format(sensorname)
         self._backyard = backyard
-        self._backyardName = backyard["BackyardName"]
+        self._backyard_name = backyard["BackyardName"]
         self._state = None
         self._unit_type = backyard["Unit-of-Measurement"]
         self._device_class = device_class
@@ -59,8 +60,8 @@ class OmnilogicSensor(Entity):
         self._bow = bow
         self._unit = None
         self.coordinator = coordinator
-        self._MSPSystemId = backyard["systemId"]
-        self._SystemId = None
+        self._msp_system_id = backyard["systemId"]
+        self._system_id = None
         self._attributes = {}
 
     @property
@@ -84,12 +85,12 @@ class OmnilogicSensor(Entity):
         """Return the device class of the entity."""
         if self._device_class != "none":
             return self._device_class
-    
+
     @property
     def unit_of_measurement(self):
-        """Return the right unit of measure"""
+        """Return the right unit of measure."""
         return self._unit
-        
+
     @property
     def icon(self):
         """Return the icon for the entity."""
@@ -97,10 +98,10 @@ class OmnilogicSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """Return the attributes"""
+        """Return the attributes."""
         attributes = self._attributes
-        attributes["MspSystemId"] = self._MSPSystemId
-        attributes["SystemId"] = self._SystemId
+        attributes["MspSystemId"] = self._msp_system_id
+        attributes["SystemId"] = self._system_id
         return attributes
 
     @property
@@ -110,7 +111,7 @@ class OmnilogicSensor(Entity):
 
     @property
     def state(self):
-
+        """Return the state."""
         return self._state
 
     async def async_update(self):
@@ -123,12 +124,12 @@ class OmnilogicSensor(Entity):
             if self.coordinator.data[0]["Unit-of-Measurement"] == "Metric":
                 temp_return = round((temp_return - 32) * 5 / 9, 1)
                 unit_of_measurement = TEMP_CELSIUS
-            
+
             self._attributes["hayward_temperature"] = temp_return
             self._attributes["hayward_unit_of_measure"] = unit_of_measurement
             self._state = float(self.coordinator.data[0]["BOWS"][0].get("waterTemp"))
             self._unit = TEMP_FAHRENHEIT
-            self._SystemId = self.coordinator.data[0]["BOWS"][0].get("systemId")
+            self._system_id = self.coordinator.data[0]["BOWS"][0].get("systemId")
             self._name = self.coordinator.data[0]["BOWS"][0].get("Name") + " Water Temperature"
 
         elif self._kind == "pump_speed":
@@ -144,10 +145,10 @@ class OmnilogicSensor(Entity):
             if self.coordinator.data[0]["Unit-of-Measurement"] == "Metric":
                 salt_return = round(salt_return / 1000, 2)
                 unit_of_measurement = "g/L"
-            
+
             self._state = salt_return
             self._unit = unit_of_measurement
-            self._SystemId = self.coordinator.data[0]["BOWS"][0]["Chlorinator"].get("systemId")
+            self._system_id = self.coordinator.data[0]["BOWS"][0]["Chlorinator"].get("systemId")
             self._name = self.coordinator.data[0]["BOWS"][0].get("Name") + " " + self.coordinator.data[0]["BOWS"][0]["Chlorinator"].get("Name") + " Salt Level"
 
         elif self._kind == "pool_chlorinator":
@@ -163,12 +164,12 @@ class OmnilogicSensor(Entity):
             if self.coordinator.data[0]["Unit-of-Measurement"] == "Metric":
                 temp_return = round((temp_return - 32) * 5 / 9, 1)
                 unit_of_measurement = TEMP_CELSIUS
-            
+
             self._attributes["hayward_temperature"] = temp_return
             self._attributes["hayward_unit_of_measure"] = unit_of_measurement
             self._state = float(self.coordinator.data[0].get("airTemp"))
             self._unit = TEMP_FAHRENHEIT
-            self._SystemId = self.coordinator.data[0]["BOWS"][0].get("systemId")
+            self._system_id = self.coordinator.data[0]["BOWS"][0].get("systemId")
             self._name = self.coordinator.data[0]["BOWS"][0].get("Name") + " Air Temperature"
 
     async def async_added_to_hass(self):
@@ -176,4 +177,3 @@ class OmnilogicSensor(Entity):
         self.async_on_remove(
             self.coordinator.async_add_listener(self.async_write_ha_state)
         )
-    
