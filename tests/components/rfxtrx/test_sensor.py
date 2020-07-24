@@ -148,13 +148,9 @@ async def test_several_sensors(hass, rfxtrx):
     assert state.attributes.get("unit_of_measurement") == UNIT_PERCENTAGE
 
 
-async def test_discover_sensor(hass, rfxtrx):
+async def test_discover_sensor(hass, rfxtrx_automatic):
     """Test with discovery of sensor."""
-    assert await async_setup_component(
-        hass, "rfxtrx", {"rfxtrx": {"device": "abcd", "automatic_add": True}},
-    )
-    await hass.async_block_till_done()
-    await hass.async_start()
+    rfxtrx = rfxtrx_automatic
 
     # 1
     await rfxtrx.signal("0a520801070100b81b0279")
