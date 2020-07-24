@@ -161,7 +161,7 @@ aiodns==2.0.0
 aioesphomeapi==2.6.1
 
 # homeassistant.components.flo
-aioflo==0.1.5
+aioflo==0.2.0
 
 # homeassistant.components.freebox
 aiofreepybox==0.0.8

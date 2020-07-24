@@ -22,17 +22,13 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Flo sensors from config entry."""
-    client = hass.data[FLO_DOMAIN]["client"]
-    location_ids = hass.data[FLO_DOMAIN]["location_ids"]
-
-    today = datetime.today()
-    start_date = datetime(today.year, today.month, today.day, 0, 0)
-    end_date = datetime(today.year, today.month, today.day, 23, 59, 59, 999000)
+    client = hass.data[FLO_DOMAIN][config_entry.entry_id]["client"]
+    locations = hass.data[FLO_DOMAIN]["locations"]
 
     async_add_entities(
         [
-            FloDailyUsageSensor(FloUsageData(location_id, client, start_date, end_date))
-            for location_id in location_ids
+            FloDailyUsageSensor(FloUsageData(location["id"], client))
+            for location in locations
         ],
         True,
     )
@@ -41,21 +37,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FloUsageData:
     """Track and query usage data."""
 
-    def __init__(self, location_id, client, start_date, end_date):
+    def __init__(self, location_id, client):
         """Initialize the usage data."""
         self._location_id = location_id
         self._client = client
-        self._start_date = start_date
-        self._end_date = end_date
         self._water_usage = None
 
     @Throttle(MIN_TIME_BETWEEN_USAGE_UPDATES)
     async def async_update(self):
         """Query and store usage data."""
+        today = datetime.today()
+        start_date = datetime(today.year, today.month, today.day, 0, 0)
+        end_date = datetime(today.year, today.month, today.day, 23, 59, 59, 999000)
         self._water_usage = await self._client.water.get_consumption_info(
-            self._location_id, self._start_date, self._end_date
+            self._location_id, start_date, end_date
         )
-        _LOGGER.info("Updated water usage: %s", self._water_usage)
+        _LOGGER.debug("Updated Flo consumption data: %s", self._water_usage)
 
     def usage(self):
         """Return the day's usage."""

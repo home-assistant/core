@@ -12,7 +12,6 @@ from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
 DATA_SCHEMA = vol.Schema({"username": str, "password": str})
 
 
@@ -24,19 +23,15 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     session = async_get_clientsession(hass)
     try:
-        api = await async_get_api(session, data[CONF_USERNAME], data[CONF_PASSWORD])
+        api = await async_get_api(
+            data[CONF_USERNAME], data[CONF_PASSWORD], session=session
+        )
     except Exception:  # pylint: disable=broad-except
         raise CannotConnect
 
     user_info = await api.user.get_info()
     a_location_id = user_info["locations"][0]["id"]
-
-    # Get location (i.e., device) information:
     location_info = await api.location.get_info(a_location_id)
-
-    _LOGGER.info("Flo Data: %s", location_info)
-
-    # Return info that you want to store in the config entry.
     return {"title": location_info["nickname"]}
 
 
