@@ -101,13 +101,9 @@ async def test_several_covers(hass, rfxtrx):
     assert state.attributes.get("friendly_name") == "RollerTrol 009ba8:1"
 
 
-async def test_discover_covers(hass, rfxtrx):
+async def test_discover_covers(hass, rfxtrx_automatic):
     """Test with discovery of covers."""
-    assert await async_setup_component(
-        hass, "rfxtrx", {"rfxtrx": {"device": "abcd", "automatic_add": True}}
-    )
-    await hass.async_block_till_done()
-    await hass.async_start()
+    rfxtrx = rfxtrx_automatic
 
     await rfxtrx.signal("0a140002f38cae010f0070")
     state = hass.states.get("cover.lightwaverf_siemens_f38cae_1")
