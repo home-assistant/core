@@ -20,10 +20,10 @@ from .entity import FloEntity
 DEPENDENCIES = ["flo"]
 
 WATER_ICON = "mdi:water"
-NAME_DAILY_USAGE = "Daily Water Counsumption"
+NAME_DAILY_USAGE = "Today's Water Usage"
 NAME_CURRENT_SYSTEM_MODE = "Current System Mode"
-NAME_FLOW_RATE = "Flow Rate"
-NAME_TEMPERATURE = "Temperature"
+NAME_FLOW_RATE = "Water Flow Rate"
+NAME_TEMPERATURE = "Water Temperature"
 NAME_WATER_PRESSURE = "Water Pressure"
 NAME_WIFI_SIGNAL_STRENGTH = "WiFi Signal Strength"
 
