@@ -246,8 +246,7 @@ async def test_template_with_unavailable_entities(hass, calls):
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
-
-    assert hass.states.get(_TEST_FAN).state == STATE_UNKNOWN
+    assert hass.states.get(_TEST_FAN).state == STATE_OFF
 
 
 async def test_template_with_unavailable_parameters(hass, calls):
