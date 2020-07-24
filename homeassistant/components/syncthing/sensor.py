@@ -16,6 +16,7 @@ from .const import (
     FOLDER_SENSOR_DEFAULT_ICON,
     FOLDER_SENSOR_ICONS,
     FOLDER_SUMMARY_RECEIVED,
+    SERVER_AVAILABLE,
     SERVER_UNAVAILABLE,
     STATE_CHANGED_RECEIVED,
 )
@@ -34,10 +35,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     dev = []
 
     for folder in config["folders"]:
-        sensor = FolderSensor(hass, client, name, folder)
-        hass.add_job(sensor.async_update_status)
-        await sensor.async_update_status()
-        dev.append(sensor)
+        dev.append(FolderSensor(hass, client, name, folder))
 
     async_add_entities(dev, True)
 
@@ -47,7 +45,7 @@ class FolderSensor(Entity):
 
     def __init__(self, hass, client, client_name, folder):
         """Initialize the sensor."""
-        self._hass = hass
+        self.hass = hass
         self._client = client
         self._client_name = client_name
         self._folder = folder
@@ -96,7 +94,7 @@ class FolderSensor(Entity):
         """Request folder status and update state."""
         try:
             _LOGGER.info(f"Folder {self._folder['id']} is updating...")
-            state = await self._hass.async_add_executor_job(
+            state = await self.hass.async_add_executor_job(
                 self._client.database.status, self._folder["id"]
             )
             # A workaround, for some reason, state of paused folder is an empty string
@@ -105,6 +103,7 @@ class FolderSensor(Entity):
             self._state = state
         except syncthing.SyncthingError:
             self._state = None
+        self.async_schedule_update_ha_state(True)
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -167,3 +166,18 @@ class FolderSensor(Entity):
                 handle_server_unavailable,
             )
         )
+
+        @callback
+        def handle_server_available():
+            self._state = None
+            self.hass.add_job(self.async_update_status)
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SERVER_AVAILABLE}-{self._client_name}",
+                handle_server_available,
+            )
+        )
+
+        await self.async_update_status()

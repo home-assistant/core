@@ -23,6 +23,7 @@ from .const import (
     DOMAIN,
     EVENTS,
     RECONNECT_INTERVAL,
+    SERVER_AVAILABLE,
     SERVER_UNAVAILABLE,
 )
 
@@ -107,9 +108,18 @@ class EventListenerThread(threading.Thread):
         """Listen to syncthing events."""
         _LOGGER.info("Starting the syncthing event listener...")
 
+        server_was_unavailable = False
+
         # Python does not have the `retry` keyword, emulating it with a while loop
         while True:
             try:
+                self._client.system.ping()
+                if server_was_unavailable:
+                    dispatcher_send(
+                        self._hass, f"{SERVER_AVAILABLE}-{self._client_name}"
+                    )
+                    server_was_unavailable = False
+
                 for event in self._events_stream:
                     if event["type"] not in EVENTS:
                         continue
@@ -131,6 +141,7 @@ class EventListenerThread(threading.Thread):
                 )
                 dispatcher_send(self._hass, f"{SERVER_UNAVAILABLE}-{self._client_name}")
                 time.sleep(RECONNECT_INTERVAL.seconds)
+                server_was_unavailable = True
                 continue
             break
 
