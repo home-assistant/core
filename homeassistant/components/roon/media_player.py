@@ -244,7 +244,7 @@ class RoonDevice(MediaPlayerEntity):
     @callback
     def async_update_callback(self, msg):
         """Handle device updates."""
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def get_sync_zones(self):
         """Get available sync slaves."""
