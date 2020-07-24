@@ -145,7 +145,7 @@ class FloDevice:
     async def _update_device(self, *_) -> None:
         """Update the device information from the API."""
         device_information = await self.api_client.device.get_info(self._flo_device_id)
-        _LOGGER.info("Flo device data: %s", device_information)
+        _LOGGER.debug("Flo device data: %s", device_information)
         self._available = device_information["isConnected"]
         self._firmware_version = device_information["fwVersion"]
         self._rssi = device_information["connectivity"]["rssi"]
