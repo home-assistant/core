@@ -31,14 +31,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     api = Client(api_key=config[CONF_API_KEY])
     entities = []
 
-    # request remaining calls to check api connection
-    remaining = api.calls_remaining()
-    if remaining.get("error_code") is not None:
+    # request profile info to check api connection
+    response = api.api_get("profile")
+    if not response.ok:
         _LOGGER.error(
             "Can't setup X API connection. Check your account or "
             "api key on xapi.us. Code: %s Description: %s ",
-            remaining.get("error_code", "unknown"),
-            remaining.get("error_message", "unknown"),
+            response.status_code,
+            response.reason,
         )
         return
 
