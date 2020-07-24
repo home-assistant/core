@@ -188,8 +188,8 @@ async def test_platform_warn_slow_setup(hass):
         assert mock_call.called
 
         # mock_calls[0] is the warning message for component setup
-        # mock_calls[5] is the warning message for platform setup
-        timeout, logger_method = mock_call.mock_calls[5][1][:2]
+        # mock_calls[6] is the warning message for platform setup
+        timeout, logger_method = mock_call.mock_calls[6][1][:2]
 
         assert timeout == entity_platform.SLOW_SETUP_WARNING
         assert logger_method == _LOGGER.warning
