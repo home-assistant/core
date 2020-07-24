@@ -432,10 +432,8 @@ mutagen==1.44.0
 # homeassistant.components.ness_alarm
 nessclient==0.9.15
 
-# homeassistant.components.ssdp
-netdisco==2.8.0
-
 # homeassistant.components.discovery
+# homeassistant.components.ssdp
 netdisco==2.8.1
 
 # homeassistant.components.nexia
