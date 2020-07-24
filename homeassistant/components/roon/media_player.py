@@ -32,6 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util import convert
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
@@ -96,6 +97,23 @@ class RoonDevice(MediaPlayerEntity):
         self._state = STATE_IDLE
         self._last_playlist = None
         self._last_media = None
+        self._last_changed = None
+        self._unique_id = None
+        self._zone_id = None
+        self._output_id = None
+        self._name = DEVICE_DEFAULT_NAME
+        self._media_title = None
+        self._media_album_name = None
+        self._media_artist = None
+        self._media_position = 0
+        self._media_duration = 0
+        self._is_volume_muted = False
+        self._volume_step = 0
+        self._source = None
+        self._shuffle = False
+        self._repeat = False
+        self._media_image_url = None
+        self._volume_level = 0
         self.update_data(player_data)
 
     @property
@@ -172,6 +190,50 @@ class RoonDevice(MediaPlayerEntity):
             else:
                 new_state = STATE_IDLE
         self._state = new_state
+        self._last_changed = self.player_data["last_changed"]
+        self._unique_id = self.player_data["dev_id"]
+        self._zone_id = self.player_data["zone_id"]
+        self._output_id = self.player_data["output_id"]
+        self._name = self.player_data["display_name"]
+        self._is_volume_muted = self.player_data["volume"]["is_muted"]
+        self._volume_step = convert(self.player_data["volume"]["step"], int, 0)
+        self._source = self.player_data["zone_name"]
+        self._shuffle = self.player_data["settings"]["shuffle"]
+        self._repeat = self.player_data["settings"]["loop"]
+
+        if self.player_data["volume"]["type"] == "db":
+            volume = (
+                convert(self.player_data["volume"]["value"], float, 0.0) / 80 * 100
+                + 100
+            )
+        else:
+            volume = convert(self.player_data["volume"]["value"], float, 0.0)
+        self._volume_level = convert(volume, int, 0) / 100
+
+        try:
+            self._media_title = self.player_data["now_playing"]["three_line"]["line1"]
+            self._media_artist = self.player_data["now_playing"]["three_line"]["line2"]
+            self._media_album_name = self.player_data["now_playing"]["three_line"][
+                "line3"
+            ]
+            self._media_position = convert(
+                self.player_data["now_playing"]["seek_position"], int, 0
+            )
+            self._media_duration = convert(
+                self.player_data["now_playing"]["length"], int, 0
+            )
+            try:
+                image_id = self.player_data["now_playing"]["image_key"]
+                self._media_image_url = self._server.roonapi.get_image(image_id)
+            except KeyError:
+                self._media_image_url = None
+        except KeyError:
+            self._media_title = None
+            self._media_album_name = None
+            self._media_artist = None
+            self._media_position = 0
+            self._media_duration = 0
+            self._media_image_url = None
 
     async def async_added_to_hass(self):
         """Register callback."""
@@ -206,12 +268,12 @@ class RoonDevice(MediaPlayerEntity):
     @property
     def last_changed(self):
         """When was the object last updated on the server."""
-        return self.player_data["last_changed"]
+        return self._last_changed
 
     @property
     def unique_id(self):
         """Return the id of this roon client."""
-        return self.player_data["dev_id"]
+        return self._unique_id
 
     @property
     def should_poll(self):
@@ -221,55 +283,37 @@ class RoonDevice(MediaPlayerEntity):
     @property
     def zone_id(self):
         """Return current session Id."""
-        try:
-            return self.player_data["zone_id"]
-        except KeyError:
-            return None
+        return self._zone_id
 
     @property
     def output_id(self):
         """Return current session Id."""
-        try:
-            return self.player_data["output_id"]
-        except KeyError:
-            return None
+        return self._output_id
 
     @property
     def name(self):
         """Return device name."""
-        try:
-            return self.player_data["display_name"]
-        except KeyError:
-            return DEVICE_DEFAULT_NAME
+        return self._name
 
     @property
     def media_title(self):
         """Return title currently playing."""
-        try:
-            return self.player_data["now_playing"]["three_line"]["line1"]
-        except KeyError:
-            return None
+        return self._media_title
 
     @property
     def media_album_name(self):
         """Album name of current playing media (Music track only)."""
-        try:
-            return self.player_data["now_playing"]["three_line"]["line3"]
-        except KeyError:
-            return None
+        return self._media_album_name
 
     @property
     def media_artist(self):
         """Artist of current playing media (Music track only)."""
-        try:
-            return self.player_data["now_playing"]["three_line"]["line2"]
-        except KeyError:
-            return None
+        return self._media_artist
 
     @property
     def media_album_artist(self):
         """Album artist of current playing media (Music track only)."""
-        return self.media_artist
+        return self._media_artist
 
     @property
     def media_playlist(self):
@@ -279,64 +323,32 @@ class RoonDevice(MediaPlayerEntity):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        try:
-            image_id = self.player_data["now_playing"]["image_key"]
-            url = self._server.roonapi.get_image(image_id)
-            return url
-        except KeyError:
-            return None
+        return self._media_image_url
 
     @property
     def media_position(self):
         """Return position currently playing."""
-        try:
-            return int(self.player_data["now_playing"]["seek_position"])
-        except (KeyError, TypeError):
-            return 0
+        return self._media_position
 
     @property
     def media_duration(self):
         """Return total runtime length."""
-        try:
-            return int(self.player_data["now_playing"]["length"])
-        except (KeyError, TypeError):
-            return 0
-
-    @property
-    def media_percent_played(self):
-        """Return media percent played."""
-        try:
-            return (self.media_position / self.media_duration) * 100
-        except (KeyError, TypeError):
-            return 0
+        return self._media_duration
 
     @property
     def volume_level(self):
         """Return current volume level."""
-        try:
-            if self.player_data["volume"]["type"] == "db":
-                return (
-                    int(float(self.player_data["volume"]["value"] / 80) * 100) + 100
-                ) / 100
-            return int(self.player_data["volume"]["value"]) / 100
-        except (KeyError, TypeError):
-            return 0
+        return self._volume_level
 
     @property
     def is_volume_muted(self):
         """Return mute state."""
-        try:
-            return self.player_data["volume"]["is_muted"]
-        except (KeyError, TypeError):
-            return False
+        return self._is_volume_muted
 
     @property
     def volume_step(self):
         """.Return volume step size."""
-        try:
-            return int(self.player_data["volume"]["step"])
-        except (KeyError, TypeError):
-            return 0
+        return self._volume_step
 
     @property
     def supports_standby(self):
@@ -356,7 +368,7 @@ class RoonDevice(MediaPlayerEntity):
     @property
     def source(self):
         """Name of the current input source."""
-        return self.player_data["zone_name"]
+        return self._source
 
     @property
     def source_list(self):
@@ -366,18 +378,12 @@ class RoonDevice(MediaPlayerEntity):
     @property
     def shuffle(self):
         """Boolean if shuffle is enabled."""
-        try:
-            return self.player_data["settings"]["shuffle"]
-        except (KeyError, TypeError):
-            return False
+        return self._shuffle
 
     @property
     def repeat(self):
         """Boolean if repeat is enabled."""
-        try:
-            return self.player_data["settings"]["loop"]
-        except (KeyError, TypeError):
-            return False
+        return self._repeat
 
     def media_play(self):
         """Send play command to device."""
