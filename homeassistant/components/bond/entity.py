@@ -1,7 +1,10 @@
 """An abstract class common to all Bond entities."""
 from abc import abstractmethod
+from asyncio import TimeoutError as AsyncIOTimeoutError
 import logging
 from typing import Any, Dict, Optional
+
+from aiohttp import ClientError
 
 from homeassistant.const import ATTR_NAME
 from homeassistant.helpers.entity import Entity
@@ -54,7 +57,7 @@ class BondEntity(Entity):
         """Fetch assumed state of the cover from the hub using API."""
         try:
             state: dict = await self._hub.bond.device_state(self._device.device_id)
-        except Exception as error:
+        except (ClientError, AsyncIOTimeoutError, OSError) as error:
             if self._available:
                 _LOGGER.warning(
                     "Entity %s has become unavailable", self.entity_id, exc_info=error
