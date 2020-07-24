@@ -160,10 +160,8 @@ async def async_setup(hass, config):
         )
         event_config[CONF_DEVICE_ID] = device_id
 
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data,
-        )
+    await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data,
     )
     return True
 
