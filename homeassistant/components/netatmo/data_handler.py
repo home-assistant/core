@@ -155,7 +155,8 @@ class NetatmoDataHandler:
         """Unregister data class."""
         # Give the entities a chance to subscribe before removing the data class entry
         # so that the data can be reused and reduce the number of API calls
-        await asyncio.sleep(1)
+        if not update_callback:
+            await asyncio.sleep(1)
 
         async with self.lock:
             self._data_classes[data_class_entry]["subscriptions"].remove(
