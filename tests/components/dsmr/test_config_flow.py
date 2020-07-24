@@ -14,7 +14,7 @@ from homeassistant.components.dsmr.const import (
     CONF_SERIAL_ID_GAS,
     DOMAIN,
 )
-from homeassistant.const import CONF_FORCE_UPDATE, CONF_HOST, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.helpers import entity_registry
 
 import tests.async_mock
@@ -29,7 +29,6 @@ TEST_PRECISION = 4
 TEST_RECONNECT_INTERVAL = 20
 TEST_UNIQUE_ID = f"{DOMAIN}-{TEST_SERIALNUMBER}"
 TEST_DSMR_VERSION = "4"
-TEST_FORCE_UPDATE = True
 TEST_POWER_WATT = True
 
 
@@ -120,7 +119,6 @@ async def test_config_flow_manual_usb_success(hass, mock_connection_factory):
         {
             CONF_PRECISION: TEST_PRECISION,
             CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-            CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
             CONF_POWER_WATT: TEST_POWER_WATT,
         },
     )
@@ -133,7 +131,6 @@ async def test_config_flow_manual_usb_success(hass, mock_connection_factory):
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
         CONF_PRECISION: TEST_PRECISION,
         CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-        CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
         CONF_POWER_WATT: TEST_POWER_WATT,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
@@ -184,7 +181,6 @@ async def test_config_flow_manual_host_success(hass, mock_connection_factory):
         {
             CONF_PRECISION: TEST_PRECISION,
             CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-            CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
             CONF_POWER_WATT: TEST_POWER_WATT,
         },
     )
@@ -197,12 +193,15 @@ async def test_config_flow_manual_host_success(hass, mock_connection_factory):
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
         CONF_PRECISION: TEST_PRECISION,
         CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-        CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
         CONF_POWER_WATT: TEST_POWER_WATT,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
     }
 
+    await hass.async_block_till_done()
+
+    conf_entries = hass.config_entries.async_entries(DOMAIN)
+    await hass.config_entries.async_unload(conf_entries[0].entry_id)
     await hass.async_block_till_done()
 
 
@@ -417,7 +416,6 @@ async def test_config_flow_manual_usb_no_gas(hass, mock_connection_factory):
         {
             CONF_PRECISION: TEST_PRECISION,
             CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-            CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
             CONF_POWER_WATT: TEST_POWER_WATT,
         },
     )
@@ -430,7 +428,6 @@ async def test_config_flow_manual_usb_no_gas(hass, mock_connection_factory):
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
         CONF_PRECISION: TEST_PRECISION,
         CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-        CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
         CONF_POWER_WATT: TEST_POWER_WATT,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: None,
@@ -480,7 +477,6 @@ async def test_config_flow_manual_usb_already_configured(hass, mock_connection_f
         {
             CONF_PRECISION: TEST_PRECISION,
             CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-            CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
             CONF_POWER_WATT: TEST_POWER_WATT,
         },
     )
@@ -493,7 +489,6 @@ async def test_config_flow_manual_usb_already_configured(hass, mock_connection_f
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
         CONF_PRECISION: TEST_PRECISION,
         CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-        CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
         CONF_POWER_WATT: TEST_POWER_WATT,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
@@ -524,6 +519,10 @@ async def test_config_flow_manual_usb_already_configured(hass, mock_connection_f
     assert result["type"] == "form"
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {"base": "already_configured"}
+
+    conf_entries = hass.config_entries.async_entries(DOMAIN)
+    await hass.config_entries.async_unload(conf_entries[0].entry_id)
+    await hass.async_block_till_done()
 
 
 async def test_config_flow_manual_host_already_configured(
@@ -565,7 +564,6 @@ async def test_config_flow_manual_host_already_configured(
         {
             CONF_PRECISION: TEST_PRECISION,
             CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-            CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
             CONF_POWER_WATT: TEST_POWER_WATT,
         },
     )
@@ -578,7 +576,6 @@ async def test_config_flow_manual_host_already_configured(
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
         CONF_PRECISION: TEST_PRECISION,
         CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-        CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
         CONF_POWER_WATT: TEST_POWER_WATT,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
@@ -609,3 +606,7 @@ async def test_config_flow_manual_host_already_configured(
     assert result["type"] == "form"
     assert result["step_id"] == "setup_host"
     assert result["errors"] == {"base": "already_configured"}
+
+    conf_entries = hass.config_entries.async_entries(DOMAIN)
+    await hass.config_entries.async_unload(conf_entries[0].entry_id)
+    await hass.async_block_till_done()

@@ -11,7 +11,6 @@ import serial
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_FORCE_UPDATE,
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
@@ -316,7 +315,7 @@ class DSMREntity(Entity):
     @property
     def force_update(self):
         """Force update."""
-        return self._config[CONF_FORCE_UPDATE]
+        return True
 
     @property
     def should_poll(self):

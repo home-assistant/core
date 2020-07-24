@@ -23,7 +23,6 @@ from homeassistant.components.dsmr.const import (
 )
 from homeassistant.components.dsmr.sensor import DerivativeDSMREntity, DSMREntity
 from homeassistant.const import (
-    CONF_FORCE_UPDATE,
     CONF_HOST,
     CONF_PORT,
     ENERGY_KILO_WATT_HOUR,
@@ -47,7 +46,6 @@ TEST_PRECISION = 3
 TEST_RECONNECT_INTERVAL = 30
 TEST_UNIQUE_ID = f"{DOMAIN}-{TEST_SERIALNUMBER}"
 TEST_DSMR_VERSION = "2.2"
-TEST_FORCE_UPDATE = False
 TEST_POWER_WATT = False
 
 
@@ -79,11 +77,11 @@ def mock_connection_factory(monkeypatch):
 
 async def test_entity():
     """Test the basic property of the entity."""
-    config = {"platform": DOMAIN, CONF_FORCE_UPDATE: TEST_FORCE_UPDATE}
+    config = {"platform": DOMAIN}
 
     entity = DSMREntity("test", "1234", "test_device", "5678", "1.0.0", config)
 
-    assert entity.force_update == TEST_FORCE_UPDATE
+    assert entity.force_update
     assert not entity.should_poll
     assert entity.unique_id == "1234_test"
 
@@ -109,7 +107,6 @@ async def test_default_setup(hass, mock_connection_factory):
 
     entry_data = {
         CONF_PORT: TEST_USB_PATH,
-        CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
@@ -201,7 +198,6 @@ async def test_power_in_watt(hass, mock_connection_factory):
 
     entry_data = {
         CONF_PORT: TEST_USB_PATH,
-        CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
@@ -336,7 +332,6 @@ async def test_v4_meter(hass, mock_connection_factory):
 
     entry_data = {
         CONF_PORT: TEST_USB_PATH,
-        CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
         CONF_DSMR_VERSION: "4",
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
@@ -395,7 +390,6 @@ async def test_v5_meter(hass, mock_connection_factory):
 
     entry_data = {
         CONF_PORT: TEST_USB_PATH,
-        CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
         CONF_DSMR_VERSION: "5",
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
@@ -454,7 +448,6 @@ async def test_belgian_meter(hass, mock_connection_factory):
 
     entry_data = {
         CONF_PORT: TEST_USB_PATH,
-        CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
         CONF_DSMR_VERSION: "5B",
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
@@ -510,7 +503,6 @@ async def test_belgian_meter_low(hass, mock_connection_factory):
 
     entry_data = {
         CONF_PORT: TEST_USB_PATH,
-        CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
         CONF_DSMR_VERSION: "5B",
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
@@ -551,7 +543,6 @@ async def test_tcp(hass, mock_connection_factory):
     entry_data = {
         CONF_HOST: TEST_HOST,
         CONF_PORT: TEST_PORT,
-        CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
@@ -579,7 +570,6 @@ async def test_connection_errors_retry(hass, monkeypatch, mock_connection_factor
 
     entry_data = {
         CONF_PORT: TEST_USB_PATH,
-        CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
@@ -618,7 +608,6 @@ async def test_reconnect(hass, monkeypatch, mock_connection_factory):
 
     entry_data = {
         CONF_PORT: TEST_USB_PATH,
-        CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
