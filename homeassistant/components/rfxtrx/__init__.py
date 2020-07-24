@@ -275,7 +275,7 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
         # Signal event to any other listeners
         fire_event = devices.get(device_id, {}).get(CONF_FIRE_EVENT)
         if fire_event:
-            hass.bus.fire(EVENT_RFXTRX_EVENT, event_data)
+            hass.bus.async_fire(EVENT_RFXTRX_EVENT, event_data)
 
     @callback
     def _add_device(event, device_id):
