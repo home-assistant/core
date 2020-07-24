@@ -20,10 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass, config):
     """Set up the Roon platform."""
-    conf = config.get(DOMAIN)
-    if conf is None:
-        conf = {}
-
     hass.data[DOMAIN] = {}
     hass.data[DATA_CONFIGS] = {}
     return True
