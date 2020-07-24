@@ -85,11 +85,3 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_link(user_input)
 
         return self.async_show_form(step_id="link", errors=errors,)
-
-    async def async_step_import(self, user_input):
-        """Import a config entry.
-
-        Special type of import, we're not actually going to store any data.
-        Instead, we're going to rely on the values that are in config file.
-        """
-        return await self.async_step_user(user_input)
