@@ -760,17 +760,23 @@ async def test_async_track_time_change(hass):
             hass, lambda x: specific_runs.append(x), second=[0, 30]
         )
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 12, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 1
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 0, 15, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 12, 0, 15, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 2
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 0, 30, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 12, 0, 30, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
     assert len(wildcard_runs) == 3
@@ -778,7 +784,9 @@ async def test_async_track_time_change(hass):
     unsub()
     unsub_utc()
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 0, 30, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 12, 0, 30, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
     assert len(wildcard_runs) == 3
@@ -799,21 +807,29 @@ async def test_periodic_task_minute(hass):
             hass, lambda x: specific_runs.append(x), minute="/5", second=0
         )
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 12, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 3, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 12, 3, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 5, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 12, 5, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
     unsub()
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 5, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 12, 5, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
@@ -833,29 +849,41 @@ async def test_periodic_task_hour(hass):
             hass, lambda x: specific_runs.append(x), hour="/2", minute=0, second=0
         )
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 23, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 23, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 0, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 25, 0, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 1, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 25, 1, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 2, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 25, 2, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 3
 
     unsub()
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 2, 0, 0))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 25, 2, 0, 0, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 3
 
@@ -871,7 +899,9 @@ async def test_periodic_task_wrong_input(hass):
             hass, lambda x: specific_runs.append(x), hour="/two"
         )
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 2, 0, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 2, 0, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
@@ -891,33 +921,45 @@ async def test_periodic_task_clock_rollback(hass):
             hass, lambda x: specific_runs.append(x), hour="/2", minute=0, second=0
         )
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999))
-    await hass.async_block_till_done()
-    assert len(specific_runs) == 1
-
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 23, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
     async_fire_time_changed(
-        hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999), fire_all=True
+        hass, datetime(now.year + 1, 5, 24, 23, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
+
+    async_fire_time_changed(
+        hass,
+        datetime(now.year + 1, 5, 24, 22, 0, 0, 999999, tzinfo=dt_util.UTC),
+        fire_all=True,
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
     async_fire_time_changed(
-        hass, datetime(now.year + 1, 5, 24, 0, 0, 0, 999999), fire_all=True
+        hass,
+        datetime(now.year + 1, 5, 24, 0, 0, 0, 999999, tzinfo=dt_util.UTC),
+        fire_all=True,
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 3
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 2, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 25, 2, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 4
 
     unsub()
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 2, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 25, 2, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 4
 
@@ -937,15 +979,21 @@ async def test_periodic_task_duplicate_time(hass):
             hass, lambda x: specific_runs.append(x), hour="/2", minute=0, second=0
         )
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 0, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 25, 0, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
