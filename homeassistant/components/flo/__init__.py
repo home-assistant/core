@@ -2,13 +2,14 @@
 import asyncio
 
 from aioflo import async_get_api
-from aiohttp import ClientSession
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_PASSWORD, CONF_USERNAME, DOMAIN
+from .const import DOMAIN
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -23,11 +24,15 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up flo from a config entry."""
-    # TODO Store an API object for your platforms to access
-    async with ClientSession() as websession:
-        hass.data[DOMAIN][entry.entry_id] = await async_get_api(
-            websession, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
-        )
+    hass.data[DOMAIN] = {}
+    session = async_get_clientsession(hass)
+    hass.data[DOMAIN]["client"] = client = await async_get_api(
+        session, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+    )
+    user_info = await client.user.get_info()
+    hass.data[DOMAIN]["location_ids"] = [
+        location["id"] for location in user_info["locations"]
+    ]
 
     for component in PLATFORMS:
         hass.async_create_task(

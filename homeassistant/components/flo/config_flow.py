@@ -5,8 +5,10 @@ from aioflo import async_get_api
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_PASSWORD, CONF_USERNAME, DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,10 +22,11 @@ async def validate_input(hass: core.HomeAssistant, data):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
 
-    api = await async_get_api(data[CONF_USERNAME], data[CONF_PASSWORD])
-
-    if not api:
-        raise InvalidAuth
+    session = async_get_clientsession(hass)
+    try:
+        api = await async_get_api(session, data[CONF_USERNAME], data[CONF_PASSWORD])
+    except Exception:  # pylint: disable=broad-except
+        raise CannotConnect
 
     user_info = await api.user.get_info()
     a_location_id = user_info["locations"][0]["id"]
@@ -33,10 +36,8 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     _LOGGER.info("Flo Data: %s", location_info)
 
-    raise CannotConnect
-
     # Return info that you want to store in the config entry.
-    return {"title": "Name of the device"}
+    return {"title": location_info["nickname"]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
