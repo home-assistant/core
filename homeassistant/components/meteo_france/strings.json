@@ -17,7 +17,7 @@
       }
     },
     "error": {
-      "empty": "No result in city search: please check the city input"
+      "empty": "No result in city search: please check the city field"
     },
     "abort": {
       "already_configured": "City already configured",

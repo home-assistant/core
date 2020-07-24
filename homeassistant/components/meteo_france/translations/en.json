@@ -5,7 +5,7 @@
             "unknown": "Unknown error: please retry later"
         },
         "error": {
-            "empty": "No result in city search: please check the city input"
+            "empty": "No result in city search: please check the city field"
         },
         "step": {
             "cities": {
