@@ -500,19 +500,6 @@ class RoonDevice(MediaPlayerEntity):
             self._server.roonapi.queue_playlist(self.zone_id, media_id)
         elif media_type == "genre":
             self._server.roonapi.play_genre(self.zone_id, media_id)
-        elif self._server.custom_play_action:
-            # reroute the play request to the given custom script
-            _LOGGER.debug(
-                "Playback requested. Will forward to custom script/action: %s",
-                self._server.custom_play_action,
-            )
-            data = {
-                "entity_id": self.entity_id,
-                "media_type": media_type,
-                "media_id": media_id,
-            }
-            _domain, _entity = self._server.custom_play_action.split(".")
-            self.hass.services.call(_domain, _entity, data, blocking=False)
         else:
             _LOGGER.error(
                 "Playback requested of unsupported type: %s --> %s",

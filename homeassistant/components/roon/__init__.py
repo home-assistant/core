@@ -1,18 +1,10 @@
-"""
-Roon (www.roonlabs.com) component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/roon/
-"""
+"""Roon (www.roonlabs.com) component."""
 import logging
 
-from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import device_registry as dr
 
-# We need an import from .config_flow, without it .config_flow is never loaded.
-from .config_flow import configured_hosts
-from .const import CONF_CUSTOM_PLAY_ACTION, DATA_CONFIGS, DOMAIN
+from .const import DOMAIN
 from .server import RoonServer
 
 _LOGGER = logging.getLogger(__name__)

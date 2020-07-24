@@ -17,7 +17,7 @@ FULL_SYNC_INTERVAL = 30
 class RoonServer:
     """Manages a single Roon Server."""
 
-    def __init__(self, hass, config_entry, custom_play_action):
+    def __init__(self, hass, config_entry):
         """Initialize the system."""
         self.config_entry = config_entry
         self.hass = hass
@@ -25,7 +25,6 @@ class RoonServer:
         self.all_player_ids = []
         self.all_playlists = []
         self.offline_devices = []
-        self.custom_play_action = custom_play_action
         self._exit = False
 
     @property

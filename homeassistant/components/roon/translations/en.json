@@ -15,8 +15,7 @@
         "step": {
             "init": {
                 "data": {
-                    "host": "Hostname or IP",
-                    "custom_play_action": "Custom play script"
+                    "host": "Hostname or IP"
                 },
                 "title": "Configure Roon Server"
             },
