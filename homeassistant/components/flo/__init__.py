@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+from .device import FloDevice
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -36,10 +37,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     _LOGGER.debug("Flo user information with locations: %s", user_info)
 
-    hass.data[DOMAIN]["locations"] = [
-        {"id": location["id"], "devices": location["devices"]}
+    tasks = [
+        client.device.get_info(device["id"])
         for location in user_info["locations"]
+        for device in location["devices"]
     ]
+
+    results = await asyncio.gather(*tasks)
+
+    hass.data[DOMAIN]["devices"] = devices = [
+        FloDevice(hass, result, client) for result in results
+    ]
+
+    tasks = [device.update_consumption_data() for device in devices]
+    await asyncio.gather(*tasks)
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -51,6 +62,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+    for device in hass.data[DOMAIN]["devices"]:
+        for unsub in device.unsubs:
+            unsub()
+
     unload_ok = all(
         await asyncio.gather(
             *[

@@ -1,99 +1,80 @@
 """Support for Flo Water Monitor sensors."""
-from datetime import datetime, timedelta
-import logging
+
+from typing import Any, Dict, List, Optional
 
 from homeassistant.const import VOLUME_GALLONS
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 from .const import DOMAIN as FLO_DOMAIN
+from .device import FloDevice
 
 DEPENDENCIES = ["flo"]
 
 WATER_ICON = "mdi:water"
-MIN_TIME_BETWEEN_USAGE_UPDATES = timedelta(seconds=60)
-
-NAME_DAILY_USAGE = "Daily Water"
-NAME_MONTHLY_USAGE = "Monthly Water"
-NAME_YEARLY_USAGE = "Yearly Water"
-
-_LOGGER = logging.getLogger(__name__)
+NAME_DAILY_USAGE = "Daily Water Counsumption"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Flo sensors from config entry."""
-    client = hass.data[FLO_DOMAIN][config_entry.entry_id]["client"]
-    locations = hass.data[FLO_DOMAIN]["locations"]
-
-    async_add_entities(
-        [
-            FloDailyUsageSensor(FloUsageData(location["id"], client))
-            for location in locations
-        ],
-        True,
-    )
-
-
-class FloUsageData:
-    """Track and query usage data."""
-
-    def __init__(self, location_id, client):
-        """Initialize the usage data."""
-        self._location_id = location_id
-        self._client = client
-        self._water_usage = None
-
-    @Throttle(MIN_TIME_BETWEEN_USAGE_UPDATES)
-    async def async_update(self):
-        """Query and store usage data."""
-        today = datetime.today()
-        start_date = datetime(today.year, today.month, today.day, 0, 0)
-        end_date = datetime(today.year, today.month, today.day, 23, 59, 59, 999000)
-        self._water_usage = await self._client.water.get_consumption_info(
-            self._location_id, start_date, end_date
-        )
-        _LOGGER.debug("Updated Flo consumption data: %s", self._water_usage)
-
-    def usage(self):
-        """Return the day's usage."""
-        if not self._water_usage:
-            return None
-        return self._water_usage["aggregations"]["sumTotalGallonsConsumed"]
+    devices: List[FloDevice] = hass.data[FLO_DOMAIN]["devices"]
+    async_add_entities([FloDailyUsageSensor(device) for device in devices], True)
 
 
 class FloDailyUsageSensor(Entity):
     """Monitors the daily water usage."""
 
-    def __init__(self, flo_usage_data):
+    def __init__(self, device):
         """Initialize the daily water usage sensor."""
-        self._flo_usage_data = flo_usage_data
-        self._state = None
+        self._device: FloDevice = device
+        self._state: float = None
 
     @property
-    def name(self):
+    def unique_id(self) -> Optional[str]:
+        """Return the unique id for the sensor."""
+        return f"{self._device.mac_address}_daily_consumption"
+
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return a device description for device registry."""
+        return {
+            "identifiers": {(FLO_DOMAIN, self._device.id)},
+            "manufacturer": self._device.manufacturer,
+            "model": self._device.model,
+            "name": self._device.name,
+            "sw_version": self._device.firmware_version,
+        }
+
+    @property
+    def available(self) -> bool:
+        """Return True if device is available."""
+        return self._device.available
+
+    @property
+    def name(self) -> str:
         """Return the name for daily usage."""
         return NAME_DAILY_USAGE
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the daily usage icon."""
         return WATER_ICON
 
     @property
-    def state(self):
+    def state(self) -> Optional[float]:
         """Return the current daily usage."""
-        return round(self._flo_usage_data.usage(), 1)
+        if not self._device._consumption_today:
+            return None
+        return round(self._device._consumption_today, 1)
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Return the polling state."""
         return True
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return gallons as the unit measurement for water."""
         return VOLUME_GALLONS
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Retrieve the latest daily usage."""
-        await self._flo_usage_data.async_update()
