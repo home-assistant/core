@@ -8,11 +8,12 @@ from .common import TEST_PASSWORD, TEST_USER_ID
 
 
 async def test_device(hass, config_entry):
-    """Test migration of config entry from v1."""
+    """Test Flo by Moen device."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(
         hass, FLO_DOMAIN, {CONF_USERNAME: TEST_USER_ID, CONF_PASSWORD: TEST_PASSWORD}
     )
+    await hass.async_block_till_done()
     assert len(hass.data[FLO_DOMAIN]["devices"]) == 1
 
     device: FloDevice = hass.data[FLO_DOMAIN]["devices"][0]
