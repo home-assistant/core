@@ -18,7 +18,12 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_O
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
-from .common import patch_bond_action, patch_bond_device_state, setup_platform
+from .common import (
+    help_test_entity_available,
+    patch_bond_action,
+    patch_bond_device_state,
+    setup_platform,
+)
 
 from tests.common import async_fire_time_changed
 
@@ -191,4 +196,11 @@ async def test_set_fan_direction(hass: core.HomeAssistant):
 
     mock_set_direction.assert_called_once_with(
         "test-device-id", Action.set_direction(Direction.FORWARD)
+    )
+
+
+async def test_fan_available(hass: core.HomeAssistant):
+    """Tests that available state is updated based on API errors."""
+    await help_test_entity_available(
+        hass, FAN_DOMAIN, ceiling_fan("name-1"), "fan.name_1"
     )
