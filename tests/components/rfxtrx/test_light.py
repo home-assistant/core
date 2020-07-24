@@ -165,13 +165,9 @@ async def test_repetitions(hass, rfxtrx, repetitions):
     assert rfxtrx.transport.send.call_count == repetitions
 
 
-async def test_discover_light(hass, rfxtrx):
+async def test_discover_light(hass, rfxtrx_automatic):
     """Test with discovery of lights."""
-    assert await async_setup_component(
-        hass, "rfxtrx", {"rfxtrx": {"device": "abcd", "automatic_add": True}},
-    )
-    await hass.async_block_till_done()
-    await hass.async_start()
+    rfxtrx = rfxtrx_automatic
 
     await rfxtrx.signal("0b11009e00e6116202020070")
     state = hass.states.get("light.ac_0e61162_2")
