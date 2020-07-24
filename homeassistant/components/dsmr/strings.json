@@ -1,5 +1,17 @@
 {
   "title": "DSMR Slimme Meter",
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "precision": "Number of decimals",
+          "reconnect_interval": "Reconnection interval [s]",
+          "power_watt": "Always report Power in [W]"
+        },
+        "title": "DSMR Options"
+      }
+    }
+  },
   "config": {
     "flow_title": "DSMR Slimme Meter: {name}",
     "step": {

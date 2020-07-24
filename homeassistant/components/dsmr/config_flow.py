@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
+from homeassistant.core import callback
 
 # pylint: disable=unused-import
 from .const import (
@@ -127,6 +128,12 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._serial_id = None
         self._serial_id_gas = None
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return DSMROptionFlowHandler(config_entry)
+
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
@@ -177,9 +184,6 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                             CONF_DSMR_VERSION: self._dsmr_version,
                             CONF_HOST: self._host,
                             CONF_PORT: self._port,
-                            CONF_RECONNECT_INTERVAL: DEFAULT_RECONNECT_INTERVAL,
-                            CONF_PRECISION: DEFAULT_PRECISION,
-                            CONF_POWER_WATT: DEFAULT_POWER_WATT,
                             CONF_SERIAL_ID: self._serial_id,
                             CONF_SERIAL_ID_GAS: self._serial_id_gas,
                         },
@@ -230,9 +234,6 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                             CONF_DSMR_VERSION: self._dsmr_version,
                             CONF_HOST: self._host,
                             CONF_PORT: self._port,
-                            CONF_RECONNECT_INTERVAL: DEFAULT_RECONNECT_INTERVAL,
-                            CONF_PRECISION: DEFAULT_PRECISION,
-                            CONF_POWER_WATT: DEFAULT_POWER_WATT,
                             CONF_SERIAL_ID: self._serial_id,
                             CONF_SERIAL_ID_GAS: self._serial_id_gas,
                         },
@@ -267,6 +268,45 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return True
 
         return False
+
+
+class DSMROptionFlowHandler(config_entries.OptionsFlow):
+    """Handle options."""
+
+    def __init__(self, config_entry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_RECONNECT_INTERVAL,
+                        default=self.config_entry.options.get(
+                            CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL
+                        ),
+                    ): int,
+                    vol.Optional(
+                        CONF_PRECISION,
+                        default=self.config_entry.options.get(
+                            CONF_PRECISION, DEFAULT_PRECISION
+                        ),
+                    ): int,
+                    vol.Optional(
+                        CONF_POWER_WATT,
+                        default=self.config_entry.options.get(
+                            CONF_POWER_WATT, DEFAULT_POWER_WATT
+                        ),
+                    ): bool,
+                }
+            ),
+        )
 
 
 class CannotConnect(exceptions.HomeAssistantError):

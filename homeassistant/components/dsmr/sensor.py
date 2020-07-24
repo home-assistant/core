@@ -29,6 +29,10 @@ from .const import (
     CONF_RECONNECT_INTERVAL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
+    DATA_TASK,
+    DEFAULT_POWER_WATT,
+    DEFAULT_PRECISION,
+    DEFAULT_RECONNECT_INTERVAL,
     DOMAIN,
     ICON_GAS,
     ICON_POWER,
@@ -47,6 +51,7 @@ async def async_setup_entry(
     logging.getLogger("dsmr_parser").setLevel(logging.ERROR)
 
     config = entry.data
+    options = entry.options
     unique_base = f"dsmr_{entry.title}"
 
     dsmr_version = config[CONF_DSMR_VERSION]
@@ -86,7 +91,13 @@ async def async_setup_entry(
     # Generate device entities
     devices = [
         DSMREntity(
-            name, unique_base, "Electricity Meter", config[CONF_SERIAL_ID], obis, config
+            name,
+            unique_base,
+            "Electricity Meter",
+            config[CONF_SERIAL_ID],
+            obis,
+            config,
+            options,
         )
         for name, obis in obis_mapping
     ]
@@ -109,6 +120,7 @@ async def async_setup_entry(
                 config[CONF_SERIAL_ID_GAS],
                 gas_obis,
                 config,
+                options,
             ),
             DerivativeDSMREntity(
                 "Hourly Gas Consumption",
@@ -117,6 +129,7 @@ async def async_setup_entry(
                 config[CONF_SERIAL_ID_GAS],
                 gas_obis,
                 config,
+                options,
             ),
         ]
 
@@ -181,7 +194,9 @@ async def async_setup_entry(
                 update_entities_telegram({})
 
                 # throttle reconnect attempts
-                await asyncio.sleep(config[CONF_RECONNECT_INTERVAL])
+                await asyncio.sleep(
+                    options.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL)
+                )
 
             except (
                 serial.serialutil.SerialException,
@@ -210,18 +225,21 @@ async def async_setup_entry(
     task = hass.loop.create_task(connect_and_reconnect())
 
     # Save the task to be able to cancel it when unloading
-    hass.data[DOMAIN][entry.title] = task
+    hass.data[DOMAIN][entry.entry_id][DATA_TASK] = task
 
 
 class DSMREntity(Entity):
     """Entity reading values from DSMR telegram."""
 
-    def __init__(self, name, unique_id, device_name, device_serial, obis, config):
+    def __init__(
+        self, name, unique_id, device_name, device_serial, obis, config, options
+    ):
         """Initialize entity."""
         self._name = name
         self._unique_id = f"{unique_id}_{name}"
         self._obis = obis
         self._config = config
+        self._options = options
         self.telegram = {}
         self._device_name = device_name
         self._device_serial = device_serial
@@ -270,10 +288,17 @@ class DSMREntity(Entity):
             return self.translate_tariff(value, self._config[CONF_DSMR_VERSION])
 
         try:
-            if unit == POWER_KILO_WATT and self._config[CONF_POWER_WATT]:
-                value = round(float(value) * 1000.0, self._config[CONF_PRECISION])
+            if unit == POWER_KILO_WATT and self._options.get(
+                CONF_POWER_WATT, DEFAULT_POWER_WATT
+            ):
+                value = round(
+                    float(value) * 1000.0,
+                    self._options.get(CONF_PRECISION, DEFAULT_PRECISION),
+                )
             else:
-                value = round(float(value), self._config[CONF_PRECISION])
+                value = round(
+                    float(value), self._options.get(CONF_PRECISION, DEFAULT_PRECISION)
+                )
 
         except TypeError:
             pass
@@ -288,7 +313,9 @@ class DSMREntity(Entity):
         """Return the unit of measurement of this entity, if any."""
         unit = self.get_dsmr_object_attr("unit")
 
-        if unit == POWER_KILO_WATT and self._config[CONF_POWER_WATT]:
+        if unit == POWER_KILO_WATT and self._options.get(
+            CONF_POWER_WATT, DEFAULT_POWER_WATT
+        ):
             return POWER_WATT
 
         return unit

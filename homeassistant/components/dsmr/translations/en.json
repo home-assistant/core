@@ -1,4 +1,16 @@
 {
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "precision": "Number of decimals",
+                    "reconnect_interval": "Reconnection interval [s]",
+                    "power_watt": "Always report Power in [W]"
+                },
+                "title": "DSMR Options"
+            }
+        }
+    },
     "config": {
         "abort": {
             "cannot_communicate": "Cannot communicate with device",
@@ -17,14 +29,6 @@
                 "data": {
                     "host": "IP address",
                     "port": "Port"
-                }
-            },
-            "setup_options": {
-                "data": {
-                    "force_update": "Force update when data is received",
-                    "precision": "Precision",
-                    "reconnect_interval": "Reconnection interval",
-                    "power_watt": "Always report Power in [W]"
                 }
             },
             "setup_serial": {
