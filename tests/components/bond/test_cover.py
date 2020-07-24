@@ -15,7 +15,12 @@ from homeassistant.const import (
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
-from .common import patch_bond_action, patch_bond_device_state, setup_platform
+from .common import (
+    help_test_entity_available,
+    patch_bond_action,
+    patch_bond_device_state,
+    setup_platform,
+)
 
 from tests.common import async_fire_time_changed
 
@@ -109,3 +114,10 @@ async def test_update_reports_closed_cover(hass: core.HomeAssistant):
         await hass.async_block_till_done()
 
     assert hass.states.get("cover.name_1").state == "closed"
+
+
+async def test_cover_available(hass: core.HomeAssistant):
+    """Tests that available state is updated based on API errors."""
+    await help_test_entity_available(
+        hass, COVER_DOMAIN, shades("name-1"), "cover.name_1"
+    )

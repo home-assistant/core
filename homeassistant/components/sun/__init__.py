@@ -11,7 +11,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import event
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.sun import (
     get_astral_location,
     get_location_astral_event_next,
@@ -80,10 +79,7 @@ async def async_setup(hass, config):
             "Elevation is now configured in Home Assistant core. "
             "See https://www.home-assistant.io/docs/configuration/basic/"
         )
-
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
-    await component.async_add_entities([Sun(hass)])
-
+    Sun(hass)
     return True
 
 
@@ -102,24 +98,21 @@ class Sun(Entity):
         self.solar_elevation = self.solar_azimuth = None
         self.rising = self.phase = None
         self._next_change = None
-        self._update_sun_position_listener = None
-        self._update_events_listener = None
-        self._core_config_listener = None
+
+        def update_location(_event):
+            location = get_astral_location(self.hass)
+            if location == self.location:
+                return
+            self.location = location
+            self.update_events(dt_util.utcnow())
+
+        update_location(None)
+        self.hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, update_location)
 
     @property
     def name(self):
         """Return the name."""
         return "Sun"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique id."""
-        return "sun"
-
-    @property
-    def should_poll(self) -> bool:
-        """Sun is not polled."""
-        return False
 
     @property
     def state(self):
@@ -217,7 +210,7 @@ class Sun(Entity):
         self.update_sun_position(utc_point_in_time)
 
         # Set timer for the next solar event
-        self._update_events_listener = event.async_track_point_in_utc_time(
+        event.async_track_point_in_utc_time(
             self.hass, self.update_events, self._next_change
         )
         _LOGGER.debug("next time: %s", self._next_change.isoformat())
@@ -244,39 +237,6 @@ class Sun(Entity):
         # position update just drop it
         if utc_point_in_time + delta * 1.25 > self._next_change:
             return
-        self._update_sun_position_listener = event.async_track_point_in_utc_time(
+        event.async_track_point_in_utc_time(
             self.hass, self.update_sun_position, utc_point_in_time + delta
         )
-
-    async def async_added_to_hass(self):
-        """Complete the initialization."""
-        _LOGGER.debug("sun added")
-        await super().async_added_to_hass()
-        self._async_update_location()
-        self._core_config_listener = self.hass.bus.async_listen(
-            EVENT_CORE_CONFIG_UPDATE, self._async_update_location_event
-        )
-
-    async def async_will_remove_from_hass(self):
-        """When entity will be removed from hass."""
-        _LOGGER.debug("sun remove")
-        if self._update_sun_position_listener:
-            self._update_sun_position_listener()
-            self._update_sun_position_listener = None
-        if self._update_events_listener:
-            self._update_events_listener()
-            self._update_events_listener = None
-        if self._core_config_listener:
-            self._core_config_listener()
-            self._core_config_listener = None
-        await super().async_will_remove_from_hass()
-        _LOGGER.debug("sun removed")
-
-    @callback
-    def _async_update_location_event(self, _):
-        self._async_update_location()
-
-    @callback
-    def _async_update_location(self):
-        self.location = get_astral_location(self.hass)
-        self.update_events(dt_util.utcnow())

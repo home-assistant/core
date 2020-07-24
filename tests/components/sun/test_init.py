@@ -6,7 +6,6 @@ from pytest import mark
 import homeassistant.components.sun as sun
 from homeassistant.const import EVENT_STATE_CHANGED
 import homeassistant.core as ha
-from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -20,8 +19,8 @@ async def test_setting_rising(hass, legacy_patchable_time):
         await async_setup_component(
             hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}
         )
-        await hass.async_block_till_done()
 
+    await hass.async_block_till_done()
     state = hass.states.get(sun.ENTITY_ID)
 
     from astral import Astral
@@ -111,7 +110,8 @@ async def test_state_change(hass, legacy_patchable_time):
         await async_setup_component(
             hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}
         )
-        await hass.async_block_till_done()
+
+    await hass.async_block_till_done()
 
     test_time = dt_util.parse_datetime(
         hass.states.get(sun.ENTITY_ID).attributes[sun.STATE_ATTR_NEXT_RISING]
@@ -146,7 +146,6 @@ async def test_norway_in_june(hass):
         assert await async_setup_component(
             hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get(sun.ENTITY_ID)
     assert state is not None
@@ -175,7 +174,6 @@ async def test_state_change_count(hass):
         assert await async_setup_component(
             hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}
         )
-        await hass.async_block_till_done()
 
     events = []
 
@@ -193,19 +191,3 @@ async def test_state_change_count(hass):
         await hass.async_block_till_done()
 
     assert len(events) < 721
-
-
-async def test_unique_id(hass):
-    """Ensure sun gets a unique id so it can be disabled."""
-    hass.config.latitude = 69.6
-    hass.config.longitude = 18.8
-
-    assert await async_setup_component(
-        hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}
-    )
-    await hass.async_block_till_done()
-
-    ent_reg = await entity_registry.async_get_registry(hass)
-
-    ent = ent_reg.async_get(sun.ENTITY_ID)
-    assert ent.unique_id == "sun"

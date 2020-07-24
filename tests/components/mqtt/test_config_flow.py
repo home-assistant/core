@@ -185,10 +185,12 @@ async def test_option_flow(hass, mqtt_mock, mock_try_connection):
         result["flow_id"],
         user_input={
             mqtt.CONF_DISCOVERY: True,
+            "birth_enable": True,
             "birth_topic": "ha_state/online",
             "birth_payload": "online",
             "birth_qos": 1,
             "birth_retain": True,
+            "will_enable": True,
             "will_topic": "ha_state/offline",
             "will_payload": "offline",
             "will_qos": 2,
@@ -215,6 +217,69 @@ async def test_option_flow(hass, mqtt_mock, mock_try_connection):
             mqtt.ATTR_QOS: 2,
             mqtt.ATTR_RETAIN: True,
         },
+    }
+
+    await hass.async_block_till_done()
+    assert mqtt_mock.async_connect.call_count == 1
+
+
+async def test_disable_birth_will(hass, mqtt_mock, mock_try_connection):
+    """Test disabling birth and will."""
+    mock_try_connection.return_value = True
+    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    await async_start(hass, "homeassistant", config_entry)
+    config_entry.data = {
+        mqtt.CONF_BROKER: "test-broker",
+        mqtt.CONF_PORT: 1234,
+    }
+
+    mqtt_mock.async_connect.reset_mock()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "broker"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            mqtt.CONF_BROKER: "another-broker",
+            mqtt.CONF_PORT: 2345,
+            mqtt.CONF_USERNAME: "user",
+            mqtt.CONF_PASSWORD: "pass",
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "options"
+
+    await hass.async_block_till_done()
+    assert mqtt_mock.async_connect.call_count == 0
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            mqtt.CONF_DISCOVERY: True,
+            "birth_enable": False,
+            "birth_topic": "ha_state/online",
+            "birth_payload": "online",
+            "birth_qos": 1,
+            "birth_retain": True,
+            "will_enable": False,
+            "will_topic": "ha_state/offline",
+            "will_payload": "offline",
+            "will_qos": 2,
+            "will_retain": True,
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] is None
+    assert config_entry.data == {
+        mqtt.CONF_BROKER: "another-broker",
+        mqtt.CONF_PORT: 2345,
+        mqtt.CONF_USERNAME: "user",
+        mqtt.CONF_PASSWORD: "pass",
+        mqtt.CONF_DISCOVERY: True,
+        mqtt.CONF_BIRTH_MESSAGE: {},
+        mqtt.CONF_WILL_MESSAGE: {},
     }
 
     await hass.async_block_till_done()
