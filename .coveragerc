@@ -680,7 +680,6 @@ omit =
     homeassistant/components/roomba/sensor.py
     homeassistant/components/roomba/vacuum.py
     homeassistant/components/roon/__init__.py
-    homeassistant/components/roon/config_flow.py
     homeassistant/components/roon/const.py
     homeassistant/components/roon/media_player.py
     homeassistant/components/roon/server.py
