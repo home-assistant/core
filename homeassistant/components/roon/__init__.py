@@ -40,8 +40,6 @@ async def async_setup_entry(hass, entry):
         identifiers={(DOMAIN, host)},
         manufacturer="Roonlabs",
         name=host,
-        model="",
-        sw_version="",
     )
     return True
 
