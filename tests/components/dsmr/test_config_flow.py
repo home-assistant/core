@@ -4,9 +4,12 @@ import asyncio
 from dsmr_parser.objects import CosemObject
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.dsmr.const import (
     CONF_DSMR_VERSION,
+    CONF_POWER_WATT,
+    CONF_PRECISION,
+    CONF_RECONNECT_INTERVAL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
     DOMAIN,
@@ -527,3 +530,71 @@ async def test_config_flow_manual_host_already_configured(
     conf_entries = hass.config_entries.async_entries(DOMAIN)
     await hass.config_entries.async_unload(conf_entries[0].entry_id)
     await hass.async_block_till_done()
+
+
+async def test_options_flow(hass, mock_connection_factory):
+    """
+    Test flow manually initialized by user.
+
+    With USB configuration.
+    """
+    (connection_factory, transport, protocol) = mock_connection_factory
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TYPE: "Serial", CONF_DSMR_VERSION: TEST_DSMR_VERSION},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_serial"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PORT: TEST_USB_PATH}
+    )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == TEST_USB_PATH
+    assert result["data"] == {
+        CONF_HOST: None,
+        CONF_PORT: TEST_USB_PATH,
+        CONF_DSMR_VERSION: TEST_DSMR_VERSION,
+        CONF_SERIAL_ID: TEST_SERIALNUMBER,
+        CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
+    }
+
+    await hass.async_block_till_done()
+
+    conf_entries = hass.config_entries.async_entries(DOMAIN)
+    config_entry = conf_entries[0]
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PRECISION: 1,
+            CONF_RECONNECT_INTERVAL: 15,
+            CONF_POWER_WATT: True,
+        },
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    await hass.async_block_till_done()
+
+    assert config_entry.options == {
+        CONF_PRECISION: 1,
+        CONF_RECONNECT_INTERVAL: 15,
+        CONF_POWER_WATT: True,
+    }
