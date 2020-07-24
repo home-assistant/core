@@ -60,9 +60,9 @@ class FloDailyUsageSensor(FloEntity):
     @property
     def state(self) -> Optional[float]:
         """Return the current daily usage."""
-        if self._device._consumption_today is None:
+        if self._device.consumption_today is None:
             return None
-        return round(self._device._consumption_today, 1)
+        return round(self._device.consumption_today, 1)
 
     @property
     def unit_of_measurement(self) -> str:
