@@ -2,7 +2,6 @@
 from haiku import fan
 from haiku import discover
 import asyncio
-import concurrent.futures
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity import Entity
 from homeassistant.core import callback
@@ -27,7 +26,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 import logging
-from homeassistant.helpers.script import Script
 
 _LOGGER = logging.getLogger(__name__)
 SPEED_1 = "Speed 1"
@@ -40,7 +38,6 @@ SPEED_7 = "Speed 7"
 ATTR_SPEED = "speed"
 ATTR_SPEED_LIST = "speed_list"
 CONF_SET_SPEED_ACTION = "async_set_speed"
-pool = concurrent.futures.ThreadPoolExecutor()
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Haiku platform."""
@@ -134,15 +131,7 @@ class HaikuFan(Entity):
 
     @property
     def state(self):
-        """Return true if device is on."""
-        fanstate = pool.submit(asyncio.run, fan.getspeed(self._cip)).result()
-        #fanstate = "5"
-        if fanstate != "0":
-            self._speed = "Speed "+fanstate
-            self._state = "Speed "+fanstate
-        else:
-            self._speed = SPEED_OFF
-            self._state = STATE_OFF
+        """Return state of device."""
         return self._state
 
     @property
@@ -151,10 +140,21 @@ class HaikuFan(Entity):
         if self._speed in self._speed_list:
             return self._speed
         else:
-            self._speed = STATE_OFF
+            self._speed = SPEED_OFF
             self._state = STATE_OFF
         return self._speed
-
+    async def async_update(self):
+        """Update state of device."""
+        updatestate = await fan.getspeed(self._cip)
+        if updatestate is none or updatestate is False:
+            self._state = STATE_OFF
+            self._speed = SPEED_OFF
+        elif updatstate == "0":
+            self._state = STATE_OFF
+            self._speed = SPEED_OFF
+        else:
+            self._speed = "Speed "+updatestate
+            self._state = "Speed "+updatestate
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
         if speed in self._speed_list:
