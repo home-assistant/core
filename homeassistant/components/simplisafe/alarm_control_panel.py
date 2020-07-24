@@ -1,5 +1,4 @@
 """Support for SimpliSafe alarm control panels."""
-import logging
 import re
 
 from simplipy.errors import SimplipyError
@@ -50,10 +49,9 @@ from .const import (
     ATTR_VOICE_PROMPT_VOLUME,
     DATA_CLIENT,
     DOMAIN,
+    LOGGER,
     VOLUME_STRING_MAP,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_BATTERY_BACKUP_POWER_LEVEL = "battery_backup_power_level"
 ATTR_GSM_STRENGTH = "gsm_strength"
@@ -146,7 +144,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             return True
 
         if not code or code != self._simplisafe.options[CONF_CODE]:
-            _LOGGER.warning(
+            LOGGER.warning(
                 "Incorrect alarm code entered (target state: %s): %s", state, code
             )
             return False
@@ -161,7 +159,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         try:
             await self._system.set_off()
         except SimplipyError as err:
-            _LOGGER.error('Error while disarming "%s": %s', self._system.name, err)
+            LOGGER.error('Error while disarming "%s": %s', self._system.name, err)
             return
 
         self._state = STATE_ALARM_DISARMED
@@ -174,7 +172,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         try:
             await self._system.set_home()
         except SimplipyError as err:
-            _LOGGER.error('Error while arming "%s" (home): %s', self._system.name, err)
+            LOGGER.error('Error while arming "%s" (home): %s', self._system.name, err)
             return
 
         self._state = STATE_ALARM_ARMED_HOME
@@ -187,7 +185,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         try:
             await self._system.set_away()
         except SimplipyError as err:
-            _LOGGER.error('Error while arming "%s" (away): %s', self._system.name, err)
+            LOGGER.error('Error while arming "%s" (away): %s', self._system.name, err)
             return
 
         self._state = STATE_ALARM_ARMING
