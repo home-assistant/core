@@ -209,14 +209,16 @@ def _create_rfx(config):
     """Construct a rfx object based on config."""
     if config[CONF_PORT] is not None:
         # If port is set then we create a TCP connection
-        return rfxtrxmod.Connect(
+        rfx = rfxtrxmod.Connect(
             (config[CONF_HOST], config[CONF_PORT]),
             None,
             debug=config[CONF_DEBUG],
             transport_protocol=rfxtrxmod.PyNetworkTransport,
         )
     else:
-        return rfxtrxmod.Connect(config[CONF_DEVICE], None, debug=config[CONF_DEBUG])
+        rfx = rfxtrxmod.Connect(config[CONF_DEVICE], None, debug=config[CONF_DEBUG])
+
+    return rfx
 
 
 def _get_device_lookup(devices):
