@@ -1,12 +1,24 @@
 """Platform for sensor integration."""
 import logging
 
-from homeassistant.const import ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_BATTERY_CHARGING,
+    ATTR_BATTERY_LEVEL,
+    LENGTH_KILOMETERS,
+    TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
+)
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+SENSORS = [
+    ("odometer", "Odometer"),
+    ("range", "Range"),
+    ("charging time", "Charging Time"),
+]
 
 SENSORS_SINGLE = [
     ("level", "Battery Level"),
@@ -28,6 +40,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for vehicle in vehicles:
         entities = []
+
+        for sensor in SENSORS:
+            entities.append(NiuSensor(hass.data[DOMAIN], vehicle, sensor[0], sensor[1]))
 
         for sensor in (
             SENSORS_SINGLE if vehicle.get_battery_count() == 1 else SENSORS_DUAL
@@ -98,6 +113,7 @@ class NiuSensor(Entity):
             "name": self._vehicle.get_name(),
             "manufacturer": "NIU",
             "model": self._vehicle.get_model(),
+            "sw_version": self._vehicle.get_firmware(),
         }
 
     def update_callback(self):
@@ -129,6 +145,20 @@ class NiuSensor(Entity):
 
         _LOGGER.debug("Updating %s", self.name)
 
+        if self._attribute == "odometer":
+            self._unit = LENGTH_KILOMETERS
+            self._state = self._vehicle.get_odometer()
+            self._icon = "mdi:counter"
+
+        if self._attribute == "range":
+            self._unit = LENGTH_KILOMETERS
+            self._state = self._vehicle.get_range()
+            self._icon = "mdi:road-variant"
+
+        if self._attribute == "charging time":
+            self._icon = "mdi:clock-outline"
+            self._state = self._vehicle.get_charging_left()
+
         if self._attribute == "level":
             self._state = self._vehicle.get_soc()
         if self._attribute == "level a":
@@ -145,7 +175,7 @@ class NiuSensor(Entity):
             desc = self._vehicle.get_battery_temp_desc(1)
 
         if "level" in self._attribute:
-            self._unit = "%"
+            self._unit = UNIT_PERCENTAGE
 
             if self._state < 5:
                 self._icon = "mdi:battery-outline"

@@ -3,6 +3,6 @@
 	"name": "NIU",
 	"config_flow": false,
 	"documentation": "https://www.home-assistant.io/integrations/niu",
-	"requirements": ["niu==0.1.4"],
+	"requirements": ["niu==0.1.5"],
 	"codeowners": ["@Bonnee"]
 }
