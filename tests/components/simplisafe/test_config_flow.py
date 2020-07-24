@@ -1,5 +1,9 @@
 """Define tests for the SimpliSafe config flow."""
-from simplipy.errors import InvalidCredentialsError, PendingAuthorizationError
+from simplipy.errors import (
+    InvalidCredentialsError,
+    PendingAuthorizationError,
+    SimplipyError,
+)
 
 from homeassistant import data_entry_flow
 from homeassistant.components.simplisafe import DOMAIN
@@ -43,6 +47,7 @@ async def test_invalid_credentials(hass):
     """Test that invalid credentials throws an error."""
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
+    print("AARON")
     with patch(
         "simplipy.API.login_via_credentials", side_effect=InvalidCredentialsError,
     ):
@@ -187,7 +192,9 @@ async def test_step_user_mfa(hass):
     ):
         # Simulate the user pressing the MFA submit button without having clicked
         # the link in the MFA email:
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
         assert result["step_id"] == "mfa"
 
     with patch(
@@ -204,3 +211,16 @@ async def test_step_user_mfa(hass):
             CONF_TOKEN: "12345abc",
             CONF_CODE: "1234",
         }
+
+
+async def test_unknown_error(hass):
+    """Test that an unknown error raises the correct error."""
+    conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
+
+    with patch(
+        "simplipy.API.login_via_credentials", side_effect=SimplipyError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=conf
+        )
+        assert result["errors"] == {"base": "unknown"}
