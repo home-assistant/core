@@ -4,7 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/androidtv",
   "requirements": [
     "adb-shell[async]==0.2.0",
-    "androidtv[async]==0.0.45",
+    "androidtv[async]==0.0.46",
     "pure-python-adb==0.2.2.dev0"
   ],
   "codeowners": ["@JeffLIrion"]

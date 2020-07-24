@@ -210,6 +210,11 @@ def setup(hass, config):
             return
 
         info = info_from_service(service_info)
+        if not info:
+            # Prevent the browser thread from collapsing
+            _LOGGER.debug("Failed to get addresses for device %s", name)
+            return
+
         _LOGGER.debug("Discovered new device %s %s", name, info)
 
         # If we can handle it as a HomeKit discovery, we do that here.
@@ -316,6 +321,9 @@ def info_from_service(service):
                 properties[key] = value.decode("utf-8")
         except UnicodeDecodeError:
             pass
+
+    if not service.addresses:
+        return None
 
     address = service.addresses[0]
 

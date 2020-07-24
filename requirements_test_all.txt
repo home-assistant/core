@@ -135,7 +135,7 @@ airly==0.0.2
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.45
+androidtv[async]==0.0.46
 
 # homeassistant.components.apns
 apns2==0.3.0
@@ -181,7 +181,7 @@ blinkpy==0.15.1
 bomradarloop==0.1.4
 
 # homeassistant.components.bond
-bond-home==0.0.9
+bond-api==0.1.7
 
 # homeassistant.components.braviatv
 bravia-tv==1.0.6
@@ -746,7 +746,7 @@ pysmappee==0.1.5
 pysmartapp==0.3.2
 
 # homeassistant.components.smartthings
-pysmartthings==0.7.1
+pysmartthings==0.7.2
 
 # homeassistant.components.soma
 pysoma==0.0.10
@@ -866,7 +866,7 @@ sentry-sdk==0.13.5
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.2.0
+simplisafe-python==9.2.1
 
 # homeassistant.components.sleepiq
 sleepyq==0.7

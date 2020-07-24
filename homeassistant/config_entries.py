@@ -10,7 +10,7 @@ import weakref
 import attr
 
 from homeassistant import data_entry_flow, loader
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.event import Event
@@ -96,6 +96,9 @@ class OperationNotAllowed(ConfigError):
     """Raised when a config entry operation is not allowed."""
 
 
+UpdateListenerType = Callable[[HomeAssistant, "ConfigEntry"], Any]
+
+
 class ConfigEntry:
     """Hold a configuration entry."""
 
@@ -165,7 +168,7 @@ class ConfigEntry:
         self.unique_id = unique_id
 
         # Listeners to call on update
-        self.update_listeners: List = []
+        self.update_listeners: List[weakref.ReferenceType[UpdateListenerType]] = []
 
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup: Optional[Callable[[], Any]] = None
@@ -398,10 +401,8 @@ class ConfigEntry:
             )
             return False
 
-    def add_update_listener(self, listener: Callable) -> Callable:
+    def add_update_listener(self, listener: UpdateListenerType) -> CALLBACK_TYPE:
         """Listen for when entry is updated.
-
-        Listener: Callback function(hass, entry)
 
         Returns function to unlisten.
         """
@@ -768,7 +769,8 @@ class ConfigEntries:
 
         for listener_ref in entry.update_listeners:
             listener = listener_ref()
-            self.hass.async_create_task(listener(self.hass, entry))
+            if listener is not None:
+                self.hass.async_create_task(listener(self.hass, entry))
 
         self._async_schedule_save()
 

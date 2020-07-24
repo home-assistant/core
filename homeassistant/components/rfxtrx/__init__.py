@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_COMMAND_ON,
     CONF_DEVICE,
     CONF_DEVICE_CLASS,
+    CONF_DEVICE_ID,
     CONF_DEVICES,
     CONF_HOST,
     CONF_PORT,
@@ -151,6 +152,14 @@ async def async_setup(hass, config):
         CONF_DEVICES: config[DOMAIN][CONF_DEVICES],
     }
 
+    # Read device_id from the event code add to the data that will end up in the ConfigEntry
+    for event_code, event_config in data[CONF_DEVICES].items():
+        event = get_rfx_object(event_code)
+        device_id = get_device_id(
+            event.device, data_bits=event_config.get(CONF_DATA_BITS)
+        )
+        event_config[CONF_DEVICE_ID] = device_id
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data,
@@ -163,7 +172,7 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
     """Set up the RFXtrx component."""
     hass.data.setdefault(DOMAIN, {})
 
-    await hass.async_add_executor_job(setup_internal, hass, entry.data)
+    await hass.async_add_executor_job(setup_internal, hass, entry)
 
     for domain in DOMAINS:
         hass.async_create_task(
@@ -203,19 +212,18 @@ def unload_internal(hass, config):
     rfx_object.close_connection()
 
 
-def setup_internal(hass, config):
+def setup_internal(hass, entry: config_entries.ConfigEntry):
     """Set up the RFXtrx component."""
+    config = entry.data
+
     # Setup some per device config
-    device_events = set()
-    device_bits = {}
+    devices = dict()
     for event_code, event_config in config[CONF_DEVICES].items():
         event = get_rfx_object(event_code)
         device_id = get_device_id(
             event.device, data_bits=event_config.get(CONF_DATA_BITS)
         )
-        device_bits[device_id] = event_config.get(CONF_DATA_BITS)
-        if event_config[CONF_FIRE_EVENT]:
-            device_events.add(device_id)
+        devices[device_id] = event_config
 
     # Declare the Handle event
     def handle_receive(event):
@@ -229,21 +237,34 @@ def setup_internal(hass, config):
             "sub_type": event.device.subtype,
             "type_string": event.device.type_string,
             "id_string": event.device.id_string,
-            "data": "".join(f"{x:02x}" for x in event.data),
+            "data": binascii.hexlify(event.data).decode("ASCII"),
             "values": getattr(event, "values", None),
         }
 
         _LOGGER.debug("Receive RFXCOM event: %s", event_data)
 
-        data_bits = get_device_data_bits(event.device, device_bits)
+        data_bits = get_device_data_bits(event.device, devices)
         device_id = get_device_id(event.device, data_bits=data_bits)
 
         # Callback to HA registered components.
         hass.helpers.dispatcher.dispatcher_send(SIGNAL_EVENT, event, device_id)
 
         # Signal event to any other listeners
-        if device_id in device_events:
+        fire_event = devices.get(device_id, {}).get(CONF_FIRE_EVENT)
+        if fire_event:
             hass.bus.fire(EVENT_RFXTRX_EVENT, event_data)
+
+    @callback
+    def device_update(event, device_id):
+        if device_id not in devices:
+            data = entry.data.copy()
+            event_code = binascii.hexlify(event.data).decode("ASCII")
+            data[CONF_DEVICES][event_code] = device_id
+            hass.config_entries.async_update_entry(entry=entry, data=data)
+            devices[device_id] = {}
+
+    if config[CONF_AUTOMATIC_ADD]:
+        hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, device_update)
 
     device = config[CONF_DEVICE]
     host = config[CONF_HOST]
@@ -331,11 +352,12 @@ def get_pt2262_cmd(device_id, data_bits):
     return hex(data[-1] & mask)
 
 
-def get_device_data_bits(device, device_bits):
+def get_device_data_bits(device, devices):
     """Deduce data bits for device based on a cache of device bits."""
     data_bits = None
     if device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
-        for device_id, bits in device_bits.items():
+        for device_id, entity_config in devices.items():
+            bits = entity_config.get(CONF_DATA_BITS)
             if get_device_id(device, bits) == device_id:
                 data_bits = bits
                 break
@@ -375,7 +397,7 @@ def get_device_id(device, data_bits=None):
     if data_bits and device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
         masked_id = get_pt2262_deviceid(id_string, data_bits)
         if masked_id:
-            id_string = str(masked_id)
+            id_string = masked_id.decode("ASCII")
 
     return (f"{device.packettype:x}", f"{device.subtype:x}", id_string)
 

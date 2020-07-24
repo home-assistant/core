@@ -92,7 +92,7 @@ async def async_setup_entry(
             ]
         return False
 
-    for packet_id, entity in discovery_info[CONF_DEVICES].items():
+    for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
         event = get_rfx_object(packet_id)
         if event is None:
             _LOGGER.error("Invalid device: %s", packet_id)
@@ -100,7 +100,9 @@ async def async_setup_entry(
         if not supported(event):
             continue
 
-        device_id = get_device_id(event.device, data_bits=entity.get(CONF_DATA_BITS))
+        device_id = get_device_id(
+            event.device, data_bits=entity_info.get(CONF_DATA_BITS)
+        )
         if device_id in device_ids:
             continue
         device_ids.add(device_id)
@@ -112,16 +114,16 @@ async def async_setup_entry(
         device = RfxtrxBinarySensor(
             event.device,
             device_id,
-            entity.get(
+            entity_info.get(
                 CONF_DEVICE_CLASS,
                 DEVICE_TYPE_DEVICE_CLASS.get(event.device.type_string),
             ),
-            entity.get(
+            entity_info.get(
                 CONF_OFF_DELAY, DEVICE_TYPE_OFF_DELAY.get(event.device.type_string),
             ),
-            entity.get(CONF_DATA_BITS),
-            entity.get(CONF_COMMAND_ON),
-            entity.get(CONF_COMMAND_OFF),
+            entity_info.get(CONF_DATA_BITS),
+            entity_info.get(CONF_COMMAND_ON),
+            entity_info.get(CONF_COMMAND_OFF),
         )
         sensors.append(device)
 
