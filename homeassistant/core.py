@@ -24,6 +24,7 @@ from typing import (
     Callable,
     Coroutine,
     Dict,
+    Iterable,
     List,
     Mapping,
     Optional,
@@ -98,6 +99,9 @@ CORE_STORAGE_KEY = "core.config"
 CORE_STORAGE_VERSION = 1
 
 DOMAIN = "homeassistant"
+
+# How long to wait to log tasks that are blocking
+BLOCK_LOG_TIMEOUT = 60
 
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds
@@ -394,9 +398,20 @@ class HomeAssistant:
             pending = [task for task in self._pending_tasks if not task.done()]
             self._pending_tasks.clear()
             if pending:
-                await asyncio.wait(pending)
+                await self._await_and_log_pending(pending)
             else:
                 await asyncio.sleep(0)
+
+    async def _await_and_log_pending(self, pending: Iterable[Awaitable[Any]]) -> None:
+        """Await and log tasks that take a long time."""
+        wait_time = 0
+        while pending:
+            _, pending = await asyncio.wait(pending, timeout=BLOCK_LOG_TIMEOUT)
+            if not pending:
+                return
+            wait_time += BLOCK_LOG_TIMEOUT
+            for task in pending:
+                _LOGGER.debug("Waited %s seconds for task: %s", wait_time, task)
 
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
