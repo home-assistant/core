@@ -47,7 +47,6 @@ async def test_invalid_credentials(hass):
     """Test that invalid credentials throws an error."""
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
-    print("AARON")
     with patch(
         "simplipy.API.login_via_credentials", side_effect=InvalidCredentialsError,
     ):
