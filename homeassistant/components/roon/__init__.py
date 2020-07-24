@@ -46,5 +46,5 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    roonserver = hass.data[DOMAIN].pop(entry.data[CONF_HOST])
+    roonserver = hass.data[DOMAIN].pop(entry.entry_id)
     return await roonserver.async_reset()
