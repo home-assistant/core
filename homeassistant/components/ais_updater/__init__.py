@@ -768,6 +768,10 @@ def do_execute_upgrade(hass, call):
         return
 
     if need_to_update:
+        # clear tmp
+        subprocess.check_output(
+            "rm -rf /data/data/pl.sviete.dom/files/usr/tmp/* ", shell=True  # nosec
+        )
         # call the download service
         hass.services.call("ais_updater", "download_upgrade")
     else:
