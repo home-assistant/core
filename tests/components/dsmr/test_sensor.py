@@ -42,11 +42,8 @@ TEST_PORT = "1234"
 TEST_USB_PATH = "/dev/ttyUSB0"
 TEST_SERIALNUMBER = "12345678"
 TEST_SERIALNUMBER_GAS = "123456789"
-TEST_PRECISION = 3
-TEST_RECONNECT_INTERVAL = 30
 TEST_UNIQUE_ID = f"{DOMAIN}-{TEST_SERIALNUMBER}"
 TEST_DSMR_VERSION = "2.2"
-TEST_POWER_WATT = False
 
 
 @pytest.fixture
@@ -78,8 +75,9 @@ def mock_connection_factory(monkeypatch):
 async def test_entity():
     """Test the basic property of the entity."""
     config = {"platform": DOMAIN}
+    options = {}
 
-    entity = DSMREntity("test", "1234", "test_device", "5678", "1.0.0", config)
+    entity = DSMREntity("test", "1234", "test_device", "5678", "1.0.0", config, options)
 
     assert entity.force_update
     assert not entity.should_poll
@@ -110,8 +108,9 @@ async def test_default_setup(hass, mock_connection_factory):
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
+    }
+    entry_options = {
         CONF_PRECISION: 4,
-        CONF_POWER_WATT: TEST_POWER_WATT,
     }
 
     telegram = {
@@ -134,7 +133,7 @@ async def test_default_setup(hass, mock_connection_factory):
     }
 
     mock_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=TEST_UNIQUE_ID, data=entry_data
+        domain=DOMAIN, unique_id=TEST_UNIQUE_ID, data=entry_data, options=entry_options
     )
 
     mock_entry.add_to_hass(hass)
@@ -201,6 +200,8 @@ async def test_power_in_watt(hass, mock_connection_factory):
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
+    }
+    entry_options = {
         CONF_PRECISION: 4,
         CONF_POWER_WATT: True,
     }
@@ -225,7 +226,7 @@ async def test_power_in_watt(hass, mock_connection_factory):
     }
 
     mock_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=TEST_UNIQUE_ID, data=entry_data
+        domain=DOMAIN, unique_id=TEST_UNIQUE_ID, data=entry_data, options=entry_options
     )
 
     mock_entry.add_to_hass(hass)
@@ -285,8 +286,9 @@ async def test_derivative():
     from dsmr_parser.objects import MBusObject
 
     config = {"platform": DOMAIN}
+    options = {}
 
-    entity = DerivativeDSMREntity("test", "1", "", "", "1.0.0", config)
+    entity = DerivativeDSMREntity("test", "1", "", "", "1.0.0", config, options)
     await entity.async_update()
 
     assert entity.state is None, "initial state not unknown"
@@ -335,9 +337,6 @@ async def test_v4_meter(hass, mock_connection_factory):
         CONF_DSMR_VERSION: "4",
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
-        CONF_PRECISION: TEST_PRECISION,
-        CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-        CONF_POWER_WATT: TEST_POWER_WATT,
     }
 
     telegram = {
@@ -393,9 +392,6 @@ async def test_v5_meter(hass, mock_connection_factory):
         CONF_DSMR_VERSION: "5",
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
-        CONF_PRECISION: TEST_PRECISION,
-        CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-        CONF_POWER_WATT: TEST_POWER_WATT,
     }
 
     telegram = {
@@ -451,9 +447,6 @@ async def test_belgian_meter(hass, mock_connection_factory):
         CONF_DSMR_VERSION: "5B",
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
-        CONF_PRECISION: TEST_PRECISION,
-        CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-        CONF_POWER_WATT: TEST_POWER_WATT,
     }
 
     telegram = {
@@ -506,9 +499,6 @@ async def test_belgian_meter_low(hass, mock_connection_factory):
         CONF_DSMR_VERSION: "5B",
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
-        CONF_PRECISION: TEST_PRECISION,
-        CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-        CONF_POWER_WATT: TEST_POWER_WATT,
     }
 
     telegram = {ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0002", "unit": ""}])}
@@ -546,9 +536,6 @@ async def test_tcp(hass, mock_connection_factory):
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
-        CONF_PRECISION: TEST_PRECISION,
-        CONF_RECONNECT_INTERVAL: TEST_RECONNECT_INTERVAL,
-        CONF_POWER_WATT: TEST_POWER_WATT,
     }
 
     mock_entry = MockConfigEntry(
@@ -573,9 +560,9 @@ async def test_connection_errors_retry(hass, monkeypatch, mock_connection_factor
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
-        CONF_PRECISION: TEST_PRECISION,
+    }
+    entry_options = {
         CONF_RECONNECT_INTERVAL: 0,
-        CONF_POWER_WATT: TEST_POWER_WATT,
     }
 
     # override the mock to have it fail the first time and succeed after
@@ -590,7 +577,7 @@ async def test_connection_errors_retry(hass, monkeypatch, mock_connection_factor
     )
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id=TEST_UNIQUE_ID, data=entry_data
+        domain="dsmr", unique_id=TEST_UNIQUE_ID, data=entry_data, options=entry_options
     )
 
     mock_entry.add_to_hass(hass)
@@ -611,9 +598,9 @@ async def test_reconnect(hass, monkeypatch, mock_connection_factory):
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
-        CONF_PRECISION: TEST_PRECISION,
+    }
+    entry_options = {
         CONF_RECONNECT_INTERVAL: 0,
-        CONF_POWER_WATT: TEST_POWER_WATT,
     }
 
     # mock waiting coroutine while connection lasts
@@ -628,7 +615,7 @@ async def test_reconnect(hass, monkeypatch, mock_connection_factory):
     protocol.wait_closed = wait_closed
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id=TEST_UNIQUE_ID, data=entry_data
+        domain="dsmr", unique_id=TEST_UNIQUE_ID, data=entry_data, options=entry_options
     )
 
     mock_entry.add_to_hass(hass)

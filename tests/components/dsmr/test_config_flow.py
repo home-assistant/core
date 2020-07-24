@@ -7,14 +7,8 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.dsmr.const import (
     CONF_DSMR_VERSION,
-    CONF_POWER_WATT,
-    CONF_PRECISION,
-    CONF_RECONNECT_INTERVAL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
-    DEFAULT_POWER_WATT,
-    DEFAULT_PRECISION,
-    DEFAULT_RECONNECT_INTERVAL,
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
@@ -119,9 +113,6 @@ async def test_config_flow_manual_usb_success(hass, mock_connection_factory):
         CONF_HOST: None,
         CONF_PORT: TEST_USB_PATH,
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
-        CONF_PRECISION: DEFAULT_PRECISION,
-        CONF_RECONNECT_INTERVAL: DEFAULT_RECONNECT_INTERVAL,
-        CONF_POWER_WATT: DEFAULT_POWER_WATT,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
     }
@@ -168,9 +159,6 @@ async def test_config_flow_manual_host_success(hass, mock_connection_factory):
         CONF_HOST: TEST_HOST,
         CONF_PORT: TEST_PORT,
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
-        CONF_PRECISION: DEFAULT_PRECISION,
-        CONF_RECONNECT_INTERVAL: DEFAULT_RECONNECT_INTERVAL,
-        CONF_POWER_WATT: DEFAULT_POWER_WATT,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
     }
@@ -390,9 +378,6 @@ async def test_config_flow_manual_usb_no_gas(hass, mock_connection_factory):
         CONF_HOST: None,
         CONF_PORT: TEST_USB_PATH,
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
-        CONF_PRECISION: DEFAULT_PRECISION,
-        CONF_RECONNECT_INTERVAL: DEFAULT_RECONNECT_INTERVAL,
-        CONF_POWER_WATT: DEFAULT_POWER_WATT,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: None,
     }
@@ -438,9 +423,6 @@ async def test_config_flow_manual_usb_already_configured(hass, mock_connection_f
         CONF_HOST: None,
         CONF_PORT: TEST_USB_PATH,
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
-        CONF_PRECISION: DEFAULT_PRECISION,
-        CONF_RECONNECT_INTERVAL: DEFAULT_RECONNECT_INTERVAL,
-        CONF_POWER_WATT: DEFAULT_POWER_WATT,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
     }
@@ -512,9 +494,6 @@ async def test_config_flow_manual_host_already_configured(
         CONF_HOST: TEST_HOST,
         CONF_PORT: TEST_PORT,
         CONF_DSMR_VERSION: TEST_DSMR_VERSION,
-        CONF_PRECISION: DEFAULT_PRECISION,
-        CONF_RECONNECT_INTERVAL: DEFAULT_RECONNECT_INTERVAL,
-        CONF_POWER_WATT: DEFAULT_POWER_WATT,
         CONF_SERIAL_ID: TEST_SERIALNUMBER,
         CONF_SERIAL_ID_GAS: TEST_SERIALNUMBER_GAS,
     }
