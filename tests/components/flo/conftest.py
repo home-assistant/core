@@ -22,7 +22,7 @@ def config_entry(hass):
     )
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def aioclient_mock_fixture(aioclient_mock):
     """Fixture to provide a aioclient mocker."""
 

@@ -1,12 +1,11 @@
 """Test the flo config flow."""
 from homeassistant import config_entries, setup
-from homeassistant.components.flo.config_flow import CannotConnect
 from homeassistant.components.flo.const import DOMAIN
 
 from tests.async_mock import patch
 
 
-async def test_form(hass):
+async def test_form(hass, aioclient_mock_fixture):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -33,20 +32,15 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass, aioclient_mock):
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.flo.config_flow.validate_input",
-        side_effect=CannotConnect,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"username": "test-username", "password": "test-password"},
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"username": "test-username", "password": "test-password"}
+    )
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}

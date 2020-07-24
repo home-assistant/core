@@ -12,7 +12,7 @@ from .common import TEST_PASSWORD, TEST_USER_ID
 from tests.common import async_fire_time_changed
 
 
-async def test_device(hass, config_entry, aioclient_mock):
+async def test_device(hass, config_entry, aioclient_mock_fixture, aioclient_mock):
     """Test Flo by Moen device."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(
@@ -28,6 +28,7 @@ async def test_device(hass, config_entry, aioclient_mock):
     assert device.current_flow_rate == 0
     assert device.current_psi == 54.20000076293945
     assert device.current_system_mode == "home"
+    assert device.target_system_mode == "home"
     assert device.firmware_version == "6.1.1"
     assert device.device_type == "flo_device_v2"
     assert device.id == "98765"
