@@ -257,17 +257,14 @@ class TelevisionMediaPlayer(HomeAccessory):
         state = self.hass.states.get(self.entity_id)
 
         self.support_select_source = False
-        self._supports_play_pause = False
 
         self.sources = []
 
-        # Add additional characteristics if volume or input selection supported
         self.chars_tv = [CHAR_REMOTE_KEY]
         self.chars_speaker = []
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        if features & (SUPPORT_PLAY | SUPPORT_PAUSE):
-            self._supports_play_pause = True
+        self._supports_play_pause = features & (SUPPORT_PLAY | SUPPORT_PAUSE)
         if features & SUPPORT_VOLUME_MUTE or features & SUPPORT_VOLUME_STEP:
             self.chars_speaker.extend(
                 (CHAR_NAME, CHAR_ACTIVE, CHAR_VOLUME_CONTROL_TYPE, CHAR_VOLUME_SELECTOR)
