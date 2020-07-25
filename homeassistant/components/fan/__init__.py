@@ -29,6 +29,7 @@ SUPPORT_OSCILLATE = 2
 SUPPORT_DIRECTION = 4
 
 SERVICE_SET_SPEED = "set_speed"
+SERVICE_CYCLE_SPEED = "cycle_speed"
 SERVICE_OSCILLATE = "oscillate"
 SERVICE_SET_DIRECTION = "set_direction"
 
@@ -73,6 +74,9 @@ async def async_setup(hass, config: dict):
         [SUPPORT_SET_SPEED],
     )
     component.async_register_entity_service(
+        SERVICE_CYCLE_SPEED, {}, "async_cycle_speed", [SUPPORT_SET_SPEED],
+    )
+    component.async_register_entity_service(
         SERVICE_OSCILLATE,
         {vol.Required(ATTR_OSCILLATING): cv.boolean},
         "async_oscillate",
@@ -111,6 +115,35 @@ class FanEntity(ToggleEntity):
             await self.async_turn_off()
         else:
             await self.hass.async_add_job(self.set_speed, speed)
+
+    async def async_cycle_speed(self):
+        """Cycle along the (available) speeds of the fan (OFF-HIGH-MEDIUM-LOW-OFF)."""
+        if (
+            (self.speed == SPEED_LOW)
+            or (self.speed == SPEED_MEDIUM and SPEED_LOW not in self.speed_list)
+            or (
+                self.speed == SPEED_HIGH
+                and SPEED_LOW not in self.speed_list
+                and SPEED_MEDIUM not in self.speed_list
+            )
+        ):
+            await self.async_turn_off()
+        elif (
+            (self.speed == SPEED_MEDIUM)
+            or (self.speed == SPEED_HIGH and SPEED_MEDIUM not in self.speed_list)
+            or (
+                self.speed == SPEED_OFF
+                and SPEED_MEDIUM not in self.speed_list
+                and SPEED_HIGH not in self.speed_list
+            )
+        ):
+            await self.hass.async_add_job(self.set_speed, SPEED_LOW)
+        elif (self.speed == SPEED_HIGH) or (
+            self.speed == SPEED_OFF and SPEED_HIGH not in self.speed_list
+        ):
+            await self.hass.async_add_job(self.set_speed, SPEED_MEDIUM)
+        elif self.speed == SPEED_OFF:
+            await self.hass.async_add_job(self.set_speed, SPEED_HIGH)
 
     def set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
