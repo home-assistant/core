@@ -741,7 +741,7 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        job = HassJob(listener)
+        job: Optional[HassJob] = None
 
         @callback
         def onetime_listener(event: Event) -> None:
@@ -755,10 +755,13 @@ class EventBus:
             # multiple times as well.
             # This will make sure the second time it does nothing.
             setattr(onetime_listener, "run", True)
+            assert job is not None
             self._async_remove_listener(event_type, job)
-            self._hass.async_run_hass_job(job, event)
+            self._hass.async_run_job(listener, event)
 
-        return self._async_listen_job(event_type, HassJob(onetime_listener))
+        job = HassJob(onetime_listener)
+
+        return self._async_listen_job(event_type, job)
 
     @callback
     def _async_remove_listener(self, event_type: str, hassjob: HassJob) -> None:
