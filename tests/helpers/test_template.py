@@ -1872,3 +1872,16 @@ def test_render_complex_handling_non_template_values(hass):
     assert template.render_complex(
         {True: 1, False: template.Template("{{ hello }}", hass)}, {"hello": 2}
     ) == {True: 1, False: "2"}
+
+
+def test_urlencode(hass):
+    """Test the urlencode method."""
+    tpl = template.Template(
+        ("{% set dict = {'foo': 'x&y', 'bar': 42} %}" "{{ dict | urlencode }}"), hass,
+    )
+    assert tpl.async_render() == "foo=x%26y&bar=42"
+    tpl = template.Template(
+        ("{% set string = 'the quick brown fox = true' %}" "{{ string | urlencode }}"),
+        hass,
+    )
+    assert tpl.async_render() == "the%20quick%20brown%20fox%20%3D%20true"

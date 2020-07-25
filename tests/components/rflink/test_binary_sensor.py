@@ -116,7 +116,7 @@ async def test_entity_availability(hass, monkeypatch):
     assert hass.states.get("binary_sensor.test").state == STATE_OFF
 
 
-async def test_off_delay(hass, monkeypatch):
+async def test_off_delay(hass, legacy_patchable_time, monkeypatch):
     """Test off_delay option."""
     # setup mocking rflink module
     event_callback, create, _, _ = await mock_rflink(hass, CONFIG, DOMAIN, monkeypatch)

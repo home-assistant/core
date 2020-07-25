@@ -10,8 +10,9 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API Key (Optional)",
+                    "api_key": "API Key",
                     "host": "Host",
+                    "location": "Location",
                     "name": "Name",
                     "port": "Port",
                     "ssl": "Use SSL",

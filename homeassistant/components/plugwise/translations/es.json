@@ -8,6 +8,7 @@
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida, comprueba los 8 caracteres de tu Smile ID",
             "unknown": "Error inesperado"
         },
+        "flow_title": "Smile: {name}",
         "step": {
             "user": {
                 "data": {

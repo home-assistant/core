@@ -9,9 +9,11 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
+    CONF_ALIAS,
     CONF_DEVICE_ID,
     CONF_ENTITY_ID,
     CONF_ID,
+    CONF_MODE,
     CONF_PLATFORM,
     CONF_ZONE,
     EVENT_HOMEASSISTANT_STARTED,
@@ -21,13 +23,28 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import Context, CoreState, HomeAssistant, callback
+from homeassistant.core import (
+    Context,
+    CoreState,
+    HomeAssistant,
+    callback,
+    split_entity_id,
+)
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import condition, extract_domain_configs, script
+from homeassistant.helpers import condition, extract_domain_configs
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.script import (
+    ATTR_CUR,
+    ATTR_MAX,
+    ATTR_MODE,
+    CONF_MAX,
+    SCRIPT_MODE_SINGLE,
+    Script,
+    make_script_schema,
+)
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
@@ -41,7 +58,6 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 GROUP_NAME_ALL_AUTOMATIONS = "all automations"
 
-CONF_ALIAS = "alias"
 CONF_DESCRIPTION = "description"
 CONF_HIDE_ENTITY = "hide_entity"
 
@@ -96,7 +112,7 @@ _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_HIDE_ENTITY, invalidation_version="0.110"),
-    vol.Schema(
+    make_script_schema(
         {
             # str on purpose
             CONF_ID: str,
@@ -107,7 +123,8 @@ PLATFORM_SCHEMA = vol.All(
             vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
             vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
             vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
-        }
+        },
+        SCRIPT_MODE_SINGLE,
     ),
 )
 
@@ -249,6 +266,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._is_enabled = False
         self._referenced_entities: Optional[Set[str]] = None
         self._referenced_devices: Optional[Set[str]] = None
+        self._logger = _LOGGER
 
     @property
     def name(self):
@@ -268,7 +286,15 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
     @property
     def state_attributes(self):
         """Return the entity state attributes."""
-        return {ATTR_LAST_TRIGGERED: self._last_triggered}
+        attrs = {
+            ATTR_LAST_TRIGGERED: self._last_triggered,
+            ATTR_MODE: self.action_script.script_mode,
+        }
+        if self.action_script.supports_max:
+            attrs[ATTR_MAX] = self.action_script.max_runs
+            if self.is_on:
+                attrs[ATTR_CUR] = self.action_script.runs
+        return attrs
 
     @property
     def is_on(self) -> bool:
@@ -318,13 +344,18 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         """Startup with initial state or previous state."""
         await super().async_added_to_hass()
 
+        self._logger = logging.getLogger(
+            f"{__name__}.{split_entity_id(self.entity_id)[1]}"
+        )
+        self.action_script.update_logger(self._logger)
+
         state = await self.async_get_last_state()
         if state:
             enable_automation = state.state == STATE_ON
             last_triggered = state.attributes.get("last_triggered")
             if last_triggered is not None:
                 self._last_triggered = parse_datetime(last_triggered)
-            _LOGGER.debug(
+            self._logger.debug(
                 "Loaded automation %s with state %s from state "
                 " storage last state %s",
                 self.entity_id,
@@ -333,15 +364,15 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             )
         else:
             enable_automation = DEFAULT_INITIAL_STATE
-            _LOGGER.debug(
-                "Automation %s not in state storage, state %s from default is used.",
+            self._logger.debug(
+                "Automation %s not in state storage, state %s from default is used",
                 self.entity_id,
                 enable_automation,
             )
 
         if self._initial_state is not None:
             enable_automation = self._initial_state
-            _LOGGER.debug(
+            self._logger.debug(
                 "Automation %s initial state %s overridden from "
                 "config initial_state",
                 self.entity_id,
@@ -384,12 +415,12 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             context=trigger_context,
         )
 
-        _LOGGER.info("Executing %s", self._name)
+        self._logger.info("Executing %s", self._name)
 
         try:
             await self.action_script.async_run(variables, trigger_context)
         except Exception:  # pylint: disable=broad-except
-            pass
+            self._logger.exception("While executing automation %s", self.entity_id)
 
     async def async_will_remove_from_hass(self):
         """Remove listeners when removing automation from Home Assistant."""
@@ -457,13 +488,13 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         results = await asyncio.gather(*triggers)
 
         if None in results:
-            _LOGGER.error("Error setting up trigger %s", self._name)
+            self._logger.error("Error setting up trigger %s", self._name)
 
         removes = [remove for remove in results if remove is not None]
         if not removes:
             return None
 
-        _LOGGER.info("Initialized trigger %s", self._name)
+        self._logger.info("Initialized trigger %s", self._name)
 
         @callback
         def remove_triggers():
@@ -498,8 +529,13 @@ async def _async_process_config(hass, config, component):
 
             initial_state = config_block.get(CONF_INITIAL_STATE)
 
-            action_script = script.Script(
-                hass, config_block.get(CONF_ACTION, {}), name, logger=_LOGGER
+            action_script = Script(
+                hass,
+                config_block[CONF_ACTION],
+                name,
+                script_mode=config_block[CONF_MODE],
+                max_runs=config_block[CONF_MAX],
+                logger=_LOGGER,
             )
 
             if CONF_CONDITION in config_block:

@@ -11,7 +11,7 @@
             "user": {
                 "data": {
                     "network_key": "Clave de red (d\u00e9jelo en blanco para generar autom\u00e1ticamente)",
-                    "usb_path": "Ruta USB"
+                    "usb_path": "Ruta del dispositivo USB"
                 },
                 "description": "Consulta https://www.home-assistant.io/docs/z-wave/installation/ para obtener informaci\u00f3n sobre las variables de configuraci\u00f3n",
                 "title": "Configurar Z-Wave"

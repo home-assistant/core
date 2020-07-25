@@ -3,14 +3,13 @@ from datetime import timedelta
 from itertools import groupby
 import json
 import logging
-import time
 
 import sqlalchemy
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import aliased
 import voluptuous as vol
 
 from homeassistant.components import sun
+from homeassistant.components.history import sqlalchemy_filter_from_include_exclude_conf
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder.models import (
     Events,
@@ -18,19 +17,13 @@ from homeassistant.components.recorder.models import (
     process_timestamp,
     process_timestamp_to_utc_isoformat,
 )
-from homeassistant.components.recorder.util import (
-    QUERY_RETRY_WAIT,
-    RETRIES,
-    session_scope,
-)
+from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_NAME,
-    CONF_EXCLUDE,
-    CONF_INCLUDE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_LOGBOOK_ENTRY,
@@ -119,15 +112,30 @@ async def async_setup(hass, config):
         domain = service.data.get(ATTR_DOMAIN)
         entity_id = service.data.get(ATTR_ENTITY_ID)
 
+        if entity_id is None and domain is None:
+            # If there is no entity_id or
+            # domain, the event will get filtered
+            # away so we use the "logbook" domain
+            domain = DOMAIN
+
         message.hass = hass
         message = message.async_render()
         async_log_entry(hass, name, message, domain, entity_id)
 
-    hass.http.register_view(LogbookView(config.get(DOMAIN, {})))
-
     hass.components.frontend.async_register_built_in_panel(
         "logbook", "logbook", "hass:format-list-bulleted-type"
     )
+
+    conf = config.get(DOMAIN, {})
+
+    if conf:
+        filters = sqlalchemy_filter_from_include_exclude_conf(conf)
+        entities_filter = convert_include_exclude_filter(conf)
+    else:
+        filters = None
+        entities_filter = None
+
+    hass.http.register_view(LogbookView(conf, filters, entities_filter))
 
     hass.services.async_register(DOMAIN, "log", log_message, schema=LOG_MESSAGE_SCHEMA)
 
@@ -154,9 +162,11 @@ class LogbookView(HomeAssistantView):
     name = "api:logbook"
     extra_urls = ["/api/logbook/{datetime}"]
 
-    def __init__(self, config):
+    def __init__(self, config, filters, entities_filter):
         """Initialize the logbook view."""
         self.config = config
+        self.filters = filters
+        self.entities_filter = entities_filter
 
     async def get(self, request, datetime=None):
         """Retrieve logbook entries."""
@@ -191,21 +201,27 @@ class LogbookView(HomeAssistantView):
         def json_events():
             """Fetch events and generate JSON."""
             return self.json(
-                _get_events(hass, self.config, start_day, end_day, entity_id)
+                _get_events(
+                    hass,
+                    self.config,
+                    start_day,
+                    end_day,
+                    entity_id,
+                    self.filters,
+                    self.entities_filter,
+                )
             )
 
         return await hass.async_add_job(json_events)
 
 
-def humanify(hass, events, entity_attr_cache, prev_states=None):
+def humanify(hass, events, entity_attr_cache):
     """Generate a converted list of events into Entry objects.
 
     Will try to group events if possible:
     - if 2+ sensor updates in GROUP_BY_MINUTES, show last
     - if Home Assistant stop and start happen in same minute call it restarted
     """
-    if prev_states is None:
-        prev_states = {}
 
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
@@ -252,12 +268,6 @@ def humanify(hass, events, entity_attr_cache, prev_states=None):
 
             if event.event_type == EVENT_STATE_CHANGED:
                 entity_id = event.entity_id
-
-                # Skip events that have not changed state
-                if entity_id in prev_states and prev_states[entity_id] == event.state:
-                    continue
-
-                prev_states[entity_id] = event.state
                 domain = event.domain
 
                 if (
@@ -327,38 +337,9 @@ def humanify(hass, events, entity_attr_cache, prev_states=None):
                 }
 
 
-def _get_related_entity_ids(session, entity_filter):
-    timer_start = time.perf_counter()
-
-    query = session.query(States).with_entities(States.entity_id).distinct()
-
-    for tryno in range(RETRIES):
-        try:
-            result = [row.entity_id for row in query if entity_filter(row.entity_id)]
-
-            if _LOGGER.isEnabledFor(logging.DEBUG):
-                elapsed = time.perf_counter() - timer_start
-                _LOGGER.debug(
-                    "fetching %d distinct domain/entity_id pairs took %fs",
-                    len(result),
-                    elapsed,
-                )
-
-            return result
-        except SQLAlchemyError as err:
-            _LOGGER.error("Error executing query: %s", err)
-
-            if tryno == RETRIES - 1:
-                raise
-            time.sleep(QUERY_RETRY_WAIT)
-
-
-def _all_entities_filter(_):
-    """Filter that accepts all entities."""
-    return True
-
-
-def _get_events(hass, config, start_day, end_day, entity_id=None):
+def _get_events(
+    hass, config, start_day, end_day, entity_id=None, filters=None, entities_filter=None
+):
     """Get events for a period of time."""
     entity_attr_cache = EntityAttributeCache(hass)
 
@@ -366,19 +347,17 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
         """Yield Events that are not filtered away."""
         for row in query.yield_per(1000):
             event = LazyEventPartialState(row)
-            if _keep_event(hass, event, entities_filter, entity_attr_cache):
+            if _keep_event(hass, event, entities_filter):
                 yield event
 
     with session_scope(hass=hass) as session:
         if entity_id is not None:
             entity_ids = [entity_id.lower()]
             entities_filter = generate_filter([], entity_ids, [], [])
-        elif config.get(CONF_EXCLUDE) or config.get(CONF_INCLUDE):
-            entities_filter = convert_include_exclude_filter(config)
-            entity_ids = _get_related_entity_ids(session, entities_filter)
+            apply_sql_entities_filter = False
         else:
-            entities_filter = _all_entities_filter
             entity_ids = None
+            apply_sql_entities_filter = True
 
         old_state = aliased(States, name="old_state")
 
@@ -388,31 +367,24 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
                 Events.event_data,
                 Events.time_fired,
                 Events.context_user_id,
-                States.state_id,
                 States.state,
                 States.entity_id,
                 States.domain,
                 States.attributes,
-                old_state.state_id.label("old_state_id"),
             )
             .order_by(Events.time_fired)
             .outerjoin(States, (Events.event_id == States.event_id))
             .outerjoin(old_state, (States.old_state_id == old_state.state_id))
             # The below filter, removes state change events that do not have
             # and old_state, new_state, or the old and
-            # new state are the same for v8 schema or later.
+            # new state.
             #
-            # If the events/states were stored before v8 schema, we relay on the
-            # prev_states dict to remove them.
-            #
-            # When all data is schema v8 or later, the check for EMPTY_JSON_OBJECT
-            # can be removed.
             .filter(
                 (Events.event_type != EVENT_STATE_CHANGED)
-                | (Events.event_data != EMPTY_JSON_OBJECT)
                 | (
                     (States.state_id.isnot(None))
                     & (old_state.state_id.isnot(None))
+                    & (States.state.isnot(None))
                     & (States.state != old_state.state)
                 )
             )
@@ -445,21 +417,19 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
                 | (States.state_id.is_(None))
             )
 
-        # When all data is schema v8 or later, prev_states can be removed
-        prev_states = {}
-        return list(humanify(hass, yield_events(query), entity_attr_cache, prev_states))
+        if apply_sql_entities_filter and filters:
+            entity_filter = filters.entity_filter()
+            if entity_filter is not None:
+                query = query.filter(
+                    entity_filter | (Events.event_type != EVENT_STATE_CHANGED)
+                )
+
+        return list(humanify(hass, yield_events(query), entity_attr_cache))
 
 
-def _keep_event(hass, event, entities_filter, entity_attr_cache):
+def _keep_event(hass, event, entities_filter):
     if event.event_type == EVENT_STATE_CHANGED:
         entity_id = event.entity_id
-        if entity_id is None:
-            return False
-
-        # Do not report on new entities
-        # Do not report on entity removal
-        if not event.has_old_and_new_state:
-            return False
     elif event.event_type in HOMEASSISTANT_EVENTS:
         entity_id = f"{HA_DOMAIN}."
     elif event.event_type in hass.data[DOMAIN] and ATTR_ENTITY_ID not in event.data:
@@ -478,7 +448,7 @@ def _keep_event(hass, event, entities_filter, entity_attr_cache):
                 return False
             entity_id = f"{domain}."
 
-    return entities_filter(entity_id)
+    return entities_filter is None or entities_filter(entity_id)
 
 
 def _entry_message_from_event(hass, entity_id, domain, event, entity_attr_cache):
@@ -650,22 +620,6 @@ class LazyEventPartialState:
                 )
         return self._time_fired_isoformat
 
-    @property
-    def has_old_and_new_state(self):
-        """Check the json data to see if new_state and old_state is present without decoding."""
-        # Delete this check once all states are saved in the v8 schema
-        # format or later (they have the old_state_id column).
-
-        # New events in v8 schema format
-        if self._row.event_data == EMPTY_JSON_OBJECT:
-            return self._row.state_id is not None and self._row.old_state_id is not None
-
-        # Old events not in v8 schema format
-        return (
-            '"old_state": {' in self._row.event_data
-            and '"new_state": {' in self._row.event_data
-        )
-
 
 class EntityAttributeCache:
     """A cache to lookup static entity_id attribute.
@@ -691,9 +645,7 @@ class EntityAttributeCache:
         if current_state:
             # Try the current state as its faster than decoding the
             # attributes
-            self._cache[entity_id][attribute] = current_state.attributes.get(
-                attribute, None
-            )
+            self._cache[entity_id][attribute] = current_state.attributes.get(attribute)
         else:
             # If the entity has been removed, decode the attributes
             # instead

@@ -23,7 +23,8 @@ async def handle_webhook(hass, webhook_id, request):
     """Handle webhook callback."""
     try:
         data = await request.json()
-    except ValueError:
+    except ValueError as err:
+        _LOGGER.error("Error in data: %s", err)
         return None
 
     _LOGGER.debug("Got webhook data: %s", data)
@@ -35,6 +36,12 @@ async def handle_webhook(hass, webhook_id, request):
             event_type=NETATMO_EVENT, event_data={"type": event_type, "data": data}
         )
         for event_data in data.get("event_list"):
+            async_evaluate_event(hass, event_data)
+    elif event_type == "therm_mode":
+        hass.bus.async_fire(
+            event_type=NETATMO_EVENT, event_data={"type": event_type, "data": data}
+        )
+        for event_data in data.get("data"):
             async_evaluate_event(hass, event_data)
     else:
         async_evaluate_event(hass, data)
@@ -58,6 +65,18 @@ def async_evaluate_event(hass, event_data):
                 event_type=NETATMO_EVENT,
                 event_data={"type": event_type, "data": person_event_data},
             )
+    elif event_type == "therm_mode":
+        _LOGGER.debug("therm_mode: %s", event_data)
+        hass.bus.async_fire(
+            event_type=NETATMO_EVENT,
+            event_data={"type": event_type, "data": event_data},
+        )
+    elif event_type == "set_point":
+        _LOGGER.debug("set_point: %s", event_data)
+        hass.bus.async_fire(
+            event_type=NETATMO_EVENT,
+            event_data={"type": event_type, "data": event_data},
+        )
     else:
         hass.bus.async_fire(
             event_type=NETATMO_EVENT,

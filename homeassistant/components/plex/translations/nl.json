@@ -16,6 +16,11 @@
         },
         "flow_title": "{naam} ({host})",
         "step": {
+            "manual_setup": {
+                "data": {
+                    "port": "Poort"
+                }
+            },
             "select_server": {
                 "data": {
                     "server": "Server"

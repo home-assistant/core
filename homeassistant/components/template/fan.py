@@ -23,8 +23,10 @@ from homeassistant.const import (
     CONF_FRIENDLY_NAME,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
+    MATCH_ALL,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
@@ -272,7 +274,7 @@ class TemplateFan(FanEntity):
             )
         else:
             _LOGGER.error(
-                "Received invalid speed: %s. Expected: %s.", speed, self._speed_list
+                "Received invalid speed: %s. Expected: %s", speed, self._speed_list
             )
 
     async def async_oscillate(self, oscillating: bool) -> None:
@@ -287,7 +289,7 @@ class TemplateFan(FanEntity):
             )
         else:
             _LOGGER.error(
-                "Received invalid oscillating value: %s. Expected: %s.",
+                "Received invalid oscillating value: %s. Expected: %s",
                 oscillating,
                 ", ".join(_VALID_OSC),
             )
@@ -304,7 +306,7 @@ class TemplateFan(FanEntity):
             )
         else:
             _LOGGER.error(
-                "Received invalid direction: %s. Expected: %s.",
+                "Received invalid direction: %s. Expected: %s",
                 direction,
                 ", ".join(_VALID_DIRECTIONS),
             )
@@ -313,16 +315,18 @@ class TemplateFan(FanEntity):
         """Register callbacks."""
 
         @callback
-        def template_fan_state_listener(entity, old_state, new_state):
+        def template_fan_state_listener(event):
             """Handle target device state changes."""
             self.async_schedule_update_ha_state(True)
 
         @callback
         def template_fan_startup(event):
             """Update template on startup."""
-            self.hass.helpers.event.async_track_state_change(
-                self._entities, template_fan_state_listener
-            )
+            if self._entities != MATCH_ALL:
+                # Track state change only for valid templates
+                self.hass.helpers.event.async_track_state_change_event(
+                    self._entities, template_fan_state_listener
+                )
 
             self.async_schedule_update_ha_state(True)
 
@@ -341,11 +345,11 @@ class TemplateFan(FanEntity):
         # Validate state
         if state in _VALID_STATES:
             self._state = state
-        elif state == STATE_UNKNOWN:
+        elif state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
             self._state = None
         else:
             _LOGGER.error(
-                "Received invalid fan is_on state: %s. Expected: %s.",
+                "Received invalid fan is_on state: %s. Expected: %s",
                 state,
                 ", ".join(_VALID_STATES),
             )
@@ -363,11 +367,11 @@ class TemplateFan(FanEntity):
             # Validate speed
             if speed in self._speed_list:
                 self._speed = speed
-            elif speed == STATE_UNKNOWN:
+            elif speed in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
                 self._speed = None
             else:
                 _LOGGER.error(
-                    "Received invalid speed: %s. Expected: %s.", speed, self._speed_list
+                    "Received invalid speed: %s. Expected: %s", speed, self._speed_list
                 )
                 self._speed = None
 
@@ -385,11 +389,11 @@ class TemplateFan(FanEntity):
                 self._oscillating = True
             elif oscillating == "False" or oscillating is False:
                 self._oscillating = False
-            elif oscillating == STATE_UNKNOWN:
+            elif oscillating in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
                 self._oscillating = None
             else:
                 _LOGGER.error(
-                    "Received invalid oscillating: %s. Expected: True/False.",
+                    "Received invalid oscillating: %s. Expected: True/False",
                     oscillating,
                 )
                 self._oscillating = None
@@ -406,11 +410,11 @@ class TemplateFan(FanEntity):
             # Validate speed
             if direction in _VALID_DIRECTIONS:
                 self._direction = direction
-            elif direction == STATE_UNKNOWN:
+            elif direction in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
                 self._direction = None
             else:
                 _LOGGER.error(
-                    "Received invalid direction: %s. Expected: %s.",
+                    "Received invalid direction: %s. Expected: %s",
                     direction,
                     ", ".join(_VALID_DIRECTIONS),
                 )

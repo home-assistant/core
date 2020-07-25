@@ -35,9 +35,9 @@ from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from . import migration, purge
-from .const import DATA_INSTANCE
+from .const import DATA_INSTANCE, SQLITE_URL_PREFIX
 from .models import Base, Events, RecorderRuns, States
-from .util import session_scope
+from .util import session_scope, validate_or_move_away_sqlite_database
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -386,11 +386,14 @@ class Recorder(threading.Thread):
             if dbevent and event.event_type == EVENT_STATE_CHANGED:
                 try:
                     dbstate = States.from_event(event)
+                    has_new_state = event.data.get("new_state")
                     dbstate.old_state_id = self._old_state_ids.get(dbstate.entity_id)
+                    if not has_new_state:
+                        dbstate.state = None
                     dbstate.event_id = dbevent.event_id
                     self.event_session.add(dbstate)
                     self.event_session.flush()
-                    if "new_state" in event.data:
+                    if has_new_state:
                         self._old_state_ids[dbstate.entity_id] = dbstate.state_id
                     elif dbstate.entity_id in self._old_state_ids:
                         del self._old_state_ids[dbstate.entity_id]
@@ -418,7 +421,7 @@ class Recorder(threading.Thread):
         except Exception as err:  # pylint: disable=broad-except
             # Must catch the exception to prevent the loop from collapsing
             _LOGGER.error(
-                "Error in database connectivity during keepalive: %s.", err,
+                "Error in database connectivity during keepalive: %s", err,
             )
             self._reopen_event_session()
 
@@ -507,7 +510,7 @@ class Recorder(threading.Thread):
             # We do not import sqlite3 here so mysql/other
             # users do not have to pay for it to be loaded in
             # memory
-            if self.db_url.startswith("sqlite://"):
+            if self.db_url.startswith(SQLITE_URL_PREFIX):
                 old_isolation = dbapi_connection.isolation_level
                 dbapi_connection.isolation_level = None
                 cursor = dbapi_connection.cursor()
@@ -523,12 +526,17 @@ class Recorder(threading.Thread):
                 cursor.execute("SET session wait_timeout=28800")
                 cursor.close()
 
-        if self.db_url == "sqlite://" or ":memory:" in self.db_url:
+        if self.db_url == SQLITE_URL_PREFIX or ":memory:" in self.db_url:
             kwargs["connect_args"] = {"check_same_thread": False}
             kwargs["poolclass"] = StaticPool
             kwargs["pool_reset_on_return"] = None
         else:
             kwargs["echo"] = False
+
+        if self.db_url != SQLITE_URL_PREFIX and self.db_url.startswith(
+            SQLITE_URL_PREFIX
+        ):
+            validate_or_move_away_sqlite_database(self.db_url)
 
         if self.engine is not None:
             self.engine.dispose()

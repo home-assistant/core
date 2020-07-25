@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Echec de connexion",
+            "invalid_auth": "Authentification invalide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Token d'acc\u00e8s",
+                    "host": "H\u00f4te"
+                }
+            }
+        }
+    }
+}

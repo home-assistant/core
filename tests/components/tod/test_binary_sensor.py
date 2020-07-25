@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 import unittest
 
+import pytest
 import pytz
 
 from homeassistant import setup
@@ -13,6 +14,12 @@ import homeassistant.util.dt as dt_util
 
 from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant
+
+
+@pytest.fixture(autouse=True)
+def mock_legacy_time(legacy_patchable_time):
+    """Make time patchable for all the tests."""
+    yield
 
 
 class TestBinarySensorTod(unittest.TestCase):

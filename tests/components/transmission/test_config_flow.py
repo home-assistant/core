@@ -8,7 +8,11 @@ from homeassistant import data_entry_flow
 from homeassistant.components import transmission
 from homeassistant.components.transmission import config_flow
 from homeassistant.components.transmission.const import (
+    CONF_LIMIT,
+    CONF_ORDER,
+    DEFAULT_LIMIT,
     DEFAULT_NAME,
+    DEFAULT_ORDER,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
 )
@@ -158,6 +162,8 @@ async def test_import(hass, api):
             CONF_HOST: HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SCAN_INTERVAL: timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            CONF_LIMIT: DEFAULT_LIMIT,
+            CONF_ORDER: DEFAULT_ORDER,
         }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -176,6 +182,8 @@ async def test_import(hass, api):
             CONF_PASSWORD: PASSWORD,
             CONF_PORT: PORT,
             CONF_SCAN_INTERVAL: timedelta(seconds=SCAN_INTERVAL),
+            CONF_LIMIT: DEFAULT_LIMIT,
+            CONF_ORDER: DEFAULT_ORDER,
         }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY

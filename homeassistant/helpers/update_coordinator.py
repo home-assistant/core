@@ -8,7 +8,7 @@ from typing import Any, Awaitable, Callable, List, Optional
 import aiohttp
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers import event
 from homeassistant.util.dt import utcnow
 
 from .debounce import Debouncer
@@ -30,7 +30,7 @@ class DataUpdateCoordinator:
         logger: logging.Logger,
         *,
         name: str,
-        update_interval: timedelta,
+        update_interval: Optional[timedelta] = None,
         update_method: Optional[Callable[[], Awaitable]] = None,
         request_refresh_debouncer: Optional[Debouncer] = None,
     ):
@@ -91,6 +91,9 @@ class DataUpdateCoordinator:
     @callback
     def _schedule_refresh(self) -> None:
         """Schedule a refresh."""
+        if self.update_interval is None:
+            return
+
         if self._unsub_refresh:
             self._unsub_refresh()
             self._unsub_refresh = None
@@ -99,7 +102,7 @@ class DataUpdateCoordinator:
         # minimizing the time between the point and the real activation.
         # That way we obtain a constant update frequency,
         # as long as the update process takes less than a second
-        self._unsub_refresh = async_track_point_in_utc_time(
+        self._unsub_refresh = event.async_track_point_in_utc_time(
             self.hass,
             self._handle_refresh_interval,
             utcnow().replace(microsecond=0) + self.update_interval,

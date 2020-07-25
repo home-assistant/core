@@ -11,6 +11,7 @@ import logging
 import os
 import sys
 import threading
+import time
 import uuid
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa
@@ -148,7 +149,7 @@ def get_test_home_assistant():
 # pylint: disable=protected-access
 async def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
-    hass = ha.HomeAssistant(loop)
+    hass = ha.HomeAssistant()
     store = auth_store.AuthStore(hass)
     hass.auth = auth.AuthManager(hass, store, {}, {})
     ensure_auth_manager_loaded(hass.auth)
@@ -284,9 +285,26 @@ fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
 
 
 @ha.callback
-def async_fire_time_changed(hass, time):
+def async_fire_time_changed(hass, datetime_, fire_all=False):
     """Fire a time changes event."""
-    hass.bus.async_fire(EVENT_TIME_CHANGED, {"now": date_util.as_utc(time)})
+    hass.bus.async_fire(EVENT_TIME_CHANGED, {"now": date_util.as_utc(datetime_)})
+
+    for task in list(hass.loop._scheduled):
+        if not isinstance(task, asyncio.TimerHandle):
+            continue
+        if task.cancelled():
+            continue
+
+        future_seconds = task.when() - hass.loop.time()
+        mock_seconds_into_future = datetime_.timestamp() - time.time()
+
+        if fire_all or mock_seconds_into_future >= future_seconds:
+            with patch(
+                "homeassistant.helpers.event.pattern_utc_now",
+                return_value=date_util.as_utc(datetime_),
+            ):
+                task._run()
+                task.cancel()
 
 
 fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
@@ -337,6 +355,7 @@ def mock_registry(hass, mock_entries=None):
     """Mock the Entity Registry."""
     registry = entity_registry.EntityRegistry(hass)
     registry.entities = mock_entries or OrderedDict()
+    registry._rebuild_index()
 
     hass.data[entity_registry.DATA_REGISTRY] = registry
     return registry
@@ -356,6 +375,7 @@ def mock_device_registry(hass, mock_entries=None, mock_deleted_entries=None):
     registry = device_registry.DeviceRegistry(hass)
     registry.devices = mock_entries or OrderedDict()
     registry.deleted_devices = mock_deleted_entries or OrderedDict()
+    registry._rebuild_index()
 
     hass.data[device_registry.DATA_REGISTRY] = registry
     return registry

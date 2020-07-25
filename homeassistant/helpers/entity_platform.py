@@ -25,6 +25,7 @@ SLOW_SETUP_WARNING = 10
 SLOW_SETUP_MAX_WAIT = 60
 PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
+PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
 
 class EntityPlatform:
@@ -78,7 +79,8 @@ class EntityPlatform:
 
         If parallel updates is set to 0, we skip the semaphore.
         If parallel updates is set to a number, we initialize the semaphore to that number.
-        Default for entities with `async_update` method is 1. Otherwise it's 0.
+        The default value for parallel requests is decided based on the first entity that is added to Home Assistant.
+        It's 0 if the entity defines the async_update method, else it's 1.
         """
         if self.parallel_updates_created:
             return self.parallel_updates
@@ -189,7 +191,7 @@ class EntityPlatform:
             return True
         except PlatformNotReady:
             tries += 1
-            wait_time = min(tries, 6) * 30
+            wait_time = min(tries, 6) * PLATFORM_NOT_READY_BASE_WAIT_TIME
             logger.warning(
                 "Platform %s not ready yet. Retrying in %d seconds.",
                 self.platform_name,
@@ -516,7 +518,11 @@ class EntityPlatform:
             """Handle the service."""
             await service.entity_service_call(
                 self.hass,
-                self.hass.data[DATA_ENTITY_PLATFORM][self.platform_name],
+                [
+                    plf
+                    for plf in self.hass.data[DATA_ENTITY_PLATFORM][self.platform_name]
+                    if plf.domain == self.domain
+                ],
                 func,
                 call,
                 required_features,

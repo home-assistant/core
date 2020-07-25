@@ -188,8 +188,8 @@ async def test_platform_warn_slow_setup(hass):
         assert mock_call.called
 
         # mock_calls[0] is the warning message for component setup
-        # mock_calls[5] is the warning message for platform setup
-        timeout, logger_method = mock_call.mock_calls[5][1][:2]
+        # mock_calls[6] is the warning message for platform setup
+        timeout, logger_method = mock_call.mock_calls[6][1][:2]
 
         assert timeout == entity_platform.SLOW_SETUP_WARNING
         assert logger_method == _LOGGER.warning
@@ -881,6 +881,15 @@ async def test_platforms_sharing_services(hass):
     )
     entity2 = MockEntity(entity_id="mock_integration.entity_2")
     await entity_platform2.async_add_entities([entity2])
+
+    entity_platform3 = MockEntityPlatform(
+        hass,
+        domain="different_integration",
+        platform_name="mock_platform",
+        platform=None,
+    )
+    entity3 = MockEntity(entity_id="different_integration.entity_3")
+    await entity_platform3.async_add_entities([entity3])
 
     entities = []
 
