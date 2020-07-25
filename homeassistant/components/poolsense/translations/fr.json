@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_auth": "L'authentification ne'st pas valide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Adresse e-mail",
+                    "password": "Mot de passe"
+                },
+                "description": "[%key:common::config_flow::description%]",
+                "title": "PoolSense"
+            }
+        }
+    }
+}

@@ -1,8 +1,12 @@
 {
     "config": {
         "abort": {
+            "already_configured": "L'accord s\u00e9lectionn\u00e9 est d\u00e9j\u00e0 configur\u00e9.",
+            "authorize_url_fail": "Erreur inconnue lors de la g\u00e9n\u00e9ration d'une URL d'autorisation.",
+            "authorize_url_timeout": "Timout de g\u00e9n\u00e9ration de l'URL d'autorisation.",
             "client_id": "L'ID client de la configuration n'est pas valide.",
             "client_secret": "Le client secret de la configuration n'est pas valide.",
+            "missing_configuration": "The composant n'est pas configur\u00e9. Veuillez vous r\u00e9f\u00e9rer \u00e0 la documentation.",
             "no_agreements": "Ce compte n'a pas d'affichages Toon.",
             "no_app": "Vous devez configurer Toon avant de pouvoir vous authentifier avec celui-ci. [Veuillez lire les instructions] (https://www.home-assistant.io/components/toon/).",
             "unknown_auth_fail": "Une erreur inattendue s'est produite lors de l'authentification."
@@ -12,6 +16,13 @@
             "display_exists": "L'affichage s\u00e9lectionn\u00e9 est d\u00e9j\u00e0 configur\u00e9."
         },
         "step": {
+            "agreement": {
+                "data": {
+                    "agreement": "Accord"
+                },
+                "description": "S\u00e9lectionnez l'adresse d'accord que vous souhaitez ajouter.",
+                "title": "S\u00e9lectionnez votre accord"
+            },
             "authenticate": {
                 "data": {
                     "password": "Mot de passe",
@@ -27,6 +38,9 @@
                 },
                 "description": "S\u00e9lectionnez l'affichage Toon avec lequel vous connecter.",
                 "title": "S\u00e9lectionnez l'affichage"
+            },
+            "pick_implementation": {
+                "title": "Choisissez votre locataire pour vous authentifier"
             }
         }
     }

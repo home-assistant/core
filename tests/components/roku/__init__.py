@@ -33,6 +33,7 @@ def mock_connection(
     app: str = "roku",
     host: str = HOST,
     power: bool = True,
+    media_state: str = "close",
     error: bool = False,
     server_error: bool = False,
 ) -> None:
@@ -89,6 +90,12 @@ def mock_connection(
         headers={"Content-Type": "text/xml"},
     )
 
+    aioclient_mock.get(
+        f"{roku_url}/query/media-player",
+        text=load_fixture(f"roku/media-player-{media_state}.xml"),
+        headers={"Content-Type": "text/xml"},
+    )
+
     aioclient_mock.post(
         re.compile(f"{roku_url}/keypress/.*"), text="OK",
     )
@@ -96,6 +103,8 @@ def mock_connection(
     aioclient_mock.post(
         re.compile(f"{roku_url}/launch/.*"), text="OK",
     )
+
+    aioclient_mock.post(f"{roku_url}/search", text="OK")
 
 
 def mock_connection_error(
@@ -115,6 +124,7 @@ def mock_connection_error(
 
     aioclient_mock.post(re.compile(f"{roku_url}/keypress/.*"), exc=SocketGIAError)
     aioclient_mock.post(re.compile(f"{roku_url}/launch/.*"), exc=SocketGIAError)
+    aioclient_mock.post(f"{roku_url}/search", exc=SocketGIAError)
 
 
 def mock_connection_server_error(
@@ -134,6 +144,7 @@ def mock_connection_server_error(
 
     aioclient_mock.post(re.compile(f"{roku_url}/keypress/.*"), status=500)
     aioclient_mock.post(re.compile(f"{roku_url}/launch/.*"), status=500)
+    aioclient_mock.post(f"{roku_url}/search", status=500)
 
 
 async def setup_integration(
@@ -145,6 +156,7 @@ async def setup_integration(
     unique_id: str = UPNP_SERIAL,
     error: bool = False,
     power: bool = True,
+    media_state: str = "close",
     server_error: bool = False,
     skip_entry_setup: bool = False,
 ) -> MockConfigEntry:
@@ -161,6 +173,7 @@ async def setup_integration(
             host=host,
             error=error,
             power=power,
+            media_state=media_state,
             server_error=server_error,
         )
         await hass.config_entries.async_setup(entry.entry_id)

@@ -17,6 +17,7 @@
     },
     "abort": {
       "already_configured": "This Smile is already configured"
-    }
+    },
+    "flow_title": "Smile: {name}"
   }
 }

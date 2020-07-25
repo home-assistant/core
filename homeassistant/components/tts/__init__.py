@@ -175,7 +175,11 @@ async def async_setup(hass, config):
             }
 
             await hass.services.async_call(
-                DOMAIN_MP, SERVICE_PLAY_MEDIA, data, blocking=True
+                DOMAIN_MP,
+                SERVICE_PLAY_MEDIA,
+                data,
+                blocking=True,
+                context=service.context,
             )
 
         service_name = p_config.get(CONF_SERVICE_NAME, f"{p_type}_{SERVICE_SAY}")

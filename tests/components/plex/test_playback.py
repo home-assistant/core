@@ -28,18 +28,14 @@ async def test_sonos_playback(hass):
     mock_plex_server = MockPlexServer(config_entry=entry)
 
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "homeassistant.components.plex.PlexWebsocket.listen"
-    ):
+        "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
+    ), patch("homeassistant.components.plex.PlexWebsocket.listen"):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     server_id = mock_plex_server.machineIdentifier
     loaded_server = hass.data[DOMAIN][SERVERS][server_id]
-
-    with patch("plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()):
-        # Access and cache PlexAccount
-        assert loaded_server.account
 
     # Test Sonos integration lookup failure
     with patch.object(

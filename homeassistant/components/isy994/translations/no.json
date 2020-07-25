@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
         "error": {
             "invalid_host": "Vertsoppf\u00f8ringen var ikke i fullstendig URL-format, for eksempel http://192.168.10.100:80",
             "unknown": "[%key:common::config_flow::error::unknown%"

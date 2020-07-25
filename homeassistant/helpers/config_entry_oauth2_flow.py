@@ -120,10 +120,16 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         """Return the redirect uri."""
         return f"{get_url(self.hass)}{AUTH_CALLBACK_PATH}"
 
+    @property
+    def extra_authorize_data(self) -> dict:
+        """Extra data that needs to be appended to the authorize url."""
+        return {}
+
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""
         return str(
-            URL(self.authorize_url).with_query(
+            URL(self.authorize_url)
+            .with_query(
                 {
                     "response_type": "code",
                     "client_id": self.client_id,
@@ -131,6 +137,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
                     "state": _encode_jwt(self.hass, {"flow_id": flow_id}),
                 }
             )
+            .update_query(self.extra_authorize_data)
         )
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:

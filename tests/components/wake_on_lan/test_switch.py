@@ -5,16 +5,11 @@ import homeassistant.components.switch as switch
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import setup_component
 
-from tests.async_mock import patch
+from tests.async_mock import Mock, patch
 from tests.common import get_test_home_assistant, mock_service
 from tests.components.switch import common
 
 TEST_STATE = None
-
-
-def send_magic_packet(*macs, **kwargs):
-    """Fake call for sending magic packets."""
-    return
 
 
 def call(cmd, stdout, stderr):
@@ -31,6 +26,8 @@ def system():
 
 class TestWolSwitch(unittest.TestCase):
     """Test the wol switch."""
+
+    send_magic_packet = Mock(return_value=None)
 
     def setUp(self):
         """Set up things to be run when tests are started."""
@@ -116,17 +113,22 @@ class TestWolSwitch(unittest.TestCase):
 
     @patch("wakeonlan.send_magic_packet", new=send_magic_packet)
     @patch("subprocess.call", new=call)
-    def test_broadcast_config(self):
-        """Test with broadcast address config."""
+    def test_broadcast_config_ip_and_port(self):
+        """Test with broadcast address and broadcast port config."""
+
+        mac = "00-01-02-03-04-05"
+        broadcast_address = "255.255.255.255"
+        port = 999
+
         assert setup_component(
             self.hass,
             switch.DOMAIN,
             {
                 "switch": {
                     "platform": "wake_on_lan",
-                    "mac": "00-01-02-03-04-05",
-                    "broadcast_address": "255.255.255.255",
-                    "broadcast_port": 999,
+                    "mac": mac,
+                    "broadcast_address": broadcast_address,
+                    "broadcast_port": port,
                 }
             },
         )
@@ -137,6 +139,68 @@ class TestWolSwitch(unittest.TestCase):
 
         common.turn_on(self.hass, "switch.wake_on_lan")
         self.hass.block_till_done()
+
+        self.send_magic_packet.assert_called_with(
+            mac, ip_address=broadcast_address, port=port
+        )
+
+    @patch("wakeonlan.send_magic_packet", new=send_magic_packet)
+    @patch("subprocess.call", new=call)
+    def test_broadcast_config_ip(self):
+        """Test with only broadcast address."""
+
+        mac = "00-01-02-03-04-05"
+        broadcast_address = "255.255.255.255"
+
+        assert setup_component(
+            self.hass,
+            switch.DOMAIN,
+            {
+                "switch": {
+                    "platform": "wake_on_lan",
+                    "mac": mac,
+                    "broadcast_address": broadcast_address,
+                }
+            },
+        )
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("switch.wake_on_lan")
+        assert STATE_OFF == state.state
+
+        common.turn_on(self.hass, "switch.wake_on_lan")
+        self.hass.block_till_done()
+
+        self.send_magic_packet.assert_called_with(mac, ip_address=broadcast_address)
+
+    @patch("wakeonlan.send_magic_packet", new=send_magic_packet)
+    @patch("subprocess.call", new=call)
+    def test_broadcast_config_port(self):
+        """Test with only broadcast port config."""
+
+        mac = "00-01-02-03-04-05"
+        port = 999
+
+        assert setup_component(
+            self.hass,
+            switch.DOMAIN,
+            {
+                "switch": {
+                    "platform": "wake_on_lan",
+                    "mac": mac,
+                    "broadcast_port": port,
+                }
+            },
+        )
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("switch.wake_on_lan")
+        assert STATE_OFF == state.state
+
+        common.turn_on(self.hass, "switch.wake_on_lan")
+        self.hass.block_till_done()
+
+        self.send_magic_packet.assert_called_with(mac, port=port)
 
     @patch("wakeonlan.send_magic_packet", new=send_magic_packet)
     @patch("subprocess.call", new=call)

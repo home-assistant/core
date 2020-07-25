@@ -41,7 +41,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import State, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs
@@ -95,12 +95,14 @@ class CoverGroup(CoverEntity):
         }
 
     @callback
+    def _update_supported_features_event(self, event):
+        self.update_supported_features(
+            event.data.get("entity_id"), event.data.get("new_state")
+        )
+
+    @callback
     def update_supported_features(
-        self,
-        entity_id: str,
-        old_state: Optional[State],
-        new_state: Optional[State],
-        update_state: bool = True,
+        self, entity_id: str, new_state: Optional[State], update_state: bool = True,
     ) -> None:
         """Update dictionaries with supported features."""
         if not new_state:
@@ -147,11 +149,9 @@ class CoverGroup(CoverEntity):
         """Register listeners."""
         for entity_id in self._entities:
             new_state = self.hass.states.get(entity_id)
-            self.update_supported_features(
-                entity_id, None, new_state, update_state=False
-            )
-        async_track_state_change(
-            self.hass, self._entities, self.update_supported_features
+            self.update_supported_features(entity_id, new_state, update_state=False)
+        async_track_state_change_event(
+            self.hass, self._entities, self._update_supported_features_event
         )
         await self.async_update()
 
@@ -209,21 +209,21 @@ class CoverGroup(CoverEntity):
         """Move the covers up."""
         data = {ATTR_ENTITY_ID: self._covers[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_OPEN_COVER, data, blocking=True
+            DOMAIN, SERVICE_OPEN_COVER, data, blocking=True, context=self._context
         )
 
     async def async_close_cover(self, **kwargs):
         """Move the covers down."""
         data = {ATTR_ENTITY_ID: self._covers[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_CLOSE_COVER, data, blocking=True
+            DOMAIN, SERVICE_CLOSE_COVER, data, blocking=True, context=self._context
         )
 
     async def async_stop_cover(self, **kwargs):
         """Fire the stop action."""
         data = {ATTR_ENTITY_ID: self._covers[KEY_STOP]}
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_STOP_COVER, data, blocking=True
+            DOMAIN, SERVICE_STOP_COVER, data, blocking=True, context=self._context
         )
 
     async def async_set_cover_position(self, **kwargs):
@@ -233,28 +233,32 @@ class CoverGroup(CoverEntity):
             ATTR_POSITION: kwargs[ATTR_POSITION],
         }
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_SET_COVER_POSITION, data, blocking=True
+            DOMAIN,
+            SERVICE_SET_COVER_POSITION,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     async def async_open_cover_tilt(self, **kwargs):
         """Tilt covers open."""
         data = {ATTR_ENTITY_ID: self._tilts[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_OPEN_COVER_TILT, data, blocking=True
+            DOMAIN, SERVICE_OPEN_COVER_TILT, data, blocking=True, context=self._context
         )
 
     async def async_close_cover_tilt(self, **kwargs):
         """Tilt covers closed."""
         data = {ATTR_ENTITY_ID: self._tilts[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_CLOSE_COVER_TILT, data, blocking=True
+            DOMAIN, SERVICE_CLOSE_COVER_TILT, data, blocking=True, context=self._context
         )
 
     async def async_stop_cover_tilt(self, **kwargs):
         """Stop cover tilt."""
         data = {ATTR_ENTITY_ID: self._tilts[KEY_STOP]}
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_STOP_COVER_TILT, data, blocking=True
+            DOMAIN, SERVICE_STOP_COVER_TILT, data, blocking=True, context=self._context
         )
 
     async def async_set_cover_tilt_position(self, **kwargs):
@@ -264,7 +268,11 @@ class CoverGroup(CoverEntity):
             ATTR_TILT_POSITION: kwargs[ATTR_TILT_POSITION],
         }
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_SET_COVER_TILT_POSITION, data, blocking=True
+            DOMAIN,
+            SERVICE_SET_COVER_TILT_POSITION,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     async def async_update(self):

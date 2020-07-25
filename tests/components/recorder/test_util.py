@@ -47,7 +47,7 @@ def test_recorder_bad_execute(hass_recorder):
 
     hass_recorder()
 
-    def to_native():
+    def to_native(validate_entity_id=True):
         """Rasie exception."""
         raise SQLAlchemyError()
 
@@ -57,6 +57,6 @@ def test_recorder_bad_execute(hass_recorder):
     with pytest.raises(SQLAlchemyError), patch(
         "homeassistant.components.recorder.time.sleep"
     ) as e_mock:
-        util.execute((mck1,))
+        util.execute((mck1,), to_native=True)
 
     assert e_mock.call_count == 2

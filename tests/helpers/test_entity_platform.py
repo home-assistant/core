@@ -882,6 +882,15 @@ async def test_platforms_sharing_services(hass):
     entity2 = MockEntity(entity_id="mock_integration.entity_2")
     await entity_platform2.async_add_entities([entity2])
 
+    entity_platform3 = MockEntityPlatform(
+        hass,
+        domain="different_integration",
+        platform_name="mock_platform",
+        platform=None,
+    )
+    entity3 = MockEntity(entity_id="different_integration.entity_3")
+    await entity_platform3.async_add_entities([entity3])
+
     entities = []
 
     @callback

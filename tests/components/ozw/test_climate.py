@@ -10,9 +10,9 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_IDLE,
-    HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
 )
 
@@ -32,7 +32,7 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg, caplog):
         HVAC_MODE_OFF,
         HVAC_MODE_HEAT,
         HVAC_MODE_COOL,
-        HVAC_MODE_AUTO,
+        HVAC_MODE_HEAT_COOL,
     ]
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 23.1
@@ -60,7 +60,7 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg, caplog):
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
-        {"entity_id": "climate.ct32_thermostat_mode", "hvac_mode": HVAC_MODE_AUTO},
+        {"entity_id": "climate.ct32_thermostat_mode", "hvac_mode": HVAC_MODE_HEAT_COOL},
         blocking=True,
     )
     assert len(sent_messages) == 2
@@ -106,7 +106,7 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg, caplog):
     await hass.async_block_till_done()
     state = hass.states.get("climate.ct32_thermostat_mode")
     assert state is not None
-    assert state.state == HVAC_MODE_AUTO
+    assert state.state == HVAC_MODE_HEAT_COOL
     assert state.attributes.get(ATTR_TEMPERATURE) is None
     assert state.attributes[ATTR_TARGET_TEMP_LOW] == 21.1
     assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 25.6

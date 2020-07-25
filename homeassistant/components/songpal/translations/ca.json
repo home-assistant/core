@@ -5,7 +5,7 @@
             "not_songpal_device": "No \u00e9s un dispositiu Songpal"
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar"
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "flow_title": "Sony Songpal {name} ({host})",
         "step": {

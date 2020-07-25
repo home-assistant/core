@@ -8,8 +8,11 @@ from tests.components.logbook.test_init import MockLazyEventPartialState
 
 async def test_humanify_alexa_event(hass):
     """Test humanifying Alexa event."""
+    hass.config.components.add("recorder")
     await async_setup_component(hass, "alexa", {})
+    await async_setup_component(hass, "logbook", {})
     hass.states.async_set("light.kitchen", "on", {"friendly_name": "Kitchen Light"})
+    entity_attr_cache = logbook.EntityAttributeCache(hass)
 
     results = list(
         logbook.humanify(
@@ -40,6 +43,7 @@ async def test_humanify_alexa_event(hass):
                     },
                 ),
             ],
+            entity_attr_cache,
         )
     )
 

@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
@@ -183,6 +184,9 @@ def get_forecast(ec_data, forecast_type):
                     ATTR_FORECAST_CONDITION: icon_code_to_condition(
                         int(half_days[0]["icon_code"])
                     ),
+                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
+                        half_days[0]["precip_probability"]
+                    ),
                 }
             )
             half_days = half_days[2:]
@@ -200,6 +204,9 @@ def get_forecast(ec_data, forecast_type):
                     ATTR_FORECAST_CONDITION: icon_code_to_condition(
                         int(half_days[high]["icon_code"])
                     ),
+                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
+                        half_days[high]["precip_probability"]
+                    ),
                 }
             )
 
@@ -214,6 +221,9 @@ def get_forecast(ec_data, forecast_type):
                     ATTR_FORECAST_TEMP: int(hours[hour]["temperature"]),
                     ATTR_FORECAST_CONDITION: icon_code_to_condition(
                         int(hours[hour]["icon_code"])
+                    ),
+                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
+                        hours[hour]["precip_probability"]
                     ),
                 }
             )

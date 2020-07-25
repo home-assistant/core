@@ -13,27 +13,43 @@ async def test_component_dependencies(hass):
     """Test if we can get the proper load order of components."""
     mock_integration(hass, MockModule("mod1"))
     mock_integration(hass, MockModule("mod2", ["mod1"]))
-    mock_integration(hass, MockModule("mod3", ["mod2"]))
+    mod_3 = mock_integration(hass, MockModule("mod3", ["mod2"]))
 
-    assert {"mod1", "mod2", "mod3"} == await loader.async_component_dependencies(
-        hass, "mod3"
+    assert {"mod1", "mod2", "mod3"} == await loader._async_component_dependencies(
+        hass, "mod_3", mod_3, set(), set()
     )
 
     # Create circular dependency
     mock_integration(hass, MockModule("mod1", ["mod3"]))
 
     with pytest.raises(loader.CircularDependency):
-        print(await loader.async_component_dependencies(hass, "mod3"))
+        print(
+            await loader._async_component_dependencies(
+                hass, "mod_3", mod_3, set(), set()
+            )
+        )
 
     # Depend on non-existing component
-    mock_integration(hass, MockModule("mod1", ["nonexisting"]))
+    mod_1 = mock_integration(hass, MockModule("mod1", ["nonexisting"]))
 
     with pytest.raises(loader.IntegrationNotFound):
-        print(await loader.async_component_dependencies(hass, "mod1"))
+        print(
+            await loader._async_component_dependencies(
+                hass, "mod_1", mod_1, set(), set()
+            )
+        )
 
-    # Try to get dependencies for non-existing component
-    with pytest.raises(loader.IntegrationNotFound):
-        print(await loader.async_component_dependencies(hass, "nonexisting"))
+    # Having an after dependency 2 deps down that is circular
+    mod_1 = mock_integration(
+        hass, MockModule("mod1", partial_manifest={"after_dependencies": ["mod_3"]})
+    )
+
+    with pytest.raises(loader.CircularDependency):
+        print(
+            await loader._async_component_dependencies(
+                hass, "mod_3", mod_3, set(), set()
+            )
+        )
 
 
 def test_component_loader(hass):

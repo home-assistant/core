@@ -176,7 +176,7 @@ class HassIO:
                 )
 
                 if request.status not in (HTTP_OK, HTTP_BAD_REQUEST):
-                    _LOGGER.error("%s return code %d.", command, request.status)
+                    _LOGGER.error("%s return code %d", command, request.status)
                     raise HassioAPIError()
 
                 answer = await request.json()

@@ -80,8 +80,8 @@ class Metering(ZigbeeChannel):
     ) -> None:
         """Initialize Metering."""
         super().__init__(cluster, ch_pool)
-        self._divisor = None
-        self._multiplier = None
+        self._divisor = 1
+        self._multiplier = 1
         self._unit_enum = None
         self._format_spec = None
 
@@ -114,14 +114,8 @@ class Metering(ZigbeeChannel):
             from_cache=from_cache,
         )
 
-        self._divisor = results.get("divisor", 1)
-        if self._divisor == 0:
-            self._divisor = 1
-
-        self._multiplier = results.get("multiplier", 1)
-        if self._multiplier == 0:
-            self._multiplier = 1
-
+        self._divisor = results.get("divisor", self._divisor)
+        self._multiplier = results.get("multiplier", self._multiplier)
         self._unit_enum = results.get("unit_of_measure", 0x7F)  # default to unknown
 
         fmting = results.get(

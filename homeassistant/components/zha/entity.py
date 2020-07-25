@@ -4,14 +4,14 @@ import asyncio
 import logging
 from typing import Any, Awaitable, Dict, List, Optional
 
-from homeassistant.core import CALLBACK_TYPE, State, callback
+from homeassistant.core import CALLBACK_TYPE, Event, callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .core.const import (
@@ -245,7 +245,7 @@ class ZhaGroupEntity(BaseZhaEntity):
             signal_override=True,
         )
 
-        self._async_unsub_state_changed = async_track_state_change(
+        self._async_unsub_state_changed = async_track_state_change_event(
             self.hass, self._entity_ids, self.async_state_changed_listener
         )
 
@@ -258,9 +258,7 @@ class ZhaGroupEntity(BaseZhaEntity):
         await self.async_update()
 
     @callback
-    def async_state_changed_listener(
-        self, entity_id: str, old_state: State, new_state: State
-    ):
+    def async_state_changed_listener(self, event: Event):
         """Handle child updates."""
         self.async_schedule_update_ha_state(True)
 

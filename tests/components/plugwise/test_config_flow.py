@@ -12,6 +12,7 @@ from tests.async_mock import patch
 def mock_smile():
     """Create a Mock Smile for testing exceptions."""
     with patch("homeassistant.components.plugwise.config_flow.Smile",) as smile_mock:
+        smile_mock.PlugwiseError = Smile.PlugwiseError
         smile_mock.InvalidAuthentication = Smile.InvalidAuthentication
         smile_mock.ConnectionFailedError = Smile.ConnectionFailedError
         smile_mock.return_value.connect.return_value = True

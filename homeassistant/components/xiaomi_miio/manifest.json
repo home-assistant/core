@@ -3,7 +3,7 @@
   "name": "Xiaomi Miio",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/xiaomi_miio",
-  "requirements": ["construct==2.9.45", "python-miio==0.5.1"],
+  "requirements": ["construct==2.9.45", "python-miio==0.5.2.1"],
   "codeowners": ["@rytilahti", "@syssi"],
   "zeroconf": ["_miio._udp.local."]
 }

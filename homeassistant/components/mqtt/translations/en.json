@@ -47,5 +47,37 @@
             "button_short_release": "\"{subtype}\" released",
             "button_triple_press": "\"{subtype}\" triple clicked"
         }
+    },
+    "options": {
+        "error": {
+            "bad_birth": "Invalid birth topic.",
+            "bad_will": "Invalid will topic.",
+            "cannot_connect": "Unable to connect to the broker."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
+                },
+                "description": "Please enter the connection information of your MQTT broker."
+            },
+            "options": {
+                "data": {
+                    "birth_payload": "Birth message payload",
+                    "birth_qos": "Birth message QoS",
+                    "birth_retain": "Birth message retain",
+                    "birth_topic": "Birth message topic",
+                    "discovery": "Enable discovery",
+                    "will_payload": "Will message payload",
+                    "will_qos": "Will message QoS",
+                    "will_retain": "Will message retain",
+                    "will_topic": "Will message topic"
+                },
+                "description": "Please select MQTT options."
+            }
+        }
     }
 }

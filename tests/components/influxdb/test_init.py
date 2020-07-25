@@ -1,9 +1,11 @@
 """The tests for the InfluxDB component."""
+from dataclasses import dataclass
 import datetime
 
 import pytest
 
 import homeassistant.components.influxdb as influxdb
+from homeassistant.components.influxdb.const import DEFAULT_BUCKET
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_OFF,
@@ -11,10 +13,13 @@ from homeassistant.const import (
     STATE_STANDBY,
     UNIT_PERCENTAGE,
 )
+from homeassistant.core import split_entity_id
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import MagicMock, Mock, call, patch
 
+INFLUX_PATH = "homeassistant.components.influxdb"
+INFLUX_CLIENT_PATH = f"{INFLUX_PATH}.InfluxDBClient"
 BASE_V1_CONFIG = {}
 BASE_V2_CONFIG = {
     "api_version": influxdb.API_VERSION_2,
@@ -23,13 +28,20 @@ BASE_V2_CONFIG = {
 }
 
 
+@dataclass
+class FilterTest:
+    """Class for capturing a filter test."""
+
+    id: str
+    should_pass: bool
+
+
 @pytest.fixture(autouse=True)
 def mock_batch_timeout(hass, monkeypatch):
     """Mock the event bus listener and the batch timeout for tests."""
     hass.bus.listen = MagicMock()
     monkeypatch.setattr(
-        "homeassistant.components.influxdb.InfluxThread.batch_timeout",
-        Mock(return_value=0),
+        f"{INFLUX_PATH}.InfluxThread.batch_timeout", Mock(return_value=0),
     )
 
 
@@ -37,9 +49,9 @@ def mock_batch_timeout(hass, monkeypatch):
 def mock_client_fixture(request):
     """Patch the InfluxDBClient object with mock for version under test."""
     if request.param == influxdb.API_VERSION_2:
-        client_target = "homeassistant.components.influxdb.InfluxDBClientV2"
+        client_target = f"{INFLUX_CLIENT_PATH}V2"
     else:
-        client_target = "homeassistant.components.influxdb.InfluxDBClient"
+        client_target = INFLUX_CLIENT_PATH
 
     with patch(client_target) as client:
         yield client
@@ -49,7 +61,7 @@ def mock_client_fixture(request):
 def get_mock_call_fixture(request):
     """Get version specific lambda to make write API call mock."""
     if request.param == influxdb.API_VERSION_2:
-        return lambda body: call(bucket=influxdb.DEFAULT_BUCKET, record=body)
+        return lambda body: call(bucket=DEFAULT_BUCKET, record=body)
     # pylint: disable=unnecessary-lambda
     return lambda body: call(body)
 
@@ -134,7 +146,16 @@ async def test_setup_minimal_config(hass, mock_client, config_ext, get_write_api
     "mock_client, config_ext, get_write_api",
     [
         (influxdb.DEFAULT_API_VERSION, {"username": "user"}, _get_write_api_mock_v1),
-        (influxdb.DEFAULT_API_VERSION, {"token": "token"}, _get_write_api_mock_v1),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            {"token": "token", "organization": "organization"},
+            _get_write_api_mock_v1,
+        ),
+        (
+            influxdb.API_VERSION_2,
+            {"api_version": influxdb.API_VERSION_2},
+            _get_write_api_mock_v2,
+        ),
         (
             influxdb.API_VERSION_2,
             {"api_version": influxdb.API_VERSION_2, "organization": "organization"},
@@ -167,7 +188,7 @@ async def _setup(hass, mock_influx_client, config_ext, get_write_api):
     config = {
         "influxdb": {
             "host": "host",
-            "exclude": {"entities": ["fake.blacklisted"], "domains": ["another_fake"]},
+            "exclude": {"entities": ["fake.excluded"], "domains": ["another_fake"]},
         }
     }
     config["influxdb"].update(config_ext)
@@ -421,43 +442,22 @@ async def test_event_listener_states(
         write_api.reset_mock()
 
 
-@pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
-    [
-        (
-            influxdb.DEFAULT_API_VERSION,
-            BASE_V1_CONFIG,
-            _get_write_api_mock_v1,
-            influxdb.DEFAULT_API_VERSION,
-        ),
-        (
-            influxdb.API_VERSION_2,
-            BASE_V2_CONFIG,
-            _get_write_api_mock_v2,
-            influxdb.API_VERSION_2,
-        ),
-    ],
-    indirect=["mock_client", "get_mock_call"],
-)
-async def test_event_listener_blacklist(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
-    """Test the event listener against a blacklist."""
-    handler_method = await _setup(hass, mock_client, config_ext, get_write_api)
-
-    for entity_id in ("ok", "blacklisted"):
+def execute_filter_test(hass, tests, handler_method, write_api, get_mock_call):
+    """Execute all tests for a given filtering test."""
+    for test in tests:
+        domain, entity_id = split_entity_id(test.id)
         state = MagicMock(
             state=1,
-            domain="fake",
-            entity_id=f"fake.{entity_id}",
+            domain=domain,
+            entity_id=test.id,
             object_id=entity_id,
             attributes={},
         )
         event = MagicMock(data={"new_state": state}, time_fired=12345)
         body = [
             {
-                "measurement": f"fake.{entity_id}",
-                "tags": {"domain": "fake", "entity_id": entity_id},
+                "measurement": test.id,
+                "tags": {"domain": domain, "entity_id": entity_id},
                 "time": 12345,
                 "fields": {"value": 1},
             }
@@ -465,9 +465,8 @@ async def test_event_listener_blacklist(
         handler_method(event)
         hass.data[influxdb.DOMAIN].block_till_done()
 
-        write_api = get_write_api(mock_client)
-        if entity_id == "ok":
-            assert write_api.call_count == 1
+        if test.should_pass:
+            write_api.assert_called_once()
             assert write_api.call_args == get_mock_call(body)
         else:
             assert not write_api.called
@@ -492,94 +491,20 @@ async def test_event_listener_blacklist(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
-async def test_event_listener_blacklist_domain(
+async def test_event_listener_denylist(
     hass, mock_client, config_ext, get_write_api, get_mock_call
 ):
-    """Test the event listener against a domain blacklist."""
-    handler_method = await _setup(hass, mock_client, config_ext, get_write_api)
-
-    for domain in ("ok", "another_fake"):
-        state = MagicMock(
-            state=1,
-            domain=domain,
-            entity_id=f"{domain}.something",
-            object_id="something",
-            attributes={},
-        )
-        event = MagicMock(data={"new_state": state}, time_fired=12345)
-        body = [
-            {
-                "measurement": f"{domain}.something",
-                "tags": {"domain": domain, "entity_id": "something"},
-                "time": 12345,
-                "fields": {"value": 1},
-            }
-        ]
-        handler_method(event)
-        hass.data[influxdb.DOMAIN].block_till_done()
-
-        write_api = get_write_api(mock_client)
-        if domain == "ok":
-            assert write_api.call_count == 1
-            assert write_api.call_args == get_mock_call(body)
-        else:
-            assert not write_api.called
-        write_api.reset_mock()
-
-
-@pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
-    [
-        (
-            influxdb.DEFAULT_API_VERSION,
-            BASE_V1_CONFIG,
-            _get_write_api_mock_v1,
-            influxdb.DEFAULT_API_VERSION,
-        ),
-        (
-            influxdb.API_VERSION_2,
-            BASE_V2_CONFIG,
-            _get_write_api_mock_v2,
-            influxdb.API_VERSION_2,
-        ),
-    ],
-    indirect=["mock_client", "get_mock_call"],
-)
-async def test_event_listener_whitelist(
-    hass, mock_client, config_ext, get_write_api, get_mock_call
-):
-    """Test the event listener against a whitelist."""
-    config = {"include": {"entities": ["fake.included"]}}
+    """Test the event listener against a denylist."""
+    config = {"exclude": {"entities": ["fake.denylisted"]}, "include": {}}
     config.update(config_ext)
     handler_method = await _setup(hass, mock_client, config, get_write_api)
+    write_api = get_write_api(mock_client)
 
-    for entity_id in ("included", "default"):
-        state = MagicMock(
-            state=1,
-            domain="fake",
-            entity_id=f"fake.{entity_id}",
-            object_id=entity_id,
-            attributes={},
-        )
-        event = MagicMock(data={"new_state": state}, time_fired=12345)
-        body = [
-            {
-                "measurement": f"fake.{entity_id}",
-                "tags": {"domain": "fake", "entity_id": entity_id},
-                "time": 12345,
-                "fields": {"value": 1},
-            }
-        ]
-        handler_method(event)
-        hass.data[influxdb.DOMAIN].block_till_done()
-
-        write_api = get_write_api(mock_client)
-        if entity_id == "included":
-            assert write_api.call_count == 1
-            assert write_api.call_args == get_mock_call(body)
-        else:
-            assert not write_api.called
-        write_api.reset_mock()
+    tests = [
+        FilterTest("fake.ok", True),
+        FilterTest("fake.denylisted", False),
+    ]
+    execute_filter_test(hass, tests, handler_method, write_api, get_mock_call)
 
 
 @pytest.mark.parametrize(
@@ -600,41 +525,20 @@ async def test_event_listener_whitelist(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
-async def test_event_listener_whitelist_domain(
+async def test_event_listener_denylist_domain(
     hass, mock_client, config_ext, get_write_api, get_mock_call
 ):
-    """Test the event listener against a domain whitelist."""
-    config = {"include": {"domains": ["fake"]}}
+    """Test the event listener against a domain denylist."""
+    config = {"exclude": {"domains": ["another_fake"]}, "include": {}}
     config.update(config_ext)
     handler_method = await _setup(hass, mock_client, config, get_write_api)
+    write_api = get_write_api(mock_client)
 
-    for domain in ("fake", "another_fake"):
-        state = MagicMock(
-            state=1,
-            domain=domain,
-            entity_id=f"{domain}.something",
-            object_id="something",
-            attributes={},
-        )
-        event = MagicMock(data={"new_state": state}, time_fired=12345)
-        body = [
-            {
-                "measurement": f"{domain}.something",
-                "tags": {"domain": domain, "entity_id": "something"},
-                "time": 12345,
-                "fields": {"value": 1},
-            }
-        ]
-        handler_method(event)
-        hass.data[influxdb.DOMAIN].block_till_done()
-
-        write_api = get_write_api(mock_client)
-        if domain == "fake":
-            assert write_api.call_count == 1
-            assert write_api.call_args == get_mock_call(body)
-        else:
-            assert not write_api.called
-        write_api.reset_mock()
+    tests = [
+        FilterTest("fake.ok", True),
+        FilterTest("another_fake.denylisted", False),
+    ]
+    execute_filter_test(hass, tests, handler_method, write_api, get_mock_call)
 
 
 @pytest.mark.parametrize(
@@ -655,69 +559,212 @@ async def test_event_listener_whitelist_domain(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
-async def test_event_listener_whitelist_domain_and_entities(
+async def test_event_listener_denylist_glob(
     hass, mock_client, config_ext, get_write_api, get_mock_call
 ):
-    """Test the event listener against a domain and entity whitelist."""
-    config = {"include": {"domains": ["fake"], "entities": ["other.one"]}}
+    """Test the event listener against a glob denylist."""
+    config = {"exclude": {"entity_globs": ["*.excluded_*"]}, "include": {}}
     config.update(config_ext)
     handler_method = await _setup(hass, mock_client, config, get_write_api)
+    write_api = get_write_api(mock_client)
 
-    for domain in ("fake", "another_fake"):
-        state = MagicMock(
-            state=1,
-            domain=domain,
-            entity_id=f"{domain}.something",
-            object_id="something",
-            attributes={},
-        )
-        event = MagicMock(data={"new_state": state}, time_fired=12345)
-        body = [
-            {
-                "measurement": f"{domain}.something",
-                "tags": {"domain": domain, "entity_id": "something"},
-                "time": 12345,
-                "fields": {"value": 1},
-            }
-        ]
-        handler_method(event)
-        hass.data[influxdb.DOMAIN].block_till_done()
+    tests = [
+        FilterTest("fake.ok", True),
+        FilterTest("fake.excluded_entity", False),
+    ]
+    execute_filter_test(hass, tests, handler_method, write_api, get_mock_call)
 
-        write_api = get_write_api(mock_client)
-        if domain == "fake":
-            assert write_api.call_count == 1
-            assert write_api.call_args == get_mock_call(body)
-        else:
-            assert not write_api.called
-        write_api.reset_mock()
 
-    for entity_id in ("one", "two"):
-        state = MagicMock(
-            state=1,
-            domain="other",
-            entity_id=f"other.{entity_id}",
-            object_id=entity_id,
-            attributes={},
-        )
-        event = MagicMock(data={"new_state": state}, time_fired=12345)
-        body = [
-            {
-                "measurement": f"other.{entity_id}",
-                "tags": {"domain": "other", "entity_id": entity_id},
-                "time": 12345,
-                "fields": {"value": 1},
-            }
-        ]
-        handler_method(event)
-        hass.data[influxdb.DOMAIN].block_till_done()
+@pytest.mark.parametrize(
+    "mock_client, config_ext, get_write_api, get_mock_call",
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
+async def test_event_listener_allowlist(
+    hass, mock_client, config_ext, get_write_api, get_mock_call
+):
+    """Test the event listener against an allowlist."""
+    config = {"include": {"entities": ["fake.included"]}, "exclude": {}}
+    config.update(config_ext)
+    handler_method = await _setup(hass, mock_client, config, get_write_api)
+    write_api = get_write_api(mock_client)
 
-        write_api = get_write_api(mock_client)
-        if entity_id == "one":
-            assert write_api.call_count == 1
-            assert write_api.call_args == get_mock_call(body)
-        else:
-            assert not write_api.called
-        write_api.reset_mock()
+    tests = [
+        FilterTest("fake.included", True),
+        FilterTest("fake.excluded", False),
+    ]
+    execute_filter_test(hass, tests, handler_method, write_api, get_mock_call)
+
+
+@pytest.mark.parametrize(
+    "mock_client, config_ext, get_write_api, get_mock_call",
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
+async def test_event_listener_allowlist_domain(
+    hass, mock_client, config_ext, get_write_api, get_mock_call
+):
+    """Test the event listener against a domain allowlist."""
+    config = {"include": {"domains": ["fake"]}, "exclude": {}}
+    config.update(config_ext)
+    handler_method = await _setup(hass, mock_client, config, get_write_api)
+    write_api = get_write_api(mock_client)
+
+    tests = [
+        FilterTest("fake.ok", True),
+        FilterTest("another_fake.excluded", False),
+    ]
+    execute_filter_test(hass, tests, handler_method, write_api, get_mock_call)
+
+
+@pytest.mark.parametrize(
+    "mock_client, config_ext, get_write_api, get_mock_call",
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
+async def test_event_listener_allowlist_glob(
+    hass, mock_client, config_ext, get_write_api, get_mock_call
+):
+    """Test the event listener against a glob allowlist."""
+    config = {"include": {"entity_globs": ["*.included_*"]}, "exclude": {}}
+    config.update(config_ext)
+    handler_method = await _setup(hass, mock_client, config, get_write_api)
+    write_api = get_write_api(mock_client)
+
+    tests = [
+        FilterTest("fake.included_entity", True),
+        FilterTest("fake.denied", False),
+    ]
+    execute_filter_test(hass, tests, handler_method, write_api, get_mock_call)
+
+
+@pytest.mark.parametrize(
+    "mock_client, config_ext, get_write_api, get_mock_call",
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
+async def test_event_listener_filtered_allowlist(
+    hass, mock_client, config_ext, get_write_api, get_mock_call
+):
+    """Test the event listener against an allowlist filtered by denylist."""
+    config = {
+        "include": {
+            "domains": ["fake"],
+            "entities": ["another_fake.included"],
+            "entity_globs": "*.included_*",
+        },
+        "exclude": {
+            "entities": ["fake.excluded"],
+            "domains": ["another_fake"],
+            "entity_globs": "*.excluded_*",
+        },
+    }
+    config.update(config_ext)
+    handler_method = await _setup(hass, mock_client, config, get_write_api)
+    write_api = get_write_api(mock_client)
+
+    tests = [
+        FilterTest("fake.ok", True),
+        FilterTest("another_fake.included", True),
+        FilterTest("test.included_entity", True),
+        FilterTest("fake.excluded", False),
+        FilterTest("another_fake.denied", False),
+        FilterTest("fake.excluded_entity", False),
+        FilterTest("another_fake.included_entity", False),
+    ]
+    execute_filter_test(hass, tests, handler_method, write_api, get_mock_call)
+
+
+@pytest.mark.parametrize(
+    "mock_client, config_ext, get_write_api, get_mock_call",
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
+async def test_event_listener_filtered_denylist(
+    hass, mock_client, config_ext, get_write_api, get_mock_call
+):
+    """Test the event listener against a domain/glob denylist with an entity id allowlist."""
+    config = {
+        "include": {"entities": ["another_fake.included", "fake.excluded_pass"]},
+        "exclude": {"domains": ["another_fake"], "entity_globs": "*.excluded_*"},
+    }
+    config.update(config_ext)
+    handler_method = await _setup(hass, mock_client, config, get_write_api)
+    write_api = get_write_api(mock_client)
+
+    tests = [
+        FilterTest("fake.ok", True),
+        FilterTest("another_fake.included", True),
+        FilterTest("fake.excluded_pass", True),
+        FilterTest("another_fake.denied", False),
+        FilterTest("fake.excluded_entity", False),
+    ]
+    execute_filter_test(hass, tests, handler_method, write_api, get_mock_call)
 
 
 @pytest.mark.parametrize(
@@ -1111,3 +1158,172 @@ async def test_event_listener_backlog_full(
         hass.data[influxdb.DOMAIN].block_till_done()
 
         assert get_write_api(mock_client).call_count == 0
+
+
+@pytest.mark.parametrize(
+    "mock_client, config_ext, get_write_api, get_mock_call",
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
+async def test_event_listener_attribute_name_conflict(
+    hass, mock_client, config_ext, get_write_api, get_mock_call
+):
+    """Test the event listener when an attribute conflicts with another field."""
+    handler_method = await _setup(hass, mock_client, config_ext, get_write_api)
+
+    attrs = {"value": "value_str"}
+    state = MagicMock(
+        state=1,
+        domain="fake",
+        entity_id="fake.something",
+        object_id="something",
+        attributes=attrs,
+    )
+    event = MagicMock(data={"new_state": state}, time_fired=12345)
+    body = [
+        {
+            "measurement": "fake.something",
+            "tags": {"domain": "fake", "entity_id": "something"},
+            "time": 12345,
+            "fields": {"value": 1, "value__str": "value_str"},
+        }
+    ]
+    handler_method(event)
+    hass.data[influxdb.DOMAIN].block_till_done()
+
+    write_api = get_write_api(mock_client)
+    assert write_api.call_count == 1
+    assert write_api.call_args == get_mock_call(body)
+
+
+@pytest.mark.parametrize(
+    "mock_client, config_ext, get_write_api, get_mock_call, test_exception",
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+            ConnectionError("fail"),
+        ),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+            influxdb.exceptions.InfluxDBClientError("fail"),
+        ),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+            influxdb.exceptions.InfluxDBServerError("fail"),
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+            ConnectionError("fail"),
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+            influxdb.ApiException(),
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
+async def test_connection_failure_on_startup(
+    hass, caplog, mock_client, config_ext, get_write_api, get_mock_call, test_exception
+):
+    """Test the event listener when it fails to connect to Influx on startup."""
+    write_api = get_write_api(mock_client)
+    write_api.side_effect = test_exception
+    config = {"influxdb": config_ext}
+
+    with patch(f"{INFLUX_PATH}.event_helper") as event_helper:
+        assert await async_setup_component(hass, influxdb.DOMAIN, config)
+        await hass.async_block_till_done()
+
+        assert (
+            len([record for record in caplog.records if record.levelname == "ERROR"])
+            == 1
+        )
+        event_helper.call_later.assert_called_once()
+        hass.bus.listen.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "mock_client, config_ext, get_write_api, get_mock_call, test_exception",
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+            influxdb.exceptions.InfluxDBClientError("fail", code=400),
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+            influxdb.ApiException(status=400),
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
+async def test_invalid_inputs_error(
+    hass, caplog, mock_client, config_ext, get_write_api, get_mock_call, test_exception
+):
+    """
+    Test the event listener when influx returns invalid inputs on write.
+
+    The difference in error handling in this case is that we do not sleep
+    and try again, if an input is invalid it is logged and dropped.
+
+    Note that this shouldn't actually occur, if its possible for the current
+    code to send an invalid input then it should be adjusted to stop that.
+    But Influx is an external service so there may be edge cases that
+    haven't been encountered yet.
+    """
+    handler_method = await _setup(hass, mock_client, config_ext, get_write_api)
+
+    write_api = get_write_api(mock_client)
+    write_api.side_effect = test_exception
+    state = MagicMock(
+        state=1,
+        domain="fake",
+        entity_id="fake.something",
+        object_id="something",
+        attributes={},
+    )
+    event = MagicMock(data={"new_state": state}, time_fired=12345)
+
+    with patch(f"{INFLUX_PATH}.time.sleep") as sleep:
+        handler_method(event)
+        hass.data[influxdb.DOMAIN].block_till_done()
+
+        write_api.assert_called_once()
+        assert (
+            len([record for record in caplog.records if record.levelname == "ERROR"])
+            == 1
+        )
+        sleep.assert_not_called()

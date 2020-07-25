@@ -1,0 +1,42 @@
+# Describes the format for available humidifier services
+
+set_mode:
+  description: Set mode for humidifier device.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'humidifier.bedroom'
+    mode:
+      description: New mode
+      example: 'away'
+
+set_humidity:
+  description: Set target humidity of humidifier device.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'humidifier.bedroom'
+    humidity:
+      description: New target humidity for humidifier device.
+      example: 50
+
+turn_on:
+  description: Turn humidifier device on.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'humidifier.bedroom'
+
+turn_off:
+  description: Turn humidifier device off.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'humidifier.bedroom'
+
+toggle:
+  description: Toggles a humidifier device.
+  fields:
+    entity_id:
+      description: Name(s) of entities to toggle.
+      example: 'humidifier.bedroom'

@@ -7,7 +7,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     ATTR_EDITABLE,
-    ATTR_HIDDEN,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_ICON,
@@ -332,7 +331,6 @@ class Zone(entity.Entity):
     def _generate_attrs(self) -> None:
         """Generate new attrs based on config."""
         self._attrs = {
-            ATTR_HIDDEN: True,
             ATTR_LATITUDE: self._config[CONF_LATITUDE],
             ATTR_LONGITUDE: self._config[CONF_LONGITUDE],
             ATTR_RADIUS: self._config[CONF_RADIUS],

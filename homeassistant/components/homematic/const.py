@@ -15,6 +15,7 @@ ATTR_DISCOVER_DEVICES = "devices"
 ATTR_PARAM = "param"
 ATTR_CHANNEL = "channel"
 ATTR_ADDRESS = "address"
+ATTR_DEVICE_TYPE = "device_type"
 ATTR_VALUE = "value"
 ATTR_VALUE_TYPE = "value_type"
 ATTR_INTERFACE = "interface"
@@ -151,7 +152,7 @@ HM_DEVICE_TYPES = {
         "IPRemoteMotionV2",
         "IPWInputDevice",
     ],
-    DISCOVER_COVER: ["Blind", "KeyBlind", "IPKeyBlind", "IPKeyBlindTilt"],
+    DISCOVER_COVER: ["Blind", "KeyBlind", "IPKeyBlind", "IPKeyBlindTilt", "IPGarage"],
     DISCOVER_LOCKS: ["KeyMatic"],
 }
 

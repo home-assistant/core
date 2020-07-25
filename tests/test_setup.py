@@ -480,12 +480,6 @@ class TestSetup:
         assert call_order == [1, 1, 2]
 
 
-async def test_component_cannot_depend_config(hass):
-    """Test config is not allowed to be a dependency."""
-    result = await setup._async_process_dependencies(hass, None, "test", ["config"])
-    assert not result
-
-
 async def test_component_warn_slow_setup(hass):
     """Warn we log when a component setup takes a long time."""
     mock_integration(hass, MockModule("test_component1"))

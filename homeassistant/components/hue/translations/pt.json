@@ -22,6 +22,20 @@
             "link": {
                 "description": "Pressione o bot\u00e3o no Philips Hue para registar com o Home Assistant. \n\n![Localiza\u00e7\u00e3o do bot\u00e3o] (/static/images/config_philips_hue.jpg)",
                 "title": "Link Hub"
+            },
+            "manual": {
+                "data": {
+                    "host": "Servidor"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_hue_groups": "Permitir grupos hue"
+                }
             }
         }
     }

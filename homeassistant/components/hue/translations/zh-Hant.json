@@ -24,6 +24,12 @@
             "link": {
                 "description": "\u6309\u4e0b Bridge \u4e0a\u7684\u6309\u9215\uff0c\u4ee5\u5c07 Philips Hue \u8a3b\u518a\u81f3 Home Assistant\u3002\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)",
                 "title": "\u9023\u7d50 Hub"
+            },
+            "manual": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef"
+                },
+                "title": "\u624b\u52d5\u8a2d\u5b9a Hue bridge"
             }
         }
     },
@@ -46,6 +52,17 @@
             "remote_button_short_release": "\"{subtype}\" \u6309\u9215\u5df2\u91cb\u653e",
             "remote_double_button_long_press": "\"{subtype}\" \u4e00\u8d77\u9577\u6309\u5f8c\u91cb\u653e",
             "remote_double_button_short_press": "\"{subtype}\" \u4e00\u8d77\u91cb\u653e"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_how_groups": "\u5141\u8a31 Hue \u7fa4\u7d44",
+                    "allow_hue_groups": "\u5141\u8a31 Hue \u7fa4\u7d44",
+                    "allow_unreachable": "\u5141\u8a31\u7121\u6cd5\u9023\u7dda\u7684\u71c8\u6ce1\u6b63\u78ba\u56de\u5831\u5176\u72c0\u614b"
+                }
+            }
         }
     }
 }

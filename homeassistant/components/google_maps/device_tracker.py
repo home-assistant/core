@@ -66,7 +66,7 @@ class GoogleMapsScanner:
 
         except InvalidCookies:
             _LOGGER.error(
-                "The cookie file provided does not provide a valid session. Please create another one and try again."
+                "The cookie file provided does not provide a valid session. Please create another one and try again"
             )
             self.success_init = False
 

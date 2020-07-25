@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "H\u00f4te",
+                    "host": "Nom d'h\u00f4te ou adresse IP",
                     "key": "Cl\u00e9 d'authentification (utilis\u00e9e uniquement par les appareils BRP072C/Zena)",
                     "password": "Mot de passe de l'appareil (utilis\u00e9 uniquement par les appareils SKYFi)"
                 },

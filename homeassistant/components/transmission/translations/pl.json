@@ -12,7 +12,9 @@
             "user": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
+                    "limit": "Limit",
                     "name": "Nazwa",
+                    "order": "Kolejno\u015b\u0107",
                     "password": "Has\u0142o",
                     "port": "Port",
                     "username": "Nazwa u\u017cytkownika"
@@ -25,6 +27,8 @@
         "step": {
             "init": {
                 "data": {
+                    "limit": "Limit",
+                    "order": "Kolejno\u015b\u0107",
                     "scan_interval": "Cz\u0119stotliwo\u015b\u0107 aktualizacji"
                 },
                 "title": "Konfiguracja opcji dla Transmission"

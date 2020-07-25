@@ -3,6 +3,6 @@
   "name": "Hisense AEH-W4A1",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hisense_aehw4a1",
-  "requirements": ["pyaehw4a1==0.3.4"],
+  "requirements": ["pyaehw4a1==0.3.5"],
   "codeowners": ["@bannhead"]
 }

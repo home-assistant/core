@@ -27,6 +27,7 @@
             "init": {
                 "data": {
                     "activity": "La actividad por defecto a ejecutar cuando no se especifica ninguna.",
+                    "activity_notify": "Actualice la actividad actual al inicio del cambio de actividad.",
                     "delay_secs": "El retraso entre el env\u00edo de comandos."
                 },
                 "description": "Ajustar las opciones de Harmony Hub"

@@ -1,0 +1,9 @@
+{
+    "config": {
+        "error": {
+            "invalid_url": "Nieprawid\u0142owy URL",
+            "unknown_state": "Nieznany stan drukarki, sprawd\u017a adres URL i \u0142\u0105czno\u015b\u0107 sieciow\u0105"
+        },
+        "flow_title": "Drukarka Samsung SyncThru: {name}"
+    }
+}

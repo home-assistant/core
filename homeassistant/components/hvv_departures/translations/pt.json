@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Palavra-passe",
+                    "username": "Username"
+                }
+            }
+        }
+    }
+}

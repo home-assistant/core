@@ -160,9 +160,9 @@ class EverLightsLight(LightEntity):
             self._status = await self._api.get_status()
         except pyeverlights.ConnectionError:
             if self._available:
-                _LOGGER.warning("EverLights control box connection lost.")
+                _LOGGER.warning("EverLights control box connection lost")
             self._available = False
         else:
             if not self._available:
-                _LOGGER.warning("EverLights control box connection restored.")
+                _LOGGER.warning("EverLights control box connection restored")
             self._available = True

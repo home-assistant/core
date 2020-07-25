@@ -32,7 +32,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import Script
 
 _LOGGER = logging.getLogger(__name__)
@@ -204,15 +204,16 @@ class AlarmControlPanelTemplate(AlarmControlPanelEntity):
         """Register callbacks."""
 
         @callback
-        def template_alarm_state_listener(entity, old_state, new_state):
+        def template_alarm_state_listener(event):
             """Handle target device state changes."""
             self.async_schedule_update_ha_state(True)
 
         @callback
         def template_alarm_control_panel_startup(event):
             """Update template on startup."""
-            if self._template is not None:
-                async_track_state_change(
+            if self._template is not None and self._entities != MATCH_ALL:
+                # Track state change only for valid templates
+                async_track_state_change_event(
                     self.hass, self._entities, template_alarm_state_listener
                 )
 

@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_XUID = "xuid"
 
-ICON = "mdi:xbox"
+ICON = "mdi:microsoft-xbox"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

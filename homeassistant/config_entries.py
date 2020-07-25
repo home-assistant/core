@@ -230,7 +230,7 @@ class ConfigEntry:
             wait_time = 2 ** min(tries, 4) * 5
             tries += 1
             _LOGGER.warning(
-                "Config entry for %s not ready yet. Retrying in %d seconds.",
+                "Config entry for %s not ready yet. Retrying in %d seconds",
                 self.domain,
                 wait_time,
             )
@@ -1008,7 +1008,8 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         entry = self.hass.config_entries.async_get_entry(flow.handler)
         if entry is None:
             raise UnknownEntry(flow.handler)
-        self.hass.config_entries.async_update_entry(entry, options=result["data"])
+        if result["data"] is not None:
+            self.hass.config_entries.async_update_entry(entry, options=result["data"])
 
         result["result"] = True
         return result
@@ -1024,7 +1025,7 @@ class OptionsFlow(data_entry_flow.FlowHandler):
 class SystemOptions:
     """Config entry system options."""
 
-    disable_new_entities = attr.ib(type=bool, default=False)
+    disable_new_entities: bool = attr.ib(default=False)
 
     def update(self, *, disable_new_entities: bool) -> None:
         """Update properties."""

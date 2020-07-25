@@ -1,0 +1,12 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_humidity": "Angi fuktighet for {entity_name}",
+            "set_mode": "Endre modus p\u00e5 {entity_name}",
+            "toggle": "Veksle {entity_name}",
+            "turn_off": "Sl\u00e5 av {entity_name}",
+            "turn_on": "Sl\u00e5 p\u00e5 {entity_name}"
+        }
+    },
+    "title": "Luftfukter"
+}

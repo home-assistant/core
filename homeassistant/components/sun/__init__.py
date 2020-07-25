@@ -9,8 +9,8 @@ from homeassistant.const import (
     SUN_EVENT_SUNSET,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import event
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.sun import (
     get_astral_location,
     get_location_astral_event_next,
@@ -99,7 +99,7 @@ class Sun(Entity):
         self.rising = self.phase = None
         self._next_change = None
 
-        def update_location(event):
+        def update_location(_event):
             self.location = get_astral_location(self.hass)
             self.update_events(dt_util.utcnow())
 
@@ -135,9 +135,9 @@ class Sun(Entity):
             STATE_ATTR_RISING: self.rising,
         }
 
-    def _check_event(self, utc_point_in_time, event, before):
+    def _check_event(self, utc_point_in_time, sun_event, before):
         next_utc = get_location_astral_event_next(
-            self.location, event, utc_point_in_time
+            self.location, sun_event, utc_point_in_time
         )
         if next_utc < self._next_change:
             self._next_change = next_utc
@@ -207,7 +207,9 @@ class Sun(Entity):
         self.update_sun_position(utc_point_in_time)
 
         # Set timer for the next solar event
-        async_track_point_in_utc_time(self.hass, self.update_events, self._next_change)
+        event.async_track_point_in_utc_time(
+            self.hass, self.update_events, self._next_change
+        )
         _LOGGER.debug("next time: %s", self._next_change.isoformat())
 
     @callback
@@ -232,6 +234,6 @@ class Sun(Entity):
         # position update just drop it
         if utc_point_in_time + delta * 1.25 > self._next_change:
             return
-        async_track_point_in_utc_time(
+        event.async_track_point_in_utc_time(
             self.hass, self.update_sun_position, utc_point_in_time + delta
         )

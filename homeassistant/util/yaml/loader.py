@@ -207,7 +207,7 @@ def _ordered_dict(loader: SafeLineLoader, node: yaml.nodes.MappingNode) -> Order
         if key in seen:
             fname = getattr(loader.stream, "name", "")
             _LOGGER.warning(
-                'YAML file %s contains duplicate key "%s". ' "Check lines %d and %d.",
+                'YAML file %s contains duplicate key "%s". Check lines %d and %d',
                 fname,
                 key,
                 seen[key],
@@ -233,7 +233,7 @@ def _env_var_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> str:
         return os.getenv(args[0], " ".join(args[1:]))
     if args[0] in os.environ:
         return os.environ[args[0]]
-    _LOGGER.error("Environment variable %s not defined.", node.value)
+    _LOGGER.error("Environment variable %s not defined", node.value)
     raise HomeAssistantError(node.value)
 
 

@@ -264,6 +264,10 @@ class Volumio(MediaPlayerEntity):
         else:
             await self.send_volumio_msg("commands", params={"cmd": "pause"})
 
+    async def async_media_stop(self):
+        """Send media_stop command to media player."""
+        await self.send_volumio_msg("commands", params={"cmd": "stop"})
+
     async def async_set_volume_level(self, volume):
         """Send volume_up command to media player."""
         await self.send_volumio_msg(

@@ -13,7 +13,6 @@ from tests.common import (
     assert_lists_same,
     async_fire_mqtt_message,
     async_get_device_automations,
-    async_mock_mqtt_component,
     async_mock_service,
     mock_device_registry,
     mock_registry,
@@ -475,7 +474,6 @@ async def test_if_fires_on_mqtt_message_after_update(
 
 async def test_no_resubscribe_same_topic(hass, device_reg, mqtt_mock):
     """Test subscription to topics without change."""
-    mock_mqtt = await async_mock_mqtt_component(hass)
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     await async_start(hass, "homeassistant", config_entry)
 
@@ -513,10 +511,10 @@ async def test_no_resubscribe_same_topic(hass, device_reg, mqtt_mock):
         },
     )
 
-    call_count = mock_mqtt.async_subscribe.call_count
+    call_count = mqtt_mock.async_subscribe.call_count
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
-    assert mock_mqtt.async_subscribe.call_count == call_count
+    assert mqtt_mock.async_subscribe.call_count == call_count
 
 
 async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(

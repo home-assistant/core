@@ -54,7 +54,7 @@ def commit(session, work):
     return False
 
 
-def execute(qry, to_native=True):
+def execute(qry, to_native=False, validate_entity_ids=True):
     """Query the database and convert the objects to HA native form.
 
     This method also retries a few times in the case of stale connections.
@@ -64,7 +64,12 @@ def execute(qry, to_native=True):
             timer_start = time.perf_counter()
             if to_native:
                 result = [
-                    row for row in (row.to_native() for row in qry) if row is not None
+                    row
+                    for row in (
+                        row.to_native(validate_entity_id=validate_entity_ids)
+                        for row in qry
+                    )
+                    if row is not None
                 ]
             else:
                 result = list(qry)

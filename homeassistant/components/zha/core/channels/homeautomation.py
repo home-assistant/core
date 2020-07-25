@@ -75,7 +75,7 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
-        await self.fetch_config(from_cache)
+        await self.fetch_config(True)
         await super().async_initialize(from_cache)
 
     async def fetch_config(self, from_cache):
