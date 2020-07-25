@@ -1,0 +1,24 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "FireServiceRota",
+                "description": "Voer uw login gegevens in",
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam",
+                    "url": "Website"
+                }
+            }
+        },
+        "error": {
+            "invalid_credentials": "Ongeldige authenticatie."
+        },
+        "abort": {
+            "already_configured": "Dit account is al geconfigureerd"
+        },
+        "create_entry": {
+            "default": "Succesvol aangemeld!"
+        }
+    }
+}
