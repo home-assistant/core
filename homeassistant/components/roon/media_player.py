@@ -31,7 +31,10 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.util import convert
 from homeassistant.util.dt import utcnow
 
@@ -62,7 +65,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Roon MediaPlayer from Config Entry."""
     roon_server = hass.data[DOMAIN][config_entry.entry_id]
-    media_players = {}
+    media_players = set()
 
     @callback
     def async_update_media_player(player_data):
@@ -71,14 +74,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if dev_id not in media_players:
             # new player!
             media_player = RoonDevice(roon_server, player_data)
-            media_players[dev_id] = media_player
+            media_players.add(dev_id)
             async_add_entities([media_player])
         else:
             # update existing player
-            media_player = media_players[dev_id]
-            if media_player and media_player.entity_id:
-                media_player.update_data(player_data)
-                media_player.async_update_callback(media_player.unique_id)
+            async_dispatcher_send(
+                hass, f"room_media_player_update_{dev_id}", player_data
+            )
 
     # start listening for players to be added or changed by the server component
     async_dispatcher_connect(hass, "roon_media_player", async_update_media_player)
@@ -89,6 +91,7 @@ class RoonDevice(MediaPlayerEntity):
 
     def __init__(self, server, player_data):
         """Initialize Roon device object."""
+        self._remove_signal_status = None
         self._sources = []
         self._server = server
         self._available = True
@@ -115,6 +118,25 @@ class RoonDevice(MediaPlayerEntity):
         self._media_image_url = None
         self._volume_level = 0
         self.update_data(player_data)
+
+    async def async_added_to_hass(self):
+        """Register callback."""
+        self._remove_signal_status = async_dispatcher_connect(
+            self.hass,
+            f"room_media_player_update_{self.unique_id}",
+            self.async_update_callback,
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Call when entity will be removed from hass."""
+        if self._remove_signal_status:
+            self._remove_signal_status()
+
+    @callback
+    def async_update_callback(self, player_data):
+        """Handle device updates."""
+        self.update_data(player_data)
+        self.async_write_ha_state()
 
     @property
     def hidden(self):
@@ -235,17 +257,6 @@ class RoonDevice(MediaPlayerEntity):
             self._media_duration = 0
             self._media_image_url = None
 
-    async def async_added_to_hass(self):
-        """Register callback."""
-        _LOGGER.debug(
-            "New Roon Device %s initialized with ID: %s", self.entity_id, self.unique_id
-        )
-
-    @callback
-    def async_update_callback(self, msg):
-        """Handle device updates."""
-        self.async_write_ha_state()
-
     def get_sync_zones(self):
         """Get available sync slaves."""
         sync_zones = [self.name]
@@ -256,7 +267,6 @@ class RoonDevice(MediaPlayerEntity):
                     and zone["display_name"] not in sync_zones
                 ):
                     sync_zones.append(zone["display_name"])
-        _LOGGER.debug("sync_slaves for player %s: %s", self.name, sync_zones)
         return sync_zones
 
     @property
