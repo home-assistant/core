@@ -2,13 +2,13 @@
 import logging
 from typing import Any, Dict
 
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, STATE_OFF, STATE_ON
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import ATTRIBUTION, DOMAIN, SIGNAL_UPDATE_INCIDENTS, SWITCH_ENTITY_LIST
-from homeassistant.components.switch import SwitchEntity
 
 _LOGGER = logging.getLogger(__name__)
 
