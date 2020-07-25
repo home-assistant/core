@@ -184,7 +184,7 @@ class ZWaveDeviceEntity(Entity):
         dev_id = create_device_id(node, self.values.primary.instance)
         device_info = {
             "identifiers": {(DOMAIN, dev_id)},
-            "name": create_device_name(node),
+            "name": create_device_name(node) + f" (Node: {node.id})",
             "manufacturer": node.node_manufacturer_name,
             "model": node.node_product_name,
         }
