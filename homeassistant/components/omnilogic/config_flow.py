@@ -34,8 +34,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 omni = OmniLogic(username, password)
-                response = await omni.connect()
-                print(response)
+                await omni.connect()
                 await self.async_set_unique_id(user_input["username"])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title="Omnilogic", data=user_input)
