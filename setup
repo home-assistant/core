@@ -1,0 +1,132 @@
+Script started on 2020-07-24 00:04:06-07:00 [TERM="xterm-256color" TTY="/dev/tty1" COLUMNS="121" LINES="72"]
+root@SB2:/mnt/c/Users/cmandich.MANDICH/Documents/GitHub/Flume-Update/core# exitgit remote[13@push origin --force--set-upstream origin HEADll [Ksh --set-upstream origin HEAD[12Porigin --forceremote[K[6Pexit[Kexit[Kexitgit remote[13@push origin --force--set-upstream origin HEADll [Ksh --set-upstream origin Flume-Update[20Porigin --forcerebase upstream/devfetch upstream dev  remote add upstream https://github.com/homee-assistant/core.git[As/cmandich.MANDICH/Documents/GitHub/Flume-Update/core# git [26Ppush origin HEAD
+[K[Aroot@SB2:/mnt/c/Users/cmandich.MANDICH/Documents/GitHub/Flume-Update/core# git push origin HEADcommit -m 'Update to PyFlume 0.5.1 to resollve https://github.com/ChrisMandich/PyFlume/issues/7'[Aub/Flume-Update/core# git add .[K
+[K[Aroot@SB2:/mnt/c/Users/cmandich.MANDICH/Documents/GitHub/Flume-Update/core# git add .commit -m 'Update to PyFlume 0.5.1 to resollve https://github.com/ChrisMandich/PyFlume/issues/7'[Aub/Flume-Update/core# git [26Ppush origin HEAD
+[K[Aroot@SB2:/mnt/c/Users/cmandich.MANDICH/Documents/GitHub/Flume-Update/core# git push origin HEADremote add upstream https://github.com/homee-assistant/core.git[As/cmandich.MANDICH/Documents/GitHub/Flume-Update/core# git [22Pfetch upstream dev  
+[K[Aroot@SB2:/mnt/c/Users/cmandich.MANDICH/Documents/GitHub/Flume-Update/core# git fetch upstream dev  [1Prebase upstream/devpush origin --force[20@--set-upstream origin Flume-Updatell [Ksh --set-upstream origin HEAD[12Porigin --forceremote[K[6Pexit[Kpython3 -m script.gen_requirements_all
+Traceback (most recent call last):
+  File "/usr/lib/python3.7/runpy.py", line 193, in _run_module_as_main
+    "__main__", mod_spec)
+  File "/usr/lib/python3.7/runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+  File "/mnt/c/Users/cmandich.MANDICH/Documents/GitHub/Flume-Update/core/script/gen_requirements_all.py", line 11, in <module>
+    from script.hassfest.model import Integration
+  File "/mnt/c/Users/cmandich.MANDICH/Documents/GitHub/Flume-Update/core/script/hassfest/model.py", line 7, in <module>
+    import attr
+ModuleNotFoundError: No module named 'attr'
+root@SB2:/mnt/c/Users/cmandich.MANDICH/Documents/GitHub/Flume-Update/core# source venv/bin/actia vate
+bash: venv/bin/activate: No such file or directory
+root@SB2:/mnt/c/Users/cmandich.MANDICH/Documents/GitHub/Flume-Update/core# source venv/vin/    bin/activate
+bash: venv/bin/activate: No such file or directory
+root@SB2:/mnt/c/Users/cmandich.MANDICH/Documents/GitHub/Flume-Update/core# script/setup 
+
+Installing development dependencies...
+Collecting wheel
+  Using cached https://files.pythonhosted.org/packages/8c/23/848298cccf8e40f5bbb59009b32848a4c38f4e7f3364297ab3c3e2e2cd14/wheel-0.34.2-py2.py3-none-any.whl
+Installing collected packages: wheel
+Successfully installed wheel-0.34.2
+Collecting tox
+  Using cached https://files.pythonhosted.org/packages/8e/ee/0ad37329c8be5d436c22cc445ed6b81575f917f8e938137bb50ba0469b5f/tox-3.18.0-py2.py3-none-any.whl
+Collecting colorlog
+  Using cached https://files.pythonhosted.org/packages/2a/81/12d77537c82c5d46aa2721dfee25a0e873ef5920ebd0827152f411effb57/colorlog-4.2.1-py2.py3-none-any.whl
+Collecting pre-commit
+  Using cached https://files.pythonhosted.org/packages/04/f0/84f3ac2978fa32096585a8ad3c695e7555a28e60e71064d8648f1adb2f92/pre_commit-2.6.0-py2.py3-none-any.whl
+Collecting mypy==0.780
+  Using cached https://files.pythonhosted.org/packages/ed/63/c21d4086d4f24b2192285273a253ab1708940dbdc2ff15bac7c131111970/mypy-0.780-cp37-cp37m-manylinux1_x86_64.whl
+Collecting toml>=0.9.4 (from tox)
+  Using cached https://files.pythonhosted.org/packages/9f/e1/1b40b80f2e1663a6b9f497123c11d7d988c0919abbf3c3f2688e448c5363/toml-0.10.1-py2.py3-none-any.whl
+Collecting packaging>=14 (from tox)
+  Using cached https://files.pythonhosted.org/packages/46/19/c5ab91b1b05cfe63cccd5cfc971db9214c6dd6ced54e33c30d5af1d2bc43/packaging-20.4-py2.py3-none-any.whl
+Collecting filelock>=3.0.0 (from tox)
+  Using cached https://files.pythonhosted.org/packages/93/83/71a2ee6158bb9f39a90c0dea1637f81d5eef866e188e1971a1b1ab01a35a/filelock-3.0.12-py3-none-any.whl
+Collecting importlib-metadata==1.6.0 (from -c homeassistant/package_constraints.txt (line 17))
+  Using cached https://files.pythonhosted.org/packages/ad/e4/891bfcaf868ccabc619942f27940c77a8a4b45fd8367098955bb7e152fb1/importlib_metadata-1.6.0-py2.py3-none-any.whl
+Collecting pluggy>=0.12.0 (from tox)
+  Using cached https://files.pythonhosted.org/packages/a0/28/85c7aa31b80d150b772fbe4a229487bc6644da9ccb7e427dd8cc60cb8a62/pluggy-0.13.1-py2.py3-none-any.whl
+Collecting py>=1.4.17 (from tox)
+  Using cached https://files.pythonhosted.org/packages/68/0f/41a43535b52a81e4f29e420a151032d26f08b62206840c48d14b70e53376/py-1.9.0-py2.py3-none-any.whl
+Collecting virtualenv!=20.0.0,!=20.0.1,!=20.0.2,!=20.0.3,!=20.0.4,!=20.0.5,!=20.0.6,!=20.0.7,>=16.0.0 (from tox)
+  Using cached https://files.pythonhosted.org/packages/45/24/27197e06ff269e54a05fcb7e270d5648fafe076eafd4ec289859a3dc4905/virtualenv-20.0.27-py2.py3-none-any.whl
+Collecting six>=1.14.0 (from tox)
+  Using cached https://files.pythonhosted.org/packages/ee/ff/48bde5c0f013094d729fe4b0316ba2a24774b3ff1c52d924a8a4cb04078a/six-1.15.0-py2.py3-none-any.whl
+Collecting nodeenv>=0.11.1 (from pre-commit)
+  Using cached https://files.pythonhosted.org/packages/0d/54/538edbe88c87f6cd71f009145a56264622de84508f6ad1ae4d76976f47be/nodeenv-1.4.0-py2.py3-none-any.whl
+Collecting cfgv>=2.0.0 (from pre-commit)
+  Using cached https://files.pythonhosted.org/packages/6d/82/49913e721128ff16d6b7cf304f513de7bba698583b045dfb9c4b3bb2f467/cfgv-3.1.0-py2.py3-none-any.whl
+Collecting pyyaml==5.3.1 (from -c homeassistant/package_constraints.txt (line 24))
+Collecting identify>=1.0.0 (from pre-commit)
+  Using cached https://files.pythonhosted.org/packages/0b/90/d21cf91ac0fb50ad88d5bc40e4cad9ccc482a582152812cd5ef01a5b262a/identify-1.4.25-py2.py3-none-any.whl
+Collecting typed-ast<1.5.0,>=1.4.0 (from mypy==0.780)
+  Using cached https://files.pythonhosted.org/packages/5d/10/0c1e8aa723a2b0c4032e048d8e511df82c8a1262f0e1df5e4c54eb2613e9/typed_ast-1.4.1-cp37-cp37m-manylinux1_x86_64.whl
+Collecting typing-extensions>=3.7.4 (from mypy==0.780)
+  Using cached https://files.pythonhosted.org/packages/0c/0e/3f026d0645d699e7320b59952146d56ad7c374e9cd72cd16e7c74e657a0f/typing_extensions-3.7.4.2-py3-none-any.whl
+Collecting mypy-extensions<0.5.0,>=0.4.3 (from mypy==0.780)
+  Using cached https://files.pythonhosted.org/packages/5c/eb/975c7c080f3223a5cdaff09612f3a5221e4ba534f7039db34c35d95fa6a5/mypy_extensions-0.4.3-py2.py3-none-any.whl
+Collecting pyparsing>=2.0.2 (from packaging>=14->tox)
+  Using cached https://files.pythonhosted.org/packages/8a/bb/488841f56197b13700afd5658fc279a2025a39e22449b7cf29864669b15d/pyparsing-2.4.7-py2.py3-none-any.whl
+Collecting zipp>=0.5 (from importlib-metadata==1.6.0->-c homeassistant/package_constraints.txt (line 17))
+  Using cached https://files.pythonhosted.org/packages/b2/34/bfcb43cc0ba81f527bc4f40ef41ba2ff4080e047acb0586b56b3d017ace4/zipp-3.1.0-py3-none-any.whl
+Collecting appdirs<2,>=1.4.3 (from virtualenv!=20.0.0,!=20.0.1,!=20.0.2,!=20.0.3,!=20.0.4,!=20.0.5,!=20.0.6,!=20.0.7,>=16.0.0->tox)
+  Using cached https://files.pythonhosted.org/packages/3b/00/2344469e2084fb287c2e0b57b72910309874c3245463acd6cf5e3db69324/appdirs-1.4.4-py2.py3-none-any.whl
+Collecting distlib<1,>=0.3.1 (from virtualenv!=20.0.0,!=20.0.1,!=20.0.2,!=20.0.3,!=20.0.4,!=20.0.5,!=20.0.6,!=20.0.7,>=16.0.0->tox)
+  Using cached https://files.pythonhosted.org/packages/f5/0a/490fa011d699bb5a5f3a0cf57de82237f52a6db9d40f33c53b2736c9a1f9/distlib-0.3.1-py2.py3-none-any.whl
+Installing collected packages: zipp, importlib-metadata, pyyaml, toml, six, pyparsing, packaging, filelock, pluggy, py, appdirs, distlib, virtualenv, tox, colorlog, nodeenv, cfgv, identify, pre-commit, typed-ast, typing-extensions, mypy-extensions, mypy
+Successfully installed appdirs-1.4.4 cfgv-3.1.0 colorlog-4.2.1 distlib-0.3.1 filelock-3.0.12 identify-1.4.25 importlib-metadata-1.6.0 mypy-0.780 mypy-extensions-0.4.3 nodeenv-1.4.0 packaging-20.4 pluggy-0.13.1 pre-commit-2.6.0 py-1.9.0 pyparsing-2.4.7 pyyaml-5.3.1 six-1.15.0 toml-0.10.1 tox-3.18.0 typed-ast-1.4.1 typing-extensions-3.7.4.2 virtualenv-20.0.27 zipp-3.1.0
+pre-commit installed at .git/hooks/pre-commit
+Obtaining file:///mnt/c/Users/cmandich.MANDICH/Documents/GitHub/Flume-Update/core
+  Installing build dependencies ... [?25l- \ | / - \ done
+[?25hCollecting PyJWT==1.7.1 (from -c homeassistant/package_constraints.txt (line 1))
+  Using cached https://files.pythonhosted.org/packages/87/8b/6a9f14b5f781697e51259d81657e6048fd31a113229cf346880bb7545565/PyJWT-1.7.1-py2.py3-none-any.whl
+Collecting aiohttp==3.6.2 (from -c homeassistant/package_constraints.txt (line 3))
+  Using cached https://files.pythonhosted.org/packages/e3/71/6000eacb8923d9fd07aa8784a8fab4f022ae697f3c2456d7dca75c743dd6/aiohttp-3.6.2-cp37-cp37m-manylinux1_x86_64.whl
+Collecting astral==1.10.1 (from -c homeassistant/package_constraints.txt (line 5))
+  Using cached https://files.pythonhosted.org/packages/ff/5d/261f49822b7f77c265197d46cdbaaaaf06f458734e9ac55a140dd75bdf29/astral-1.10.1-py2.py3-none-any.whl
+Collecting async_timeout==3.0.1 (from -c homeassistant/package_constraints.txt (line 6))
+  Using cached https://files.pythonhosted.org/packages/e1/1e/5a4441be21b0726c4464f3f23c8b19628372f606755a9d2e46c187e65ec4/async_timeout-3.0.1-py3-none-any.whl
+Collecting attrs==19.3.0 (from -c homeassistant/package_constraints.txt (line 7))
+  Using cached https://files.pythonhosted.org/packages/a2/db/4313ab3be961f7a763066401fb77f7748373b6094076ae2bda2806988af6/attrs-19.3.0-py2.py3-none-any.whl
+Collecting bcrypt==3.1.7 (from -c homeassistant/package_constraints.txt (line 8))
+  Using cached https://files.pythonhosted.org/packages/8b/1d/82826443777dd4a624e38a08957b975e75df859b381ae302cfd7a30783ed/bcrypt-3.1.7-cp34-abi3-manylinux1_x86_64.whl
+Collecting certifi>=2020.4.5.1 (from -c homeassistant/package_constraints.txt (line 9))
+  Using cached https://files.pythonhosted.org/packages/5e/c4/6c4fe722df5343c33226f0b4e0bb042e4dc13483228b4718baf286f86d87/certifi-2020.6.20-py2.py3-none-any.whl
+Collecting ciso8601==2.1.3 (from -c homeassistant/package_constraints.txt (line 10))
+Collecting cryptography==2.9.2 (from -c homeassistant/package_constraints.txt (line 11))
+  Using cached https://files.pythonhosted.org/packages/58/95/f1282ca55649b60afcf617e1e2ca384a2a3e7a5cf91f724cf83c8fbe76a1/cryptography-2.9.2-cp35-abi3-manylinux1_x86_64.whl
+Requirement already satisfied: importlib-metadata==1.6.0 in ./venv/lib/python3.7/site-packages (from -c homeassistant/package_constraints.txt (line 17)) (1.6.0)
+Collecting jinja2>=2.11.1 (from -c homeassistant/package_constraints.txt (line 18))
+  Using cached https://files.pythonhosted.org/packages/30/9e/f663a2aa66a09d838042ae1a2c5659828bb9b41ea3a6efa20a20fd92b121/Jinja2-2.11.2-py2.py3-none-any.whl
+Requirement already satisfied: pip>=8.0.3 in ./venv/lib/python3.7/site-packages (from -c homeassistant/package_constraints.txt (line 21)) (18.1)
+Collecting python-slugify==4.0.0 (from -c homeassistant/package_constraints.txt (line 22))
+Collecting pytz>=2020.1 (from -c homeassistant/package_constraints.txt (line 23))
+  Using cached https://files.pythonhosted.org/packages/4f/a4/879454d49688e2fad93e59d7d4efda580b783c745fd2ec2a3adf87b0808d/pytz-2020.1-py2.py3-none-any.whl
+Requirement already satisfied: pyyaml==5.3.1 in ./venv/lib/python3.7/site-packages (from -c homeassistant/package_constraints.txt (line 24)) (5.3.1)
+Collecting requests==2.24.0 (from -c homeassistant/package_constraints.txt (line 25))
+  Using cached https://files.pythonhosted.org/packages/45/1e/0c169c6a5381e241ba7404532c16a21d86ab872c9bed8bdcd4c423954103/requests-2.24.0-py2.py3-none-any.whl
+Collecting ruamel.yaml==0.15.100 (from -c homeassistant/package_constraints.txt (line 26))
+  Using cached https://files.pythonhosted.org/packages/71/fc/12de89822adaa3a60b8cb0139bae75918278999d08e6dff158623abd7cba/ruamel.yaml-0.15.100-cp37-cp37m-manylinux1_x86_64.whl
+Collecting voluptuous-serialize==2.4.0 (from -c homeassistant/package_constraints.txt (line 28))
+  Using cached https://files.pythonhosted.org/packages/b5/37/79066c7bd82e7a463ecbfe644598f9a79011a32179d9829121ea171b339a/voluptuous_serialize-2.4.0-py3-none-any.whl
+Collecting voluptuous==0.11.7 (from -c homeassistant/package_constraints.txt (line 29))
+Collecting urllib3>=1.24.3 (from -c homeassistant/package_constraints.txt (line 35))
+  Using cached https://files.pythonhosted.org/packages/9f/f0/a391d1463ebb1b233795cabfc0ef38d3db4442339de68f847026199e69d7/urllib3-1.25.10-py2.py3-none-any.whl
+Collecting chardet<4.0,>=2.0 (from aiohttp==3.6.2->-c homeassistant/package_constraints.txt (line 3))
+  Using cached https://files.pythonhosted.org/packages/bc/a9/01ffebfb562e4274b6487b4bb1ddec7ca55ec7510b22e4c51f14098443b8/chardet-3.0.4-py2.py3-none-any.whl
+Collecting multidict<5.0,>=4.5 (from aiohttp==3.6.2->-c homeassistant/package_constraints.txt (line 3))
+  Using cached https://files.pythonhosted.org/packages/85/b8/a9fe777dab4c6aa067b516a34fe995213707e490ea1e72f823949a830a6a/multidict-4.7.6-cp37-cp37m-manylinux1_x86_64.whl
+Collecting yarl<2.0,>=1.0 (from aiohttp==3.6.2->-c homeassistant/package_constraints.txt (line 3))
+  Using cached https://files.pythonhosted.org/packages/70/54/7cb8eabe7dea1b441a7487ae3a1adb319f2d2e44a062a669f730a24dc474/yarl-1.4.2-cp37-cp37m-manylinux1_x86_64.whl
+Requirement already satisfied: six>=1.4.1 in ./venv/lib/python3.7/site-packages (from bcrypt==3.1.7->-c homeassistant/package_constraints.txt (line 8)) (1.15.0)
+Collecting cffi>=1.1 (from bcrypt==3.1.7->-c homeassistant/package_constraints.txt (line 8))
+  Using cached https://files.pythonhosted.org/packages/ff/1d/0b743dadcdf4980b717163fd2d24cd18c1c0c7a78a076268afd7e0e2c25e/cffi-1.14.0-cp37-cp37m-manylinux1_x86_64.whl
+Requirement already satisfied: zipp>=0.5 in ./venv/lib/python3.7/site-packages (from importlib-metadata==1.6.0->-c homeassistant/package_constraints.txt (line 17)) (3.1.0)
+Collecting MarkupSafe>=0.23 (from jinja2>=2.11.1->-c homeassistant/package_constraints.txt (line 18))
+  Using cached https://files.pythonhosted.org/packages/98/7b/ff284bd8c80654e471b769062a9b43cc5d03e7a615048d96f4619df8d420/MarkupSafe-1.1.1-cp37-cp37m-manylinux1_x86_64.whl
+Collecting text-unidecode>=1.3 (from python-slugify==4.0.0->-c homeassistant/package_constraints.txt (line 22))
+  Using cached https://files.pythonhosted.org/packages/a6/a5/c0b6468d3824fe3fde30dbb5e1f687b291608f9473681bbf7dabbf5a87d7/text_unidecode-1.3-py2.py3-none-any.whl
+Collecting idna<3,>=2.5 (from requests==2.24.0->-c homeassistant/package_constraints.txt (line 25))
+  Using cached https://files.pythonhosted.org/packages/a2/38/928ddce2273eaa564f6f50de919327bf3a00f091b5baba8dfa9460f3a8a8/idna-2.10-py2.py3-none-any.whl
+Collecting pycparser (from cffi>=1.1->bcrypt==3.1.7->-c homeassistant/package_constraints.txt (line 8))
+  Using cached https://files.pythonhosted.org/packages/ae/e7/d9c3a176ca4b02024debf82342dab36efadfc5776f9c8db077e8f6e71821/pycparser-2.20-py2.py3-none-any.whl
+Installing collected packages: PyJWT, async-timeout, attrs, chardet, multidict, idna, yarl, aiohttp, pytz, astral, pycparser, cffi, bcrypt, certifi, ciso8601, cryptography, MarkupSafe, jinja2, text-unidecode, python-slugify, urllib3, requests, ruamel.yaml, voluptuous, voluptuous-serialize, homeassistant
+  Running setup.py develop for homeassistant
+Successfully installed MarkupSafe-1.1.1 PyJWT-1.7.1 aiohttp-3.6.2 astral-1.10.1 async-timeout-3.0.1 attrs-19.3.0 bcrypt-3.1.7 certifi-2020.6.20 cffi-1.14.0 chardet-3.0.4 ciso8601-2.1.3 cryptography-2.9.2 home

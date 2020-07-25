@@ -613,7 +613,7 @@ pyeverlights==0.1.0
 pyfido==2.1.1
 
 # homeassistant.components.flume
-pyflume==0.5.1
+pyflume==0.5.2
 
 # homeassistant.components.flunearyou
 pyflunearyou==1.0.7
