@@ -106,6 +106,7 @@ class RepositorySensor(Entity):
             ATTR_CLONES_UNIQUE: self._clones_unique,
             ATTR_DESCRIPTION: self._description,
             ATTR_FORKS: self._forks,
+            ATTR_HOMEPAGE: self._homepage,
             ATTR_LATEST_COMMIT_MESSAGE: self._latest_commit_message,
             ATTR_LATEST_COMMIT_SHA: self._latest_commit_sha,
             ATTR_LATEST_OPEN_ISSUE_URL: self._latest_open_issue_url,
