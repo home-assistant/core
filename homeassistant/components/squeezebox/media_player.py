@@ -338,7 +338,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             return None
         if len(self._player.playlist) > 1:
             urls = [{"url": track["url"]} for track in self._player.playlist]
-            return json.dumps(urls)
+            return json.dumps({"index": self._player.current_index, "urls": urls})
         return self._player.url
 
     @property
@@ -472,9 +472,9 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             cmd = "add"
 
         if media_type == MEDIA_TYPE_PLAYLIST:
-            playlist = json.loads(media_id)
-            _LOGGER.debug("Loading playlist: %s", playlist)
-            await self._player.async_load_playlist(playlist, cmd)
+            content = json.loads(media_id)
+            await self._player.async_load_playlist(content["urls"], cmd)
+            await self._player.async_index(content["index"])
         else:
             await self._player.async_load_url(media_id, cmd)
 
