@@ -3,7 +3,10 @@ from homeassistant import config_entries, setup
 from pyfireservicerota import FireServiceRota, InvalidAuthError
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant import data_entry_flow
-from homeassistant.components.fireservicerota.const import DOMAIN, URL_LIST  # pylint: disable=unused-import
+from homeassistant.components.fireservicerota.const import (
+    DOMAIN,
+    URL_LIST,
+)  # pylint: disable=unused-import
 
 from tests.async_mock import patch
 import pytest
@@ -11,15 +14,19 @@ import pytest
 MOCK_CONF = {
     CONF_USERNAME: "my@email.address",
     CONF_PASSWORD: "mypassw0rd",
-    CONF_URL: "https://brandweerrooster.nl"
+    CONF_URL: "https://brandweerrooster.nl",
 }
+
 
 @pytest.fixture(name="mock_fireservicerota")
 def mock_fireservicerota():
     """Mock FireServiceRota."""
-    with patch("homeassistant.components.fireservicerota.config_flow.FireServiceRota",) as fireservice:
+    with patch(
+        "homeassistant.components.fireservicerota.config_flow.FireServiceRota",
+    ) as fireservice:
         fireservice.return_value.get_full_name.return_value = MOCK_CONF[CONF_ID]
         yield fireservice.return_value
+
 
 async def test_show_form(hass):
     """Test that the form is served with no input."""
@@ -41,7 +48,6 @@ async def test_step_user(hass, mock_fireservicerota):
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == MOCK_CONF
-
 
 
 # async def test_full_flow(hass, aiohttp_client, aioclient_mock):

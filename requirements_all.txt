@@ -1382,7 +1382,7 @@ pyeverlights==0.1.0
 pyfido==2.1.1
 
 # homeassistant.components.fireservicerota
-pyfireservicerota==0.0.32
+pyfireservicerota==0.0.33
 
 # homeassistant.components.flexit
 pyflexit==0.3
