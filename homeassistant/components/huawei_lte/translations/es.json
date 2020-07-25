@@ -33,7 +33,7 @@
         "step": {
             "init": {
                 "data": {
-                    "name": "Nombre del servicio de notificaci\u00f3n",
+                    "name": "Nombre del servicio de notificaci\u00f3n (el cambio requiere reiniciar)",
                     "recipient": "Destinatarios de notificaciones por SMS",
                     "track_new_devices": "Rastrea nuevos dispositivos"
                 }

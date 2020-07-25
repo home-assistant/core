@@ -40,6 +40,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
@@ -229,6 +230,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             "Could not connect to %s at %s %s", device_name, address, adb_log
         )
         raise PlatformNotReady
+
+    async def _async_close(event):
+        """Close the ADB socket connection when HA stops."""
+        await aftv.adb_close()
+
+    # Close the ADB connection when HA stops
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
 
     device_args = [
         aftv,

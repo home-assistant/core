@@ -86,6 +86,7 @@ TRAIT_TEMPERATURE_SETTING = f"{PREFIX_TRAITS}TemperatureSetting"
 TRAIT_LOCKUNLOCK = f"{PREFIX_TRAITS}LockUnlock"
 TRAIT_FANSPEED = f"{PREFIX_TRAITS}FanSpeed"
 TRAIT_MODES = f"{PREFIX_TRAITS}Modes"
+TRAIT_INPUTSELECTOR = f"{PREFIX_TRAITS}InputSelector"
 TRAIT_OPENCLOSE = f"{PREFIX_TRAITS}OpenClose"
 TRAIT_VOLUME = f"{PREFIX_TRAITS}Volume"
 TRAIT_ARMDISARM = f"{PREFIX_TRAITS}ArmDisarm"
@@ -112,6 +113,7 @@ COMMAND_THERMOSTAT_SET_MODE = f"{PREFIX_COMMANDS}ThermostatSetMode"
 COMMAND_LOCKUNLOCK = f"{PREFIX_COMMANDS}LockUnlock"
 COMMAND_FANSPEED = f"{PREFIX_COMMANDS}SetFanSpeed"
 COMMAND_MODES = f"{PREFIX_COMMANDS}SetModes"
+COMMAND_INPUT = f"{PREFIX_COMMANDS}SetInput"
 COMMAND_OPENCLOSE = f"{PREFIX_COMMANDS}OpenClose"
 COMMAND_SET_VOLUME = f"{PREFIX_COMMANDS}setVolume"
 COMMAND_VOLUME_RELATIVE = f"{PREFIX_COMMANDS}volumeRelative"
@@ -1213,7 +1215,6 @@ class ModesTrait(_Trait):
     commands = [COMMAND_MODES]
 
     SYNONYMS = {
-        "input source": ["input source", "input", "source"],
         "sound mode": ["sound mode", "effects"],
         "option": ["option", "setting", "mode", "value"],
     }
@@ -1230,10 +1231,7 @@ class ModesTrait(_Trait):
         if domain != media_player.DOMAIN:
             return False
 
-        return (
-            features & media_player.SUPPORT_SELECT_SOURCE
-            or features & media_player.SUPPORT_SELECT_SOUND_MODE
-        )
+        return features & media_player.SUPPORT_SELECT_SOUND_MODE
 
     def sync_attributes(self):
         """Return mode attributes for a sync request."""
@@ -1266,13 +1264,6 @@ class ModesTrait(_Trait):
         attrs = self.state.attributes
         modes = []
         if self.state.domain == media_player.DOMAIN:
-            if media_player.ATTR_INPUT_SOURCE_LIST in attrs:
-                modes.append(
-                    _generate(
-                        "input source", attrs[media_player.ATTR_INPUT_SOURCE_LIST]
-                    )
-                )
-
             if media_player.ATTR_SOUND_MODE_LIST in attrs:
                 modes.append(
                     _generate("sound mode", attrs[media_player.ATTR_SOUND_MODE_LIST])
@@ -1294,11 +1285,6 @@ class ModesTrait(_Trait):
         mode_settings = {}
 
         if self.state.domain == media_player.DOMAIN:
-            if media_player.ATTR_INPUT_SOURCE_LIST in attrs:
-                mode_settings["input source"] = attrs.get(
-                    media_player.ATTR_INPUT_SOURCE
-                )
-
             if media_player.ATTR_SOUND_MODE_LIST in attrs:
                 mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
         elif self.state.domain == input_select.DOMAIN:
@@ -1352,20 +1338,7 @@ class ModesTrait(_Trait):
             )
             return
 
-        requested_source = settings.get("input source")
         sound_mode = settings.get("sound mode")
-
-        if requested_source:
-            await self.hass.services.async_call(
-                media_player.DOMAIN,
-                media_player.SERVICE_SELECT_SOURCE,
-                {
-                    ATTR_ENTITY_ID: self.state.entity_id,
-                    media_player.ATTR_INPUT_SOURCE: requested_source,
-                },
-                blocking=True,
-                context=data.context,
-            )
 
         if sound_mode:
             await self.hass.services.async_call(
@@ -1378,6 +1351,61 @@ class ModesTrait(_Trait):
                 blocking=True,
                 context=data.context,
             )
+
+
+@register_trait
+class InputSelectorTrait(_Trait):
+    """Trait to set modes.
+
+    https://developers.google.com/assistant/smarthome/traits/inputselector
+    """
+
+    name = TRAIT_INPUTSELECTOR
+    commands = [COMMAND_INPUT]
+
+    SYNONYMS = {}
+
+    @staticmethod
+    def supported(domain, features, device_class):
+        """Test if state is supported."""
+        if domain == media_player.DOMAIN and (
+            features & media_player.SUPPORT_SELECT_SOURCE
+        ):
+            return True
+
+        return False
+
+    def sync_attributes(self):
+        """Return mode attributes for a sync request."""
+        attrs = self.state.attributes
+        inputs = [
+            {"key": source, "names": [{"name_synonym": [source], "lang": "en"}]}
+            for source in attrs.get(media_player.ATTR_INPUT_SOURCE_LIST, [])
+        ]
+
+        payload = {"availableInputs": inputs, "orderedInputs": True}
+
+        return payload
+
+    def query_attributes(self):
+        """Return current modes."""
+        attrs = self.state.attributes
+        return {"currentInput": attrs.get(media_player.ATTR_INPUT_SOURCE, "")}
+
+    async def execute(self, command, data, params, challenge):
+        """Execute an SetInputSource command."""
+        requested_source = params.get("newInput")
+
+        await self.hass.services.async_call(
+            media_player.DOMAIN,
+            media_player.SERVICE_SELECT_SOURCE,
+            {
+                ATTR_ENTITY_ID: self.state.entity_id,
+                media_player.ATTR_INPUT_SOURCE: requested_source,
+            },
+            blocking=True,
+            context=data.context,
+        )
 
 
 @register_trait

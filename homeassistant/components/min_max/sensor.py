@@ -1,4 +1,4 @@
-"""Support for displaying the minimal and the maximal value."""
+"""Support for displaying minimal, maximal, mean or median values."""
 import logging
 
 import voluptuous as vol
@@ -24,6 +24,7 @@ ATTR_MAX_VALUE = "max_value"
 ATTR_MAX_ENTITY_ID = "max_entity_id"
 ATTR_COUNT_SENSORS = "count_sensors"
 ATTR_MEAN = "mean"
+ATTR_MEDIAN = "median"
 ATTR_LAST = "last"
 ATTR_LAST_ENTITY_ID = "last_entity_id"
 
@@ -32,6 +33,7 @@ ATTR_TO_PROPERTY = [
     ATTR_MAX_VALUE,
     ATTR_MAX_ENTITY_ID,
     ATTR_MEAN,
+    ATTR_MEDIAN,
     ATTR_MIN_VALUE,
     ATTR_MIN_ENTITY_ID,
     ATTR_LAST,
@@ -47,6 +49,7 @@ SENSOR_TYPES = {
     ATTR_MIN_VALUE: "min",
     ATTR_MAX_VALUE: "max",
     ATTR_MEAN: "mean",
+    ATTR_MEDIAN: "median",
     ATTR_LAST: "last",
 }
 
@@ -80,7 +83,7 @@ def calc_min(sensor_values):
     val = None
     entity_id = None
     for sensor_id, sensor_value in sensor_values:
-        if sensor_value != STATE_UNKNOWN:
+        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
             if val is None or val > sensor_value:
                 entity_id, val = sensor_id, sensor_value
     return entity_id, val
@@ -91,7 +94,7 @@ def calc_max(sensor_values):
     val = None
     entity_id = None
     for sensor_id, sensor_value in sensor_values:
-        if sensor_value != STATE_UNKNOWN:
+        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
             if val is None or val < sensor_value:
                 entity_id, val = sensor_id, sensor_value
     return entity_id, val
@@ -99,15 +102,31 @@ def calc_max(sensor_values):
 
 def calc_mean(sensor_values, round_digits):
     """Calculate mean value, honoring unknown states."""
-    sensor_value_sum = 0
-    count = 0
+    result = []
     for _, sensor_value in sensor_values:
-        if sensor_value != STATE_UNKNOWN:
-            sensor_value_sum += sensor_value
-            count += 1
-    if count == 0:
+        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+            result.append(sensor_value)
+    if len(result) == 0:
         return None
-    return round(sensor_value_sum / count, round_digits)
+    return round(sum(result) / len(result), round_digits)
+
+
+def calc_median(sensor_values, round_digits):
+    """Calculate median value, honoring unknown states."""
+    result = []
+    for _, sensor_value in sensor_values:
+        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+            result.append(sensor_value)
+    if len(result) == 0:
+        return None
+    result.sort()
+    if len(result) % 2 == 0:
+        median1 = result[len(result) // 2]
+        median2 = result[len(result) // 2 - 1]
+        median = (median1 + median2) / 2
+    else:
+        median = result[len(result) // 2]
+    return round(median, round_digits)
 
 
 class MinMaxSensor(Entity):
@@ -126,7 +145,7 @@ class MinMaxSensor(Entity):
             self._name = f"{next(v for k, v in SENSOR_TYPES.items() if self._sensor_type == v)} sensor".capitalize()
         self._unit_of_measurement = None
         self._unit_of_measurement_mismatch = False
-        self.min_value = self.max_value = self.mean = self.last = None
+        self.min_value = self.max_value = self.mean = self.last = self.median = None
         self.min_entity_id = self.max_entity_id = self.last_entity_id = None
         self.count_sensors = len(self._entity_ids)
         self.states = {}
@@ -224,3 +243,4 @@ class MinMaxSensor(Entity):
         self.min_entity_id, self.min_value = calc_min(sensor_values)
         self.max_entity_id, self.max_value = calc_max(sensor_values)
         self.mean = calc_mean(sensor_values, self._round_digits)
+        self.median = calc_median(sensor_values, self._round_digits)

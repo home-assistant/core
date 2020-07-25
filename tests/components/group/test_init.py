@@ -490,3 +490,25 @@ async def test_service_group_set_group_remove_group(hass):
 
     group_state = hass.states.get("group.user_test_group")
     assert group_state is None
+
+
+async def test_group_order(hass):
+    """Test that order gets incremented when creating a new group."""
+    hass.states.async_set("light.bowl", STATE_ON)
+
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "group_zero": {"entities": "light.Bowl", "icon": "mdi:work"},
+                "group_one": {"entities": "light.Bowl", "icon": "mdi:work"},
+                "group_two": {"entities": "light.Bowl", "icon": "mdi:work"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.group_zero").attributes["order"] == 0
+    assert hass.states.get("group.group_one").attributes["order"] == 1
+    assert hass.states.get("group.group_two").attributes["order"] == 2

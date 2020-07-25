@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .common import setup_bond_entity
+from .common import patch_bond_device_ids, setup_bond_entity
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -30,7 +30,9 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAss
         domain=DOMAIN, data={CONF_HOST: "1.1.1.1", CONF_ACCESS_TOKEN: "test-token"},
     )
 
-    with patch_setup_entry("cover") as mock_cover_async_setup_entry, patch_setup_entry(
+    with patch_bond_device_ids(), patch_setup_entry(
+        "cover"
+    ) as mock_cover_async_setup_entry, patch_setup_entry(
         "fan"
     ) as mock_fan_async_setup_entry, patch_setup_entry(
         "light"
@@ -75,9 +77,9 @@ async def test_unload_config_entry(hass: HomeAssistant):
         domain=DOMAIN, data={CONF_HOST: "1.1.1.1", CONF_ACCESS_TOKEN: "test-token"},
     )
 
-    with patch_setup_entry("cover"), patch_setup_entry("fan"), patch_setup_entry(
-        "light"
-    ), patch_setup_entry("switch"):
+    with patch_bond_device_ids(), patch_setup_entry("cover"), patch_setup_entry(
+        "fan"
+    ), patch_setup_entry("light"), patch_setup_entry("switch"):
         result = await setup_bond_entity(hass, config_entry)
         assert result is True
         await hass.async_block_till_done()

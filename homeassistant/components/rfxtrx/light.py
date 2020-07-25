@@ -10,18 +10,18 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import CONF_DEVICES, STATE_ON
 from homeassistant.core import callback
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
     CONF_AUTOMATIC_ADD,
+    CONF_DATA_BITS,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
     SIGNAL_EVENT,
-    RfxtrxDevice,
+    RfxtrxCommandEntity,
     get_device_id,
     get_rfx_object,
 )
-from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST, DATA_RFXTRX_CONFIG
+from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ async def async_setup_entry(
     hass, config_entry, async_add_entities,
 ):
     """Set up config entry."""
-    discovery_info = hass.data[DATA_RFXTRX_CONFIG]
+    discovery_info = config_entry.data
     device_ids = set()
 
     def supported(event):
@@ -49,9 +49,11 @@ async def async_setup_entry(
             _LOGGER.error("Invalid device: %s", packet_id)
             continue
         if not supported(event):
-            return
+            continue
 
-        device_id = get_device_id(event.device)
+        device_id = get_device_id(
+            event.device, data_bits=entity_info.get(CONF_DATA_BITS)
+        )
         if device_id in device_ids:
             continue
         device_ids.add(device_id)
@@ -93,7 +95,7 @@ async def async_setup_entry(
         hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, light_update)
 
 
-class RfxtrxLight(RfxtrxDevice, LightEntity, RestoreEntity):
+class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
     """Representation of a RFXtrx light."""
 
     _brightness = 0
@@ -102,22 +104,11 @@ class RfxtrxLight(RfxtrxDevice, LightEntity, RestoreEntity):
         """Restore RFXtrx device state (ON/OFF)."""
         await super().async_added_to_hass()
 
-        old_state = await self.async_get_last_state()
-        if old_state is not None:
-            self._state = old_state.state == STATE_ON
-
-        # Restore the brightness of dimmable devices
-        if (
-            old_state is not None
-            and old_state.attributes.get(ATTR_BRIGHTNESS) is not None
-        ):
-            self._brightness = int(old_state.attributes[ATTR_BRIGHTNESS])
-
-        self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_EVENT, self._handle_event
-            )
-        )
+        if self._event is None:
+            old_state = await self.async_get_last_state()
+            if old_state is not None:
+                self._state = old_state.state == STATE_ON
+                self._brightness = old_state.attributes.get(ATTR_BRIGHTNESS)
 
     @property
     def brightness(self):
@@ -128,6 +119,11 @@ class RfxtrxLight(RfxtrxDevice, LightEntity, RestoreEntity):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_RFXTRX
+
+    @property
+    def is_on(self):
+        """Return true if device is on."""
+        return self._state
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
@@ -147,6 +143,7 @@ class RfxtrxLight(RfxtrxDevice, LightEntity, RestoreEntity):
 
     def _apply_event(self, event):
         """Apply command from rfxtrx."""
+        super()._apply_event(event)
         if event.values["Command"] in COMMAND_ON_LIST:
             self._state = True
         elif event.values["Command"] in COMMAND_OFF_LIST:
