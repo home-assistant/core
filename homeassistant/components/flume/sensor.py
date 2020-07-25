@@ -157,7 +157,10 @@ class FlumeSensor(Entity):
             return
         _LOGGER.debug("Successful update of flume sensor: %s", self._name)
         self._state = self._flume_device.values["current_interval"]
-        self._attributes = self._flume_device.values
+        self._attributes = {
+            k: round(self._flume_device.values[k], 1)
+            for k in (self._flume_device.values.keys() - "current_interval")
+        }
         self._available = True
 
     async def async_added_to_hass(self):
