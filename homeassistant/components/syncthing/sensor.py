@@ -9,6 +9,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     DOMAIN,
@@ -17,6 +18,7 @@ from .const import (
     FOLDER_SENSOR_DEFAULT_ICON,
     FOLDER_SENSOR_ICONS,
     FOLDER_SUMMARY_RECEIVED,
+    SCAN_INTERVAL,
     SERVER_AVAILABLE,
     SERVER_UNAVAILABLE,
     STATE_CHANGED_RECEIVED,
@@ -181,6 +183,15 @@ class FolderSensor(Entity):
                 f"{SERVER_AVAILABLE}-{self._client_name}",
                 handle_server_available,
             )
+        )
+
+        @callback
+        def refresh(event_time):
+            """Get the latest data from Syncthing."""
+            self.hass.add_job(self.async_update_status)
+
+        self.async_on_remove(
+            async_track_time_interval(self.hass, refresh, SCAN_INTERVAL)
         )
 
         await self.async_update_status()
