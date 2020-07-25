@@ -55,6 +55,7 @@ class FolderSensor(Entity):
         self._client_name = client_name
         self._folder = folder
         self._state = None
+        self._unsub_timer = None
 
     @property
     def name(self):
@@ -110,6 +111,24 @@ class FolderSensor(Entity):
             self._state = None
         self.async_schedule_update_ha_state(True)
 
+    def subscribe(self):
+        """Start polling syncthing folder status."""
+        if self._unsub_timer is None:
+
+            def refresh(event_time):
+                """Get the latest data from Syncthing."""
+                self.hass.add_job(self.async_update_status)
+
+            self._unsub_timer = async_track_time_interval(
+                self.hass, refresh, SCAN_INTERVAL
+            )
+
+    def unsubscribe(self):
+        """Stop polling syncthing folder status."""
+        if self._unsub_timer is not None:
+            self._unsub_timer()
+            self._unsub_timer = None
+
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
 
@@ -162,6 +181,7 @@ class FolderSensor(Entity):
         @callback
         def handle_server_unavailable():
             self._state = None
+            self.unsubscribe()
             self.async_schedule_update_ha_state(True)
 
         self.async_on_remove(
@@ -175,6 +195,7 @@ class FolderSensor(Entity):
         @callback
         def handle_server_available():
             self._state = None
+            self.subscribe()
             self.hass.add_job(self.async_update_status)
 
         self.async_on_remove(
@@ -185,13 +206,7 @@ class FolderSensor(Entity):
             )
         )
 
-        @callback
-        def refresh(event_time):
-            """Get the latest data from Syncthing."""
-            self.hass.add_job(self.async_update_status)
-
-        self.async_on_remove(
-            async_track_time_interval(self.hass, refresh, SCAN_INTERVAL)
-        )
+        self.subscribe()
+        self.async_on_remove(self.unsubscribe)
 
         await self.async_update_status()
