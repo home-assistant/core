@@ -35,7 +35,7 @@ PyEssent==0.13
 PyFlick==0.0.2
 
 # homeassistant.components.github
-PyGithub==1.43.8
+PyGithub==1.51.0
 
 # homeassistant.components.mvglive
 PyMVGLive==1.1.4

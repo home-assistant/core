@@ -1,7 +1,16 @@
 {
   "domain": "github",
   "name": "GitHub",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/github",
-  "requirements": ["PyGithub==1.43.8"],
-  "codeowners": []
+  "requirements": [
+    "PyGithub==1.51.0"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@timmo001"
+  ]
 }

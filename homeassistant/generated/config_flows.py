@@ -67,6 +67,7 @@ FLOWS = [
     "geonetnz_quakes",
     "geonetnz_volcano",
     "gios",
+    "github",
     "glances",
     "goalzero",
     "gogogate2",
