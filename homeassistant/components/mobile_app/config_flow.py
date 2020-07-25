@@ -50,3 +50,7 @@ class MobileAppFlowHandler(config_entries.ConfigFlow):
         return self.async_create_entry(
             title=user_input[ATTR_DEVICE_NAME], data=user_input
         )
+
+    async def async_step_import(self, import_data):
+        """Import config from configuration.yaml."""
+        return await self.async_step_user(import_data)
