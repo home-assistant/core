@@ -260,13 +260,11 @@ class TelevisionMediaPlayer(HomeAccessory):
 
         self.sources = []
 
-        # Add additional characteristics if volume or input selection supported
-        self.chars_tv = []
+        self.chars_tv = [CHAR_REMOTE_KEY]
         self.chars_speaker = []
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        if features & (SUPPORT_PLAY | SUPPORT_PAUSE):
-            self.chars_tv.append(CHAR_REMOTE_KEY)
+        self._supports_play_pause = features & (SUPPORT_PLAY | SUPPORT_PAUSE)
         if features & SUPPORT_VOLUME_MUTE or features & SUPPORT_VOLUME_STEP:
             self.chars_speaker.extend(
                 (CHAR_NAME, CHAR_ACTIVE, CHAR_VOLUME_CONTROL_TYPE, CHAR_VOLUME_SELECTOR)
@@ -285,10 +283,9 @@ class TelevisionMediaPlayer(HomeAccessory):
             CHAR_ACTIVE, setter_callback=self.set_on_off
         )
 
-        if CHAR_REMOTE_KEY in self.chars_tv:
-            self.char_remote_key = serv_tv.configure_char(
-                CHAR_REMOTE_KEY, setter_callback=self.set_remote_key
-            )
+        self.char_remote_key = serv_tv.configure_char(
+            CHAR_REMOTE_KEY, setter_callback=self.set_remote_key
+        )
 
         if CHAR_VOLUME_SELECTOR in self.chars_speaker:
             serv_speaker = self.add_preload_service(
@@ -382,7 +379,7 @@ class TelevisionMediaPlayer(HomeAccessory):
             _LOGGER.warning("%s: Unhandled key press for %s", self.entity_id, value)
             return
 
-        if key_name == KEY_PLAY_PAUSE:
+        if key_name == KEY_PLAY_PAUSE and self._supports_play_pause:
             # Handle Play Pause by directly updating the media player entity.
             state = self.hass.states.get(self.entity_id).state
             if state in (STATE_PLAYING, STATE_PAUSED):
@@ -394,7 +391,7 @@ class TelevisionMediaPlayer(HomeAccessory):
             params = {ATTR_ENTITY_ID: self.entity_id}
             self.call_service(DOMAIN, service, params)
         else:
-            # Other keys can be handled by listening to the event bus
+            # Unhandled keys can be handled by listening to the event bus
             self.hass.bus.fire(
                 EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
                 {ATTR_KEY_NAME: key_name, ATTR_ENTITY_ID: self.entity_id},
