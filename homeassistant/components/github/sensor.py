@@ -16,6 +16,8 @@ from .const import CONF_REPOSITORY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_CLONES = "clones"
+ATTR_CLONES_UNIQUE = "clones_unique"
 ATTR_DESCRIPTION = "description"
 ATTR_FORKS = "forks"
 ATTR_HOMEPAGE = "homepage"
@@ -30,7 +32,10 @@ ATTR_OPEN_PULL_REQUESTS = "open_pull_requests"
 ATTR_PATH = "path"
 ATTR_STARGAZERS = "stargazers"
 ATTR_TOPICS = "topics"
+ATTR_VIEWS = "views"
+ATTR_VIEWS_UNIQUE = "views_unique"
 ATTR_WATCHERS = "watchers"
+
 
 SCAN_INTERVAL = timedelta(seconds=300)
 
@@ -52,6 +57,8 @@ class RepositorySensor(Entity):
         self._repository = repository
         self._unique_id = f"{repository}_sensor"
         self._available = False
+        self._clones = None
+        self._clones_unique = None
         self._description = None
         self._forks = None
         self._homepage = None
@@ -95,6 +102,8 @@ class RepositorySensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
+            ATTR_CLONES_UNIQUE: self._clones_unique,
+            ATTR_CLONES: self._clones,
             ATTR_DESCRIPTION: self._description,
             ATTR_FORKS: self._forks,
             ATTR_LATEST_COMMIT_MESSAGE: self._latest_commit_message,
@@ -109,6 +118,8 @@ class RepositorySensor(Entity):
             ATTR_PATH: self._repository,
             ATTR_STARGAZERS: self._stargazers,
             ATTR_TOPICS: self._topics,
+            ATTR_VIEWS_UNIQUE: self._views_unique,
+            ATTR_VIEWS: self._views,
             ATTR_WATCHERS: self._watchers,
         }
 
@@ -131,6 +142,10 @@ class RepositorySensor(Entity):
             endpoint=f"/repos/{repository.full_name}/branches/{repository.default_branch}"
         )
 
+        clones = await repository.client.get(
+            endpoint=f"/repos/{repository.full_name}/traffic/clones"
+        )
+
         releases: AIOGitHubAPIRepositoryRelease = await repository.get_releases()
 
         all_issues: [AIOGitHubAPIRepositoryIssue] = await repository.get_issues()
@@ -145,28 +160,32 @@ class RepositorySensor(Entity):
 
         self._state = last_commit["commit"]["sha"][0:7]
 
-        self._name = repository.attributes.get("name")
+        self._clones = clones["count"]
+        self._clones_unique = clones["uniques"]
         self._description = repository.description
-        self._topics = repository.topics
+        self._forks = repository.attributes.get("forks")
         self._homepage = repository.attributes.get("homepage")
+        self._latest_commit_message = last_commit["commit"]["commit"][
+            "message"
+        ].splitlines()[0]
         self._latest_commit_sha = last_commit["commit"]["sha"]
+        self._latest_open_issue_url = issues[0].html_url if len(issues) > 1 else ""
+        self._latest_open_pr_url = (
+            pull_requests[0].html_url if len(pull_requests) > 1 else ""
+        )
         self._latest_release_tag = releases[0].tag_name if len(releases) > 1 else ""
         self._latest_release_url = (
             f"https://github.com/{repository.full_name}/releases/{releases[0].tag_name}"
             if len(releases) > 1
             else ""
         )
-        self._stargazers = repository.attributes.get("stargazers_count")
-        self._watchers = repository.attributes.get("watchers_count")
-        self._forks = repository.attributes.get("forks")
-        self._latest_commit_message = last_commit["commit"]["commit"][
-            "message"
-        ].splitlines()[0]
+        self._name = repository.attributes.get("name")
         self._open_issues = len(issues)
         self._pull_requests = len(pull_requests)
-        self._latest_open_issue_url = issues[0].html_url if len(issues) > 1 else ""
-        self._latest_open_pr_url = (
-            pull_requests[0].html_url if len(pull_requests) > 1 else ""
-        )
+        self._stargazers = repository.attributes.get("stargazers_count")
+        self._topics = repository.topics
+        self._views = ""
+        self._views_unique = ""
+        self._watchers = repository.attributes.get("watchers_count")
 
         self._available = True
