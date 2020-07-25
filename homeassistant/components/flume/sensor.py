@@ -1,6 +1,7 @@
 """Sensor for displaying the number of result from Flume."""
 from datetime import timedelta
 import logging
+from numbers import Number
 
 from pyflume import FlumeData
 import voluptuous as vol
@@ -148,6 +149,10 @@ class FlumeSensor(Entity):
     def update(self):
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating flume sensor: %s", self._name)
+
+        def format_attribute_value(value):
+            return round(value, 1) if isinstance(value, Number) else None
+
         try:
             self._flume_device.update_force()
         except Exception as ex:  # pylint: disable=broad-except
@@ -158,8 +163,22 @@ class FlumeSensor(Entity):
         _LOGGER.debug("Successful update of flume sensor: %s", self._name)
         self._state = self._flume_device.values["current_interval"]
         self._attributes = {
-            k: round(self._flume_device.values[k], 1)
-            for k in (self._flume_device.values.keys() - ["current_interval"])
+            "month_to_date": format_attribute_value(
+                self._flume_device.values["month_to_date"]
+            ),
+            "week_to_date": format_attribute_value(
+                self._flume_device.values["week_to_date"]
+            ),
+            "today": format_attribute_value(self._flume_device.values["today"]),
+            "last_60_min": format_attribute_value(
+                self._flume_device.values["last_60_min"]
+            ),
+            "last_24_hrs": format_attribute_value(
+                self._flume_device.values["last_24_hrs"]
+            ),
+            "last_30_days": format_attribute_value(
+                self._flume_device.values["last_30_days"]
+            ),
         }
         self._available = True
 
