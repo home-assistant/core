@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
         except (ValueError, IndexError, KeyError, OSError):
             return
-        new_sensor = RemoteRPiGPIOBinarySensor(port_name, button, invert_logic)
+        new_sensor = RemoteRPiGPIOBinarySensor(port_name, button, invert_logic, address, port_num)
         devices.append(new_sensor)
 
     add_entities(devices, True)
@@ -60,12 +60,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
     """Represent a binary sensor that uses a Remote Raspberry Pi GPIO."""
 
-    def __init__(self, name, button, invert_logic):
+    def __init__(self, name, button, invert_logic, address, port):
         """Initialize the RPi binary sensor."""
         self._name = name
         self._invert_logic = invert_logic
         self._state = False
         self._button = button
+        self._unique_id = (f"rrpi-{address}-sensor-{port}")
 
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
@@ -87,6 +88,11 @@ class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+    
+    @property
+    def unique_id(self) -> str:
+        """Return the unique id."""
+        return self._unique_id
 
     @property
     def is_on(self):
