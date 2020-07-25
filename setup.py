@@ -32,6 +32,7 @@ PROJECT_URLS = {
 PACKAGES = find_packages(exclude=["tests", "tests.*"])
 
 REQUIRES = [
+    "wheel",
     "aiohttp==3.6.2",
     "astral==1.10.1",
     "async_timeout==3.0.1",
