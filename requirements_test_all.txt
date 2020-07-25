@@ -1000,3 +1000,6 @@ zigpy-zigate==0.6.1
 
 # homeassistant.components.zha
 zigpy==0.22.1
+
+# homeassistant.components.zoneminder
+zm-py==0.4.0
