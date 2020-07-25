@@ -224,7 +224,7 @@ SENSOR_ENTITIES = {
     "power_meter_reading_low": {
         ATTR_NAME: "Electricity Meter Feed IN Tariff 2",
         ATTR_SECTION: "power_usage",
-        ATTR_MEASUREMENT: "meter_high",
+        ATTR_MEASUREMENT: "meter_low",
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:power-plug",

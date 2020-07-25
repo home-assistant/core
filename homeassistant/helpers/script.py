@@ -140,7 +140,7 @@ class _ScriptRun:
     ) -> None:
         self._hass = hass
         self._script = script
-        self._variables = variables
+        self._variables = variables or {}
         self._context = context
         self._log_exceptions = log_exceptions
         self._step = -1
@@ -431,22 +431,23 @@ class _ScriptRun:
 
     async def _async_repeat_step(self):
         """Repeat a sequence."""
-
         description = self._action.get(CONF_ALIAS, "sequence")
         repeat = self._action[CONF_REPEAT]
 
-        async def async_run_sequence(iteration, extra_msg="", extra_vars=None):
+        saved_repeat_vars = self._variables.get("repeat")
+
+        def set_repeat_var(iteration, count=None):
+            repeat_vars = {"first": iteration == 1, "index": iteration}
+            if count:
+                repeat_vars["last"] = iteration == count
+            self._variables["repeat"] = repeat_vars
+
+        # pylint: disable=protected-access
+        script = self._script._get_repeat_script(self._step)
+
+        async def async_run_sequence(iteration, extra_msg=""):
             self._log("Repeating %s: Iteration %i%s", description, iteration, extra_msg)
-            repeat_vars = {"repeat": {"first": iteration == 1, "index": iteration}}
-            if extra_vars:
-                repeat_vars["repeat"].update(extra_vars)
-            # pylint: disable=protected-access
-            await self._async_run_script(
-                self._script._get_repeat_script(self._step),
-                # Add repeat to variables. Override if it already exists in case of
-                # nested calls.
-                {**(self._variables or {}), **repeat_vars},
-            )
+            await self._async_run_script(script)
 
         if CONF_COUNT in repeat:
             count = repeat[CONF_COUNT]
@@ -461,10 +462,10 @@ class _ScriptRun:
                         level=logging.ERROR,
                     )
                     raise _StopScript
+            extra_msg = f" of {count}"
             for iteration in range(1, count + 1):
-                await async_run_sequence(
-                    iteration, f" of {count}", {"last": iteration == count}
-                )
+                set_repeat_var(iteration, count)
+                await async_run_sequence(iteration, extra_msg)
                 if self._stop.is_set():
                     break
 
@@ -473,6 +474,7 @@ class _ScriptRun:
                 await self._async_get_condition(config) for config in repeat[CONF_WHILE]
             ]
             for iteration in itertools.count(1):
+                set_repeat_var(iteration)
                 if self._stop.is_set() or not all(
                     cond(self._hass, self._variables) for cond in conditions
                 ):
@@ -484,11 +486,17 @@ class _ScriptRun:
                 await self._async_get_condition(config) for config in repeat[CONF_UNTIL]
             ]
             for iteration in itertools.count(1):
+                set_repeat_var(iteration)
                 await async_run_sequence(iteration)
                 if self._stop.is_set() or all(
                     cond(self._hass, self._variables) for cond in conditions
                 ):
                     break
+
+        if saved_repeat_vars:
+            self._variables["repeat"] = saved_repeat_vars
+        else:
+            del self._variables["repeat"]
 
     async def _async_choose_step(self):
         """Choose a sequence."""
@@ -503,11 +511,11 @@ class _ScriptRun:
         if choose_data["default"]:
             await self._async_run_script(choose_data["default"])
 
-    async def _async_run_script(self, script, variables=None):
+    async def _async_run_script(self, script):
         """Execute a script."""
         await self._async_run_long_action(
             self._hass.async_create_task(
-                script.async_run(variables or self._variables, self._context)
+                script.async_run(self._variables, self._context)
             )
         )
 
