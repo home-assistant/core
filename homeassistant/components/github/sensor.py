@@ -102,8 +102,8 @@ class RepositorySensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_CLONES_UNIQUE: self._clones_unique,
             ATTR_CLONES: self._clones,
+            ATTR_CLONES_UNIQUE: self._clones_unique,
             ATTR_DESCRIPTION: self._description,
             ATTR_FORKS: self._forks,
             ATTR_LATEST_COMMIT_MESSAGE: self._latest_commit_message,
@@ -118,8 +118,8 @@ class RepositorySensor(Entity):
             ATTR_PATH: self._repository,
             ATTR_STARGAZERS: self._stargazers,
             ATTR_TOPICS: self._topics,
-            ATTR_VIEWS_UNIQUE: self._views_unique,
             ATTR_VIEWS: self._views,
+            ATTR_VIEWS_UNIQUE: self._views_unique,
             ATTR_WATCHERS: self._watchers,
         }
 
