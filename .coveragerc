@@ -525,6 +525,7 @@ omit =
     homeassistant/components/mpd/media_player.py
     homeassistant/components/mqtt_room/sensor.py
     homeassistant/components/msteams/notify.py
+    homeassistant/components/mullvad/*
     homeassistant/components/mvglive/sensor.py
     homeassistant/components/mychevy/*
     homeassistant/components/mycroft/*

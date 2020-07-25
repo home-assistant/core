@@ -913,6 +913,9 @@ minio==4.0.9
 # homeassistant.components.mitemp_bt
 mitemp_bt==0.0.3
 
+# homeassistant.components.mullvad
+mullvad-api==1.0.0
+
 # homeassistant.components.tts
 mutagen==1.44.0
 

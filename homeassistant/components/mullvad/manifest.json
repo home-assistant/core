@@ -1,0 +1,7 @@
+{
+  "domain": "mullvad",
+  "name": "Mullvad",
+  "documentation": "https://www.home-assistant.io/integrations/mullvad",
+  "requirements": ["mullvad-api==1.0.0"],
+  "codeowners": ["@meichthys"]
+}
