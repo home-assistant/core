@@ -22,7 +22,6 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -37,7 +36,6 @@ async def test_authorization_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "user"
@@ -61,7 +59,6 @@ async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
         )
-        await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "reauth"
@@ -85,7 +82,6 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "user"
@@ -109,7 +105,6 @@ async def test_reauth_connection_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
         )
-        await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "reauth"
@@ -138,7 +133,6 @@ async def test_project_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "user"
@@ -167,7 +161,6 @@ async def test_reauth_project_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
         )
-        await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "reauth"
@@ -187,7 +180,6 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
     )
-    await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "reauth"
@@ -212,11 +204,10 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
 async def test_full_flow_implementation(hass: HomeAssistant) -> None:
@@ -225,7 +216,7 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
         "homeassistant.components.azure_devops.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.azure_devops.async_setup_entry", return_value=True,
-    ), patch(
+    ) as mock_setup_entry, patch(
         "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorized",
         return_value=True,
     ), patch(
@@ -239,7 +230,6 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "user"
@@ -248,6 +238,8 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
             result["flow_id"], FIXTURE_USER_INPUT,
         )
         await hass.async_block_till_done()
+        assert len(mock_setup.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 1
 
         assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert (
@@ -256,6 +248,3 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
         )
         assert result2["data"][CONF_ORG] == FIXTURE_USER_INPUT[CONF_ORG]
         assert result2["data"][CONF_PROJECT] == FIXTURE_USER_INPUT[CONF_PROJECT]
-
-        await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
