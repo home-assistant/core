@@ -49,6 +49,7 @@ homeassistant/components/avri/* @timvancann
 homeassistant/components/awair/* @ahayworth @danielsjf
 homeassistant/components/aws/* @awarecan
 homeassistant/components/axis/* @Kane610
+homeassistant/components/azure_devops/* @timmo001
 homeassistant/components/azure_event_hub/* @eavanvalkenburg
 homeassistant/components/azure_service_bus/* @hfurubotten
 homeassistant/components/beewi_smartclim/* @alemuro
