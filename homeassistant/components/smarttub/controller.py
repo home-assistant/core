@@ -98,7 +98,10 @@ class SmartTubController:
         )
 
     async def async_update_entity(self, entity):
-        """Request a state update on behalf of entity."""
+        """Request a state update on behalf of entity.
+
+        All entities derive their state from the coordinator.
+        """
         await self._coordinator.async_request_refresh()
 
     async def async_register_devices(self, entry):
@@ -170,7 +173,7 @@ class SmartTubController:
         return self._get_status_value(spa_id, "setTemperature")
 
     async def set_target_water_temperature(self, spa_id, temperature: float):
-        """Return the target water temperature."""
+        """Set the target water temperature."""
         await self._spas[spa_id].set_temperature(temperature)
 
     def get_current_water_temperature(self, spa_id) -> float:
