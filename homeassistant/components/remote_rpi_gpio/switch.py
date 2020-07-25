@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             led = remote_rpi_gpio.setup_output(address, port, invert_logic)
         except (ValueError, IndexError, KeyError, OSError):
             return
-        new_switch = RemoteRPiGPIOSwitch(name, led)
+        new_switch = RemoteRPiGPIOSwitch(name, led, address, port)
         devices.append(new_switch)
 
     add_entities(devices)
@@ -46,16 +46,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class RemoteRPiGPIOSwitch(SwitchEntity):
     """Representation of a Remote Raspberry Pi GPIO."""
 
-    def __init__(self, name, led):
+    def __init__(self, name, led, address, port):
         """Initialize the pin."""
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = False
         self._switch = led
+        self._unique_id = (f"rrpi-{address}-switch-{port}")
 
     @property
     def name(self):
         """Return the name of the switch."""
         return self._name
+    
+    @property
+    def unique_id(self) -> str:
+        """Return the unique id."""
+        return self._unique_id
 
     @property
     def should_poll(self):
