@@ -159,7 +159,7 @@ class FlumeSensor(Entity):
         self._state = self._flume_device.values["current_interval"]
         self._attributes = {
             k: round(self._flume_device.values[k], 1)
-            for k in (self._flume_device.values.keys() - "current_interval")
+            for k in (self._flume_device.values.keys() - ["current_interval"])
         }
         self._available = True
 
