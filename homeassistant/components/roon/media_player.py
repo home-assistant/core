@@ -61,7 +61,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Roon MediaPlayer from Config Entry."""
-    roon_server = hass.data[DOMAIN][config_entry.data["host"]]
+    roon_server = hass.data[DOMAIN][config_entry.entry_id]
     media_players = {}
 
     @callback

@@ -19,7 +19,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Set up a roonserver from a config entry."""
     host = entry.data[CONF_HOST]
-    roonserver = RoonServer(hass, entry, None)
+    roonserver = RoonServer(hass, entry)
 
     if not await roonserver.async_setup():
         return False
