@@ -3,10 +3,14 @@
   "name": "Hayward Omnilogic",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/omnilogic",
-  "requirements": ["omnilogic==0.3.1"],
+  "requirements": [
+    "omnilogic==0.3.2"
+  ],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
   "dependencies": [],
-  "codeowners": ["@oliver84"]
+  "codeowners": [
+    "@oliver84"
+  ]
 }
