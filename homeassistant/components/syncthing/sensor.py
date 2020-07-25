@@ -40,7 +40,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for folder in config["folders"]:
             dev.append(FolderSensor(hass, client, name, folder))
 
-        async_add_entities(dev, True)
+        async_add_entities(dev)
     except syncthing.SyncthingError as exception:
         raise PlatformNotReady from exception
 
@@ -109,7 +109,7 @@ class FolderSensor(Entity):
             self._state = state
         except syncthing.SyncthingError:
             self._state = None
-        self.async_schedule_update_ha_state(True)
+        self.async_write_ha_state()
 
     def subscribe(self):
         """Start polling syncthing folder status."""
@@ -139,8 +139,7 @@ class FolderSensor(Entity):
                 if event["data"]["summary"]["state"] == "":
                     event["data"]["summary"]["state"] = "paused"
                 self._state = event["data"]["summary"]
-                self.async_schedule_update_ha_state(True)
-            pass
+                self.async_write_ha_state()
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -154,7 +153,7 @@ class FolderSensor(Entity):
         def handle_state_chaged(event):
             if self._state is not None:
                 self._state["state"] = event["data"]["to"]
-                self.async_schedule_update_ha_state(True)
+                self.async_write_ha_state()
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -168,7 +167,7 @@ class FolderSensor(Entity):
         def handle_folder_paused(event):
             if self._state is not None:
                 self._state["state"] = "paused"
-                self.async_schedule_update_ha_state(True)
+                self.async_write_ha_state()
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -182,7 +181,7 @@ class FolderSensor(Entity):
         def handle_server_unavailable():
             self._state = None
             self.unsubscribe()
-            self.async_schedule_update_ha_state(True)
+            self.async_write_ha_state()
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -194,7 +193,6 @@ class FolderSensor(Entity):
 
         @callback
         def handle_server_available():
-            self._state = None
             self.subscribe()
             self.hass.add_job(self.async_update_status)
 
