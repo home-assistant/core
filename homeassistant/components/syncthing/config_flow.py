@@ -32,10 +32,8 @@ DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
-    if hass.data[DOMAIN] is not None:
-        for instance in hass.data[DOMAIN].values():
-            if instance["name"] == data[CONF_NAME]:
-                raise AlreadyConfigured
+    if data[CONF_NAME] in hass.data[DOMAIN]:
+        raise AlreadyConfigured
 
     try:
         client = syncthing.Syncthing(

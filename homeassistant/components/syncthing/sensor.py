@@ -30,8 +30,8 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Syncthing sensors."""
 
-    client = hass.data[DOMAIN][config_entry.entry_id]["client"]
     name = config_entry.data[CONF_NAME]
+    client = hass.data[DOMAIN][name]["client"]
 
     try:
         config = await hass.async_add_executor_job(client.system.config)
@@ -102,7 +102,7 @@ class FolderSensor(Entity):
             state = await self.hass.async_add_executor_job(
                 self._client.database.status, self._folder["id"]
             )
-            # A workaround, for some reason, state of paused folder is an empty string
+            # A workaround, for some reason, state of paused folders is an empty string
             if state["state"] == "":
                 state["state"] = "paused"
             self._state = state
