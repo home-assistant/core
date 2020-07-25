@@ -188,9 +188,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
             domain=DOMAIN, unique_id=UNIQUE_ID, data=FIXTURE_USER_INPUT
         )
         mock_config.add_to_hass(hass)
-        hass.config_entries.async_update_entry(
-            mock_config, data={**FIXTURE_USER_INPUT, CONF_PAT: "abcd1234"}
-        )
+        hass.config_entries.async_update_entry(mock_config)
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
