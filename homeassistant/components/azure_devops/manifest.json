@@ -1,0 +1,8 @@
+{
+  "domain": "azure_devops",
+  "name": "Azure DevOps",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/azure_devops",
+  "requirements": ["aioazuredevops==1.3.4"],
+  "codeowners": ["@timmo001"]
+}
