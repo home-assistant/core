@@ -50,7 +50,7 @@ async def test_track_point_in_time(hass):
     runs = []
 
     async_track_point_in_utc_time(
-        hass, callback(lambda x: runs.append(1)), birthday_paulus
+        hass, callback(lambda x: runs.append(x)), birthday_paulus
     )
 
     async_fire_time_changed(hass, before_birthday)
@@ -67,7 +67,7 @@ async def test_track_point_in_time(hass):
     assert len(runs) == 1
 
     async_track_point_in_utc_time(
-        hass, callback(lambda x: runs.append(1)), birthday_paulus
+        hass, callback(lambda x: runs.append(x)), birthday_paulus
     )
 
     async_fire_time_changed(hass, after_birthday)
@@ -75,7 +75,7 @@ async def test_track_point_in_time(hass):
     assert len(runs) == 2
 
     unsub = async_track_point_in_time(
-        hass, callback(lambda x: runs.append(1)), birthday_paulus
+        hass, callback(lambda x: runs.append(x)), birthday_paulus
     )
     unsub()
 
@@ -539,7 +539,7 @@ async def test_track_time_interval(hass):
 
     utc_now = dt_util.utcnow()
     unsub = async_track_time_interval(
-        hass, lambda x: specific_runs.append(1), timedelta(seconds=10)
+        hass, lambda x: specific_runs.append(x), timedelta(seconds=10)
     )
 
     async_fire_time_changed(hass, utc_now + timedelta(seconds=5))
@@ -750,10 +750,15 @@ async def test_async_track_time_change(hass):
 
     now = dt_util.utcnow()
 
-    unsub = async_track_time_change(hass, lambda x: wildcard_runs.append(1))
-    unsub_utc = async_track_utc_time_change(
-        hass, lambda x: specific_runs.append(1), second=[0, 30]
-    )
+    time_that_will_not_match_right_away = datetime(now.year + 1, 5, 24, 11, 59, 55)
+
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        unsub = async_track_time_change(hass, lambda x: wildcard_runs.append(x))
+        unsub_utc = async_track_utc_time_change(
+            hass, lambda x: specific_runs.append(x), second=[0, 30]
+        )
 
     async_fire_time_changed(
         hass, datetime(now.year + 1, 5, 24, 12, 0, 0, 999999, tzinfo=dt_util.UTC)
@@ -793,9 +798,14 @@ async def test_periodic_task_minute(hass):
 
     now = dt_util.utcnow()
 
-    unsub = async_track_utc_time_change(
-        hass, lambda x: specific_runs.append(1), minute="/5", second=0
-    )
+    time_that_will_not_match_right_away = datetime(now.year + 1, 5, 24, 11, 59, 55)
+
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        unsub = async_track_utc_time_change(
+            hass, lambda x: specific_runs.append(x), minute="/5", second=0
+        )
 
     async_fire_time_changed(
         hass, datetime(now.year + 1, 5, 24, 12, 0, 0, 999999, tzinfo=dt_util.UTC)
@@ -830,9 +840,14 @@ async def test_periodic_task_hour(hass):
 
     now = dt_util.utcnow()
 
-    unsub = async_track_utc_time_change(
-        hass, lambda x: specific_runs.append(1), hour="/2", minute=0, second=0
-    )
+    time_that_will_not_match_right_away = datetime(now.year + 1, 5, 24, 21, 59, 55)
+
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        unsub = async_track_utc_time_change(
+            hass, lambda x: specific_runs.append(x), hour="/2", minute=0, second=0
+        )
 
     async_fire_time_changed(
         hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999, tzinfo=dt_util.UTC)
@@ -881,7 +896,7 @@ async def test_periodic_task_wrong_input(hass):
 
     with pytest.raises(ValueError):
         async_track_utc_time_change(
-            hass, lambda x: specific_runs.append(1), hour="/two"
+            hass, lambda x: specific_runs.append(x), hour="/two"
         )
 
     async_fire_time_changed(
@@ -897,9 +912,14 @@ async def test_periodic_task_clock_rollback(hass):
 
     now = dt_util.utcnow()
 
-    unsub = async_track_utc_time_change(
-        hass, lambda x: specific_runs.append(1), hour="/2", minute=0, second=0
-    )
+    time_that_will_not_match_right_away = datetime(now.year + 1, 5, 24, 21, 59, 55)
+
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        unsub = async_track_utc_time_change(
+            hass, lambda x: specific_runs.append(x), hour="/2", minute=0, second=0
+        )
 
     async_fire_time_changed(
         hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999, tzinfo=dt_util.UTC)
@@ -950,9 +970,14 @@ async def test_periodic_task_duplicate_time(hass):
 
     now = dt_util.utcnow()
 
-    unsub = async_track_utc_time_change(
-        hass, lambda x: specific_runs.append(1), hour="/2", minute=0, second=0
-    )
+    time_that_will_not_match_right_away = datetime(now.year + 1, 5, 24, 21, 59, 55)
+
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        unsub = async_track_utc_time_change(
+            hass, lambda x: specific_runs.append(x), hour="/2", minute=0, second=0
+        )
 
     async_fire_time_changed(
         hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999, tzinfo=dt_util.UTC)
@@ -990,7 +1015,7 @@ async def test_periodic_task_entering_dst(hass):
         "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
     ):
         unsub = async_track_time_change(
-            hass, lambda x: specific_runs.append(1), hour=2, minute=30, second=0
+            hass, lambda x: specific_runs.append(x), hour=2, minute=30, second=0
         )
 
     async_fire_time_changed(
@@ -1036,7 +1061,7 @@ async def test_periodic_task_leaving_dst(hass):
         "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
     ):
         unsub = async_track_time_change(
-            hass, lambda x: specific_runs.append(1), hour=2, minute=30, second=0
+            hass, lambda x: specific_runs.append(x), hour=2, minute=30, second=0
         )
 
     async_fire_time_changed(
