@@ -6,6 +6,7 @@ import syncthing
 
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
@@ -30,14 +31,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     client = hass.data[DOMAIN][config_entry.entry_id]["client"]
     name = config_entry.data[CONF_NAME]
 
-    config = await hass.async_add_executor_job(client.system.config)
+    try:
+        config = await hass.async_add_executor_job(client.system.config)
+        dev = []
 
-    dev = []
+        for folder in config["folders"]:
+            dev.append(FolderSensor(hass, client, name, folder))
 
-    for folder in config["folders"]:
-        dev.append(FolderSensor(hass, client, name, folder))
-
-    async_add_entities(dev, True)
+        async_add_entities(dev, True)
+    except syncthing.SyncthingError as exception:
+        raise PlatformNotReady from exception
 
 
 class FolderSensor(Entity):
