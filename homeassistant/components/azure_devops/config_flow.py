@@ -109,7 +109,18 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = await self._check_setup()
         if errors is not None:
             return await self._show_reauth_form(errors)
-        return self._async_create_entry()
+
+        for entry in self._async_current_entries():
+            if entry.unique_id == self.unique_id:
+                self.hass.config_entries.async_update_entry(
+                    entry,
+                    data={
+                        CONF_ORG: self._organization,
+                        CONF_PROJECT: self._project,
+                        CONF_PAT: self._pat,
+                    },
+                )
+                return self.async_abort(reason="reauth_successful")
 
     def _async_create_entry(self):
         """Handle create entry."""

@@ -12,9 +12,12 @@ from homeassistant.components.azure_devops.const import (
 from homeassistant.core import HomeAssistant
 
 from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
-FIXTURE_USER_INPUT = {CONF_ORG: "random", CONF_PROJECT: "project", CONF_PAT: "abc123"}
 FIXTURE_REAUTH_INPUT = {CONF_PAT: "abc123"}
+FIXTURE_USER_INPUT = {CONF_ORG: "random", CONF_PROJECT: "project", CONF_PAT: "abc123"}
+
+UNIQUE_ID = "random_project"
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:
@@ -150,10 +153,10 @@ async def test_project_error(hass: HomeAssistant) -> None:
 async def test_reauth_project_error(hass: HomeAssistant) -> None:
     """Test we show user form on Azure DevOps project error."""
     with patch(
+        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
+    ), patch(
         "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorized",
         return_value=True,
-    ), patch(
-        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
     ), patch(
         "homeassistant.components.azure_devops.config_flow.DevOpsClient.get_project",
         return_value=None,
@@ -177,23 +180,31 @@ async def test_reauth_project_error(hass: HomeAssistant) -> None:
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test reauth works."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
+        return_value=False,
+    ):
+        mock_config = MockConfigEntry(
+            domain=DOMAIN, unique_id=UNIQUE_ID, data=FIXTURE_USER_INPUT
+        )
+        mock_config.add_to_hass(hass)
+        hass.config_entries.async_update_entry(
+            mock_config, data={**FIXTURE_USER_INPUT, CONF_PAT: "abcd1234"}
+        )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "reauth"
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "reauth"
+        assert result["errors"] == {"base": "authorization_error"}
 
     with patch(
-        "homeassistant.components.azure_devops.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.azure_devops.async_setup_entry", return_value=True,
-    ) as mock_setup_entry, patch(
+        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
+    ), patch(
         "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorized",
         return_value=True,
-    ), patch(
-        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
     ), patch(
         "homeassistant.components.azure_devops.config_flow.DevOpsClient.get_project",
         return_value=DevOpsProject(
@@ -205,10 +216,8 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert len(mock_setup.mock_calls) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
-
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result2["reason"] == "reauth_successful"
 
 
 async def test_full_flow_implementation(hass: HomeAssistant) -> None:

@@ -23,6 +23,10 @@
         "description": "Authentication failed for {project_url}. Please enter your current credentials.",
         "title": "Reauthentication"
       }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::data::access_token%] updated successfully"
     }
   },
   "title": "Azure DevOps"
