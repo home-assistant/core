@@ -9,6 +9,7 @@ from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMA
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
@@ -135,6 +136,29 @@ async def test_turn_off_light(hass: core.HomeAssistant):
     mock_turn_light_off.assert_called_once_with(
         "test-device-id", Action.turn_light_off()
     )
+
+
+async def test_support_brightness(hass: core.HomeAssistant):
+    """Tests that turn on command delegates to set flame API."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        dimmable_ceiling_fan("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    state = hass.states.get("light.name_1")
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & SUPPORT_BRIGHTNESS
+
+
+async def test_dont_support_brightness(hass: core.HomeAssistant):
+    """Tests that turn on command delegates to set flame API."""
+    await setup_platform(
+        hass, LIGHT_DOMAIN, ceiling_fan("name-1"), bond_device_id="test-device-id",
+    )
+
+    state = hass.states.get("light.name_1")
+    assert not state.attributes[ATTR_SUPPORTED_FEATURES] & SUPPORT_BRIGHTNESS
 
 
 async def test_turn_on_light_with_brightness(hass: core.HomeAssistant):
