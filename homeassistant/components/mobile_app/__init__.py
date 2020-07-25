@@ -1,6 +1,8 @@
 """Integrates Native Apps to Home Assistant."""
 import asyncio
 
+import voluptuous as vol
+
 from homeassistant.components import cloud
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.webhook import (
@@ -9,17 +11,37 @@ from homeassistant.components.webhook import (
 )
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr, discovery
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery,
+)
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (
+    ATTR_BACKGROUND,
+    ATTR_DEFAULT_BEHAVIOR,
     ATTR_DEVICE_ID,
     ATTR_DEVICE_NAME,
+    ATTR_FOREGROUND,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_OS_VERSION,
+    ATTR_TEXT_INPUT_BEHAVIOR,
     CONF_CLOUDHOOK_URL,
     CONF_PUSH,
+    CONF_PUSH_ACTIONS_ACTIVATION_MODE,
+    CONF_PUSH_ACTIONS_AUTHENTICATION_REQUIRED,
+    CONF_PUSH_ACTIONS_BEHAVIOR,
+    CONF_PUSH_ACTIONS_DESTRUCTIVE,
+    CONF_PUSH_ACTIONS_IDENTIFIER,
+    CONF_PUSH_ACTIONS_TEXT_INPUT_BUTTON_TITLE,
+    CONF_PUSH_ACTIONS_TEXT_INPUT_PLACEHOLDER,
+    CONF_PUSH_ACTIONS_TITLE,
+    CONF_PUSH_CATEGORIES,
+    CONF_PUSH_CATEGORIES_ACTIONS,
+    CONF_PUSH_CATEGORIES_IDENTIFIER,
+    CONF_PUSH_CATEGORIES_NAME,
     DATA_BINARY_SENSOR,
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
@@ -157,3 +179,52 @@ class MobileAppiOSPushConfigView(HomeAssistantView):
     def get(self, request):
         """Handle the GET request for the push configuration."""
         return self.json(self.push_config)
+
+
+BEHAVIORS = [ATTR_DEFAULT_BEHAVIOR, ATTR_TEXT_INPUT_BEHAVIOR]
+
+ACTIVATION_MODES = [ATTR_FOREGROUND, ATTR_BACKGROUND]
+
+ACTION_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PUSH_ACTIONS_IDENTIFIER): vol.Upper,
+        vol.Required(CONF_PUSH_ACTIONS_TITLE): cv.string,
+        vol.Optional(
+            CONF_PUSH_ACTIONS_ACTIVATION_MODE, default=ATTR_BACKGROUND
+        ): vol.In(ACTIVATION_MODES),
+        vol.Optional(
+            CONF_PUSH_ACTIONS_AUTHENTICATION_REQUIRED, default=False
+        ): cv.boolean,
+        vol.Optional(CONF_PUSH_ACTIONS_DESTRUCTIVE, default=False): cv.boolean,
+        vol.Optional(CONF_PUSH_ACTIONS_BEHAVIOR, default=ATTR_DEFAULT_BEHAVIOR): vol.In(
+            BEHAVIORS
+        ),
+        vol.Optional(CONF_PUSH_ACTIONS_TEXT_INPUT_BUTTON_TITLE): cv.string,
+        vol.Optional(CONF_PUSH_ACTIONS_TEXT_INPUT_PLACEHOLDER): cv.string,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+ACTION_SCHEMA_LIST = vol.All(cv.ensure_list, [ACTION_SCHEMA])
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: {
+            CONF_PUSH: {
+                CONF_PUSH_CATEGORIES: vol.All(
+                    cv.ensure_list,
+                    [
+                        {
+                            vol.Required(CONF_PUSH_CATEGORIES_NAME): cv.string,
+                            vol.Required(CONF_PUSH_CATEGORIES_IDENTIFIER): vol.Lower,
+                            vol.Required(
+                                CONF_PUSH_CATEGORIES_ACTIONS
+                            ): ACTION_SCHEMA_LIST,
+                        }
+                    ],
+                )
+            }
+        }
+    },
+    extra=vol.ALLOW_EXTRA,
+)
