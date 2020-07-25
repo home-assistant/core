@@ -1,5 +1,6 @@
 """Support for interfacing to the Logitech SqueezeBox API."""
 import asyncio
+import json
 import logging
 
 from pysqueezebox import Server, async_discover
@@ -10,6 +11,7 @@ from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEn
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_PLAYLIST,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -332,11 +334,20 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     @property
     def media_content_id(self):
         """Content ID of current playing media."""
+        if not self._player.playlist:
+            return None
+        if len(self._player.playlist) > 1:
+            urls = [{"url": track["url"]} for track in self._player.playlist]
+            return json.dumps(urls)
         return self._player.url
 
     @property
     def media_content_type(self):
         """Content type of current playing media."""
+        if not self._player.playlist:
+            return None
+        if len(self._player.playlist) > 1:
+            return MEDIA_TYPE_PLAYLIST
         return MEDIA_TYPE_MUSIC
 
     @property
@@ -460,7 +471,12 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         if kwargs.get(ATTR_MEDIA_ENQUEUE):
             cmd = "add"
 
-        await self._player.async_load_url(media_id, cmd)
+        if media_type == MEDIA_TYPE_PLAYLIST:
+            playlist = json.loads(media_id)
+            _LOGGER.debug("Loading playlist: %s", playlist)
+            await self._player.async_load_playlist(playlist, cmd)
+        else:
+            await self._player.async_load_url(media_id, cmd)
 
     async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
