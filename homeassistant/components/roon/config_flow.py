@@ -1,87 +1,103 @@
-"""Config flow for Roon."""
-from asyncio import sleep
-from collections import OrderedDict
+"""Config flow for roon integration."""
 import logging
 
 from roon import RoonApi
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_API_KEY, CONF_HOST
-from homeassistant.core import callback
 
-from .const import CONF_CUSTOM_PLAY_ACTION, DOMAIN, ROON_APPINFO
+from .const import DEFAULT_NAME, DOMAIN, ROON_APPINFO  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-
-@callback
-def configured_hosts(hass):
-    """Return a set of the configured hosts."""
-    return {
-        entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
-    }
+DATA_SCHEMA = vol.Schema({"host": str})
 
 
-class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow."""
+class RoonHub:
+    """Interact with roon during config flow."""
 
-    user_input = {}
-    roonapi = None
+    def __init__(self, host):
+        """Initialize."""
+        self._host = host
+
+    async def authenticate(self) -> bool:
+        """Test if we can authenticate with the host."""
+        try:
+            roonapi = RoonApi(ROON_APPINFO, None, self._host)
+        except Exception as error:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception %s", error)
+            raise CannotConnect
+
+        token = roonapi.token
+        roonapi.stop()
+        return token
+
+
+async def authenticate(hass: core.HomeAssistant, host):
+    """Connect and authenticate home assistant."""
+
+    hub = RoonHub(host)
+    token = await hub.authenticate()
+    if token is None:
+        raise InvalidAuth
+
+    return {CONF_HOST: host, CONF_API_KEY: token}
+
+
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for roon."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
+    def __init__(self):
+        """Initialize the Roon flow."""
+        self._host = None
+
     async def async_step_user(self, user_input=None):
-        """Handle a flow initialized by the user."""
-        return await self.async_step_init()
+        """Handle getting host details from the user."""
 
-    async def async_step_init(self, user_input=None):
-        """Confirm the setup."""
+        errors = {}
         if user_input is not None:
-            return await self.async_step_link(user_input)
+            try:
+                # TODO: Would be nice to have some host validation here
+                self._host = user_input["host"]
+                return await self.async_step_link()
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
 
-        fields = OrderedDict()
-        fields[vol.Required(CONF_HOST)] = str
-        fields[vol.Optional(CONF_CUSTOM_PLAY_ACTION)] = str
-
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(fields))
+        return self.async_show_form(
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+        )
 
     async def async_step_link(self, user_input=None):
-        """Attempt to link with the Roon core.
+        """Handle linking and authenticting with the roon server."""
 
-        Given a configured host, will ask the user to approve the extension in roon.
-        """
         errors = {}
-
-        if user_input and user_input.get(CONF_API_KEY):
-            return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
-
-        if user_input:
-            self.user_input = user_input
-
-        if not user_input and self.user_input:
-            token = None
+        if user_input is not None:
             try:
-                count = 0
-                roonapi = RoonApi(
-                    ROON_APPINFO, token, self.user_input[CONF_HOST], blocking_init=False
-                )
-                while count < 120:
-                    # wait a maximum of 120 seconds for the token
-                    token = roonapi.token
-                    count += 1
-                    if token:
-                        break
-                    await sleep(1, self.hass.loop)
-            except Exception:  # pylint: disable=broad-except
+                info = await authenticate(self.hass, self._host)
+                return self.async_create_entry(title=DEFAULT_NAME, data=info)
+            except CannotConnect:
                 errors["base"] = "cannot_connect"
-            if not token:
-                errors["base"] = "register_failed"
-            else:
-                user_input = self.user_input
-                user_input[CONF_API_KEY] = token
-                roonapi.stop()
-                return await self.async_step_link(user_input)
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
 
-        return self.async_show_form(step_id="link", errors=errors,)
+        return self.async_show_form(step_id="link", errors=errors)
+
+
+class CannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class InvalidAuth(exceptions.HomeAssistantError):
+    """Error to indicate there is invalid auth."""

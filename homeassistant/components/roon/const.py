@@ -9,6 +9,7 @@ DOMAIN = "roon"
 
 DATA_CONFIGS = "roon_configs"
 
+DEFAULT_NAME = "Roon Labs Music Player"
 
 ROON_APPINFO = {
     "extension_id": "home_assistant",

@@ -1,29 +1,26 @@
 {
     "config": {
         "abort": {
-            "all_configured": "All Roon Core servers are already configured",
-            "already_configured": "Roon Core is already configured",
-            "cannot_connect": "Unable to connect to the Roon Core server",
-            "discover_timeout": "Unable to discover Roon servers",
-            "no_servers": "No Roon Core servers discovered",
-            "unknown": "Unknown error occurred"
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
         },
         "error": {
-            "linking": "Unknown linking error occurred.",
-            "register_failed": "Failed to register, please try again"
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+            "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
         },
         "step": {
-            "init": {
-                "data": {
-                    "host": "Hostname or IP"
-                },
-                "title": "Configure Roon Server"
-            },
             "link": {
-                "description": "You must authorize Home Assistant in Roon. After you click submit below, open the settings on your Roon Core and approve HomeAssistant on the Extensions tab.",
+                "description": "You must authorize Home Assistant in Roon. After you click submit, go to the Roon Core application, open Settings and enable HomeAssistant on the Extensions tab.",
                 "title": "Authorize HomeAssistant in Roon"
+            },
+            "user": {
+                "data": {
+                    "host": "[%key:common::config_flow::data::host%]"
+                },
+                "description": "Please enter your Roon server Hostname or IP.",
+                "title": "Configure Roon Server"
             }
-        },
-        "title": "Roon"
-    }
+        }
+    },
+    "title": "Roon"
 }
