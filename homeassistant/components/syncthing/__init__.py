@@ -71,6 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = {
         "client": client,
         "event_listener": event_listener,
+        "name": data[CONF_NAME],
     }
 
     return True

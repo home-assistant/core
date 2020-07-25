@@ -32,6 +32,11 @@ DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
+    if hass.data[DOMAIN] is not None:
+        for instance in hass.data[DOMAIN].values():
+            if instance["name"] == data[CONF_NAME]:
+                raise AlreadyConfigured
+
     try:
         client = syncthing.Syncthing(
             data[CONF_TOKEN],
@@ -65,7 +70,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
-                errors["base"] = "invalid_auth"
+                errors[CONF_TOKEN] = "invalid_auth"
+            except AlreadyConfigured:
+                errors[CONF_NAME] = "already_configured"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -81,3 +88,7 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class AlreadyConfigured(exceptions.HomeAssistantError):
+    """Error to indicate device is already configured."""
