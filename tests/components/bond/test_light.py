@@ -140,7 +140,10 @@ async def test_turn_off_light(hass: core.HomeAssistant):
 async def test_turn_on_light_with_brightness(hass: core.HomeAssistant):
     """Tests that turn on command delegates to set flame API."""
     await setup_platform(
-        hass, LIGHT_DOMAIN, dimmable_ceiling_fan("name-1"), bond_device_id="test-device-id"
+        hass,
+        LIGHT_DOMAIN,
+        dimmable_ceiling_fan("name-1"),
+        bond_device_id="test-device-id",
     )
 
     with patch_bond_action() as mock_set_brightness, patch_bond_device_state():
@@ -152,7 +155,9 @@ async def test_turn_on_light_with_brightness(hass: core.HomeAssistant):
         )
         await hass.async_block_till_done()
 
-    mock_set_brightness.assert_called_once_with("test-device-id", Action(Action.SET_BRIGHTNESS, 50))
+    mock_set_brightness.assert_called_once_with(
+        "test-device-id", Action(Action.SET_BRIGHTNESS, 50)
+    )
 
 
 async def test_update_reports_light_is_on(hass: core.HomeAssistant):
