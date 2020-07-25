@@ -106,8 +106,6 @@ class EventListenerThread(threading.Thread):
 
     def run(self):
         """Listen to syncthing events."""
-        _LOGGER.info("Starting the syncthing event listener...")
-
         server_was_unavailable = False
 
         # Python does not have the `retry` keyword, emulating it with a while loop
@@ -147,7 +145,4 @@ class EventListenerThread(threading.Thread):
 
     def stop(self):
         """Stop listening to syncthing events."""
-        _LOGGER.info("Stopping the syncthing event listener...")
-
         self._events_stream.stop()
-        _LOGGER.info("The syncthing event listener stopped.")
