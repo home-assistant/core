@@ -1,3 +1,7 @@
+calendar_discovery:
+  description: Discover Google Calendars
+calendar_sync:
+  description: Synchronize Google Calendar data
 found_calendar:
   description: Add calendar if it has not been already discovered.
 scan_for_calendars:

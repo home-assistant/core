@@ -1,189 +1,281 @@
-"""Support for Google Calendar Search binary sensors."""
-import copy
+"""Google Calendar."""
 from datetime import timedelta
 import logging
+import math
+from typing import Dict, Optional
 
-from httplib2 import ServerNotFoundError  # pylint: disable=import-error
-
-from homeassistant.components.calendar import (
-    ENTITY_ID_FORMAT,
-    CalendarEventDevice,
-    calculate_offset,
-    is_offset_reached,
+from homeassistant.components.calendar.calendar import (
+    CalendarEntity,
+    CalendarEvent,
 )
-from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.util import Throttle, dt
 
-from . import (
-    CONF_CAL_ID,
-    CONF_DEVICE_ID,
-    CONF_ENTITIES,
-    CONF_IGNORE_AVAILABILITY,
-    CONF_MAX_RESULTS,
-    CONF_NAME,
-    CONF_OFFSET,
-    CONF_SEARCH,
-    CONF_TRACK,
-    DEFAULT_CONF_OFFSET,
-    TOKEN_FILE,
-    GoogleCalendarService,
-)
+from .api import GoogleAPI
+from .const import DOMAIN, SERVICE_CALENDAR_DISCOVERY
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_GOOGLE_SEARCH_PARAMS = {
-    "orderBy": "startTime",
-    "maxResults": 5,
-    "singleEvents": True,
-}
+CALENDAR_SYNC_TIME = timedelta(minutes=15)
+CONTACTS_SYNC_TIME = timedelta(hours=12)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
-
-
-def setup_platform(hass, config, add_entities, disc_info=None):
-    """Set up the calendar platform for event devices."""
-    if disc_info is None:
-        return
-
-    if not any(data[CONF_TRACK] for data in disc_info[CONF_ENTITIES]):
-        return
-
-    calendar_service = GoogleCalendarService(hass.config.path(TOKEN_FILE))
-    entities = []
-    for data in disc_info[CONF_ENTITIES]:
-        if not data[CONF_TRACK]:
-            continue
-        entity_id = generate_entity_id(
-            ENTITY_ID_FORMAT, data[CONF_DEVICE_ID], hass=hass
-        )
-        entity = GoogleCalendarEventDevice(
-            calendar_service, disc_info[CONF_CAL_ID], data, entity_id
-        )
-        entities.append(entity)
-
-    add_entities(entities, True)
+"""
+Templates
+{% for calendar in states.calendar -%}
+{{ calendar.name }}
+{% endfor %}
 
 
-class GoogleCalendarEventDevice(CalendarEventDevice):
-    """A calendar event device."""
-
-    def __init__(self, calendar_service, calendar, data, entity_id):
-        """Create the Calendar event device."""
-        self.data = GoogleCalendarData(
-            calendar_service,
-            calendar,
-            data.get(CONF_SEARCH),
-            data.get(CONF_IGNORE_AVAILABILITY),
-            data.get(CONF_MAX_RESULTS),
-        )
-        self._event = None
-        self._name = data[CONF_NAME]
-        self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
-        self._offset_reached = False
-        self.entity_id = entity_id
-
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        return {"offset_reached": self._offset_reached}
-
-    @property
-    def event(self):
-        """Return the next upcoming event."""
-        return self._event
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
-
-    async def async_get_events(self, hass, start_date, end_date):
-        """Get all events in a specific time frame."""
-        return await self.data.async_get_events(hass, start_date, end_date)
-
-    def update(self):
-        """Update event data."""
-        self.data.update()
-        event = copy.deepcopy(self.data.event)
-        if event is None:
-            self._event = event
-            return
-        event = calculate_offset(event, self._offset)
-        self._offset_reached = is_offset_reached(event)
-        self._event = event
+{% for event in states.calendar.contacts.attributes.schedule -%}
+{{ event.start.strftime('%Y-%m-%d') }} {{ event.title }}
+{% endfor %}
 
 
-class GoogleCalendarData:
-    """Class to utilize calendar service object to get next event."""
+{% for event in states.calendar.contacts_calendar.attributes.schedule %}
+{{ event.title }}
+{% endfor %}
+"""
 
-    def __init__(
-        self, calendar_service, calendar_id, search, ignore_availability, max_results
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+) -> bool:
+    """Setup entry."""
+    await async_register_services(hass, entry, async_add_entities)
+    await async_register_webhooks(hass, entry, async_add_entities)
+
+    # Discover calendars.
+    if hass.services.has_service(
+        DOMAIN, SERVICE_CALENDAR_DISCOVERY
+    ) and not await hass.services.async_call(
+        DOMAIN, SERVICE_CALENDAR_DISCOVERY, blocking=True
     ):
-        """Set up how we are going to search the google calendar."""
-        self.calendar_service = calendar_service
-        self.calendar_id = calendar_id
-        self.search = search
-        self.ignore_availability = ignore_availability
-        self.max_results = max_results
-        self.event = None
+        _LOGGER.error(
+            "Unable to discover calendars.  Try calling the `{domain}.{service}` service manually.".format(
+                domain=DOMAIN, service=SERVICE_CALENDAR_DISCOVERY,
+            )
+        )
 
-    def _prepare_query(self):
-        try:
-            service = self.calendar_service.get()
-        except ServerNotFoundError:
-            _LOGGER.error("Unable to connect to Google")
-            return None, None
-        params = dict(DEFAULT_GOOGLE_SEARCH_PARAMS)
-        params["calendarId"] = self.calendar_id
-        if self.max_results:
-            params["maxResults"] = self.max_results
-        if self.search:
-            params["q"] = self.search
+    return True
 
-        return service, params
 
-    async def async_get_events(self, hass, start_date, end_date):
-        """Get all events in a specific time frame."""
-        service, params = await hass.async_add_executor_job(self._prepare_query)
-        if service is None:
-            return []
-        params["timeMin"] = start_date.isoformat("T")
-        params["timeMax"] = end_date.isoformat("T")
+async def async_register_services(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+) -> None:
+    """Register services"""
+    google = hass.data[DOMAIN][entry.entry_id]
 
-        events = await hass.async_add_executor_job(service.events)
-        result = await hass.async_add_executor_job(events.list(**params).execute)
+    def discover_calendars(call):
+        """Discover and register calendars"""
+        calendars = []
+        if google.calendar:
+            # Discover and register Google Calendar calendars.
+            for calendar in google.calendar.list_calendars():
+                data = CalendarData(
+                    google.calendar, calendar.get("id"), calendar.get("summary")
+                )
+                calendars.append(GoogleCalendarEntity(data))
 
-        items = result.get("items", [])
-        event_list = []
-        for item in items:
-            if not self.ignore_availability and "transparency" in item.keys():
-                if item["transparency"] == "opaque":
-                    event_list.append(item)
-            else:
-                event_list.append(item)
-        return event_list
+        if google.people:
+            # Register a Google Contacts calendar.
+            data = ContactsCalendarData(
+                google.people, entry.entry_id, "Contacts Calendar"
+            )
+            calendars.append(GoogleCalendarEntity(data))
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+        return async_add_entities(calendars, True)
+
+    hass.services.async_register(DOMAIN, SERVICE_CALENDAR_DISCOVERY, discover_calendars)
+
+
+async def async_register_webhooks(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+) -> None:
+    """Register webhooks"""
+    # TODO: Register webhook for push updates.
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload entry."""
+    await hass.services.async_remove(DOMAIN, SERVICE_CALENDAR_DISCOVERY)
+    # TODO: Unload webhook
+    return True
+
+
+class GoogleCalendarEntity(CalendarEntity):
+    """Google Calendar Entity"""
+
+    def update(self) -> None:
+        """Update Google Calendar Entity"""
+        self._data.update()
+        self._events = self._data.events
+        super().update()
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        return self._data.calendar_id
+
+    @property
+    def name(self) -> Optional[str]:
+        """Return the name of the entity."""
+        return self._data.name
+
+    @property
+    def should_poll(self) -> bool:
+        """No need to poll. Calendar is updated via webhook."""
+        # TODO: Change to false once push has been implemented.
+        return True
+
+    async def async_added_to_hass(self) -> bool:
+        """When entity is added to hass."""
+        # TODO: Subscribe to updates webhook and set callback listener
+        return True
+
+
+class CalendarData:
+    """Calendar data"""
+
+    def __init__(self, api: GoogleAPI, id: str, name: str):
+        """Initialize calendar data."""
+        self._api = api
+        self.calendar_id = id
+        self.name = name
+        self.events = []
+
+    @Throttle(CALENDAR_SYNC_TIME)
     def update(self):
-        """Get the latest data."""
-        service, params = self._prepare_query()
-        if service is None:
+        """Update calendar data"""
+        self.events = []
+        events = self._api.list_events(calendar_id=self.calendar_id)
+
+        for event in events:
+            self.events.append(GoogleCalendarEvent(event))
+
+
+class ContactsCalendarData:
+    """Contacts calendar data"""
+
+    def __init__(self, api: GoogleAPI, id: str, name: str):
+        """Initialize contacts calendar data."""
+        self._api = api
+        self.calendar_id = id
+        self.name = name
+        self.events = []
+
+    @Throttle(CONTACTS_SYNC_TIME)
+    def update(self):
+        """Update contacts calendar data"""
+        self.events = []
+        contacts = self._api.list_contacts()
+
+        for contact in contacts:
+            contact_events = []
+            names = contact.get("names", [])
+            if not names:
+                continue
+
+            contact_name = "{display_name} {family_name}".format(
+                display_name=names[0].get("givenName"),
+                family_name=names[0].get("familyName"),
+            )
+
+            for event in contact.get("birthdays", []):
+                contact_events.append(
+                    {
+                        "contact_name": contact_name,
+                        "event_type": "birthday",
+                        "event_date": event.get("date"),
+                    }
+                )
+
+            for event in contact.get("events", []):
+                contact_events.append(
+                    {
+                        "contact_name": contact_name,
+                        "event_type": event.get("formattedType"),
+                        "event_date": event.get("date"),
+                    }
+                )
+
+            for event in contact_events:
+                self.events.append(GoogleContactCalendarEvent(event))
+
+
+class GoogleCalendarEvent(CalendarEvent):
+    """
+    Calendar Event object
+    https://developers.google.com/calendar/concepts/events-calendars#events
+    """
+
+    def __init__(self, event: Dict):
+        self.id = event.get("id")
+        self.title = event.get("summary")
+        self.description = event.get("description")
+        self.location = event.get("location")
+
+        _start = event.get("start")
+        self.start = dt.parse_datetime(_start.get("dateTime", ""))
+        if self.start is None:
+            self.start = dt.parse_datetime(_start.get("date", ""))
+
+        _end = event.get("end")
+        self.end = dt.parse_datetime(_end.get("dateTime", ""))
+        if self.end is None:
+            self.end = dt.parse_datetime(_end.get("date", ""))
+
+        self.status = event.get("status")
+
+        organizer = event.get("organizer")
+        if organizer is not None:
+            self.organizer = organizer.get("email")
+
+        creator = event.get("creator")
+        if creator is not None:
+            self.creator = creator.get("email")
+        self.create = dt.parse_datetime(event.get("created", ""))
+        self.update = dt.parse_datetime(event.get("updated", ""))
+        self.ical_uid = event.get("iCalUID")
+        self.url = event.get("htmlLink")
+
+
+class GoogleContactCalendarEvent(CalendarEvent):
+    """
+    Calendar Event object
+    """
+
+    def __init__(self, event: Dict):
+        self.title = ""
+
+        event_date = event.get("event_date", "")
+        if not event_date:
             return
-        params["timeMin"] = dt.now().isoformat("T")
 
-        events = service.events()
-        result = events.list(**params).execute()
+        if not event_date.get("year"):
+            event_date["year"] = dt.now().year
 
-        items = result.get("items", [])
+        self.start = dt.as_utc(dt.now().replace(**event_date)) or None
+        if not self.start:
+            return
+        self.start = self.start.replace(hour=0, minute=0, second=0, microsecond=0)
+        self.end = self.start + timedelta(days=1) - timedelta(seconds=1)
 
-        new_event = None
-        for item in items:
-            if not self.ignore_availability and "transparency" in item.keys():
-                if item["transparency"] == "opaque":
-                    new_event = item
-                    break
-            else:
-                new_event = item
-                break
+        event_count = None
+        if event_date.get("year"):
+            event_count = math.trunc(abs((dt.now() - self.start).days) / 365.25)
 
-        self.event = new_event
+        ordinal = lambda n: "%d%s" % (
+            n,
+            "tsnrhtdd"[(math.floor(n / 10) % 10 != 1) * (n % 10 < 4) * n % 10 :: 4],
+        )
+
+        title_parts = []
+        title_parts.append(
+            "{contact_name}'s".format(contact_name=event.get("contact_name"))
+        )
+        if event_count:
+            title_parts.append("{event_count}".format(event_count=ordinal(event_count)))
+        title_parts.append("{event_type}".format(event_type=event.get("event_type")))
+        self.title = " ".join(title_parts)
+

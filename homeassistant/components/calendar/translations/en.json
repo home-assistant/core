@@ -1,8 +1,10 @@
 {
     "state": {
         "_": {
-            "off": "Off",
-            "on": "On"
+            "busy": "Busy",
+            "free": "Free",
+            "off": "[%key:common::state::off%]",
+            "on": "[%key:common::state::on%]"
         }
     },
     "title": "Calendar"

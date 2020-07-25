@@ -3,5 +3,5 @@
   "name": "Calendar",
   "documentation": "https://www.home-assistant.io/integrations/calendar",
   "dependencies": ["http"],
-  "codeowners": []
+  "codeowners": ["@wernerhp"]
 }

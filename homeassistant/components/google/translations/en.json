@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Already configured",
+            "authorize_url_timeout": "Authorization timed out",
+            "missing_configuration": "Missing configuration"
+        },
+        "create_entry": {
+            "default": "Successfully authenticated."
+        },
+        "error": {
+            "api_required": "Please select an API to connect your account."
+        },
+        "flow_title": "Google",
+        "step": {
+            "api": {
+                "data": {
+                    "calendar": "Google Calendar (Google Calendar API)",
+                    "people": "Contacts Calendar (Google People API)"
+                },
+                "description": "Go to **[Library](https://console.developers.google.com/apis/library)** and **Enable** the following APIs.  \n- [Google Calendar API](https://console.developers.google.com/apis/library/calendar-json.googleapis.com)  \n- [Google People API](https://console.developers.google.com/apis/library/people.googleapis.com)",
+                "title": "APIs & Services"
+            },
+            "pick_implementation": {
+                "title": "Pick OAuth2 Implementation"
+            },
+            "user": {
+                "data": {
+                    "client_id": "Client ID",
+                    "client_secret": "Client Secret"
+                },
+                "description": "**[Create OAuth client ID](https://console.developers.google.com/apis/credentials/oauthclient)** and enter the **Client ID** and **Client Secret** below.  \n\n**Application type:** Web application  \n**Name:** Home Assistant  \n**Authorize redirect URIs:** [[YOUR_HA_EXTERNAL_URL]]",
+                "title": "APIs & Services"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calendar": "Calendar [Google Calendar API](https://console.developers.google.com/apis/library/calendar-json.googleapis.com)",
+                    "contacts": "Contacts [Google People API](https://console.developers.google.com/apis/library/people.googleapis.com)"
+                },
+                "description": "Go to **[Library](https://console.developers.google.com/apis/library)** and **Enable** the required APIs.  ",
+                "title": "APIs & Services"
+            }
+        }
+    },
+    "title": "Google"
+}

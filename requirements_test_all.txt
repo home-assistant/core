@@ -326,7 +326,17 @@ glances_api==0.2.0
 gogogate2-api==1.0.4
 
 # homeassistant.components.google
-google-api-python-client==1.6.4
+# homeassistant.components.google_calendar
+# homeassistant.components.werner
+google-api-python-client==1.9.3
+
+# homeassistant.components.google
+# homeassistant.components.google_calendar
+google-auth-httplib2==0.0.3
+
+# homeassistant.components.google
+# homeassistant.components.google_calendar
+google-auth-oauthlib==0.4.1
 
 # homeassistant.components.google_pubsub
 google-cloud-pubsub==0.39.1
@@ -367,7 +377,6 @@ homeconnect==0.5
 # homeassistant.components.homematicip_cloud
 homematicip==0.10.19
 
-# homeassistant.components.google
 # homeassistant.components.remember_the_milk
 httplib2==0.10.3
 
@@ -456,9 +465,6 @@ numato-gpio==0.7.1
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
 numpy==1.19.0
-
-# homeassistant.components.google
-oauth2client==4.0.0
 
 # homeassistant.components.onvif
 onvif-zeep-async==0.4.0

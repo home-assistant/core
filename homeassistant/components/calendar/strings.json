@@ -3,7 +3,9 @@
   "state": {
     "_": {
       "off": "[%key:common::state::off%]",
-      "on": "[%key:common::state::on%]"
+      "on": "[%key:common::state::on%]",
+      "free": "Free",
+      "busy": "Busy"
     }
   }
 }
