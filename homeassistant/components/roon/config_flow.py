@@ -61,7 +61,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                # TODO: Would be nice to have some host validation here
                 self._host = user_input["host"]
                 return await self.async_step_link()
             except CannotConnect:
