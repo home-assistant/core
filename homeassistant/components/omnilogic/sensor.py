@@ -1,4 +1,5 @@
-"""Support for Omnilogic Sensors."""
+"""Support for the Omnilogic integration sensors."""
+
 from datetime import timedelta
 import logging
 
@@ -45,9 +46,8 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
 class OmnilogicSensor(Entity):
     """Defines an Omnilogic sensor entity."""
 
-    def __init__(self, coordinator, kind, name, backyard, bow, device_class, icon, unit):
-        """Initialize Entities."""
-        sensorname = "omni_" + backyard["BackyardName"].replace(" ", "_") + "_" + bow["Name"].replace(" ", "_") + "_" + kind
+    def __init__(self, coordinator, kind, name, backyard, bow, icon, unit):
+        """Set up the Omnilogic sensor platform."""
         self._kind = kind
         self._name = None
         self.entity_id = ENTITY_ID_FORMAT.format(sensorname)
@@ -111,7 +111,7 @@ class OmnilogicSensor(Entity):
 
     @property
     def state(self):
-        """Return the state."""
+        """Return the state of the sensor."""
         return self._state
 
     async def async_update(self):
