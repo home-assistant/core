@@ -138,16 +138,25 @@ class RepositorySensor(Entity):
             self._available = False
             return
 
+        # TODO: Disable by default using option flow
         last_commit = await repository.client.get(
             endpoint=f"/repos/{repository.full_name}/branches/{repository.default_branch}"
         )
 
+        # TODO: Disable by default using option flow
         clones = await repository.client.get(
             endpoint=f"/repos/{repository.full_name}/traffic/clones"
         )
 
+        # TODO: Disable by default using option flow
+        views = await repository.client.get(
+            endpoint=f"/repos/{repository.full_name}/traffic/views"
+        )
+
+        # TODO: Disable by default using option flow
         releases: AIOGitHubAPIRepositoryRelease = await repository.get_releases()
 
+        # TODO: Disable by default using option flow
         all_issues: [AIOGitHubAPIRepositoryIssue] = await repository.get_issues()
         issues: [AIOGitHubAPIRepositoryIssue] = []
         pull_requests: [AIOGitHubAPIRepositoryIssue] = []
@@ -184,8 +193,8 @@ class RepositorySensor(Entity):
         self._pull_requests = len(pull_requests)
         self._stargazers = repository.attributes.get("stargazers_count")
         self._topics = repository.topics
-        self._views = ""
-        self._views_unique = ""
+        self._views = views["count"]
+        self._views_unique = views["uniques"]
         self._watchers = repository.attributes.get("watchers_count")
 
         self._available = True
