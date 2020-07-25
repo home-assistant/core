@@ -99,7 +99,6 @@ class FolderSensor(Entity):
     async def async_update_status(self):
         """Request folder status and update state."""
         try:
-            _LOGGER.info(f"Folder {self._folder['id']} is updating...")
             state = await self.hass.async_add_executor_job(
                 self._client.database.status, self._folder["id"]
             )
