@@ -114,7 +114,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
         # Filter out CommandClasses we're definitely not interested in.
         if value.command_class in [
-            CommandClass.VERSION,
             CommandClass.MANUFACTURER_SPECIFIC,
         ]:
             return
