@@ -22,6 +22,7 @@ FLOWS = [
     "avri",
     "awair",
     "axis",
+    "azure_devops",
     "blebox",
     "blink",
     "bond",
