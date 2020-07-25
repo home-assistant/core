@@ -145,6 +145,30 @@ async def test_form_ssdp(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_ssdp_aborts_before_checking_remoteid_if_host_known(hass):
+    """Test we abort without connecting if the host is already known."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={"host": "2.2.2.2", "name": "any"},
+    )
+    config_entry.add_to_hass(hass)
+
+    harmonyapi = _get_mock_harmonyapi(connect=True)
+
+    with patch(
+        "homeassistant.components.harmony.util.HarmonyAPI", return_value=harmonyapi,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data={
+                "friendlyName": "Harmony Hub",
+                "ssdp_location": "http://2.2.2.2:8088/description",
+            },
+        )
+    assert result["type"] == "abort"
+
+
 async def test_form_cannot_connect(hass):
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
