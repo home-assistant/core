@@ -37,6 +37,7 @@ async def async_setup_entry(
             isinstance(event.device, rfxtrxmod.LightingDevice)
             and not event.device.known_to_be_dimmable
             and not event.device.known_to_be_rollershutter
+            or isinstance(event.device, rfxtrxmod.RfyDevice)
         )
 
     # Add switch from config file
