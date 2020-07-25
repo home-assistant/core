@@ -180,6 +180,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
     )
+    await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "reauth"
