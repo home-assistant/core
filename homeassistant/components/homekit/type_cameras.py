@@ -322,10 +322,12 @@ class Camera(HomeAccessory, PyhapCamera):
 
         session_info["stream"] = stream
         session_info[FFMPEG_PID] = stream.process.pid
+
+        async def watch_session(_):
+            await self._async_ffmpeg_watch(session_info["id"])
+
         session_info[FFMPEG_WATCHER] = async_track_time_interval(
-            self.hass,
-            lambda _: self._async_ffmpeg_watch(session_info["id"]),
-            FFMPEG_WATCH_INTERVAL,
+            self.hass, watch_session, FFMPEG_WATCH_INTERVAL,
         )
 
         return await self._async_ffmpeg_watch(session_info["id"])
@@ -346,8 +348,7 @@ class Camera(HomeAccessory, PyhapCamera):
         """Cleanup a streaming session after stopping."""
         if FFMPEG_WATCHER not in self.sessions[session_id]:
             return
-        self.sessions[session_id][FFMPEG_WATCHER]()
-        del self.sessions[session_id][FFMPEG_WATCHER]
+        self.sessions[session_id].pop(FFMPEG_WATCHER)()
 
     async def stop_stream(self, session_info):
         """Stop the stream for the given ``session_id``."""
