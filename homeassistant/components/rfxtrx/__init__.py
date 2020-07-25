@@ -280,11 +280,14 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
     @callback
     def _add_device(event, device_id):
         """Add a device to config entry."""
+        config = DEVICE_DATA_SCHEMA({})
+        config[CONF_DEVICE_ID] = device_id
+
         data = entry.data.copy()
         event_code = binascii.hexlify(event.data).decode("ASCII")
-        data[CONF_DEVICES][event_code] = device_id
+        data[CONF_DEVICES][event_code] = config
         hass.config_entries.async_update_entry(entry=entry, data=data)
-        devices[device_id] = {}
+        devices[device_id] = config
 
     @callback
     def _start_rfxtrx(event):
