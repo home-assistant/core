@@ -139,7 +139,7 @@ async def test_turn_off_light(hass: core.HomeAssistant):
 
 
 async def test_support_brightness(hass: core.HomeAssistant):
-    """Tests that turn on command delegates to set flame API."""
+    """Tests that a dimmable light should support the brightness feature."""
     await setup_platform(
         hass,
         LIGHT_DOMAIN,
@@ -152,7 +152,7 @@ async def test_support_brightness(hass: core.HomeAssistant):
 
 
 async def test_dont_support_brightness(hass: core.HomeAssistant):
-    """Tests that turn on command delegates to set flame API."""
+    """Tests that a non-dimmable light should not support the brightness feature."""
     await setup_platform(
         hass, LIGHT_DOMAIN, ceiling_fan("name-1"), bond_device_id="test-device-id",
     )
@@ -162,7 +162,7 @@ async def test_dont_support_brightness(hass: core.HomeAssistant):
 
 
 async def test_turn_on_light_with_brightness(hass: core.HomeAssistant):
-    """Tests that turn on command delegates to set flame API."""
+    """Tests that turn on command, on a dimmable light, delegates to API and parses brightness."""
     await setup_platform(
         hass,
         LIGHT_DOMAIN,
@@ -276,3 +276,14 @@ async def test_light_available(hass: core.HomeAssistant):
     await help_test_entity_available(
         hass, LIGHT_DOMAIN, ceiling_fan("name-1"), "light.name_1"
     )
+
+
+async def test_parse_brightness(hass: core.HomeAssistant):
+    """Tests that reported brightness level (0..100) converted to HA brightness (0...255)."""
+    await setup_platform(hass, LIGHT_DOMAIN, dimmable_ceiling_fan("name-1"))
+
+    with patch_bond_device_state(return_value={"light": 1, "brightness": 50}):
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
+
+    assert hass.states.get("light.name_1").attributes[ATTR_BRIGHTNESS] == 128
