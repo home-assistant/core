@@ -5,6 +5,7 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 CONF_CLOUDHOOK_URL = "cloudhook_url"
+CONF_PUSH = "push"
 CONF_REMOTE_UI_URL = "remote_ui_url"
 CONF_SECRET = "secret"
 CONF_USER_ID = "user_id"
@@ -74,3 +75,5 @@ SIGNAL_SENSOR_UPDATE = f"{DOMAIN}_sensor_update"
 SIGNAL_LOCATION_UPDATE = DOMAIN + "_location_update_{}"
 
 ATTR_CAMERA_ENTITY_ID = "camera_entity_id"
+
+ECO_IOS = "ios"

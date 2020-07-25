@@ -2,11 +2,13 @@
 import asyncio
 
 from homeassistant.components import cloud
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
 )
 from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, discovery
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
@@ -17,6 +19,7 @@ from .const import (
     ATTR_MODEL,
     ATTR_OS_VERSION,
     CONF_CLOUDHOOK_URL,
+    CONF_PUSH,
     DATA_BINARY_SENSOR,
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
@@ -24,6 +27,7 @@ from .const import (
     DATA_SENSOR,
     DATA_STORE,
     DOMAIN,
+    ECO_IOS,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
@@ -101,6 +105,10 @@ async def async_setup_entry(hass, entry):
             hass.config_entries.async_forward_entry_setup(entry, domain)
         )
 
+    hass.http.register_view(
+        MobileAppiOSPushConfigView(hass.data[DOMAIN][ECO_IOS][CONF_PUSH])
+    )
+
     return True
 
 
@@ -133,3 +141,19 @@ async def async_remove_entry(hass, entry):
             await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
         except cloud.CloudNotAvailable:
             pass
+
+
+class MobileAppiOSPushConfigView(HomeAssistantView):
+    """A view that provides the iOOS push categories configuration."""
+
+    url = "/api/mobile_app/ios/push"
+    name = "api:mobile_app:ios:push"
+
+    def __init__(self, push_config):
+        """Init the view."""
+        self.push_config = push_config
+
+    @callback
+    def get(self, request):
+        """Handle the GET request for the push configuration."""
+        return self.json(self.push_config)
