@@ -1,23 +1,36 @@
 """The GitHub integration."""
 import asyncio
 
-# from github import Github
-import voluptuous as vol
+from aiogithubapi import (
+    AIOGitHubAPIAuthenticationException,
+    AIOGitHubAPIException,
+    GitHub,
+)
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
+from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.core import Config, HomeAssistant
 
 from .const import DOMAIN
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 PLATFORMS = ["sensor"]
 
 
+async def async_setup(hass: HomeAssistant, config: Config) -> bool:
+    """Set up GitHub integration."""
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up GitHub from a config entry."""
-    # TODO Store an API object for your platforms to access
-    # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
+    try:
+        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = GitHub(
+            entry.data[CONF_ACCESS_TOKEN]
+        )
+    except AIOGitHubAPIAuthenticationException as err:
+        raise ConfigEntryNotReady from err
+    except AIOGitHubAPIException as err:
+        raise ConfigEntryNotReady from err
 
     for component in PLATFORMS:
         hass.async_create_task(

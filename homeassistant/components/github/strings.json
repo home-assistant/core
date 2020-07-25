@@ -3,16 +3,16 @@
   "config": {
     "step": {
       "user": {
-        "description": "Please enter your access token and repository. URL is only needed if you are using a private Github server",
+        "description": "Please enter your access token and repository.",
         "data": {
-          "access_token": "[%key:common::config_flow::data::access_token%]",
-          "repository": "Repository",
-          "url": "URL"
+          "access_token": "Access Token",
+          "repository": "Repository"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_find_repo": "Cannot find repository",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }

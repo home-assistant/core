@@ -1,22 +1,23 @@
 """Config flow for GitHub integration."""
 import logging
 
-from github import Github, GithubException, Repository
+from aiogithubapi import (
+    AIOGitHubAPIAuthenticationException,
+    AIOGitHubAPIException,
+    GitHub,
+)
+from aiogithubapi.objects.repository import AIOGitHubAPIRepository
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_URL
+from homeassistant.const import CONF_ACCESS_TOKEN
 
 from .const import CONF_REPOSITORY, DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ACCESS_TOKEN): str,
-        vol.Required(CONF_REPOSITORY): str,
-        vol.Optional(CONF_URL): str,
-    }
+    {vol.Required(CONF_ACCESS_TOKEN): str, vol.Required(CONF_REPOSITORY): str}
 )
 
 
@@ -25,21 +26,18 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    url = data[CONF_URL]
-
     try:
-        if url:
-            github = Github(data[CONF_ACCESS_TOKEN], base_url=url)
-        else:
-            github = Github(data[CONF_ACCESS_TOKEN])
-    except GithubException.BadCredentialsException:
+        github = GitHub(data[CONF_ACCESS_TOKEN])
+    except AIOGitHubAPIAuthenticationException:
         raise InvalidAuth
-    except GithubException.GithubException:
+    except AIOGitHubAPIException:
         raise CannotConnect
 
-    repository: Repository = github.get_repo(data[CONF_REPOSITORY])
+    repository: AIOGitHubAPIRepository = await github.get_repo(data[CONF_REPOSITORY])
+    if repository is None:
+        raise CannotFindRepo
 
-    return {"title": repository.name}
+    return {"title": repository.full_name}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -54,10 +52,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-
                 return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except CannotFindRepo:
+                errors["base"] = "cannot_find_repo"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
@@ -71,6 +70,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
+
+
+class CannotFindRepo(exceptions.HomeAssistantError):
+    """Error to indicate repo cannot be found."""
 
 
 class InvalidAuth(exceptions.HomeAssistantError):

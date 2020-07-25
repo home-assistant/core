@@ -12,9 +12,6 @@ Plugwise_Smile==1.5.1
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
 
-# homeassistant.components.github
-PyGithub==1.51.0
-
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
 PyNaCl==1.3.0
@@ -101,6 +98,9 @@ aioflo==0.4.1
 
 # homeassistant.components.freebox
 aiofreepybox==0.0.8
+
+# homeassistant.components.github
+aiogithubapi==1.0.4
 
 # homeassistant.components.guardian
 aioguardian==1.0.1

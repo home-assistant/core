@@ -34,9 +34,6 @@ PyEssent==0.13
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
 
-# homeassistant.components.github
-PyGithub==1.51.0
-
 # homeassistant.components.mvglive
 PyMVGLive==1.1.4
 
@@ -170,6 +167,9 @@ aiofreepybox==0.0.8
 
 # homeassistant.components.yi
 aioftp==0.12.0
+
+# homeassistant.components.github
+aiogithubapi==1.0.4
 
 # homeassistant.components.guardian
 aioguardian==1.0.1
