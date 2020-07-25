@@ -2174,7 +2174,7 @@ vilfo-api-client==0.3.2
 volkszaehler==0.1.2
 
 # homeassistant.components.volvooncall
-volvooncall==0.8.7
+volvooncall==0.8.12
 
 # homeassistant.components.verisure
 vsure==1.5.4
