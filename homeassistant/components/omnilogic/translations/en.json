@@ -1,10 +1,16 @@
 {
     "config": {
+        "abort": {
+            "exists": "Omnilogic is already configured."
+        },
+        "error": {
+            "conn_err": "Unable to connect to Hayward Omnilogic, confirm username and password."
+        },
         "step": {
             "user": {
                 "data": {
                     "password": "Password",
-                    "username": "Username ..NOT email address"
+                    "username": "Username"
                 },
                 "description": "Please enter the username and password for your Omnilogic account.",
                 "title": "Connect to Hayward Omnilogic"
