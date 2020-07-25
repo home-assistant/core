@@ -1,13 +1,27 @@
 {
     "config": {
         "abort": {
-            "already_configured": "D\u00ebse SimpliSafe Kont g\u00ebtt scho benotzt."
+            "already_configured": "D\u00ebse SimpliSafe Kont g\u00ebtt scho benotzt.",
+            "reauth_successful": "SimpliSafe erfollegr\u00e4ich re-authentifiz\u00e9iert."
         },
         "error": {
             "identifier_exists": "Konto ass scho registr\u00e9iert",
-            "invalid_credentials": "Ong\u00eblteg Login Informatioune"
+            "invalid_credentials": "Ong\u00eblteg Login Informatioune",
+            "still_awaiting_mfa": "Waart nach den MFA E-Mail Klick.",
+            "unknown": "Onerwaarte Feeler"
         },
         "step": {
+            "mfa": {
+                "description": "Kuck den E-Mailen fir ee Link vun SimpliSafe. Nodeem de Link opgeruff gouf, komm heihinner zer\u00e9ck fir d'Installatioun vun der Integratioun ofzeschl\u00e9issen.",
+                "title": "SimpliSafe Multi-Faktor Authentifikatioun"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passwuert"
+                },
+                "description": "D\u00e4in Acc\u00e8s Jeton as ofgelaf oder gouf revok\u00e9iert. G\u00ebff d\u00e4i Passwuert an fir d\u00e4i Kont fr\u00ebsch ze verbannen.",
+                "title": "SimpliSafe Kont fr\u00ebsch verbannen"
+            },
             "user": {
                 "data": {
                     "code": "Code (benotzt am Home Assistant Benotzer Interface)",
