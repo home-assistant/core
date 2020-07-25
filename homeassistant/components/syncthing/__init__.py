@@ -68,10 +68,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_event_listener)
 
-    hass.data[DOMAIN][entry.entry_id] = {
+    hass.data[DOMAIN][data[CONF_NAME]] = {
         "client": client,
         "event_listener": event_listener,
-        "name": data[CONF_NAME],
     }
 
     return True
@@ -88,8 +87,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN][entry.entry_id]["event_listener"].stop()
-        hass.data[DOMAIN].pop(entry.entry_id)
+        hass.data[DOMAIN][entry.data[CONF_NAME]]["event_listener"].stop()
+        hass.data[DOMAIN].pop(entry.data[CONF_NAME])
 
     return unload_ok
 
