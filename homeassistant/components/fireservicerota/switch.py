@@ -8,11 +8,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import ATTRIBUTION, DOMAIN, SIGNAL_UPDATE_INCIDENTS, SWITCH_ENTITY_LIST
-
-try:
-    from homeassistant.components.switch import SwitchEntity
-except ImportError:
-    from homeassistant.components.switch import SwitchDevice as SwitchEntity
+from homeassistant.components.switch import SwitchEntity
 
 _LOGGER = logging.getLogger(__name__)
 

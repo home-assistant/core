@@ -95,11 +95,9 @@ class IncidentsDataProvider:
         """Return the current data."""
         return self._data
 
-    @staticmethod
-    def on_close():
+    def on_close(self):
         """Log websocket close and restart listener."""
         _LOGGER.debug("Websocket closed")
-        # return
 
     def incidents_listener(self):
         """(re)start a websocket listener."""
@@ -207,7 +205,7 @@ class IncidentsSensor(RestoreEntity):
                     "formatted_address",
                 ):
                     attr[address_value] = data.get("address").get(address_value)
-            except (KeyError, TypeError):
+            except (KeyError, AttributeError):
                 pass
 
             attr[ATTR_ATTRIBUTION] = ATTRIBUTION

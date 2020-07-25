@@ -20,8 +20,6 @@ from .const import DOMAIN, NOTIFICATION_AUTH_ID, NOTIFICATION_AUTH_TITLE, PLATFO
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 _LOGGER = logging.getLogger(__name__)
-
-
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the FireServiceRota component."""
     hass.data[DOMAIN] = {}
