@@ -3,6 +3,7 @@ import asyncio
 
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components import cloud
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.webhook import (
@@ -62,6 +63,8 @@ PLATFORMS = "sensor", "binary_sensor", "device_tracker"
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up the mobile app component."""
+    conf = config.get(DOMAIN)
+
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
     app_config = await store.async_load()
     if app_config is None:
@@ -94,6 +97,13 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     hass.async_create_task(
         discovery.async_load_platform(hass, "notify", DOMAIN, {}, config)
     )
+
+    if conf is not None:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
+            )
+        )
 
     return True
 
