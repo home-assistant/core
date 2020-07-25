@@ -746,6 +746,7 @@ class EventBus:
         @callback
         def onetime_listener(event: Event) -> None:
             """Remove listener from event bus and then fire listener."""
+            nonlocal job
             if hasattr(onetime_listener, "run"):
                 return
             # Set variable so that we will never run twice.
