@@ -1,6 +1,4 @@
 """The tests for the TTS component."""
-import ctypes
-
 import pytest
 import yarl
 
@@ -265,11 +263,11 @@ async def test_setup_component_and_test_service_with_service_options(
             "entity_id": "media_player.something",
             tts.ATTR_MESSAGE: "There is someone at the door.",
             tts.ATTR_LANGUAGE: "de",
-            tts.ATTR_OPTIONS: {"voice": "alex"},
+            tts.ATTR_OPTIONS: {"voice": "alex", "age": 5},
         },
         blocking=True,
     )
-    opt_hash = ctypes.c_size_t(hash(frozenset({"voice": "alex"}))).value
+    opt_hash = tts._hash_options({"voice": "alex", "age": 5})
 
     assert len(calls) == 1
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
@@ -306,7 +304,7 @@ async def test_setup_component_and_test_with_service_options_def(hass, empty_cac
             },
             blocking=True,
         )
-        opt_hash = ctypes.c_size_t(hash(frozenset({"voice": "alex"}))).value
+        opt_hash = tts._hash_options({"voice": "alex"})
 
         assert len(calls) == 1
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
@@ -343,7 +341,7 @@ async def test_setup_component_and_test_service_with_service_options_wrong(
         },
         blocking=True,
     )
-    opt_hash = ctypes.c_size_t(hash(frozenset({"speed": 1}))).value
+    opt_hash = tts._hash_options({"speed": 1})
 
     assert len(calls) == 0
     await hass.async_block_till_done()

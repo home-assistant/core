@@ -3,5 +3,5 @@
   "name": "General Transit Feed Specification (GTFS)",
   "documentation": "https://www.home-assistant.io/integrations/gtfs",
   "requirements": ["pygtfs==0.1.5"],
-  "codeowners": ["@robbiet480"]
+  "codeowners": []
 }

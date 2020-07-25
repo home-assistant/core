@@ -4,7 +4,7 @@ import telnetlib
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -73,7 +73,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities([pioneer])
 
 
-class PioneerDevice(MediaPlayerDevice):
+class PioneerDevice(MediaPlayerEntity):
     """Representation of a Pioneer device."""
 
     def __init__(self, name, host, port, timeout, sources):

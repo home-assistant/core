@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Vertsnavnet eller ip-adressen til din Solar-Log-enhet",
+                    "host": "Vert",
                     "name": "Prefikset som skal brukes til dine Solar-Log sensorer"
                 },
                 "title": "Definer din Solar-Log tilkobling"

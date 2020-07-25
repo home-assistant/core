@@ -1,8 +1,12 @@
 {
     "config": {
         "abort": {
+            "already_configured": "El acuerdo seleccionado ya est\u00e1 configurado.",
+            "authorize_url_fail": "Error desconocido generando una url de autorizaci\u00f3n",
+            "authorize_url_timeout": "Tiempo de espera agotado generando la url de autorizaci\u00f3n.",
             "client_id": "El ID de cliente en la configuraci\u00f3n no es v\u00e1lido.",
             "client_secret": "El secreto de la configuraci\u00f3n no es v\u00e1lido.",
+            "missing_configuration": "El componente no est\u00e1 configurado. Consulta la documentaci\u00f3n.",
             "no_agreements": "Esta cuenta no tiene pantallas Toon.",
             "no_app": "Es necesario configurar Toon antes de poder autenticarse con \u00e9l. [Por favor, lee las instrucciones](https://www.home-assistant.io/components/toon/).",
             "unknown_auth_fail": "Se ha producido un error inesperado al autenticar."
@@ -12,6 +16,13 @@
             "display_exists": "La pantalla seleccionada ya est\u00e1 configurada."
         },
         "step": {
+            "agreement": {
+                "data": {
+                    "agreement": "Acuerdo"
+                },
+                "description": "Selecciona la direcci\u00f3n del acuerdo que deseas a\u00f1adir.",
+                "title": "Selecciona tu acuerdo"
+            },
             "authenticate": {
                 "data": {
                     "password": "Contrase\u00f1a",
@@ -27,6 +38,9 @@
                 },
                 "description": "Selecciona la pantalla Toon que quieres conectar.",
                 "title": "Seleccionar pantalla"
+            },
+            "pick_implementation": {
+                "title": "Elige el arrendatario con el cual deseas autenticarte"
             }
         }
     }

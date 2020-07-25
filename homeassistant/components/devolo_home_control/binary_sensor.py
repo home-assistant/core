@@ -1,7 +1,14 @@
 """Platform for binary sensor integration."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_DOOR,
+    DEVICE_CLASS_HEAT,
+    DEVICE_CLASS_MOISTURE,
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_SMOKE,
+    BinarySensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -9,6 +16,14 @@ from .const import DOMAIN
 from .devolo_device import DevoloDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+DEVICE_CLASS_MAPPING = {
+    "Water alarm": DEVICE_CLASS_MOISTURE,
+    "Home Security": DEVICE_CLASS_MOTION,
+    "Smoke Alarm": DEVICE_CLASS_SMOKE,
+    "Heat Alarm": DEVICE_CLASS_HEAT,
+    "door": DEVICE_CLASS_DOOR,
+}
 
 
 async def async_setup_entry(
@@ -52,6 +67,11 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
             self._unique_id
         )
 
+        self._device_class = DEVICE_CLASS_MAPPING.get(
+            self._binary_sensor_property.sub_type
+            or self._binary_sensor_property.sensor_type
+        )
+
         self._state = self._binary_sensor_property.state
 
         self._subscriber = None
@@ -60,6 +80,11 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
     def is_on(self):
         """Return the state."""
         return self._state
+
+    @property
+    def device_class(self):
+        """Return device class."""
+        return self._device_class
 
     def _sync(self, message=None):
         """Update the binary sensor state."""

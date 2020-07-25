@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "unknown_error": "Onerwaarte Feeler",
+            "wrong_login": "Ong\u00eblteg Authentifikatioun"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-Mail",
+                    "password": "Passwuert"
+                },
+                "title": "SmartHab ariichten"
+            }
+        }
+    }
+}

@@ -27,6 +27,7 @@
             "init": {
                 "data": {
                     "activity": "Activit\u00e9 par d\u00e9faut \u00e0 ex\u00e9cuter lorsqu'aucune n'est sp\u00e9cifi\u00e9e.",
+                    "activity_notify": "Mettre \u00e0 jour l'activit\u00e9 lors de son lancement.",
                     "delay_secs": "Le d\u00e9lai entre l'envoi des commandes."
                 },
                 "description": "Ajuster les options du hub Harmony"

@@ -87,14 +87,19 @@ class PlexSensor(Entity):
                 # "Supernatural (2005) - s01e13 - Route 666"
 
                 def sync_io_attributes(session):
-                    return (session.show(), session.seasonEpisode)
+                    year = None
+                    try:
+                        year = session.show().year
+                    except TypeError:
+                        pass
+                    return (year, session.seasonEpisode)
 
-                show, season_episode = await self.hass.async_add_executor_job(
+                year, season_episode = await self.hass.async_add_executor_job(
                     sync_io_attributes, sess
                 )
                 season_title = sess.grandparentTitle
-                if show.year is not None:
-                    season_title += f" ({show.year!s})"
+                if year is not None:
+                    season_title += f" ({year!s})"
                 episode_title = sess.title
                 now_playing_title = (
                     f"{season_title} - {season_episode} - {episode_title}"
@@ -111,8 +116,9 @@ class PlexSensor(Entity):
                 # "picture_of_last_summer_camp (2015)"
                 # "The Incredible Hulk (2008)"
                 now_playing_title = sess.title
-                if sess.year is not None:
-                    now_playing_title += f" ({sess.year})"
+                year = await self.hass.async_add_executor_job(getattr, sess, "year")
+                if year is not None:
+                    now_playing_title += f" ({year})"
 
             now_playing.append((now_playing_user, now_playing_title))
         self._state = len(self.sessions)

@@ -28,8 +28,8 @@ async def test_sonos_playback(hass):
     mock_plex_server = MockPlexServer(config_entry=entry)
 
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "homeassistant.components.plex.PlexWebsocket.listen"
-    ):
+        "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
+    ), patch("homeassistant.components.plex.PlexWebsocket.listen"):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -37,13 +37,9 @@ async def test_sonos_playback(hass):
     server_id = mock_plex_server.machineIdentifier
     loaded_server = hass.data[DOMAIN][SERVERS][server_id]
 
-    with patch("plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()):
-        # Access and cache PlexAccount
-        assert loaded_server.account
-
     # Test Sonos integration lookup failure
     with patch.object(
-        hass.components.sonos, "get_coordinator_id", side_effect=HomeAssistantError
+        hass.components.sonos, "get_coordinator_name", side_effect=HomeAssistantError
     ):
         assert await hass.services.async_call(
             DOMAIN,
@@ -59,7 +55,7 @@ async def test_sonos_playback(hass):
     # Test success with dict
     with patch.object(
         hass.components.sonos,
-        "get_coordinator_id",
+        "get_coordinator_name",
         return_value="media_player.sonos_kitchen",
     ), patch("plexapi.playqueue.PlayQueue.create"):
         assert await hass.services.async_call(
@@ -76,7 +72,7 @@ async def test_sonos_playback(hass):
     # Test success with plex_key
     with patch.object(
         hass.components.sonos,
-        "get_coordinator_id",
+        "get_coordinator_name",
         return_value="media_player.sonos_kitchen",
     ), patch("plexapi.playqueue.PlayQueue.create"):
         assert await hass.services.async_call(
@@ -93,7 +89,7 @@ async def test_sonos_playback(hass):
     # Test invalid Plex server requested
     with patch.object(
         hass.components.sonos,
-        "get_coordinator_id",
+        "get_coordinator_name",
         return_value="media_player.sonos_kitchen",
     ):
         assert await hass.services.async_call(
@@ -109,10 +105,10 @@ async def test_sonos_playback(hass):
 
     # Test no speakers available
     with patch.object(
-        loaded_server.account, "sonos_speaker_by_id", return_value=None
+        loaded_server.account, "sonos_speaker", return_value=None
     ), patch.object(
         hass.components.sonos,
-        "get_coordinator_id",
+        "get_coordinator_name",
         return_value="media_player.sonos_kitchen",
     ):
         assert await hass.services.async_call(

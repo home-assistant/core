@@ -159,7 +159,7 @@ async def test_async_track_time_interval_backoff(hass):
     _LOGGER.debug("Backoff...")
     for idx in range(1, len(intervals)):
         tme += intervals[idx]
-        async_fire_time_changed(hass, tme)
+        async_fire_time_changed(hass, tme + timedelta(seconds=0.1))
         await hass.async_block_till_done()
 
         assert call_count == idx + 1
@@ -167,7 +167,7 @@ async def test_async_track_time_interval_backoff(hass):
     _LOGGER.debug("Max backoff reached - intervals[-1]")
     for _idx in range(1, 10):
         tme += intervals[-1]
-        async_fire_time_changed(hass, tme)
+        async_fire_time_changed(hass, tme + timedelta(seconds=0.1))
         await hass.async_block_till_done()
 
         assert call_count == idx + 1 + _idx
@@ -176,14 +176,14 @@ async def test_async_track_time_interval_backoff(hass):
     call_count = 0
     ret_val = True
     tme += intervals[-1]
-    async_fire_time_changed(hass, tme)
+    async_fire_time_changed(hass, tme + timedelta(seconds=0.1))
     await hass.async_block_till_done()
     assert call_count == 1
 
     _LOGGER.debug("No backoff - intervals[0]")
     for _idx in range(2, 10):
         tme += intervals[0]
-        async_fire_time_changed(hass, tme)
+        async_fire_time_changed(hass, tme + timedelta(seconds=0.1))
         await hass.async_block_till_done()
 
         assert call_count == _idx

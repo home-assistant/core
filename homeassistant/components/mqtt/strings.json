@@ -47,5 +47,37 @@
       "button_5": "Fifth button",
       "button_6": "Sixth button"
     }
+  },
+  "options": {
+    "step": {
+      "broker": {
+        "description": "Please enter the connection information of your MQTT broker.",
+        "data": {
+          "broker": "Broker",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "options": {
+        "description": "Please select MQTT options.",
+        "data": {
+          "discovery": "Enable discovery",
+          "birth_topic": "Birth message topic",
+          "birth_payload": "Birth message payload",
+          "birth_qos": "Birth message QoS",
+          "birth_retain": "Birth message retain",
+          "will_topic": "Will message topic",
+          "will_payload": "Will message payload",
+          "will_qos": "Will message QoS",
+          "will_retain": "Will message retain"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the broker.",
+      "bad_birth": "Invalid birth topic.",
+      "bad_will": "Invalid will topic."
+    }
   }
 }

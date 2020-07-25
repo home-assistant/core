@@ -17,6 +17,7 @@ from homeassistant.components import (
     switch,
 )
 from homeassistant.components.climate import const as climate
+from homeassistant.components.humidifier import const as humidifier
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 
 from . import DEMO_DEVICES
@@ -93,6 +94,12 @@ def hass_fixture(loop, hass):
     loop.run_until_complete(
         setup.async_setup_component(
             hass, climate.DOMAIN, {"climate": [{"platform": "demo"}]}
+        )
+    )
+
+    loop.run_until_complete(
+        setup.async_setup_component(
+            hass, humidifier.DOMAIN, {"humidifier": [{"platform": "demo"}]}
         )
     )
 
@@ -292,6 +299,52 @@ async def test_query_climate_request_f(hass_fixture, assistant_client, auth_head
     hass_fixture.config.units.temperature_unit = const.TEMP_CELSIUS
 
 
+async def test_query_humidifier_request(hass_fixture, assistant_client, auth_header):
+    """Test a query request."""
+    reqid = "5711642932632160984"
+    data = {
+        "requestId": reqid,
+        "inputs": [
+            {
+                "intent": "action.devices.QUERY",
+                "payload": {
+                    "devices": [
+                        {"id": "humidifier.humidifier"},
+                        {"id": "humidifier.dehumidifier"},
+                        {"id": "humidifier.hygrostat"},
+                    ]
+                },
+            }
+        ],
+    }
+    result = await assistant_client.post(
+        ga.const.GOOGLE_ASSISTANT_API_ENDPOINT,
+        data=json.dumps(data),
+        headers=auth_header,
+    )
+    assert result.status == 200
+    body = await result.json()
+    assert body.get("requestId") == reqid
+    devices = body["payload"]["devices"]
+    assert len(devices) == 3
+    assert devices["humidifier.humidifier"] == {
+        "on": True,
+        "online": True,
+        "humiditySetpointPercent": 68,
+    }
+    assert devices["humidifier.dehumidifier"] == {
+        "on": True,
+        "online": True,
+        "humiditySetpointPercent": 54,
+    }
+    assert devices["humidifier.hygrostat"] == {
+        "on": True,
+        "online": True,
+        "humiditySetpointPercent": 50,
+        "currentModeSettings": {"mode": "home"},
+    }
+
+
 async def test_execute_request(hass_fixture, assistant_client, auth_header):
     """Test an execute request."""
     reqid = "5711642932632160985"
@@ -346,6 +399,33 @@ async def test_execute_request(hass_fixture, assistant_client, auth_header):
                                 },
                             ],
                         },
+                        {
+                            "devices": [{"id": "humidifier.humidifier"}],
+                            "execution": [
+                                {
+                                    "command": "action.devices.commands.OnOff",
+                                    "params": {"on": False},
+                                }
+                            ],
+                        },
+                        {
+                            "devices": [{"id": "humidifier.dehumidifier"}],
+                            "execution": [
+                                {
+                                    "command": "action.devices.commands.SetHumidity",
+                                    "params": {"humidity": 45},
+                                }
+                            ],
+                        },
+                        {
+                            "devices": [{"id": "humidifier.hygrostat"}],
+                            "execution": [
+                                {
+                                    "command": "action.devices.commands.SetModes",
+                                    "params": {"updateModeSettings": {"mode": "eco"}},
+                                }
+                            ],
+                        },
                     ]
                 },
             }
@@ -360,7 +440,7 @@ async def test_execute_request(hass_fixture, assistant_client, auth_header):
     body = await result.json()
     assert body.get("requestId") == reqid
     commands = body["payload"]["commands"]
-    assert len(commands) == 6
+    assert len(commands) == 9
 
     assert not any(result["status"] == "ERROR" for result in commands)
 
@@ -381,3 +461,12 @@ async def test_execute_request(hass_fixture, assistant_client, auth_header):
 
     lounge = hass_fixture.states.get("media_player.lounge_room")
     assert lounge.state == "off"
+
+    humidifier_state = hass_fixture.states.get("humidifier.humidifier")
+    assert humidifier_state.state == "off"
+
+    dehumidifier = hass_fixture.states.get("humidifier.dehumidifier")
+    assert dehumidifier.attributes.get(humidifier.ATTR_HUMIDITY) == 45
+
+    hygrostat = hass_fixture.states.get("humidifier.hygrostat")
+    assert hygrostat.attributes.get(humidifier.ATTR_MODE) == "eco"

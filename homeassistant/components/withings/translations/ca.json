@@ -1,22 +1,31 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Configuraci\u00f3 de perfil actualitzada.",
             "authorize_url_timeout": "S'ha acabat el temps d'espera durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
             "missing_configuration": "La integraci\u00f3 Withings no est\u00e0 configurada. Mira'n la documentaci\u00f3."
         },
         "create_entry": {
             "default": "Autenticaci\u00f3 exitosa amb Withings."
         },
+        "error": {
+            "profile_exists": "El perfil ja est\u00e0 configurat. Proporciona un nom de perfil \u00fanic."
+        },
+        "flow_title": "Withings: {profile}",
         "step": {
             "pick_implementation": {
                 "title": "Selecci\u00f3 del m\u00e8tode d'autenticaci\u00f3"
             },
             "profile": {
                 "data": {
-                    "profile": "Perfil"
+                    "profile": "Nom de perfil"
                 },
-                "description": "Quin perfil has seleccionat al lloc web de Withings? \u00c9s important que els perfils coincideixin sin\u00f3, les dades no s'etiquetaran correctament.",
+                "description": "Ha de proporcionar un nom de perfil \u00fanic per a aquestes dades. Normalment \u00e9s el nom del perfil seleccionat en el pas anterior.",
                 "title": "Perfil d'usuari."
+            },
+            "reauth": {
+                "description": "El perfil \"{profile}\" s'ha de tornar a autenticar per poder continuar rebent dades de Withings.",
+                "title": "Torna a autenticar perfil"
             }
         }
     }

@@ -96,7 +96,9 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.client_id = None
         self._manual = False
 
-    async def async_step_user(self, user_input=None, errors=None):
+    async def async_step_user(
+        self, user_input=None, errors=None
+    ):  # pylint: disable=arguments-differ
         """Handle a flow initialized by the user."""
         if user_input is not None:
             return await self.async_step_plex_website_auth()

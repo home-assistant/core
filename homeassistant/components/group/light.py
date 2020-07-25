@@ -38,7 +38,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, State, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import color as color_util
 
@@ -100,14 +100,12 @@ class LightGroup(light.LightEntity):
         """Register callbacks."""
 
         @callback
-        def async_state_changed_listener(
-            entity_id: str, old_state: State, new_state: State
-        ):
+        def async_state_changed_listener(*_):
             """Handle child updates."""
             self.async_schedule_update_ha_state(True)
 
         assert self.hass is not None
-        self._async_unsub_state_changed = async_track_state_change(
+        self._async_unsub_state_changed = async_track_state_change_event(
             self.hass, self._entity_ids, async_state_changed_listener
         )
         await self.async_update()
@@ -233,7 +231,11 @@ class LightGroup(light.LightEntity):
 
         if not emulate_color_temp_entity_ids:
             await self.hass.services.async_call(
-                light.DOMAIN, light.SERVICE_TURN_ON, data, blocking=True
+                light.DOMAIN,
+                light.SERVICE_TURN_ON,
+                data,
+                blocking=True,
+                context=self._context,
             )
             return
 
@@ -249,13 +251,18 @@ class LightGroup(light.LightEntity):
 
         await asyncio.gather(
             self.hass.services.async_call(
-                light.DOMAIN, light.SERVICE_TURN_ON, data, blocking=True
+                light.DOMAIN,
+                light.SERVICE_TURN_ON,
+                data,
+                blocking=True,
+                context=self._context,
             ),
             self.hass.services.async_call(
                 light.DOMAIN,
                 light.SERVICE_TURN_ON,
                 emulate_color_temp_data,
                 blocking=True,
+                context=self._context,
             ),
         )
 
@@ -267,7 +274,11 @@ class LightGroup(light.LightEntity):
             data[ATTR_TRANSITION] = kwargs[ATTR_TRANSITION]
 
         await self.hass.services.async_call(
-            light.DOMAIN, light.SERVICE_TURN_OFF, data, blocking=True
+            light.DOMAIN,
+            light.SERVICE_TURN_OFF,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     async def async_update(self):

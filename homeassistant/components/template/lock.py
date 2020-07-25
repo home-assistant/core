@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import Script
 
 from . import extract_entities, initialise_templates
@@ -102,7 +102,7 @@ class TemplateLock(LockEntity):
         """Register callbacks."""
 
         @callback
-        def template_lock_state_listener(entity, old_state, new_state):
+        def template_lock_state_listener(event):
             """Handle target device state changes."""
             self.async_schedule_update_ha_state(True)
 
@@ -111,7 +111,7 @@ class TemplateLock(LockEntity):
             """Update template on startup."""
             if self._state_entities != MATCH_ALL:
                 # Track state change only for valid templates
-                async_track_state_change(
+                async_track_state_change_event(
                     self._hass, self._state_entities, template_lock_state_listener
                 )
             self.async_schedule_update_ha_state(True)

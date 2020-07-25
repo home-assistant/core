@@ -11,7 +11,7 @@ from homeassistant.setup import async_setup_component
 from . import mock_storage
 
 from tests.async_mock import patch
-from tests.common import CLIENT_ID, register_auth_provider
+from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, register_auth_provider
 from tests.components.met.conftest import mock_weather  # noqa: F401
 
 
@@ -192,7 +192,8 @@ async def test_onboarding_integration(hass, hass_storage, hass_client):
     client = await hass_client()
 
     resp = await client.post(
-        "/api/onboarding/integration", json={"client_id": CLIENT_ID}
+        "/api/onboarding/integration",
+        json={"client_id": CLIENT_ID, "redirect_uri": CLIENT_REDIRECT_URI},
     )
 
     assert resp.status == 200
@@ -216,6 +217,35 @@ async def test_onboarding_integration(hass, hass_storage, hass_client):
     assert (
         await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
     )
+
+    # Onboarding refresh token and new refresh token
+    for user in await hass.auth.async_get_users():
+        assert len(user.refresh_tokens) == 2, user
+
+
+async def test_onboarding_integration_invalid_redirect_uri(
+    hass, hass_storage, hass_client
+):
+    """Test finishing integration step."""
+    mock_storage(hass_storage, {"done": [const.STEP_USER]})
+
+    assert await async_setup_component(hass, "onboarding", {})
+
+    client = await hass_client()
+
+    resp = await client.post(
+        "/api/onboarding/integration",
+        json={"client_id": CLIENT_ID, "redirect_uri": "http://invalid-redirect.uri"},
+    )
+
+    assert resp.status == 400
+
+    # We will still mark the last step as done because there is nothing left.
+    assert const.STEP_INTEGRATION in hass_storage[const.DOMAIN]["data"]["done"]
+
+    # Only refresh token from onboarding should be there
+    for user in await hass.auth.async_get_users():
+        assert len(user.refresh_tokens) == 1, user
 
 
 async def test_onboarding_integration_requires_auth(hass, hass_storage, aiohttp_client):

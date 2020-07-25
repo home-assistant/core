@@ -126,9 +126,14 @@ class VerisureDoorlock(LockEntity):
         )["doorLockStateChangeTransactionId"]
         _LOGGER.debug("Verisure doorlock %s", state)
         transaction = {}
+        attempts = 0
         while "result" not in transaction:
-            sleep(0.5)
             transaction = hub.session.get_lock_state_transaction(transaction_id)
+            attempts += 1
+            if attempts == 30:
+                break
+            if attempts > 1:
+                sleep(0.5)
         if transaction["result"] == "OK":
             self._state = state
             self._change_timestamp = monotonic()

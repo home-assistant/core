@@ -29,7 +29,7 @@
         "username": "Username",
         "password": "Password",
         "host": "Host",
-        "ip": "IP address",
+        "ip": "IP Address",
         "port": "Port",
         "usb_path": "USB Device Path",
         "access_token": "Access Token",
@@ -52,7 +52,7 @@
         "already_configured_device": "Device is already configured",
         "no_devices_found": "No devices found on the network",
         "oauth2_missing_configuration": "The component is not configured. Please follow the documentation.",
-        "oauth2_authorize_url_timeout": "Timeout generating authorize url."
+        "oauth2_authorize_url_timeout": "Timeout generating authorize URL."
       }
     }
   }

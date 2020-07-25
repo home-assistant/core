@@ -4,5 +4,8 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/abode",
   "requirements": ["abodepy==0.19.0"],
-  "codeowners": ["@shred86"]
+  "codeowners": ["@shred86"],
+  "homekit": {
+    "models": ["Abode", "Iota"]
+  }
 }

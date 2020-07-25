@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
+    MATCH_ALL,
     STATE_CLOSED,
     STATE_OPEN,
 )
@@ -35,7 +36,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import Script
 
 from . import extract_entities, initialise_templates
@@ -226,16 +227,18 @@ class CoverTemplate(CoverEntity):
         """Register callbacks."""
 
         @callback
-        def template_cover_state_listener(entity, old_state, new_state):
+        def template_cover_state_listener(event):
             """Handle target device state changes."""
             self.async_schedule_update_ha_state(True)
 
         @callback
         def template_cover_startup(event):
             """Update template on startup."""
-            async_track_state_change(
-                self.hass, self._entities, template_cover_state_listener
-            )
+            if self._entities != MATCH_ALL:
+                # Track state change only for valid templates
+                async_track_state_change_event(
+                    self.hass, self._entities, template_cover_state_listener
+                )
 
             self.async_schedule_update_ha_state(True)
 
@@ -447,7 +450,7 @@ class CoverTemplate(CoverEntity):
                 ):
                     # Common during HA startup - so just a warning
                     _LOGGER.warning(
-                        "Could not render %s template %s, the state is unknown.",
+                        "Could not render %s template %s, the state is unknown",
                         friendly_property_name,
                         self._name,
                     )

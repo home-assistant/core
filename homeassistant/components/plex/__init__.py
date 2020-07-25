@@ -161,12 +161,20 @@ async def async_setup_entry(hass, entry):
         }
     )
 
-    hass.services.async_register(
-        PLEX_DOMAIN,
-        SERVICE_PLAY_ON_SONOS,
-        async_play_on_sonos_service,
-        schema=play_on_sonos_schema,
-    )
+    def get_plex_account(plex_server):
+        try:
+            return plex_server.account
+        except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized):
+            return None
+
+    plex_account = await hass.async_add_executor_job(get_plex_account, plex_server)
+    if plex_account:
+        hass.services.async_register(
+            PLEX_DOMAIN,
+            SERVICE_PLAY_ON_SONOS,
+            async_play_on_sonos_service,
+            schema=play_on_sonos_schema,
+        )
 
     return True
 
@@ -207,7 +215,7 @@ def play_on_sonos(hass, service_call):
 
     sonos = hass.components.sonos
     try:
-        sonos_id = sonos.get_coordinator_id(entity_id)
+        sonos_name = sonos.get_coordinator_name(entity_id)
     except HomeAssistantError as err:
         _LOGGER.error("Cannot get Sonos device: %s", err)
         return
@@ -231,10 +239,10 @@ def play_on_sonos(hass, service_call):
     else:
         plex_server = next(iter(plex_servers))
 
-    sonos_speaker = plex_server.account.sonos_speaker_by_id(sonos_id)
+    sonos_speaker = plex_server.account.sonos_speaker(sonos_name)
     if sonos_speaker is None:
         _LOGGER.error(
-            "Sonos speaker '%s' could not be found on this Plex account", sonos_id
+            "Sonos speaker '%s' could not be found on this Plex account", sonos_name
         )
         return
 

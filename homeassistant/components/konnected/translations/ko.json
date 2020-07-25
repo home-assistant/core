@@ -99,7 +99,7 @@
                     "pause": "\ud384\uc2a4 \uac04 \uc77c\uc2dc\uc815\uc9c0 \uc2dc\uac04 (ms) (\uc120\ud0dd \uc0ac\ud56d)",
                     "repeat": "\ubc18\ubcf5 \uc2dc\uac04 (-1 = \ubb34\ud55c) (\uc120\ud0dd \uc0ac\ud56d)"
                 },
-                "description": "{zone} \uad6c\uc5ed\uc5d0 \ub300\ud55c \ucd9c\ub825 \uc635\uc158\uc744 \uc120\ud0dd\ud574\uc8fc\uc138\uc694: \uc0c1\ud0dc {state}",
+                "description": "{zone} \uc5d0 \ub300\ud55c \ucd9c\ub825 \uc635\uc158\uc744 \uc120\ud0dd\ud574\uc8fc\uc138\uc694: \uc0c1\ud0dc {state}",
                 "title": "\uc2a4\uc704\uce58 \ucd9c\ub825 \uad6c\uc131\ud558\uae30"
             }
         }

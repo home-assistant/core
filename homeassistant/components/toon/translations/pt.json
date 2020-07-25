@@ -1,6 +1,8 @@
 {
     "config": {
         "abort": {
+            "authorize_url_fail": "Erro desconhecido ao gerar um URL de autoriza\u00e7\u00e3o.",
+            "authorize_url_timeout": "Tempo excedido a gerar um URL de autoriza\u00e7\u00e3o",
             "client_id": "O ID do cliente da configura\u00e7\u00e3o \u00e9 inv\u00e1lido.",
             "client_secret": "O segredo do cliente da configura\u00e7\u00e3o \u00e9 inv\u00e1lido.",
             "unknown_auth_fail": "Ocorreu um erro inesperado durante a autentica\u00e7\u00e3o."
@@ -9,11 +11,21 @@
             "credentials": "As credenciais fornecidas s\u00e3o inv\u00e1lidas."
         },
         "step": {
+            "agreement": {
+                "data": {
+                    "agreement": "Acordo"
+                },
+                "title": "Seleccione o seu acordo"
+            },
             "authenticate": {
                 "data": {
                     "password": "Palavra-passe",
+                    "tenant": "Inquilino",
                     "username": "Nome de Utilizador"
                 }
+            },
+            "display": {
+                "title": "Seleccionar visor"
             }
         }
     }

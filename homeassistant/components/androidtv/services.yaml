@@ -33,3 +33,9 @@ upload:
     local_path:
       description: The filepath on your Home Assistant instance.
       example: "/config/www/example.txt"
+learn_sendevent:
+  description: Translate a key press on a remote into ADB 'sendevent' commands.  You must press one button on the remote within 8 seconds of calling this service.
+  fields:
+    entity_id:
+      description: Name(s) of Android TV / Fire TV entities.
+      example: "media_player.android_tv_living_room"

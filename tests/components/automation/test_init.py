@@ -1,5 +1,5 @@
 """The tests for the automation component."""
-from datetime import timedelta
+import asyncio
 
 import pytest
 
@@ -14,22 +14,19 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
     EVENT_HOMEASSISTANT_STARTED,
+    SERVICE_TURN_OFF,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Context, CoreState, Event, State
+from homeassistant.core import Context, CoreState, State, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.async_mock import Mock, patch
-from tests.common import (
-    assert_setup_component,
-    async_fire_time_changed,
-    async_mock_service,
-    mock_restore_cache,
-)
+from tests.common import assert_setup_component, async_mock_service, mock_restore_cache
 from tests.components.automation import common
+from tests.components.logbook.test_init import MockLazyEventPartialState
 
 
 @pytest.fixture
@@ -81,57 +78,6 @@ async def test_service_specify_data(hass, calls):
 
     assert len(calls) == 1
     assert calls[0].data["some"] == "event - test_event"
-    state = hass.states.get("automation.hello")
-    assert state is not None
-    assert state.attributes.get("last_triggered") == time
-
-
-async def test_action_delay(hass, calls):
-    """Test action delay."""
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "alias": "hello",
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "action": [
-                    {
-                        "service": "test.automation",
-                        "data_template": {
-                            "some": "{{ trigger.platform }} - "
-                            "{{ trigger.event.event_type }}"
-                        },
-                    },
-                    {"delay": {"minutes": "10"}},
-                    {
-                        "service": "test.automation",
-                        "data_template": {
-                            "some": "{{ trigger.platform }} - "
-                            "{{ trigger.event.event_type }}"
-                        },
-                    },
-                ],
-            }
-        },
-    )
-
-    time = dt_util.utcnow()
-
-    with patch("homeassistant.components.automation.utcnow", return_value=time):
-        hass.bus.async_fire("test_event")
-        await hass.async_block_till_done()
-
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "event - test_event"
-
-    future = dt_util.utcnow() + timedelta(minutes=10)
-    async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
-
-    assert len(calls) == 2
-    assert calls[1].data["some"] == "event - test_event"
-
     state = hass.states.get("automation.hello")
     assert state is not None
     assert state.attributes.get("last_triggered") == time
@@ -610,6 +556,58 @@ async def test_reload_config_handles_load_fails(hass, calls):
     assert len(calls) == 2
 
 
+@pytest.mark.parametrize("service", ["turn_off", "reload"])
+async def test_automation_stops(hass, calls, service):
+    """Test that turning off / reloading an automation stops any running actions."""
+    entity_id = "automation.hello"
+    test_entity = "test.entity"
+
+    config = {
+        automation.DOMAIN: {
+            "alias": "hello",
+            "trigger": {"platform": "event", "event_type": "test_event"},
+            "action": [
+                {"event": "running"},
+                {"wait_template": "{{ is_state('test.entity', 'goodbye') }}"},
+                {"service": "test.automation"},
+            ],
+        }
+    }
+    assert await async_setup_component(hass, automation.DOMAIN, config,)
+
+    running = asyncio.Event()
+
+    @callback
+    def running_cb(event):
+        running.set()
+
+    hass.bus.async_listen_once("running", running_cb)
+    hass.states.async_set(test_entity, "hello")
+
+    hass.bus.async_fire("test_event")
+    await running.wait()
+
+    if service == "turn_off":
+        await hass.services.async_call(
+            automation.DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    else:
+        with patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value=config,
+        ):
+            await common.async_reload(hass)
+
+    hass.states.async_set(test_entity, "goodbye")
+    await hass.async_block_till_done()
+
+    assert len(calls) == 0
+
+
 async def test_automation_restore_state(hass):
     """Ensure states are restored on startup."""
     time = dt_util.utcnow()
@@ -1038,21 +1036,25 @@ async def test_extraction_functions(hass):
 
 async def test_logbook_humanify_automation_triggered_event(hass):
     """Test humanifying Automation Trigger event."""
+    hass.config.components.add("recorder")
     await async_setup_component(hass, automation.DOMAIN, {})
+    await async_setup_component(hass, "logbook", {})
+    entity_attr_cache = logbook.EntityAttributeCache(hass)
 
     event1, event2 = list(
         logbook.humanify(
             hass,
             [
-                Event(
+                MockLazyEventPartialState(
                     EVENT_AUTOMATION_TRIGGERED,
                     {ATTR_ENTITY_ID: "automation.hello", ATTR_NAME: "Hello Automation"},
                 ),
-                Event(
+                MockLazyEventPartialState(
                     EVENT_AUTOMATION_TRIGGERED,
                     {ATTR_ENTITY_ID: "automation.bye", ATTR_NAME: "Bye Automation"},
                 ),
             ],
+            entity_attr_cache,
         )
     )
 

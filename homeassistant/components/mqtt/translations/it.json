@@ -47,5 +47,37 @@
             "button_short_release": "\"{subtype}\" rilasciato",
             "button_triple_press": "\"{subtype}\" cliccato tre volte"
         }
+    },
+    "options": {
+        "error": {
+            "bad_birth": "Argomento birth non valido.",
+            "bad_will": "Argomento will non valido.",
+            "cannot_connect": "Impossibile connettersi al broker."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "password": "Password",
+                    "port": "Porta",
+                    "username": "Nome utente"
+                },
+                "description": "Inserisci le informazioni di connessione del tuo broker MQTT."
+            },
+            "options": {
+                "data": {
+                    "birth_payload": "Payload del messaggio birth",
+                    "birth_qos": "QoS del messaggio birth",
+                    "birth_retain": "Persistenza del messaggio birth",
+                    "birth_topic": "Argomento del messaggio birth",
+                    "discovery": "Attiva l'individuazione",
+                    "will_payload": "Payload del messaggio will",
+                    "will_qos": "QoS del messaggio will",
+                    "will_retain": "Persistenza del messaggio will",
+                    "will_topic": "Argomento del messaggio will"
+                },
+                "description": "Selezionare le opzioni MQTT."
+            }
+        }
     }
 }

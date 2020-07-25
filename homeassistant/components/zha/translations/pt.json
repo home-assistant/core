@@ -27,7 +27,15 @@
             "close": "Fechar",
             "dim_down": "Escurecer",
             "dim_up": "Clariar",
-            "left": "Esquerda"
+            "left": "Esquerda",
+            "open": "Abrir",
+            "right": "Direita",
+            "turn_off": "Desligar",
+            "turn_on": "Ligar"
+        },
+        "trigger_type": {
+            "device_dropped": "Dispositivo caiu",
+            "device_shaken": "Dispositivo abanado"
         }
     }
 }

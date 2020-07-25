@@ -9,9 +9,9 @@ from doorbirdpy import DoorBird
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.logbook import log_entry
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_DEVICES,
     CONF_HOST,
     CONF_NAME,
@@ -26,7 +26,14 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import get_url
 from homeassistant.util import dt as dt_util, slugify
 
-from .const import CONF_EVENTS, DOMAIN, DOOR_STATION, DOOR_STATION_INFO, PLATFORMS
+from .const import (
+    CONF_EVENTS,
+    DOMAIN,
+    DOOR_STATION,
+    DOOR_STATION_EVENT_ENTITY_IDS,
+    DOOR_STATION_INFO,
+    PLATFORMS,
+)
 from .util import get_doorstation_by_token
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,7 +94,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
         doorstation = get_doorstation_by_token(hass, token)
 
         if doorstation is None:
-            _LOGGER.error("Device not found for provided token.")
+            _LOGGER.error("Device not found for provided token")
             return
 
         # Clear webhooks
@@ -165,6 +172,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+
     unload_ok = all(
         await asyncio.gather(
             *[
@@ -228,6 +236,7 @@ class ConfiguredDoorBird:
         self._device = device
         self._custom_url = custom_url
         self.events = events
+        self.doorstation_events = [self._get_event_name(event) for event in self.events]
         self._token = token
 
     @property
@@ -259,9 +268,7 @@ class ConfiguredDoorBird:
         if self.custom_url is not None:
             hass_url = self.custom_url
 
-        for event in self.events:
-            event = self._get_event_name(event)
-
+        for event in self.doorstation_events:
             self._register_event(hass_url, event)
 
             _LOGGER.info("Successfully registered URL for %s on %s", event, self.name)
@@ -363,8 +370,10 @@ class DoorBirdRequestView(HomeAssistantView):
             message = f"HTTP Favorites cleared for {device.slug}"
             return web.Response(status=HTTP_OK, text=message)
 
-        hass.bus.async_fire(f"{DOMAIN}_{event}", event_data)
+        event_data[ATTR_ENTITY_ID] = hass.data[DOMAIN][
+            DOOR_STATION_EVENT_ENTITY_IDS
+        ].get(event)
 
-        log_entry(hass, f"Doorbird {event}", "event was fired.", DOMAIN)
+        hass.bus.async_fire(f"{DOMAIN}_{event}", event_data)
 
         return web.Response(status=HTTP_OK, text="OK")

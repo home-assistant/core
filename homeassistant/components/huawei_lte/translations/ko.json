@@ -16,6 +16,7 @@
             "response_error": "\uae30\uae30\uc5d0\uc11c \uc54c \uc218 \uc5c6\ub294 \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4",
             "unknown_connection_error": "\uae30\uae30\uc5d0 \uc5f0\uacb0\ud558\ub294 \uc911 \uc54c \uc218 \uc5c6\ub294 \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
         },
+        "flow_title": "Huawei LTE: {name}",
         "step": {
             "user": {
                 "data": {

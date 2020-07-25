@@ -1,8 +1,12 @@
 {
     "config": {
         "abort": {
+            "already_configured": "L'accordo selezionato \u00e8 gi\u00e0 configurato.",
+            "authorize_url_fail": "Errore sconosciuto nel generare l'url di autorizzazione",
+            "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione.",
             "client_id": "L'ID client dalla configurazione non \u00e8 valido.",
             "client_secret": "Il client segreto della configurazione non \u00e8 valido.",
+            "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione.",
             "no_agreements": "Questo account non ha display Toon.",
             "no_app": "\u00c8 necessario configurare Toon prima di poter eseguire l'autenticazione con esso. [Si prega di leggere le istruzioni](https://www.home-assistant.io/components/toon/).",
             "unknown_auth_fail": "Si \u00e8 verificato un errore imprevisto durante l'autenticazione."
@@ -12,6 +16,13 @@
             "display_exists": "Il display selezionato \u00e8 gi\u00e0 configurato."
         },
         "step": {
+            "agreement": {
+                "data": {
+                    "agreement": "Accordo"
+                },
+                "description": "Selezionare l'indirizzo del contratto che si desidera aggiungere.",
+                "title": "Seleziona il tuo contratto"
+            },
             "authenticate": {
                 "data": {
                     "password": "Password",
@@ -27,6 +38,9 @@
                 },
                 "description": "Seleziona il display Toon con cui connettersi.",
                 "title": "Seleziona il display"
+            },
+            "pick_implementation": {
+                "title": "Scegliere il tenant con cui eseguire l'autenticazione"
             }
         }
     }

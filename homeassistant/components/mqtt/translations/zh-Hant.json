@@ -47,5 +47,37 @@
             "button_short_release": "\"{subtype}\" \u91cb\u653e",
             "button_triple_press": "\"{subtype}\" \u4e09\u9023\u64ca"
         }
+    },
+    "options": {
+        "error": {
+            "bad_birth": "Birth \u4e3b\u984c\u7121\u6548\u3002",
+            "bad_will": "Will \u4e3b\u984c\u7121\u6548\u3002",
+            "cannot_connect": "\u7121\u6cd5\u9023\u7dda\u81f3 Broker\u3002"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "password": "\u5bc6\u78bc",
+                    "port": "\u901a\u8a0a\u57e0",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u8acb\u8f38\u5165 MQTT Broker \u9023\u7dda\u8cc7\u8a0a\u3002"
+            },
+            "options": {
+                "data": {
+                    "birth_payload": "Birth \u8a0a\u606f payload",
+                    "birth_qos": "Birth \u8a0a\u606f QoS",
+                    "birth_retain": "Birth \u8a0a\u606f Retain",
+                    "birth_topic": "Birth \u8a0a\u606f\u4e3b\u984c",
+                    "discovery": "\u958b\u555f\u63a2\u7d22",
+                    "will_payload": "Will \u8a0a\u606f payload",
+                    "will_qos": "Will \u8a0a\u606f QoS",
+                    "will_retain": "Will \u8a0a\u606f Retain",
+                    "will_topic": "Will \u8a0a\u606f\u4e3b\u984c"
+                },
+                "description": "\u8acb\u9078\u64c7 MQTT \u9078\u9805\u3002"
+            }
+        }
     }
 }

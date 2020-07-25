@@ -157,6 +157,13 @@ INDICATE_ACTIVE_LOCAL_DEVICE = [
     "flame_state",
 ]
 
+CUSTOM_ICONS = {
+    "gas_consumed_interval": "mdi:fire",
+    "gas_consumed_cumulative": "mdi:fire",
+    "modulation_level": "mdi:percent",
+    "valve_position": "mdi:valve",
+}
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Smile sensors from a config entry."""
@@ -271,6 +278,7 @@ class PwThermostatSensor(SmileSensor, Entity):
         """Set up the Plugwise API."""
         super().__init__(api, coordinator, name, dev_id, sensor)
 
+        self._icon = None
         self._model = sensor_type[SENSOR_MAP_MODEL]
         self._unit_of_measurement = sensor_type[SENSOR_MAP_UOM]
         self._dev_class = sensor_type[SENSOR_MAP_DEVICE_CLASS]
@@ -292,6 +300,7 @@ class PwThermostatSensor(SmileSensor, Entity):
             if self._unit_of_measurement == UNIT_PERCENTAGE:
                 measurement = int(measurement)
             self._state = measurement
+            self._icon = CUSTOM_ICONS.get(self._sensor, self._icon)
 
         self.async_write_ha_state()
 
@@ -346,6 +355,7 @@ class PwPowerSensor(SmileSensor, Entity):
         """Set up the Plugwise API."""
         super().__init__(api, coordinator, name, dev_id, sensor)
 
+        self._icon = None
         self._model = model
         if model is None:
             self._model = sensor_type[SENSOR_MAP_MODEL]
@@ -371,5 +381,6 @@ class PwPowerSensor(SmileSensor, Entity):
             if self._unit_of_measurement == ENERGY_KILO_WATT_HOUR:
                 measurement = int(measurement / 1000)
             self._state = measurement
+            self._icon = CUSTOM_ICONS.get(self._sensor, self._icon)
 
         self.async_write_ha_state()

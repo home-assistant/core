@@ -11,7 +11,7 @@
             "user": {
                 "data": {
                     "email": "Courriel (facultatif)",
-                    "host": "H\u00f4te",
+                    "host": "Nom d'h\u00f4te ou adresse IP",
                     "port": "Port (10000)"
                 },
                 "title": "Se connecter \u00e0 l'appareil"

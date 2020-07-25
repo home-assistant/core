@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,8 +106,11 @@ class MoldIndicator(Entity):
         """Register callbacks."""
 
         @callback
-        def mold_indicator_sensors_state_listener(entity, old_state, new_state):
+        def mold_indicator_sensors_state_listener(event):
             """Handle for state changes for dependent sensors."""
+            new_state = event.data.get("new_state")
+            old_state = event.data.get("old_state")
+            entity = event.data.get("entity_id")
             _LOGGER.debug(
                 "Sensor state change for %s that had old state %s and new state %s",
                 entity,
@@ -123,8 +126,8 @@ class MoldIndicator(Entity):
             """Add listeners and get 1st state."""
             _LOGGER.debug("Startup for %s", self.entity_id)
 
-            async_track_state_change(
-                self.hass, self._entities, mold_indicator_sensors_state_listener
+            async_track_state_change_event(
+                self.hass, list(self._entities), mold_indicator_sensors_state_listener
             )
 
             # Read initial state

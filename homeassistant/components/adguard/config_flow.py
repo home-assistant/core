@@ -84,7 +84,7 @@ class AdGuardHomeFlowHandler(ConfigFlow):
             errors["base"] = "connection_error"
             return await self._show_setup_form(errors)
 
-        if LooseVersion(MIN_ADGUARD_HOME_VERSION) > LooseVersion(version):
+        if version and LooseVersion(MIN_ADGUARD_HOME_VERSION) > LooseVersion(version):
             return self.async_abort(
                 reason="adguard_home_outdated",
                 description_placeholders={
@@ -105,7 +105,7 @@ class AdGuardHomeFlowHandler(ConfigFlow):
             },
         )
 
-    async def async_step_hassio(self, user_input=None):
+    async def async_step_hassio(self, discovery_info):
         """Prepare configuration for a Hass.io AdGuard Home add-on.
 
         This flow is triggered by the discovery component.
@@ -113,14 +113,14 @@ class AdGuardHomeFlowHandler(ConfigFlow):
         entries = self._async_current_entries()
 
         if not entries:
-            self._hassio_discovery = user_input
+            self._hassio_discovery = discovery_info
             return await self.async_step_hassio_confirm()
 
         cur_entry = entries[0]
 
         if (
-            cur_entry.data[CONF_HOST] == user_input[CONF_HOST]
-            and cur_entry.data[CONF_PORT] == user_input[CONF_PORT]
+            cur_entry.data[CONF_HOST] == discovery_info[CONF_HOST]
+            and cur_entry.data[CONF_PORT] == discovery_info[CONF_PORT]
         ):
             return self.async_abort(reason="single_instance_allowed")
 
@@ -133,8 +133,8 @@ class AdGuardHomeFlowHandler(ConfigFlow):
             cur_entry,
             data={
                 **cur_entry.data,
-                CONF_HOST: user_input[CONF_HOST],
-                CONF_PORT: user_input[CONF_PORT],
+                CONF_HOST: discovery_info[CONF_HOST],
+                CONF_PORT: discovery_info[CONF_PORT],
             },
         )
 

@@ -1,8 +1,8 @@
 """Test the Avri config flow."""
-from asynctest import patch
-
 from homeassistant import config_entries, setup
 from homeassistant.components.avri.const import DOMAIN
+
+from tests.async_mock import patch
 
 
 async def test_form(hass):

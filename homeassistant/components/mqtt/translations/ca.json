@@ -47,5 +47,37 @@
             "button_short_release": "\"{subtype}\" alliberat",
             "button_triple_press": "\"{subtype}\" clicat tres vegades"
         }
+    },
+    "options": {
+        "error": {
+            "bad_birth": "Topic missatge de naixement inv\u00e0lid.",
+            "bad_will": "Topic missatge d'\u00faltima voluntat inv\u00e0lid.",
+            "cannot_connect": "No es pot connectar amb el broker."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Introdueix la informaci\u00f3 de connexi\u00f3 del teu broker MQTT."
+            },
+            "options": {
+                "data": {
+                    "birth_payload": "Dades (payload) missatge de naixement",
+                    "birth_qos": "QoS missatge de naixement",
+                    "birth_retain": "Retenci\u00f3 missatge de naixement",
+                    "birth_topic": "Topic missatge de naixement",
+                    "discovery": "Activar descobriment",
+                    "will_payload": "Dades (payload) missatge d'\u00faltima voluntat",
+                    "will_qos": "QoS missatge d'\u00faltima voluntat",
+                    "will_retain": "Retenci\u00f3 missatge d'\u00faltima voluntat",
+                    "will_topic": "Topic missatge d'\u00faltima voluntat"
+                },
+                "description": "Selecciona les opcions MQTT."
+            }
+        }
     }
 }

@@ -12,7 +12,9 @@
             "user": {
                 "data": {
                     "host": "Amfitri\u00f3",
+                    "limit": "L\u00edmit",
                     "name": "Nom",
+                    "order": "Ordre",
                     "password": "Contrasenya",
                     "port": "Port",
                     "username": "Nom d'usuari"
@@ -25,6 +27,8 @@
         "step": {
             "init": {
                 "data": {
+                    "limit": "L\u00edmit",
+                    "order": "Ordre",
                     "scan_interval": "Freq\u00fc\u00e8ncia d'actualitzaci\u00f3"
                 },
                 "title": "Opcions de configuraci\u00f3 de Transmission"

@@ -1,0 +1,14 @@
+{
+  "problemMatcher": [
+    {
+      "owner": "check-executables-have-shebangs",
+      "pattern": [
+        {
+          "regexp": "^(.+):\\s(.+)$",
+          "file": 1,
+          "message": 2
+        }
+      ]
+    }
+  ]
+}

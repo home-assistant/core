@@ -564,6 +564,14 @@ async def test_camera_with_linked_motion_sensor(hass, run_driver, events):
     await hass.async_block_till_done()
     assert char.value is True
 
+    # Ensure we do not throw when the linked
+    # motion sensor is removed
+    hass.states.async_remove(motion_entity_id)
+    await hass.async_block_till_done()
+    await acc.run_handler()
+    await hass.async_block_till_done()
+    assert char.value is True
+
 
 async def test_camera_with_a_missing_linked_motion_sensor(hass, run_driver, events):
     """Test a camera with a configured linked motion sensor that is missing."""

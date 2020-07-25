@@ -2,7 +2,7 @@
   "domain": "bmw_connected_drive",
   "name": "BMW Connected Drive",
   "documentation": "https://www.home-assistant.io/integrations/bmw_connected_drive",
-  "requirements": ["bimmer_connected==0.7.5"],
+  "requirements": ["bimmer_connected==0.7.7"],
   "dependencies": [],
-  "codeowners": ["@gerard33"]
+  "codeowners": ["@gerard33", "@rikroe"]
 }

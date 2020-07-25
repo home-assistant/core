@@ -84,23 +84,29 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_FRONTEND_REPO): cv.isdir,
-                vol.Optional(CONF_THEMES): vol.Schema(
-                    {cv.string: {cv.string: cv.string}}
-                ),
-                vol.Optional(CONF_EXTRA_HTML_URL): vol.All(cv.ensure_list, [cv.string]),
-                vol.Optional(CONF_EXTRA_MODULE_URL): vol.All(
-                    cv.ensure_list, [cv.string]
-                ),
-                vol.Optional(CONF_EXTRA_JS_URL_ES5): vol.All(
-                    cv.ensure_list, [cv.string]
-                ),
-                # We no longer use these options.
-                vol.Optional(CONF_EXTRA_HTML_URL_ES5): cv.match_all,
-                vol.Optional(CONF_JS_VERSION): cv.match_all,
-            }
+        DOMAIN: vol.All(
+            cv.deprecated(CONF_EXTRA_HTML_URL, invalidation_version="0.115"),
+            cv.deprecated(CONF_EXTRA_HTML_URL_ES5, invalidation_version="0.115"),
+            vol.Schema(
+                {
+                    vol.Optional(CONF_FRONTEND_REPO): cv.isdir,
+                    vol.Optional(CONF_THEMES): vol.Schema(
+                        {cv.string: {cv.string: cv.string}}
+                    ),
+                    vol.Optional(CONF_EXTRA_HTML_URL): vol.All(
+                        cv.ensure_list, [cv.string]
+                    ),
+                    vol.Optional(CONF_EXTRA_MODULE_URL): vol.All(
+                        cv.ensure_list, [cv.string]
+                    ),
+                    vol.Optional(CONF_EXTRA_JS_URL_ES5): vol.All(
+                        cv.ensure_list, [cv.string]
+                    ),
+                    # We no longer use these options.
+                    vol.Optional(CONF_EXTRA_HTML_URL_ES5): cv.match_all,
+                    vol.Optional(CONF_JS_VERSION): cv.match_all,
+                },
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -281,8 +287,13 @@ async def async_setup(hass, config):
 
     # To smooth transition to new urls, add redirects to new urls of dev tools
     # Added June 27, 2019. Can be removed in 2021.
-    for panel in ("event", "info", "service", "state", "template", "mqtt"):
+    for panel in ("event", "service", "state", "template"):
         hass.http.register_redirect(f"/dev-{panel}", f"/developer-tools/{panel}")
+    for panel in ("logs", "info", "mqtt"):
+        # Can be removed in 2021.
+        hass.http.register_redirect(f"/dev-{panel}", f"/config/{panel}")
+        # Added June 20 2020. Can be removed in 2022.
+        hass.http.register_redirect(f"/developer-tools/{panel}", f"/config/{panel}")
 
     async_register_built_in_panel(
         hass,
@@ -344,7 +355,7 @@ def _async_setup_themes(hass, themes):
             hass.data[DATA_DEFAULT_THEME] = name
             update_theme_and_fire_event()
         else:
-            _LOGGER.warning("Theme %s is not defined.", name)
+            _LOGGER.warning("Theme %s is not defined", name)
 
     async def reload_themes(_):
         """Reload themes."""
