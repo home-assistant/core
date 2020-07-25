@@ -14,8 +14,11 @@ from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-def patch_setup_entry(domain: str):
+def patch_setup_entry(domain: str, *, enabled: bool = True):
     """Patch async_setup_entry for specified domain."""
+    if not enabled:
+        return nullcontext()
+
     return patch(f"homeassistant.components.bond.{domain}.async_setup_entry")
 
 
@@ -30,15 +33,15 @@ async def setup_bond_entity(
     """Set up Bond entity."""
     config_entry.add_to_hass(hass)
 
-    with patch_bond_version() if patch_version else nullcontext(), patch_bond_device_ids() if patch_device_ids else nullcontext(), patch_setup_entry(
-        "cover"
-    ) if patch_platforms else nullcontext(), patch_setup_entry(
-        "fan"
-    ) if patch_platforms else nullcontext(), patch_setup_entry(
-        "light"
-    ) if patch_platforms else nullcontext(), patch_setup_entry(
-        "switch"
-    ) if patch_platforms else nullcontext():
+    with patch_bond_version(enabled=patch_version), patch_bond_device_ids(
+        enabled=patch_device_ids
+    ), patch_setup_entry("cover", enabled=patch_platforms), patch_setup_entry(
+        "fan", enabled=patch_platforms
+    ), patch_setup_entry(
+        "light", enabled=patch_platforms
+    ), patch_setup_entry(
+        "switch", enabled=patch_platforms
+    ):
         return await hass.config_entries.async_setup(config_entry.entry_id)
 
 
@@ -70,8 +73,11 @@ async def setup_platform(
     return mock_entry
 
 
-def patch_bond_version(return_value: Optional[dict] = None):
+def patch_bond_version(enabled: bool = True, return_value: Optional[dict] = None):
     """Patch Bond API version endpoint."""
+    if not enabled:
+        return nullcontext()
+
     if return_value is None:
         return_value = {"bondid": "test-bond-id"}
 
@@ -80,8 +86,11 @@ def patch_bond_version(return_value: Optional[dict] = None):
     )
 
 
-def patch_bond_device_ids(return_value=None, side_effect=None):
+def patch_bond_device_ids(enabled: bool = True, return_value=None, side_effect=None):
     """Patch Bond API devices endpoint."""
+    if not enabled:
+        return nullcontext()
+
     if return_value is None:
         return_value = []
 
