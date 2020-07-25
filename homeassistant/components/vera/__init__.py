@@ -2,6 +2,7 @@
 import asyncio
 from collections import defaultdict
 import logging
+from typing import Type
 
 import pyvera as veraApi
 from requests.exceptions import RequestException
@@ -124,10 +125,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     vera_devices = defaultdict(list)
     for device in devices:
         device_type = map_vera_device(device, light_ids)
-        if device_type is None:
-            continue
-
-        vera_devices[device_type].append(device)
+        if device_type is not None:
+            vera_devices[device_type].append(device)
 
     vera_scenes = []
     for scene in all_scenes:
@@ -168,27 +167,31 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 def map_vera_device(vera_device, remap):
     """Map vera classes to Home Assistant types."""
 
-    if isinstance(vera_device, veraApi.VeraDimmer):
-        return "light"
-    if isinstance(vera_device, veraApi.VeraBinarySensor):
-        return "binary_sensor"
-    if isinstance(vera_device, veraApi.VeraSensor):
-        return "sensor"
-    if isinstance(vera_device, veraApi.VeraArmableDevice):
-        return "switch"
-    if isinstance(vera_device, veraApi.VeraLock):
-        return "lock"
-    if isinstance(vera_device, veraApi.VeraThermostat):
-        return "climate"
-    if isinstance(vera_device, veraApi.VeraCurtain):
-        return "cover"
-    if isinstance(vera_device, veraApi.VeraSceneController):
-        return "sensor"
-    if isinstance(vera_device, veraApi.VeraSwitch):
-        if vera_device.device_id in remap:
+    type_map = {
+        veraApi.VeraDimmer: "light",
+        veraApi.VeraBinarySensor: "binary_sensor",
+        veraApi.VeraSensor: "sensor",
+        veraApi.VeraArmableDevice: "switch",
+        veraApi.VeraLock: "lock",
+        veraApi.VeraThermostat: "climate",
+        veraApi.VeraCurtain: "cover",
+        veraApi.VeraSceneController: "sensor",
+        veraApi.VeraSwitch: "switch",
+    }
+
+    def map_special_case(instance_class: Type, entity_type: str) -> str:
+        if instance_class is veraApi.VeraSwitch and vera_device.device_id in remap:
             return "light"
-        return "switch"
-    return None
+        return entity_type
+
+    return next(
+        iter(
+            map_special_case(instance_class, entity_type)
+            for instance_class, entity_type in type_map.items()
+            if isinstance(vera_device, instance_class)
+        ),
+        None,
+    )
 
 
 class VeraDevice(Entity):
