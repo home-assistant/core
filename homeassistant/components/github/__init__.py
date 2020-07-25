@@ -1,5 +1,6 @@
 """The GitHub integration."""
 import asyncio
+import logging
 
 from aiogithubapi import (
     AIOGitHubAPIAuthenticationException,
@@ -7,11 +8,13 @@ from aiogithubapi import (
     GitHub,
 )
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import Config, HomeAssistant
 
-from .const import DOMAIN
+from .const import CONF_REPOSITORY, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"]
 
@@ -24,13 +27,17 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up GitHub from a config entry."""
     try:
-        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = GitHub(
-            entry.data[CONF_ACCESS_TOKEN]
+        github = GitHub(entry.data[CONF_ACCESS_TOKEN])
+        await github.get_repo(entry.data[CONF_REPOSITORY])
+    except (AIOGitHubAPIAuthenticationException, AIOGitHubAPIException):
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": "reauth"}, data=entry.data
+            )
         )
-    except AIOGitHubAPIAuthenticationException as err:
-        raise ConfigEntryNotReady from err
-    except AIOGitHubAPIException as err:
-        raise ConfigEntryNotReady from err
+        return False
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = github
 
     for component in PLATFORMS:
         hass.async_create_task(
