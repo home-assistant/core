@@ -1,4 +1,7 @@
 """The GitHub integration."""
+# TODO: Disable extra REST calls by default using option flow
+# TODO: Tests
+# TODO: Device triggers? (scaffold)
 import asyncio
 from datetime import timedelta
 import logging
@@ -111,7 +114,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
         return False
 
-    # TODO: Disable extra REST calls by default using option flow
     async def async_update_data() -> GitHubData:
         """Fetch data from GitHub."""
         repository: AIOGitHubAPIRepository = await github.get_repo(
