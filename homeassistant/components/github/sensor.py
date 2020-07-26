@@ -81,10 +81,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         ):
             sensors.append(ViewsSensor(coordinator, repository))
 
-        _LOGGER.warning("Add Sensors")
-        _LOGGER.warning(sensors)
-
-        async_add_entities(sensors, False)
+        async_add_entities(sensors, True)
 
     async_dispatcher_connect(
         hass, f"signal-{DOMAIN}-sensors-update-{entry.entry_id}", add_sensor_entities
@@ -114,8 +111,6 @@ class GitHubSensor(GitHubDeviceEntity):
         """Initialize the sensor."""
         self._state = None
         self._attributes = None
-
-        _LOGGER.warning("init: %s", name)
 
         super().__init__(coordinator, f"{repository.full_name}_{unique_id}", name, icon)
 
@@ -175,8 +170,6 @@ class ForksSensor(GitHubSensor):
     async def _github_update(self) -> bool:
         """Fetch new state data for the sensor."""
         data: GitHubData = self._coordinator.data
-
-        _LOGGER.warning("Update Forks")
 
         self._state = data.repository.attributes.get("forks")
 

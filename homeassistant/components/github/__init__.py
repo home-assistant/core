@@ -127,7 +127,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     async def async_update_data() -> GitHubData:
         """Fetch data from GitHub."""
-        _LOGGER.warning("async_update_data")
         repository: AIOGitHubAPIRepository = await github.get_repo(
             entry.data[CONF_REPOSITORY]
         )
@@ -163,8 +162,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         else:
             clones = None
             views = None
-
-        _LOGGER.warning(repository.full_name)
 
         return GitHubData(
             repository,
@@ -269,8 +266,6 @@ class GitHubEntity(Entity):
 
     async def async_update(self) -> None:
         """Update GitHub entity."""
-        _LOGGER.warning("async_update")
-
         if await self._github_update():
             self._available = True
         else:
