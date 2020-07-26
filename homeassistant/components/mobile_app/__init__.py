@@ -210,7 +210,22 @@ PUSH_ACTION_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-ACTION_SCHEMA_LIST = vol.All(cv.ensure_list, [PUSH_ACTION_SCHEMA])
+PUSH_ACTION_SCHEMA_LIST = vol.All(cv.ensure_list, [PUSH_ACTION_SCHEMA])
+
+ACTION_SCHEMA = vol.Schema(
+    {
+        vol.Required("name"): cv.string,
+        vol.Required("text"): vol.All(
+            {vol.Required("label"): cv.string, vol.Required("color"): cv.string}
+        ),
+        vol.Required("icon"): vol.All(
+            {vol.Required("icon"): cv.string, vol.Required("color"): cv.string}
+        ),
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+ACTION_SCHEMA_LIST = vol.All(cv.ensure_list, [ACTION_SCHEMA])
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -227,11 +242,12 @@ CONFIG_SCHEMA = vol.Schema(
                                 ): vol.Lower,
                                 vol.Required(
                                     CONF_PUSH_CATEGORIES_ACTIONS
-                                ): ACTION_SCHEMA_LIST,
+                                ): PUSH_ACTION_SCHEMA_LIST,
                             }
                         ],
                     )
-                }
+                },
+                vol.Optional("actions"): ACTION_SCHEMA_LIST,
             }
         }
     },

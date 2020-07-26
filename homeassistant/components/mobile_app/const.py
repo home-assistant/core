@@ -12,6 +12,9 @@ ATTR_DEFAULT_BEHAVIOR = "default"
 ATTR_TEXT_INPUT_BEHAVIOR = "textInput"
 
 CONF_CLOUDHOOK_URL = "cloudhook_url"
+
+CONF_ECO_IOS = "ios"
+
 CONF_PUSH = "push"
 CONF_PUSH_CATEGORIES = "categories"
 CONF_PUSH_CATEGORIES_NAME = "name"
@@ -97,5 +100,3 @@ SIGNAL_SENSOR_UPDATE = f"{DOMAIN}_sensor_update"
 SIGNAL_LOCATION_UPDATE = DOMAIN + "_location_update_{}"
 
 ATTR_CAMERA_ENTITY_ID = "camera_entity_id"
-
-CONF_ECO_IOS = "ios"
