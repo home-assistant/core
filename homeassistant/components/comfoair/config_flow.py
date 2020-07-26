@@ -8,7 +8,12 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 
-from .const import CONF_SERIAL_PORT, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
+from .const import (  # pylint:disable=unused-import
+    CONF_SERIAL_PORT,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DOMAIN,
+)
 
 CONF_MANUAL_PATH = "Enter Manually"
 
