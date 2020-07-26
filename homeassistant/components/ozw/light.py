@@ -146,12 +146,35 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         if self.values.dimming_duration is None:
             return
 
+        ozw_build = int(
+            self.values.primary.ozw_instance.get_status().openzwave_version.split(".")[
+                2
+            ]
+        )
+
         if ATTR_TRANSITION not in kwargs:
             # no transition specified by user, use defaults
-            new_value = 7621  # anything over 7620 uses the factory default
+            if ozw_build > 1185:
+                new_value = 7621  # anything over 7620 uses the factory default
+            else:
+                new_value = 255  # default for older version
+
         else:
             # transition specified by user
-            new_value = max(0, min(7620, kwargs[ATTR_TRANSITION]))
+            if ozw_build > 1185:
+                new_value = max(0, min(7620, kwargs[ATTR_TRANSITION]))
+            else:
+                transition = kwargs[ATTR_TRANSITION]
+                if transition <= 127:
+                    new_value = int(transition)
+                else:
+                    minutes = int(transition / 60)
+                    _LOGGER.debug(
+                        "Transition rounded to %d minutes for %s",
+                        minutes,
+                        self.entity_id,
+                    )
+                    new_value = minutes + 128
 
         # only send value if it differs from current
         # this prevents a command for nothing
