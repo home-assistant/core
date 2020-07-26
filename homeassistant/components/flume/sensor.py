@@ -1,6 +1,7 @@
 """Sensor for displaying the number of result from Flume."""
 from datetime import timedelta
 import logging
+from numbers import Number
 
 from pyflume import FlumeData
 import voluptuous as vol
@@ -24,6 +25,7 @@ from .const import (
     FLUME_AUTH,
     FLUME_DEVICES,
     FLUME_HTTP_SESSION,
+    FLUME_QUERIES_SENSOR,
     FLUME_TYPE_SENSOR,
     KEY_DEVICE_ID,
     KEY_DEVICE_LOCATION,
@@ -82,9 +84,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             update_on_init=False,
             http_session=http_session,
         )
-        flume_entity_list.append(
-            FlumeSensor(flume_device, device_friendly_name, device_id)
-        )
+
+        flume_data = FlumeSensorData(flume_device)
+
+        for flume_query_sensor in FLUME_QUERIES_SENSOR.items():
+            flume_entity_list.append(
+                FlumeSensor(
+                    flume_data,
+                    flume_query_sensor,
+                    f"{device_friendly_name} {flume_query_sensor[1]['friendly_name']}",
+                    device_id,
+                )
+            )
 
     if flume_entity_list:
         async_add_entities(flume_entity_list)
@@ -93,15 +104,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FlumeSensor(Entity):
     """Representation of the Flume sensor."""
 
-    def __init__(self, flume_device, name, device_id):
+    def __init__(self, flume_data, flume_query_sensor, name, device_id):
         """Initialize the Flume sensor."""
-        self._flume_device = flume_device
+        self._flume_data = flume_data
+        self._flume_query_sensor = flume_query_sensor
         self._name = name
         self._device_id = device_id
         self._undo_track_sensor = None
-        self._available = False
+        self._available = self._flume_data.available
         self._state = None
-        self._attributes = None
 
     @property
     def device_info(self):
@@ -127,7 +138,7 @@ class FlumeSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         # This is in gallons per SCAN_INTERVAL
-        return "gal/m"
+        return self._flume_query_sensor[1]["unit_of_measurement"]
 
     @property
     def available(self):
@@ -136,35 +147,49 @@ class FlumeSensor(Entity):
 
     @property
     def unique_id(self):
-        """Device unique ID."""
-        return self._device_id
+        """Flume query and Device unique ID."""
+        return f"{self._flume_query_sensor[1]['friendly_name']}_{self._device_id}"
 
-    @property
-    def device_state_attributes(self):
-        """Return Flume state attributes."""
-        return self._attributes
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating flume sensor: %s", self._name)
-        try:
-            self._flume_device.update_force()
-        except Exception as ex:  # pylint: disable=broad-except
-            if self._available:
-                _LOGGER.error("Update of flume sensor %s failed: %s", self._name, ex)
-            self._available = False
-            return
+
+        def format_state_value(value):
+            return round(value, 1) if isinstance(value, Number) else None
+
+        self._flume_data.update()
+        self._state = format_state_value(
+            self._flume_data.flume_device.values[self._flume_query_sensor[0]]
+        )
         _LOGGER.debug("Successful update of flume sensor: %s", self._name)
-        self._state = self._flume_device.values["current_interval"]
-        self._attributes = {
-            k: round(self._flume_device.values[k], 1)
-            for k in (self._flume_device.values.keys() - "current_interval")
-        }
-        self._available = True
+
+        self._available = self._flume_data.available
 
     async def async_added_to_hass(self):
         """Request an update when added."""
         # We do ask for an update with async_add_entities()
         # because it will update disabled entities
         self.async_schedule_update_ha_state()
+
+
+class FlumeSensorData:
+    """Get the latest data and update the states."""
+
+    def __init__(self, flume_device):
+        """Initialize the data object."""
+        self.flume_device = flume_device
+        self.available = True
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """Get the latest data from the Flume."""
+        _LOGGER.debug("Updating Flume data")
+
+        try:
+            self.flume_device.update_force()
+        except Exception as ex:  # pylint: disable=broad-except
+            if self.available:
+                _LOGGER.error("Update of Flume data failed: %s", ex)
+            self.available = False
+            return
+        _LOGGER.debug("Successful update of Flume data")
