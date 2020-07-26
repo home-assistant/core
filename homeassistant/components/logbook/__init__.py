@@ -212,7 +212,7 @@ class LogbookView(HomeAssistantView):
                 )
             )
 
-        return await hass.async_add_job(json_events)
+        return await hass.async_add_executor_job(json_events)
 
 
 def humanify(hass, events, entity_attr_cache):
