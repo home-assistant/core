@@ -169,7 +169,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         """Retrieve Netatmo public weather entities."""
         temp_data_classes = []
         entities = {
-            device.name: device
+            device.name: device.id
             for device in async_entries_for_config_entry(
                 device_registry, entry.entry_id
             )
@@ -183,7 +183,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             signal_name = f"{PUBLICDATA_DATA_CLASS_NAME}-{area.uuid}"
 
             if area.area_name in entities:
-                device = entities.pop(area.area_name)
+                entities.pop(area.area_name)
 
                 if update:
                     async_dispatcher_send(
@@ -206,8 +206,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     NetatmoPublicSensor(data_handler, area, sensor_type)
                 )
 
-        for device in entities.values():
-            device_registry.async_remove_device(device.id)
+        for device_id in entities.values():
+            device_registry.async_remove_device(device_id)
 
         if new_entities:
             async_add_entities(new_entities)
