@@ -101,6 +101,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     conf = config.get(DOMAIN)
 
     _LOGGER.warning(f"{conf}")
+    _LOGGER.warning(f"Digging down to iOS {conf[ECO_IOS]}")
+    hass.http.register_view(iOSPushConfigView(conf[ECO_IOS][CONF_PUSH]))
 
     return True
 
@@ -133,10 +135,6 @@ async def async_setup_entry(hass, entry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, domain)
         )
-
-    hass.http.register_view(
-        MobileAppiOSPushConfigView(hass.data[DOMAIN][ECO_IOS][CONF_PUSH])
-    )
 
     return True
 
@@ -172,7 +170,7 @@ async def async_remove_entry(hass, entry):
             pass
 
 
-class MobileAppiOSPushConfigView(HomeAssistantView):
+class iOSPushConfigView(HomeAssistantView):
     """A view that provides the iOOS push categories configuration."""
 
     url = "/api/mobile_app/ios/push"
