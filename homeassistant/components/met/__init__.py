@@ -8,11 +8,9 @@ from homeassistant.const import (
     LENGTH_FEET,
     LENGTH_METERS,
 )
-from .config_flow import MetFlowHandler
 from .const import DOMAIN, CONF_TRACK_HOME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.distance import convert as convert_distance
-from homeassistant.util.pressure import convert as convert_pressure
 import homeassistant.util.dt as dt_util
 
 
@@ -57,10 +55,10 @@ async def async_unload_entry(hass, config_entry):
 
 
 class MetWeatherData:
-    """Keep data for Met.no weather entities"""
+    """Keep data for Met.no weather entities."""
 
     def __init__(self, hass, config, is_metric):
-        """Initialise the weather entity data"""
+        """Initialise the weather entity data."""
         self.hass = hass
         self._config = config
         self._is_metric = is_metric
@@ -69,6 +67,7 @@ class MetWeatherData:
         self.forecast_data = None
 
     def init_data(self):
+        """Weather data inialization - get the coordinates."""
         conf = self._config
 
         if conf.get(CONF_TRACK_HOME, False):
@@ -95,6 +94,7 @@ class MetWeatherData:
         )
 
     async def fetch_data(self):
+        """Fetch data from API - (current weather and forecast)."""
         await self._weather_data.fetching_data()
         self.current_weather_data = self._weather_data.get_current_weather()
         time_zone = dt_util.DEFAULT_TIME_ZONE

@@ -2,7 +2,6 @@
 import logging
 from random import randrange
 from datetime import timedelta
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.weather import PLATFORM_SCHEMA, WeatherEntity
@@ -18,9 +17,7 @@ from homeassistant.const import (
     PRESSURE_INHG,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.event import async_call_later
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.pressure import convert as convert_pressure
@@ -113,8 +110,8 @@ class MetWeather(WeatherEntity):
     async def _core_config_updated(self, _event):
         """Handle core config updated."""
         if self._config.get(CONF_TRACK_HOME):
-            self.hass.data[DOMAIN]['home'].init_data()
-            await self.hass.data[DOMAIN]['home'].fetch_data()
+            self.hass.data[DOMAIN]["home"].init_data()
+            await self.hass.data[DOMAIN]["home"].fetch_data()
 
     async def will_remove_from_hass(self):
         """Handle entity will be removed from hass."""
@@ -123,8 +120,7 @@ class MetWeather(WeatherEntity):
             self._unsub_track_home = None
 
     async def async_update(self):
-        """Only used by the generic entity update service.
-        """
+        """Only used by the generic entity update service."""
         await self._coordinator.async_request_refresh()
         self.async_write_ha_state()
 
