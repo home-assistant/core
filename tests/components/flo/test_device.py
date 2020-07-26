@@ -41,6 +41,10 @@ async def test_device(hass, config_entry, aioclient_mock_fixture, aioclient_mock
     assert device.manufacturer == "Flo by Moen"
     assert device.device_name == "Flo by Moen flo_device_075_v2"
     assert device.rssi == -47
+    assert device.pending_info_alerts_count == 0
+    assert device.pending_critical_alerts_count == 0
+    assert device.pending_warning_alerts_count == 2
+    assert device.has_alerts is True
 
     call_count = aioclient_mock.call_count
 
