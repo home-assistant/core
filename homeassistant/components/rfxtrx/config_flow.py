@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_COMMAND_ON,
     CONF_DEVICE,
     CONF_DEVICE_ID,
+    CONF_DEVICES,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import (
@@ -17,7 +18,8 @@ from homeassistant.helpers.device_registry import (
     async_get_registry,
 )
 
-from . import DOMAIN
+from . import DOMAIN, get_rfx_object
+from .binary_sensor import supported as binary_supported
 from .const import (
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
@@ -26,6 +28,9 @@ from .const import (
     CONF_OFF_DELAY,
     CONF_SIGNAL_REPETITIONS,
 )
+from .cover import supported as cover_supported
+from .light import supported as light_supported
+from .switch import supported as switch_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +43,7 @@ class OptionsFlow(config_entries.OptionsFlow):
         self._config_entry = config_entry
         self._global_options = None
         self._selected_device = None
+        self._selected_device_event_code = None
         self._device_entries = None
 
     async def async_step_init(self, user_input=None):
@@ -46,20 +52,40 @@ class OptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_prompt_options(self, user_input=None):
         """Prompt for options."""
+        errors = {}
+
         if user_input is not None:
             self._global_options = {
                 CONF_DEBUG: user_input[CONF_DEBUG],
                 CONF_AUTOMATIC_ADD: user_input[CONF_AUTOMATIC_ADD],
             }
             if CONF_DEVICE in user_input:
-                self._selected_device = user_input[CONF_DEVICE]
-                return await self.async_step_set_device_options()
+                event_code = None
+                for entry in self._device_entries:
+                    if entry.id == user_input[CONF_DEVICE]:
+                        device_id = next(iter(entry.identifiers))[1:]
+                        for packet_id, entity_info in self._config_entry.data[
+                            CONF_DEVICES
+                        ].items():
+                            if entity_info.get(CONF_DEVICE_ID) == device_id:
+                                event_code = packet_id
+                                break
+                        break
+                if not event_code:
+                    errors = {"base": "unknown_event_code"}
+                else:
+                    self._selected_device_event_code = event_code
+                    self._selected_device = self._config_entry.data[CONF_DEVICES][
+                        event_code
+                    ].copy()
+                    return await self.async_step_set_device_options()
             if CONF_DEVICE_ID in user_input:
                 return None
 
-            self.update_config_data(self._global_options)
+            if not errors:
+                self.update_config_data(self._global_options)
 
-            return self.async_create_entry(title="", data={})
+                return self.async_create_entry(title="", data={})
 
         device_registry = await async_get_registry(self.hass)
         device_entries = async_entries_for_config_entry(
@@ -82,7 +108,7 @@ class OptionsFlow(config_entries.OptionsFlow):
         }
 
         return self.async_show_form(
-            step_id="prompt_options", data_schema=vol.Schema(options)
+            step_id="prompt_options", data_schema=vol.Schema(options), errors=errors
         )
 
     async def async_step_set_device_options(self, user_input=None):
@@ -90,14 +116,56 @@ class OptionsFlow(config_entries.OptionsFlow):
         if user_input is not None:
             return None
 
+        device_data = self._selected_device
+
+        rfx_obj = get_rfx_object(self._selected_device_event_code)
+
         data_scheme = {
-            vol.Optional(CONF_FIRE_EVENT): bool,
-            vol.Optional(CONF_OFF_DELAY): int,
-            vol.Optional(CONF_DATA_BITS): int,
-            vol.Optional(CONF_COMMAND_ON): int,
-            vol.Optional(CONF_COMMAND_OFF): int,
-            vol.Optional(CONF_SIGNAL_REPETITIONS): int,
+            vol.Optional(
+                CONF_FIRE_EVENT, default=device_data.get(CONF_FIRE_EVENT, False)
+            ): bool,
         }
+
+        if binary_supported(rfx_obj):
+            data_scheme.update(
+                {
+                    vol.Optional(
+                        CONF_OFF_DELAY, default=device_data.get(CONF_OFF_DELAY, 0)
+                    ): int,
+                }
+            )
+
+        if (
+            binary_supported(rfx_obj)
+            or cover_supported(rfx_obj)
+            or light_supported(rfx_obj)
+            or switch_supported(rfx_obj)
+        ):
+            data_scheme.update(
+                {
+                    vol.Optional(
+                        CONF_SIGNAL_REPETITIONS,
+                        default=device_data.get(CONF_SIGNAL_REPETITIONS),
+                    ): int,
+                }
+            )
+
+        if rfx_obj.device.type_string == "PT2262":
+            data_scheme.update(
+                {
+                    vol.Optional(
+                        CONF_DATA_BITS, default=device_data.get(CONF_DATA_BITS, 0)
+                    ): int,
+                    vol.Optional(
+                        CONF_COMMAND_ON,
+                        default=hex(device_data.get(CONF_COMMAND_ON, 0)),
+                    ): str,
+                    vol.Optional(
+                        CONF_COMMAND_OFF,
+                        default=hex(device_data.get(CONF_COMMAND_OFF, 0)),
+                    ): str,
+                }
+            )
 
         return self.async_show_form(
             step_id="set_device_options", data_schema=vol.Schema(data_scheme)
