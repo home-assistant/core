@@ -430,7 +430,7 @@ class RoonDevice(MediaPlayerEntity):
             return self.media_stop()
 
     def set_shuffle(self, shuffle):
-        """Set shuffle state on zone."""
+        """Set shuffle state."""
         self._server.roonapi.shuffle(self.output_id, shuffle)
 
     def play_media(self, media_type, media_id, **kwargs):
