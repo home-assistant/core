@@ -33,8 +33,7 @@ class FloSwitch(FloEntity, SwitchEntity):
         """Return the icon to use for the valve."""
         if self.is_on:
             return "mdi:valve-open"
-        else:
-            return "mdi:valve-closed"
+        return "mdi:valve-closed"
 
     async def async_turn_on(self, **kwargs) -> None:
         """Open the valve."""
