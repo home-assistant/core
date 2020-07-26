@@ -45,6 +45,8 @@ async def test_device(hass, config_entry, aioclient_mock_fixture, aioclient_mock
     assert device.pending_critical_alerts_count == 0
     assert device.pending_warning_alerts_count == 2
     assert device.has_alerts is True
+    assert device.last_known_valve_state == "open"
+    assert device.target_valve_state == "open"
 
     call_count = aioclient_mock.call_count
 
