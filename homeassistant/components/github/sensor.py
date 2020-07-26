@@ -45,7 +45,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         DATA_REPOSITORY
     ]
 
-    async_add_entities([RepositorySensor(coordinator, repository)], True)
+    async_add_entities([LastCommitSensor(coordinator, repository)], True)
 
 
 class GitHubSensor(GitHubDeviceEntity):
@@ -60,42 +60,10 @@ class GitHubSensor(GitHubDeviceEntity):
         icon: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, f"{repository.full_name}_{unique_id}", name, icon)
-
-
-class RepositorySensor(GitHubSensor):
-    """Representation of a Repository Sensor."""
-
-    def __init__(
-        self, coordinator: DataUpdateCoordinator, repository: AIOGitHubAPIRepository
-    ) -> None:
-        """Initialize the sensor."""
-        self._clones = None
-        self._clones_unique = None
-        self._description = None
-        self._forks = None
-        self._homepage = None
-        self._latest_commit_message = None
-        self._latest_commit_sha = None
-        self._latest_open_issue_url = None
-        self._latest_open_pr_url = None
-        self._latest_release_tag = None
-        self._latest_release_url = None
-        self._open_issues = None
-        self._pull_requests = None
-        self._repo_name = None
-        self._stargazers = None
         self._state = None
-        self._topics = None
-        self._views = None
-        self._views_unique = None
-        self._watchers = None
+        self._attributes = None
 
-        name = repository.attributes.get("name")
-
-        super().__init__(
-            coordinator, repository, "repository", f"{name} Repository", "mdi:github"
-        )
+        super().__init__(coordinator, f"{repository.full_name}_{unique_id}", name, icon)
 
     @property
     def state(self) -> str:
@@ -103,29 +71,22 @@ class RepositorySensor(GitHubSensor):
         return self._state
 
     @property
-    def device_state_attributes(self) -> dict:
-        """Return the state attributes."""
-        return {
-            ATTR_CLONES: self._clones,
-            ATTR_CLONES_UNIQUE: self._clones_unique,
-            ATTR_DESCRIPTION: self._description,
-            ATTR_FORKS: self._forks,
-            ATTR_HOMEPAGE: self._homepage,
-            ATTR_LATEST_COMMIT_MESSAGE: self._latest_commit_message,
-            ATTR_LATEST_COMMIT_SHA: self._latest_commit_sha,
-            ATTR_LATEST_OPEN_ISSUE_URL: self._latest_open_issue_url,
-            ATTR_LATEST_OPEN_PULL_REQUEST_URL: self._latest_open_pr_url,
-            ATTR_LATEST_RELEASE_TAG: self._latest_release_tag,
-            ATTR_LATEST_RELEASE_URL: self._latest_release_url,
-            ATTR_NAME: self._repo_name,
-            ATTR_OPEN_ISSUES: self._open_issues,
-            ATTR_OPEN_PULL_REQUESTS: self._pull_requests,
-            ATTR_STARGAZERS: self._stargazers,
-            ATTR_TOPICS: self._topics,
-            ATTR_VIEWS: self._views,
-            ATTR_VIEWS_UNIQUE: self._views_unique,
-            ATTR_WATCHERS: self._watchers,
-        }
+    def device_state_attributes(self) -> object:
+        """Return the attributes of the sensor."""
+        return self._attributes
+
+
+class LastCommitSensor(GitHubSensor):
+    """Representation of a Repository Sensor."""
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, repository: AIOGitHubAPIRepository
+    ) -> None:
+        """Initialize the sensor."""
+        name = repository.attributes.get("name")
+        super().__init__(
+            coordinator, repository, "last_commit", f"{name} Last Commit", "mdi:github"
+        )
 
     async def _github_update(self) -> bool:
         """Fetch new state data for the sensor."""
@@ -133,36 +94,39 @@ class RepositorySensor(GitHubSensor):
 
         self._state = data.last_commit.sha_short
 
-        self._clones = data.clones.count
-        self._clones_unique = data.clones.count_uniques
-        self._description = data.repository.description
-        self._forks = data.repository.attributes.get("forks")
-        self._homepage = data.repository.attributes.get("homepage")
-        self._latest_commit_message = data.last_commit.message
-        self._latest_commit_sha = data.last_commit.sha
-        self._latest_open_issue_url = (
-            data.open_issues[0].html_url if len(data.open_issues) > 1 else ""
-        )
-        self._latest_open_pr_url = (
-            data.open_pull_requests[0].html_url
-            if len(data.open_pull_requests) > 1
-            else ""
-        )
-        self._latest_release_tag = (
-            data.releases[0].tag_name if len(data.releases) > 1 else ""
-        )
-        self._latest_release_url = (
-            f"https://github.com/{data.repository.full_name}/releases/{data.releases[0].tag_name}"
-            if len(data.releases) > 1
-            else ""
-        )
-        self._open_issues = len(data.open_issues)
-        self._pull_requests = len(data.open_pull_requests)
-        self._repo_name = data.repository.attributes.get("name")
-        self._stargazers = data.repository.attributes.get("stargazers_count")
-        self._topics = data.repository.topics
-        self._views = data.views.count
-        self._views_unique = data.views.count_uniques
-        self._watchers = data.repository.attributes.get("watchers_count")
+        self._attributes = {
+            ATTR_CLONES: data.clones.count,
+            ATTR_CLONES_UNIQUE: data.clones.count_uniques,
+            ATTR_DESCRIPTION: data.repository.description,
+            ATTR_FORKS: data.repository.attributes.get("forks"),
+            ATTR_HOMEPAGE: data.repository.attributes.get("homepage"),
+            ATTR_LATEST_COMMIT_MESSAGE: data.last_commit.message,
+            ATTR_LATEST_COMMIT_SHA: data.last_commit.sha,
+            ATTR_LATEST_OPEN_ISSUE_URL: (
+                data.open_issues[0].html_url if len(data.open_issues) > 1 else ""
+            ),
+            ATTR_LATEST_OPEN_PULL_REQUEST_URL: (
+                data.open_pull_requests[0].html_url
+                if len(data.open_pull_requests) > 1
+                else None
+            ),
+            ATTR_LATEST_RELEASE_TAG: (
+                data.releases[0].tag_name if len(data.releases) > 1 else ""
+            ),
+            ATTR_LATEST_RELEASE_URL: (
+                f"https://github.com/{data.repository.full_name}/releases/{data.releases[0].tag_name}"
+                if len(data.releases) > 1
+                else None
+            ),
+            ATTR_OPEN_ISSUES: len(data.open_issues),
+            ATTR_OPEN_PULL_REQUESTS: len(data.open_pull_requests),
+            ATTR_NAME: data.repository.attributes.get("name"),
+            ATTR_PATH: data.repository.full_name,
+            ATTR_STARGAZERS: data.repository.attributes.get("stargazers_count"),
+            ATTR_TOPICS: data.repository.topics,
+            ATTR_VIEWS: data.views.count,
+            ATTR_VIEWS_UNIQUE: data.views.count_uniques,
+            ATTR_WATCHERS: data.repository.attributes.get("watchers_count"),
+        }
 
         return True
