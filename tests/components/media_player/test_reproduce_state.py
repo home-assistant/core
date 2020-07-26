@@ -7,6 +7,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_POSITION,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
@@ -53,6 +54,8 @@ ENTITY_2 = "media_player.test2"
 async def test_state(hass, service, state):
     """Test that we can turn a state into a service call."""
     calls_1 = async_mock_service(hass, DOMAIN, service)
+    if service != SERVICE_TURN_ON:
+        async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
 
     await async_reproduce_states(hass, [State(ENTITY_1, state)])
 
@@ -149,7 +152,7 @@ async def test_attribute_no_state(hass):
     [
         (SERVICE_VOLUME_SET, ATTR_MEDIA_VOLUME_LEVEL),
         (SERVICE_VOLUME_MUTE, ATTR_MEDIA_VOLUME_MUTED),
-        (SERVICE_MEDIA_SEEK, ATTR_MEDIA_SEEK_POSITION),
+        (SERVICE_MEDIA_SEEK, ATTR_MEDIA_POSITION),
         (SERVICE_SELECT_SOURCE, ATTR_INPUT_SOURCE),
         (SERVICE_SELECT_SOUND_MODE, ATTR_SOUND_MODE),
     ],
@@ -165,7 +168,13 @@ async def test_attribute(hass, service, attribute):
     await hass.async_block_till_done()
 
     assert len(calls_1) == 1
-    assert calls_1[0].data == {"entity_id": ENTITY_1, attribute: value}
+    if attribute == ATTR_MEDIA_POSITION:
+        assert calls_1[0].data == {
+            "entity_id": ENTITY_1,
+            ATTR_MEDIA_SEEK_POSITION: value,
+        }
+    else:
+        assert calls_1[0].data == {"entity_id": ENTITY_1, attribute: value}
 
 
 async def test_play_media(hass):

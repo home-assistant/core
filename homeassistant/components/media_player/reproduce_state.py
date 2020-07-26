@@ -14,6 +14,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
     STATE_IDLE,
     STATE_OFF,
+    STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
 )
@@ -50,8 +51,6 @@ async def _async_reproduce_states(
 ) -> None:
     """Reproduce component states."""
 
-    _LOGGER.debug("Restoring state: %s", state)
-
     async def call_service(service: str, keys: Iterable) -> None:
         """Call service with set of attributes given."""
         data = {"entity_id": state.entity_id}
@@ -73,8 +72,13 @@ async def _async_reproduce_states(
         # entities that are off have no other attributes to restore
         return
 
-    await call_service(SERVICE_TURN_ON, [])
-    already_playing = False
+    if state.state in [
+        STATE_ON,
+        STATE_PLAYING,
+        STATE_IDLE,
+        STATE_PAUSED,
+    ]:
+        await call_service(SERVICE_TURN_ON, [])
 
     if ATTR_MEDIA_VOLUME_LEVEL in state.attributes:
         await call_service(SERVICE_VOLUME_SET, [ATTR_MEDIA_VOLUME_LEVEL])
@@ -87,6 +91,8 @@ async def _async_reproduce_states(
 
     if ATTR_SOUND_MODE in state.attributes:
         await call_service(SERVICE_SELECT_SOUND_MODE, [ATTR_SOUND_MODE])
+
+    already_playing = False
 
     if (ATTR_MEDIA_CONTENT_TYPE in state.attributes) and (
         ATTR_MEDIA_CONTENT_ID in state.attributes
