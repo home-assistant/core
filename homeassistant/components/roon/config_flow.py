@@ -1,4 +1,5 @@
 """Config flow for roon integration."""
+from asyncio import sleep
 import logging
 
 from roon import RoonApi
@@ -13,6 +14,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema({"host": str})
 
+TIMEOUT = 120
+
 
 class RoonHub:
     """Interact with roon during config flow."""
@@ -21,10 +24,19 @@ class RoonHub:
         """Initialize."""
         self._host = host
 
-    async def authenticate(self) -> bool:
+    async def authenticate(self, hass) -> bool:
         """Test if we can authenticate with the host."""
+        token = None
+        secs = 0
         try:
-            roonapi = RoonApi(ROON_APPINFO, None, self._host)
+            roonapi = RoonApi(ROON_APPINFO, None, self._host, blocking_init=False)
+            while secs < TIMEOUT:
+                token = roonapi.token
+                secs += 5
+                if token:
+                    break
+                await sleep(5, hass.loop)
+
         except Exception as error:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception %s", error)
             raise CannotConnect
@@ -38,7 +50,7 @@ async def authenticate(hass: core.HomeAssistant, host):
     """Connect and authenticate home assistant."""
 
     hub = RoonHub(host)
-    token = await hub.authenticate()
+    token = await hub.authenticate(hass)
     if token is None:
         raise InvalidAuth
 
