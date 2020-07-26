@@ -6,6 +6,15 @@ PLATFORMS = ["sensor"]
 DEFAULT_NAME = "Flume Sensor"
 
 FLUME_TYPE_SENSOR = 2
+FLUME_QUERIES_SENSOR = {
+    "current_interval": "Current",
+    "month_to_date": "Current Month",
+    "week_to_date": "Current Week",
+    "today": "Current Day",
+    "last_60_min": "60 Minutes",
+    "last_24_hrs": "24 Hours",
+    "last_30_days": "30 Days",
+}
 
 FLUME_AUTH = "flume_auth"
 FLUME_HTTP_SESSION = "http_session"
