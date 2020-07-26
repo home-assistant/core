@@ -6,7 +6,10 @@ from skybellpy import Skybell
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME, __version__
+    ATTR_ATTRIBUTION,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    __version__,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -46,8 +49,11 @@ def setup(hass, config):
     try:
         cache = hass.config.path(DEFAULT_CACHEDB)
         skybell = Skybell(
-            username=username, password=password, get_devices=True, cache_path=cache,
-            agent_identifier=AGENT_IDENTIFIER
+            username=username,
+            password=password,
+            get_devices=True,
+            cache_path=cache,
+            agent_identifier=AGENT_IDENTIFIER,
         )
 
         hass.data[DOMAIN] = skybell
