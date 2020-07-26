@@ -123,24 +123,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         latest_commit = await repository.client.get(
             endpoint=f"/repos/{repository.full_name}/branches/{repository.default_branch}"
         )
-        clones = await repository.client.get(
-            endpoint=f"/repos/{repository.full_name}/traffic/clones"
-        )
         issues: [AIOGitHubAPIRepositoryIssue] = await repository.get_issues()
         releases: [AIOGitHubAPIRepositoryRelease] = await repository.get_releases()
-        views = await repository.client.get(
-            endpoint=f"/repos/{repository.full_name}/traffic/views"
-        )
+        if repository.attributes.get("permissions").get("push") is True:
+            clones = await repository.client.get(
+                endpoint=f"/repos/{repository.full_name}/traffic/clones"
+            )
+            views = await repository.client.get(
+                endpoint=f"/repos/{repository.full_name}/traffic/views"
+            )
+        else:
+            clones = None
+            views = None
+
         return GitHubData(
             repository,
             GitHubLatestCommit(
                 latest_commit["commit"]["sha"],
                 latest_commit["commit"]["commit"]["message"],
             ),
-            GitHubClones(clones["count"], clones["uniques"]),
+            GitHubClones(clones["count"], clones["uniques"])
+            if clones is not None
+            else None,
             issues,
             releases,
-            GitHubViews(views["count"], views["uniques"]),
+            GitHubViews(views["count"], views["uniques"])
+            if views is not None
+            else None,
         )
 
     coordinator = DataUpdateCoordinator(

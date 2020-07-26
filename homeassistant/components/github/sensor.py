@@ -45,20 +45,20 @@ async def async_setup_entry(hass, entry, async_add_entities):
         DATA_REPOSITORY
     ]
 
-    async_add_entities(
-        [
-            ClonesSensor(coordinator, repository),
-            ForksSensor(coordinator, repository),
-            LatestCommitSensor(coordinator, repository),
-            LatestOpenIssueSensor(coordinator, repository),
-            LatestPullRequestSensor(coordinator, repository),
-            LatestReleaseSensor(coordinator, repository),
-            StargazersSensor(coordinator, repository),
-            ViewsSensor(coordinator, repository),
-            WatchersSensor(coordinator, repository),
-        ],
-        True,
-    )
+    sensors = [
+        ForksSensor(coordinator, repository),
+        LatestCommitSensor(coordinator, repository),
+        LatestOpenIssueSensor(coordinator, repository),
+        LatestPullRequestSensor(coordinator, repository),
+        LatestReleaseSensor(coordinator, repository),
+        StargazersSensor(coordinator, repository),
+        WatchersSensor(coordinator, repository),
+    ]
+    if repository.attributes.get("permissions").get("push") is True:
+        sensors.append(ClonesSensor(coordinator, repository))
+        sensors.append(ViewsSensor(coordinator, repository))
+
+    async_add_entities(sensors, True)
 
 
 class GitHubSensor(GitHubDeviceEntity):
