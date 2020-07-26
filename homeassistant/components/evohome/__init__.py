@@ -614,13 +614,12 @@ class EvoChild(EvoDevice):
     @property
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature of a Zone."""
-        if not self._evo_device.temperatureStatus["isAvailable"]:
-            return None
-
         if self._evo_broker.temps:
-            return self._evo_broker.temps[self._evo_device.zoneId]
+            if self._evo_broker.temps[self._evo_device.zoneId] != 128:
+                return self._evo_broker.temps[self._evo_device.zoneId]
 
-        return self._evo_device.temperatureStatus["temperature"]
+        if self._evo_device.temperatureStatus["isAvailable"]:
+            return self._evo_device.temperatureStatus["temperature"]
 
     @property
     def setpoints(self) -> Dict[str, Any]:
