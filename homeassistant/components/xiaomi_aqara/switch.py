@@ -43,7 +43,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     device, "Wall Switch", "channel_0", False, gateway, config_entry
                 )
             )
-        elif model in ["ctrl_ln1", "ctrl_ln1.aq1"]:
+        elif model in ["ctrl_ln1", "ctrl_ln1.aq1", "switch_b1nacn02"]:
             entities.append(
                 XiaomiGenericSwitch(
                     device, "Wall Switch LN", "channel_0", False, gateway, config_entry
