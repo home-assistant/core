@@ -71,7 +71,7 @@ PyTurboJPEG==1.4.0
 PyViCare==0.2.0
 
 # homeassistant.components.xiaomi_aqara
-PyXiaomiGateway==0.12.4
+PyXiaomiGateway==0.13.2
 
 # homeassistant.components.bmp280
 # homeassistant.components.mcp23017
