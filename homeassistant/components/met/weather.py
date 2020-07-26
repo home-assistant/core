@@ -111,12 +111,17 @@ class MetWeather(WeatherEntity):
         """Handle core config updated."""
         if self._config.get(CONF_TRACK_HOME):
 <<<<<<< HEAD
+<<<<<<< HEAD
             self.hass.data[DOMAIN]["home"].init_data()
             await self.hass.data[DOMAIN]["home"].fetch_data()
 =======
             self.hass.data[DOMAIN]['home'].init_data()
             await self.hass.data[DOMAIN]['home'].fetch_data()
 >>>>>>> Added CONF_TRACK_HOME handling
+=======
+            self.hass.data[DOMAIN]["home"].init_data()
+            await self.hass.data[DOMAIN]["home"].fetch_data()
+>>>>>>> black & flake8
 
     async def will_remove_from_hass(self):
         """Handle entity will be removed from hass."""
