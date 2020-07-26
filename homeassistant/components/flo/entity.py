@@ -62,6 +62,11 @@ class FloEntity(Entity):
         """Poll state from device."""
         return False
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {"device_id": self._device.id, "location_id": self._device.location_id}
+
     async def async_update(self):
         """Update Flo entity."""
         await self._device.async_request_refresh()
