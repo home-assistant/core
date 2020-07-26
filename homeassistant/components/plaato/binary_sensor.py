@@ -9,9 +9,8 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PROBLEM,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_TOKEN
 
-from .const import CONF_DEVICE_NAME, CONF_USE_WEBHOOK, DOMAIN
+from .const import CONF_USE_WEBHOOK, COORDINATOR, DOMAIN
 from .entity import PlaatoEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,14 +24,11 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up Plaato from a config entry."""
 
     if not config_entry.data.get(CONF_USE_WEBHOOK, False):
-        coordinator = hass.data[DOMAIN][config_entry.entry_id]
+        coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
         if coordinator.data is not None:
             async_add_devices(
                 PlaatoBinarySensor(
-                    config_entry.data[CONF_TOKEN],
-                    sensor_type,
-                    config_entry.data[CONF_DEVICE_NAME],
-                    coordinator,
+                    hass.data[DOMAIN][config_entry.entry_id], sensor_type, coordinator,
                 )
                 for sensor_type in coordinator.data.binary_sensors.keys()
             )

@@ -5,7 +5,23 @@ from datetime import timedelta
 import logging
 
 from aiohttp import web
-from pyplaato.plaato import Plaato, PlaatoDeviceType
+from pyplaato.models.airlock import PlaatoAirlock
+from pyplaato.plaato import (
+    ATTR_ABV,
+    ATTR_BATCH_VOLUME,
+    ATTR_BPM,
+    ATTR_BUBBLES,
+    ATTR_CO2_VOLUME,
+    ATTR_DEVICE_ID,
+    ATTR_DEVICE_NAME,
+    ATTR_OG,
+    ATTR_SG,
+    ATTR_TEMP,
+    ATTR_TEMP_UNIT,
+    ATTR_VOLUME_UNIT,
+    Plaato,
+    PlaatoDeviceType,
+)
 import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR
@@ -30,29 +46,19 @@ from .const import (
     CONF_DEVICE_NAME,
     CONF_DEVICE_TYPE,
     CONF_USE_WEBHOOK,
+    COORDINATOR,
+    DEVICE,
+    DEVICE_ID,
+    DEVICE_NAME,
+    DEVICE_TYPE,
     DOMAIN,
     PLATFORMS,
+    SENSOR_DATA,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ["webhook"]
-
-PLAATO_DEVICE_SENSORS = "sensors"
-PLAATO_DEVICE_ATTRS = "attrs"
-
-ATTR_DEVICE_ID = "device_id"
-ATTR_DEVICE_NAME = "device_name"
-ATTR_TEMP_UNIT = "temp_unit"
-ATTR_VOLUME_UNIT = "volume_unit"
-ATTR_BPM = "bpm"
-ATTR_TEMP = "temp"
-ATTR_SG = "sg"
-ATTR_OG = "og"
-ATTR_BUBBLES = "bubbles"
-ATTR_ABV = "abv"
-ATTR_CO2_VOLUME = "co2_volume"
-ATTR_BATCH_VOLUME = "batch_volume"
 
 SENSOR_UPDATE = f"{DOMAIN}_sensor_update"
 SENSOR_DATA_KEY = f"{DOMAIN}.{SENSOR}"
@@ -100,15 +106,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 hass.config_entries.async_forward_entry_setup(entry, platform)
             )
 
-    entry.add_update_listener(async_reload_entry)
+    entry.add_update_listener(_async_update_listener)
     return True
 
 
 def setup_webhook(hass: HomeAssistant, entry: ConfigEntry):
     """Init webhook based on config entry."""
     if entry.data[CONF_WEBHOOK_ID] is not None:
-        webhook_id = entry.data[CONF_WEBHOOK_ID]
-        device_name = entry.data[CONF_DEVICE_NAME]
+        webhook_id = entry.data.get(CONF_WEBHOOK_ID)
+        device_name = entry.data.get(CONF_DEVICE_NAME)
+        device_type = entry.data.get(CONF_DEVICE_TYPE)
+        device = {DEVICE_NAME: device_name, DEVICE_TYPE: device_type}
+
+        hass.data[DOMAIN][entry.entry_id] = {
+            COORDINATOR: None,
+            DEVICE: device,
+            SENSOR_DATA: None,
+        }
+
         hass.components.webhook.async_register(
             DOMAIN, f"{DOMAIN}.{device_name}", webhook_id, handle_webhook
         )
@@ -120,13 +135,22 @@ async def async_setup_coordinator(hass: HomeAssistant, entry: ConfigEntry):
     """Init auth token based on config entry."""
     auth_token = entry.data.get(CONF_TOKEN)
     device_type = entry.data.get(CONF_DEVICE_TYPE)
+    device = {
+        DEVICE_NAME: entry.data.get(CONF_DEVICE_NAME),
+        DEVICE_TYPE: device_type,
+        DEVICE_ID: auth_token,
+    }
 
     coordinator = PlaatoCoordinator(hass, auth_token, device_type)
     await coordinator.async_refresh()
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data[DOMAIN][entry.entry_id] = {
+        COORDINATOR: coordinator,
+        DEVICE: device,
+        SENSOR_DATA: None,
+    }
 
     for platform in PLATFORMS:
         if entry.options.get(platform, True):
@@ -157,14 +181,14 @@ async def async_unload_webhook(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unloaded:
-        hass.data[SENSOR_DATA_KEY]()
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unloaded
 
 
 async def async_unload_coordinator(hass: HomeAssistant, entry: ConfigEntry):
     """Unload auth token based entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
     unloaded = all(
         await asyncio.gather(
             *[
@@ -180,6 +204,10 @@ async def async_unload_coordinator(hass: HomeAssistant, entry: ConfigEntry):
     return unloaded
 
 
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
 
 async def handle_webhook(hass, webhook_id, request):
     """Handle incoming webhook from Plaato."""
@@ -190,31 +218,9 @@ async def handle_webhook(hass, webhook_id, request):
         return
 
     device_id = _device_id(data)
+    sensor_data = PlaatoAirlock.from_web_hook(data)
 
-    attrs = {
-        ATTR_DEVICE_NAME: data.get(ATTR_DEVICE_NAME),
-        ATTR_DEVICE_ID: data.get(ATTR_DEVICE_ID),
-        ATTR_TEMP_UNIT: data.get(ATTR_TEMP_UNIT),
-        ATTR_VOLUME_UNIT: data.get(ATTR_VOLUME_UNIT),
-    }
-
-    sensors = {
-        ATTR_TEMP: data.get(ATTR_TEMP),
-        ATTR_BPM: data.get(ATTR_BPM),
-        ATTR_SG: data.get(ATTR_SG),
-        ATTR_OG: data.get(ATTR_OG),
-        ATTR_ABV: data.get(ATTR_ABV),
-        ATTR_CO2_VOLUME: data.get(ATTR_CO2_VOLUME),
-        ATTR_BATCH_VOLUME: data.get(ATTR_BATCH_VOLUME),
-        ATTR_BUBBLES: data.get(ATTR_BUBBLES),
-    }
-
-    hass.data[DOMAIN][device_id] = {
-        PLAATO_DEVICE_ATTRS: attrs,
-        PLAATO_DEVICE_SENSORS: sensors,
-    }
-
-    async_dispatcher_send(hass, SENSOR_UPDATE, device_id)
+    async_dispatcher_send(hass, SENSOR_UPDATE, *(device_id, sensor_data))
 
     return web.Response(text=f"Saving status for {device_id}", status=HTTP_OK)
 

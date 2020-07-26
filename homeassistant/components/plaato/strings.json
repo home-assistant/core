@@ -32,10 +32,26 @@
     "abort": {
       "no_device": "No device was selected",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "webhook_not_internet_accessible": "[%key:common::config_flow::abort::webhook_not_internet_accessible%]"
+      "webhook_not_internet_accessible": "[%key:common::config_flow::abort::webhook_not_internet_accessible%]",
+      "already_configured": "Already configured"
     },
     "create_entry": {
       "default": "Your Plaato {device_type} with name **{device_name}** was successfully setup!"
+    }
+  },
+  "options": {
+    "step": {
+      "webhook": {
+        "title": "Options for Plaato Airlock",
+        "description": "Webhook info:\n\n- URL: `{webhook_url}`\n- Method: POST\n\n"
+      },
+      "user": {
+        "title": "Options for Plaato",
+        "description": "Set the update interval",
+        "data": {
+          "update_interval": "Update interval (minutes)"
+        }
+      }
     }
   }
 }

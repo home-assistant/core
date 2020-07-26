@@ -6,11 +6,15 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 
+from ...config_entries import ConfigEntry
 from .const import (
     CONF_CLOUDHOOK,
     CONF_DEVICE_NAME,
     CONF_DEVICE_TYPE,
+    CONF_UPDATE_INTERVAL,
     CONF_USE_WEBHOOK,
     DOCS_URL,
     PLACEHOLDER_DEVICE_NAME,
@@ -59,7 +63,7 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         device_name = self._init_info.get(CONF_DEVICE_NAME, None)
         device_type = PlaatoDeviceType(self._init_info.get(CONF_DEVICE_TYPE))
 
-        unique_id = auth_token if auth_token is not None else webhook_id
+        unique_id = auth_token if auth_token else webhook_id
 
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
@@ -122,11 +126,6 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_webhook(self, user_input=None):
         """Handle device type step."""
-        # pylint: disable=unused-variable
-        webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
-        self._init_info[CONF_WEBHOOK_ID] = webhook_id
-        self._init_info[CONF_CLOUDHOOK] = cloudhook
-
         return await self.async_step_create_entry()
 
     async def _show_api_method_form(self, device_type: PlaatoDeviceType):
@@ -156,3 +155,61 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             cloudhook = False
 
         return webhook_id, webhook_url, cloudhook
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return PlaatoOptionsFlowHandler(config_entry)
+
+
+class PlaatoOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle Plaato options."""
+
+    def __init__(self, config_entry: ConfigEntry):
+        """Initialize domain options flow."""
+        super().__init__()
+
+        self._config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        use_webhook = self._config_entry.data.get(CONF_USE_WEBHOOK, False)
+        if use_webhook:
+            return await self.async_step_webhook()
+
+        return await self.async_step_user()
+
+    async def async_step_user(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_UPDATE_INTERVAL,
+                        default=self._config_entry.options.get(CONF_UPDATE_INTERVAL, 5),
+                    ): cv.positive_int
+                }
+            ),
+        )
+
+    async def async_step_webhook(self, user_input=None):
+        """Manage the options for webhook device."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        webhook_id = self._config_entry.data.get(CONF_WEBHOOK_ID, None)
+        webhook_url = (
+            ""
+            if webhook_id is None
+            else self.hass.components.webhook.async_generate_url(webhook_id)
+        )
+
+        return self.async_show_form(
+            step_id="webhook",
+            description_placeholders={PLACEHOLDER_WEBHOOK_URL: webhook_url},
+        )

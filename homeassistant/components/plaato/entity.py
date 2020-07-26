@@ -1,31 +1,27 @@
 """PlaatoEntity class."""
-
-from pyplaato.plaato import PlaatoDeviceType
+from pyplaato.models.device import PlaatoDevice
 
 from homeassistant.helpers import entity
 
-from .const import DOMAIN
+from .const import DEVICE, DEVICE_ID, DEVICE_NAME, DEVICE_TYPE, DOMAIN, SENSOR_DATA
 
 
 class PlaatoEntity(entity.Entity):
     """Representation of a Plaato Entity."""
 
-    def __init__(self, device_id, sensor_type, device_name, coordinator=None):
+    def __init__(self, data, sensor_type, coordinator=None):
         """Initialize the sensor."""
+        sensor_data = data[SENSOR_DATA] if coordinator is None else coordinator.data
         self._coordinator = coordinator
-        self._device_id = device_id
+        self._sensor_data: PlaatoDevice = sensor_data
         self._sensor_type = sensor_type
-        self._device_type = PlaatoDeviceType.Airlock
-        self._device_name = device_name
-        self._name = f"{device_name} {sensor_type}"
-        self._attributes = None
-
-        if coordinator is not None:
-            self._device_type = coordinator.data.device_type
-            sensor_name = coordinator.data.get_sensor_name(self._sensor_type)
-            self._name = f"{device_name} {sensor_name}"
-            self._attributes = PlaatoEntity._to_snake_case(coordinator.data.attributes)
-
+        self._device_id = data[DEVICE].get(DEVICE_ID)
+        self._device_type = data[DEVICE].get(DEVICE_TYPE)
+        self._device_name = data[DEVICE].get(DEVICE_NAME)
+        self._name = (
+            f"{self._device_name} {self._sensor_data.get_sensor_name(sensor_type)}"
+        )
+        self._attributes = PlaatoEntity._to_snake_case(self._sensor_data.attributes)
         self._state = 0
 
     @property
@@ -41,16 +37,17 @@ class PlaatoEntity(entity.Entity):
     @property
     def device_info(self):
         """Get device info."""
-        fw_version = ""
-        if self._coordinator is not None:
-            fw_version = self._coordinator.data.firmware_version
-        return {
+        device_info = {
             "identifiers": {(DOMAIN, self._device_id)},
             "name": self._device_name,
             "manufacturer": "Plaato",
             "model": self._device_type,
-            "sw_version": fw_version,
         }
+
+        if self._sensor_data.firmware_version != "":
+            device_info["sw_version"] = self._sensor_data.firmware_version
+
+        return device_info
 
     @property
     def device_state_attributes(self):
@@ -73,7 +70,9 @@ class PlaatoEntity(entity.Entity):
     async def async_added_to_hass(self):
         """When entity is added to hass."""
         if self._coordinator is not None:
-            self.async_on_remove(self._coordinator.async_add_listener(self.async_write_ha_state))
+            self.async_on_remove(
+                self._coordinator.async_add_listener(self.async_write_ha_state)
+            )
         else:
             self.async_on_remove(
                 self.hass.helpers.dispatcher.async_dispatcher_connect(

@@ -30,13 +30,29 @@
       "no_api_method": "You need to add an auth token or select webhook"
     },
     "abort": {
-        "not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive messages from Plaato Airlock.",
-        "one_instance_allowed": "Only a single instance is necessary.",
-        "single_instance_allowed": "Already configured. Only a single configuration possible.",
-        "webhook_not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive webhook messages."
+      "no_device": "No device was selected",
+      "already_configured": "Already configured",
+      "one_instance_allowed": "Only a single instance is necessary.",
+      "single_instance_allowed": "Already configured. Only a single configuration possible.",
+      "webhook_not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive webhook messages."
     },
     "create_entry": {
       "default": "Your Plaato {device_type} with name **{device_name}** was successfully setup!"
+    }
+  },
+  "options": {
+    "step": {
+      "webhook": {
+        "title": "Options for Plaato Airlock",
+        "description": "\nWebhook info:\n\n- URL: `{webhook_url}`\n- Method: POST\n\n"
+      },
+      "user": {
+        "title": "Options for Plaato",
+        "description": "Set the update interval",
+        "data": {
+          "update_interval": "Update interval (minutes)"
+        }
+      }
     }
   }
 }
