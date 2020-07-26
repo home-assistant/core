@@ -121,6 +121,7 @@ async def async_process_requirements(
 
     async with pip_lock:
         for req in requirements:
+            _LOGGER.debug("is_installed: %s", req)
             if pkg_util.is_installed(req):
                 continue
 
