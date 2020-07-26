@@ -1,9 +1,5 @@
 """Constants for Roon Component."""
-import voluptuous as vol
-
-from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
 
 DOMAIN = "roon"
 
@@ -19,11 +15,6 @@ ROON_APPINFO = {
     "email": "home_assistant@users.noreply.github.com",
     "website": "https://www.home-assistant.io/",
 }
-
-CONFIG_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_HOST): cv.string, vol.Optional(CONF_API_KEY): cv.string},
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 class RoonException(HomeAssistantError):
