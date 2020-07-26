@@ -1,7 +1,8 @@
 """Test OpenZWave Websocket API."""
 
+from homeassistant.components.ozw.websocket_api import ID, NODE_ID, OZW_INSTANCE, TYPE
+
 from .common import setup_ozw
-from homeassistant.components.ozw.websocket_api import ID, TYPE, NODE_ID, OZW_INSTANCE
 
 
 async def test_sensor(hass, generic_data, hass_ws_client):
@@ -54,4 +55,3 @@ async def test_sensor(hass, generic_data, hass_ws_client):
     assert result["received_packets"] == 3594
     assert result["received_dup_packets"] == 12
     assert result["received_unsolicited"] == 3546
-

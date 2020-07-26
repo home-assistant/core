@@ -34,8 +34,8 @@ from .entity import (
     create_device_name,
     create_value_id,
 )
-from .websocket_api import ZWaveWebsocketApi
 from .services import ZWaveServices
+from .websocket_api import ZWaveWebsocketApi
 
 _LOGGER = logging.getLogger(__name__)
 
