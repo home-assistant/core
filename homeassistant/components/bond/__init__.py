@@ -1,17 +1,20 @@
 """The Bond integration."""
 import asyncio
 
-from bond import Bond
+from aiohttp import ClientTimeout
+from bond_api import Bond
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
 
 from .const import DOMAIN
 from .utils import BondHub
 
 PLATFORMS = ["cover", "fan", "light", "switch"]
+_API_TIMEOUT = SLOW_UPDATE_WARNING - 1
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -25,9 +28,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_ACCESS_TOKEN]
 
-    bond = Bond(bondIp=host, bondToken=token)
+    bond = Bond(host=host, token=token, timeout=ClientTimeout(total=_API_TIMEOUT))
     hub = BondHub(bond)
-    await hass.async_add_executor_job(hub.setup)
+    await hub.setup()
     hass.data[DOMAIN][entry.entry_id] = hub
 
     device_registry = await dr.async_get_registry(hass)

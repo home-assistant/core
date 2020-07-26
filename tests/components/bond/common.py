@@ -1,13 +1,16 @@
 """Common methods used across tests for Bond."""
+from asyncio import TimeoutError as AsyncIOTimeoutError
+from datetime import timedelta
 from typing import Any, Dict
 
 from homeassistant import core
 from homeassistant.components.bond.const import DOMAIN as BOND_DOMAIN
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component
+from homeassistant.util import utcnow
 
 from tests.async_mock import patch
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_HUB_VERSION: dict = {"bondid": "test-bond-id"}
 
@@ -21,9 +24,7 @@ async def setup_bond_entity(
 
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.bond.Bond.getVersion", return_value=hub_version
-    ):
+    with patch("homeassistant.components.bond.Bond.version", return_value=hub_version):
         return await hass.config_entries.async_setup(config_entry.entry_id)
 
 
@@ -45,13 +46,15 @@ async def setup_platform(
     mock_entry.add_to_hass(hass)
 
     with patch("homeassistant.components.bond.PLATFORMS", [platform]), patch(
-        "homeassistant.components.bond.Bond.getVersion", return_value=MOCK_HUB_VERSION
+        "homeassistant.components.bond.Bond.version", return_value=MOCK_HUB_VERSION
     ), patch_bond_device_ids(return_value=[bond_device_id],), patch(
-        "homeassistant.components.bond.Bond.getDevice", return_value=discovered_device
+        "homeassistant.components.bond.Bond.device", return_value=discovered_device
     ), patch_bond_device_state(
         return_value={}
     ), patch(
-        "homeassistant.components.bond.Bond.getProperties", return_value=props
+        "homeassistant.components.bond.Bond.device_properties", return_value=props
+    ), patch(
+        "homeassistant.components.bond.Bond.device_state", return_value={}
     ):
         assert await async_setup_component(hass, BOND_DOMAIN, {})
         await hass.async_block_till_done()
@@ -60,70 +63,46 @@ async def setup_platform(
 
 
 def patch_bond_device_ids(return_value=None):
-    """Patch Bond API getDeviceIds command."""
+    """Patch Bond API devices command."""
     if return_value is None:
         return_value = []
 
     return patch(
-        "homeassistant.components.bond.Bond.getDeviceIds", return_value=return_value,
+        "homeassistant.components.bond.Bond.devices", return_value=return_value,
     )
 
 
-def patch_bond_turn_on():
-    """Patch Bond API turnOn command."""
-    return patch("homeassistant.components.bond.Bond.turnOn")
+def patch_bond_action():
+    """Patch Bond API action command."""
+    return patch("homeassistant.components.bond.Bond.action")
 
 
-def patch_bond_turn_off():
-    """Patch Bond API turnOff command."""
-    return patch("homeassistant.components.bond.Bond.turnOff")
-
-
-def patch_bond_set_speed():
-    """Patch Bond API setSpeed command."""
-    return patch("homeassistant.components.bond.Bond.setSpeed")
-
-
-def patch_bond_set_flame():
-    """Patch Bond API setFlame command."""
-    return patch("homeassistant.components.bond.Bond.setFlame")
-
-
-def patch_bond_open():
-    """Patch Bond API open command."""
-    return patch("homeassistant.components.bond.Bond.open")
-
-
-def patch_bond_close():
-    """Patch Bond API close command."""
-    return patch("homeassistant.components.bond.Bond.close")
-
-
-def patch_bond_hold():
-    """Patch Bond API hold command."""
-    return patch("homeassistant.components.bond.Bond.hold")
-
-
-def patch_bond_set_direction():
-    """Patch Bond API setDirection command."""
-    return patch("homeassistant.components.bond.Bond.setDirection")
-
-
-def patch_turn_light_on():
-    """Patch Bond API turnLightOn command."""
-    return patch("homeassistant.components.bond.Bond.turnLightOn")
-
-
-def patch_turn_light_off():
-    """Patch Bond API turnLightOff command."""
-    return patch("homeassistant.components.bond.Bond.turnLightOff")
-
-
-def patch_bond_device_state(return_value=None):
-    """Patch Bond API getDeviceState command."""
+def patch_bond_device_state(return_value=None, side_effect=None):
+    """Patch Bond API device state endpoint."""
     if return_value is None:
         return_value = {}
 
     return patch(
-        "homeassistant.components.bond.Bond.getDeviceState", return_value=return_value
+        "homeassistant.components.bond.Bond.device_state",
+        return_value=return_value,
+        side_effect=side_effect,
     )
+
+
+async def help_test_entity_available(
+    hass: core.HomeAssistant, domain: str, device: Dict[str, Any], entity_id: str
+):
+    """Run common test to verify available property."""
+    await setup_platform(hass, domain, device)
+
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    with patch_bond_device_state(side_effect=AsyncIOTimeoutError()):
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    with patch_bond_device_state(return_value={}):
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE

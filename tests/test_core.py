@@ -1090,9 +1090,20 @@ def test_timer_out_of_sync(mock_monotonic, loop):
     ):
         callback(target)
 
-        event_type, event_data = hass.bus.async_fire.mock_calls[1][1]
-        assert event_type == EVENT_TIMER_OUT_OF_SYNC
-        assert abs(event_data[ATTR_SECONDS] - 2.433333) < 0.001
+        _, event_0_args, event_0_kwargs = hass.bus.async_fire.mock_calls[0]
+        event_context_0 = event_0_kwargs["context"]
+
+        event_type_0, _ = event_0_args
+        assert event_type_0 == EVENT_TIME_CHANGED
+
+        _, event_1_args, event_1_kwargs = hass.bus.async_fire.mock_calls[1]
+        event_type_1, event_data_1 = event_1_args
+        event_context_1 = event_1_kwargs["context"]
+
+        assert event_type_1 == EVENT_TIMER_OUT_OF_SYNC
+        assert abs(event_data_1[ATTR_SECONDS] - 2.433333) < 0.001
+
+        assert event_context_0 == event_context_1
 
         assert len(funcs) == 2
         fire_time_event, _ = funcs
@@ -1393,3 +1404,24 @@ async def test_start_events(hass):
         EVENT_HOMEASSISTANT_STARTED,
     ]
     assert core_states == [ha.CoreState.starting, ha.CoreState.running]
+
+
+async def test_log_blocking_events(hass, caplog):
+    """Ensure we log which task is blocking startup when debug logging is on."""
+    caplog.set_level(logging.DEBUG)
+
+    async def _wait_a_bit_1():
+        await asyncio.sleep(0.1)
+
+    async def _wait_a_bit_2():
+        await asyncio.sleep(0.1)
+
+    hass.async_create_task(_wait_a_bit_1())
+    await hass.async_block_till_done()
+
+    with patch.object(ha, "BLOCK_LOG_TIMEOUT", 0.00001):
+        hass.async_create_task(_wait_a_bit_2())
+        await hass.async_block_till_done()
+
+    assert "_wait_a_bit_2" in caplog.text
+    assert "_wait_a_bit_1" not in caplog.text
