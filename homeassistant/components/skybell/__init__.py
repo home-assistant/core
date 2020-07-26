@@ -25,7 +25,7 @@ DOMAIN = "skybell"
 DEFAULT_CACHEDB = "./skybell_cache.pickle"
 DEFAULT_ENTITY_NAMESPACE = "skybell"
 
-AGENT_IDENTIFIER = "HomeAssistant/{0}".format(__version__)
+AGENT_IDENTIFIER = f"HomeAssistant/{__version__}"
 
 CONFIG_SCHEMA = vol.Schema(
     {
