@@ -2,17 +2,13 @@
 from datetime import timedelta
 import logging
 
-from aiogithubapi import GitHub
-from aiogithubapi.objects.repository import (
-    AIOGitHubAPIRepository,
-    AIOGitHubAPIRepositoryIssue,
-    AIOGitHubAPIRepositoryRelease,
-)
+from aiogithubapi.objects.repository import AIOGitHubAPIRepository
 
 from homeassistant.const import ATTR_NAME
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import GitHubDeviceEntity
-from .const import CONF_REPOSITORY, DOMAIN
+from . import GitHubData, GitHubDeviceEntity
+from .const import DATA_COORDINATOR, DATA_REPOSITORY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,22 +32,28 @@ ATTR_VIEWS = "views"
 ATTR_VIEWS_UNIQUE = "views_unique"
 ATTR_WATCHERS = "watchers"
 
-
 SCAN_INTERVAL = timedelta(seconds=300)
+PARALLEL_UPDATES = 4
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the sensor platform."""
-    github = hass.data[DOMAIN][entry.entry_id]
-    repository = entry.data[CONF_REPOSITORY]
+    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        DATA_COORDINATOR
+    ]
+    repository: AIOGitHubAPIRepository = hass.data[DOMAIN][entry.entry_id][
+        DATA_REPOSITORY
+    ]
 
-    async_add_entities([RepositorySensor(github, repository)], True)
+    async_add_entities([RepositorySensor(coordinator, repository)], True)
 
 
 class RepositorySensor(GitHubDeviceEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, github: GitHub, repository: str):
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, repository: AIOGitHubAPIRepository
+    ) -> None:
         """Initialize the sensor."""
         self._clones = None
         self._clones_unique = None
@@ -75,16 +77,19 @@ class RepositorySensor(GitHubDeviceEntity):
         self._watchers = None
 
         super().__init__(
-            github, repository, f"{repository}_sensor", repository, "mdi:github"
+            coordinator,
+            f"{repository.full_name}_sensor",
+            repository.full_name,
+            "mdi:github",
         )
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> dict:
         """Return the state attributes."""
         return {
             ATTR_CLONES: self._clones,
@@ -101,7 +106,6 @@ class RepositorySensor(GitHubDeviceEntity):
             ATTR_NAME: self._name,
             ATTR_OPEN_ISSUES: self._open_issues,
             ATTR_OPEN_PULL_REQUESTS: self._pull_requests,
-            ATTR_PATH: self._repository,
             ATTR_STARGAZERS: self._stargazers,
             ATTR_TOPICS: self._topics,
             ATTR_VIEWS: self._views,
@@ -109,73 +113,42 @@ class RepositorySensor(GitHubDeviceEntity):
             ATTR_WATCHERS: self._watchers,
         }
 
-    async def async_update(self):
+    async def _github_update(self) -> bool:
         """Fetch new state data for the sensor."""
-        repository: AIOGitHubAPIRepository = await self._github.get_repo(
-            self._repository
+        data: GitHubData = self._coordinator.data
+
+        self._state = data.last_commit.sha_short
+
+        self._clones = data.clones.count
+        self._clones_unique = data.clones.count_uniques
+        self._description = data.repository.description
+        self._forks = data.repository.attributes.get("forks")
+        self._homepage = data.repository.attributes.get("homepage")
+        self._latest_commit_message = data.last_commit.message
+        self._latest_commit_sha = data.last_commit.sha
+        self._latest_open_issue_url = (
+            data.open_issues[0].html_url if len(data.open_issues) > 1 else ""
         )
-        if repository is None:
-            _LOGGER.error("Cannot find repository")
-            self._available = False
-            return
-
-        # TODO: Disable by default using option flow
-        last_commit = await repository.client.get(
-            endpoint=f"/repos/{repository.full_name}/branches/{repository.default_branch}"
-        )
-
-        # TODO: Disable by default using option flow
-        clones = await repository.client.get(
-            endpoint=f"/repos/{repository.full_name}/traffic/clones"
-        )
-
-        # TODO: Disable by default using option flow
-        views = await repository.client.get(
-            endpoint=f"/repos/{repository.full_name}/traffic/views"
-        )
-
-        # TODO: Disable by default using option flow
-        releases: AIOGitHubAPIRepositoryRelease = await repository.get_releases()
-
-        # TODO: Disable by default using option flow
-        all_issues: [AIOGitHubAPIRepositoryIssue] = await repository.get_issues()
-        issues: [AIOGitHubAPIRepositoryIssue] = []
-        pull_requests: [AIOGitHubAPIRepositoryIssue] = []
-        for issue in all_issues:
-            if issue.state == "open":
-                if "pull" in issue.html_url:
-                    pull_requests.append(issue)
-                else:
-                    issues.append(issue)
-
-        self._state = last_commit["commit"]["sha"][0:7]
-
-        self._clones = clones["count"]
-        self._clones_unique = clones["uniques"]
-        self._description = repository.description
-        self._forks = repository.attributes.get("forks")
-        self._homepage = repository.attributes.get("homepage")
-        self._latest_commit_message = last_commit["commit"]["commit"][
-            "message"
-        ].splitlines()[0]
-        self._latest_commit_sha = last_commit["commit"]["sha"]
-        self._latest_open_issue_url = issues[0].html_url if len(issues) > 1 else ""
         self._latest_open_pr_url = (
-            pull_requests[0].html_url if len(pull_requests) > 1 else ""
-        )
-        self._latest_release_tag = releases[0].tag_name if len(releases) > 1 else ""
-        self._latest_release_url = (
-            f"https://github.com/{repository.full_name}/releases/{releases[0].tag_name}"
-            if len(releases) > 1
+            data.open_pull_requests[0].html_url
+            if len(data.open_pull_requests) > 1
             else ""
         )
-        self._name = repository.attributes.get("name")
-        self._open_issues = len(issues)
-        self._pull_requests = len(pull_requests)
-        self._stargazers = repository.attributes.get("stargazers_count")
-        self._topics = repository.topics
-        self._views = views["count"]
-        self._views_unique = views["uniques"]
-        self._watchers = repository.attributes.get("watchers_count")
+        self._latest_release_tag = (
+            data.releases[0].tag_name if len(data.releases) > 1 else ""
+        )
+        self._latest_release_url = (
+            f"https://github.com/{data.repository.full_name}/releases/{data.releases[0].tag_name}"
+            if len(data.releases) > 1
+            else ""
+        )
+        self._name = data.repository.attributes.get("name")
+        self._open_issues = len(data.open_issues)
+        self._pull_requests = len(data.open_pull_requests)
+        self._stargazers = data.repository.attributes.get("stargazers_count")
+        self._topics = data.repository.topics
+        self._views = data.views.count
+        self._views_unique = data.views.count_uniques
+        self._watchers = data.repository.attributes.get("watchers_count")
 
-        self._available = True
+        return True

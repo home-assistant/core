@@ -1,24 +1,96 @@
 """The GitHub integration."""
 import asyncio
+from datetime import timedelta
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from aiogithubapi import (
     AIOGitHubAPIAuthenticationException,
     AIOGitHubAPIException,
     GitHub,
 )
+from aiogithubapi.objects.repository import (
+    AIOGitHubAPIRepository,
+    AIOGitHubAPIRepositoryIssue,
+    AIOGitHubAPIRepositoryRelease,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import Config, HomeAssistant
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_REPOSITORY, DOMAIN
+from .const import CONF_REPOSITORY, DATA_COORDINATOR, DATA_REPOSITORY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"]
+
+
+class GitHubClones:
+    """Represents a GitHub clones object."""
+
+    def __init__(self, count: int, count_uniques: int) -> None:
+        """Initialize a GitHub clones object."""
+        self.count = count
+        self.count_uniques = count_uniques
+
+
+class GitHubLastCommit:
+    """Represents a GitHub last commit object."""
+
+    def __init__(self, sha: int, message: str) -> None:
+        """Initialize a GitHub last commit object."""
+        self.sha = sha
+        self.sha_short = sha[0:7]
+        self.message = message.splitlines()[0]
+
+
+class GitHubViews:
+    """Represents a GitHub views object."""
+
+    def __init__(self, count: int, count_uniques: int) -> None:
+        """Initialize a GitHub views object."""
+        self.count = count
+        self.count_uniques = count_uniques
+
+
+class GitHubData:
+    """Represents a GitHub data object."""
+
+    def __init__(
+        self,
+        repository: AIOGitHubAPIRepository,
+        last_commit: GitHubLastCommit,
+        clones: GitHubClones = None,
+        issues: List[AIOGitHubAPIRepositoryIssue] = None,
+        releases: List[AIOGitHubAPIRepositoryRelease] = None,
+        views: GitHubViews = None,
+    ) -> None:
+        """Initialize the GitHub data object."""
+        self.repository = repository
+        self.last_commit = last_commit
+        self.clones = clones
+        self.issues = issues
+        self.releases = releases
+        self.views = views
+
+        if issues is not None:
+            open_issues: List[AIOGitHubAPIRepositoryIssue] = []
+            open_pull_requests: List[AIOGitHubAPIRepositoryIssue] = []
+            for issue in issues:
+                if issue.state == "open":
+                    if "pull" in issue.html_url:
+                        open_pull_requests.append(issue)
+                    else:
+                        open_issues.append(issue)
+
+            self.open_issues = open_issues
+            self.open_pull_requests = open_pull_requests
+        else:
+            self.open_issues = None
+            self.open_pull_requests = None
 
 
 async def async_setup(hass: HomeAssistant, config: Config) -> bool:
@@ -30,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up GitHub from a config entry."""
     try:
         github = GitHub(entry.data[CONF_ACCESS_TOKEN])
-        await github.get_repo(entry.data[CONF_REPOSITORY])
+        repository = await github.get_repo(entry.data[CONF_REPOSITORY])
     except (AIOGitHubAPIAuthenticationException, AIOGitHubAPIException):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
@@ -39,7 +111,51 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
         return False
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = github
+    # TODO: Disable extra REST calls by default using option flow
+    async def async_update_data() -> GitHubData:
+        """Fetch data from GitHub."""
+        repository: AIOGitHubAPIRepository = await github.get_repo(
+            entry.data[CONF_REPOSITORY]
+        )
+        last_commit = await repository.client.get(
+            endpoint=f"/repos/{repository.full_name}/branches/{repository.default_branch}"
+        )
+        clones = await repository.client.get(
+            endpoint=f"/repos/{repository.full_name}/traffic/clones"
+        )
+        issues: [AIOGitHubAPIRepositoryIssue] = await repository.get_issues()
+        releases: [AIOGitHubAPIRepositoryRelease] = await repository.get_releases()
+        views = await repository.client.get(
+            endpoint=f"/repos/{repository.full_name}/traffic/views"
+        )
+        return GitHubData(
+            repository,
+            GitHubLastCommit(
+                last_commit["commit"]["sha"], last_commit["commit"]["commit"]["message"]
+            ),
+            GitHubClones(clones["count"], clones["uniques"]),
+            issues,
+            releases,
+            GitHubViews(views["count"], views["uniques"]),
+        )
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        # Name of the data. For logging purposes.
+        name=DOMAIN,
+        update_method=async_update_data,
+        # Polling interval. Will only be polled if there are subscribers.
+        update_interval=timedelta(seconds=300),
+    )
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        DATA_COORDINATOR: coordinator,
+        DATA_REPOSITORY: repository,
+    }
+
+    # Fetch initial data so we have data when entities subscribe
+    await coordinator.async_refresh()
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -69,11 +185,10 @@ class GitHubEntity(Entity):
     """Defines a GitHub entity."""
 
     def __init__(
-        self, github: GitHub, repository: str, unique_id: str, name: str, icon: str
+        self, coordinator: DataUpdateCoordinator, unique_id: str, name: str, icon: str
     ) -> None:
         """Set up GitHub Entity."""
-        self._github = github
-        self._repository = repository
+        self._coordinator = coordinator
         self._unique_id = unique_id
         self._name = name
         self._icon = icon
@@ -97,7 +212,23 @@ class GitHubEntity(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._available
+        return self._coordinator.last_update_success and self._available
+
+    @property
+    def should_poll(self):
+        """No need to poll. Coordinator notifies entity of updates."""
+        return False
+
+    async def async_update(self) -> None:
+        """Update GitHub entity."""
+        if await self._github_update():
+            self._available = True
+        else:
+            self._available = False
+
+    async def _github_update(self) -> bool:
+        """Update GitHub entity."""
+        raise NotImplementedError()
 
 
 class GitHubDeviceEntity(GitHubEntity):
@@ -106,8 +237,10 @@ class GitHubDeviceEntity(GitHubEntity):
     @property
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this GitHub instance."""
+        data: GitHubData = self._coordinator.data
+
         return {
-            "identifiers": {(DOMAIN, self._repository)},
-            "manufacturer": self._repository.split("/")[0],
-            "name": self._repository,
+            "identifiers": {(DOMAIN, data.repository.full_name)},
+            "manufacturer": data.repository.attributes.get("owner").get("login"),
+            "name": data.repository.full_name,
         }
