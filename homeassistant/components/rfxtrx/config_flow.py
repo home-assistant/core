@@ -57,7 +57,9 @@ class OptionsFlow(config_entries.OptionsFlow):
             if CONF_DEVICE_ID in user_input:
                 return None
 
-            return self.async_create_entry(title="", data=self._global_options)
+            self.update_config_data(self._global_options)
+
+            return self.async_create_entry(title="", data={})
 
         device_registry = await async_get_registry(self.hass)
         device_entries = async_entries_for_config_entry(
@@ -100,6 +102,20 @@ class OptionsFlow(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="set_device_options", data_schema=vol.Schema(data_scheme)
         )
+
+    @callback
+    def update_config_data(self, data):
+        """Update data in ConfigEntry."""
+        entry_data = self._config_entry.data.copy()
+        entry_data.update(data)
+        self.hass.config_entries.async_update_entry(self._config_entry, data=entry_data)
+        self.hass.async_create_task(async_update_options(self.hass, self._config_entry))
+
+
+@callback
+def async_update_options(hass, config_entry: ConfigEntry):
+    """Update options."""
+    hass.config_entries.async_reload(config_entry.entry_id)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
