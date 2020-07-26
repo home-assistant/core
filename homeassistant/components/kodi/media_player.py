@@ -7,7 +7,7 @@ import socket
 import urllib
 
 import aiohttp
-from datatime import timedelta
+from datetime import timedelta
 import jsonrpc_async
 import jsonrpc_base
 import jsonrpc_websocket
