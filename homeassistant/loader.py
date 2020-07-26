@@ -336,6 +336,8 @@ async def async_get_integration(hass: "HomeAssistant", domain: str) -> Integrati
             raise IntegrationNotFound(domain)
         cache = hass.data[DATA_INTEGRATIONS] = {}
 
+    _LOGGER.debug("async_get_integration: %s", domain)
+
     int_or_evt: Union[Integration, asyncio.Event, None] = cache.get(domain, _UNDEF)
 
     if isinstance(int_or_evt, asyncio.Event):
