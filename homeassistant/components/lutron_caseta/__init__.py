@@ -137,8 +137,7 @@ class LutronCasetaDevice(Entity):
                 "manufacturer": "Lutron",
                 "model": self._device.get("model"),
             }
-        else:
-            return None
+        return None
 
     @property
     def device_state_attributes(self):
