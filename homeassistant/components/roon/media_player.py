@@ -14,7 +14,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SEEK,
-    SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET,
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
@@ -55,7 +54,6 @@ SUPPORT_ROON = (
     | SUPPORT_VOLUME_MUTE
     | SUPPORT_PLAY
     | SUPPORT_PLAY_MEDIA
-    | SUPPORT_SELECT_SOURCE
     | SUPPORT_VOLUME_STEP
 )
 
@@ -92,7 +90,6 @@ class RoonDevice(MediaPlayerEntity):
     def __init__(self, server, player_data):
         """Initialize Roon device object."""
         self._remove_signal_status = None
-        self._sources = []
         self._server = server
         self._available = True
         self._last_position_update = None
@@ -112,7 +109,6 @@ class RoonDevice(MediaPlayerEntity):
         self._media_duration = 0
         self._is_volume_muted = False
         self._volume_step = 0
-        self._source = None
         self._shuffle = False
         self._repeat = False
         self._media_image_url = None
@@ -181,7 +177,6 @@ class RoonDevice(MediaPlayerEntity):
             self._state = STATE_OFF
         else:
             self._available = True
-            self._sources = self.get_sync_zones()
             # determine player state
             self.update_state()
             if self.state == STATE_PLAYING:
@@ -219,7 +214,6 @@ class RoonDevice(MediaPlayerEntity):
         self._name = self.player_data["display_name"]
         self._is_volume_muted = self.player_data["volume"]["is_muted"]
         self._volume_step = convert(self.player_data["volume"]["step"], int, 0)
-        self._source = self.player_data["zone_name"]
         self._shuffle = self.player_data["settings"]["shuffle"]
         self._repeat = self.player_data["settings"]["loop"]
 
@@ -256,18 +250,6 @@ class RoonDevice(MediaPlayerEntity):
             self._media_position = 0
             self._media_duration = 0
             self._media_image_url = None
-
-    def get_sync_zones(self):
-        """Get available sync slaves."""
-        sync_zones = [self.name]
-        for zone in self._server.zones.values():
-            for output in zone["outputs"]:
-                if (
-                    output["output_id"] in self.player_data["can_group_with_output_ids"]
-                    and zone["display_name"] not in sync_zones
-                ):
-                    sync_zones.append(zone["display_name"])
-        return sync_zones
 
     @property
     def media_position_updated_at(self):
@@ -376,16 +358,6 @@ class RoonDevice(MediaPlayerEntity):
         return self.state == STATE_PLAYING
 
     @property
-    def source(self):
-        """Name of the current input source."""
-        return self._source
-
-    @property
-    def source_list(self):
-        """List of available input sources."""
-        return self._sources
-
-    @property
     def shuffle(self):
         """Boolean if shuffle is enabled."""
         return self._shuffle
@@ -473,22 +445,6 @@ class RoonDevice(MediaPlayerEntity):
     def set_shuffle(self, shuffle):
         """Set shuffle state on zone."""
         self._server.roonapi.shuffle(self.output_id, shuffle)
-
-    def select_source(self, source):
-        """Select source on player (used to sync/unsync)."""
-        _LOGGER.debug("select source called - unsync %s", self.name)
-        if source == self.name:
-            self._server.roonapi.ungroup_outputs([self.output_id])
-        else:
-            _LOGGER.debug("select source called - sync %s with %s", self.name, source)
-            output_ids = []
-            for _, zone in self._server.zones.items():
-                if zone["display_name"].lower() == source.lower():
-                    for output in zone["outputs"]:
-                        output_ids.append(output["output_id"])
-                    output_ids.append(self.output_id)
-                    self._server.roonapi.group_outputs(output_ids)
-                    break
 
     def play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
