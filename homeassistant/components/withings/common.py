@@ -582,7 +582,9 @@ class DataManager:
             update_interval=timedelta(minutes=120),
             update_method=self.async_subscribe_webhook,
         )
-        self.poll_data_update_coordinator = DataUpdateCoordinator(
+        self.poll_data_update_coordinator = DataUpdateCoordinator[
+            Dict[MeasureType, Any]
+        ](
             hass,
             _LOGGER,
             name="poll_data_update_coordinator",

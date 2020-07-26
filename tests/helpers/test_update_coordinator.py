@@ -19,12 +19,12 @@ def get_crd(hass, update_interval):
     """Make coordinator mocks."""
     calls = 0
 
-    async def refresh():
+    async def refresh() -> int:
         nonlocal calls
         calls += 1
         return calls
 
-    crd = update_coordinator.DataUpdateCoordinator(
+    crd = update_coordinator.DataUpdateCoordinator[int](
         hass,
         LOGGER,
         name="test",
