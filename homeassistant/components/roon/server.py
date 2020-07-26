@@ -1,5 +1,5 @@
 """Code to handle the api connection to a Roon server."""
-from asyncio import ensure_future, run_coroutine_threadsafe, sleep
+from asyncio import create_task, sleep
 import logging
 
 from roon import RoonApi
@@ -22,9 +22,9 @@ class RoonServer:
         self.config_entry = config_entry
         self.hass = hass
         self.roonapi = None
-        self.all_player_ids = []
+        self.all_player_ids = set()
         self.all_playlists = []
-        self.offline_devices = []
+        self.offline_devices = set()
         self._exit = False
 
     @property
@@ -51,7 +51,7 @@ class RoonServer:
         )
 
         # Initialize Roon background polling
-        ensure_future(self.async_do_loop())
+        create_task(self.async_do_loop())
 
         return True
 
@@ -76,9 +76,7 @@ class RoonServer:
 
     def roonapi_state_callback(self, event, changed_zones):
         """Callbacks from the roon api websockets."""
-        run_coroutine_threadsafe(
-            self.async_update_changed_players(changed_zones), self.hass.loop
-        )
+        self.hass.add_job(self.async_update_changed_players(changed_zones))
 
     async def async_do_loop(self):
         """Background work loop."""
@@ -107,8 +105,7 @@ class RoonServer:
                     # player back online
                     self.offline_devices.remove(dev_id)
                 async_dispatcher_send(self.hass, "roon_media_player", player_data)
-                if dev_id not in self.all_player_ids:
-                    self.all_player_ids.append(dev_id)
+                self.all_player_ids.add(dev_id)
 
     async def async_update_players(self):
         """Periodic full scan of all devices."""
@@ -116,19 +113,19 @@ class RoonServer:
         await self.async_update_changed_players(zone_ids)
         # check for any removed devices
         all_devs = {}
-        for zone_id in zone_ids:
-            zone = self.roonapi.zones[zone_id]
+        for zone in self.roonapi.zones.values():
             for device in zone["outputs"]:
                 player_data = await self.async_create_player_data(zone, device)
                 dev_id = player_data["dev_id"]
                 all_devs[dev_id] = player_data
         for dev_id in self.all_player_ids:
-            if dev_id not in all_devs.keys():
-                # player was removed!
-                player_data = {"dev_id": dev_id}
-                player_data["is_available"] = False
-                async_dispatcher_send(self.hass, "roon_media_player", player_data)
-                self.offline_devices.append(dev_id)
+            if dev_id in all_devs:
+                continue
+            # player was removed!
+            player_data = {"dev_id": dev_id}
+            player_data["is_available"] = False
+            async_dispatcher_send(self.hass, "roon_media_player", player_data)
+            self.offline_devices.add(dev_id)
 
     async def async_update_playlists(self):
         """Store lists in memory with all playlists - could be used by a custom lovelace card."""

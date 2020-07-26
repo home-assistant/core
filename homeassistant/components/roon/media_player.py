@@ -117,27 +117,19 @@ class RoonDevice(MediaPlayerEntity):
 
     async def async_added_to_hass(self):
         """Register callback."""
-        self._remove_signal_status = async_dispatcher_connect(
-            self.hass,
-            f"room_media_player_update_{self.unique_id}",
-            self.async_update_callback,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"room_media_player_update_{self.unique_id}",
+                self.async_update_callback,
+            )
         )
-
-    async def async_will_remove_from_hass(self):
-        """Call when entity will be removed from hass."""
-        if self._remove_signal_status:
-            self._remove_signal_status()
 
     @callback
     def async_update_callback(self, player_data):
         """Handle device updates."""
         self.update_data(player_data)
         self.async_write_ha_state()
-
-    @property
-    def hidden(self):
-        """Return True if entity should be hidden from UI."""
-        return not self._available
 
     @property
     def available(self):
@@ -163,10 +155,6 @@ class RoonDevice(MediaPlayerEntity):
             "via_hub": (DOMAIN, self._server.host),
         }
 
-    async def async_update(self):
-        """Retrieve the current state of the player."""
-        self.update_data(self.player_data)
-
     def update_data(self, player_data=None):
         """Update session object."""
         if player_data:
@@ -188,12 +176,11 @@ class RoonDevice(MediaPlayerEntity):
         # power state from source control (if supported)
         if "source_controls" in self.player_data:
             for source in self.player_data["source_controls"]:
-                if source["supports_standby"]:
-                    if not source["status"] == "indeterminate":
-                        self._supports_standby = True
-                        if source["status"] in ["standby", "deselected"]:
-                            new_state = STATE_OFF
-                        break
+                if source["supports_standby"] and source["status"] != "indeterminate":
+                    self._supports_standby = True
+                    if source["status"] in ["standby", "deselected"]:
+                        new_state = STATE_OFF
+                    break
         # determine player state
         if not new_state:
             if self.player_data["state"] == "playing":
