@@ -1,14 +1,27 @@
 """Sensor platform for GitHub integration."""
-from datetime import timedelta
 import logging
 
 from aiogithubapi.objects.repository import AIOGitHubAPIRepository
 
 from homeassistant.const import ATTR_DATE, ATTR_ID, ATTR_NAME
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import GitHubData, GitHubDeviceEntity
-from .const import DATA_COORDINATOR, DATA_REPOSITORY, DOMAIN
+from .const import (
+    CONF_CLONES,
+    CONF_ISSUES_PRS,
+    CONF_LATEST_COMMIT,
+    CONF_LATEST_RELEASE,
+    CONF_VIEWS,
+    DATA_COORDINATOR,
+    DATA_REPOSITORY,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,9 +45,6 @@ ATTR_UNIQUE = "unique"
 ATTR_URL = "url"
 ATTR_USER = "user"
 
-SCAN_INTERVAL = timedelta(seconds=300)
-PARALLEL_UPDATES = 4
-
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the sensor platform."""
@@ -45,20 +55,49 @@ async def async_setup_entry(hass, entry, async_add_entities):
         DATA_REPOSITORY
     ]
 
-    sensors = [
-        ForksSensor(coordinator, repository),
-        LatestCommitSensor(coordinator, repository),
-        LatestOpenIssueSensor(coordinator, repository),
-        LatestPullRequestSensor(coordinator, repository),
-        LatestReleaseSensor(coordinator, repository),
-        StargazersSensor(coordinator, repository),
-        WatchersSensor(coordinator, repository),
-    ]
-    if repository.attributes.get("permissions").get("push") is True:
-        sensors.append(ClonesSensor(coordinator, repository))
-        sensors.append(ViewsSensor(coordinator, repository))
+    @callback
+    def add_sensor_entities():
+        """Add sensor entities."""
+        sensors = [
+            ForksSensor(coordinator, repository),
+            StargazersSensor(coordinator, repository),
+            WatchersSensor(coordinator, repository),
+        ]
+        if (
+            entry.options.get(CONF_CLONES, False) is True
+            and repository.attributes.get("permissions").get("push") is True
+        ):
+            sensors.append(ClonesSensor(coordinator, repository))
+        if entry.options.get(CONF_LATEST_COMMIT, True) is True:
+            sensors.append(LatestCommitSensor(coordinator, repository))
+        if entry.options.get(CONF_ISSUES_PRS, False) is True:
+            sensors.append(LatestOpenIssueSensor(coordinator, repository))
+            sensors.append(LatestPullRequestSensor(coordinator, repository))
+        if entry.options.get(CONF_LATEST_RELEASE, False) is True:
+            sensors.append(LatestReleaseSensor(coordinator, repository))
+        if (
+            entry.options.get(CONF_VIEWS, False) is True
+            and repository.attributes.get("permissions").get("push") is True
+        ):
+            sensors.append(ViewsSensor(coordinator, repository))
 
-    async_add_entities(sensors, True)
+        _LOGGER.warning("Add Sensors")
+        _LOGGER.warning(sensors)
+
+        async_add_entities(sensors, False)
+
+    async_dispatcher_connect(
+        hass, f"signal-{DOMAIN}-sensors-update-{entry.entry_id}", add_sensor_entities
+    )
+
+    entry.add_update_listener(async_config_entry_updated)
+
+    add_sensor_entities()
+
+
+async def async_config_entry_updated(hass, entry) -> None:
+    """Handle signals of config entry being updated."""
+    async_dispatcher_send(hass, f"signal-{DOMAIN}-sensors-update-{entry.entry_id}")
 
 
 class GitHubSensor(GitHubDeviceEntity):
@@ -75,6 +114,8 @@ class GitHubSensor(GitHubDeviceEntity):
         """Initialize the sensor."""
         self._state = None
         self._attributes = None
+
+        _LOGGER.warning("init: %s", name)
 
         super().__init__(coordinator, f"{repository.full_name}_{unique_id}", name, icon)
 
@@ -135,6 +176,8 @@ class ForksSensor(GitHubSensor):
         """Fetch new state data for the sensor."""
         data: GitHubData = self._coordinator.data
 
+        _LOGGER.warning("Update Forks")
+
         self._state = data.repository.attributes.get("forks")
 
         self._attributes = {
@@ -157,18 +200,22 @@ class LatestCommitSensor(GitHubSensor):
         """Initialize the sensor."""
         name = repository.attributes.get("name")
         super().__init__(
-            coordinator, repository, "last_commit", f"{name} Last Commit", "mdi:github"
+            coordinator,
+            repository,
+            "latest_commit",
+            f"{name} Latest Commit",
+            "mdi:github",
         )
 
     async def _github_update(self) -> bool:
         """Fetch new state data for the sensor."""
         data: GitHubData = self._coordinator.data
 
-        self._state = data.last_commit.sha_short
+        self._state = data.latest_commit.sha_short
 
         self._attributes = {
-            ATTR_MESSAGE: data.last_commit.message,
-            ATTR_SHA: data.last_commit.sha,
+            ATTR_MESSAGE: data.latest_commit.message,
+            ATTR_SHA: data.latest_commit.sha,
             ATTR_REPO_DESCRIPTION: data.repository.description,
             ATTR_REPO_HOMEPAGE: data.repository.attributes.get("homepage"),
             ATTR_REPO_NAME: data.repository.attributes.get("name"),

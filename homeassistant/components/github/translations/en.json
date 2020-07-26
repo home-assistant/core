@@ -4,14 +4,14 @@
     "flow_title": "GitHub: {repository}",
     "step": {
       "reauth": {
-        "title": "GitHub: {repository}",
-        "description": "Please re-enter your access token.",
+        "title": "GitHub: Reauthentication",
+        "description": "Please re-enter your [access token](https://github.com/settings/tokens).",
         "data": {
           "access_token": "Access Token"
         }
       },
       "user": {
-        "description": "Please enter your access token and repository.",
+        "description": "Please enter your [access token](https://github.com/settings/tokens) and repository (`org/project`).",
         "data": {
           "access_token": "Access Token",
           "repository": "Repository"
@@ -26,7 +26,23 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "connection_error": "There was an error connecting to GitHub.",
       "reauth_successful": "[%key:common::config_flow::data::access_token%] updated successfully"
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "title": "GitHub Options",
+        "description": "To help reduce the chances of hitting API limits, some items have been disabled by default. You can enable and disable these items here.",
+        "data": {
+          "clones": "Clones",
+          "issues_and_prs": "Issues and Pull Requests",
+          "latest_commit": "Latest Commit",
+          "latest_release": "Latest Release",
+          "views": "Views"
+        }
+      }
     }
   }
 }
