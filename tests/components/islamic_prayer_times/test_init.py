@@ -20,7 +20,7 @@ from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_setup_with_config(hass):
+async def test_setup_with_config(hass, legacy_patchable_time):
     """Test that we import the config and setup the client."""
     config = {
         islamic_prayer_times.DOMAIN: {islamic_prayer_times.CONF_CALC_METHOD: "isna"}
@@ -36,7 +36,7 @@ async def test_setup_with_config(hass):
         await hass.async_block_till_done()
 
 
-async def test_successful_config_entry(hass):
+async def test_successful_config_entry(hass, legacy_patchable_time):
     """Test that Islamic Prayer Times is configured successfully."""
 
     entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={},)
@@ -55,7 +55,7 @@ async def test_successful_config_entry(hass):
         }
 
 
-async def test_setup_failed(hass):
+async def test_setup_failed(hass, legacy_patchable_time):
     """Test Islamic Prayer Times failed due to an error."""
 
     entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={},)
@@ -71,7 +71,7 @@ async def test_setup_failed(hass):
         assert entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass, legacy_patchable_time):
     """Test removing Islamic Prayer Times."""
     entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={},)
     entry.add_to_hass(hass)
