@@ -37,7 +37,7 @@ class GitHubClones:
         self.count_uniques = count_uniques
 
 
-class GitHubLastCommit:
+class GitHubLatestCommit:
     """Represents a GitHub last commit object."""
 
     def __init__(self, sha: int, message: str) -> None:
@@ -62,7 +62,7 @@ class GitHubData:
     def __init__(
         self,
         repository: AIOGitHubAPIRepository,
-        last_commit: GitHubLastCommit,
+        last_commit: GitHubLatestCommit,
         clones: GitHubClones = None,
         issues: List[AIOGitHubAPIRepositoryIssue] = None,
         releases: List[AIOGitHubAPIRepositoryRelease] = None,
@@ -117,7 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         repository: AIOGitHubAPIRepository = await github.get_repo(
             entry.data[CONF_REPOSITORY]
         )
-        last_commit = await repository.client.get(
+        latest_commit = await repository.client.get(
             endpoint=f"/repos/{repository.full_name}/branches/{repository.default_branch}"
         )
         clones = await repository.client.get(
@@ -130,8 +130,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
         return GitHubData(
             repository,
-            GitHubLastCommit(
-                last_commit["commit"]["sha"], last_commit["commit"]["commit"]["message"]
+            GitHubLatestCommit(
+                latest_commit["commit"]["sha"],
+                latest_commit["commit"]["commit"]["message"],
             ),
             GitHubClones(clones["count"], clones["uniques"]),
             issues,
