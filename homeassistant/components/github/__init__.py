@@ -2,6 +2,7 @@
 # TODO: Disable extra REST calls by default using option flow
 # TODO: Tests
 # TODO: Device triggers? (scaffold)
+# TODO: Breaking changes (flow, url, options flow, split etc.)
 import asyncio
 from datetime import timedelta
 import logging
