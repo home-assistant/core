@@ -10,8 +10,8 @@ from aiogithubapi.objects.repository import (
 )
 
 from homeassistant.const import ATTR_NAME
-from homeassistant.helpers.entity import Entity
 
+from . import GitHubDeviceEntity
 from .const import CONF_REPOSITORY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,15 +48,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([RepositorySensor(github, repository)], True)
 
 
-class RepositorySensor(Entity):
+class RepositorySensor(GitHubDeviceEntity):
     """Representation of a Sensor."""
 
     def __init__(self, github: GitHub, repository: str):
         """Initialize the sensor."""
-        self._github = github
-        self._repository = repository
-        self._unique_id = f"{repository}_sensor"
-        self._available = False
         self._clones = None
         self._clones_unique = None
         self._description = None
@@ -78,25 +74,14 @@ class RepositorySensor(Entity):
         self._views_unique = None
         self._watchers = None
 
-    @property
-    def unique_id(self):
-        """Return the unique_id of the sensor."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+        super().__init__(
+            github, repository, f"{repository}_sensor", repository, "mdi:github"
+        )
 
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
 
     @property
     def device_state_attributes(self):
@@ -123,11 +108,6 @@ class RepositorySensor(Entity):
             ATTR_VIEWS_UNIQUE: self._views_unique,
             ATTR_WATCHERS: self._watchers,
         }
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:github"
 
     async def async_update(self):
         """Fetch new state data for the sensor."""
