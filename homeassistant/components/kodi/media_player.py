@@ -1,5 +1,6 @@
 """Support for interfacing with the XBMC/Kodi JSON-RPC API."""
 from collections import OrderedDict
+from datetime import timedelta
 from functools import wraps
 import logging
 import re
@@ -7,7 +8,6 @@ import socket
 import urllib
 
 import aiohttp
-from datetime import timedelta
 import jsonrpc_async
 import jsonrpc_base
 import jsonrpc_websocket
