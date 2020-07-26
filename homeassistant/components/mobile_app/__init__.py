@@ -30,6 +30,7 @@ from .const import (
     ATTR_OS_VERSION,
     ATTR_TEXT_INPUT_BEHAVIOR,
     CONF_CLOUDHOOK_URL,
+    CONF_ECO_IOS,
     CONF_PUSH,
     CONF_PUSH_ACTIONS_ACTIVATION_MODE,
     CONF_PUSH_ACTIONS_AUTHENTICATION_REQUIRED,
@@ -50,7 +51,6 @@ from .const import (
     DATA_SENSOR,
     DATA_STORE,
     DOMAIN,
-    ECO_IOS,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
@@ -100,9 +100,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     conf = config.get(DOMAIN)
 
-    _LOGGER.warning(f"{conf}")
-    _LOGGER.warning(f"Digging down to iOS {conf[ECO_IOS]}")
-    hass.http.register_view(iOSPushConfigView(conf[ECO_IOS][CONF_PUSH]))
+    if conf:
+        if CONF_ECO_IOS in conf:
+            hass.http.register_view(iOSPushConfigView(conf[CONF_ECO_IOS][CONF_PUSH]))
 
     return True
 
@@ -190,7 +190,7 @@ BEHAVIORS = [ATTR_DEFAULT_BEHAVIOR, ATTR_TEXT_INPUT_BEHAVIOR]
 
 ACTIVATION_MODES = [ATTR_FOREGROUND, ATTR_BACKGROUND]
 
-ACTION_SCHEMA = vol.Schema(
+PUSH_ACTION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PUSH_ACTIONS_IDENTIFIER): vol.Upper,
         vol.Required(CONF_PUSH_ACTIONS_TITLE): cv.string,
@@ -210,12 +210,12 @@ ACTION_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-ACTION_SCHEMA_LIST = vol.All(cv.ensure_list, [ACTION_SCHEMA])
+ACTION_SCHEMA_LIST = vol.All(cv.ensure_list, [PUSH_ACTION_SCHEMA])
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: {
-            ECO_IOS: {
+            CONF_ECO_IOS: {
                 CONF_PUSH: {
                     CONF_PUSH_CATEGORIES: vol.All(
                         cv.ensure_list,
