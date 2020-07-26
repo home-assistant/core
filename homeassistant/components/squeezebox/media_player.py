@@ -20,6 +20,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SEEK,
     SUPPORT_SHUFFLE_SET,
+    SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
@@ -82,6 +83,7 @@ SUPPORT_SQUEEZEBOX = (
     | SUPPORT_PLAY
     | SUPPORT_SHUFFLE_SET
     | SUPPORT_CLEAR_PLAYLIST
+    | SUPPORT_STOP
 )
 
 PLATFORM_SCHEMA = vol.All(
@@ -432,6 +434,10 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     async def async_mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         await self._player.async_set_muting(mute)
+
+    async def async_media_stop(self):
+        """Send stop command to media player."""
+        await self._player.async_stop()
 
     async def async_media_play_pause(self):
         """Send pause command to media player."""
