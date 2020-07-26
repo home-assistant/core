@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import logging
 from time import monotonic
 from typing import Awaitable, Callable, Generic, List, Optional, TypeVar
+import urllib.error
 
 import aiohttp
 import requests
@@ -149,6 +150,14 @@ class DataUpdateCoordinator(Generic[T]):
         except (aiohttp.ClientError, requests.exceptions.RequestException) as err:
             if self.last_update_success:
                 self.logger.error("Error requesting %s data: %s", self.name, err)
+                self.last_update_success = False
+
+        except urllib.error.URLError as err:
+            if self.last_update_success:
+                if err.reason == "timed out":
+                    self.logger.error("Timeout fetching %s data", self.name)
+                else:
+                    self.logger.error("Error requesting %s data: %s", self.name, err)
                 self.last_update_success = False
 
         except UpdateFailed as err:

@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+import urllib.error
 
 import aiohttp
 import pytest
@@ -113,8 +114,10 @@ async def test_request_refresh_no_auto_update(crd_without_update_interval):
     [
         (asyncio.TimeoutError, "Timeout fetching test data"),
         (requests.exceptions.Timeout, "Timeout fetching test data"),
+        (urllib.error.URLError("timed out"), "Timeout fetching test data"),
         (aiohttp.ClientError, "Error requesting test data"),
         (requests.exceptions.RequestException, "Error requesting test data"),
+        (urllib.error.URLError("something"), "Error requesting test data"),
         (update_coordinator.UpdateFailed, "Error fetching test data"),
     ],
 )
