@@ -16,12 +16,12 @@ from . import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-SENSORS = [
-    ("charging", "Charging Status", DEVICE_CLASS_BATTERY_CHARGING, "mdi:ev-station"),
-    ("connection", "Connection Status", DEVICE_CLASS_CONNECTIVITY, "mdi:car-connected"),
-    ("power", "Power Status", DEVICE_CLASS_POWER, "mdi:power"),
-    ("lock", "Lock Status", DEVICE_CLASS_LOCK, "mdi:lock"),
-]
+SENSORS = {
+    "charging": ("Charging Status", DEVICE_CLASS_BATTERY_CHARGING, "mdi:ev-station"),
+    "connection": ("Connection Status", DEVICE_CLASS_CONNECTIVITY, "mdi:car-connected"),
+    "power": ("Power Status", DEVICE_CLASS_POWER, "mdi:power"),
+    "lock": ("Lock Status", DEVICE_CLASS_LOCK, "mdi:lock"),
+}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -29,9 +29,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     entities = []
     for vehicle in hass.data[DOMAIN].account.get_vehicles():
-        for sensor in SENSORS:
+        for key, value in SENSORS.items():
             device = NiuBinarySensor(
-                hass.data[DOMAIN], vehicle, sensor[0], sensor[1], sensor[2], sensor[3]
+                hass.data[DOMAIN], vehicle, key, value[0], value[1], value[2]
             )
             entities.append(device)
 

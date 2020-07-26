@@ -14,24 +14,26 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSORS = [
-    ("odometer", "Odometer"),
-    ("range", "Range"),
-    ("charging time", "Charging Time"),
-]
+# Sensors present in all vehicles
+SENSORS = {
+    "level": ("Battery Level", UNIT_PERCENTAGE, "mdi:battery"),
+    "odometer": ("Odometer", LENGTH_KILOMETERS, "mdi:counter"),
+    "range": ("Range", LENGTH_KILOMETERS, "mdi:road-variant"),
+    "charging time": ("Charging Time", None, "mdi:clock-outline"),
+}
 
-SENSORS_SINGLE = [
-    ("level", "Battery Level"),
-    ("temp", "Battery Temperature"),
-]
+# Sensors present in single-battery vehicles
+SENSORS_SINGLE = {
+    "temp": ("Battery Temperature", TEMP_CELSIUS, "mdi:thermometer"),
+}
 
-SENSORS_DUAL = [
-    ("level", "Battery Level"),
-    ("level a", "Battery A Level"),
-    ("level b", "Battery B Level"),
-    ("temp a", "Battery A Temperature"),
-    ("temp b", "Battery B Temperature"),
-]
+# Sensors present in dual-battery vehicles
+SENSORS_DUAL = {
+    "level a": ("Battery A Level", UNIT_PERCENTAGE, "mdi:battery"),
+    "level b": ("Battery B Level", UNIT_PERCENTAGE, "mdi:battery"),
+    "temp a": ("Battery A Temperature", TEMP_CELSIUS, "mdi:thermometer"),
+    "temp b": ("Battery B Temperature", TEMP_CELSIUS, "mdi:thermometer"),
+}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -41,13 +43,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for vehicle in vehicles:
         entities = []
 
-        for sensor in SENSORS:
-            entities.append(NiuSensor(hass.data[DOMAIN], vehicle, sensor[0], sensor[1]))
+        for key, value in SENSORS.items():
+            entities.append(
+                NiuSensor(hass.data[DOMAIN], vehicle, key, value[0], value[1], value[2])
+            )
 
-        for sensor in (
-            SENSORS_SINGLE if vehicle.get_battery_count() == 1 else SENSORS_DUAL
+        for key, value in (
+            SENSORS_SINGLE.items()
+            if vehicle.get_battery_count() == 1
+            else SENSORS_DUAL.items()
         ):
-            entities.append(NiuSensor(hass.data[DOMAIN], vehicle, sensor[0], sensor[1]))
+            entities.append(
+                NiuSensor(hass.data[DOMAIN], vehicle, key, value[0], value[1], value[2])
+            )
 
         add_entities(entities, True)
 
@@ -55,7 +63,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class NiuSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, account, vehicle, attribute, name):
+    def __init__(self, account, vehicle, attribute, name, unit, icon):
         """Initialize the sensor."""
         self._account = account
         self._serial = vehicle.get_serial()
@@ -63,8 +71,8 @@ class NiuSensor(Entity):
         self._attribute = attribute
         self._name = name
 
-        self._unit = None
-        self._icon = None
+        self._unit = unit
+        self._icon = icon
         self._state = None
 
     @property
@@ -145,27 +153,19 @@ class NiuSensor(Entity):
 
         _LOGGER.debug("Updating %s", self.name)
 
+        # Odometer
         if self._attribute == "odometer":
-            self._unit = LENGTH_KILOMETERS
             self._state = self._vehicle.get_odometer()
-            self._icon = "mdi:counter"
 
+        # Range
         if self._attribute == "range":
-            self._unit = LENGTH_KILOMETERS
             self._state = self._vehicle.get_range()
-            self._icon = "mdi:road-variant"
 
+        # Charging time
         if self._attribute == "charging time":
-            self._icon = "mdi:clock-outline"
             self._state = self._vehicle.get_charging_left()
 
-        if self._attribute == "level":
-            self._state = self._vehicle.get_soc()
-        if self._attribute == "level a":
-            self._state = self._vehicle.get_soc(0)
-        if self._attribute == "level b":
-            self._state = self._vehicle.get_soc(1)
-
+        # Temperature
         desc = ""
         if self._attribute == "temp" or self._attribute == "temp a":
             self._state = self._vehicle.get_battery_temp(0)
@@ -174,9 +174,25 @@ class NiuSensor(Entity):
             self._state = self._vehicle.get_battery_temp(1)
             desc = self._vehicle.get_battery_temp_desc(1)
 
-        if "level" in self._attribute:
-            self._unit = UNIT_PERCENTAGE
+        if "temp" in self._attribute:
+            if desc == "low":
+                self._icon = "mdi:thermometer-low"
+            elif desc == "normal":
+                self._icon = "mdi:thermometer"
+            elif desc == "high":
+                self._icon = "mdi:thermometer-high"
+            else:
+                self._icon = "mdi:thermometer-alert"
 
+        # Battery level
+        if self._attribute == "level":
+            self._state = self._vehicle.get_soc()
+        if self._attribute == "level a":
+            self._state = self._vehicle.get_soc(0)
+        if self._attribute == "level b":
+            self._state = self._vehicle.get_soc(1)
+
+        if "level" in self._attribute:
             if self._state < 5:
                 self._icon = "mdi:battery-outline"
             elif 5 <= self._state < 15:
@@ -201,15 +217,3 @@ class NiuSensor(Entity):
                 self._icon = "mdi:battery"
             else:
                 self._icon = "mdi:battery-alert"
-
-        if "temp" in self._attribute:
-            self._unit = TEMP_CELSIUS
-
-            if desc == "low":
-                self._icon = "mdi:thermometer-low"
-            elif desc == "normal":
-                self._icon = "mdi:thermometer"
-            elif desc == "high":
-                self._icon = "mdi:thermometer-high"
-            else:
-                self._icon = "mdi:thermometer-alert"
