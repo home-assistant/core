@@ -17,7 +17,14 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HassJob,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.sun import get_astral_event_next
 from homeassistant.helpers.template import Template
@@ -96,6 +103,8 @@ def async_track_state_change(
     else:
         entity_ids = tuple(entity_id.lower() for entity_id in entity_ids)
 
+    job = HassJob(action)
+
     @callback
     def state_change_listener(event: Event) -> None:
         """Handle specific state changes."""
@@ -114,8 +123,8 @@ def async_track_state_change(
             if not match_to_state(new_state):
                 return
 
-        hass.async_run_job(
-            action,
+        hass.async_run_hass_job(
+            job,
             event.data.get("entity_id"),
             event.data.get("old_state"),
             event.data.get("new_state"),
@@ -168,9 +177,9 @@ def async_track_state_change_event(
             if entity_id not in entity_callbacks:
                 return
 
-            for action in entity_callbacks[entity_id][:]:
+            for job in entity_callbacks[entity_id][:]:
                 try:
-                    hass.async_run_job(action, event)
+                    hass.async_run_hass_job(job, event)
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception(
                         "Error while processing state changed for %s", entity_id
@@ -185,8 +194,10 @@ def async_track_state_change_event(
 
     entity_ids = [entity_id.lower() for entity_id in entity_ids]
 
+    job = HassJob(action)
+
     for entity_id in entity_ids:
-        entity_callbacks.setdefault(entity_id, []).append(action)
+        entity_callbacks.setdefault(entity_id, []).append(job)
 
     @callback
     def remove_listener() -> None:
@@ -196,7 +207,7 @@ def async_track_state_change_event(
             TRACK_STATE_CHANGE_CALLBACKS,
             TRACK_STATE_CHANGE_LISTENER,
             entity_ids,
-            action,
+            job,
         )
 
     return remove_listener
@@ -208,14 +219,14 @@ def _async_remove_entity_listeners(
     storage_key: str,
     listener_key: str,
     entity_ids: Iterable[str],
-    action: Callable[[Event], Any],
+    hassjob: HassJob,
 ) -> None:
     """Remove a listener."""
 
     entity_callbacks = hass.data[storage_key]
 
     for entity_id in entity_ids:
-        entity_callbacks[entity_id].remove(action)
+        entity_callbacks[entity_id].remove(hassjob)
         if len(entity_callbacks[entity_id]) == 0:
             del entity_callbacks[entity_id]
 
@@ -247,9 +258,9 @@ def async_track_entity_registry_updated_event(
             if entity_id not in entity_callbacks:
                 return
 
-            for action in entity_callbacks[entity_id][:]:
+            for job in entity_callbacks[entity_id][:]:
                 try:
-                    hass.async_run_job(action, event)
+                    hass.async_run_hass_job(job, event)
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception(
                         "Error while processing entity registry update for %s",
@@ -265,8 +276,10 @@ def async_track_entity_registry_updated_event(
 
     entity_ids = [entity_id.lower() for entity_id in entity_ids]
 
+    job = HassJob(action)
+
     for entity_id in entity_ids:
-        entity_callbacks.setdefault(entity_id, []).append(action)
+        entity_callbacks.setdefault(entity_id, []).append(job)
 
     @callback
     def remove_listener() -> None:
@@ -276,7 +289,7 @@ def async_track_entity_registry_updated_event(
             TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS,
             TRACK_ENTITY_REGISTRY_UPDATED_LISTENER,
             entity_ids,
-            action,
+            job,
         )
 
     return remove_listener
@@ -295,6 +308,7 @@ def async_track_template(
 
     # Local variable to keep track of if the action has already been triggered
     already_triggered = False
+    job = HassJob(action)
 
     @callback
     def template_condition_listener(entity_id: str, from_s: State, to_s: State) -> None:
@@ -305,7 +319,7 @@ def async_track_template(
         # Check to see if template returns true
         if template_result and not already_triggered:
             already_triggered = True
-            hass.async_run_job(action, entity_id, from_s, to_s)
+            hass.async_run_hass_job(job, entity_id, from_s, to_s)
         elif not template_result:
             already_triggered = False
 
@@ -346,13 +360,15 @@ def async_track_same_state(
             async_remove_state_for_cancel()
             async_remove_state_for_cancel = None
 
+    job = HassJob(action)
+
     @callback
     def state_for_listener(now: Any) -> None:
         """Fire on state changes after a delay and calls action."""
         nonlocal async_remove_state_for_listener
         async_remove_state_for_listener = None
         clear_listener()
-        hass.async_run_job(action)
+        hass.async_run_hass_job(job)
 
     @callback
     def state_for_cancel_listener(event: Event) -> None:
@@ -392,10 +408,12 @@ def async_track_point_in_time(
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in time."""
 
+    job = HassJob(action)
+
     @callback
     def utc_converter(utc_now: datetime) -> None:
         """Convert passed in UTC now to local now."""
-        hass.async_run_job(action, dt_util.as_local(utc_now))
+        hass.async_run_hass_job(job, dt_util.as_local(utc_now))
 
     return async_track_point_in_utc_time(hass, utc_converter, point_in_time)
 
@@ -411,11 +429,12 @@ def async_track_point_in_utc_time(
     """Add a listener that fires once after a specific point in UTC time."""
     # Ensure point_in_time is UTC
     utc_point_in_time = dt_util.as_utc(point_in_time)
+    job = HassJob(action)
 
     cancel_callback = hass.loop.call_at(
         hass.loop.time() + point_in_time.timestamp() - time.time(),
-        hass.async_run_job,
-        action,
+        hass.async_run_hass_job,
+        job,
         utc_point_in_time,
     )
 
@@ -453,6 +472,7 @@ def async_track_time_interval(
 ) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively at every timedelta interval."""
     remove = None
+    job = HassJob(action)
 
     def next_interval() -> datetime:
         """Return the next interval."""
@@ -463,7 +483,7 @@ def async_track_time_interval(
         """Handle elapsed intervals."""
         nonlocal remove
         remove = async_track_point_in_utc_time(hass, interval_listener, next_interval())
-        hass.async_run_job(action, now)
+        hass.async_run_hass_job(job, now)
 
     remove = async_track_point_in_utc_time(hass, interval_listener, next_interval())
 
@@ -482,7 +502,7 @@ class SunListener:
     """Helper class to help listen to sun events."""
 
     hass: HomeAssistant = attr.ib()
-    action: Callable[..., None] = attr.ib()
+    hassjob: HassJob = attr.ib()
     event: str = attr.ib()
     offset: Optional[timedelta] = attr.ib()
     _unsub_sun: Optional[CALLBACK_TYPE] = attr.ib(default=None)
@@ -526,7 +546,7 @@ class SunListener:
         """Handle solar event."""
         self._unsub_sun = None
         self._listen_next_sun_event()
-        self.hass.async_run_job(self.action)
+        self.hass.async_run_hass_job(self.hassjob)
 
     @callback
     def _handle_config_event(self, _event: Any) -> None:
@@ -543,7 +563,7 @@ def async_track_sunrise(
     hass: HomeAssistant, action: Callable[..., None], offset: Optional[timedelta] = None
 ) -> CALLBACK_TYPE:
     """Add a listener that will fire a specified offset from sunrise daily."""
-    listener = SunListener(hass, action, SUN_EVENT_SUNRISE, offset)
+    listener = SunListener(hass, HassJob(action), SUN_EVENT_SUNRISE, offset)
     listener.async_attach()
     return listener.async_detach
 
@@ -557,7 +577,7 @@ def async_track_sunset(
     hass: HomeAssistant, action: Callable[..., None], offset: Optional[timedelta] = None
 ) -> CALLBACK_TYPE:
     """Add a listener that will fire a specified offset from sunset daily."""
-    listener = SunListener(hass, action, SUN_EVENT_SUNSET, offset)
+    listener = SunListener(hass, HassJob(action), SUN_EVENT_SUNSET, offset)
     listener.async_attach()
     return listener.async_detach
 
@@ -581,12 +601,14 @@ def async_track_utc_time_change(
     """Add a listener that will fire if time matches a pattern."""
     # We do not have to wrap the function with time pattern matching logic
     # if no pattern given
+    job = HassJob(action)
+
     if all(val is None for val in (hour, minute, second)):
 
         @callback
         def time_change_listener(event: Event) -> None:
             """Fire every time event that comes in."""
-            hass.async_run_job(action, event.data[ATTR_NOW])
+            hass.async_run_hass_job(job, event.data[ATTR_NOW])
 
         return hass.bus.async_listen(EVENT_TIME_CHANGED, time_change_listener)
 
@@ -616,7 +638,7 @@ def async_track_utc_time_change(
         nonlocal next_time, cancel_callback
 
         now = pattern_utc_now()
-        hass.async_run_job(action, dt_util.as_local(now) if local else now)
+        hass.async_run_hass_job(job, dt_util.as_local(now) if local else now)
 
         calculate_next(now + timedelta(seconds=1))
 
