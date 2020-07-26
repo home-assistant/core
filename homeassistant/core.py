@@ -405,6 +405,8 @@ class HomeAssistant:
         """Await and log tasks that take a long time."""
         wait_time = 0
         while pending:
+            for task in pending:
+                _LOGGER.debug("Waiting for task: %s", wait_time, task)
             _, pending = await asyncio.wait(pending, timeout=BLOCK_LOG_TIMEOUT)
             if not pending:
                 return
