@@ -8,6 +8,8 @@ from aioflo.api import API
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 
+from .const import SIGNAL_DEVICE_UPDATED, SIGNAL_WATER_CONSUMPTION_UPDATED
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -155,6 +157,7 @@ class FloDevice:
         self._current_flow_rate = device_information["telemetry"]["current"]["gpm"]
         self._current_psi = device_information["telemetry"]["current"]["psi"]
         self._temperature = device_information["telemetry"]["current"]["tempF"]
+        self.hass.bus.async_fire(f"{self.mac_address}-{SIGNAL_DEVICE_UPDATED}")
 
     async def update_consumption_data(self, *_) -> None:
         """Update water consumption data from the API."""
@@ -166,3 +169,6 @@ class FloDevice:
         )
         _LOGGER.debug("Updated Flo consumption data: %s", water_usage)
         self._consumption_today = water_usage["aggregations"]["sumTotalGallonsConsumed"]
+        self.hass.bus.async_fire(
+            f"{self.mac_address}-{SIGNAL_WATER_CONSUMPTION_UPDATED}"
+        )

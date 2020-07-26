@@ -11,9 +11,10 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     VOLUME_GALLONS,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.temperature import fahrenheit_to_celsius
 
-from .const import DOMAIN as FLO_DOMAIN
+from .const import DOMAIN as FLO_DOMAIN, SIGNAL_WATER_CONSUMPTION_UPDATED
 from .device import FloDevice
 from .entity import FloEntity
 
@@ -68,6 +69,16 @@ class FloDailyUsageSensor(FloEntity):
     def unit_of_measurement(self) -> str:
         """Return gallons as the unit measurement for water."""
         return VOLUME_GALLONS
+
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._device.mac_address}-{SIGNAL_WATER_CONSUMPTION_UPDATED}",
+                self.async_write_ha_state,
+            )
+        )
 
 
 class FloSystemModeSensor(FloEntity):

@@ -2,9 +2,10 @@
 
 from typing import Any, Dict
 
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN as FLO_DOMAIN
+from .const import DOMAIN as FLO_DOMAIN, SIGNAL_DEVICE_UPDATED
 from .device import FloDevice
 
 
@@ -52,7 +53,17 @@ class FloEntity(Entity):
     @property
     def should_poll(self) -> bool:
         """Poll state from device."""
-        return True
+        return False
 
     async def async_update(self) -> None:
         """Retrieve the latest daily usage."""
+
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._device.mac_address}-{SIGNAL_DEVICE_UPDATED}",
+                self.async_write_ha_state,
+            )
+        )
