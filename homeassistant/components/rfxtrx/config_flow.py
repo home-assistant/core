@@ -18,7 +18,7 @@ from homeassistant.helpers.device_registry import (
     async_get_registry,
 )
 
-from . import DOMAIN, get_rfx_object
+from . import DOMAIN, get_device_id, get_rfx_object
 from .binary_sensor import supported as binary_supported
 from .const import (
     CONF_AUTOMATIC_ADD,
@@ -27,12 +27,15 @@ from .const import (
     CONF_FIRE_EVENT,
     CONF_OFF_DELAY,
     CONF_SIGNAL_REPETITIONS,
+    DEVICE_PACKET_TYPE_LIGHTING4,
 )
 from .cover import supported as cover_supported
 from .light import supported as light_supported
 from .switch import supported as switch_supported
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_OFF_DELAY_ENABLED = CONF_OFF_DELAY + "_enabled"
 
 
 class OptionsFlow(config_entries.OptionsFlow):
@@ -44,6 +47,7 @@ class OptionsFlow(config_entries.OptionsFlow):
         self._global_options = None
         self._selected_device = None
         self._selected_device_event_code = None
+        self._rfxobj = None
         self._device_entries = None
 
     async def async_step_init(self, user_input=None):
@@ -77,10 +81,12 @@ class OptionsFlow(config_entries.OptionsFlow):
                     self._selected_device_event_code = event_code
                     self._selected_device = self._config_entry.data[CONF_DEVICES][
                         event_code
-                    ].copy()
+                    ]
                     return await self.async_step_set_device_options()
             if CONF_DEVICE_ID in user_input:
-                return None
+                self._selected_device_event_code = user_input[CONF_DEVICE_ID]
+                self._selected_device = {}
+                return await self.async_step_set_device_options()
 
             if not errors:
                 self.update_config_data(self._global_options)
@@ -113,12 +119,53 @@ class OptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_set_device_options(self, user_input=None):
         """Manage device options."""
+        errors = {}
+
         if user_input is not None:
-            return None
+            device_id = get_device_id(
+                self._rfxobj.device, data_bits=user_input.get(CONF_DATA_BITS)
+            )
+            try:
+                command_on = (
+                    int(user_input.get(CONF_COMMAND_ON), 16)
+                    if user_input.get(CONF_COMMAND_ON)
+                    else None
+                )
+                command_off = (
+                    int(user_input.get(CONF_COMMAND_OFF), 16)
+                    if user_input.get(CONF_COMMAND_OFF)
+                    else None
+                )
+            except NameError:
+                errors = {"base": "invalid_input_2262"}
+
+            if not errors:
+                data = {
+                    CONF_DEVICES: {
+                        self._selected_device_event_code: {
+                            CONF_DEVICE: device_id,
+                            CONF_FIRE_EVENT: user_input.get(CONF_FIRE_EVENT),
+                            CONF_OFF_DELAY: user_input.get(CONF_OFF_DELAY)
+                            if user_input.get(CONF_OFF_DELAY_ENABLED)
+                            else None,
+                            CONF_SIGNAL_REPETITIONS: user_input.get(
+                                CONF_SIGNAL_REPETITIONS
+                            ),
+                            CONF_DATA_BITS: user_input.get(CONF_DATA_BITS),
+                            CONF_COMMAND_ON: command_on,
+                            CONF_COMMAND_OFF: command_off,
+                        }
+                    }
+                }
+
+                self.update_config_data(data)
+
+                return self.async_create_entry(title="", data={})
 
         device_data = self._selected_device
 
-        rfx_obj = get_rfx_object(self._selected_device_event_code)
+        if self._rfxobj is None:
+            self._rfxobj = get_rfx_object(self._selected_device_event_code)
 
         data_scheme = {
             vol.Optional(
@@ -126,9 +173,13 @@ class OptionsFlow(config_entries.OptionsFlow):
             ): bool,
         }
 
-        if binary_supported(rfx_obj):
+        if binary_supported(self._rfxobj):
             data_scheme.update(
                 {
+                    vol.Optional(
+                        CONF_OFF_DELAY_ENABLED,
+                        default=device_data.get(CONF_OFF_DELAY) is not None,
+                    ): bool,
                     vol.Optional(
                         CONF_OFF_DELAY, default=device_data.get(CONF_OFF_DELAY, 0)
                     ): int,
@@ -136,10 +187,10 @@ class OptionsFlow(config_entries.OptionsFlow):
             )
 
         if (
-            binary_supported(rfx_obj)
-            or cover_supported(rfx_obj)
-            or light_supported(rfx_obj)
-            or switch_supported(rfx_obj)
+            binary_supported(self._rfxobj)
+            or cover_supported(self._rfxobj)
+            or light_supported(self._rfxobj)
+            or switch_supported(self._rfxobj)
         ):
             data_scheme.update(
                 {
@@ -150,7 +201,7 @@ class OptionsFlow(config_entries.OptionsFlow):
                 }
             )
 
-        if rfx_obj.device.type_string == "PT2262":
+        if self._rfxobj.device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
             data_scheme.update(
                 {
                     vol.Optional(
@@ -168,7 +219,9 @@ class OptionsFlow(config_entries.OptionsFlow):
             )
 
         return self.async_show_form(
-            step_id="set_device_options", data_schema=vol.Schema(data_scheme)
+            step_id="set_device_options",
+            data_schema=vol.Schema(data_scheme),
+            errors=errors,
         )
 
     @callback
@@ -180,10 +233,9 @@ class OptionsFlow(config_entries.OptionsFlow):
         self.hass.async_create_task(async_update_options(self.hass, self._config_entry))
 
 
-@callback
-def async_update_options(hass, config_entry: ConfigEntry):
+async def async_update_options(hass, config_entry: ConfigEntry):
     """Update options."""
-    hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -194,10 +246,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config=None):
         """Handle the initial step."""
-        entry = await self.async_set_unique_id(DOMAIN)
-        if entry and import_config.items() != entry.data.items():
-            self.hass.config_entries.async_update_entry(entry, data=import_config)
-            return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(DOMAIN)
+        self._abort_if_unique_id_configured()
         return self.async_create_entry(title="RFXTRX", data=import_config)
 
     @staticmethod
