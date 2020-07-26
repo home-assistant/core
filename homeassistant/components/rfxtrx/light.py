@@ -36,10 +36,7 @@ async def async_setup_entry(
     device_ids = set()
 
     def supported(event):
-        return (
-            isinstance(event.device, rfxtrxmod.LightingDevice)
-            and event.device.known_to_be_dimmable
-        )
+        return isinstance(event.device, rfxtrxmod.LightingDevice)
 
     # Add switch from config file
     entities = []
@@ -124,6 +121,11 @@ class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
     def is_on(self):
         """Return true if device is on."""
         return self._state
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._device.known_to_be_dimmable
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
