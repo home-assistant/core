@@ -141,6 +141,11 @@ class _ScriptRun:
         self._hass = hass
         self._script = script
         self._variables = variables or {}
+        # Top level run may be passed in an immutable variable container (such as a
+        # MappingProxyType.) If so, make a mutable copy so it is possible to create
+        # additional variables during the run, such as in repeat and choose actions.
+        if not isinstance(self._variables, dict):
+            self._variables = dict(self._variables)
         self._context = context
         self._log_exceptions = log_exceptions
         self._step = -1
