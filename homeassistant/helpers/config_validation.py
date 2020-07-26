@@ -1015,18 +1015,23 @@ DEVICE_ACTION_SCHEMA = DEVICE_ACTION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTR
 
 _SCRIPT_SCENE_SCHEMA = vol.Schema({vol.Required(CONF_SCENE): entity_domain("scene")})
 
+
+def template_or_conditions(value: Any) -> list:
+    """Validate value is a template or a list of conditions."""
+    value = vol.Any(template, vol.All(ensure_list, [CONDITION_SCHEMA]))(value)
+    if isinstance(value, template_helper.Template):
+        value = [{"condition": "template", "value_template": value}]
+    return cast(list, value)
+
+
 _SCRIPT_REPEAT_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ALIAS): string,
         vol.Required(CONF_REPEAT): vol.All(
             {
                 vol.Exclusive(CONF_COUNT, "repeat"): vol.Any(vol.Coerce(int), template),
-                vol.Exclusive(CONF_WHILE, "repeat"): vol.All(
-                    ensure_list, [CONDITION_SCHEMA]
-                ),
-                vol.Exclusive(CONF_UNTIL, "repeat"): vol.All(
-                    ensure_list, [CONDITION_SCHEMA]
-                ),
+                vol.Exclusive(CONF_WHILE, "repeat"): template_or_conditions,
+                vol.Exclusive(CONF_UNTIL, "repeat"): template_or_conditions,
                 vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
             },
             has_at_least_one_key(CONF_COUNT, CONF_WHILE, CONF_UNTIL),
@@ -1041,9 +1046,7 @@ _SCRIPT_CHOOSE_SCHEMA = vol.Schema(
             ensure_list,
             [
                 {
-                    vol.Required(CONF_CONDITIONS): vol.All(
-                        ensure_list, [CONDITION_SCHEMA]
-                    ),
+                    vol.Required(CONF_CONDITIONS): template_or_conditions,
                     vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
                 }
             ],
