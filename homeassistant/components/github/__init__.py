@@ -17,13 +17,14 @@ from aiogithubapi.objects.repository import (
     AIOGitHubAPIRepositoryIssue,
     AIOGitHubAPIRepositoryRelease,
 )
+import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import Config, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_CLONES,
@@ -127,59 +128,65 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     async def async_update_data() -> GitHubData:
         """Fetch data from GitHub."""
-        repository: AIOGitHubAPIRepository = await github.get_repo(
-            entry.data[CONF_REPOSITORY]
-        )
-        if entry.options.get(CONF_LATEST_COMMIT, True) is True:
-            latest_commit = await repository.client.get(
-                endpoint=f"/repos/{repository.full_name}/branches/{repository.default_branch}"
-            )
-        else:
-            latest_commit = None
-        if entry.options.get(CONF_ISSUES_PRS, False) is True:
-            issues: List[AIOGitHubAPIRepositoryIssue] = await repository.get_issues()
-        else:
-            issues = None
-        if entry.options.get(CONF_LATEST_RELEASE, False) is True:
-            releases: List[
-                AIOGitHubAPIRepositoryRelease
-            ] = await repository.get_releases()
-        else:
-            releases = None
-        if repository.attributes.get("permissions").get("push") is True:
-            if entry.options.get(CONF_CLONES, False) is True:
-                clones = await repository.client.get(
-                    endpoint=f"/repos/{repository.full_name}/traffic/clones"
+        try:
+            async with async_timeout.timeout(60):
+                repository: AIOGitHubAPIRepository = await github.get_repo(
+                    entry.data[CONF_REPOSITORY]
                 )
-            else:
-                clones = None
-            if entry.options.get(CONF_VIEWS, False) is True:
-                views = await repository.client.get(
-                    endpoint=f"/repos/{repository.full_name}/traffic/views"
-                )
-            else:
-                views = None
-        else:
-            clones = None
-            views = None
+                if entry.options.get(CONF_LATEST_COMMIT, True) is True:
+                    latest_commit = await repository.client.get(
+                        endpoint=f"/repos/{repository.full_name}/branches/{repository.default_branch}"
+                    )
+                else:
+                    latest_commit = None
+                if entry.options.get(CONF_ISSUES_PRS, False) is True:
+                    issues: List[
+                        AIOGitHubAPIRepositoryIssue
+                    ] = await repository.get_issues()
+                else:
+                    issues = None
+                if entry.options.get(CONF_LATEST_RELEASE, False) is True:
+                    releases: List[
+                        AIOGitHubAPIRepositoryRelease
+                    ] = await repository.get_releases()
+                else:
+                    releases = None
+                if repository.attributes.get("permissions").get("push") is True:
+                    if entry.options.get(CONF_CLONES, False) is True:
+                        clones = await repository.client.get(
+                            endpoint=f"/repos/{repository.full_name}/traffic/clones"
+                        )
+                    else:
+                        clones = None
+                    if entry.options.get(CONF_VIEWS, False) is True:
+                        views = await repository.client.get(
+                            endpoint=f"/repos/{repository.full_name}/traffic/views"
+                        )
+                    else:
+                        views = None
+                else:
+                    clones = None
+                    views = None
 
-        return GitHubData(
-            repository,
-            GitHubLatestCommit(
-                latest_commit["commit"]["sha"],
-                latest_commit["commit"]["commit"]["message"],
-            )
-            if latest_commit is not None
-            else None,
-            GitHubClones(clones["count"], clones["uniques"])
-            if clones is not None
-            else None,
-            issues,
-            releases,
-            GitHubViews(views["count"], views["uniques"])
-            if views is not None
-            else None,
-        )
+                return GitHubData(
+                    repository,
+                    GitHubLatestCommit(
+                        latest_commit["commit"]["sha"],
+                        latest_commit["commit"]["commit"]["message"],
+                    )
+                    if latest_commit is not None
+                    else None,
+                    GitHubClones(clones["count"], clones["uniques"])
+                    if clones is not None
+                    else None,
+                    issues,
+                    releases,
+                    GitHubViews(views["count"], views["uniques"])
+                    if views is not None
+                    else None,
+                )
+        except (AIOGitHubAPIAuthenticationException, AIOGitHubAPIException) as err:
+            raise UpdateFailed(f"Error communicating with GitHub: {err}")
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -188,7 +195,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         name=DOMAIN,
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=300),
+        update_interval=timedelta(seconds=120),
     )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
@@ -263,6 +270,12 @@ class GitHubEntity(Entity):
     def should_poll(self):
         """No need to poll. Coordinator notifies entity of updates."""
         return False
+
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     async def async_update(self) -> None:
         """Update GitHub entity."""

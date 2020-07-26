@@ -45,6 +45,8 @@ ATTR_UNIQUE = "unique"
 ATTR_URL = "url"
 ATTR_USER = "user"
 
+PARALLEL_UPDATES = 4
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the sensor platform."""
@@ -56,8 +58,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
     ]
 
     @callback
-    def add_sensor_entities():
+    async def add_sensor_entities():
         """Add sensor entities."""
+        await coordinator.async_refresh()
+
         sensors = [
             ForksSensor(coordinator, repository),
             StargazersSensor(coordinator, repository),
@@ -89,7 +93,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     entry.add_update_listener(async_config_entry_updated)
 
-    add_sensor_entities()
+    await add_sensor_entities()
 
 
 async def async_config_entry_updated(hass, entry) -> None:
@@ -139,6 +143,7 @@ class ClonesSensor(GitHubSensor):
 
     async def _github_update(self) -> bool:
         """Fetch new state data for the sensor."""
+        await self._coordinator.async_request_refresh()
         data: GitHubData = self._coordinator.data
 
         self._state = data.clones.count
@@ -169,6 +174,7 @@ class ForksSensor(GitHubSensor):
 
     async def _github_update(self) -> bool:
         """Fetch new state data for the sensor."""
+        await self._coordinator.async_request_refresh()
         data: GitHubData = self._coordinator.data
 
         self._state = data.repository.attributes.get("forks")
@@ -202,6 +208,7 @@ class LatestCommitSensor(GitHubSensor):
 
     async def _github_update(self) -> bool:
         """Fetch new state data for the sensor."""
+        await self._coordinator.async_request_refresh()
         data: GitHubData = self._coordinator.data
 
         self._state = data.latest_commit.sha_short
@@ -237,6 +244,7 @@ class LatestOpenIssueSensor(GitHubSensor):
 
     async def _github_update(self) -> bool:
         """Fetch new state data for the sensor."""
+        await self._coordinator.async_request_refresh()
         data: GitHubData = self._coordinator.data
 
         if data.open_issues is None or len(data.open_issues) < 1:
@@ -284,6 +292,7 @@ class LatestPullRequestSensor(GitHubSensor):
 
     async def _github_update(self) -> bool:
         """Fetch new state data for the sensor."""
+        await self._coordinator.async_request_refresh()
         data: GitHubData = self._coordinator.data
 
         if data.open_pull_requests is None or len(data.open_pull_requests) < 1:
@@ -330,6 +339,7 @@ class LatestReleaseSensor(GitHubSensor):
 
     async def _github_update(self) -> bool:
         """Fetch new state data for the sensor."""
+        await self._coordinator.async_request_refresh()
         data: GitHubData = self._coordinator.data
 
         if data.releases is None or len(data.releases) < 1:
@@ -368,6 +378,7 @@ class StargazersSensor(GitHubSensor):
 
     async def _github_update(self) -> bool:
         """Fetch new state data for the sensor."""
+        await self._coordinator.async_request_refresh()
         data: GitHubData = self._coordinator.data
 
         self._state = data.repository.attributes.get("stargazers_count")
@@ -397,6 +408,7 @@ class ViewsSensor(GitHubSensor):
 
     async def _github_update(self) -> bool:
         """Fetch new state data for the sensor."""
+        await self._coordinator.async_request_refresh()
         data: GitHubData = self._coordinator.data
 
         self._state = data.views.count
@@ -427,6 +439,7 @@ class WatchersSensor(GitHubSensor):
 
     async def _github_update(self) -> bool:
         """Fetch new state data for the sensor."""
+        await self._coordinator.async_request_refresh()
         data: GitHubData = self._coordinator.data
 
         self._state = data.repository.attributes.get("watchers_count")
