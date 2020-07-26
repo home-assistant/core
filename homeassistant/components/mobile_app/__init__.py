@@ -215,6 +215,7 @@ PUSH_ACTION_SCHEMA_LIST = vol.All(cv.ensure_list, [PUSH_ACTION_SCHEMA])
 ACTION_SCHEMA = vol.Schema(
     {
         vol.Required("name"): cv.string,
+        vol.Required("background"): cv.string,
         vol.Required("text"): vol.All(
             {vol.Required("label"): cv.string, vol.Required("color"): cv.string}
         ),
