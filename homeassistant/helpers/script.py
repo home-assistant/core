@@ -38,13 +38,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_TURN_ON,
 )
-from homeassistant.core import (
-    SERVICE_CALL_LIMIT,
-    Context,
-    HassJob,
-    HomeAssistant,
-    callback,
-)
+from homeassistant.core import SERVICE_CALL_LIMIT, Context, HomeAssistant, callback
 from homeassistant.helpers import (
     condition,
     config_validation as cv,
@@ -633,8 +627,6 @@ class Script:
         template.attach(hass, self.sequence)
         self.name = name
         self.change_listener = change_listener
-        self._last_change_listener = None
-        self._job_change_listner = None
         self.script_mode = script_mode
         self._set_logger(logger)
         self._log_exceptions = log_exceptions
@@ -673,14 +665,8 @@ class Script:
                 choose_data["default"].update_logger(self._logger)
 
     def _changed(self):
-        if not self.change_listener:
-            return
-
-        if self.change_listener != self._last_change_listener:
-            self._last_change_listener = self.change_listener
-            self._job_change_listner = HassJob(self.change_listener)
-
-        self._hass.async_run_hass_job(self._job_change_listner)
+        if self.change_listener:
+            self._hass.async_run_job(self.change_listener)
 
     def _chain_change_listener(self, sub_script):
         if sub_script.is_running:

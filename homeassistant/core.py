@@ -149,52 +149,6 @@ def is_callback(func: Callable[..., Any]) -> bool:
     return getattr(func, "_hass_callback", False) is True
 
 
-@enum.unique
-class HassJobType(enum.Enum):
-    """Represent a job type."""
-
-    Coroutine = 1
-    Coroutinefunction = 2
-    Callback = 3
-    Executor = 4
-
-
-class HassJob:
-    """Represent a job to be run later.
-
-    We check the callable type in advance
-    so we can avoid checking it every time
-    we run the job.
-    """
-
-    __slots__ = ["job_type", "target"]
-
-    def __init__(self, target: Callable):
-        """Create a job object."""
-        self.target = target
-        self.job_type = _get_callable_job_type(target)
-
-    def __repr__(self) -> str:
-        """Return the job."""
-        return f"<Job {self.job_type} {self.target}>"
-
-
-def _get_callable_job_type(target: Callable) -> HassJobType:
-    """Determine the job type from the callable."""
-    # Check for partials to properly determine if coroutine function
-    check_target = target
-    while isinstance(check_target, functools.partial):
-        check_target = check_target.func
-
-    if asyncio.iscoroutine(check_target):
-        return HassJobType.Coroutine
-    if asyncio.iscoroutinefunction(check_target):
-        return HassJobType.Coroutinefunction
-    if is_callback(check_target):
-        return HassJobType.Callback
-    return HassJobType.Executor
-
-
 class CoreState(enum.Enum):
     """Represent the current state of Home Assistant."""
 
@@ -346,32 +300,26 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
-        return self.async_add_hass_job(HassJob(target), *args)
+        task = None
 
-    @callback
-    def async_add_hass_job(
-        self, hassjob: HassJob, *args: Any
-    ) -> Optional[asyncio.Future]:
-        """Add a HassJob from within the event loop.
+        # Check for partials to properly determine if coroutine function
+        check_target = target
+        while isinstance(check_target, functools.partial):
+            check_target = check_target.func
 
-        This method must be run in the event loop.
-        hassjob: HassJob to call.
-        args: parameters for method to call.
-        """
-        if hassjob.job_type == HassJobType.Coroutine:
-            task = self.loop.create_task(hassjob.target)  # type: ignore
-        elif hassjob.job_type == HassJobType.Coroutinefunction:
-            task = self.loop.create_task(hassjob.target(*args))
-        elif hassjob.job_type == HassJobType.Callback:
-            self.loop.call_soon(hassjob.target, *args)
-            return None
+        if asyncio.iscoroutine(check_target):
+            task = self.loop.create_task(target)  # type: ignore
+        elif asyncio.iscoroutinefunction(check_target):
+            task = self.loop.create_task(target(*args))
+        elif is_callback(check_target):
+            self.loop.call_soon(target, *args)
         else:
             task = self.loop.run_in_executor(  # type: ignore
-                None, hassjob.target, *args
+                None, target, *args
             )
 
         # If a task is scheduled
-        if self._track_task:
+        if self._track_task and task is not None:
             self._pending_tasks.append(task)
 
         return task
@@ -415,20 +363,6 @@ class HomeAssistant:
         self._track_task = False
 
     @callback
-    def async_run_hass_job(self, hassjob: HassJob, *args: Any) -> None:
-        """Run a HassJob from within the event loop.
-
-        This method must be run in the event loop.
-
-        hassjob: HassJob
-        args: parameters for method to call.
-        """
-        if hassjob.job_type == HassJobType.Callback:
-            hassjob.target(*args)
-        else:
-            self.async_add_hass_job(hassjob, *args)
-
-    @callback
     def async_run_job(
         self, target: Callable[..., Union[None, Awaitable]], *args: Any
     ) -> None:
@@ -439,7 +373,14 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
-        self.async_run_hass_job(HassJob(target), *args)
+        if (
+            not asyncio.iscoroutine(target)
+            and not asyncio.iscoroutinefunction(target)
+            and is_callback(target)
+        ):
+            target(*args)
+        else:
+            self.async_add_job(target, *args)
 
     def block_till_done(self) -> None:
         """Block until all pending work is done."""
@@ -614,7 +555,7 @@ class EventBus:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
-        self._listeners: Dict[str, List[HassJob]] = {}
+        self._listeners: Dict[str, List[Callable]] = {}
         self._hass = hass
 
     @callback
@@ -669,8 +610,8 @@ class EventBus:
         if not listeners:
             return
 
-        for job in listeners:
-            self._hass.async_add_hass_job(job, event)
+        for func in listeners:
+            self._hass.async_add_job(func, event)
 
     def listen(self, event_type: str, listener: Callable) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
@@ -697,18 +638,14 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        return self._async_listen_job(event_type, HassJob(listener))
-
-    @callback
-    def _async_listen_job(self, event_type: str, hassjob: HassJob) -> CALLBACK_TYPE:
         if event_type in self._listeners:
-            self._listeners[event_type].append(hassjob)
+            self._listeners[event_type].append(listener)
         else:
-            self._listeners[event_type] = [hassjob]
+            self._listeners[event_type] = [listener]
 
         def remove_listener() -> None:
             """Remove the listener."""
-            self._async_remove_listener(event_type, hassjob)
+            self._async_remove_listener(event_type, listener)
 
         return remove_listener
 
@@ -741,12 +678,10 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        job: Optional[HassJob] = None
 
         @callback
         def onetime_listener(event: Event) -> None:
             """Remove listener from event bus and then fire listener."""
-            nonlocal job
             if hasattr(onetime_listener, "run"):
                 return
             # Set variable so that we will never run twice.
@@ -755,22 +690,19 @@ class EventBus:
             # multiple times as well.
             # This will make sure the second time it does nothing.
             setattr(onetime_listener, "run", True)
-            assert job is not None
-            self._async_remove_listener(event_type, job)
+            self._async_remove_listener(event_type, onetime_listener)
             self._hass.async_run_job(listener, event)
 
-        job = HassJob(onetime_listener)
-
-        return self._async_listen_job(event_type, job)
+        return self.async_listen(event_type, onetime_listener)
 
     @callback
-    def _async_remove_listener(self, event_type: str, hassjob: HassJob) -> None:
+    def _async_remove_listener(self, event_type: str, listener: Callable) -> None:
         """Remove a listener of a specific event_type.
 
         This method must be run in the event loop.
         """
         try:
-            self._listeners[event_type].remove(hassjob)
+            self._listeners[event_type].remove(listener)
 
             # delete event_type list if empty
             if not self._listeners[event_type]:
@@ -778,7 +710,7 @@ class EventBus:
         except (KeyError, ValueError):
             # KeyError is key event_type listener did not exist
             # ValueError if listener did not exist within event_type
-            _LOGGER.warning("Unable to remove unknown job listener %s", hassjob)
+            _LOGGER.warning("Unable to remove unknown listener %s", listener)
 
 
 class State:

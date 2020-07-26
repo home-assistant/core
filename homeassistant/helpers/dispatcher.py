@@ -2,7 +2,7 @@
 import logging
 from typing import Any, Callable
 
-from homeassistant.core import HassJob, callback
+from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
@@ -44,25 +44,23 @@ def async_dispatcher_connect(
     if signal not in hass.data[DATA_DISPATCHER]:
         hass.data[DATA_DISPATCHER][signal] = []
 
-    job = HassJob(
-        catch_log_exception(
-            target,
-            lambda *args: "Exception in {} when dispatching '{}': {}".format(
-                # Functions wrapped in partial do not have a __name__
-                getattr(target, "__name__", None) or str(target),
-                signal,
-                args,
-            ),
-        )
+    wrapped_target = catch_log_exception(
+        target,
+        lambda *args: "Exception in {} when dispatching '{}': {}".format(
+            # Functions wrapped in partial do not have a __name__
+            getattr(target, "__name__", None) or str(target),
+            signal,
+            args,
+        ),
     )
 
-    hass.data[DATA_DISPATCHER][signal].append(job)
+    hass.data[DATA_DISPATCHER][signal].append(wrapped_target)
 
     @callback
     def async_remove_dispatcher() -> None:
         """Remove signal listener."""
         try:
-            hass.data[DATA_DISPATCHER][signal].remove(job)
+            hass.data[DATA_DISPATCHER][signal].remove(wrapped_target)
         except (KeyError, ValueError):
             # KeyError is key target listener did not exist
             # ValueError if listener did not exist within signal
@@ -86,5 +84,5 @@ def async_dispatcher_send(hass: HomeAssistantType, signal: str, *args: Any) -> N
     """
     target_list = hass.data.get(DATA_DISPATCHER, {}).get(signal, [])
 
-    for job in target_list:
-        hass.async_add_hass_job(job, *args)
+    for target in target_list:
+        hass.async_add_job(target, *args)
