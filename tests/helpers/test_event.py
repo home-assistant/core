@@ -422,7 +422,7 @@ async def test_track_same_state_simple_trigger(hass):
         hass,
         period,
         thread_run_callback,
-        callback(lambda _, _2, to_s: to_s.state == "on"),
+        lambda _, _2, to_s: to_s.state == "on",
         entity_ids="light.Bowl",
     )
 
