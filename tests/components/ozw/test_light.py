@@ -67,7 +67,7 @@ async def test_light(hass, light_data, light_msg, light_rgb_msg, sent_messages):
 
     msg = sent_messages[-2]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
-    assert msg["payload"] == {"Value": 237, "ValueIDKey": 1407375551070225}
+    assert msg["payload"] == {"Value": 6553, "ValueIDKey": 1407375551070225}
 
     msg = sent_messages[-1]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
@@ -131,7 +131,7 @@ async def test_light(hass, light_data, light_msg, light_rgb_msg, sent_messages):
         },
         blocking=True,
     )
-    assert len(sent_messages) == 7
+    assert len(sent_messages) == 8
     msg = sent_messages[-1]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {
@@ -158,7 +158,7 @@ async def test_light(hass, light_data, light_msg, light_rgb_msg, sent_messages):
         {"entity_id": "light.led_bulb_6_multi_colour_level", "color_name": new_color},
         blocking=True,
     )
-    assert len(sent_messages) == 9
+    assert len(sent_messages) == 11
 
     msg = sent_messages[-2]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
@@ -192,7 +192,7 @@ async def test_light(hass, light_data, light_msg, light_rgb_msg, sent_messages):
         {"entity_id": "light.led_bulb_6_multi_colour_level", "hs_color": new_color},
         blocking=True,
     )
-    assert len(sent_messages) == 11
+    assert len(sent_messages) == 14
     msg = sent_messages[-1]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {"Value": 255, "ValueIDKey": 659128337}
@@ -225,7 +225,7 @@ async def test_light(hass, light_data, light_msg, light_rgb_msg, sent_messages):
         {"entity_id": "light.led_bulb_6_multi_colour_level", "rgb_color": new_color},
         blocking=True,
     )
-    assert len(sent_messages) == 13
+    assert len(sent_messages) == 17
     msg = sent_messages[-1]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {"Value": 255, "ValueIDKey": 659128337}
@@ -258,7 +258,7 @@ async def test_light(hass, light_data, light_msg, light_rgb_msg, sent_messages):
         {"entity_id": "light.led_bulb_6_multi_colour_level", "xy_color": new_color},
         blocking=True,
     )
-    assert len(sent_messages) == 15
+    assert len(sent_messages) == 20
     msg = sent_messages[-1]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {"Value": 255, "ValueIDKey": 659128337}
@@ -291,7 +291,7 @@ async def test_light(hass, light_data, light_msg, light_rgb_msg, sent_messages):
         {"entity_id": "light.led_bulb_6_multi_colour_level", "color_temp": new_color},
         blocking=True,
     )
-    assert len(sent_messages) == 17
+    assert len(sent_messages) == 23
     msg = sent_messages[-1]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {"Value": 255, "ValueIDKey": 659128337}
@@ -324,7 +324,7 @@ async def test_light(hass, light_data, light_msg, light_rgb_msg, sent_messages):
         {"entity_id": "light.led_bulb_6_multi_colour_level", "color_temp": new_color},
         blocking=True,
     )
-    assert len(sent_messages) == 19
+    assert len(sent_messages) == 26
     msg = sent_messages[-1]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {"Value": 255, "ValueIDKey": 659128337}
