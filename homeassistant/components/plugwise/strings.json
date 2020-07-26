@@ -6,6 +6,7 @@
         "description": "Details",
         "data": {
           "host": "Smile IP address",
+          "port": "Smile port number",
           "password": "Smile ID"
         }
       }
