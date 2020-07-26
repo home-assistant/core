@@ -1,0 +1,8 @@
+{
+  "domain": "accuweather",
+  "name": "AccuWeather",
+  "documentation": "https://github.com/bieniu/ha-accuweather",
+  "requirements": ["accuweather==0.0.9"],
+  "codeowners": ["@bieniu"],
+  "config_flow": true
+}

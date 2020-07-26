@@ -50,7 +50,7 @@ async def test_track_point_in_time(hass):
     runs = []
 
     async_track_point_in_utc_time(
-        hass, callback(lambda x: runs.append(1)), birthday_paulus
+        hass, callback(lambda x: runs.append(x)), birthday_paulus
     )
 
     async_fire_time_changed(hass, before_birthday)
@@ -67,7 +67,7 @@ async def test_track_point_in_time(hass):
     assert len(runs) == 1
 
     async_track_point_in_utc_time(
-        hass, callback(lambda x: runs.append(1)), birthday_paulus
+        hass, callback(lambda x: runs.append(x)), birthday_paulus
     )
 
     async_fire_time_changed(hass, after_birthday)
@@ -75,7 +75,7 @@ async def test_track_point_in_time(hass):
     assert len(runs) == 2
 
     unsub = async_track_point_in_time(
-        hass, callback(lambda x: runs.append(1)), birthday_paulus
+        hass, callback(lambda x: runs.append(x)), birthday_paulus
     )
     unsub()
 
@@ -434,7 +434,7 @@ async def test_track_same_state_simple_trigger(hass):
         hass,
         period,
         callback_run_callback,
-        lambda _, _2, to_s: to_s.state == "on",
+        callback(lambda _, _2, to_s: to_s.state == "on"),
         entity_ids="light.Bowl",
     )
 
@@ -442,7 +442,10 @@ async def test_track_same_state_simple_trigger(hass):
         coroutine_runs.append(1)
 
     async_track_same_state(
-        hass, period, coroutine_run_callback, lambda _, _2, to_s: to_s.state == "on"
+        hass,
+        period,
+        coroutine_run_callback,
+        callback(lambda _, _2, to_s: to_s.state == "on"),
     )
 
     # Adding state to state machine
@@ -474,7 +477,7 @@ async def test_track_same_state_simple_no_trigger(hass):
         hass,
         period,
         callback_run_callback,
-        lambda _, _2, to_s: to_s.state == "on",
+        callback(lambda _, _2, to_s: to_s.state == "on"),
         entity_ids="light.Bowl",
     )
 
@@ -539,7 +542,7 @@ async def test_track_time_interval(hass):
 
     utc_now = dt_util.utcnow()
     unsub = async_track_time_interval(
-        hass, lambda x: specific_runs.append(1), timedelta(seconds=10)
+        hass, callback(lambda x: specific_runs.append(x)), timedelta(seconds=10)
     )
 
     async_fire_time_changed(hass, utc_now + timedelta(seconds=5))
@@ -590,12 +593,14 @@ async def test_track_sunrise(hass, legacy_patchable_time):
     # Track sunrise
     runs = []
     with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
-        unsub = async_track_sunrise(hass, lambda: runs.append(1))
+        unsub = async_track_sunrise(hass, callback(lambda: runs.append(1)))
 
     offset_runs = []
     offset = timedelta(minutes=30)
     with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
-        unsub2 = async_track_sunrise(hass, lambda: offset_runs.append(1), offset)
+        unsub2 = async_track_sunrise(
+            hass, callback(lambda: offset_runs.append(1)), offset
+        )
 
     # run tests
     async_fire_time_changed(hass, next_rising - offset)
@@ -648,7 +653,7 @@ async def test_track_sunrise_update_location(hass, legacy_patchable_time):
     # Track sunrise
     runs = []
     with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
-        async_track_sunrise(hass, lambda: runs.append(1))
+        async_track_sunrise(hass, callback(lambda: runs.append(1)))
 
     # Mimic sunrise
     async_fire_time_changed(hass, next_rising)
@@ -711,12 +716,14 @@ async def test_track_sunset(hass, legacy_patchable_time):
     # Track sunset
     runs = []
     with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
-        unsub = async_track_sunset(hass, lambda: runs.append(1))
+        unsub = async_track_sunset(hass, callback(lambda: runs.append(1)))
 
     offset_runs = []
     offset = timedelta(minutes=30)
     with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
-        unsub2 = async_track_sunset(hass, lambda: offset_runs.append(1), offset)
+        unsub2 = async_track_sunset(
+            hass, callback(lambda: offset_runs.append(1)), offset
+        )
 
     # Run tests
     async_fire_time_changed(hass, next_setting - offset)
@@ -750,22 +757,37 @@ async def test_async_track_time_change(hass):
 
     now = dt_util.utcnow()
 
-    unsub = async_track_time_change(hass, lambda x: wildcard_runs.append(1))
-    unsub_utc = async_track_utc_time_change(
-        hass, lambda x: specific_runs.append(1), second=[0, 30]
+    time_that_will_not_match_right_away = datetime(
+        now.year + 1, 5, 24, 11, 59, 55, tzinfo=dt_util.UTC
     )
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 0, 0, 999999))
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        unsub = async_track_time_change(
+            hass, callback(lambda x: wildcard_runs.append(x))
+        )
+        unsub_utc = async_track_utc_time_change(
+            hass, callback(lambda x: specific_runs.append(x)), second=[0, 30]
+        )
+
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 12, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 1
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 0, 15, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 12, 0, 15, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 2
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 0, 30, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 12, 0, 30, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
     assert len(wildcard_runs) == 3
@@ -773,7 +795,9 @@ async def test_async_track_time_change(hass):
     unsub()
     unsub_utc()
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 0, 30, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 12, 0, 30, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
     assert len(wildcard_runs) == 3
@@ -785,25 +809,40 @@ async def test_periodic_task_minute(hass):
 
     now = dt_util.utcnow()
 
-    unsub = async_track_utc_time_change(
-        hass, lambda x: specific_runs.append(1), minute="/5", second=0
+    time_that_will_not_match_right_away = datetime(
+        now.year + 1, 5, 24, 11, 59, 55, tzinfo=dt_util.UTC
     )
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 0, 0, 999999))
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        unsub = async_track_utc_time_change(
+            hass, callback(lambda x: specific_runs.append(x)), minute="/5", second=0
+        )
+
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 12, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 3, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 12, 3, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 5, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 12, 5, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
     unsub()
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 12, 5, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 12, 5, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
@@ -814,33 +853,56 @@ async def test_periodic_task_hour(hass):
 
     now = dt_util.utcnow()
 
-    unsub = async_track_utc_time_change(
-        hass, lambda x: specific_runs.append(1), hour="/2", minute=0, second=0
+    time_that_will_not_match_right_away = datetime(
+        now.year + 1, 5, 24, 21, 59, 55, tzinfo=dt_util.UTC
     )
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999))
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        unsub = async_track_utc_time_change(
+            hass,
+            callback(lambda x: specific_runs.append(x)),
+            hour="/2",
+            minute=0,
+            second=0,
+        )
+
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 23, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 23, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 0, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 25, 0, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 1, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 25, 1, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 2, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 25, 2, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 3
 
     unsub()
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 2, 0, 0))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 25, 2, 0, 0, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 3
 
@@ -853,10 +915,12 @@ async def test_periodic_task_wrong_input(hass):
 
     with pytest.raises(ValueError):
         async_track_utc_time_change(
-            hass, lambda x: specific_runs.append(1), hour="/two"
+            hass, callback(lambda x: specific_runs.append(x)), hour="/two"
         )
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 2, 0, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 2, 0, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
@@ -867,37 +931,60 @@ async def test_periodic_task_clock_rollback(hass):
 
     now = dt_util.utcnow()
 
-    unsub = async_track_utc_time_change(
-        hass, lambda x: specific_runs.append(1), hour="/2", minute=0, second=0
+    time_that_will_not_match_right_away = datetime(
+        now.year + 1, 5, 24, 21, 59, 55, tzinfo=dt_util.UTC
     )
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999))
-    await hass.async_block_till_done()
-    assert len(specific_runs) == 1
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        unsub = async_track_utc_time_change(
+            hass,
+            callback(lambda x: specific_runs.append(x)),
+            hour="/2",
+            minute=0,
+            second=0,
+        )
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 23, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
     async_fire_time_changed(
-        hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999), fire_all=True
+        hass, datetime(now.year + 1, 5, 24, 23, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
+
+    async_fire_time_changed(
+        hass,
+        datetime(now.year + 1, 5, 24, 22, 0, 0, 999999, tzinfo=dt_util.UTC),
+        fire_all=True,
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
     async_fire_time_changed(
-        hass, datetime(now.year + 1, 5, 24, 0, 0, 0, 999999), fire_all=True
+        hass,
+        datetime(now.year + 1, 5, 24, 0, 0, 0, 999999, tzinfo=dt_util.UTC),
+        fire_all=True,
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 3
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 2, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 25, 2, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 4
 
     unsub()
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 2, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 25, 2, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 4
 
@@ -908,19 +995,36 @@ async def test_periodic_task_duplicate_time(hass):
 
     now = dt_util.utcnow()
 
-    unsub = async_track_utc_time_change(
-        hass, lambda x: specific_runs.append(1), hour="/2", minute=0, second=0
+    time_that_will_not_match_right_away = datetime(
+        now.year + 1, 5, 24, 21, 59, 55, tzinfo=dt_util.UTC
     )
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999))
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        unsub = async_track_utc_time_change(
+            hass,
+            callback(lambda x: specific_runs.append(x)),
+            hour="/2",
+            minute=0,
+            second=0,
+        )
+
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(hass, datetime(now.year + 1, 5, 25, 0, 0, 0, 999999))
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 25, 0, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
@@ -942,7 +1046,11 @@ async def test_periodic_task_entering_dst(hass):
         "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
     ):
         unsub = async_track_time_change(
-            hass, lambda x: specific_runs.append(1), hour=2, minute=30, second=0
+            hass,
+            callback(lambda x: specific_runs.append(x)),
+            hour=2,
+            minute=30,
+            second=0,
         )
 
     async_fire_time_changed(
@@ -988,7 +1096,11 @@ async def test_periodic_task_leaving_dst(hass):
         "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
     ):
         unsub = async_track_time_change(
-            hass, lambda x: specific_runs.append(1), hour=2, minute=30, second=0
+            hass,
+            callback(lambda x: specific_runs.append(x)),
+            hour=2,
+            minute=30,
+            second=0,
         )
 
     async_fire_time_changed(

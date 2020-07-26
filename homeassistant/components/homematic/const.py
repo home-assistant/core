@@ -152,7 +152,14 @@ HM_DEVICE_TYPES = {
         "IPRemoteMotionV2",
         "IPWInputDevice",
     ],
-    DISCOVER_COVER: ["Blind", "KeyBlind", "IPKeyBlind", "IPKeyBlindTilt", "IPGarage"],
+    DISCOVER_COVER: [
+        "Blind",
+        "KeyBlind",
+        "IPKeyBlind",
+        "IPKeyBlindTilt",
+        "IPGarage",
+        "IPKeyBlindMulti",
+    ],
     DISCOVER_LOCKS: ["KeyMatic"],
 }
 

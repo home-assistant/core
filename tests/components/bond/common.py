@@ -1,13 +1,16 @@
 """Common methods used across tests for Bond."""
+from asyncio import TimeoutError as AsyncIOTimeoutError
+from datetime import timedelta
 from typing import Any, Dict
 
 from homeassistant import core
 from homeassistant.components.bond.const import DOMAIN as BOND_DOMAIN
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component
+from homeassistant.util import utcnow
 
 from tests.async_mock import patch
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_HUB_VERSION: dict = {"bondid": "test-bond-id"}
 
@@ -74,11 +77,32 @@ def patch_bond_action():
     return patch("homeassistant.components.bond.Bond.action")
 
 
-def patch_bond_device_state(return_value=None):
+def patch_bond_device_state(return_value=None, side_effect=None):
     """Patch Bond API device state endpoint."""
     if return_value is None:
         return_value = {}
 
     return patch(
-        "homeassistant.components.bond.Bond.device_state", return_value=return_value
+        "homeassistant.components.bond.Bond.device_state",
+        return_value=return_value,
+        side_effect=side_effect,
     )
+
+
+async def help_test_entity_available(
+    hass: core.HomeAssistant, domain: str, device: Dict[str, Any], entity_id: str
+):
+    """Run common test to verify available property."""
+    await setup_platform(hass, domain, device)
+
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    with patch_bond_device_state(side_effect=AsyncIOTimeoutError()):
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    with patch_bond_device_state(return_value={}):
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE

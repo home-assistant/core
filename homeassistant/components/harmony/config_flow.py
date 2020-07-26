@@ -86,6 +86,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
         friendly_name = discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]
 
+        if self._host_already_configured(parsed_url.hostname):
+            return self.async_abort(reason="already_configured")
+
         # pylint: disable=no-member
         self.context["title_placeholders"] = {"name": friendly_name}
 
@@ -157,6 +160,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         data.update(_options_from_user_input(user_input))
 
         return self.async_create_entry(title=validated[CONF_NAME], data=data)
+
+    def _host_already_configured(self, host):
+        """See if we already have a harmony entry matching the host."""
+        for entry in self._async_current_entries():
+            if entry.data[CONF_HOST] == host:
+                return True
+        return False
 
 
 def _options_from_user_input(user_input):

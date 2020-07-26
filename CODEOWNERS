@@ -14,6 +14,7 @@ homeassistant/scripts/check_config.py @kellerza
 
 # Integrations
 homeassistant/components/abode/* @shred86
+homeassistant/components/accuweather/* @bieniu
 homeassistant/components/acmeda/* @atmurray
 homeassistant/components/adguard/* @frenck
 homeassistant/components/agent_dvr/* @ispysoftware
@@ -48,6 +49,7 @@ homeassistant/components/avri/* @timvancann
 homeassistant/components/awair/* @ahayworth @danielsjf
 homeassistant/components/aws/* @awarecan
 homeassistant/components/axis/* @Kane610
+homeassistant/components/azure_devops/* @timmo001
 homeassistant/components/azure_event_hub/* @eavanvalkenburg
 homeassistant/components/azure_service_bus/* @hfurubotten
 homeassistant/components/beewi_smartclim/* @alemuro
@@ -280,7 +282,7 @@ homeassistant/components/notion/* @bachya
 homeassistant/components/nsw_fuel_station/* @nickw444
 homeassistant/components/nsw_rural_fire_service_feed/* @exxamalte
 homeassistant/components/nuheat/* @bdraco
-homeassistant/components/nuki/* @pvizeli
+homeassistant/components/nuki/* @pschmitt @pvizeli
 homeassistant/components/numato/* @clssn
 homeassistant/components/nut/* @bdraco
 homeassistant/components/nws/* @MatthewFlamm

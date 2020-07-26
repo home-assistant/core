@@ -1404,3 +1404,24 @@ async def test_start_events(hass):
         EVENT_HOMEASSISTANT_STARTED,
     ]
     assert core_states == [ha.CoreState.starting, ha.CoreState.running]
+
+
+async def test_log_blocking_events(hass, caplog):
+    """Ensure we log which task is blocking startup when debug logging is on."""
+    caplog.set_level(logging.DEBUG)
+
+    async def _wait_a_bit_1():
+        await asyncio.sleep(0.1)
+
+    async def _wait_a_bit_2():
+        await asyncio.sleep(0.1)
+
+    hass.async_create_task(_wait_a_bit_1())
+    await hass.async_block_till_done()
+
+    with patch.object(ha, "BLOCK_LOG_TIMEOUT", 0.00001):
+        hass.async_create_task(_wait_a_bit_2())
+        await hass.async_block_till_done()
+
+    assert "_wait_a_bit_2" in caplog.text
+    assert "_wait_a_bit_1" not in caplog.text

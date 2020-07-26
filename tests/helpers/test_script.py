@@ -854,6 +854,122 @@ async def test_repeat_conditional(hass, condition):
         assert event.data.get("index") == str(index + 1)
 
 
+@pytest.mark.parametrize("condition", ["while", "until"])
+async def test_repeat_var_in_condition(hass, condition):
+    """Test repeat action w/ while option."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+
+    sequence = {"repeat": {"sequence": {"event": event}}}
+    if condition == "while":
+        sequence["repeat"]["while"] = {
+            "condition": "template",
+            "value_template": "{{ repeat.index <= 2 }}",
+        }
+    else:
+        sequence["repeat"]["until"] = {
+            "condition": "template",
+            "value_template": "{{ repeat.index == 2 }}",
+        }
+    script_obj = script.Script(hass, cv.SCRIPT_SCHEMA(sequence))
+
+    with mock.patch(
+        "homeassistant.helpers.condition._LOGGER.error",
+        side_effect=AssertionError("Template Error"),
+    ):
+        await script_obj.async_run()
+
+    assert len(events) == 2
+
+
+async def test_repeat_nested(hass):
+    """Test nested repeats."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "event": event,
+                "event_data_template": {
+                    "repeat": "{{ None if repeat is not defined else repeat }}"
+                },
+            },
+            {
+                "repeat": {
+                    "count": 2,
+                    "sequence": [
+                        {
+                            "event": event,
+                            "event_data_template": {
+                                "first": "{{ repeat.first }}",
+                                "index": "{{ repeat.index }}",
+                                "last": "{{ repeat.last }}",
+                            },
+                        },
+                        {
+                            "repeat": {
+                                "count": 2,
+                                "sequence": {
+                                    "event": event,
+                                    "event_data_template": {
+                                        "first": "{{ repeat.first }}",
+                                        "index": "{{ repeat.index }}",
+                                        "last": "{{ repeat.last }}",
+                                    },
+                                },
+                            }
+                        },
+                        {
+                            "event": event,
+                            "event_data_template": {
+                                "first": "{{ repeat.first }}",
+                                "index": "{{ repeat.index }}",
+                                "last": "{{ repeat.last }}",
+                            },
+                        },
+                    ],
+                }
+            },
+            {
+                "event": event,
+                "event_data_template": {
+                    "repeat": "{{ None if repeat is not defined else repeat }}"
+                },
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "test script")
+
+    with mock.patch(
+        "homeassistant.helpers.condition._LOGGER.error",
+        side_effect=AssertionError("Template Error"),
+    ):
+        await script_obj.async_run()
+
+    assert len(events) == 10
+    assert events[0].data == {"repeat": "None"}
+    assert events[-1].data == {"repeat": "None"}
+    for index, result in enumerate(
+        (
+            ("True", "1", "False"),
+            ("True", "1", "False"),
+            ("False", "2", "True"),
+            ("True", "1", "False"),
+            ("False", "2", "True"),
+            ("True", "1", "False"),
+            ("False", "2", "True"),
+            ("False", "2", "True"),
+        ),
+        1,
+    ):
+        assert events[index].data == {
+            "first": result[0],
+            "index": result[1],
+            "last": result[2],
+        }
+
+
 @pytest.mark.parametrize("var,result", [(1, "first"), (2, "second"), (3, "default")])
 async def test_choose(hass, var, result):
     """Test choose action."""

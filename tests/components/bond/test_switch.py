@@ -10,7 +10,12 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_O
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
-from .common import patch_bond_action, patch_bond_device_state, setup_platform
+from .common import (
+    help_test_entity_available,
+    patch_bond_action,
+    patch_bond_device_state,
+    setup_platform,
+)
 
 from tests.common import async_fire_time_changed
 
@@ -86,3 +91,10 @@ async def test_update_reports_switch_is_off(hass: core.HomeAssistant):
         await hass.async_block_till_done()
 
     assert hass.states.get("switch.name_1").state == "off"
+
+
+async def test_switch_available(hass: core.HomeAssistant):
+    """Tests that available state is updated based on API errors."""
+    await help_test_entity_available(
+        hass, SWITCH_DOMAIN, generic_device("name-1"), "switch.name_1"
+    )
