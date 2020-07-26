@@ -1,5 +1,6 @@
 """Module that groups code required to handle state restore for component."""
 import asyncio
+import logging
 from typing import Any, Dict, Iterable, Optional
 
 from homeassistant.const import (
@@ -13,7 +14,6 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
     STATE_IDLE,
     STATE_OFF,
-    STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
 )
@@ -25,6 +25,7 @@ from .const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_POSITION,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
@@ -37,6 +38,8 @@ from .const import (
 
 # mypy: allow-untyped-defs
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def _async_reproduce_states(
     hass: HomeAssistantType,
@@ -47,36 +50,37 @@ async def _async_reproduce_states(
 ) -> None:
     """Reproduce component states."""
 
+    _LOGGER.debug("Restoring state: %s", state)
+
     async def call_service(service: str, keys: Iterable) -> None:
         """Call service with set of attributes given."""
         data = {"entity_id": state.entity_id}
         for key in keys:
             if key in state.attributes:
-                data[key] = state.attributes[key]
+                if key == ATTR_MEDIA_POSITION:
+                    # for this property only, the state does not match the service data
+                    data[ATTR_MEDIA_SEEK_POSITION] = state.attributes[key]
+                else:
+                    data[key] = state.attributes[key]
 
+        _LOGGER.debug("Calling %s with data %s", service, data)
         await hass.services.async_call(
             DOMAIN, service, data, blocking=True, context=context
         )
 
-    if state.state == STATE_ON:
-        await call_service(SERVICE_TURN_ON, [])
-    elif state.state == STATE_OFF:
+    if state.state == STATE_OFF:
         await call_service(SERVICE_TURN_OFF, [])
-    elif state.state == STATE_PLAYING:
-        await call_service(SERVICE_MEDIA_PLAY, [])
-    elif state.state == STATE_IDLE:
-        await call_service(SERVICE_MEDIA_STOP, [])
-    elif state.state == STATE_PAUSED:
-        await call_service(SERVICE_MEDIA_PAUSE, [])
+        # entities that are off have no other attributes to restore
+        return
+
+    await call_service(SERVICE_TURN_ON, [])
+    already_playing = False
 
     if ATTR_MEDIA_VOLUME_LEVEL in state.attributes:
         await call_service(SERVICE_VOLUME_SET, [ATTR_MEDIA_VOLUME_LEVEL])
 
     if ATTR_MEDIA_VOLUME_MUTED in state.attributes:
         await call_service(SERVICE_VOLUME_MUTE, [ATTR_MEDIA_VOLUME_MUTED])
-
-    if ATTR_MEDIA_SEEK_POSITION in state.attributes:
-        await call_service(SERVICE_MEDIA_SEEK, [ATTR_MEDIA_SEEK_POSITION])
 
     if ATTR_INPUT_SOURCE in state.attributes:
         await call_service(SERVICE_SELECT_SOURCE, [ATTR_INPUT_SOURCE])
@@ -91,6 +95,17 @@ async def _async_reproduce_states(
             SERVICE_PLAY_MEDIA,
             [ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_ENQUEUE],
         )
+        already_playing = True
+
+    if ATTR_MEDIA_POSITION in state.attributes:
+        await call_service(SERVICE_MEDIA_SEEK, [ATTR_MEDIA_POSITION])
+
+    if state.state == STATE_PLAYING and not already_playing:
+        await call_service(SERVICE_MEDIA_PLAY, [])
+    elif state.state == STATE_IDLE:
+        await call_service(SERVICE_MEDIA_STOP, [])
+    elif state.state == STATE_PAUSED:
+        await call_service(SERVICE_MEDIA_PAUSE, [])
 
 
 async def async_reproduce_states(
