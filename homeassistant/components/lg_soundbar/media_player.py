@@ -104,7 +104,8 @@ class LGDevice(MediaPlayerEntity):
                 self._equaliser = data["i_curr_eq"]
             if "s_user_name" in data:
                 self._name = data["s_user_name"]
-        self.schedule_update_ha_state()
+        if self.hass is not None:
+            self.schedule_update_ha_state()
 
     def update(self):
         """Trigger updates from the device."""
