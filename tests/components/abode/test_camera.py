@@ -52,7 +52,7 @@ async def test_camera_on(hass):
             blocking=True,
         )
         await hass.async_block_till_done()
-        mock_capture.assert_called_once_with(True)
+        mock_capture.assert_called_once_with(False)
 
 
 async def test_camera_off(hass):
@@ -67,4 +67,4 @@ async def test_camera_off(hass):
             blocking=True,
         )
         await hass.async_block_till_done()
-        mock_capture.assert_called_once_with(False)
+        mock_capture.assert_called_once_with(True)

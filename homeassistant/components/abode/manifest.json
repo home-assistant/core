@@ -3,6 +3,6 @@
   "name": "Abode",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/abode",
-  "requirements": ["abodepy==1.0.0"],
+  "requirements": ["abodepy==1.1.0"],
   "codeowners": ["@shred86"]
 }

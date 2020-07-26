@@ -84,11 +84,11 @@ class AbodeCamera(AbodeDevice, Camera):
 
     def turn_on(self):
         """Turn on camera."""
-        self._device.privacy_mode(True)
+        self._device.privacy_mode(False)
 
     def turn_off(self):
         """Turn off camera."""
-        self._device.privacy_mode(False)
+        self._device.privacy_mode(True)
 
     def _capture_callback(self, capture):
         """Update the image with the device then refresh device."""
