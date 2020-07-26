@@ -40,7 +40,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     except AIOGitHubAPIException:
         raise CannotConnect
 
-    return {"title": repository.full_name}
+    return {"title": repository.attributes.get("name")}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
