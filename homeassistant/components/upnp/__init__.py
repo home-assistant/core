@@ -145,8 +145,10 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a UPnP/IGD device from a config entry."""
     udn = config_entry.data.get(CONFIG_ENTRY_UDN)
-    del hass.data[DOMAIN][DOMAIN_DEVICES][udn]
-    del hass.data[DOMAIN][DOMAIN_COORDINATORS][udn]
+    if udn in hass.data[DOMAIN][DOMAIN_DEVICES]:
+        del hass.data[DOMAIN][DOMAIN_DEVICES][udn]
+    if udn in hass.data[DOMAIN][DOMAIN_COORDINATORS]:
+        del hass.data[DOMAIN][DOMAIN_COORDINATORS][udn]
 
     _LOGGER.debug("Deleting sensors")
     return await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
