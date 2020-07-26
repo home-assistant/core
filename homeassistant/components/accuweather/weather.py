@@ -12,7 +12,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_WIND_SPEED,
     WeatherEntity,
 )
-from homeassistant.const import CONF_NAME, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.util.dt import utc_from_timestamp
 
 from .const import ATTR_FORECAST, ATTRIBUTION, CONDITION_CLASSES, COORDINATOR, DOMAIN
@@ -74,7 +74,7 @@ class AccuWeatherEntity(WeatherEntity):
                 if self.coordinator.data["WeatherIcon"] in v
             ][0]
         except IndexError:
-            return STATE_UNKNOWN
+            return None
 
     @property
     def temperature(self):
