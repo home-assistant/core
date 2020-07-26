@@ -793,8 +793,9 @@ async def test_repeat_count(hass):
 
 
 @pytest.mark.parametrize("condition", ["while", "until"])
-async def test_repeat_conditional(hass, condition):
-    """Test repeat action w/ while option."""
+@pytest.mark.parametrize("direct_template", [False, True])
+async def test_repeat_conditional(hass, condition, direct_template):
+    """Test repeat action w/ while & until options."""
     event = "test_event"
     events = async_capture_events(hass, event)
     count = 3
@@ -815,15 +816,23 @@ async def test_repeat_conditional(hass, condition):
         }
     }
     if condition == "while":
-        sequence["repeat"]["while"] = {
-            "condition": "template",
-            "value_template": "{{ not is_state('sensor.test', 'done') }}",
-        }
+        template = "{{ not is_state('sensor.test', 'done') }}"
+        if direct_template:
+            sequence["repeat"]["while"] = template
+        else:
+            sequence["repeat"]["while"] = {
+                "condition": "template",
+                "value_template": template,
+            }
     else:
-        sequence["repeat"]["until"] = {
-            "condition": "template",
-            "value_template": "{{ is_state('sensor.test', 'done') }}",
-        }
+        template = "{{ is_state('sensor.test', 'done') }}"
+        if direct_template:
+            sequence["repeat"]["until"] = template
+        else:
+            sequence["repeat"]["until"] = {
+                "condition": "template",
+                "value_template": template,
+            }
     script_obj = script.Script(hass, cv.SCRIPT_SCHEMA(sequence))
 
     wait_started = async_watch_for_action(script_obj, "wait")
@@ -856,7 +865,7 @@ async def test_repeat_conditional(hass, condition):
 
 @pytest.mark.parametrize("condition", ["while", "until"])
 async def test_repeat_var_in_condition(hass, condition):
-    """Test repeat action w/ while option."""
+    """Test repeat action w/ while & until options that use repeat variable."""
     event = "test_event"
     events = async_capture_events(hass, event)
 
@@ -986,10 +995,7 @@ async def test_choose(hass, var, result):
                     "sequence": {"event": event, "event_data": {"choice": "first"}},
                 },
                 {
-                    "conditions": {
-                        "condition": "template",
-                        "value_template": "{{ var == 2 }}",
-                    },
+                    "conditions": "{{ var == 2 }}",
                     "sequence": {"event": event, "event_data": {"choice": "second"}},
                 },
             ],
