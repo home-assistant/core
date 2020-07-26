@@ -91,8 +91,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             flume_entity_list.append(
                 FlumeSensor(
                     flume_data,
-                    flume_query_sensor[0],
-                    f"{device_friendly_name} {flume_query_sensor[1]}",
+                    flume_query_sensor,
+                    f"{device_friendly_name} {flume_query_sensor[1]['friendly_name']}",
                     device_id,
                 )
             )
@@ -111,9 +111,8 @@ class FlumeSensor(Entity):
         self._name = name
         self._device_id = device_id
         self._undo_track_sensor = None
-        self._available = False
+        self._available = self._flume_data.available
         self._state = None
-        self._attributes = None
 
     @property
     def device_info(self):
@@ -139,7 +138,7 @@ class FlumeSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         # This is in gallons per SCAN_INTERVAL
-        return "gal/m"
+        return self._flume_query_sensor[1]["unit_of_measurement"]
 
     @property
     def available(self):
@@ -149,22 +148,22 @@ class FlumeSensor(Entity):
     @property
     def unique_id(self):
         """Flume query and Device unique ID."""
-        return f"{self._flume_query_sensor}_{self._device_id}"
+        return f"{self._flume_query_sensor[1]['friendly_name']}_{self._device_id}"
 
     def update(self):
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating flume sensor: %s", self._name)
 
-        def format_attribute_value(value):
+        def format_state_value(value):
             return round(value, 1) if isinstance(value, Number) else None
 
         self._flume_data.update()
-        self._state = format_attribute_value(
-            self._flume_data.flume_device.values[self._flume_query_sensor]
+        self._state = format_state_value(
+            self._flume_data.flume_device.values[self._flume_query_sensor[0]]
         )
         _LOGGER.debug("Successful update of flume sensor: %s", self._name)
 
-        self._available = True
+        self._available = self._flume_data.available
 
     async def async_added_to_hass(self):
         """Request an update when added."""
