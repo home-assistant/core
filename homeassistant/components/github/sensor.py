@@ -48,8 +48,23 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([RepositorySensor(coordinator, repository)], True)
 
 
-class RepositorySensor(GitHubDeviceEntity):
-    """Representation of a Sensor."""
+class GitHubSensor(GitHubDeviceEntity):
+    """Representation of a GitHub sensor."""
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        repository: AIOGitHubAPIRepository,
+        unique_id: str,
+        name: str,
+        icon: str,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, f"{repository.full_name}_{unique_id}", name, icon)
+
+
+class RepositorySensor(GitHubSensor):
+    """Representation of a Repository Sensor."""
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, repository: AIOGitHubAPIRepository
@@ -66,9 +81,9 @@ class RepositorySensor(GitHubDeviceEntity):
         self._latest_open_pr_url = None
         self._latest_release_tag = None
         self._latest_release_url = None
-        self._name = None
         self._open_issues = None
         self._pull_requests = None
+        self._repo_name = None
         self._stargazers = None
         self._state = None
         self._topics = None
@@ -76,11 +91,10 @@ class RepositorySensor(GitHubDeviceEntity):
         self._views_unique = None
         self._watchers = None
 
+        name = repository.attributes.get("name")
+
         super().__init__(
-            coordinator,
-            f"{repository.full_name}_sensor",
-            repository.full_name,
-            "mdi:github",
+            coordinator, repository, "repository", f"{name} Repository", "mdi:github"
         )
 
     @property
@@ -103,7 +117,7 @@ class RepositorySensor(GitHubDeviceEntity):
             ATTR_LATEST_OPEN_PULL_REQUEST_URL: self._latest_open_pr_url,
             ATTR_LATEST_RELEASE_TAG: self._latest_release_tag,
             ATTR_LATEST_RELEASE_URL: self._latest_release_url,
-            ATTR_NAME: self._name,
+            ATTR_NAME: self._repo_name,
             ATTR_OPEN_ISSUES: self._open_issues,
             ATTR_OPEN_PULL_REQUESTS: self._pull_requests,
             ATTR_STARGAZERS: self._stargazers,
@@ -142,9 +156,9 @@ class RepositorySensor(GitHubDeviceEntity):
             if len(data.releases) > 1
             else ""
         )
-        self._name = data.repository.attributes.get("name")
         self._open_issues = len(data.open_issues)
         self._pull_requests = len(data.open_pull_requests)
+        self._repo_name = data.repository.attributes.get("name")
         self._stargazers = data.repository.attributes.get("stargazers_count")
         self._topics = data.repository.topics
         self._views = data.views.count
