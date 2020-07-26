@@ -6,6 +6,7 @@ from time import monotonic
 from typing import Awaitable, Callable, Generic, List, Optional, TypeVar
 
 import aiohttp
+import requests
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import event
@@ -140,12 +141,12 @@ class DataUpdateCoordinator(Generic[T]):
             start = monotonic()
             self.data = await self._async_update_data()
 
-        except asyncio.TimeoutError:
+        except (asyncio.TimeoutError, requests.exceptions.Timeout):
             if self.last_update_success:
                 self.logger.error("Timeout fetching %s data", self.name)
                 self.last_update_success = False
 
-        except aiohttp.ClientError as err:
+        except (aiohttp.ClientError, requests.exceptions.RequestException) as err:
             if self.last_update_success:
                 self.logger.error("Error requesting %s data: %s", self.name, err)
                 self.last_update_success = False

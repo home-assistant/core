@@ -5,6 +5,7 @@ import logging
 
 import aiohttp
 import pytest
+import requests
 
 from homeassistant.helpers import update_coordinator
 from homeassistant.util.dt import utcnow
@@ -111,7 +112,9 @@ async def test_request_refresh_no_auto_update(crd_without_update_interval):
     "err_msg",
     [
         (asyncio.TimeoutError, "Timeout fetching test data"),
+        (requests.exceptions.Timeout, "Timeout fetching test data"),
         (aiohttp.ClientError, "Error requesting test data"),
+        (requests.exceptions.RequestException, "Error requesting test data"),
         (update_coordinator.UpdateFailed, "Error fetching test data"),
     ],
 )
