@@ -112,6 +112,8 @@ async def test_create_entry(hass):
     with patch(
         "accuweather.AccuWeather._async_get_data",
         return_value=json.loads(load_fixture("accuweather/location_data.json")),
+    ), patch(
+        "homeassistant.components.accuweather.async_setup_entry", return_value=True
     ):
 
         result = await hass.config_entries.flow.async_init(
