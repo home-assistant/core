@@ -413,6 +413,11 @@ async def _async_set_up_integrations(
     hass: core.HomeAssistant, config: Dict[str, Any]
 ) -> None:
     """Set up all the integrations."""
+    import cProfile
+
+    pr = cProfile.Profile()
+    pr.enable()
+
     setup_started = hass.data[DATA_SETUP_STARTED] = {}
     domains_to_setup = _get_domains(hass, config)
 
@@ -517,3 +522,7 @@ async def _async_set_up_integrations(
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
     await hass.async_block_till_done()
+
+    pr.disable()
+    pr.create_stats()
+    pr.dump_stats("bootstrap.cprof")
