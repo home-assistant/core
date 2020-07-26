@@ -1,8 +1,13 @@
 """Tests for the Bond module."""
+from aiohttp import ClientConnectionError
+import pytest
+
+from homeassistant.components.bond import async_setup_entry
 from homeassistant.components.bond.const import DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -16,6 +21,17 @@ async def test_async_setup_no_domain_config(hass: HomeAssistant):
     result = await async_setup_component(hass, DOMAIN, {})
 
     assert result is True
+
+
+async def test_async_setup_raises_entry_not_ready(hass: HomeAssistant):
+    """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
+    )
+
+    with patch_bond_version(side_effect=ClientConnectionError()):
+        with pytest.raises(ConfigEntryNotReady):
+            await async_setup_entry(hass, config_entry)
 
 
 async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAssistant):
