@@ -33,6 +33,7 @@ async def test_setup_with_config(hass):
             await async_setup_component(hass, islamic_prayer_times.DOMAIN, config)
             is True
         )
+        await hass.async_block_till_done()
 
 
 async def test_successful_config_entry(hass):
@@ -46,6 +47,7 @@ async def test_successful_config_entry(hass):
         return_value=PRAYER_TIMES,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
         assert entry.state == config_entries.ENTRY_STATE_LOADED
         assert entry.options == {
@@ -65,6 +67,7 @@ async def test_setup_failed(hass):
         side_effect=InvalidResponseError(),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
         assert entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
 
 
@@ -95,6 +98,7 @@ async def test_islamic_prayer_times_timestamp_format(hass, legacy_patchable_time
         return_value=PRAYER_TIMES,
     ), patch("homeassistant.util.dt.now", return_value=NOW):
         await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
         assert (
             hass.data[islamic_prayer_times.DOMAIN].prayer_times_info
