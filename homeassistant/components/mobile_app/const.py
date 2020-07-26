@@ -98,4 +98,4 @@ SIGNAL_LOCATION_UPDATE = DOMAIN + "_location_update_{}"
 
 ATTR_CAMERA_ENTITY_ID = "camera_entity_id"
 
-ECO_IOS = "ios"
+CONF_ECO_IOS = "ios"
