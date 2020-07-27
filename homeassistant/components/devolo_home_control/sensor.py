@@ -53,13 +53,19 @@ class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
         self._device_class = DEVICE_CLASS_MAPPING.get(
             self._multi_level_sensor_property.sensor_type
         )
+
+        if self._device_class is None:
+            name = f"{device_instance.itemName} {self._multi_level_sensor_property.sensor_type}"
+        else:
+            name = device_instance.itemName
+
         self._unit = self._multi_level_sensor_property.unit
 
         super().__init__(
             homecontrol=homecontrol,
             device_instance=device_instance,
             element_uid=element_uid,
-            name=f"{device_instance.itemName} {self._multi_level_sensor_property.sensor_type}",
+            name=name,
             sync=self._sync,
         )
 
