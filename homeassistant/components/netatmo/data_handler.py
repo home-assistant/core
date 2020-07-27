@@ -1,5 +1,4 @@
 """The Netatmo data handler."""
-import asyncio
 from collections import deque
 from datetime import timedelta
 from functools import partial
@@ -61,8 +60,6 @@ class NetatmoDataHandler:
         self.data = {}
         self._queue: Deque = deque()
         self._webhook: bool = False
-
-        self.lock = asyncio.Lock()
 
     async def async_setup(self):
         """Set up the Netatmo data handler."""
