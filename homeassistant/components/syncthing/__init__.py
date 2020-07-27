@@ -122,6 +122,8 @@ class EventListenerThread(threading.Thread):
                     server_was_unavailable = False
 
                 for event in self._events_stream:
+                    if self._events_stream.last_seen_id == 0:
+                        continue  # skipping historical events from the first batch
                     if event["type"] not in EVENTS:
                         continue
 
