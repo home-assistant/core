@@ -7,7 +7,6 @@ on:
       - dev
       - rc
       - master
-      - plugwise-add-port
   pull_request: ~
 
 env:
