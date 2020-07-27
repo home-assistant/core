@@ -146,9 +146,6 @@ def vizio_update_fixture():
             "mute": "Off",
         },
     ), patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_setting_types_list",
-        return_value=["audio"],
-    ), patch(
         "homeassistant.components.vizio.media_player.VizioAsync.get_setting_options",
         return_value=EQ_LIST,
     ), patch(
