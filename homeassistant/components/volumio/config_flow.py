@@ -16,7 +16,9 @@ from .const import DOMAIN  # pylint:disable=unused-import
 _LOGGER = logging.getLogger(__name__)
 
 
-DATA_SCHEMA = vol.Schema({"host": str, "port": int})
+DATA_SCHEMA = vol.Schema(
+    {vol.Required(CONF_HOST): str, vol.Required(CONF_PORT, default=3000): int}
+)
 
 
 async def validate_input(hass, host, port):
@@ -54,22 +56,38 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
+    async def _set_uid_and_abort(self):
+        await self.async_set_unique_id(self._uuid)
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_HOST: self._host,
+                CONF_PORT: self._port,
+                CONF_NAME: self._name,
+            }
+        )
+
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
+            info = None
             try:
                 self._host = user_input[CONF_HOST]
                 self._port = user_input[CONF_PORT]
                 info = await validate_input(self.hass, self._host, self._port)
-                self._name = info.get("name", self._host)
-                self._uuid = info.get("id", self._host)
-                return self._async_get_entry()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+
+            if info is not None:
+                self._name = info.get("name", self._host)
+                self._uuid = info.get("id", None)
+                if self._uuid is not None:
+                    await self._set_uid_and_abort()
+
+                return self._async_get_entry()
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -77,21 +95,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Handle zeroconf discovery."""
-        host = discovery_info["host"]
-        port = int(discovery_info["port"])
-        name = discovery_info["properties"]["volumioName"]
-        uuid = discovery_info["properties"]["UUID"]
+        self._host = discovery_info["host"]
+        self._port = int(discovery_info["port"])
+        self._name = discovery_info["properties"]["volumioName"]
+        self._uuid = discovery_info["properties"]["UUID"]
 
-        # Check if already configured
-        await self.async_set_unique_id(uuid)
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: host, CONF_PORT: port, CONF_NAME: name}
-        )
-
-        self._host = discovery_info[CONF_HOST]
-        self._port = discovery_info[CONF_PORT]
-        self._name = name
-        self._uuid = uuid
+        await self._set_uid_and_abort()
 
         return await self.async_step_discovery_confirm()
 
@@ -111,7 +120,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""

@@ -58,6 +58,40 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_updates_unique_id(hass):
+    """Test a duplicate id aborts and updates existing entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_SYSTEM_INFO["id"],
+        data={
+            "host": "dummy",
+            "port": 11,
+            "name": "dummy",
+            "id": TEST_SYSTEM_INFO["id"],
+        },
+    )
+
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.volumio.config_flow.Volumio.get_system_info",
+        return_value=TEST_SYSTEM_INFO,
+    ), patch("homeassistant.components.volumio.async_setup", return_value=True), patch(
+        "homeassistant.components.volumio.async_setup_entry", return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_CONNECTION,
+        )
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_configured"
+
+    assert entry.data == {**TEST_SYSTEM_INFO, **TEST_CONNECTION}
+
+
 async def test_empty_system_info(hass):
     """Test old volumio versions with empty system info."""
     result = await hass.config_entries.flow.async_init(
@@ -84,7 +118,7 @@ async def test_empty_system_info(hass):
         "host": TEST_CONNECTION["host"],
         "port": TEST_CONNECTION["port"],
         "name": TEST_CONNECTION["host"],
-        "id": TEST_CONNECTION["host"],
+        "id": None,
     }
 
     await hass.async_block_till_done()
