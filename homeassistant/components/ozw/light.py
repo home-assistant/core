@@ -146,22 +146,20 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         if self.values.dimming_duration is None:
             return
 
-        ozw_build = int(
-            self.values.primary.ozw_instance.get_status().openzwave_version.split(".")[
-                2
-            ]
-        )
+        ozw_version = self.values.primary.ozw_instance.get_status().openzwave_version
+        ozw_build = int(ozw_version.split(".")[2])
+        ozw_major = float(ozw_version[0:1])
 
         if ATTR_TRANSITION not in kwargs:
             # no transition specified by user, use defaults
-            if ozw_build > 1205:
+            if ozw_build >= 1205 and ozw_major >= 1.6:
                 new_value = 7621  # anything over 7620 uses the factory default
             else:
                 new_value = 255  # default for older version
 
         else:
             # transition specified by user
-            if ozw_build > 1205:
+            if ozw_build >= 1205 and ozw_major >= 1.6:
                 new_value = max(0, min(7620, kwargs[ATTR_TRANSITION]))
             else:
                 transition = kwargs[ATTR_TRANSITION]
