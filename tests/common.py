@@ -818,11 +818,7 @@ def mock_restore_cache(hass, states):
     _LOGGER.debug("Restore cache: %s", data.last_states)
     assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
 
-    async def get_restore_state_data() -> restore_state.RestoreStateData:
-        return data
-
-    # Patch the singleton task in hass.data to return our new RestoreStateData
-    hass.data[key] = hass.async_create_task(get_restore_state_data())
+    hass.data[key] = data
 
 
 class MockEntity(entity.Entity):
