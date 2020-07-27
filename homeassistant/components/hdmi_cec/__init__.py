@@ -217,21 +217,18 @@ def setup(hass: HomeAssistant, base_config):
     else:
         adapter = CecAdapter(name=display_name[:12], activate_source=False)
     hdmi_network = HDMINetwork(adapter, loop=loop)
-    if host:
 
-        def _tcpadapter_watchdog(now=None):
-            _LOGGER.debug("Reached _tcpadapter_watchdog")
-            event.async_call_later(hass, WATCHDOG_INTERVAL, _tcpadapter_watchdog)
-            if not adapter.initialized:
-                _LOGGER.info("Adapter not initialized. Trying to restart.")
-                hass.bus.fire(EVENT_HDMI_CEC_UNAVAILABLE)
-                adapter.init()
+    def _adapter_watchdog(now=None):
+        _LOGGER.debug("Reached _adapter_watchdog")
+        event.async_call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog)
+        if not adapter.initialized:
+            _LOGGER.info("Adapter not initialized. Trying to restart.")
+            hass.bus.fire(EVENT_HDMI_CEC_UNAVAILABLE)
+            adapter.init()
 
-        hdmi_network.set_initialized_callback(
-            partial(
-                event.async_call_later, hass, WATCHDOG_INTERVAL, _tcpadapter_watchdog
-            )
-        )
+    hdmi_network.set_initialized_callback(
+        partial(event.async_call_later, hass, WATCHDOG_INTERVAL, _adapter_watchdog)
+    )
 
     def _adapter_watchdog(now=None):
         _LOGGER.debug("Reached _adapter_watchdog")
