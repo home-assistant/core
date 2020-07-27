@@ -5,7 +5,7 @@ from Plugwise_Smile.Smile import Smile
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -27,6 +27,7 @@ def _base_schema(discovery_info):
     if not discovery_info:
         base_schema[vol.Required(CONF_HOST)] = str
 
+    base_schema[vol.Optional(CONF_PORT, default=80)] = int
     base_schema[vol.Required(CONF_PASSWORD)] = str
 
     return vol.Schema(base_schema)
@@ -41,6 +42,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     websession = async_get_clientsession(hass, verify_ssl=False)
     api = Smile(
         host=data[CONF_HOST],
+        port=data[CONF_PORT],
         password=data[CONF_PASSWORD],
         timeout=30,
         websession=websession,
