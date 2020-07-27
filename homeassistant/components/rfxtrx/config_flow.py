@@ -141,7 +141,7 @@ class OptionsFlow(config_entries.OptionsFlow):
                     if user_input.get(CONF_COMMAND_OFF)
                     else None
                 )
-            except NameError:
+            except (NameError, ValueError):
                 errors = {"base": "invalid_input_2262"}
 
             if not errors:
@@ -205,7 +205,7 @@ class OptionsFlow(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_SIGNAL_REPETITIONS,
-                        default=device_data.get(CONF_SIGNAL_REPETITIONS),
+                        default=device_data.get(CONF_SIGNAL_REPETITIONS, 1),
                     ): int,
                 }
             )
