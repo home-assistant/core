@@ -54,6 +54,7 @@ from .const import (
     DOMAIN,
     PLATFORMS,
     SENSOR_DATA,
+    UNDO_UPDATE_LISTENER,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -106,7 +107,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 hass.config_entries.async_forward_entry_setup(entry, platform)
             )
 
-    entry.add_update_listener(_async_update_listener)
     return True
 
 
@@ -117,11 +117,13 @@ def setup_webhook(hass: HomeAssistant, entry: ConfigEntry):
         device_name = entry.data.get(CONF_DEVICE_NAME)
         device_type = entry.data.get(CONF_DEVICE_TYPE)
         device = {DEVICE_NAME: device_name, DEVICE_TYPE: device_type}
+        undo_listener = entry.add_update_listener(_async_update_listener)
 
         hass.data[DOMAIN][entry.entry_id] = {
             COORDINATOR: None,
             DEVICE: device,
             SENSOR_DATA: None,
+            UNDO_UPDATE_LISTENER: undo_listener,
         }
 
         hass.components.webhook.async_register(
@@ -135,6 +137,7 @@ async def async_setup_coordinator(hass: HomeAssistant, entry: ConfigEntry):
     """Init auth token based on config entry."""
     auth_token = entry.data.get(CONF_TOKEN)
     device_type = entry.data.get(CONF_DEVICE_TYPE)
+    undo_listener = entry.add_update_listener(_async_update_listener)
     device = {
         DEVICE_NAME: entry.data.get(CONF_DEVICE_NAME),
         DEVICE_TYPE: device_type,
@@ -150,6 +153,7 @@ async def async_setup_coordinator(hass: HomeAssistant, entry: ConfigEntry):
         COORDINATOR: coordinator,
         DEVICE: device,
         SENSOR_DATA: None,
+        UNDO_UPDATE_LISTENER: undo_listener,
     }
 
     for platform in PLATFORMS:
@@ -160,6 +164,7 @@ async def async_setup_coordinator(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     use_webhook = entry.data.get(CONF_USE_WEBHOOK)
+    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
 
     if use_webhook:
         return await async_unload_webhook(hass, entry)
