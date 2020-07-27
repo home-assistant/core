@@ -516,9 +516,9 @@ async def test_wc_light(hass, light_wc_data, light_msg, light_rgb_msg, sent_mess
     assert state.attributes["color_temp"] == 191
 
 
-async def test_newozw_light(hass, light_newozw_data, light_msg, sent_messages):
+async def test_new_ozw_light(hass, light_new_ozw_data, light_msg, sent_messages):
     """Test setting up config entry."""
-    receive_message = await setup_ozw(hass, fixture=light_newozw_data)
+    receive_message = await setup_ozw(hass, fixture=light_new_ozw_data)
 
     # Test loaded only white LED support
     state = hass.states.get("light.led_bulb_6_multi_colour_level")
