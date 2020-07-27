@@ -58,13 +58,13 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
             self._binary_sensor_property.sub_type
             or self._binary_sensor_property.sensor_type
         )
+        name = device_instance.itemName
+
         if self._device_class is None:
             if device_instance.binary_sensor_property.get(element_uid).sub_type != "":
-                name = f"{device_instance.itemName} {device_instance.binary_sensor_property.get(element_uid).sub_type}"
+                name += f" {device_instance.binary_sensor_property.get(element_uid).sub_type}"
             else:
-                name = f"{device_instance.itemName} {device_instance.binary_sensor_property.get(element_uid).sensor_type}"
-        else:
-            name = device_instance.itemName
+                name += f" {device_instance.binary_sensor_property.get(element_uid).sensor_type}"
 
         super().__init__(
             homecontrol=homecontrol,

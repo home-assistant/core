@@ -54,10 +54,10 @@ class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
             self._multi_level_sensor_property.sensor_type
         )
 
+        name = device_instance.itemName
+
         if self._device_class is None:
-            name = f"{device_instance.itemName} {self._multi_level_sensor_property.sensor_type}"
-        else:
-            name = device_instance.itemName
+            name += f" {self._multi_level_sensor_property.sensor_type}"
 
         self._unit = self._multi_level_sensor_property.unit
 
