@@ -23,14 +23,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
         return
 
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
-    temp_data_classes = []
 
     async def get_entities():
         """Retrieve Netatmo entities."""
         await data_handler.register_data_class(
             CAMERA_DATA_CLASS_NAME, CAMERA_DATA_CLASS_NAME, None
         )
-        temp_data_classes.append((CAMERA_DATA_CLASS_NAME, None))
 
         entities = []
         try:
@@ -62,9 +60,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         return entities
 
     async_add_entities(await get_entities(), True)
-
-    for data_class in temp_data_classes:
-        await data_handler.unregister_data_class(*data_class)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

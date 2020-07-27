@@ -112,9 +112,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async def find_entities(data_class_name):
         """Find all entities."""
-        temp_data_classes = []
         await data_handler.register_data_class(data_class_name, data_class_name, None)
-        temp_data_classes.append((data_class_name, None))
 
         all_module_infos = {}
         data = data_handler.data
@@ -148,9 +146,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     )
                 )
 
-        for dc in temp_data_classes:
-            await data_handler.unregister_data_class(*dc)
-
         return entities
 
     for data_class_name in [
@@ -162,7 +157,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
     @callback
     async def add_public_entities(update=True):
         """Retrieve Netatmo public weather entities."""
-        temp_public_data_classes = []
         entities = {
             device.name: device.id
             for device in async_entries_for_config_entry(
@@ -195,7 +189,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 LAT_SW=area.lat_sw,
                 LON_SW=area.lon_sw,
             )
-            temp_public_data_classes.append((signal_name, None))
             for sensor_type in SUPPORTED_PUBLIC_SENSOR_TYPES:
                 new_entities.append(
                     NetatmoPublicSensor(data_handler, area, sensor_type)
@@ -206,9 +199,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
         if new_entities:
             async_add_entities(new_entities)
-
-        for dc in temp_public_data_classes:
-            await data_handler.unregister_data_class(*dc)
 
     async_dispatcher_connect(
         hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}", add_public_entities

@@ -56,6 +56,8 @@ class NetatmoBase(Entity):
                     data_class["name"], signal_name, self.async_update_callback
                 )
 
+            await self.data_handler.unregister_data_class(signal_name, None)
+
         self.async_update_callback()
 
     async def async_will_remove_from_hass(self):

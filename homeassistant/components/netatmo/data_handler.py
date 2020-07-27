@@ -128,45 +128,39 @@ class NetatmoDataHandler:
         self, data_class_name, data_class_entry, update_callback, **kwargs
     ):
         """Register data class."""
-        async with self.lock:
-            if data_class_entry not in self._data_classes:
-                self._data_classes[data_class_entry] = {
-                    "class": DATA_CLASSES[data_class_name],
-                    "name": data_class_entry,
-                    "interval": DEFAULT_INTERVALS[data_class_name],
-                    NEXT_SCAN: time() + DEFAULT_INTERVALS[data_class_name],
-                    "kwargs": kwargs,
-                    "subscriptions": [update_callback],
-                }
+        if data_class_entry not in self._data_classes:
+            self._data_classes[data_class_entry] = {
+                "class": DATA_CLASSES[data_class_name],
+                "name": data_class_entry,
+                "interval": DEFAULT_INTERVALS[data_class_name],
+                NEXT_SCAN: time() + DEFAULT_INTERVALS[data_class_name],
+                "kwargs": kwargs,
+                "subscriptions": [update_callback],
+            }
 
-                await self.async_fetch_data(
-                    DATA_CLASSES[data_class_name], data_class_entry, **kwargs
-                )
+            await self.async_fetch_data(
+                DATA_CLASSES[data_class_name], data_class_entry, **kwargs
+            )
 
-                self._queue.append(self._data_classes[data_class_entry])
-                _LOGGER.debug("Data class %s added", data_class_entry)
+            self._queue.append(self._data_classes[data_class_entry])
+            _LOGGER.debug("Data class %s added", data_class_entry)
 
-            else:
-                self._data_classes[data_class_entry]["subscriptions"].append(
-                    update_callback
-                )
-
-    async def unregister_data_class(self, data_class_entry, update_callback):
-        """Unregister data class."""
-        # Give the entities a chance to subscribe before removing the data class entry
-        # so that the data can be reused and reduce the number of API calls
-        if not update_callback:
-            await asyncio.sleep(1)
-
-        async with self.lock:
-            self._data_classes[data_class_entry]["subscriptions"].remove(
+        else:
+            self._data_classes[data_class_entry]["subscriptions"].append(
                 update_callback
             )
 
-            if not self._data_classes[data_class_entry].get("subscriptions"):
-                self._queue.remove(self._data_classes[data_class_entry])
-                self._data_classes.pop(data_class_entry)
-                _LOGGER.debug("Data class %s removed", data_class_entry)
+    async def unregister_data_class(self, data_class_entry, update_callback):
+        """Unregister data class."""
+        if update_callback not in self._data_classes[data_class_entry]["subscriptions"]:
+            return
+
+        self._data_classes[data_class_entry]["subscriptions"].remove(update_callback)
+
+        if not self._data_classes[data_class_entry].get("subscriptions"):
+            self._queue.remove(self._data_classes[data_class_entry])
+            self._data_classes.pop(data_class_entry)
+            _LOGGER.debug("Data class %s removed", data_class_entry)
 
     @property
     def webhook(self) -> bool:

@@ -112,12 +112,10 @@ SCHEMA_SERVICE_SETSCHEDULE = vol.Schema(
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Netatmo energy platform."""
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
-    temp_data_classes = []
 
     await data_handler.register_data_class(
         HOMEDATA_DATA_CLASS_NAME, HOMEDATA_DATA_CLASS_NAME, None
     )
-    temp_data_classes.append((HOMEDATA_DATA_CLASS_NAME, None))
     home_data = data_handler.data.get(HOMEDATA_DATA_CLASS_NAME)
 
     if not home_data:
@@ -136,7 +134,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 await data_handler.register_data_class(
                     HOMESTATUS_DATA_CLASS_NAME, signal_name, None, home_id=home_id
                 )
-                temp_data_classes.append((signal_name, None))
                 home_status = data_handler.data.get(signal_name)
                 if home_status and room_id in home_status.rooms:
                     entities.append(NetatmoThermostat(data_handler, home_id, room_id))
@@ -160,9 +157,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         return entities
 
     async_add_entities(await get_entities(), True)
-
-    for data_class in temp_data_classes:
-        await data_handler.unregister_data_class(*data_class)
 
     platform = entity_platform.current_platform.get()
 
