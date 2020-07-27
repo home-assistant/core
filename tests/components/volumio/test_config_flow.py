@@ -1,6 +1,6 @@
 """Test the Volumio config flow."""
 from homeassistant import config_entries
-from homeassistant.components.volumio.config_flow import CannotConnect
+from homeassistant.components.volumio.config_flow import CannotConnectError
 from homeassistant.components.volumio.const import DOMAIN
 
 from tests.async_mock import patch
@@ -133,8 +133,8 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.volumio.config_flow.validate_input",
-        side_effect=CannotConnect,
+        "homeassistant.components.volumio.config_flow.Volumio.get_system_info",
+        side_effect=CannotConnectError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_CONNECTION,
@@ -151,7 +151,7 @@ async def test_form_exception(hass):
     )
 
     with patch(
-        "homeassistant.components.volumio.config_flow.validate_input",
+        "homeassistant.components.volumio.config_flow.Volumio.get_system_info",
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -201,8 +201,8 @@ async def test_discovery_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.volumio.config_flow.validate_input",
-        side_effect=CannotConnect,
+        "homeassistant.components.volumio.config_flow.Volumio.get_system_info",
+        side_effect=CannotConnectError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={},
