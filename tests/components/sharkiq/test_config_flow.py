@@ -2,8 +2,23 @@
 from homeassistant import config_entries, setup
 from homeassistant.components.sharkiq.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.sharkiq.const import DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from tests.async_mock import patch
+from tests.async_mock import MagicMock, PropertyMock, patch
+
+VALID_CONFIG = {
+    CONF_PASSWORD: "P4s$w0rD$7r0nk",
+    CONF_USERNAME: "test_email@address.com",
+}
+TEST_USERNAME = "test-username"
+TEST_PASSWORD = "test-password"
+
+
+def _create_mocked_ayla(connect=None):
+    """Create a mocked AylaApi object."""
+    mocked_ayla = MagicMock()
+    type(mocked_ayla).connect = MagicMock(side_effect=connect)
+    return mocked_ayla
 
 
 async def test_form(hass):
@@ -16,7 +31,7 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.sharkiq.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.sharkiq.config_flow.validate_input",
         return_value=True,
     ), patch(
         "homeassistant.components.sharkiq.async_setup", return_value=True
@@ -25,18 +40,14 @@ async def test_form(hass):
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            {CONF_USERNAME: TEST_USERNAME, CONF_PASSWORD: TEST_PASSWORD,},
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == f"Shark IQ ({TEST_USERNAME:s})"
     assert result2["data"] == {
-        "username": "test-username",
-        "password": "test-password",
+        "username": TEST_USERNAME,
+        "password": TEST_PASSWORD,
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -48,18 +59,12 @@ async def test_form_invalid_auth(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    mocked_ayla = _create_mocked_ayla(connect=InvalidAuth)
 
-    with patch(
-        "homeassistant.components.sharkiq.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
-    ):
+    with patch("sharkiqpy.get_ayla_api", return_value=mocked_ayla):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            {CONF_USERNAME: TEST_USERNAME, CONF_PASSWORD: TEST_PASSWORD,},
         )
 
     assert result2["type"] == "form"
@@ -71,14 +76,12 @@ async def test_form_cannot_connect(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    mocked_ayla = _create_mocked_ayla(connect=CannotConnect)
 
-    with patch(
-        "homeassistant.components.sharkiq.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
-    ):
+    with patch("sharkiqpy.get_ayla_api", return_value=mocked_ayla):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "test-username", "password": "test-password",},
+            {CONF_USERNAME: TEST_USERNAME, CONF_PASSWORD: TEST_PASSWORD,},
         )
 
     assert result2["type"] == "form"
