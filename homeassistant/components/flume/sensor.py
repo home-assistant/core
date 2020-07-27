@@ -148,7 +148,7 @@ class FlumeSensor(Entity):
     @property
     def unique_id(self):
         """Flume query and Device unique ID."""
-        return f"{self._flume_query_sensor[1]['friendly_name']}_{self._device_id}"
+        return f"{self._flume_query_sensor[0]}_{self._device_id}"
 
     def update(self):
         """Get the latest data and updates the states."""
