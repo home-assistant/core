@@ -40,11 +40,6 @@ from .webhook import handle_webhook
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SECRET_KEY = "secret_key"
-CONF_WEBHOOKS = "webhooks"
-
-WAIT_FOR_CLOUD = 5
-
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(

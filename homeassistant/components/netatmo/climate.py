@@ -1,5 +1,4 @@
 """Support for Netatmo Smart thermostats."""
-from datetime import timedelta
 import logging
 from typing import List, Optional
 
@@ -90,11 +89,6 @@ HVAC_MAP_NETATMO = {
 }
 
 CURRENT_HVAC_MAP_NETATMO = {True: CURRENT_HVAC_HEAT, False: CURRENT_HVAC_IDLE}
-
-CONF_HOMES = "homes"
-CONF_ROOMS = "rooms"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
 DEFAULT_MAX_TEMP = 30
 

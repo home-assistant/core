@@ -278,7 +278,7 @@ class NetatmoSensor(NetatmoBase):
 
     @property
     def available(self):
-        """Return True if entity is available."""
+        """Return entity availability."""
         return self._state is not None
 
     @callback
@@ -585,6 +585,8 @@ class NetatmoPublicSensor(NetatmoBase):
             data = self._data.get_latest_gust_strengths()
 
         if not data:
+            if self._state is None:
+                return
             _LOGGER.debug(
                 "No station provides %s data in the area %s", self.type, self._area_name
             )

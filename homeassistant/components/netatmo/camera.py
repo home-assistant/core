@@ -32,13 +32,7 @@ from .netatmo_entity_base import NetatmoBase
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_HOME = "home"
-CONF_CAMERAS = "cameras"
-CONF_QUALITY = "quality"
-
 DEFAULT_QUALITY = "high"
-
-VALID_QUALITIES = ["high", "medium", "low", "poor"]
 
 SCHEMA_SERVICE_SETPERSONSHOME = vol.Schema(
     {

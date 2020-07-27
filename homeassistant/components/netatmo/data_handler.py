@@ -121,6 +121,7 @@ class NetatmoDataHandler:
             ]:
                 if update_callback:
                     update_callback()
+
         except (pyatmo.NoDevice, pyatmo.ApiError) as err:
             _LOGGER.debug(err)
 

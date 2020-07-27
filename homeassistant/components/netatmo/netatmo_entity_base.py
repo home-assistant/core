@@ -73,14 +73,7 @@ class NetatmoBase(Entity):
             )
 
     async def async_remove(self):
-        """Clean up when removing entity.
-
-        Remove entity if no entry in entity registry exist.
-        Remove entity registry entry if no entry in device registry exist.
-        Remove device registry entry if there is only one linked entity (this entity).
-        Remove entity registry entry if there are more than one entity linked to the
-        device registry entry.
-        """
+        """Clean up when removing entity."""
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
         entity_entry = entity_registry.async_get(self.entity_id)
         if not entity_entry:
@@ -96,6 +89,7 @@ class NetatmoBase(Entity):
 
     @property
     def _data(self):
+        """Return data for this entity."""
         return self.data_handler.data[self._data_classes[0]["name"]]
 
     @property
