@@ -1,6 +1,5 @@
 """Test the Smappee config flow."""
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.smappee import config_flow
 from homeassistant.components.smappee.const import (
     AUTHORIZE_URL,
     CONF_HOSTNAME,
@@ -14,6 +13,7 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -102,12 +102,13 @@ async def test_user_device_exists_abort(hass):
         "pysmappee.api.SmappeeLocalApi.load_instantaneous",
         return_value=[{"key": "phase0ActivePower", "value": 0}],
     ):
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": SOURCE_USER},
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
             data={"host": "1.2.3.4"},
+            unique_id="Smappee1006000212",
+            source=SOURCE_USER,
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        config_entry.add_to_hass(hass)
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
         result = await hass.config_entries.flow.async_init(
@@ -129,12 +130,14 @@ async def test_zeroconf_device_exists_abort(hass):
         "pysmappee.api.SmappeeLocalApi.load_instantaneous",
         return_value=[{"key": "phase0ActivePower", "value": 0}],
     ):
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": SOURCE_USER},
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
             data={"host": "1.2.3.4"},
+            unique_id="Smappee1006000212",
+            source=SOURCE_USER,
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        config_entry.add_to_hass(hass)
+
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
         result = await hass.config_entries.flow.async_init(
