@@ -62,7 +62,7 @@ async def test_setup_fails_on_no_dir(hass, caplog):
     assert "Folder pyscript not found in configuration folder" in caplog.text
 
 
-async def test_service_exists(hass):
+async def test_service_exists(hass, caplog):
     """Test discover, compile script and install a service."""
 
     await setup_script(
@@ -76,11 +76,35 @@ def func1():
 
 def func2():
     pass
+
+@service
+def reload():
+    pass
+
+@state_active("arg1", "too many args")
+def func4():
+    pass
+
+@service("too many args")
+def func5():
+    pass
 """,
     )
     assert hass.services.has_service("pyscript", "func1")
     assert hass.services.has_service("pyscript", "reload")
     assert not hass.services.has_service("pyscript", "func2")
+    assert (
+        "function 'reload' in /some/config/dir/pyscript/hello.py conflicts with reload service; ignoring (please rename)"
+        in caplog.text
+    )
+    assert (
+        "func4 defined in /some/config/dir/pyscript/hello.py decorator @state_active got 2 arguments, expected 1; ignored"
+        in caplog.text
+    )
+    assert (
+        "func5 defined in /some/config/dir/pyscript/hello.py: decorator @service takes no arguments; ignored"
+        in caplog.text
+    )
 
 
 async def test_service_description(hass):

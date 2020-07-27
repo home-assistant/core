@@ -186,7 +186,7 @@ class EvalFunc:
                 val = args[i]
                 if var_name in kwargs:
                     raise TypeError(
-                        "{self.name}() got multiple values for argument '{var_name}'"
+                        f"{self.name}() got multiple values for argument '{var_name}'"
                     )
             elif var_name in kwargs:
                 val = kwargs[var_name]
@@ -273,11 +273,7 @@ class AstEval:
         """Vector to specific function based on ast class type."""
         name = "ast_" + arg.__class__.__name__.lower()
         try:
-            func = getattr(self, name, self.ast_not_implemented)
-            if asyncio.iscoroutinefunction(func):
-                val = await func(arg)
-            else:
-                val = func(arg)
+            val = await getattr(self, name, self.ast_not_implemented)(arg)
             if undefined_check and isinstance(val, EvalName):
                 raise NameError(f"name '{val.name}' is not defined")
             return val
@@ -285,16 +281,21 @@ class AstEval:
             raise
         except Exception as err:  # pylint: disable=broad-except
             func_name = self.curr_func.get_name() + "(), " if self.curr_func else ""
-            self.exception = f"Exception in {func_name}{self.filename} line {arg.lineno} column {arg.col_offset}: {err}"
-            self.exception_long = f"Exception in {func_name}{self.filename} line {arg.lineno} column {arg.col_offset}: {traceback.format_exc(0)}"
-            _LOGGER.error(
-                "Exception in %s%s line %s column %s: %s",
-                func_name,
-                self.filename,
-                arg.lineno,
-                arg.col_offset,
-                err,
-            )
+            if hasattr(arg, "lineno"):
+                self.exception = f"Exception in {func_name}{self.filename} line {arg.lineno} column {arg.col_offset}: {err}"
+                self.exception_long = f"Exception in {func_name}{self.filename} line {arg.lineno} column {arg.col_offset}: {traceback.format_exc(0)}"
+                _LOGGER.error(
+                    "Exception in %s%s line %s column %s: %s",
+                    func_name,
+                    self.filename,
+                    arg.lineno,
+                    arg.col_offset,
+                    err,
+                )
+            else:
+                self.exception = f"Exception in {func_name}{self.filename}: {err}"
+                self.exception_long = f"Exception in {func_name}{self.filename}: {traceback.format_exc(0)}"
+                _LOGGER.error("Exception in %s%s: %s", func_name, self.filename, err)
         return None
 
     # Statements return NONE, EvalBreak, EvalContinue, EvalReturn
@@ -441,22 +442,7 @@ class AstEval:
                         await self.aeval(lhs.slice.upper) if lhs.slice.upper else None
                     )
                     step = await self.aeval(lhs.slice.step) if lhs.slice.step else None
-                    if not lower and not upper and not step:
-                        return val
-                    if not lower and not upper and step:
-                        var[::step] = val
-                    elif not lower and upper and not step:
-                        var[:upper] = val
-                    elif not lower and upper and step:
-                        var[:upper:step] = val
-                    elif lower and not upper and not step:
-                        var[lower] = val
-                    elif lower and not upper and step:
-                        var[lower::step] = val
-                    elif lower and upper and not step:
-                        var[lower:upper] = val
-                    else:
-                        var[lower:upper:step] = val
+                    var[slice(lower, upper, step)] = val
             else:
                 var_name = await self.aeval(lhs)
                 if var_name.find(".") >= 0:
@@ -471,7 +457,7 @@ class AstEval:
                                 break
                         else:
                             raise TypeError(
-                                "can't find nonlocal '{var_name}' for assignment"
+                                f"can't find nonlocal '{var_name}' for assignment"
                             )
                     else:
                         self.sym_table[var_name] = val
@@ -492,7 +478,9 @@ class AstEval:
                     sym_table[var_name] = val
                     break
             else:
-                raise TypeError("can't find nonlocal '{var_name}' for assignment")
+                raise TypeError(f"can't find nonlocal '{var_name}' for assignment")
+        elif self.state.exist(var_name):
+            self.state.set(var_name, val)
         else:
             self.sym_table[var_name] = val
 
@@ -505,6 +493,21 @@ class AstEval:
                     ind = await self.aeval(arg1.slice.value)
                     for elt in ind if isinstance(ind, list) else [ind]:
                         del var[elt]
+                elif isinstance(arg1.slice, ast.Slice):
+                    lower = (
+                        (await self.aeval(arg1.slice.lower))
+                        if arg1.slice.lower
+                        else None
+                    )
+                    upper = (
+                        (await self.aeval(arg1.slice.upper))
+                        if arg1.slice.upper
+                        else None
+                    )
+                    step = (
+                        (await self.aeval(arg1.slice.step)) if arg1.slice.step else None
+                    )
+                    del var[slice(lower, upper, step)]
                 else:
                     raise NotImplementedError(
                         f"{self.name}: not implemented slice type {arg1.slice} in del"
@@ -788,21 +791,7 @@ class AstEval:
                 lower = (await self.aeval(arg.slice.lower)) if arg.slice.lower else None
                 upper = (await self.aeval(arg.slice.upper)) if arg.slice.upper else None
                 step = (await self.aeval(arg.slice.step)) if arg.slice.step else None
-                if not lower and not upper and not step:
-                    return None
-                if not lower and not upper and step:
-                    return var[::step]
-                if not lower and upper and not step:
-                    return var[:upper]
-                if not lower and upper and step:
-                    return var[:upper:step]
-                if lower and not upper and not step:
-                    return var[lower]
-                if lower and not upper and step:
-                    return var[lower::step]
-                if lower and upper and not step:
-                    return var[lower:upper]
-                return var[lower:upper:step]
+                return var[slice(lower, upper, step)]
         else:
             return None
 

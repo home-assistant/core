@@ -274,7 +274,7 @@ async def compile_scripts(
                         dec_name,
                         len(trig_args[dec_name]),
                         "s" if len(trig_args[dec_name]) > 1 else "",
-                        " or ".join(sorted(arg_cnt)),
+                        " or ".join([str(cnt) for cnt in sorted(arg_cnt)]),
                     )
                     del trig_args[dec_name]
                 if arg_cnt == 1:

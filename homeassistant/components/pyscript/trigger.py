@@ -31,17 +31,9 @@ def days_in_mon(month, year):
     dom = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
     month -= 1
-    if month < 0 or month >= len(dom):
-        return -1
     if (month == 1) and isleap(year):
         return dom[month] + 1
     return dom[month]
-
-
-def days_between(month1, day1, year1, month2, day2, year2):
-    """Calculate the number of days in between the two dates."""
-    delta = datetime.date(year2, month2, day2) - datetime.date(year1, month1, day1)
-    return round(delta.days)
 
 
 def cron_ge(cron, fld, curr):
@@ -52,31 +44,26 @@ def cron_ge(cron, fld, curr):
     if cron[fld] == "*":
         return curr
     for elt in cron[fld].split(","):
-        rng = elt.split("-")
-        if len(rng) == 2:
-            rng0, rng1 = [int(rng[0]), int(rng[1])]
+        match0 = re.split(r"^(\d+)(-(\d+))?$", elt)
+        if len(match0) != 5:
+            _LOGGER.warning("can't parse field %s in cron entry %s", elt, cron[fld])
+            return curr
+        if match0[3] is not None:
+            rng0, rng1 = [int(match0[1]), int(match0[3])]
             if rng0 < ret:
                 ret = rng0
-            if rng0 > rng1:
-                # wrap case
-                if curr >= rng0 or curr < rng1:
-                    return curr
-            else:
-                if rng0 <= curr <= rng1:
-                    return curr
-                if curr <= rng0 < min_ge:
-                    min_ge = rng0
-        elif len(rng) == 1:
-            rng0 = int(rng[0])
+            if rng0 <= curr <= rng1:
+                return curr
+            if curr <= rng0 < min_ge:
+                min_ge = rng0
+        else:
+            rng0 = int(match0[1])
             if curr == rng0:
                 return curr
             if rng0 < ret:
                 ret = rng0
             if curr <= rng0 < min_ge:
                 min_ge = rng0
-        else:
-            _LOGGER.warning("can't parse field %s in cron entry %s", elt, cron[fld])
-            return curr
     if min_ge < 1000:
         return min_ge
     return ret
@@ -267,10 +254,10 @@ class TrigTime:
         match0 = re.split(r"^0*(\d+)[-/]0*(\d+)(?:[-/]0*(\d+))?", dt_str)
         match1 = re.split(r"^(\w+).*", dt_str)
         if len(match0) == 5:
-            year, month, day = int(match0[1]), int(match0[2]), int(match0[3])
-            day_offset = 0  # explicit date means no offset
-        elif len(match0) == 4:
-            month, day = int(match0[1]), int(match0[2])
+            if match0[3] is None:
+                month, day = int(match0[1]), int(match0[2])
+            else:
+                year, month, day = int(match0[1]), int(match0[2]), int(match0[3])
             day_offset = 0  # explicit date means no offset
         elif len(match1) == 3:
             if match1[1] in self.dow2int:
@@ -391,8 +378,6 @@ class TrigTime:
                 else:
                     if start <= now or now <= end:
                         this_match = True
-            else:
-                this_match = False
 
             if neg:
                 neg_check = neg_check and not this_match
@@ -442,22 +427,19 @@ class TrigTime:
                 carry = hr_next < hr_next0
 
                 if carry or not today:
-                    # this event occurs after today
+                    # event is after today; get first min & hour
 
                     min_next = cron_ge(cron, 0, 0)
                     hr_next = cron_ge(cron, 1, 0)
 
                     #
-                    # calculate the date of the next occurrence of this event, which
-                    # will be on a different day than the current
+                    # find next date; first check day of month
                     #
-
-                    # check monthly day specification
                     d1_next = now.day + 1
                     day1 = cron_ge(
                         cron, 2, (d1_next - 1) % days_in_mon(now.month, now.year) + 1
                     )
-                    carry1 = day1 < d1_next
+                    carry1 = day1 < d1_next or day1 > days_in_mon(mon_next, year_next)
 
                     # check weekly day specification
                     wday_next2 = (now.isoweekday() % 7) + 1
@@ -469,11 +451,14 @@ class TrigTime:
                     day2 = (d1_next + days_ahead - 1) % days_in_mon(
                         now.month, now.year
                     ) + 1
-                    carry2 = day2 < d1_next
+                    carry2 = day2 < d1_next or day2 > days_in_mon(mon_next, year_next)
 
                     #
-                    # based on their respective specifications, day1, and day2 give
-                    # the day of the month for the next occurrence of this event.
+                    # day1 and day2 give the day of the month based on day-of-month and
+                    # weekday specifications.
+                    #
+                    # if both day-of-month and weekday are specified, cron treats that
+                    # as "or", not "and" (ie, pick the earlier of the two)
                     #
                     if cron[2] == "*" and cron[4] != "*":
                         day1 = day2
@@ -482,26 +467,27 @@ class TrigTime:
                         day2 = day1
                         carry2 = carry1
 
-                    if (carry1 and carry2) or (now.month != mon_next):
-                        # event does not occur in this month
-                        if now.month == 12:
-                            mon_next = cron_ge(cron, 3, 1)
-                            year_next = year_next + 1
-                        else:
-                            mon_next = cron_ge(cron, 3, now.month + 1)
-                        # recompute day1 and day2
+                    if (carry1 and carry2) or now.month != mon_next:
+                        # event does not occur in this month; check the next
+                        # 8 years (to make sure we include a leap year) to see
+                        # if there is a valid mday & month
                         day1 = cron_ge(cron, 2, 1)
-                        days_btwn = (
-                            days_between(
-                                now.month, now.day, now.year, mon_next, 1, year_next
-                            )
-                            + 1
-                        )
-                        wd_next = ((now.isoweekday() % 7) + days_btwn) % 7
-                        # wd_next is the day of the week of the first of month mon
+                        mon_next = now.month
+                        for _ in range(8 * 12):
+                            last_mon = mon_next
+                            mon_next = cron_ge(cron, 3, (mon_next % 12) + 1)
+                            if mon_next <= last_mon:
+                                year_next = year_next + 1
+                            if day1 <= days_in_mon(mon_next, year_next):
+                                break
+                        else:
+                            continue
+                        # recompute day2
+                        wd_next = datetime.date(year_next, mon_next, 1).isoweekday() % 7
+                        # wd_next is the dow of the first of mon_next
                         wday_next = cron_ge(cron, 4, wd_next)
                         if wday_next < wd_next:
-                            day2 = 1 + 7 - wd_next + wday_next
+                            day2 = 8 - wd_next + wday_next
                         else:
                             day2 = 1 + wday_next - wd_next
                         if cron[2] != "*" and cron[4] == "*":
@@ -558,6 +544,15 @@ class TrigTime:
 
             elif len(match2) == 5:
                 start = self.parse_date_time(match2[1].strip(), 0, now)
+                if match2[3] is not None:
+                    end = self.parse_date_time(match2[3].strip(), 0, now)
+                    if end < start:
+                        if end <= now:
+                            # try end of tomorrow
+                            end = self.parse_date_time(match2[3].strip(), 1, now)
+                        else:
+                            # try a start of yesterday
+                            start = self.parse_date_time(match2[1].strip(), -1, now)
                 if now < start and (next_time is None or start < next_time):
                     next_time = start
                 period = parse_time_offset(match2[2].strip())
@@ -570,12 +565,6 @@ class TrigTime:
                         if now < this_t and (next_time is None or this_t < next_time):
                             next_time = this_t
                     else:
-                        end = self.parse_date_time(match2[3].strip(), 0, now)
-                        if end < start:
-                            #
-                            # end might be a time tomorrow
-                            #
-                            end = self.parse_date_time(match2[3].strip(), 1, now)
                         if now < this_t <= end and (
                             next_time is None or this_t < next_time
                         ):
@@ -585,7 +574,7 @@ class TrigTime:
                             # Try tomorrow's start (won't make a difference if spec has
                             # full date)
                             #
-                            start = self.parse_date_time(match2[3].strip(), 1, now)
+                            start = self.parse_date_time(match2[1].strip(), 1, now)
                             if now < start and (next_time is None or start < next_time):
                                 next_time = start
             else:

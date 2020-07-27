@@ -31,9 +31,17 @@ async def setup_script(hass, notify_q, now, source):
 
     #
     # I'm not sure how to run the mock all the time, so just force the dt_now()
-    # trigger function to return the fixed time, now.
+    # trigger function to return the given list of times in now.
     #
-    trigger.__dict__["dt_now"] = lambda: now
+    def return_next_time():
+        nonlocal now
+        if isinstance(now, list):
+            if len(now) > 1:
+                return now.pop(0)
+            return now[0]
+        return now
+
+    trigger.__dict__["dt_now"] = return_next_time
 
     if notify_q:
 
@@ -58,14 +66,20 @@ async def test_state_trigger(hass, caplog):
     await setup_script(
         hass,
         notify_q,
-        dt(2020, 7, 1, 11, 59, 59, 999999),
+        [dt(2020, 7, 1, 10, 59, 59, 999999), dt(2020, 7, 1, 11, 59, 59, 999999)],
         """
 
 from math import sqrt
 
 seq_num = 0
 
-@time_trigger
+#
+# Instead of just a bare @time_trigger, do a real time trigger.
+# The first value of now() causes func_startup_sync() to start almost
+# immediately.  The remaining values of now() are all and hour later at
+# 11:59:59.999999, so this trigger won't happen again for another 24 hours.
+#
+@time_trigger("once(2020/07/01 11:00:00)")
 def func_startup_sync():
     global seq_num
 
@@ -204,7 +218,7 @@ def func4(trigger_type=None, event_type=None, **kwargs):
     seq_num = 0
 
     seq_num += 1
-    # fire event to startup triggers, and handshake when they are running
+    # fire event to start triggers, and handshake when they are running
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     assert literal_eval(await wait_until_done(notify_q)) == seq_num
 

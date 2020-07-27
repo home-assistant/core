@@ -23,8 +23,8 @@ class Handler:
     def __init__(self, hass):
         """Initialize State."""
         self.hass = hass
-        self.unique_task2_name = {}
-        self.unique_name2_task = {}
+        self.unique_task2name = {}
+        self.unique_name2task = {}
 
         #
         # initial list of available functions
@@ -68,18 +68,18 @@ class Handler:
     async def task_unique(self, name, kill_me=False):
         """Implement task.unique()."""
         task = current_task()
-        if name in self.unique_name2_task:
+        if name in self.unique_name2task:
             if not kill_me:
-                task = self.unique_name2_task[name]
+                task = self.unique_name2task[name]
             try:
                 task.cancel()
                 await task
             except asyncio.CancelledError:
                 pass
-            self.unique_task2_name.pop(self.unique_name2_task[name], None)
-            self.unique_name2_task.pop(name, None)
-        self.unique_name2_task[name] = task
-        self.unique_name2_task[task] = name
+            self.unique_task2name.pop(self.unique_name2task[name], None)
+            self.unique_name2task.pop(name, None)
+        self.unique_name2task[name] = task
+        self.unique_name2task[task] = name
 
     def service_has_service(self, domain, name):
         """Implement service.has_service()."""
@@ -125,22 +125,10 @@ class Handler:
         for name, func in funcs.items():
             self.functions[name] = func
 
-    def deregister(self, *names):
-        """Deregister functions."""
-        for name in names:
-            if name in self.functions:
-                del self.functions[name]
-
     def register_ast(self, funcs):
         """Register functions that need ast context to be available for calling."""
         for name, func in funcs.items():
             self.ast_functions[name] = func
-
-    def deregister_ast(self, *names):
-        """Deregister functions that need ast context."""
-        for name in names:
-            if name in self.ast_functions:
-                del self.ast_functions[name]
 
     def install_ast_funcs(self, ast_ctx):
         """Install ast functions into the local symbol table."""
@@ -173,16 +161,16 @@ class Handler:
             await coro
         except asyncio.CancelledError:
             task = current_task()
-            if task in self.unique_task2_name:
-                self.unique_name2_task.pop(self.unique_task2_name[task], None)
-                self.unique_task2_name.pop(task, None)
+            if task in self.unique_task2name:
+                self.unique_name2task.pop(self.unique_task2name[task], None)
+                self.unique_task2name.pop(task, None)
             raise
         except Exception:  # pylint: disable=broad-except
             _LOGGER.error("run_coro: %s", traceback.format_exc(-1))
         task = current_task()
-        if task in self.unique_task2_name:
-            self.unique_name2_task.pop(self.unique_task2_name[task], None)
-            self.unique_task2_name.pop(task, None)
+        if task in self.unique_task2name:
+            self.unique_name2task.pop(self.unique_task2name[task], None)
+            self.unique_task2name.pop(task, None)
 
     def create_task(self, coro):
         """Create a new task that runs a coroutine."""
