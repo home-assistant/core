@@ -1,5 +1,5 @@
 """Code to handle the api connection to a Roon server."""
-from asyncio import create_task, sleep
+import asyncio
 import logging
 
 from roon import RoonApi
@@ -51,7 +51,7 @@ class RoonServer:
         )
 
         # Initialize Roon background polling
-        create_task(self.async_do_loop())
+        asyncio.create_task(self.async_do_loop())
 
         return True
 
@@ -84,7 +84,7 @@ class RoonServer:
         while not self._exit:
             await self.async_update_players()
             # await self.async_update_playlists()
-            await sleep(FULL_SYNC_INTERVAL, self.hass.loop)
+            await asyncio.sleep(FULL_SYNC_INTERVAL)
 
     async def async_update_changed_players(self, changed_zones_ids):
         """Update the players which were reported as changed by the Roon API."""

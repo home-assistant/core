@@ -1,5 +1,5 @@
 """Config flow for roon integration."""
-from asyncio import sleep
+import asyncio
 import logging
 
 from roon import RoonApi
@@ -35,7 +35,7 @@ class RoonHub:
                 secs += 5
                 if token:
                     break
-                await sleep(5, hass.loop)
+                await asyncio.sleep(5)
 
         except Exception as error:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception %s", error)
