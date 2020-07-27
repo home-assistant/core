@@ -71,7 +71,7 @@ class FireServiceRotaData:
         """Get the latest availability data."""
         try:
             self.availability_data = await self._hass.async_add_executor_job(
-                self.fsr.get_availability
+                self.fsr.get_availability, str(self._hass.config.time_zone)
             )
             _LOGGER.debug("Updating availability data")
         except ExpiredTokenError:
@@ -128,6 +128,9 @@ class FireServiceRotaData:
                 CONF_TOKEN: token_info,
             },
         )
+        """Rerun setup to start with updated tokens."""
+        await self._hass.config_entries.async_reload(self._entry.entry_id)
+
         return True
 
 
