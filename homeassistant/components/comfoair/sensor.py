@@ -24,6 +24,8 @@ ATTR_AIR_FLOW_SUPPLY = "air_flow_supply"
 ATTR_AIR_FLOW_EXHAUST = "air_flow_exhaust"
 ATTR_FAN_SPEED_MODE = "speed_mode"
 
+PARALLEL_UPDATES = 0
+
 SENSOR_TYPES = {
     ATTR_COMFORT_TEMPERATURE: [
         "Comfort Temperature",

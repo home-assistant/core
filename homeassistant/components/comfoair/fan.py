@@ -20,6 +20,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 SPEED_MAPPING = {1: SPEED_OFF, 2: SPEED_LOW, 3: SPEED_MEDIUM, 4: SPEED_HIGH}
 SPEED_VALUES = list(SPEED_MAPPING.values())
 
