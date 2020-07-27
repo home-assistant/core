@@ -19,10 +19,13 @@ CONF_ACTIVE_DIRECTORY = "active_directory"
 CONF_ALLOWED_GROUP_DNS = "allowed_group_dns"
 CONF_BASE_DN = "base_dn"
 CONF_CERT_VALIDATION = "validate_certificates"
+CONF_ENCRYPTION = "encryption"
+CONF_ENCRYPTION_LDAPS = "ldaps"
+CONF_ENCRYPTION_NONE = "none"
+CONF_ENCRYPTION_STARTTLS = "starttls"
 CONF_PORT = "port"
 CONF_SERVER = "server"
 CONF_TIMEOUT = "timeout"
-CONF_TLS = "tls"
 
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
     {
@@ -35,7 +38,9 @@ CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
         vol.Required(CONF_PORT, default=636): int,
         vol.Required(CONF_SERVER): str,
         vol.Required(CONF_TIMEOUT, default=10): int,
-        vol.Required(CONF_TLS, default=True): bool,
+        vol.Required(CONF_ENCRYPTION, default=CONF_ENCRYPTION_LDAPS): vol.In(
+            [CONF_ENCRYPTION_LDAPS, CONF_ENCRYPTION_NONE, CONF_ENCRYPTION_STARTTLS]
+        ),
     },
     extra=vol.PREVENT_EXTRA,
 )
@@ -65,15 +70,16 @@ class LdapAuthProvider(AuthProvider):
     def async_validate_login(self, username: str, password: str) -> None:
         """Validate a username and password."""
         try:
-            # Server setup
             tls = ldap3.Tls()
+            # Disable cert validation if required.
             if not self.config[CONF_CERT_VALIDATION]:
-                # Disable cert validation
                 tls.validate = ssl.CERT_NONE
+            encryption = self.config[CONF_ENCRYPTION]
+            # Server setup
             server = ldap3.Server(
                 self.config[CONF_SERVER],
                 port=self.config[CONF_PORT],
-                use_ssl=self.config[CONF_TLS],
+                use_ssl=encryption == CONF_ENCRYPTION_LDAPS,
                 tls=tls,
                 connect_timeout=self.config[CONF_TIMEOUT],
                 get_info=ldap3.ALL,
@@ -91,6 +97,10 @@ class LdapAuthProvider(AuthProvider):
                     password=password,
                     auto_bind=True,
                 )
+
+            # Upgrade connection with START_TLS if requested.
+            if encryption == CONF_ENCRYPTION_STARTTLS:
+                conn.starttls()
 
             _LOGGER.debug("Server info: %s", server.info)
             _LOGGER.debug("Connection: %s", conn)
