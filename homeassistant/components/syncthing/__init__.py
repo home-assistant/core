@@ -58,7 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
-    event_listener = EventListenerThread(hass, client, data[CONF_NAME])
+    name = data[CONF_NAME]
+    event_listener = EventListenerThread(hass, client, name)
 
     event_listener.start()
 
@@ -68,10 +69,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_event_listener)
 
-    hass.data[DOMAIN][data[CONF_NAME]] = {
+    hass.data[DOMAIN][name] = {
         "client": client,
         "event_listener": event_listener,
     }
+
+    if not entry.unique_id:
+        hass.config_entries.async_update_entry(entry, unique_id=name)
 
     return True
 
@@ -87,8 +91,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN][entry.data[CONF_NAME]]["event_listener"].stop()
-        hass.data[DOMAIN].pop(entry.data[CONF_NAME])
+        name = entry.data[CONF_NAME]
+        hass.data[DOMAIN][name]["event_listener"].stop()
+        hass.data[DOMAIN].pop(name)
 
     return unload_ok
 
@@ -96,12 +101,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class EventListenerThread(threading.Thread):
     """A threaded event listener class."""
 
-    def __init__(self, hass, client, client_name):
+    def __init__(self, hass, client, name):
         """Initialize the listener."""
         super().__init__()
         self._hass = hass
         self._client = client
-        self._client_name = client_name
+        self._name = name
         self._events_stream = self._client.events()
 
     def run(self):
@@ -113,9 +118,7 @@ class EventListenerThread(threading.Thread):
             try:
                 self._client.system.ping()
                 if server_was_unavailable:
-                    dispatcher_send(
-                        self._hass, f"{SERVER_AVAILABLE}-{self._client_name}"
-                    )
+                    dispatcher_send(self._hass, f"{SERVER_AVAILABLE}-{self._name}")
                     server_was_unavailable = False
 
                 for event in self._events_stream:
@@ -129,15 +132,13 @@ class EventListenerThread(threading.Thread):
                     else:  # A workaround, some events store folder id under `id` key
                         folder = event["data"]["id"]
                     dispatcher_send(
-                        self._hass,
-                        f"{signal_name}-{self._client_name}-{folder}",
-                        event,
+                        self._hass, f"{signal_name}-{self._name}-{folder}", event,
                     )
             except syncthing.SyncthingError:
                 _LOGGER.info(
                     f"The syncthing event listener crashed. Probably, the server is not available. Sleeping {RECONNECT_INTERVAL.seconds} seconds and retrying..."
                 )
-                dispatcher_send(self._hass, f"{SERVER_UNAVAILABLE}-{self._client_name}")
+                dispatcher_send(self._hass, f"{SERVER_UNAVAILABLE}-{self._name}")
                 time.sleep(RECONNECT_INTERVAL.seconds)
                 server_was_unavailable = True
                 continue
