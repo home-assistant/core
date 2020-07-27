@@ -142,6 +142,7 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
 
         Zwave Dimming Duration values now use seconds as an
         integer (max: 7620 seconds or 127 mins)
+        Build 1205 https://github.com/OpenZWave/open-zwave/commit/f81bc04
         """
         if self.values.dimming_duration is None:
             return
