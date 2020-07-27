@@ -48,11 +48,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FolderSensor(Entity):
     """A Syncthing folder sensor."""
 
-    def __init__(self, hass, client, client_name, folder):
+    def __init__(self, hass, client, name, folder):
         """Initialize the sensor."""
         self.hass = hass
         self._client = client
-        self._client_name = client_name
+        self._name = name
         self._folder = folder
         self._state = None
         self._unsub_timer = None
@@ -60,12 +60,12 @@ class FolderSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._client_name} {self._folder['id']} {self._folder['label']}"
+        return f"{self._name} {self._folder['id']} {self._folder['label']}"
 
     @property
     def unique_id(self):
         """Return the unique id of the entity."""
-        return f"{DOMAIN}-{self._client_name}-{self._folder['id']}"
+        return f"{DOMAIN}-{self._name}-{self._folder['id']}"
 
     @property
     def state(self):
@@ -143,7 +143,7 @@ class FolderSensor(Entity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{FOLDER_SUMMARY_RECEIVED}-{self._client_name}-{self._folder['id']}",
+                f"{FOLDER_SUMMARY_RECEIVED}-{self._name}-{self._folder['id']}",
                 handle_folder_summary,
             )
         )
@@ -157,7 +157,7 @@ class FolderSensor(Entity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{STATE_CHANGED_RECEIVED}-{self._client_name}-{self._folder['id']}",
+                f"{STATE_CHANGED_RECEIVED}-{self._name}-{self._folder['id']}",
                 handle_state_chaged,
             )
         )
@@ -171,7 +171,7 @@ class FolderSensor(Entity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{FOLDER_PAUSED_RECEIVED}-{self._client_name}-{self._folder['id']}",
+                f"{FOLDER_PAUSED_RECEIVED}-{self._name}-{self._folder['id']}",
                 handle_folder_paused,
             )
         )
@@ -185,7 +185,7 @@ class FolderSensor(Entity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SERVER_UNAVAILABLE}-{self._client_name}",
+                f"{SERVER_UNAVAILABLE}-{self._name}",
                 handle_server_unavailable,
             )
         )
@@ -197,9 +197,7 @@ class FolderSensor(Entity):
 
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass,
-                f"{SERVER_AVAILABLE}-{self._client_name}",
-                handle_server_available,
+                self.hass, f"{SERVER_AVAILABLE}-{self._name}", handle_server_available,
             )
         )
 
