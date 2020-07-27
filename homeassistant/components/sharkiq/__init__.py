@@ -1,10 +1,10 @@
 """Shark IQ Integration."""
 
 import asyncio
+from datetime import timedelta
 import logging
 
 import async_timeout
-from datetime import timedelta
 from sharkiqpy import AylaApi, SharkIqAuthError, get_ayla_api
 import voluptuous as vol
 
