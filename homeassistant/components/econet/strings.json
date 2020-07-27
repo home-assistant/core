@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Fill in your Rheem login information.",
+        "data": {
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "identifier_exists": "Account already registered",
+      "invalid_credentials": "Invalid credentials"
+    },
+    "abort": {
+      "already_configured": "This Rheem account is already in use."
+    }
+  }
+}
