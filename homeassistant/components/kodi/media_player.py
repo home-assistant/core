@@ -454,7 +454,7 @@ class KodiDevice(MediaPlayerEntity):
             )
         )
 
-    async def _async_connect_websocket_if_disconnected(self):
+    async def _async_connect_websocket_if_disconnected(self, *_):
         """Reconnect the websocket if it fails."""
         if not self._ws_server.connected:
             await self.hass.async_create_task(self.async_ws_connect())
