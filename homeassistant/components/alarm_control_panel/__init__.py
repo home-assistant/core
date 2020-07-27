@@ -12,6 +12,7 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
+    SERVICE_ALARM_ARM_VACATION,
     SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
 )
@@ -29,6 +30,7 @@ from .const import (
     SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_ARM_VACATION,
     SUPPORT_ALARM_TRIGGER,
 )
 
@@ -74,6 +76,12 @@ async def async_setup(hass, config):
         ALARM_SERVICE_SCHEMA,
         "async_alarm_arm_night",
         [SUPPORT_ALARM_ARM_NIGHT],
+    )
+    component.async_register_entity_service(
+        SERVICE_ALARM_ARM_VACATION,
+        ALARM_SERVICE_SCHEMA,
+        "async_alarm_arm_vacation",
+        [SUPPORT_ALARM_ARM_VACATION],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_CUSTOM_BYPASS,
@@ -150,6 +158,14 @@ class AlarmControlPanelEntity(Entity):
     async def async_alarm_arm_night(self, code=None):
         """Send arm night command."""
         await self.hass.async_add_executor_job(self.alarm_arm_night, code)
+    
+    def alarm_arm_vacation(self, code=None):
+        """Send arm vacation command."""
+        raise NotImplementedError()
+
+    async def async_alarm_arm_vacation(self, code=None):
+        """Send arm vacation command."""
+        await self.hass.async_add_executor_job(self.alarm_arm_vacation, code)
 
     def alarm_trigger(self, code=None):
         """Send alarm trigger command."""
