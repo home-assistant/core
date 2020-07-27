@@ -30,7 +30,6 @@ import homeassistant.helpers.config_validation as cv
 SERVICE_UPDATE_SETTING = "update_setting"
 
 ATTR_SETTING_TYPE = "setting_type"
-ATTR_SETTING_TYPES = f"{ATTR_SETTING_TYPE}s"
 ATTR_SETTING_NAME = "setting_name"
 ATTR_NEW_VALUE = "new_value"
 

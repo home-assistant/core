@@ -130,9 +130,6 @@ async def _cm_for_test_setup_without_apps(
         "homeassistant.components.vizio.media_player.VizioAsync.get_all_settings",
         return_value=all_settings,
     ), patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_setting_types_list",
-        return_value=["audio"],
-    ), patch(
         "homeassistant.components.vizio.media_player.VizioAsync.get_setting_options",
         return_value=EQ_LIST,
     ), patch(
@@ -199,8 +196,6 @@ async def _test_setup_speaker(
                 _assert_sources_and_volume(attr, VIZIO_DEVICE_CLASS_SPEAKER)
                 assert not service_call.called
                 assert "sound_mode" in attr
-                assert attr["audio_settings"] == audio_settings
-                assert attr["setting_types"] == ["audio"]
 
 
 @asynccontextmanager

@@ -34,7 +34,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
-    ATTR_SETTING_TYPES,
     CONF_ADDITIONAL_CONFIGS,
     CONF_APPS,
     CONF_VOLUME_STEP,
@@ -151,8 +150,6 @@ class VizioDevice(MediaPlayerEntity):
         self._available_sound_modes = []
         self._available_inputs = []
         self._available_apps = []
-        self._setting_types = []
-        self._all_settings = {}
         self._conf_apps = config_entry.options.get(CONF_APPS, {})
         self._additional_app_configs = config_entry.data.get(CONF_APPS, {}).get(
             CONF_ADDITIONAL_CONFIGS, []
@@ -208,39 +205,26 @@ class VizioDevice(MediaPlayerEntity):
             self._current_app = None
             self._current_app_config = None
             self._current_sound_mode = None
-            self._all_settings = {}
             return
 
         self._state = STATE_ON
 
-        if not self._setting_types:
-            self._setting_types = sorted(
-                await self._device.get_setting_types_list(log_api_exception=False)
-            )
+        audio_settings = await self._device.get_all_settings(
+            VIZIO_AUDIO_SETTINGS, log_api_exception=False
+        )
 
-        for setting_type in self._setting_types:
-            self._all_settings[setting_type] = await self._device.get_all_settings(
-                setting_type, log_api_exception=False
-            )
-
-        if VIZIO_AUDIO_SETTINGS in self._all_settings:
-            self._volume_level = (
-                float(self._all_settings[VIZIO_AUDIO_SETTINGS][VIZIO_VOLUME])
-                / self._max_volume
-            )
-            if VIZIO_MUTE in self._all_settings[VIZIO_AUDIO_SETTINGS]:
+        if audio_settings:
+            self._volume_level = float(audio_settings[VIZIO_VOLUME]) / self._max_volume
+            if VIZIO_MUTE in audio_settings:
                 self._is_volume_muted = (
-                    self._all_settings[VIZIO_AUDIO_SETTINGS][VIZIO_MUTE].lower()
-                    == VIZIO_MUTE_ON
+                    audio_settings[VIZIO_MUTE].lower() == VIZIO_MUTE_ON
                 )
             else:
                 self._is_volume_muted = None
 
-            if VIZIO_SOUND_MODE in self._all_settings[VIZIO_AUDIO_SETTINGS]:
+            if VIZIO_SOUND_MODE in audio_settings:
                 self._supported_commands |= SUPPORT_SELECT_SOUND_MODE
-                self._current_sound_mode = self._all_settings[VIZIO_AUDIO_SETTINGS][
-                    VIZIO_SOUND_MODE
-                ]
+                self._current_sound_mode = audio_settings[VIZIO_SOUND_MODE]
                 if not self._available_sound_modes:
                     self._available_sound_modes = await self._device.get_setting_options(
                         VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE
@@ -443,15 +427,6 @@ class VizioDevice(MediaPlayerEntity):
     def sound_mode_list(self) -> Optional[List[str]]:
         """List of available sound modes."""
         return self._available_sound_modes
-
-    @property
-    def device_state_attributes(self):
-        """Return additional state attributes."""
-        data = {ATTR_SETTING_TYPES: self._setting_types}
-        for setting_type, settings in self._all_settings.items():
-            data[f"{setting_type}_settings"] = settings
-
-        return data
 
     async def async_select_sound_mode(self, sound_mode):
         """Select sound mode."""
