@@ -5,12 +5,12 @@ from homeassistant.components.ozw.websocket_api import ID, NODE_ID, OZW_INSTANCE
 from .common import setup_ozw
 
 
-async def test_sensor(hass, generic_data, hass_ws_client):
-    """Set up config entry."""
+async def test_websocket_api(hass, generic_data, hass_ws_client):
+    """Test the ozw websocket api."""
     await setup_ozw(hass, fixture=generic_data)
     client = await hass_ws_client(hass)
 
-    """Test network status."""
+    # Test network status
     await client.send_json({ID: 5, TYPE: "ozw/network_status"})
     msg = await client.receive_json()
     result = msg["result"]
@@ -18,7 +18,7 @@ async def test_sensor(hass, generic_data, hass_ws_client):
     assert result["state"] == "driverAllNodesQueried"
     assert result[OZW_INSTANCE] == 1
 
-    """Test node status."""
+    # Test node status
     await client.send_json({ID: 6, TYPE: "ozw/node_status", NODE_ID: 32})
     msg = await client.receive_json()
     result = msg["result"]
@@ -38,7 +38,7 @@ async def test_sensor(hass, generic_data, hass_ws_client):
     assert result["node_generic_string"] == "Binary Switch"
     assert result["node_specific_string"] == "Binary Power Switch"
 
-    """Test network status."""
+    # Test node statistics
     await client.send_json({ID: 7, TYPE: "ozw/node_statistics", NODE_ID: 39})
     msg = await client.receive_json()
     result = msg["result"]
