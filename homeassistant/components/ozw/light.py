@@ -156,13 +156,13 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         if ATTR_TRANSITION not in kwargs:
             # no transition specified by user, use defaults
             new_value = 7621  # anything over 7620 uses the factory default
-            if ozw_version < (1, 6, 1206):
+            if ozw_version < (1, 6, 1205):
                 new_value = 255  # default for older version
 
         else:
             # transition specified by user
             new_value = max(0, min(7620, kwargs[ATTR_TRANSITION]))
-            if ozw_version < (1, 6, 1206):
+            if ozw_version < (1, 6, 1205):
                 transition = kwargs[ATTR_TRANSITION]
                 if transition <= 127:
                     new_value = int(transition)
