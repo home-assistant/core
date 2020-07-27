@@ -25,6 +25,7 @@ from homeassistant.const import (
     STATE_OK,
     STATE_ON,
     STATE_OPEN,
+    STATE_PAUSED,
     STATE_PLAYING,
     STATE_PROBLEM,
     STATE_UNKNOWN,
@@ -93,6 +94,7 @@ _GROUP_TYPES = [
     (STATE_LOCKED, STATE_UNLOCKED),
     (STATE_PROBLEM, STATE_OK),
     (STATE_IDLE, STATE_OFF),
+    (STATE_PAUSED, STATE_OFF),
     (STATE_PLAYING, STATE_OFF),
 ]
 
