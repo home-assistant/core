@@ -1,4 +1,4 @@
-"""Shark IQ robot vacuums"""
+"""Shark IQ robot vacuums."""
 import logging
 from typing import TYPE_CHECKING, List
 
@@ -18,6 +18,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     ayla_api = domain_data[SHARKIQ_SESSION]  # type: AylaApi
 
     devices = await ayla_api.async_get_devices()  # type: List[SharkIqVacuum]
-    device_names = ', '.join([d.name for d in devices])
-    _LOGGER.debug("Found % Shark IQ device(s): %s", len(devices), device_names)
+    device_names = ", ".join([d.name for d in devices])
+    _LOGGER.debug("Found % Shark IQ device(s): %", len(devices), device_names)
     async_add_entities([SharkVacuumEntity(d) for d in devices], True)

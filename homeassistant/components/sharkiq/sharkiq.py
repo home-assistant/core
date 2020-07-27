@@ -56,7 +56,7 @@ FAN_SPEEDS_MAP = {
     "Max": PowerModes.MAX,
 }
 
-STATE_RECHARGING_TO_RESUME = 'recharging_to_resume'  # TODO: Add strings for this
+STATE_RECHARGING_TO_RESUME = "recharging_to_resume"  # TODO: Add strings for this
 
 # Attributes to expose
 ATTR_RECHARGE_RESUME = "recharge_and_resume"
@@ -100,13 +100,13 @@ class SharkVacuumEntity(StateVacuumEntity):
     def device_info(self) -> Dict:
         """Device info dictionary."""
         return {
-            "identifiers": {
-                (DOMAIN, self.serial_number)
-            },
+            "identifiers": {(DOMAIN, self.serial_number)},
             "name": self.name,
             "manufacturer": SHARK,
             "model": self.model,
-            "sw_version": self.sharkiq.get_property_value(Properties.ROBOT_FIRMWARE_VERSION)
+            "sw_version": self.sharkiq.get_property_value(
+                Properties.ROBOT_FIRMWARE_VERSION
+            ),
         }
 
     @property
@@ -123,7 +123,11 @@ class SharkVacuumEntity(StateVacuumEntity):
     def error_code(self) -> Optional[int]:
         """Error code or None."""
         # Errors remain for a while, so we should only show an error if the device is stopped
-        if self.sharkiq.get_property_value(Properties.OPERATING_MODE) == OperatingModes.STOP and not self.is_docked:
+        if (
+            self.sharkiq.get_property_value(Properties.OPERATING_MODE)
+            == OperatingModes.STOP
+            and not self.is_docked
+        ):
             return self.sharkiq.get_property_value(Properties.ERROR_CODE)
         else:
             return None
@@ -154,7 +158,7 @@ class SharkVacuumEntity(StateVacuumEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique id of the vacuum cleaner."""
-        return "sharkiq-{:s}-vacuum".format(self.serial_number)
+        return f"sharkiq-{self.serial_number:s}-vacuum"
 
     @property
     def available(self) -> bool:

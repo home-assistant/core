@@ -29,7 +29,9 @@ async def async_setup(hass, config):
     if DOMAIN not in config:
         return True
     for index, conf in enumerate(config[DOMAIN]):
-        _LOGGER.debug("Importing Shark IQ #%d (Username: %s)", index, conf[CONF_USERNAME])
+        _LOGGER.debug(
+            "Importing Shark IQ #%d (Username: %s)", index, conf[CONF_USERNAME]
+        )
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf,
@@ -60,7 +62,7 @@ async def async_setup_entry(hass, config_entry):
     ayla_api = get_ayla_api(
         username=config_entry.data[CONF_USERNAME],
         password=config_entry.data[CONF_PASSWORD],
-        websession=hass.helpers.aiohttp_client.async_get_clientsession()
+        websession=hass.helpers.aiohttp_client.async_get_clientsession(),
     )
 
     try:
@@ -69,9 +71,7 @@ async def async_setup_entry(hass, config_entry):
     except CannotConnect as exc:
         raise exceptions.ConfigEntryNotReady from exc
 
-    hass.data[DOMAIN][config_entry.entry_id] = {
-        SHARKIQ_SESSION: ayla_api
-    }
+    hass.data[DOMAIN][config_entry.entry_id] = {SHARKIQ_SESSION: ayla_api}
 
     for component in COMPONENTS:
         hass.async_create_task(

@@ -25,7 +25,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     ayla_api = get_ayla_api(
         username=data[CONF_USERNAME],
         password=data[CONF_PASSWORD],
-        websession=hass.helpers.aiohttp_client.async_get_clientsession(hass)
+        websession=hass.helpers.aiohttp_client.async_get_clientsession(hass),
     )
 
     try:
