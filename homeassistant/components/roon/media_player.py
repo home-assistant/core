@@ -374,6 +374,9 @@ class RoonDevice(MediaPlayerEntity):
     def media_seek(self, position):
         """Send seek command to device."""
         self._server.roonapi.seek(self.output_id, position)
+        # Seek doesn't cause an async update - so force one
+        self._media_position = position
+        self.async_write_ha_state()
 
     def set_volume_level(self, volume):
         """Send new volume_level to device."""
