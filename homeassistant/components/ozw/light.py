@@ -148,7 +148,7 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
 
         ozw_version = self.values.primary.ozw_instance.get_status().openzwave_version
         ozw_build = int(ozw_version.split(".")[2])
-        ozw_major = float(ozw_version[0:1])
+        ozw_major = float(".".join(ozw_version.split(".")[0:2]))
 
         if ATTR_TRANSITION not in kwargs:
             # no transition specified by user, use defaults
