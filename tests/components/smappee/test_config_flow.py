@@ -99,17 +99,6 @@ async def test_connection_error_empty_host(hass):
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
-async def test_zeroconf_no_data(hass):
-    """Test we abort if zeroconf provides no data."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}
-    )
-
-    assert result["reason"] == "connection_error"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-
-
 async def test_zerconf_wrong_mdns(hass):
     """Test we abort if unsupported mDNS name is discovered."""
     result = await hass.config_entries.flow.async_init(
