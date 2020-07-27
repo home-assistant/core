@@ -1005,6 +1005,31 @@ async def test_choose(hass, var, result):
     assert events[0].data["choice"] == result
 
 
+@pytest.mark.parametrize(
+    "action",
+    [
+        {"repeat": {"count": 1, "sequence": {"event": "abc"}}},
+        {"choose": {"conditions": [], "sequence": {"event": "abc"}}},
+        {"choose": [], "default": {"event": "abc"}},
+    ],
+)
+async def test_multiple_runs_repeat_choose(hass, caplog, action):
+    """Test parallel runs with repeat & choose actions & max_runs > default."""
+    max_runs = script.DEFAULT_MAX + 1
+    script_obj = script.Script(
+        hass, cv.SCRIPT_SCHEMA(action), script_mode="parallel", max_runs=max_runs
+    )
+
+    events = async_capture_events(hass, "abc")
+    for _ in range(max_runs):
+        hass.async_create_task(script_obj.async_run())
+    await hass.async_block_till_done()
+
+    assert "WARNING" not in caplog.text
+    assert "ERROR" not in caplog.text
+    assert len(events) == max_runs
+
+
 async def test_last_triggered(hass):
     """Test the last_triggered."""
     event = "test_event"
