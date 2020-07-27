@@ -1,13 +1,15 @@
 """Test the Shark IQ config flow."""
-import aiohttp
 import logging
+
+import aiohttp
+from sharkiqpy import SharkIqAuthError
+
 from homeassistant import config_entries, setup
 from homeassistant.components.sharkiq.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.sharkiq.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.async_mock import MagicMock, PropertyMock, patch
-from sharkiqpy import SharkIqAuthError
 
 VALID_CONFIG = {
     CONF_PASSWORD: "P4s$w0rD$7r0nk",

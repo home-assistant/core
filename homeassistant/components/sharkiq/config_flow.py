@@ -1,9 +1,9 @@
 """Config flow for Shark IQ integration."""
 
-import aiohttp
 import asyncio
 import logging
 
+import aiohttp
 import async_timeout
 from sharkiqpy import SharkIqAuthError, get_ayla_api
 import voluptuous as vol
