@@ -136,7 +136,7 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         self._name = name
         self.host = host
         self._state = None
-        self._current_activity = None
+        self._current_activity = ACTIVITY_POWER_OFF
         self.default_activity = activity
         self._client = HarmonyClient(ip_address=host)
         self._config_path = out_path
@@ -340,17 +340,31 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
 
         if activity:
             activity_id = None
+            activity_name = None
+
             if activity.isdigit() or activity == "-1":
                 _LOGGER.debug("%s: Activity is numeric", self.name)
-                if self._client.get_activity_name(int(activity)):
+                activity_name = self._client.get_activity_name(int(activity))
+                if activity_name:
                     activity_id = activity
 
             if activity_id is None:
                 _LOGGER.debug("%s: Find activity ID based on name", self.name)
-                activity_id = self._client.get_activity_id(str(activity))
+                activity_name = str(activity)
+                activity_id = self._client.get_activity_id(activity_name)
 
             if activity_id is None:
                 _LOGGER.error("%s: Activity %s is invalid", self.name, activity)
+                return
+
+            if self._current_activity == activity_name:
+                # Automations or HomeKit may turn the device on multiple times
+                # when the current activity is already active which will cause
+                # harmony to loose state.  This behavior is unexpected as turning
+                # the device on when its already on isn't expected to reset state.
+                _LOGGER.debug(
+                    "%s: Current activity is already %s", self.name, activity_name
+                )
                 return
 
             try:
