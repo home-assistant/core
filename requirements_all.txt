@@ -1827,6 +1827,9 @@ pyvizio==0.1.49
 # homeassistant.components.velux
 pyvlx==0.2.16
 
+# homeassistant.components.volumio
+pyvolumio==0.1
+
 # homeassistant.components.html5
 pywebpush==1.9.2
 

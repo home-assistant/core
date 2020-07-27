@@ -926,6 +926,7 @@ omit =
     homeassistant/components/vlc/media_player.py
     homeassistant/components/vlc_telnet/media_player.py
     homeassistant/components/volkszaehler/sensor.py
+    homeassistant/components/volumio/__init__.py
     homeassistant/components/volumio/media_player.py
     homeassistant/components/volvooncall/*
     homeassistant/components/w800rf32/*
