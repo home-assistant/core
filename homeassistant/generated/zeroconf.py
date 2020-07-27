@@ -6,6 +6,9 @@ To update, run python3 -m script.hassfest
 # fmt: off
 
 ZEROCONF = {
+    "_Volumio._tcp.local.": [
+        "volumio"
+    ],
     "_api._udp.local.": [
         "guardian"
     ],
