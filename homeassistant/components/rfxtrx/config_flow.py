@@ -65,15 +65,16 @@ class OptionsFlow(config_entries.OptionsFlow):
             }
             if CONF_DEVICE in user_input:
                 event_code = None
+                device_id = None
                 for entry in self._device_entries:
                     if entry.id == user_input[CONF_DEVICE]:
                         device_id = next(iter(entry.identifiers))[1:]
-                        for packet_id, entity_info in self._config_entry.data[
-                            CONF_DEVICES
-                        ].items():
-                            if entity_info.get(CONF_DEVICE_ID) == device_id:
-                                event_code = packet_id
-                                break
+                        break
+                for packet_id, entity_info in self._config_entry.data[
+                    CONF_DEVICES
+                ].items():
+                    if entity_info.get(CONF_DEVICE_ID) == device_id:
+                        event_code = packet_id
                         break
                 if not event_code:
                     errors = {"base": "unknown_event_code"}
