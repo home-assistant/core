@@ -1,95 +1,178 @@
-"""
-Support for MQTT discovery.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mqtt/#discovery
-"""
+"""Support for MQTT discovery."""
 import asyncio
 import json
 import logging
 import re
 
-import homeassistant.components.mqtt as mqtt
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.const import CONF_PLATFORM
-from homeassistant.components.mqtt import CONF_STATE_TOPIC
+from homeassistant.components import mqtt
+from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import HomeAssistantType
+
+from .abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS
+from .const import ATTR_DISCOVERY_HASH, ATTR_DISCOVERY_PAYLOAD, ATTR_DISCOVERY_TOPIC
 
 _LOGGER = logging.getLogger(__name__)
 
 TOPIC_MATCHER = re.compile(
-    r'(?P<prefix_topic>\w+)/(?P<component>\w+)/'
-    r'(?:(?P<node_id>[a-zA-Z0-9_-]+)/)?(?P<object_id>[a-zA-Z0-9_-]+)/config')
+    r"(?P<component>\w+)/(?:(?P<node_id>[a-zA-Z0-9_-]+)/)"
+    r"?(?P<object_id>[a-zA-Z0-9_-]+)/config"
+)
 
-SUPPORTED_COMPONENTS = ['binary_sensor', 'fan', 'light', 'sensor', 'switch']
+SUPPORTED_COMPONENTS = [
+    "alarm_control_panel",
+    "binary_sensor",
+    "camera",
+    "climate",
+    "cover",
+    "device_automation",
+    "fan",
+    "light",
+    "lock",
+    "sensor",
+    "switch",
+    "vacuum",
+]
 
-ALLOWED_PLATFORMS = {
-    'binary_sensor': ['mqtt'],
-    'fan': ['mqtt'],
-    'light': ['mqtt', 'mqtt_json', 'mqtt_template'],
-    'sensor': ['mqtt'],
-    'switch': ['mqtt'],
-}
+ALREADY_DISCOVERED = "mqtt_discovered_components"
+CONFIG_ENTRY_IS_SETUP = "mqtt_config_entry_is_setup"
+DATA_CONFIG_ENTRY_LOCK = "mqtt_config_entry_lock"
+DISCOVERY_UNSUBSCRIBE = "mqtt_discovery_unsubscribe"
+MQTT_DISCOVERY_UPDATED = "mqtt_discovery_updated_{}"
+MQTT_DISCOVERY_NEW = "mqtt_discovery_new_{}_{}"
 
-ALREADY_DISCOVERED = 'mqtt_discovered_components'
+TOPIC_BASE = "~"
 
 
-@asyncio.coroutine
-def async_start(hass, discovery_topic, hass_config):
-    """Initialize of MQTT Discovery."""
-    # pylint: disable=unused-variable
-    @asyncio.coroutine
-    def async_device_message_received(topic, payload, qos):
+def clear_discovery_hash(hass, discovery_hash):
+    """Clear entry in ALREADY_DISCOVERED list."""
+    del hass.data[ALREADY_DISCOVERED][discovery_hash]
+
+
+def set_discovery_hash(hass, discovery_hash):
+    """Clear entry in ALREADY_DISCOVERED list."""
+    hass.data[ALREADY_DISCOVERED][discovery_hash] = {}
+
+
+class MQTTConfig(dict):
+    """Dummy class to allow adding attributes."""
+
+
+async def async_start(
+    hass: HomeAssistantType, discovery_topic, config_entry=None
+) -> bool:
+    """Start MQTT Discovery."""
+
+    async def async_device_message_received(msg):
         """Process the received message."""
-        match = TOPIC_MATCHER.match(topic)
+        payload = msg.payload
+        topic = msg.topic
+        topic_trimmed = topic.replace(f"{discovery_topic}/", "", 1)
+        match = TOPIC_MATCHER.match(topic_trimmed)
 
         if not match:
             return
 
-        prefix_topic, component, node_id, object_id = match.groups()
-
-        try:
-            payload = json.loads(payload)
-        except ValueError:
-            _LOGGER.warning("Unable to parse JSON %s: %s", object_id, payload)
-            return
+        component, node_id, object_id = match.groups()
 
         if component not in SUPPORTED_COMPONENTS:
-            _LOGGER.warning("Component %s is not supported", component)
+            _LOGGER.warning("Integration %s is not supported", component)
             return
 
-        payload = dict(payload)
-        platform = payload.get(CONF_PLATFORM, 'mqtt')
-        if platform not in ALLOWED_PLATFORMS.get(component, []):
-            _LOGGER.warning("Platform %s (component %s) is not allowed",
-                            platform, component)
-            return
+        if payload:
+            try:
+                payload = json.loads(payload)
+            except ValueError:
+                _LOGGER.warning("Unable to parse JSON %s: '%s'", object_id, payload)
+                return
 
-        payload[CONF_PLATFORM] = platform
-        if CONF_STATE_TOPIC not in payload:
-            payload[CONF_STATE_TOPIC] = '{}/{}/{}{}/state'.format(
-                discovery_topic, component, '%s/' % node_id if node_id else '',
-                object_id)
+        payload = MQTTConfig(payload)
 
-        if ALREADY_DISCOVERED not in hass.data:
-            hass.data[ALREADY_DISCOVERED] = set()
+        for key in list(payload.keys()):
+            abbreviated_key = key
+            key = ABBREVIATIONS.get(key, key)
+            payload[key] = payload.pop(abbreviated_key)
+
+        if CONF_DEVICE in payload:
+            device = payload[CONF_DEVICE]
+            for key in list(device.keys()):
+                abbreviated_key = key
+                key = DEVICE_ABBREVIATIONS.get(key, key)
+                device[key] = device.pop(abbreviated_key)
+
+        if TOPIC_BASE in payload:
+            base = payload.pop(TOPIC_BASE)
+            for key, value in payload.items():
+                if isinstance(value, str) and value:
+                    if value[0] == TOPIC_BASE and key.endswith("topic"):
+                        payload[key] = f"{base}{value[1:]}"
+                    if value[-1] == TOPIC_BASE and key.endswith("topic"):
+                        payload[key] = f"{value[:-1]}{base}"
 
         # If present, the node_id will be included in the discovered object id
-        discovery_id = '_'.join((node_id, object_id)) if node_id else object_id
-
+        discovery_id = " ".join((node_id, object_id)) if node_id else object_id
         discovery_hash = (component, discovery_id)
+
+        if payload:
+            # Attach MQTT topic to the payload, used for debug prints
+            setattr(payload, "__configuration_source__", f"MQTT (topic: '{topic}')")
+            discovery_data = {
+                ATTR_DISCOVERY_HASH: discovery_hash,
+                ATTR_DISCOVERY_PAYLOAD: payload,
+                ATTR_DISCOVERY_TOPIC: topic,
+            }
+            setattr(payload, "discovery_data", discovery_data)
+
+            payload[CONF_PLATFORM] = "mqtt"
+
+        if ALREADY_DISCOVERED not in hass.data:
+            hass.data[ALREADY_DISCOVERED] = {}
         if discovery_hash in hass.data[ALREADY_DISCOVERED]:
-            _LOGGER.info("Component has already been discovered: %s %s",
-                         component, discovery_id)
-            return
+            # Dispatch update
+            _LOGGER.info(
+                "Component has already been discovered: %s %s, sending update",
+                component,
+                discovery_id,
+            )
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_UPDATED.format(discovery_hash), payload
+            )
+        elif payload:
+            # Add component
+            _LOGGER.info("Found new component: %s %s", component, discovery_id)
+            hass.data[ALREADY_DISCOVERED][discovery_hash] = None
 
-        hass.data[ALREADY_DISCOVERED].add(discovery_hash)
+            config_entries_key = f"{component}.mqtt"
+            async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
+                if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
+                    if component == "device_automation":
+                        # Local import to avoid circular dependencies
+                        # pylint: disable=import-outside-toplevel
+                        from . import device_automation
 
-        _LOGGER.info("Found new component: %s %s", component, discovery_id)
+                        await device_automation.async_setup_entry(hass, config_entry)
+                    else:
+                        await hass.config_entries.async_forward_entry_setup(
+                            config_entry, component
+                        )
+                    hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
 
-        yield from async_load_platform(
-            hass, component, platform, payload, hass_config)
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_NEW.format(component, "mqtt"), payload
+            )
 
-    yield from mqtt.async_subscribe(
-        hass, discovery_topic + '/#', async_device_message_received, 0)
+    hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
+    hass.data[CONFIG_ENTRY_IS_SETUP] = set()
+
+    hass.data[DISCOVERY_UNSUBSCRIBE] = await mqtt.async_subscribe(
+        hass, f"{discovery_topic}/#", async_device_message_received, 0
+    )
 
     return True
+
+
+async def async_stop(hass: HomeAssistantType) -> bool:
+    """Stop MQTT Discovery."""
+    if DISCOVERY_UNSUBSCRIBE in hass.data and hass.data[DISCOVERY_UNSUBSCRIBE]:
+        hass.data[DISCOVERY_UNSUBSCRIBE]()
+        hass.data[DISCOVERY_UNSUBSCRIBE] = None

@@ -1,0 +1,7 @@
+{
+  "domain": "linode",
+  "name": "Linode",
+  "documentation": "https://www.home-assistant.io/integrations/linode",
+  "requirements": ["linode-api==4.1.9b1"],
+  "codeowners": []
+}

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Aquest controlador RainMachine ja est\u00e0 configurat."
+        },
+        "error": {
+            "identifier_exists": "Aquest compte ja est\u00e0 registrat",
+            "invalid_credentials": "Credencials inv\u00e0lides"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Nom de l'amfitri\u00f3 o adre\u00e7a IP",
+                    "password": "Contrasenya",
+                    "port": "Port"
+                },
+                "title": "Introdueix la teva informaci\u00f3"
+            }
+        }
+    }
+}

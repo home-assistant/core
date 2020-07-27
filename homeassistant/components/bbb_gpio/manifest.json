@@ -1,0 +1,7 @@
+{
+  "domain": "bbb_gpio",
+  "name": "BeagleBone Black GPIO",
+  "documentation": "https://www.home-assistant.io/integrations/bbb_gpio",
+  "requirements": ["Adafruit_BBIO==1.1.1"],
+  "codeowners": []
+}

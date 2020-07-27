@@ -1,0 +1,7 @@
+{
+  "domain": "opencv",
+  "name": "OpenCV",
+  "documentation": "https://www.home-assistant.io/integrations/opencv",
+  "requirements": ["numpy==1.19.0", "opencv-python-headless==4.2.0.32"],
+  "codeowners": []
+}

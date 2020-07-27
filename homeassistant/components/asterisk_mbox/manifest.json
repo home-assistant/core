@@ -1,0 +1,7 @@
+{
+  "domain": "asterisk_mbox",
+  "name": "Asterisk Voicemail",
+  "documentation": "https://www.home-assistant.io/integrations/asterisk_mbox",
+  "requirements": ["asterisk_mbox==0.5.0"],
+  "codeowners": []
+}

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Wachtwoord"
+                },
+                "description": "Voer het IP-adres van uw Daikin AC in.",
+                "title": "Daikin AC instellen"
+            }
+        }
+    }
+}

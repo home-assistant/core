@@ -1,0 +1,7 @@
+{
+  "domain": "zestimate",
+  "name": "Zestimate",
+  "documentation": "https://www.home-assistant.io/integrations/zestimate",
+  "requirements": ["xmltodict==0.12.0"],
+  "codeowners": []
+}

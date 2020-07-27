@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "authenticate": {
+                "title": "Yhdist\u00e4 Toon-tili"
+            },
+            "display": {
+                "data": {
+                    "display": "Valitse n\u00e4ytt\u00f6"
+                },
+                "title": "Valitse n\u00e4ytt\u00f6"
+            }
+        }
+    }
+}

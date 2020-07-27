@@ -1,0 +1,156 @@
+# Describes the format for available zha services
+
+permit:
+  description: Allow nodes to join the Zigbee network.
+  fields:
+    duration:
+      description: Time to permit joins, in seconds
+      example: 60
+    ieee_address:
+      description: IEEE address of the node permitting new joins
+      example: "00:0d:6f:00:05:7d:2d:34"
+
+remove:
+  description: Remove a node from the Zigbee network.
+  fields:
+    ieee_address:
+      description: IEEE address of the node to remove
+      example: "00:0d:6f:00:05:7d:2d:34"
+
+reconfigure_device:
+  description: >-
+    Reconfigure ZHA device (heal device). Use this if you are having issues
+    with the device. If the device in question is a battery powered device
+    please ensure it is awake and accepting commands when you use this
+    service.
+  fields:
+    ieee_address:
+      description: IEEE address of the device to reconfigure
+      example: "00:0d:6f:00:05:7d:2d:34"
+
+set_zigbee_cluster_attribute:
+  description: >-
+    Set attribute value for the specified cluster on the specified entity.
+  fields:
+    ieee:
+      description: IEEE address for the device
+      example: "00:0d:6f:00:05:7d:2d:34"
+    endpoint_id:
+      description: Endpoint id for the cluster
+      example: 1
+    cluster_id:
+      description: ZCL cluster to retrieve attributes for
+      example: 6
+    cluster_type:
+      description: type of the cluster (in or out)
+      example: "out"
+    attribute:
+      description: id of the attribute to set
+      example: 0
+    value:
+      description: value to write to the attribute
+      example: 0x0001
+    manufacturer:
+      description: manufacturer code
+      example: 0x00FC
+
+issue_zigbee_cluster_command:
+  description: >-
+    Issue command on the specified cluster on the specified entity.
+  fields:
+    ieee:
+      description: IEEE address for the device
+      example: "00:0d:6f:00:05:7d:2d:34"
+    endpoint_id:
+      description: Endpoint id for the cluster
+      example: 1
+    cluster_id:
+      description: ZCL cluster to retrieve attributes for
+      example: 6
+    cluster_type:
+      description: type of the cluster (in or out)
+      example: "out"
+    command:
+      description: id of the command to execute
+      example: 0
+    command_type:
+      description: type of the command to execute (client or server)
+      example: "server"
+    args:
+      description: args to pass to the command
+      example: "[arg1, arg2, argN]"
+    manufacturer:
+      description: manufacturer code
+      example: 0x00FC
+
+issue_zigbee_group_command:
+  description: >-
+    Issue command on the specified cluster on the specified group.
+  fields:
+    group:
+      description: Hexadecimal address of the group
+      example: 0x0222
+    cluster_id:
+      description: ZCL cluster to send command to
+      example: 6
+    command:
+      description: id of the command to execute
+      example: 0
+    args:
+      description: args to pass to the command
+      example: "[arg1, arg2, argN]"
+    manufacturer:
+      description: manufacturer code
+      example: 0x00FC
+
+warning_device_squawk:
+  description: >-
+    This service uses the WD capabilities to emit a quick audible/visible pulse called a "squawk". The squawk command has no effect if the WD is currently active (warning in progress).
+  fields:
+    ieee:
+      description: IEEE address for the device
+      example: "00:0d:6f:00:05:7d:2d:34"
+    mode:
+      description: >-
+        The Squawk Mode field is used as a 4-bit enumeration, and can have one of the values shown in Table 8-24 of the ZCL spec - Squawk Mode Field. The exact operation of each mode (how the WD “squawks”) is implementation specific.
+      example: 1
+    strobe:
+      description: >-
+        The strobe field is used as a Boolean, and determines if the visual indication is also required in addition to the audible squawk, as shown in Table 8-25 of the ZCL spec - Strobe Bit.
+      example: 1
+    level:
+      description: >-
+        The squawk level field is used as a 2-bit enumeration, and determines the intensity of audible squawk sound as shown in Table 8-26 of the ZCL spec - Squawk Level Field Values.
+      example: 2
+
+warning_device_warn:
+  description: >-
+    This service starts the WD operation. The WD alerts the surrounding area by audible (siren) and visual (strobe) signals.
+  fields:
+    ieee:
+      description: IEEE address for the device
+      example: "00:0d:6f:00:05:7d:2d:34"
+    mode:
+      description: >-
+        The Warning Mode field is used as an 4-bit enumeration, can have one of the values defined below in table 8-20 of the ZCL spec. The exact behavior of the WD device in each mode is according to the relevant security standards.
+      example: 1
+    strobe:
+      description: >-
+        The Strobe field is used as a 2-bit enumeration, and determines if the visual indication is required in addition to the audible siren, as indicated in Table 8-21 of the ZCL spec. If the strobe field is “1” and the Warning Mode is “0” (“Stop”) then only the strobe is activated.
+      example: 1
+    level:
+      description: >-
+        The Siren Level field is used as a 2-bit enumeration, and indicates the intensity of audible squawk sound as shown in Table 8-22 of the ZCL spec.
+      example: 2
+    duration:
+      description: >-
+        Requested duration of warning, in seconds. If both Strobe and Warning Mode are "0" this field SHALL be ignored.
+      example: 2
+    duty_cycle:
+      description: >-
+        Indicates the length of the flash cycle. This provides a means of varying the flash duration for different alarm types (e.g., fire, police, burglar). Valid range is 0-100 in increments of 10. All other values SHALL be rounded to the nearest valid value. Strobe SHALL calculate duty cycle over a duration of one second. The ON state SHALL precede the OFF state. For example, if Strobe Duty Cycle Field specifies “40,” then the strobe SHALL flash ON for 4/10ths of a second and then turn OFF for 6/10ths of a second.
+      example: 2
+    intensity:
+      description: >-
+        Indicates the intensity of the strobe as shown in Table 8-23 of the ZCL spec. This attribute is designed to vary the output of the strobe (i.e., brightness) and not its frequency, which is detailed in section 8.4.2.3.1.6 of the ZCL spec.
+      example: 2

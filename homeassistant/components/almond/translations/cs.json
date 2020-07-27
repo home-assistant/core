@@ -1,0 +1,10 @@
+{
+    "config": {
+        "step": {
+            "hassio_confirm": {
+                "description": "Chcete nakonfigurovat slu\u017ebu Home Assistant pro p\u0159ipojen\u00ed k Almond pomoc\u00ed hass.io {addon}?",
+                "title": "Almond prost\u0159ednictv\u00edm dopl\u0148ku Hass.io"
+            }
+        }
+    }
+}

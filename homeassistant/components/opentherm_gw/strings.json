@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "init": {
+        "title": "OpenTherm Gateway",
+        "data": { "name": "Name", "device": "Path or URL", "id": "ID" }
+      }
+    },
+    "error": {
+      "already_configured": "Gateway already configured",
+      "id_exists": "Gateway id already exists",
+      "serial_error": "Error connecting to device",
+      "timeout": "Connection attempt timed out"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Options for the OpenTherm Gateway",
+        "data": {
+          "floor_temperature": "Floor Temperature",
+          "precision": "Precision"
+        }
+      }
+    }
+  }
+}

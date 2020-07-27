@@ -1,1 +1,1 @@
-"""Test 'image_processing' component plaforms."""
+"""Test 'image_processing' component platforms."""

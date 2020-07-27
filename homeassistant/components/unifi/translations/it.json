@@ -1,0 +1,70 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il sito del Controller \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "faulty_credentials": "Autenticazione non valida",
+            "service_unavailable": "Impossibile connettersi",
+            "unknown_client_mac": "Nessun client disponibile su quell'indirizzo MAC"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Porta",
+                    "site": "ID del sito",
+                    "username": "Nome utente",
+                    "verify_ssl": "Il Controller sta utilizzando il certificato corretto"
+                },
+                "title": "Configura l'UniFi Controller"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "client_control": {
+                "data": {
+                    "block_client": "Client controllati per l'accesso alla rete",
+                    "poe_clients": "Consentire il controllo POE dei client"
+                },
+                "description": "Configurare i controlli client \n\nCreare interruttori per i numeri di serie dei quali si desidera controllare l'accesso alla rete.",
+                "title": "Opzioni UniFi 2/3"
+            },
+            "device_tracker": {
+                "data": {
+                    "detection_time": "Tempo in secondi dall'ultima volta che viene visto fino a quando non \u00e8 considerato lontano",
+                    "ignore_wired_bug": "Disattivare la logica dei bug cablati UniFi",
+                    "ssid_filter": "Selezionare gli SSID su cui tracciare i client wireless",
+                    "track_clients": "Traccia i client di rete",
+                    "track_devices": "Tracciare i dispositivi di rete (dispositivi Ubiquiti)",
+                    "track_wired_clients": "Includi i client di rete cablata"
+                },
+                "description": "Configurare il tracciamento del dispositivo",
+                "title": "Opzioni UniFi 1/3"
+            },
+            "init": {
+                "data": {
+                    "one": "uno",
+                    "other": "altri"
+                }
+            },
+            "simple_options": {
+                "data": {
+                    "block_client": "Client controllati per l'accesso alla rete",
+                    "track_clients": "Traccia i client di rete",
+                    "track_devices": "Tracciare i dispositivi di rete (dispositivi Ubiquiti)"
+                },
+                "description": "Configurare l'integrazione UniFi"
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Sensori di utilizzo della larghezza di banda per i client di rete"
+                },
+                "description": "Configurare i sensori delle statistiche",
+                "title": "Opzioni UniFi 3/3"
+            }
+        }
+    }
+}

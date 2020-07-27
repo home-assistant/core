@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Geen LIFX-apparaten gevonden op het netwerk.",
+            "single_instance_allowed": "Slechts een enkele configuratie van LIFX is mogelijk."
+        },
+        "step": {
+            "confirm": {
+                "description": "Wilt u LIFX instellen?"
+            }
+        }
+    }
+}

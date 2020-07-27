@@ -1,0 +1,6 @@
+set_run_state:
+  description: Set the ZoneMinder run state
+  fields:
+    name:
+      description: The string name of the ZoneMinder run state to set as active.
+      example: "Home"

@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "D\u00ebsen App Schl\u00ebssel g\u00ebtt scho benotzt"
+        },
+        "error": {
+            "invalid_key": "Ong\u00ebltegen API Schl\u00ebssel an/oder Applikatioun's Schl\u00ebssel",
+            "no_devices": "Keng Apparater am Kont fonnt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Schl\u00ebssel",
+                    "app_key": "Applikatioun's Schl\u00ebssel"
+                },
+                "title": "F\u00ebllt \u00e4r Informatiounen aus"
+            }
+        }
+    }
+}

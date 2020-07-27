@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 configurado"
+        },
+        "error": {
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "C\u00f3digo de dois fatores"
+                },
+                "description": "Digite o pin enviado para o seu e-mail. Se o e-mail n\u00e3o contiver um pin, deixe em branco",
+                "title": "Autentica\u00e7\u00e3o de dois fatores"
+            },
+            "user": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Nome de usu\u00e1rio"
+                },
+                "title": "Entrar com a conta Blink"
+            }
+        }
+    }
+}

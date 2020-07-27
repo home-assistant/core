@@ -1,0 +1,7 @@
+{
+  "domain": "norway_air",
+  "name": "Om Luftkvalitet i Norge (Norway Air)",
+  "documentation": "https://www.home-assistant.io/integrations/norway_air",
+  "requirements": ["pyMetno==0.5.1"],
+  "codeowners": []
+}

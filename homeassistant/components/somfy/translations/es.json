@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Solo puedes configurar una cuenta de Somfy.",
+            "authorize_url_timeout": "Tiempo de espera agotado generando la url de autorizaci\u00f3n",
+            "missing_configuration": "El componente Somfy no est\u00e1 configurado. Por favor, sigue la documentaci\u00f3n."
+        },
+        "create_entry": {
+            "default": "Autenticado correctamente con Somfy."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Seleccione el m\u00e9todo de autenticaci\u00f3n"
+            }
+        }
+    }
+}

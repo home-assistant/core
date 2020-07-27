@@ -1,0 +1,9 @@
+{
+  "domain": "nut",
+  "name": "Network UPS Tools (NUT)",
+  "documentation": "https://www.home-assistant.io/integrations/nut",
+  "requirements": ["pynut2==2.1.2"],
+  "codeowners": ["@bdraco"],
+  "config_flow": true,
+  "zeroconf": ["_nut._tcp.local."]
+}

@@ -1,1 +1,5 @@
-{"sum":"38.21","duration":70320,"units":"kWh"}
+{
+  "sum": "38.21",
+  "duration": 70320,
+  "units": "kWh"
+}

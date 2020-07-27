@@ -1,0 +1,7 @@
+{
+  "domain": "seventeentrack",
+  "name": "17TRACK",
+  "documentation": "https://www.home-assistant.io/integrations/seventeentrack",
+  "requirements": ["py17track==2.2.2"],
+  "codeowners": ["@bachya"]
+}

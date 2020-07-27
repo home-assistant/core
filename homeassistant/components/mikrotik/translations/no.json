@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Mikrotik er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislykket",
+            "name_exists": "Navnet eksisterer",
+            "wrong_credentials": "Feil legitimasjon"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "name": "Navn",
+                    "password": "Passord",
+                    "port": "",
+                    "username": "Brukernavn",
+                    "verify_ssl": "Bruk ssl"
+                },
+                "title": "Sett opp Mikrotik-ruter"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "device_tracker": {
+                "data": {
+                    "arp_ping": "Aktiver ARP-ping",
+                    "detection_time": "Vurder hjemmeintervall",
+                    "force_dhcp": "Tving skanning ved hjelp av DHCP"
+                }
+            }
+        }
+    }
+}

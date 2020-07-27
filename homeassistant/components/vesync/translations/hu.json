@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "invalid_login": "\u00c9rv\u00e9nytelen felhaszn\u00e1l\u00f3n\u00e9v vagy jelsz\u00f3"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "E-mail"
+                },
+                "title": "\u00cdrja be a felhaszn\u00e1l\u00f3nevet \u00e9s a jelsz\u00f3t"
+            }
+        }
+    }
+}

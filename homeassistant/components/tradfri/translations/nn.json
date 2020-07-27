@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Brua er allereie konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Klarte ikkje \u00e5 kople til gatewayen.",
+            "invalid_key": "Kunne ikkje registrere med den brukte n\u00f8kkelen. Dersom dette held fram, pr\u00f8v \u00e5 starta gatewayen p\u00e5 ny.",
+            "timeout": "Tida gjekk ut for validering av kode"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "host": "Vert",
+                    "security_code": "Sikkerheitskode"
+                },
+                "description": "Du finn sikkerheitskoda p\u00e5 baksida av gatewayen din.",
+                "title": "Skriv inn sikkerheitskode"
+            }
+        }
+    }
+}

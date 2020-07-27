@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Nur eine Vesync-Instanz ist zul\u00e4ssig"
+        },
+        "error": {
+            "invalid_login": "Ung\u00fcltiger Benutzername oder Kennwort"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "E-Mail-Adresse"
+                },
+                "title": "Benutzername und Passwort eingeben"
+            }
+        }
+    }
+}

@@ -1,0 +1,1 @@
+"""The sensehat component."""

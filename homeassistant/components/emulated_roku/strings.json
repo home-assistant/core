@@ -1,0 +1,19 @@
+{
+  "title": "Emulated Roku",
+  "config": {
+    "abort": { "name_exists": "Name already exists" },
+    "step": {
+      "user": {
+        "data": {
+          "advertise_ip": "Advertise IP",
+          "advertise_port": "Advertise port",
+          "host_ip": "Host IP",
+          "listen_port": "Listen port",
+          "name": "Name",
+          "upnp_bind_multicast": "Bind multicast (True/False)"
+        },
+        "title": "Define server configuration"
+      }
+    }
+  }
+}

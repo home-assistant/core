@@ -1,0 +1,42 @@
+feedback_off:
+  description: Turns feedback sounds off.
+  fields:
+    site_id:
+      description: Site to turn sounds on, defaults to all sites (optional)
+      example: bedroom
+feedback_on:
+  description: Turns feedback sounds on.
+  fields:
+    site_id:
+      description: Site to turn sounds on, defaults to all sites (optional)
+      example: bedroom
+say:
+  description: Send a TTS message to Snips.
+  fields:
+    custom_data:
+      description: custom data that will be included with all messages in this session
+      example: user=UserName
+    site_id:
+      description: Site to use to start session, defaults to default (optional)
+      example: bedroom
+    text:
+      description: Text to say.
+      example: My name is snips
+say_action:
+  description: Send a TTS message to Snips to listen for a response.
+  fields:
+    can_be_enqueued:
+      description: If True, session waits for an open session to end, if False session is dropped if one is running
+      example: true
+    custom_data:
+      description: custom data that will be included with all messages in this session
+      example: user=UserName
+    intent_filter:
+      description: Optional Array of Strings - A list of intents names to restrict the NLU resolution to on the first query.
+      example: "turnOnLights, turnOffLights"
+    site_id:
+      description: Site to use to start session, defaults to default (optional)
+      example: bedroom
+    text:
+      description: Text to say
+      example: My name is snips

@@ -1,33 +1,43 @@
-sudo: false
+dist: bionic
 addons:
   apt:
     packages:
       - libudev-dev
-matrix:
+      - libavformat-dev
+      - libavcodec-dev
+      - libavdevice-dev
+      - libavutil-dev
+      - libswscale-dev
+      - libswresample-dev
+      - libavfilter-dev
+    sources:
+      - sourceline: ppa:savoury1/ffmpeg4
+      - sourceline: ppa:savoury1/multimedia
+
+python:
+  - "3.7.1"
+  - "3.8"
+
+env:
+  - TOX_ARGS="-- --test-group-count 4 --test-group 1"
+  - TOX_ARGS="-- --test-group-count 4 --test-group 2"
+  - TOX_ARGS="-- --test-group-count 4 --test-group 3"
+  - TOX_ARGS="-- --test-group-count 4 --test-group 4"
+
+jobs:
   fast_finish: true
   include:
-    - python: "3.4.2"
+    - python: "3.7.1"
       env: TOXENV=lint
-    - python: "3.4.2"
-      env: TOXENV=py34
-    # - python: "3.5"
-    #   env: TOXENV=typing
-    - python: "3.5"
-      env: TOXENV=py35
-    - python: "3.6"
-      env: TOXENV=py36
-    # - python: "3.6-dev"
-    #   env: TOXENV=py36
-    - python: "3.4.2"
-      env: TOXENV=requirements
-  # allow_failures:
-  #   - python: "3.5"
-  #     env: TOXENV=typing
+    - python: "3.7.1"
+      env: TOXENV=pylint PYLINT_ARGS=--jobs=0 TRAVIS_WAIT=30
+    - python: "3.7.1"
+      env: TOXENV=typing
 
 cache:
+  pip: true
   directories:
-    - $HOME/.cache/pip
-install: pip install -U tox coveralls
+    - $HOME/.cache/pre-commit
+install: pip install -U tox tox-travis
 language: python
-script: travis_wait tox
-after_success: coveralls
+script: ${TRAVIS_WAIT:+travis_wait $TRAVIS_WAIT} tox --develop ${TOX_ARGS-}

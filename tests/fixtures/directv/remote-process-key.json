@@ -1,0 +1,10 @@
+{
+  "hold": "keyPress",
+  "key": "ANY",
+  "status": {
+    "code": 200,
+    "commandResult": 0,
+    "msg": "OK",
+    "query": "/remote/processKey?key=ANY&hold=keyPress"
+  }
+}

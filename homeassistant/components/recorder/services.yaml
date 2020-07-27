@@ -2,8 +2,10 @@
 
 purge:
   description: Start purge task - delete events and states older than x days, according to keep_days service data.
-
   fields:
     keep_days:
-      description: Number of history days to keep in database after purge. Value >= 0
+      description: Number of history days to keep in database after purge. Value >= 0.
       example: 2
+    repack:
+      description: Attempt to save disk space by rewriting the entire database file.
+      example: true

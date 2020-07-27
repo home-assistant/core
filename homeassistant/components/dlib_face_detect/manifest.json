@@ -1,0 +1,7 @@
+{
+  "domain": "dlib_face_detect",
+  "name": "Dlib Face Detect",
+  "documentation": "https://www.home-assistant.io/integrations/dlib_face_detect",
+  "requirements": ["face_recognition==1.2.3"],
+  "codeowners": []
+}

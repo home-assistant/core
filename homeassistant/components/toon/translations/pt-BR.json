@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "client_id": "O ID do cliente da configura\u00e7\u00e3o \u00e9 inv\u00e1lido.",
+            "client_secret": "O segredo do cliente da configura\u00e7\u00e3o \u00e9 inv\u00e1lido.",
+            "no_agreements": "Esta conta n\u00e3o possui exibi\u00e7\u00f5es Toon.",
+            "no_app": "Voc\u00ea precisa configurar o Toon antes de poder autenticar com ele. [Por favor, leia as instru\u00e7\u00f5es] (https://www.home-assistant.io/components/toon/).",
+            "unknown_auth_fail": "Ocorreu um erro inesperado durante a autentica\u00e7\u00e3o."
+        },
+        "error": {
+            "credentials": "As credenciais fornecidas s\u00e3o inv\u00e1lidas.",
+            "display_exists": "A exibi\u00e7\u00e3o selecionada j\u00e1 est\u00e1 configurada."
+        },
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Senha",
+                    "tenant": "Inquilino",
+                    "username": "Usu\u00e1rio"
+                },
+                "description": "Autentique-se com sua conta Eneco Toon (n\u00e3o com a conta do desenvolvedor).",
+                "title": "Vincule sua conta Toon"
+            },
+            "display": {
+                "data": {
+                    "display": "Escolha a exibi\u00e7\u00e3o"
+                },
+                "description": "Selecione a exibi\u00e7\u00e3o Toon para se conectar.",
+                "title": "Selecione a exibi\u00e7\u00e3o"
+            }
+        }
+    }
+}

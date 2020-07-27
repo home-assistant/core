@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Slechts een enkele configuratie van Abode is toegestaan."
+        },
+        "error": {
+            "connection_error": "Kan geen verbinding maken met Abode.",
+            "identifier_exists": "Account is al geregistreerd.",
+            "invalid_credentials": "Ongeldige inloggegevens."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "E-mailadres"
+                },
+                "title": "Vul uw Abode-inloggegevens in"
+            }
+        }
+    }
+}

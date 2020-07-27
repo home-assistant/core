@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up LIFX?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Only a single configuration of LIFX is possible.",
+      "no_devices_found": "No LIFX devices found on the network."
+    }
+  }
+}

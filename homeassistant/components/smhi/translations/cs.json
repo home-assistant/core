@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "N\u00e1zev ji\u017e existuje",
+            "wrong_location": "Lokalita pouze pro \u0160v\u00e9dsko"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Zem\u011bpisn\u00e1 \u0161\u00ed\u0159ka",
+                    "longitude": "Zem\u011bpisn\u00e1 d\u00e9lka",
+                    "name": "N\u00e1zev"
+                },
+                "title": "Lokalita ve \u0160v\u00e9dsku"
+            }
+        }
+    }
+}

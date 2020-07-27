@@ -1,0 +1,8 @@
+{
+  "domain": "gios",
+  "name": "GIOŚ",
+  "documentation": "https://www.home-assistant.io/integrations/gios",
+  "codeowners": ["@bieniu"],
+  "requirements": ["gios==0.1.1"],
+  "config_flow": true
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "islamic_prayer_times",
+  "name": "Islamic Prayer Times",
+  "documentation": "https://www.home-assistant.io/integrations/islamic_prayer_times",
+  "requirements": ["prayer_times_calculator==0.0.3"],
+  "codeowners": ["@engrbm87"],
+  "config_flow": true
+}

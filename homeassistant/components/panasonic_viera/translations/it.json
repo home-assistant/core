@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Questo TV Panasonic Viera \u00e8 gi\u00e0 configurato.",
+            "not_connected": "La connessione remota con la TV Panasonic Viera \u00e8 andata persa. Controllare i registri per ulteriori informazioni.",
+            "unknown": "Si \u00e8 verificato un errore sconosciuto. Controllare i registri per ulteriori informazioni."
+        },
+        "error": {
+            "invalid_pin_code": "Il codice PIN inserito non \u00e8 valido",
+            "not_connected": "Impossibile stabilire una connessione remota con la TV Panasonic Viera"
+        },
+        "step": {
+            "pairing": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "description": "Inserire il PIN visualizzato sul televisore",
+                "title": "Abbinamento"
+            },
+            "user": {
+                "data": {
+                    "host": "Indirizzo IP",
+                    "name": "Nome"
+                },
+                "description": "Inserisci l'indirizzo IP del tuo Panasonic Viera TV",
+                "title": "Configura la tua TV"
+            }
+        }
+    },
+    "title": "Panasonic Viera"
+}

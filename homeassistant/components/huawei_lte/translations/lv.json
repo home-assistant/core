@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Parole",
+                    "url": "URL",
+                    "username": "Lietot\u0101jv\u0101rds"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Fill in your information",
+        "data": {
+          "ip_address": "Hostname or IP Address",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      }
+    },
+    "error": {
+      "identifier_exists": "Account already registered",
+      "invalid_credentials": "Invalid credentials"
+    },
+    "abort": {
+      "already_configured": "This RainMachine controller is already configured."
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "title": "Sonarr",
+  "config": {
+    "flow_title": "Sonarr: {name}",
+    "step": {
+      "user": {
+        "title": "Connect to Sonarr",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "base_path": "Path to API",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "Sonarr uses a SSL certificate",
+          "verify_ssl": "Sonarr uses a proper certificate"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "upcoming_days": "Number of upcoming days to display",
+          "wanted_max_items": "Max number of wanted items to display"
+        }
+      }
+    }
+  }
+}

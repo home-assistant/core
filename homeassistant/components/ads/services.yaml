@@ -1,0 +1,15 @@
+# Describes the format for available ADS services
+
+write_data_by_name:
+  description: Write a value to the connected ADS device.
+
+  fields:
+    adsvar:
+      description: The name of the variable to write to.
+      example: ".global_var"
+    adstype:
+      description: The data type of the variable to write to.
+      example: "int"
+    value:
+      description: The value to write to the variable.
+      example: 1

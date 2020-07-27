@@ -1,0 +1,11 @@
+# Describes the format for available openhome services
+
+invoke_pin:
+  description: Invoke a pin on the specified device.
+  fields:
+    entity_id:
+      description: The name of the openhome device to invoke the pin on
+      example: media_player.main_room
+    pin:
+      description: Which pin to invoke
+      example: 4

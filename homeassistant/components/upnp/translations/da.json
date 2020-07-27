@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "UPnP/IGD er allerede konfigureret",
+            "no_devices_discovered": "Ingen UPnP/IGD-enheder fundet.",
+            "no_devices_found": "Ingen UPnP/IGD enheder kunne findes p\u00e5 netv\u00e6rket."
+        },
+        "error": {
+            "one": "En",
+            "other": "Anden"
+        }
+    }
+}

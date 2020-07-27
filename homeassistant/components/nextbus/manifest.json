@@ -1,0 +1,7 @@
+{
+  "domain": "nextbus",
+  "name": "NextBus",
+  "documentation": "https://www.home-assistant.io/integrations/nextbus",
+  "codeowners": ["@vividboarder"],
+  "requirements": ["py_nextbusnext==0.1.4"]
+}

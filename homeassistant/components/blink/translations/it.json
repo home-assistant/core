@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "Codice a due fattori"
+                },
+                "description": "Inserisci il PIN inviato alla tua e-mail. Se l'e-mail non contiene un PIN, lasciare vuoto",
+                "title": "Autenticazione a due fattori"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "title": "Accedi con l'account Blink"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "simple_options": {
+                "data": {
+                    "scan_interval": "Intervallo di scansione (secondi)"
+                },
+                "description": "Configurare l'integrazione di Blink",
+                "title": "Opzioni di Blink"
+            }
+        }
+    }
+}

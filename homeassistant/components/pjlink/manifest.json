@@ -1,0 +1,7 @@
+{
+  "domain": "pjlink",
+  "name": "PJLink",
+  "documentation": "https://www.home-assistant.io/integrations/pjlink",
+  "requirements": ["pypjlink2==1.2.1"],
+  "codeowners": []
+}

@@ -1,0 +1,13 @@
+alarm_keypress:
+  description: Send custom keypresses to the alarm.
+  fields:
+    keypress:
+      description: "String to send to the alarm panel."
+      example: "*71"
+
+alarm_toggle_chime:
+  description: Send the alarm the toggle chime command.
+  fields:
+    code:
+      description: A required code to toggle the alarm control panel chime with.
+      example: 1234

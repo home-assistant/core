@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cas\u00e9ta \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3002",
+            "cannot_connect": "\u7531\u65bc\u9023\u7dda\u5931\u6557\uff0c\u5df2\u53d6\u6d88 Cas\u00e9ta bridge \u8a2d\u5b9a\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u81f3 Cas\u00e9ta bridge \u5931\u6557\uff0c\u8acb\u6aa2\u67e5\u4e3b\u6a5f\u8207\u8a8d\u8b49\u8a2d\u5b9a\u3002"
+        },
+        "step": {
+            "import_failed": {
+                "description": "\u7121\u6cd5\u8a2d\u5b9a\u7531 configuration.yaml \u532f\u5165\u7684 bridge\uff08\u4e3b\u6a5f\uff1a{host}\uff09\u3002",
+                "title": "\u532f\u5165 Cas\u00e9ta bridge \u8a2d\u5b9a\u5931\u6557\u3002"
+            }
+        }
+    }
+}

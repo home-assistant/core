@@ -1,0 +1,24 @@
+{
+    "device_automation": {
+        "action_type": {
+            "lock": "Lock {entity_name}",
+            "open": "Open {entity_name}",
+            "unlock": "Unlock {entity_name}"
+        },
+        "condition_type": {
+            "is_locked": "{entity_name} is locked",
+            "is_unlocked": "{entity_name} is unlocked"
+        },
+        "trigger_type": {
+            "locked": "{entity_name} locked",
+            "unlocked": "{entity_name} unlocked"
+        }
+    },
+    "state": {
+        "_": {
+            "locked": "Locked",
+            "unlocked": "Unlocked"
+        }
+    },
+    "title": "Lock"
+}

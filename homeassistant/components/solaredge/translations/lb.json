@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "site_exists": "D\u00ebs site_id ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "site_exists": "D\u00ebs site_id ass scho konfigur\u00e9iert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Schl\u00ebssel",
+                    "name": "Numm vun d\u00ebser Installatioun",
+                    "site_id": "SolarEdge site-ID"
+                },
+                "title": "API Parameter fir d\u00ebs Installatioun d\u00e9fin\u00e9ieren"
+            }
+        }
+    }
+}

@@ -1,0 +1,7 @@
+{
+  "domain": "ee_brightbox",
+  "name": "EE Bright Box",
+  "documentation": "https://www.home-assistant.io/integrations/ee_brightbox",
+  "requirements": ["eebrightbox==0.0.4"],
+  "codeowners": []
+}

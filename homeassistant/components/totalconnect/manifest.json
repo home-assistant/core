@@ -1,0 +1,9 @@
+{
+  "domain": "totalconnect",
+  "name": "Honeywell Total Connect Alarm",
+  "documentation": "https://www.home-assistant.io/integrations/totalconnect",
+  "requirements": ["total_connect_client==0.55"],
+  "dependencies": [],
+  "codeowners": ["@austinmroczek"],
+  "config_flow": true
+}

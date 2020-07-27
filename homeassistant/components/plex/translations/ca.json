@@ -1,0 +1,63 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Tots els servidors enlla\u00e7ats ja estan configurats",
+            "already_configured": "Aquest servidor Plex ja est\u00e0 configurat",
+            "already_in_progress": "S'est\u00e0 configurant Plex",
+            "invalid_import": "La configuraci\u00f3 importada \u00e9s inv\u00e0lida",
+            "non-interactive": "Importaci\u00f3 no interactiva",
+            "token_request_timeout": "S'ha acabat el temps d'espera durant l'obtenci\u00f3 del token.",
+            "unknown": "Ha fallat per motiu desconegut"
+        },
+        "error": {
+            "faulty_credentials": "Ha fallat l'autoritzaci\u00f3, comprova el Token",
+            "host_or_token": "Has de proporcionar almenys o un amfitri\u00f3 (host) o un token",
+            "no_servers": "No hi ha servidors vinculats amb el compte de Plex",
+            "not_found": "No s'ha trobat el servidor Plex",
+            "ssl_error": "Problema amb el certificat SSL"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "port": "Port",
+                    "ssl": "Utilitza SSL",
+                    "token": "Token (opcional)",
+                    "verify_ssl": "Verifica el certificat SSL"
+                },
+                "title": "Configuraci\u00f3 manual de Plex"
+            },
+            "select_server": {
+                "data": {
+                    "server": "Servidor"
+                },
+                "description": "Hi ha diversos servidors disponibles, selecciona'n un:",
+                "title": "Selecciona servidor Plex"
+            },
+            "user": {
+                "description": "V\u00e9s a [plex.tv](https://plex.tv) per enlla\u00e7ar un servidor Plex.",
+                "title": "Servidor Multim\u00e8dia Plex"
+            },
+            "user_advanced": {
+                "data": {
+                    "setup_method": "M\u00e8tode de configuraci\u00f3"
+                },
+                "title": "Servidor Multim\u00e8dia Plex"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "ignore_new_shared_users": "Ignora els nous usuaris gestionats/compartits",
+                    "ignore_plex_web_clients": "Ignora els clients de Plex Web",
+                    "monitored_users": "Usuaris monitoritzats",
+                    "use_episode_art": "Utilitza imatges de l'episodi"
+                },
+                "description": "Opcions dels reproductors multim\u00e8dia Plex"
+            }
+        }
+    }
+}

@@ -1,0 +1,7 @@
+{
+  "domain": "digitalloggers",
+  "name": "Digital Loggers",
+  "documentation": "https://www.home-assistant.io/integrations/digitalloggers",
+  "requirements": ["dlipower==0.7.165"],
+  "codeowners": []
+}

@@ -1,0 +1,9 @@
+{
+  "domain": "traccar",
+  "name": "Traccar",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/traccar",
+  "requirements": ["pytraccar==0.9.0", "stringcase==1.2.0"],
+  "dependencies": ["webhook"],
+  "codeowners": ["@ludeeus"]
+}

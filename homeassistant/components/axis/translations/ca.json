@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "bad_config_file": "Dades del fitxer de configuraci\u00f3 incorrectes",
+            "link_local_address": "L'enlla\u00e7 d'adreces locals no est\u00e0 disponible",
+            "not_axis_device": "El dispositiu descobert no \u00e9s un dispositiu Axis"
+        },
+        "error": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de dades de configuraci\u00f3 pel dispositiu ja est\u00e0 en curs.",
+            "device_unavailable": "El dispositiu no est\u00e0 disponible",
+            "faulty_credentials": "Credencials d'usuari incorrectes"
+        },
+        "flow_title": "Dispositiu d'eix: {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "username": "Nom d'usuari"
+                },
+                "title": "Configuraci\u00f3 de dispositiu Axis"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "configure_stream": {
+                "data": {
+                    "stream_profile": "Selecciona el perfil de transmissi\u00f3 de v\u00eddeo a utilitzar"
+                },
+                "title": "Opcions de transmissi\u00f3 de v\u00eddeo del dispositiu Axis"
+            }
+        }
+    }
+}

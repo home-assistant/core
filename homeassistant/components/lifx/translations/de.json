@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Keine LIFX Ger\u00e4te im Netzwerk gefunden.",
+            "single_instance_allowed": "Nur eine einzige Konfiguration von LIFX ist zul\u00e4ssig."
+        },
+        "step": {
+            "confirm": {
+                "description": "M\u00f6chtest du LIFX einrichten?"
+            }
+        }
+    }
+}

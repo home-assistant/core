@@ -1,0 +1,19 @@
+{
+    "state": {
+        "_": {
+            "cloudy": "\u0c2e\u0c47\u0c18\u0c3e\u0c35\u0c43\u0c24\u0c02",
+            "fog": "\u0c2a\u0c4a\u0c17\u0c2e\u0c02\u0c1a\u0c41",
+            "hail": "\u0c35\u0c21\u0c17\u0c33\u0c4d\u0c33\u0c41",
+            "lightning": "\u0c2e\u0c46\u0c30\u0c41\u0c2a\u0c41\u0c32\u0c41",
+            "lightning-rainy": "\u0c2e\u0c46\u0c30\u0c41\u0c2a\u0c41, \u0c35\u0c30\u0c4d\u0c37\u0c02",
+            "partlycloudy": "\u0c2a\u0c3e\u0c15\u0c4d\u0c37\u0c3f\u0c15\u0c02\u0c17\u0c3e \u0c2e\u0c47\u0c18\u0c3e\u0c35\u0c43\u0c24\u0c02",
+            "pouring": "\u0c15\u0c41\u0c02\u0c2d\u0c35\u0c43\u0c37\u0c4d\u0c1f\u0c3f",
+            "rainy": "\u0c35\u0c30\u0c4d\u0c37\u0c02",
+            "snowy": "\u0c2e\u0c02\u0c1a\u0c41",
+            "snowy-rainy": "\u0c2e\u0c02\u0c1a\u0c41, \u0c35\u0c30\u0c4d\u0c37\u0c02",
+            "sunny": "\u0c0e\u0c02\u0c21",
+            "windy": "\u0c17\u0c3e\u0c32\u0c41\u0c32\u0c24\u0c4b",
+            "windy-variant": "\u0c17\u0c3e\u0c32\u0c41\u0c32\u0c24\u0c4b"
+        }
+    }
+}

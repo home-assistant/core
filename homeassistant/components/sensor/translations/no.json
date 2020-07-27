@@ -1,0 +1,33 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_battery_level": "Gjeldende {entity_name} batteriniv\u00e5",
+            "is_humidity": "Gjeldende {entity_name} fuktighet",
+            "is_illuminance": "Gjeldende {entity_name} belysningsstyrke",
+            "is_power": "Gjeldende {entity_name}-effekt",
+            "is_pressure": "Gjeldende {entity_name} trykk",
+            "is_signal_strength": "Gjeldende {entity_name} signalstyrke",
+            "is_temperature": "Gjeldende {entity_name} temperatur",
+            "is_timestamp": "Gjeldende {entity_name} tidsstempel",
+            "is_value": "Gjeldende {entity_name} verdi"
+        },
+        "trigger_type": {
+            "battery_level": "{entity_name} batteriniv\u00e5 endres",
+            "humidity": "{entity_name} fuktighets endringer",
+            "illuminance": "{entity_name} belysningsstyrke endringer",
+            "power": "{entity_name} effektendringer",
+            "pressure": "{entity_name} trykk endringer",
+            "signal_strength": "{entity_name} signalstyrkeendringer",
+            "temperature": "{entity_name} temperaturendringer",
+            "timestamp": "{entity_name} tidsstempel endringer",
+            "value": "{entity_name} verdi endringer"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Av",
+            "on": "P\u00e5"
+        }
+    },
+    "title": ""
+}

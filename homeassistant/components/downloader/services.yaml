@@ -1,0 +1,15 @@
+download_file:
+  description: Downloads a file to the download location.
+  fields:
+    url:
+      description: The URL of the file to download.
+      example: "http://example.org/myfile"
+    subdir:
+      description: Download into subdirectory.
+      example: "download_dir"
+    filename:
+      description: Determine the filename.
+      example: "my_file_name"
+    overwrite:
+      description: Whether to overwrite the file or not.
+      example: "false"

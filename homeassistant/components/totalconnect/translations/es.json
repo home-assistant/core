@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La cuenta ya est\u00e1 configurada"
+        },
+        "error": {
+            "login": "Error de inicio de sesi\u00f3n: comprueba tu nombre de usuario y contrase\u00f1a"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Usuario"
+                },
+                "title": "Total Connect"
+            }
+        }
+    }
+}

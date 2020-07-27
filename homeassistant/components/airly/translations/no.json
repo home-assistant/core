@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Airly integrasjonen for disse koordinatene er allerede konfigurert."
+        },
+        "error": {
+            "auth": "API-n\u00f8kkelen er ikke korrekt.",
+            "wrong_location": "Ingen Airly m\u00e5lestasjoner i dette omr\u00e5det."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "latitude": "Breddegrad",
+                    "longitude": "Lengdegrad",
+                    "name": "Navn p\u00e5 integrasjonen"
+                },
+                "description": "Sett opp Airly luftkvalitet integrasjon. For \u00e5 opprette API-n\u00f8kkel, g\u00e5 til [https://developer.airly.eu/register](https://developer.airly.eu/register)",
+                "title": ""
+            }
+        }
+    }
+}

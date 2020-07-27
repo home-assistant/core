@@ -1,0 +1,59 @@
+{
+    "LockName": "Side Door",
+    "Type": 1001,
+    "Created": "2019-10-07T01:49:06.831Z",
+    "Updated": "2019-10-07T01:49:06.831Z",
+    "LockID": "BROKENID",
+    "HouseID": "abc",
+    "HouseName": "dog",
+    "Calibrated": false,
+    "timeZone": "America/Chicago",
+    "battery": 0.9524716174964851,
+    "hostLockInfo": {
+        "serialNumber": "YR",
+        "manufacturer": "yale",
+        "productID": 1536,
+        "productTypeID": 32770
+    },
+    "supportsEntryCodes": true,
+    "skuNumber": "AUG-MD01",
+    "macAddress": "MAC",
+    "SerialNumber": "M1FXZ00EZ9",
+    "LockStatus": {
+        "status": "unknown_error_during_connect",
+        "dateTime": "2020-02-22T02:48:11.741Z",
+        "isLockStatusChanged": true,
+        "valid": true,
+        "doorState": "closed"
+    },
+    "currentFirmwareVersion": "undefined-4.3.0-1.8.14",
+    "homeKitEnabled": true,
+    "zWaveEnabled": false,
+    "isGalileo": false,
+    "Bridge": {
+        "_id": "id",
+        "mfgBridgeID": "id",
+        "deviceModel": "august-connect",
+        "firmwareVersion": "2.2.1",
+        "operative": true,
+        "status": {
+            "current": "online",
+            "updated": "2020-02-21T15:06:47.001Z",
+            "lastOnline": "2020-02-21T15:06:47.001Z",
+            "lastOffline": "2020-02-06T17:33:21.265Z"
+        },
+        "hyperBridge": true
+    },
+    "parametersToSet": {},
+    "ruleHash": {},
+    "cameras": [],
+    "geofenceLimits": {
+        "ios": {
+            "debounceInterval": 90,
+            "gpsAccuracyMultiplier": 2.5,
+            "maximumGeofence": 5000,
+            "minimumGeofence": 100,
+            "minGPSAccuracyRequired": 80
+        }
+    }
+}

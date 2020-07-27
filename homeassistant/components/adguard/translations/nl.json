@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "adguard_home_addon_outdated": "Deze integratie vereist AdGuard Home {minimal_version} of hoger, u heeft {current_version}. Update uw Hass.io AdGuard Home-add-on.",
+            "adguard_home_outdated": "Deze integratie vereist AdGuard Home {minimal_version} of hoger, u heeft {current_version}.",
+            "existing_instance_updated": "Bestaande configuratie bijgewerkt.",
+            "single_instance_allowed": "Slechts \u00e9\u00e9n configuratie van AdGuard Home is toegestaan."
+        },
+        "error": {
+            "connection_error": "Kon niet verbinden."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Wilt u Home Assistant configureren om verbinding te maken met AdGuard Home van de Hass.io-add-on: {addon}?",
+                "title": "AdGuard Home via Hass.io add-on"
+            },
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "ssl": "AdGuard Home maakt gebruik van een SSL certificaat",
+                    "username": "Gebruikersnaam",
+                    "verify_ssl": "AdGuard Home maakt gebruik van een goed certificaat"
+                },
+                "description": "Stel uw AdGuard Home-instantie in om toezicht en controle mogelijk te maken."
+            }
+        }
+    }
+}

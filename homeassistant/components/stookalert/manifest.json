@@ -1,0 +1,7 @@
+{
+  "domain": "stookalert",
+  "name": "RIVM Stookalert",
+  "documentation": "https://www.home-assistant.io/integrations/stookalert",
+  "codeowners": ["@fwestenberg"],
+  "requirements": ["stookalert==0.1.4"]
+}

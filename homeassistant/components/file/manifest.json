@@ -1,0 +1,6 @@
+{
+  "domain": "file",
+  "name": "File",
+  "documentation": "https://www.home-assistant.io/integrations/file",
+  "codeowners": ["@fabaff"]
+}

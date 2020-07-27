@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ponte Cas\u00e9ta j\u00e1 configurada.",
+            "cannot_connect": "Instala\u00e7\u00e3o cancelada da ponte Cas\u00e9ta devido \u00e0 falha na conex\u00e3o."
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar \u00e0 ponte Cas\u00e9ta; verifique sua configura\u00e7\u00e3o de endere\u00e7o e certificado."
+        },
+        "step": {
+            "import_failed": {
+                "description": "N\u00e3o foi poss\u00edvel configurar a ponte (host: {host}) importada do configuration.yaml.",
+                "title": "Falha ao importar a configura\u00e7\u00e3o da ponte Cas\u00e9ta."
+            }
+        }
+    }
+}

@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "UPnP/IGD este deja configurat",
+            "no_devices_discovered": "Nu au fost descoperite UPnP/IGD-uri"
+        },
+        "error": {
+            "few": "",
+            "one": "Unul",
+            "other": ""
+        }
+    }
+}

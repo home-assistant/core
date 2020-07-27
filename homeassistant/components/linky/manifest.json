@@ -1,0 +1,8 @@
+{
+  "domain": "linky",
+  "name": "Enedis Linky",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/linky",
+  "requirements": ["pylinky==0.4.0"],
+  "codeowners": ["@Quentame"]
+}

@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "TelldusLive ya est\u00e1 configurado",
+            "authorize_url_fail": "Error desconocido al generar una URL de autorizaci\u00f3n.",
+            "authorize_url_timeout": "Tiempo de espera agotado para generar la URL de autorizaci\u00f3n.",
+            "unknown": "Se produjo un error desconocido"
+        },
+        "error": {
+            "auth_error": "Error de autenticaci\u00f3n, por favor intente de nuevo"
+        },
+        "step": {
+            "auth": {
+                "description": "Para vincular su cuenta de TelldusLive: \n 1. Haga clic en el siguiente enlace \n 2. Inicia sesi\u00f3n en Telldus Live \n 3. Autorice ** {app_name} ** (haga clic en ** S\u00ed **). \n 4. Vuelve aqu\u00ed y haz clic en ** ENVIAR **. \n\n [Enlace a la cuenta de TelldusLive] ( {auth_url} )",
+                "title": "Autenticar con TelldusLive"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Elegir punto final."
+            }
+        }
+    }
+}

@@ -1,0 +1,24 @@
+# Describes the format for available aftership services
+
+add_tracking:
+  description: Add new tracking to Aftership.
+  fields:
+    tracking_number:
+      description: Tracking number for the new tracking
+      example: "123456789"
+    title:
+      description: A custom title for the new tracking
+      example: "Laptop"
+    slug:
+      description: Slug (carrier) of the new tracking
+      example: "USPS"
+
+remove_tracking:
+  description: Remove a tracking from Aftership.
+  fields:
+    tracking_number:
+      description: Tracking number of the tracking to remove
+      example: "123456789"
+    slug:
+      description: Slug (carrier) of the tracking to remove
+      example: "USPS"

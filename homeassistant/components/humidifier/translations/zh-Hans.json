@@ -1,0 +1,17 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_humidity": "\u8bbe\u7f6e {entity_name} \u7684\u6e7f\u5ea6",
+            "set_mode": "\u66f4\u6539 {entity_name} \u7684\u6a21\u5f0f",
+            "toggle": "\u5207\u6362 {entity_name} \u5f00\u5173",
+            "turn_off": "\u5173\u95ed {entity_name}",
+            "turn_on": "\u6253\u5f00 {entity_name}"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "\u5173\u95ed",
+            "on": "\u5f00\u542f"
+        }
+    }
+}

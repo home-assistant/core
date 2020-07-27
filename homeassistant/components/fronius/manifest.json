@@ -1,0 +1,7 @@
+{
+  "domain": "fronius",
+  "name": "Fronius",
+  "documentation": "https://www.home-assistant.io/integrations/fronius",
+  "requirements": ["pyfronius==0.4.6"],
+  "codeowners": ["@nielstron"]
+}

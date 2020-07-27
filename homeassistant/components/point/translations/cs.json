@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Ji\u017e nakonfigurov\u00e1no. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace.",
+            "authorize_url_fail": "Nezn\u00e1m\u00e1 chyba p\u0159i generov\u00e1n\u00ed autoriza\u010dn\u00ed URL.",
+            "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el",
+            "external_setup": "Point \u00fasp\u011b\u0161n\u011b nakonfigurov\u00e1n z jin\u00e9ho toku.",
+            "no_flows": "Mus\u00edte nakonfigurovat Point, abyste se s n\u00edm mohli ov\u011b\u0159it. [P\u0159e\u010dt\u011bte si pros\u00edm pokyny](https://www.home-assistant.io/components/point/)."
+        },
+        "create_entry": {
+            "default": "\u00dasp\u011b\u0161n\u011b ov\u011b\u0159eno pomoc\u00ed n\u00e1stroje Minut pro va\u0161e za\u0159\u00edzen\u00ed Point"
+        },
+        "error": {
+            "follow_link": "P\u0159edt\u00edm, ne\u017e stisknete tla\u010d\u00edtko Odeslat, postupujte podle tohoto odkazu a autentizujte se",
+            "no_token": "Nen\u00ed ov\u011b\u0159en s Minut"
+        },
+        "step": {
+            "auth": {
+                "description": "Postupujte podle n\u00ed\u017ee uveden\u00e9ho odkazu a <b> P\u0159ijm\u011bte </b> p\u0159\u00edstup k \u00fa\u010dtu Minut, pot\u00e9 se vra\u0165te zp\u011bt a stiskn\u011bte n\u00ed\u017ee <b> Odeslat </b> . \n\n [Odkaz]({authorization_url})",
+                "title": "Ov\u011b\u0159en\u00ed Point"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Poskytovatel"
+                },
+                "description": "Zvolte pomoc\u00ed kter\u00e9ho poskytovatele ov\u011b\u0159ov\u00e1n\u00ed chcete ov\u011b\u0159it Point.",
+                "title": "Poskytovatel ov\u011b\u0159en\u00ed"
+            }
+        }
+    }
+}

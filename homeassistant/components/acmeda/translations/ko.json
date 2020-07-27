@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "\ubc1c\uacac\ub41c \uc0c8\ub85c\uc6b4 Pulse \ud5c8\ube0c\uac00 \uc5c6\uc2b5\ub2c8\ub2e4."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "\ud638\uc2a4\ud2b8 ID"
+                },
+                "title": "\ucd94\uac00\ud560 \ud5c8\ube0c \uc120\ud0dd\ud558\uae30"
+            }
+        }
+    },
+    "title": "Rollease Acmeda Automate"
+}

@@ -1,0 +1,6 @@
+{
+  "domain": "openhardwaremonitor",
+  "name": "Open Hardware Monitor",
+  "documentation": "https://www.home-assistant.io/integrations/openhardwaremonitor",
+  "codeowners": []
+}
