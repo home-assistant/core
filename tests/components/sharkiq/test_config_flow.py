@@ -5,7 +5,6 @@ import aiohttp
 from sharkiqpy import SharkIqAuthError
 
 from homeassistant import config_entries, setup
-from homeassistant.components.sharkiq.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.sharkiq.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
