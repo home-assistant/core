@@ -1,5 +1,5 @@
 set_climate_timer:
-  description: Turn on cliate entities for a set time.
+  description: Turn on climate entities for a set time.
   fields:
     entity_id:
       description: Entity ID for the tado component to turn on for a set time.
