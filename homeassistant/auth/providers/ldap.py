@@ -1,7 +1,6 @@
 """Ldap auth provider."""
 from collections import OrderedDict
 import logging
-import re
 import ssl
 from typing import Any, Dict, Optional, cast
 
@@ -20,6 +19,9 @@ CONF_ACTIVE_DIRECTORY = "active_directory"
 CONF_ALLOWED_GROUP_DNS = "allowed_group_dns"
 CONF_BASE_DN = "base_dn"
 CONF_CERT_VALIDATION = "validate_certificates"
+CONF_BIND_AS_USER = "bind_as_user"
+CONF_BIND_USERNAME = "bind_username"
+CONF_BIND_PASSWORD = "bind_password"
 CONF_ENCRYPTION = "encryption"
 CONF_ENCRYPTION_LDAPS = "ldaps"
 CONF_ENCRYPTION_NONE = "none"
@@ -31,6 +33,7 @@ CONF_USERNAME_ATTR = "username_attribute"
 
 # Default values
 DEFAULT_CONF_ACTIVE_DIRECTORY = False
+DEFAULT_CONF_BIND_AS_USER = True
 DEFAULT_CONF_CERT_VALIDATION = True
 DEFAULT_CONF_PORT = 636
 DEFAULT_CONF_TIMEOUT = 10
@@ -45,6 +48,9 @@ CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
             cv.ensure_list, [str]
         ),
         vol.Required(CONF_BASE_DN): str,
+        vol.Required(CONF_BIND_AS_USER, default=DEFAULT_CONF_BIND_AS_USER): bool,
+        vol.Optional(CONF_BIND_USERNAME): str,
+        vol.Optional(CONF_BIND_PASSWORD): str,
         vol.Required(CONF_CERT_VALIDATION, default=DEFAULT_CONF_CERT_VALIDATION): bool,
         vol.Required(CONF_ENCRYPTION, default=CONF_ENCRYPTION_LDAPS): vol.In(
             [CONF_ENCRYPTION_LDAPS, CONF_ENCRYPTION_NONE, CONF_ENCRYPTION_STARTTLS],
@@ -97,72 +103,60 @@ class LdapAuthProvider(AuthProvider):
                 get_info=ldap3.ALL,
             )
 
+            bind_as_user = self.config[CONF_BIND_AS_USER]
+            bind_username = (
+                self.config[CONF_BIND_USERNAME] if bind_as_user else username
+            )
+            bind_password = (
+                self.config[CONF_BIND_PASSWORD] if bind_as_user else password
+            )
+
             # LDAP bind
-            username_attr = self.config[CONF_USERNAME_ATTR]
+            base_dn = self.config[CONF_BASE_DN]
+            username_attr = (
+                "sAMAccountName"
+                if self.config[CONF_ACTIVE_DIRECTORY]
+                else self.config[CONF_USERNAME_ATTR]
+            )
             if self.config[CONF_ACTIVE_DIRECTORY]:
                 conn = ldap3.Connection(
-                    server, user=username, password=password, authentication=ldap3.NTLM,
+                    server,
+                    user=bind_username,
+                    password=bind_password,
+                    authentication=ldap3.NTLM,
+                    auto_bind=True,
                 )
             else:
                 conn = ldap3.Connection(
                     server,
-                    user=f"{username_attr}={username},{self.config[CONF_BASE_DN]}",
-                    password=password,
+                    user=f"{username_attr}={bind_username},{base_dn}",
+                    password=bind_password,
                     auto_bind=True,
                 )
 
             # Upgrade connection with START_TLS if requested.
+            # TODO START_TLS before binding
             if encryption == CONF_ENCRYPTION_STARTTLS:
                 conn.starttls()
 
             _LOGGER.debug("Server info: %s", server.info)
             _LOGGER.debug("Connection: %s", conn)
 
-            # Determine the DN of the binding user
-            if self.config[CONF_ACTIVE_DIRECTORY]:
-                # Get the username from the connection. It is stored there in the following form: 'domain\\user'.
-                username_no_domain = conn.user.split("\\")[1]
-                if not conn.search(
-                    self.config[CONF_BASE_DN],
-                    f"(&(sAMAccountName={username_no_domain})(objectclass=person))",
-                    attributes=["distinguishedName"],
-                    size_limit=1,
-                ):
-                    _LOGGER.error("Unable to determine the DN of the binding user")
-                    raise LdapError
-                dn_self = conn.entries[0].distinguishedName.value
-            else:
-                # On regular LDAP no search if necessary, we can simply extract the DN from the who_am_i response.
-                # Example: 'dn: uid=user01,cn=users,cn=accounts,dc=example,dc=com'
-                whoami = conn.extend.standard.who_am_i()
-                match = re.match("dn: (.+)", whoami, re.IGNORECASE)
-                if not match:
-                    _LOGGER.error("Unable to determine the DN of the binding user")
-                    raise LdapError
-                dn_self = match.group(1)
-            _LOGGER.debug("DN of the bind user: %s", dn_self)
-
-            # Get information about the binding user
+            # Query the directory server for the connecting user
             if not conn.search(
-                dn_self,
+                self.config[CONF_BASE_DN],
                 "(objectclass=person)",
                 size_limit=1,
                 time_limit=self.config[CONF_TIMEOUT],
-                attributes=["sAMAccountName", "displayName", "memberOf"]
-                if self.config[CONF_ACTIVE_DIRECTORY]
-                else [username_attr, "displayName", "memberOf"],
+                attributes=[username_attr, "displayName", "memberOf"],
             ):
                 _LOGGER.error("LDAP self search returned no results.")
                 raise LdapError
             # Get the account name from the directory.
-            uid = (
-                conn.entries[0].sAMAccountName.value
-                if self.config[CONF_ACTIVE_DIRECTORY]
-                else getattr(conn.entries[0], username_attr).value
-            )
+            uid = getattr(conn.entries[0], username_attr).value
             # Full name: Firstname Lastname
             display_name = conn.entries[0].displayName.value
-            _LOGGER.info("Logged in as %s (%s)", display_name, uid)
+            _LOGGER.info("Found user %s (%s)", display_name, uid)
 
             # Check group membership
             if self.config[CONF_ALLOWED_GROUP_DNS]:
@@ -183,6 +177,13 @@ class LdapAuthProvider(AuthProvider):
                             uid
                         )
                     )
+
+            # Check credentials if we haven't done this already
+            if not bind_as_user and not conn.rebind(
+                user=conn.entries[0].entry_dn, password=password
+            ):
+                _LOGGER.error("Error in bind %s", conn.result)
+                raise InvalidAuthError("Invalid LDAP credentials provided")
 
         except ldap3.core.exceptions.LDAPBindError as exc:
             _LOGGER.error("Bind failed: %s", exc)
