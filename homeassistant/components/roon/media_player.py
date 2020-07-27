@@ -1,9 +1,4 @@
-"""
-MediaPlayer platform for Roon component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.roon/
-"""
+"""MediaPlayer platform for Roon integration."""
 import logging
 
 from homeassistant.components.media_player import MediaPlayerEntity
@@ -38,8 +33,6 @@ from homeassistant.util import convert
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
-
-DEPENDENCIES = ["roon"]
 
 SUPPORT_ROON = (
     SUPPORT_PAUSE
