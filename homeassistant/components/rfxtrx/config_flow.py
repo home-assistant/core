@@ -73,7 +73,8 @@ class OptionsFlow(config_entries.OptionsFlow):
                 for packet_id, entity_info in self._config_entry.data[
                     CONF_DEVICES
                 ].items():
-                    if entity_info.get(CONF_DEVICE_ID) == device_id:
+                    test = entity_info.get(CONF_DEVICE_ID)
+                    if test == device_id:
                         event_code = packet_id
                         break
                 if not event_code:
@@ -90,7 +91,7 @@ class OptionsFlow(config_entries.OptionsFlow):
                 return await self.async_step_set_device_options()
 
             if not errors:
-                self.update_config_data(self._global_options)
+                self.update_config_data(global_options=self._global_options)
 
                 return self.async_create_entry(title="", data={})
 
@@ -141,25 +142,29 @@ class OptionsFlow(config_entries.OptionsFlow):
                 errors = {"base": "invalid_input_2262"}
 
             if not errors:
-                data = {
-                    CONF_DEVICES: {
-                        self._selected_device_event_code: {
-                            CONF_DEVICE: device_id,
-                            CONF_FIRE_EVENT: user_input.get(CONF_FIRE_EVENT),
-                            CONF_OFF_DELAY: user_input.get(CONF_OFF_DELAY)
-                            if user_input.get(CONF_OFF_DELAY_ENABLED)
-                            else None,
-                            CONF_SIGNAL_REPETITIONS: user_input.get(
-                                CONF_SIGNAL_REPETITIONS
-                            ),
-                            CONF_DATA_BITS: user_input.get(CONF_DATA_BITS),
-                            CONF_COMMAND_ON: command_on,
-                            CONF_COMMAND_OFF: command_off,
-                        }
-                    }
+                devices = {}
+                devices[self._selected_device_event_code] = {
+                    CONF_DEVICE_ID: device_id,
+                    CONF_FIRE_EVENT: user_input.get(CONF_FIRE_EVENT, False),
+                    CONF_SIGNAL_REPETITIONS: user_input.get(CONF_SIGNAL_REPETITIONS, 1),
                 }
 
-                self.update_config_data(data)
+                device = devices[self._selected_device_event_code]
+                if (
+                    user_input.get(CONF_OFF_DELAY_ENABLED)
+                    and user_input.get(CONF_OFF_DELAY) is not None
+                ):
+                    device[CONF_OFF_DELAY] = user_input[CONF_OFF_DELAY]
+                if user_input.get(CONF_DATA_BITS) is not None:
+                    device[CONF_DATA_BITS] = user_input.get(CONF_DATA_BITS)
+                if command_on is not None:
+                    device[CONF_COMMAND_ON] = command_on
+                if command_off is not None:
+                    device[CONF_COMMAND_OFF] = command_off
+
+                self.update_config_data(
+                    global_options=self._global_options, devices=devices
+                )
 
                 return self.async_create_entry(title="", data={})
 
@@ -226,10 +231,13 @@ class OptionsFlow(config_entries.OptionsFlow):
         )
 
     @callback
-    def update_config_data(self, data):
+    def update_config_data(self, global_options=None, devices=None):
         """Update data in ConfigEntry."""
         entry_data = self._config_entry.data.copy()
-        entry_data.update(data)
+        if global_options is not None:
+            entry_data.update(global_options)
+        for event_code, options in devices.items():
+            entry_data[CONF_DEVICES][event_code] = options
         self.hass.config_entries.async_update_entry(self._config_entry, data=entry_data)
         self.hass.async_create_task(async_update_options(self.hass, self._config_entry))
 
