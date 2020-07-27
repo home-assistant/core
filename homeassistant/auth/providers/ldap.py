@@ -26,6 +26,7 @@ CONF_ENCRYPTION_STARTTLS = "starttls"
 CONF_PORT = "port"
 CONF_SERVER = "server"
 CONF_TIMEOUT = "timeout"
+CONF_USERNAME_ATTR = "username_attribute"
 
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
     {
@@ -35,12 +36,13 @@ CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
         ),
         vol.Required(CONF_BASE_DN): str,
         vol.Required(CONF_CERT_VALIDATION, default=True): bool,
+        vol.Required(CONF_ENCRYPTION, default=CONF_ENCRYPTION_LDAPS): vol.In(
+            [CONF_ENCRYPTION_LDAPS, CONF_ENCRYPTION_NONE, CONF_ENCRYPTION_STARTTLS],
+        ),
         vol.Required(CONF_PORT, default=636): int,
         vol.Required(CONF_SERVER): str,
         vol.Required(CONF_TIMEOUT, default=10): int,
-        vol.Required(CONF_ENCRYPTION, default=CONF_ENCRYPTION_LDAPS): vol.In(
-            [CONF_ENCRYPTION_LDAPS, CONF_ENCRYPTION_NONE, CONF_ENCRYPTION_STARTTLS]
-        ),
+        vol.Required(CONF_USERNAME_ATTR, default="uid"): str,
     },
     extra=vol.PREVENT_EXTRA,
 )
@@ -86,6 +88,7 @@ class LdapAuthProvider(AuthProvider):
             )
 
             # LDAP bind
+            username_attr = self.config[CONF_USERNAME_ATTR]
             if self.config[CONF_ACTIVE_DIRECTORY]:
                 conn = ldap3.Connection(
                     server, user=username, password=password, authentication=ldap3.NTLM,
@@ -93,7 +96,7 @@ class LdapAuthProvider(AuthProvider):
             else:
                 conn = ldap3.Connection(
                     server,
-                    user=f"uid={username},{self.config[CONF_BASE_DN]}",
+                    user=f"{username_attr}={username},{self.config[CONF_BASE_DN]}",
                     password=password,
                     auto_bind=True,
                 )
@@ -137,7 +140,7 @@ class LdapAuthProvider(AuthProvider):
                 time_limit=self.config[CONF_TIMEOUT],
                 attributes=["sAMAccountName", "displayName", "memberOf"]
                 if self.config[CONF_ACTIVE_DIRECTORY]
-                else ["uid", "displayName", "memberOf"],
+                else [username_attr, "displayName", "memberOf"],
             ):
                 _LOGGER.error("LDAP self search returned no results.")
                 raise LdapError
@@ -145,7 +148,7 @@ class LdapAuthProvider(AuthProvider):
             uid = (
                 conn.entries[0].sAMAccountName.value
                 if self.config[CONF_ACTIVE_DIRECTORY]
-                else conn.entries[0].uid.value
+                else getattr(conn.entries[0], username_attr).value
             )
             # Full name: Firstname Lastname
             display_name = conn.entries[0].displayName.value
