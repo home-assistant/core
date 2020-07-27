@@ -1,5 +1,6 @@
 """Config flow for Shark IQ integration."""
 
+import aiohttp
 import asyncio
 import logging
 
@@ -32,7 +33,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         with async_timeout.timeout(10):
             _LOGGER.debug("Initialize connection to Ayla networks API")
             await ayla_api.async_sign_in()
-    except asyncio.TimeoutError:
+    except (asyncio.TimeoutError, aiohttp.ClientError):
         raise CannotConnect
     except SharkIqAuthError:
         raise InvalidAuth
