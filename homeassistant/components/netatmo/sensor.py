@@ -109,10 +109,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Netatmo weather and homecoach platform."""
     device_registry = await hass.helpers.device_registry.async_get_registry()
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
-    temp_data_classes = []
 
     async def find_entities(data_class_name):
         """Find all entities."""
+        temp_data_classes = []
         await data_handler.register_data_class(data_class_name, data_class_name, None)
         temp_data_classes.append((data_class_name, None))
 
@@ -148,26 +148,21 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     )
                 )
 
-        return entities
-
-    async def get_entities():
-        """Retrieve Netatmo entities."""
-        entities = []
-
-        for data_class_name in [
-            WEATHERSTATION_DATA_CLASS_NAME,
-            HOMECOACH_DATA_CLASS_NAME,
-        ]:
-            entities.extend(await find_entities(data_class_name))
+        for dc in temp_data_classes:
+            await data_handler.unregister_data_class(*dc)
 
         return entities
 
-    async_add_entities(await get_entities(), True)
+    for data_class_name in [
+        WEATHERSTATION_DATA_CLASS_NAME,
+        HOMECOACH_DATA_CLASS_NAME,
+    ]:
+        async_add_entities(await find_entities(data_class_name), True)
 
     @callback
     async def add_public_entities(update=True):
         """Retrieve Netatmo public weather entities."""
-        temp_data_classes = []
+        temp_public_data_classes = []
         entities = {
             device.name: device.id
             for device in async_entries_for_config_entry(
@@ -200,7 +195,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 LAT_SW=area.lat_sw,
                 LON_SW=area.lon_sw,
             )
-            temp_data_classes.append((signal_name, None))
+            temp_public_data_classes.append((signal_name, None))
             for sensor_type in SUPPORTED_PUBLIC_SENSOR_TYPES:
                 new_entities.append(
                     NetatmoPublicSensor(data_handler, area, sensor_type)
@@ -212,8 +207,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         if new_entities:
             async_add_entities(new_entities)
 
-        for data_class in temp_data_classes:
-            await data_handler.unregister_data_class(*data_class)
+        for dc in temp_public_data_classes:
+            await data_handler.unregister_data_class(*dc)
 
     async_dispatcher_connect(
         hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}", add_public_entities
@@ -222,9 +217,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entry.add_update_listener(async_config_entry_updated)
 
     await add_public_entities(False)
-
-    for data_class in temp_data_classes:
-        await data_handler.unregister_data_class(*data_class)
 
 
 async def async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
