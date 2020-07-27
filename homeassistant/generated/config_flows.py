@@ -45,6 +45,7 @@ FLOWS = [
     "dunehd",
     "dynalite",
     "ecobee",
+    "econet",
     "elgato",
     "elkm1",
     "emulated_roku",
