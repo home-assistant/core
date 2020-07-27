@@ -15,6 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
 
+# Configuration labels
 CONF_ACTIVE_DIRECTORY = "active_directory"
 CONF_ALLOWED_GROUP_DNS = "allowed_group_dns"
 CONF_BASE_DN = "base_dn"
@@ -28,21 +29,30 @@ CONF_SERVER = "server"
 CONF_TIMEOUT = "timeout"
 CONF_USERNAME_ATTR = "username_attribute"
 
+# Default values
+DEFAULT_CONF_ACTIVE_DIRECTORY = False
+DEFAULT_CONF_CERT_VALIDATION = True
+DEFAULT_CONF_PORT = 636
+DEFAULT_CONF_TIMEOUT = 10
+DEFAULT_CONF_USERNAME_ATTR = "uid"
+
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
     {
-        vol.Required(CONF_ACTIVE_DIRECTORY, default=False): bool,
+        vol.Required(
+            CONF_ACTIVE_DIRECTORY, default=DEFAULT_CONF_ACTIVE_DIRECTORY
+        ): bool,
         vol.Optional(CONF_ALLOWED_GROUP_DNS, default=[]): vol.All(
             cv.ensure_list, [str]
         ),
         vol.Required(CONF_BASE_DN): str,
-        vol.Required(CONF_CERT_VALIDATION, default=True): bool,
+        vol.Required(CONF_CERT_VALIDATION, default=DEFAULT_CONF_CERT_VALIDATION): bool,
         vol.Required(CONF_ENCRYPTION, default=CONF_ENCRYPTION_LDAPS): vol.In(
             [CONF_ENCRYPTION_LDAPS, CONF_ENCRYPTION_NONE, CONF_ENCRYPTION_STARTTLS],
         ),
-        vol.Required(CONF_PORT, default=636): int,
+        vol.Required(CONF_PORT, default=DEFAULT_CONF_PORT): int,
         vol.Required(CONF_SERVER): str,
-        vol.Required(CONF_TIMEOUT, default=10): int,
-        vol.Required(CONF_USERNAME_ATTR, default="uid"): str,
+        vol.Required(CONF_TIMEOUT, default=DEFAULT_CONF_TIMEOUT): int,
+        vol.Required(CONF_USERNAME_ATTR, default=DEFAULT_CONF_USERNAME_ATTR): str,
     },
     extra=vol.PREVENT_EXTRA,
 )
