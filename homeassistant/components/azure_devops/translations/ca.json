@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja ha estat configurat",
+            "reauth_successful": "Token d'acc\u00e9s actualitzat correctament"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "organization": "Organitzaci\u00f3"
+                }
+            }
+        }
+    }
+}
