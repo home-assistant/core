@@ -392,7 +392,7 @@ async def test_services(
         DOMAIN,
         "set_setting",
         SERVICE_UPDATE_SETTING,
-        {"setting_type": "audio", "setting_name": "eq", "new_value": "Music"},
+        {"setting_type": "Audio", "setting_name": "EQ", "new_value": "Music"},
     )
 
 

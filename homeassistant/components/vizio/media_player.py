@@ -290,7 +290,9 @@ class VizioDevice(MediaPlayerEntity):
         self, setting_type: str, setting_name: str, new_value: Union[int, str]
     ) -> None:
         """Update a setting when update_setting service is called."""
-        await self._device.set_setting(setting_type, setting_name, new_value)
+        await self._device.set_setting(
+            setting_type.lower(), setting_name.lower(), new_value
+        )
 
     async def async_added_to_hass(self):
         """Register callbacks when entity is added."""
