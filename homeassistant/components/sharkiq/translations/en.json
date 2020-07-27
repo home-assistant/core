@@ -1,0 +1,27 @@
+{
+  "title": "Shark IQ",
+  "config": {
+    "step": {
+      "init": {
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      },
+      "user": {
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]"
+    }
+  }
+}

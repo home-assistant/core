@@ -1959,6 +1959,9 @@ sense_energy==0.7.2
 # homeassistant.components.sentry
 sentry-sdk==0.16.5
 
+# homeassistant.components.sharkiq
+sharkiqpy==0.1.3
+
 # homeassistant.components.aquostv
 sharp_aquos_rc==0.3.2
 
