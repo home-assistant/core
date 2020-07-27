@@ -1,5 +1,5 @@
 """Constants for the flo integration."""
-
+CLIENT = "client"
 DOMAIN = "flo"
 FLO_HOME = "home"
 FLO_AWAY = "away"
