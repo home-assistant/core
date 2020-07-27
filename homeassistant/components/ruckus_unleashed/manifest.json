@@ -1,0 +1,15 @@
+{
+  "domain": "ruckus_unleashed",
+  "name": "Ruckus Unleashed",
+  "documentation": "https://www.home-assistant.io/integrations/ruckus_unleashed",
+  "requirements": [
+    "pexpect==4.6.0"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@cvhoang"
+  ]
+}
