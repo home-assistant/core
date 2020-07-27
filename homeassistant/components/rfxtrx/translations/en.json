@@ -6,7 +6,8 @@
                   "debug": "Enable debugging",
                   "automatic_add": "Enable automatic add",
                   "device_id": "Select device id to add",
-                  "device": "Select device to configure"
+                  "device": "Select device to configure",
+                  "remove_device": "Select device to delete"
                 },
                 "title": "Rfxtrx Options"
             },
@@ -22,6 +23,11 @@
                 },
                 "title": "Configure device options"
             }
+        },
+        "error": {
+            "unknown_event_code": "Unable to find event code",
+            "invalid_input_2262": "Invalid input for command on/off",
+            "unknown": "Unexpected error"
         }
     },
     "title": "Rfxtrx"

@@ -36,13 +36,14 @@ from .switch import supported as switch_supported
 _LOGGER = logging.getLogger(__name__)
 
 CONF_OFF_DELAY_ENABLED = CONF_OFF_DELAY + "_enabled"
+CONF_REMOVE_DEVICE = "remove_device"
 
 
 class OptionsFlow(config_entries.OptionsFlow):
     """Handle Rfxtrx options."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize vizio options flow."""
+        """Initialize rfxtrx options flow."""
         self._config_entry = config_entry
         self._global_options = None
         self._selected_device = None
@@ -64,19 +65,7 @@ class OptionsFlow(config_entries.OptionsFlow):
                 CONF_AUTOMATIC_ADD: user_input[CONF_AUTOMATIC_ADD],
             }
             if CONF_DEVICE in user_input:
-                event_code = None
-                device_id = None
-                for entry in self._device_entries:
-                    if entry.id == user_input[CONF_DEVICE]:
-                        device_id = next(iter(entry.identifiers))[1:]
-                        break
-                for packet_id, entity_info in self._config_entry.data[
-                    CONF_DEVICES
-                ].items():
-                    test = entity_info.get(CONF_DEVICE_ID)
-                    if test == device_id:
-                        event_code = packet_id
-                        break
+                event_code = self._get_event_code(user_input[CONF_DEVICE])
                 if not event_code:
                     errors = {"base": "unknown_event_code"}
                 else:
@@ -85,6 +74,19 @@ class OptionsFlow(config_entries.OptionsFlow):
                         event_code
                     ]
                     return await self.async_step_set_device_options()
+            if CONF_REMOVE_DEVICE in user_input:
+                event_code = self._get_event_code(user_input[CONF_REMOVE_DEVICE])
+                if not event_code:
+                    errors = {"base": "unknown_event_code"}
+                else:
+                    device_registry = await async_get_registry(self.hass)
+                    device_registry.async_remove_device(user_input[CONF_REMOVE_DEVICE])
+                    devices = {event_code: None}
+                    self.update_config_data(
+                        global_options=self._global_options, devices=devices
+                    )
+
+                    return self.async_create_entry(title="", data={})
             if CONF_DEVICE_ID in user_input:
                 self._selected_device_event_code = user_input[CONF_DEVICE_ID]
                 self._selected_device = {}
@@ -113,6 +115,7 @@ class OptionsFlow(config_entries.OptionsFlow):
             ): bool,
             vol.Optional(CONF_DEVICE_ID): str,
             vol.Optional(CONF_DEVICE): vol.In(devices),
+            vol.Optional(CONF_REMOVE_DEVICE): vol.In(devices),
         }
 
         return self.async_show_form(
@@ -230,14 +233,33 @@ class OptionsFlow(config_entries.OptionsFlow):
             errors=errors,
         )
 
+    def _get_event_code(self, entry_id):
+        """Get event code based on device identifier."""
+        event_code = None
+        device_id = None
+        for entry in self._device_entries:
+            if entry.id == entry_id:
+                device_id = next(iter(entry.identifiers))[1:]
+                break
+        for packet_id, entity_info in self._config_entry.data[CONF_DEVICES].items():
+            if entity_info.get(CONF_DEVICE_ID) == device_id:
+                event_code = packet_id
+                break
+
+        return event_code
+
     @callback
     def update_config_data(self, global_options=None, devices=None):
         """Update data in ConfigEntry."""
         entry_data = self._config_entry.data.copy()
-        if global_options is not None:
+        if global_options:
             entry_data.update(global_options)
-        for event_code, options in devices.items():
-            entry_data[CONF_DEVICES][event_code] = options
+        if devices:
+            for event_code, options in devices.items():
+                if options is None:
+                    entry_data[CONF_DEVICES].pop(event_code)
+                else:
+                    entry_data[CONF_DEVICES][event_code] = options
         self.hass.config_entries.async_update_entry(self._config_entry, data=entry_data)
         self.hass.async_create_task(async_update_options(self.hass, self._config_entry))
 
