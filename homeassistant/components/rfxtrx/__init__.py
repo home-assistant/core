@@ -18,7 +18,6 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
     CONF_PORT,
-    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     POWER_WATT,
     TEMP_CELSIUS,
@@ -289,22 +288,16 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
         hass.config_entries.async_update_entry(entry=entry, data=data)
         devices[device_id] = config
 
-    @callback
-    def _start_rfxtrx(event):
-        """Start receiving events."""
-        rfx_object.event_callback = lambda event: hass.add_job(
-            async_handle_receive, event
-        )
-
     def _shutdown_rfxtrx(event):
         """Close connection with RFXtrx."""
         rfx_object.close_connection()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _start_rfxtrx)
     listener = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_rfxtrx)
 
     hass.data[DOMAIN][DATA_LISTENER] = listener
     hass.data[DOMAIN][DATA_RFXOBJECT] = rfx_object
+
+    rfx_object.event_callback = lambda event: hass.add_job(async_handle_receive, event)
 
     def send(call):
         event = call.data[ATTR_EVENT]
