@@ -821,6 +821,7 @@ class Script:
             action[CONF_REPEAT][CONF_SEQUENCE],
             f"{self.name}: {step_name}",
             script_mode=SCRIPT_MODE_PARALLEL,
+            max_runs=self.max_runs,
             logger=self._logger,
             top_level=False,
         )
@@ -848,6 +849,7 @@ class Script:
                 choice[CONF_SEQUENCE],
                 f"{self.name}: {step_name}: choice {idx}",
                 script_mode=SCRIPT_MODE_PARALLEL,
+                max_runs=self.max_runs,
                 logger=self._logger,
                 top_level=False,
             )
@@ -862,6 +864,7 @@ class Script:
                 action[CONF_DEFAULT],
                 f"{self.name}: {step_name}: default",
                 script_mode=SCRIPT_MODE_PARALLEL,
+                max_runs=self.max_runs,
                 logger=self._logger,
                 top_level=False,
             )
