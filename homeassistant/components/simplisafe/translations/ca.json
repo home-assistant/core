@@ -5,9 +5,15 @@
         },
         "error": {
             "identifier_exists": "Aquest compte ja est\u00e0 registrat",
-            "invalid_credentials": "Credencials inv\u00e0lides"
+            "invalid_credentials": "Credencials inv\u00e0lides",
+            "unknown": "Error inesperat"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrasenya"
+                }
+            },
             "user": {
                 "data": {
                     "code": "Codi (utilitzat a la UI de Home Assistant)",

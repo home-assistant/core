@@ -183,7 +183,7 @@ class AdGuardHomeEntity(Entity):
         except AdGuardHomeError:
             if self._available:
                 _LOGGER.debug(
-                    "An error occurred while updating AdGuard Home sensor.",
+                    "An error occurred while updating AdGuard Home sensor",
                     exc_info=True,
                 )
             self._available = False

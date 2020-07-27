@@ -94,7 +94,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
         doorstation = get_doorstation_by_token(hass, token)
 
         if doorstation is None:
-            _LOGGER.error("Device not found for provided token.")
+            _LOGGER.error("Device not found for provided token")
             return
 
         # Clear webhooks

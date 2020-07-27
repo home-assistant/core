@@ -7,8 +7,8 @@
         "error": {
             "cannot_connect": "No se pudo conectar",
             "complete_pairing_failed": "No se pudo completar el emparejamiento. Aseg\u00farate de que el PIN que has proporcionado es correcto y que el televisor sigue encendido y conectado a la red antes de volver a enviarlo.",
-            "host_exists": "El host ya est\u00e1 configurado.",
-            "name_exists": "Nombre ya configurado."
+            "host_exists": "Ya existe un VIZIO SmartCast Device configurado con ese host.",
+            "name_exists": "Ya existe un VIZIO SmartCast Device configurado con ese nombre."
         },
         "step": {
             "pair_tv": {
@@ -30,11 +30,11 @@
                 "data": {
                     "access_token": "Token de acceso",
                     "device_class": "Tipo de dispositivo",
-                    "host": "< Host / IP > : <Port>",
+                    "host": "Host",
                     "name": "Nombre"
                 },
                 "description": "El token de acceso solo se necesita para las televisiones. Si est\u00e1s configurando una televisi\u00f3n y a\u00fan no tienes un token de acceso, d\u00e9jalo en blanco para iniciar el proceso de sincronizaci\u00f3n.",
-                "title": "Configurar el cliente de Vizio SmartCast"
+                "title": "VIZIO SmartCast Device"
             }
         }
     },

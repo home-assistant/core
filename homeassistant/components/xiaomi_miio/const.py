@@ -4,8 +4,8 @@ DOMAIN = "xiaomi_miio"
 # Fan Services
 SERVICE_SET_BUZZER_ON = "fan_set_buzzer_on"
 SERVICE_SET_BUZZER_OFF = "fan_set_buzzer_off"
-SERVICE_SET_LED_ON = "fan_set_led_on"
-SERVICE_SET_LED_OFF = "fan_set_led_off"
+SERVICE_SET_FAN_LED_ON = "fan_set_led_on"
+SERVICE_SET_FAN_LED_OFF = "fan_set_led_off"
 SERVICE_SET_CHILD_LOCK_ON = "fan_set_child_lock_on"
 SERVICE_SET_CHILD_LOCK_OFF = "fan_set_child_lock_off"
 SERVICE_SET_LED_BRIGHTNESS = "fan_set_led_brightness"
@@ -34,8 +34,8 @@ SERVICE_EYECARE_MODE_OFF = "light_eyecare_mode_off"
 
 # Remote Services
 SERVICE_LEARN = "remote_learn_command"
-SERVICE_SET_LED_ON = "remote_set_led_on"
-SERVICE_SET_LED_OFF = "remote_set_led_off"
+SERVICE_SET_REMOTE_LED_ON = "remote_set_led_on"
+SERVICE_SET_REMOTE_LED_OFF = "remote_set_led_off"
 
 # Switch Services
 SERVICE_SET_WIFI_LED_ON = "switch_set_wifi_led_on"

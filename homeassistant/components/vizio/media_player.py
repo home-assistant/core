@@ -110,7 +110,7 @@ async def async_setup_entry(
         _LOGGER.warning("Failed to connect to %s", host)
         raise PlatformNotReady
 
-    entity = VizioDevice(config_entry, device, name, device_class,)
+    entity = VizioDevice(config_entry, device, name, device_class)
 
     async_add_entities([entity], update_before_add=True)
 

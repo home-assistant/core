@@ -3,7 +3,7 @@
         "abort": {
             "already_setup": "Already configured. Only a single configuration possible.",
             "authorize_url_fail": "Unknown error generating an authorize url.",
-            "authorize_url_timeout": "Timeout generating authorize url.",
+            "authorize_url_timeout": "Timeout generating authorize URL.",
             "external_setup": "Point successfully configured from another flow.",
             "no_flows": "The component is not configured. Please follow the documentation."
         },

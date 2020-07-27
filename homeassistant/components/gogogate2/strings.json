@@ -10,7 +10,7 @@
     "step": {
       "user": {
         "title": "Setup GogoGate2",
-        "description": "Provide requisite information below. Note: only the 'admin' user is known to work.",
+        "description": "Provide requisite information below.",
         "data": {
           "ip_address": "IP Address",
           "username": "[%key:common::config_flow::data::username%]",

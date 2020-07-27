@@ -23,6 +23,7 @@ TEST_MAC = "ab:cd:ef:gh"
 TEST_HOST2 = "5.6.7.8"
 TEST_NAME = "Test_Receiver"
 TEST_MODEL = "model5"
+TEST_IGNORED_MODEL = "HEOS 7"
 TEST_RECEIVER_TYPE = "avr-x"
 TEST_SERIALNUMBER = "123456789"
 TEST_MANUFACTURER = "Denon"
@@ -468,6 +469,27 @@ async def test_config_flow_ssdp_missing_info(hass):
 
     assert result["type"] == "abort"
     assert result["reason"] == "not_denonavr_missing"
+
+
+async def test_config_flow_ssdp_ignored_model(hass):
+    """
+    Failed flow initialized by ssdp discovery.
+
+    Model in the ignored models list.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data={
+            ssdp.ATTR_UPNP_MANUFACTURER: TEST_MANUFACTURER,
+            ssdp.ATTR_UPNP_MODEL_NAME: TEST_IGNORED_MODEL,
+            ssdp.ATTR_UPNP_SERIAL: TEST_SERIALNUMBER,
+            ssdp.ATTR_SSDP_LOCATION: TEST_SSDP_LOCATION,
+        },
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_denonavr_manufacturer"
 
 
 async def test_options_flow(hass):

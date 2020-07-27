@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_account": "El compte ja ha estat configurat"
+        },
+        "error": {
+            "account_error": "Autenticaci\u00f3 inv\u00e0lida",
+            "session_error": "Ha fallat la connexi\u00f3",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "server": "Servidor",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Introdueix les credencials de Dexcom Share",
+                "title": "Configura la integraci\u00f3 de Dexcom"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "unit_of_measurement": "Unitat de mesura"
+                }
+            }
+        }
+    }
+}

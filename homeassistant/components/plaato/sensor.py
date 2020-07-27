@@ -119,7 +119,7 @@ class PlaatoSensor(Entity):
         """Return the state of the sensor."""
         sensors = self.get_sensors()
         if sensors is False:
-            _LOGGER.debug("Device with name %s has no sensors.", self.name)
+            _LOGGER.debug("Device with name %s has no sensors", self.name)
             return 0
 
         if self._type == ATTR_ABV:

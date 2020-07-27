@@ -36,10 +36,13 @@
             "init": {
                 "data": {
                     "filter": "Zeilen auswielen",
-                    "offset": "Offset (Minutten)"
+                    "offset": "Offset (Minutten)",
+                    "real_time": "Benotz Echtz\u00e4it Donn\u00e9e\u00ebn"
                 },
+                "description": "Optiounen \u00e4nneren fir d\u00ebsen Departe Sensor",
                 "title": "Optiounen"
             }
         }
-    }
+    },
+    "title": "HVV Departe"
 }

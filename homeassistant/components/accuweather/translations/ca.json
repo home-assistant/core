@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_api_key": "Clau API inv\u00e0lida"
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "title": "Opcions d'AccuWeather"
+            }
+        }
+    }
+}

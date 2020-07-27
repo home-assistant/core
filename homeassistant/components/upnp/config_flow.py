@@ -120,7 +120,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Ensure anything to add. If not, silently abort.
         if not self._discoveries:
-            _LOGGER.info("No UPnP devices discovered, aborting.")
+            _LOGGER.info("No UPnP devices discovered, aborting")
             return self.async_abort(reason="no_devices_found")
 
         discovery = self._discoveries[0]

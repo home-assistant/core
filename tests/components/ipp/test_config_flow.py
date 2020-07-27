@@ -17,6 +17,7 @@ from . import (
     mock_connection,
 )
 
+from tests.async_mock import patch
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -308,10 +309,13 @@ async def test_full_user_flow_implementation(
     assert result["step_id"] == "user"
     assert result["type"] == RESULT_TYPE_FORM
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_HOST: "192.168.1.31", CONF_BASE_PATH: "/ipp/print"},
-    )
+    with patch(
+        "homeassistant.components.ipp.async_setup_entry", return_value=True
+    ), patch("homeassistant.components.ipp.async_setup", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "192.168.1.31", CONF_BASE_PATH: "/ipp/print"},
+        )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "192.168.1.31"
@@ -338,9 +342,12 @@ async def test_full_zeroconf_flow_implementation(
     assert result["step_id"] == "zeroconf_confirm"
     assert result["type"] == RESULT_TYPE_FORM
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
+    with patch(
+        "homeassistant.components.ipp.async_setup_entry", return_value=True
+    ), patch("homeassistant.components.ipp.async_setup", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "EPSON XP-6000 Series"
@@ -370,9 +377,12 @@ async def test_full_zeroconf_tls_flow_implementation(
     assert result["type"] == RESULT_TYPE_FORM
     assert result["description_placeholders"] == {CONF_NAME: "EPSON XP-6000 Series"}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
+    with patch(
+        "homeassistant.components.ipp.async_setup_entry", return_value=True
+    ), patch("homeassistant.components.ipp.async_setup", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "EPSON XP-6000 Series"

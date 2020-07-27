@@ -76,7 +76,7 @@ async def async_setup(hass, config):
             for target, key in target_keys.items():
                 res = pyfttt.send_event(key, event, value1, value2, value3)
                 if res.status_code != HTTP_OK:
-                    _LOGGER.error("IFTTT reported error sending event to %s.", target)
+                    _LOGGER.error("IFTTT reported error sending event to %s", target)
         except requests.exceptions.RequestException:
             _LOGGER.exception("Error communicating with IFTTT")
 

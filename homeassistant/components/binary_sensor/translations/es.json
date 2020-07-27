@@ -131,7 +131,7 @@
             "on": "H\u00famedo"
         },
         "motion": {
-            "off": "Sin movimiento",
+            "off": "No detectado",
             "on": "Detectado"
         },
         "occupancy": {

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_in_progress": "Konfigurasjonsflyt for denne Denon AVR p\u00e5g\u00e5r allerede",
-            "connection_error": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
+            "connection_error": "Kunne ikke koble til, vennligst pr\u00f8v igjen. Koble fra str\u00f8m- og nettverkskablene og koble dem til igjen kan hjelpe",
             "not_denonavr_manufacturer": "Ikke en Denon AVR Network Receiver, oppdaget manafucturer stemte ikke overens",
             "not_denonavr_missing": "Ikke en Denon AVR Network Receiver, oppdagelsesinformasjon ikke fullf\u00f8rt"
         },

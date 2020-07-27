@@ -104,6 +104,98 @@ async def help_test_default_availability_payload(
         assert state.state != STATE_UNAVAILABLE
 
 
+async def help_test_default_availability_list_payload(
+    hass,
+    mqtt_mock,
+    domain,
+    config,
+    no_assumed_state=False,
+    state_topic=None,
+    state_message=None,
+):
+    """Test availability by default payload with defined topic.
+
+    This is a test helper for the MqttAvailability mixin.
+    """
+    # Add availability settings to config
+    config = copy.deepcopy(config)
+    config[domain]["availability"] = [
+        {"topic": "availability-topic1"},
+        {"topic": "availability-topic2"},
+    ]
+    assert await async_setup_component(hass, domain, config,)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{domain}.test")
+    assert state.state == STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, "availability-topic1", "online")
+
+    state = hass.states.get(f"{domain}.test")
+    assert state.state != STATE_UNAVAILABLE
+    if no_assumed_state:
+        assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "availability-topic1", "offline")
+
+    state = hass.states.get(f"{domain}.test")
+    assert state.state == STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, "availability-topic2", "online")
+
+    state = hass.states.get(f"{domain}.test")
+    assert state.state != STATE_UNAVAILABLE
+    if no_assumed_state:
+        assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "availability-topic2", "offline")
+
+    state = hass.states.get(f"{domain}.test")
+    assert state.state == STATE_UNAVAILABLE
+
+    if state_topic:
+        async_fire_mqtt_message(hass, state_topic, state_message)
+
+        state = hass.states.get(f"{domain}.test")
+        assert state.state == STATE_UNAVAILABLE
+
+        async_fire_mqtt_message(hass, "availability-topic1", "online")
+
+        state = hass.states.get(f"{domain}.test")
+        assert state.state != STATE_UNAVAILABLE
+
+
+async def help_test_default_availability_list_single(
+    hass,
+    mqtt_mock,
+    caplog,
+    domain,
+    config,
+    no_assumed_state=False,
+    state_topic=None,
+    state_message=None,
+):
+    """Test availability list and availability_topic are mutually exclusive.
+
+    This is a test helper for the MqttAvailability mixin.
+    """
+    # Add availability settings to config
+    config = copy.deepcopy(config)
+    config[domain]["availability"] = [
+        {"topic": "availability-topic1"},
+    ]
+    config[domain]["availability_topic"] = "availability-topic"
+    assert await async_setup_component(hass, domain, config,)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{domain}.test")
+    assert state is None
+    assert (
+        "Invalid config for [sensor.mqtt]: two or more values in the same group of exclusion 'availability'"
+        in caplog.text
+    )
+
+
 async def help_test_custom_availability_payload(
     hass,
     mqtt_mock,
@@ -150,6 +242,88 @@ async def help_test_custom_availability_payload(
 
         state = hass.states.get(f"{domain}.test")
         assert state.state != STATE_UNAVAILABLE
+
+
+async def help_test_discovery_update_availability(
+    hass,
+    mqtt_mock,
+    domain,
+    config,
+    no_assumed_state=False,
+    state_topic=None,
+    state_message=None,
+):
+    """Test update of discovered MQTTAvailability.
+
+    This is a test helper for the MQTTAvailability mixin.
+    """
+    # Add availability settings to config
+    config1 = copy.deepcopy(config)
+    config1[domain]["availability_topic"] = "availability-topic1"
+    config2 = copy.deepcopy(config)
+    config2[domain]["availability"] = [
+        {"topic": "availability-topic2"},
+        {"topic": "availability-topic3"},
+    ]
+    config3 = copy.deepcopy(config)
+    config3[domain]["availability_topic"] = "availability-topic4"
+    data1 = json.dumps(config1[domain])
+    data2 = json.dumps(config2[domain])
+    data3 = json.dumps(config3[domain])
+
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    await async_start(hass, "homeassistant", entry)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data1)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{domain}.test")
+    assert state.state == STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, "availability-topic1", "online")
+    state = hass.states.get(f"{domain}.test")
+    assert state.state != STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, "availability-topic1", "offline")
+    state = hass.states.get(f"{domain}.test")
+    assert state.state == STATE_UNAVAILABLE
+
+    # Change availability_topic
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data2)
+    await hass.async_block_till_done()
+
+    # Verify we are no longer subscribing to the old topic
+    async_fire_mqtt_message(hass, "availability-topic1", "online")
+    state = hass.states.get(f"{domain}.test")
+    assert state.state == STATE_UNAVAILABLE
+
+    # Verify we are subscribing to the new topic
+    async_fire_mqtt_message(hass, "availability-topic2", "online")
+    state = hass.states.get(f"{domain}.test")
+    assert state.state != STATE_UNAVAILABLE
+
+    # Verify we are subscribing to the new topic
+    async_fire_mqtt_message(hass, "availability-topic3", "offline")
+    state = hass.states.get(f"{domain}.test")
+    assert state.state == STATE_UNAVAILABLE
+
+    # Change availability_topic
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data3)
+    await hass.async_block_till_done()
+
+    # Verify we are no longer subscribing to the old topic
+    async_fire_mqtt_message(hass, "availability-topic2", "online")
+    state = hass.states.get(f"{domain}.test")
+    assert state.state == STATE_UNAVAILABLE
+
+    # Verify we are no longer subscribing to the old topic
+    async_fire_mqtt_message(hass, "availability-topic3", "online")
+    state = hass.states.get(f"{domain}.test")
+    assert state.state == STATE_UNAVAILABLE
+
+    # Verify we are subscribing to the new topic
+    async_fire_mqtt_message(hass, "availability-topic4", "online")
+    state = hass.states.get(f"{domain}.test")
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def help_test_setting_attribute_via_mqtt_json_message(

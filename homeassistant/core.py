@@ -5,7 +5,6 @@ Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
 """
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 import datetime
 import enum
 import functools
@@ -13,6 +12,7 @@ from ipaddress import ip_address
 import logging
 import os
 import pathlib
+import random
 import re
 import threading
 from time import monotonic
@@ -24,6 +24,7 @@ from typing import (
     Callable,
     Coroutine,
     Dict,
+    Iterable,
     List,
     Mapping,
     Optional,
@@ -99,6 +100,9 @@ CORE_STORAGE_VERSION = 1
 
 DOMAIN = "homeassistant"
 
+# How long to wait to log tasks that are blocking
+BLOCK_LOG_TIMEOUT = 60
+
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds
 
@@ -145,19 +149,6 @@ def is_callback(func: Callable[..., Any]) -> bool:
     return getattr(func, "_hass_callback", False) is True
 
 
-@callback
-def async_loop_exception_handler(_: Any, context: Dict) -> None:
-    """Handle all exception inside the core loop."""
-    kwargs = {}
-    exception = context.get("exception")
-    if exception:
-        kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
-
-    _LOGGER.error(
-        "Error doing job: %s", context["message"], **kwargs  # type: ignore
-    )
-
-
 class CoreState(enum.Enum):
     """Represent the current state of Home Assistant."""
 
@@ -166,6 +157,7 @@ class CoreState(enum.Enum):
     running = "RUNNING"
     stopping = "STOPPING"
     final_write = "FINAL_WRITE"
+    stopped = "STOPPED"
 
     def __str__(self) -> str:
         """Return the event."""
@@ -179,18 +171,9 @@ class HomeAssistant:
     http: "HomeAssistantHTTP" = None  # type: ignore
     config_entries: "ConfigEntries" = None  # type: ignore
 
-    def __init__(self, loop: Optional[asyncio.events.AbstractEventLoop] = None) -> None:
+    def __init__(self) -> None:
         """Initialize new Home Assistant object."""
-        self.loop: asyncio.events.AbstractEventLoop = (loop or asyncio.get_event_loop())
-
-        executor_opts: Dict[str, Any] = {
-            "max_workers": None,
-            "thread_name_prefix": "SyncWorker",
-        }
-
-        self.executor = ThreadPoolExecutor(**executor_opts)
-        self.loop.set_default_executor(self.executor)
-        self.loop.set_exception_handler(async_loop_exception_handler)
+        self.loop = asyncio.get_running_loop()
         self._pending_tasks: list = []
         self._track_task = True
         self.bus = EventBus(self)
@@ -288,7 +271,7 @@ class HomeAssistant:
         if self.state != CoreState.starting:
             _LOGGER.warning(
                 "Home Assistant startup has been interrupted. "
-                "Its state may be inconsistent."
+                "Its state may be inconsistent"
             )
             return
 
@@ -415,9 +398,20 @@ class HomeAssistant:
             pending = [task for task in self._pending_tasks if not task.done()]
             self._pending_tasks.clear()
             if pending:
-                await asyncio.wait(pending)
+                await self._await_and_log_pending(pending)
             else:
                 await asyncio.sleep(0)
+
+    async def _await_and_log_pending(self, pending: Iterable[Awaitable[Any]]) -> None:
+        """Await and log tasks that take a long time."""
+        wait_time = 0
+        while pending:
+            _, pending = await asyncio.wait(pending, timeout=BLOCK_LOG_TIMEOUT)
+            if not pending:
+                return
+            wait_time += BLOCK_LOG_TIMEOUT
+            for task in pending:
+                _LOGGER.debug("Waited %s seconds for task: %s", wait_time, task)
 
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
@@ -461,9 +455,12 @@ class HomeAssistant:
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
         await self.async_block_till_done()
-        self.executor.shutdown()
+
+        # Python 3.9+ and backported in runner.py
+        await self.loop.shutdown_default_executor()  # type: ignore
 
         self.exit_code = exit_code
+        self.state = CoreState.stopped
 
         if self._stopped is not None:
             self._stopped.set()
@@ -475,9 +472,15 @@ class HomeAssistant:
 class Context:
     """The context that triggered something."""
 
-    user_id = attr.ib(type=str, default=None)
-    parent_id = attr.ib(type=Optional[str], default=None)
-    id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
+    user_id: str = attr.ib(default=None)
+    parent_id: Optional[str] = attr.ib(default=None)
+    # The uuid1 uses a random multicast MAC address instead of the real MAC address
+    # of the machine without the overhead of calling the getrandom() system call.
+    #
+    # This is effectively equivalent to PostgreSQL's uuid_generate_v1mc() function
+    id: str = attr.ib(
+        factory=lambda: uuid.uuid1(node=random.getrandbits(48) | (1 << 40)).hex
+    )
 
     def as_dict(self) -> dict:
         """Return a dictionary representation of the context."""
@@ -1152,7 +1155,7 @@ class ServiceRegistry:
         service = service.lower()
 
         if service not in self._services.get(domain, {}):
-            _LOGGER.warning("Unable to remove unknown service %s/%s.", domain, service)
+            _LOGGER.warning("Unable to remove unknown service %s/%s", domain, service)
             return
 
         self._services[domain].pop(service)
@@ -1219,7 +1222,16 @@ class ServiceRegistry:
             raise ServiceNotFound(domain, service) from None
 
         if handler.schema:
-            processed_data = handler.schema(service_data)
+            try:
+                processed_data = handler.schema(service_data)
+            except vol.Invalid:
+                _LOGGER.debug(
+                    "Invalid data for service call %s.%s: %s",
+                    domain,
+                    service,
+                    service_data,
+                )
+                raise
         else:
             processed_data = service_data
 
@@ -1330,7 +1342,7 @@ class Config:
         self.config_dir: Optional[str] = None
 
         # List of allowed external dirs to access
-        self.whitelist_external_dirs: Set[str] = set()
+        self.allowlist_external_dirs: Set[str] = set()
 
         # List of allowed external URLs that integrations may use
         self.allowlist_external_urls: Set[str] = set()
@@ -1380,9 +1392,9 @@ class Config:
         except (FileNotFoundError, RuntimeError, PermissionError):
             return False
 
-        for whitelisted_path in self.whitelist_external_dirs:
+        for allowed_path in self.allowlist_external_dirs:
             try:
-                thepath.relative_to(whitelisted_path)
+                thepath.relative_to(allowed_path)
                 return True
             except ValueError:
                 pass
@@ -1407,7 +1419,9 @@ class Config:
             "time_zone": time_zone,
             "components": self.components,
             "config_dir": self.config_dir,
-            "whitelist_external_dirs": self.whitelist_external_dirs,
+            # legacy, backwards compat
+            "whitelist_external_dirs": self.allowlist_external_dirs,
+            "allowlist_external_dirs": self.allowlist_external_dirs,
             "allowlist_external_urls": self.allowlist_external_urls,
             "version": __version__,
             "config_source": self.config_source,
@@ -1547,6 +1561,7 @@ class Config:
 def _async_create_timer(hass: HomeAssistant) -> None:
     """Create a timer that will start on HOMEASSISTANT_START."""
     handle = None
+    timer_context = Context()
 
     def schedule_tick(now: datetime.datetime) -> None:
         """Schedule a timer tick when the next second rolls around."""
@@ -1561,12 +1576,14 @@ def _async_create_timer(hass: HomeAssistant) -> None:
         """Fire next time event."""
         now = dt_util.utcnow()
 
-        hass.bus.async_fire(EVENT_TIME_CHANGED, {ATTR_NOW: now})
+        hass.bus.async_fire(EVENT_TIME_CHANGED, {ATTR_NOW: now}, context=timer_context)
 
         # If we are more than a second late, a tick was missed
         late = monotonic() - target
         if late > 1:
-            hass.bus.async_fire(EVENT_TIMER_OUT_OF_SYNC, {ATTR_SECONDS: late})
+            hass.bus.async_fire(
+                EVENT_TIMER_OUT_OF_SYNC, {ATTR_SECONDS: late}, context=timer_context
+            )
 
         schedule_tick(now)
 

@@ -1,6 +1,5 @@
 """Define tests for the Elexa Guardian config flow."""
 from aioguardian.errors import GuardianError
-from asynctest import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.guardian import CONF_UID, DOMAIN
@@ -11,6 +10,7 @@ from homeassistant.components.guardian.config_flow import (
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

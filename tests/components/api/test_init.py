@@ -212,6 +212,8 @@ async def test_api_get_config(hass, mock_api_client):
         result["components"] = set(result["components"])
     if "whitelist_external_dirs" in result:
         result["whitelist_external_dirs"] = set(result["whitelist_external_dirs"])
+    if "allowlist_external_dirs" in result:
+        result["allowlist_external_dirs"] = set(result["allowlist_external_dirs"])
     if "allowlist_external_urls" in result:
         result["allowlist_external_urls"] = set(result["allowlist_external_urls"])
 

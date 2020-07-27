@@ -24,7 +24,10 @@ from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.event import async_track_same_state, async_track_state_change
+from homeassistant.helpers.event import (
+    async_track_same_state,
+    async_track_state_change_event,
+)
 
 from . import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
@@ -148,7 +151,7 @@ class BinarySensorTemplate(BinarySensorEntity):
         """Register callbacks."""
 
         @callback
-        def template_bsensor_state_listener(entity, old_state, new_state):
+        def template_bsensor_state_listener(event):
             """Handle the target device state changes."""
             self.async_check_state()
 
@@ -157,7 +160,7 @@ class BinarySensorTemplate(BinarySensorEntity):
             """Update template on startup."""
             if self._entities != MATCH_ALL:
                 # Track state change only for valid templates
-                async_track_state_change(
+                async_track_state_change_event(
                     self.hass, self._entities, template_bsensor_state_listener
                 )
 
@@ -255,7 +258,7 @@ class BinarySensorTemplate(BinarySensorEntity):
                 ):
                     # Common during HA startup - so just a warning
                     _LOGGER.warning(
-                        "Could not render %s template %s, the state is unknown.",
+                        "Could not render %s template %s, the state is unknown",
                         friendly_property_name,
                         self._name,
                     )

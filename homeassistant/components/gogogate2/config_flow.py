@@ -63,7 +63,7 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_IP_ADDRESS, default=user_input.get(CONF_IP_ADDRESS, "")
                     ): str,
                     vol.Required(
-                        CONF_USERNAME, default=user_input.get(CONF_USERNAME, "admin")
+                        CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
                     ): str,
                     vol.Required(
                         CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")

@@ -66,6 +66,8 @@ def stream_worker(hass, stream, quit_event):
     first_pts = 0
     # The decoder timestamp of the latest packet we processed
     last_dts = None
+    # Keep track of consecutive packets without a dts to detect end of stream.
+    last_packet_was_without_dts = False
 
     while not quit_event.is_set():
         try:
@@ -73,8 +75,14 @@ def stream_worker(hass, stream, quit_event):
             if packet.dts is None:
                 if first_packet:
                     continue
-                # If we get a "flushing" packet, the stream is done
-                raise StopIteration("No dts in packet")
+                _LOGGER.error("Stream packet without dts detected, skipping...")
+                # Allow a single packet without dts before terminating the stream.
+                if last_packet_was_without_dts:
+                    # If we get a "flushing" packet, the stream is done
+                    raise StopIteration("No dts in consecutive packets")
+                last_packet_was_without_dts = True
+                continue
+            last_packet_was_without_dts = False
         except (av.AVError, StopIteration) as ex:
             # End of stream, clear listeners and stop thread
             for fmt, _ in outputs.items():

@@ -24,6 +24,12 @@
             "link": {
                 "description": "Presione el bot\u00f3n en la pasarela para registrar Philips Hue con Home Assistant. \n\n![Ubicaci\u00f3n del bot\u00f3n en la pasarela](/static/images/config_philips_hue.jpg)",
                 "title": "Link Hub"
+            },
+            "manual": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Configurar manualmente un puente Hue"
             }
         }
     },
@@ -46,6 +52,17 @@
             "remote_button_short_release": "Bot\u00f3n \"{subtype}\" soltado",
             "remote_double_button_long_press": "Ambos \"{subtype}\" soltados despu\u00e9s de pulsaci\u00f3n larga",
             "remote_double_button_short_press": "Ambos \"{subtype}\" soltados"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_how_groups": "Permitir grupos de Hue",
+                    "allow_hue_groups": "Permitir grupos de Hue",
+                    "allow_unreachable": "Permitir que las bombillas inalcanzables informen su estado correctamente"
+                }
+            }
         }
     }
 }

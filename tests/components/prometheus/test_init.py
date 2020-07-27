@@ -1,10 +1,10 @@
 """The tests for the Prometheus exporter."""
-from collections import namedtuple
+from dataclasses import dataclass
+import datetime
 
 import pytest
 
-from homeassistant import setup
-from homeassistant.components import climate, sensor
+from homeassistant.components import climate, humidifier, sensor
 from homeassistant.components.demo.sensor import DemoSensor
 import homeassistant.components.prometheus as prometheus
 from homeassistant.const import (
@@ -16,25 +16,35 @@ from homeassistant.const import (
 )
 from homeassistant.core import split_entity_id
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 import tests.async_mock as mock
 
 PROMETHEUS_PATH = "homeassistant.components.prometheus"
 
 
-@pytest.fixture
-async def prometheus_client(loop, hass, hass_client):
+@dataclass
+class FilterTest:
+    """Class for capturing a filter test."""
+
+    id: str
+    should_pass: bool
+
+
+async def prometheus_client(hass, hass_client):
     """Initialize an hass_client with Prometheus component."""
     await async_setup_component(hass, prometheus.DOMAIN, {prometheus.DOMAIN: {}})
 
-    await setup.async_setup_component(
-        hass, sensor.DOMAIN, {"sensor": [{"platform": "demo"}]}
-    )
+    await async_setup_component(hass, sensor.DOMAIN, {"sensor": [{"platform": "demo"}]})
 
-    await setup.async_setup_component(
+    await async_setup_component(
         hass, climate.DOMAIN, {"climate": [{"platform": "demo"}]}
     )
     await hass.async_block_till_done()
+
+    await async_setup_component(
+        hass, humidifier.DOMAIN, {"humidifier": [{"platform": "demo"}]}
+    )
 
     sensor1 = DemoSensor(
         None, "Television Energy", 74, None, ENERGY_KILO_WATT_HOUR, None
@@ -48,7 +58,11 @@ async def prometheus_client(loop, hass, hass_client):
     )
     sensor2.hass = hass
     sensor2.entity_id = "sensor.radio_energy"
-    await sensor2.async_update_ha_state()
+    with mock.patch(
+        "homeassistant.util.dt.utcnow",
+        return_value=datetime.datetime(1970, 1, 2, tzinfo=dt_util.UTC),
+    ):
+        await sensor2.async_update_ha_state()
 
     sensor3 = DemoSensor(
         None, "Electricity price", 0.123, None, f"SEK/{ENERGY_KILO_WATT_HOUR}", None
@@ -77,9 +91,10 @@ async def prometheus_client(loop, hass, hass_client):
     return await hass_client()
 
 
-async def test_view(prometheus_client):  # pylint: disable=redefined-outer-name
+async def test_view(hass, hass_client):
     """Test prometheus metrics view."""
-    resp = await prometheus_client.get(prometheus.API_ENDPOINT)
+    client = await prometheus_client(hass, hass_client)
+    resp = await client.get(prometheus.API_ENDPOINT)
 
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/plain"
@@ -113,6 +128,31 @@ async def test_view(prometheus_client):  # pylint: disable=redefined-outer-name
     )
 
     assert (
+        'humidifier_target_humidity_percent{domain="humidifier",'
+        'entity="humidifier.humidifier",'
+        'friendly_name="Humidifier"} 68.0' in body
+    )
+
+    assert (
+        'humidifier_state{domain="humidifier",'
+        'entity="humidifier.dehumidifier",'
+        'friendly_name="Dehumidifier"} 1.0' in body
+    )
+
+    assert (
+        'humidifier_mode{domain="humidifier",'
+        'entity="humidifier.hygrostat",'
+        'friendly_name="Hygrostat",'
+        'mode="home"} 1.0' in body
+    )
+    assert (
+        'humidifier_mode{domain="humidifier",'
+        'entity="humidifier.hygrostat",'
+        'friendly_name="Hygrostat",'
+        'mode="eco"} 0.0' in body
+    )
+
+    assert (
         'humidity_percent{domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 54.0' in body
@@ -128,6 +168,18 @@ async def test_view(prometheus_client):  # pylint: disable=redefined-outer-name
         'power_kwh{domain="sensor",'
         'entity="sensor.radio_energy",'
         'friendly_name="Radio Energy"} 14.0' in body
+    )
+
+    assert (
+        'entity_available{domain="sensor",'
+        'entity="sensor.radio_energy",'
+        'friendly_name="Radio Energy"} 1.0' in body
+    )
+
+    assert (
+        'last_updated_time_seconds{domain="sensor",'
+        'entity="sensor.radio_energy",'
+        'friendly_name="Radio Energy"} 86400.0' in body
     )
 
     assert (
@@ -200,9 +252,6 @@ async def test_full_config(hass, mock_client):
     await hass.async_block_till_done()
     assert hass.bus.listen.called
     assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
-
-
-FilterTest = namedtuple("FilterTest", "id should_pass")
 
 
 def make_event(entity_id):

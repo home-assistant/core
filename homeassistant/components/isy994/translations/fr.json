@@ -1,11 +1,25 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Echec de connexion",
+            "invalid_auth": "Autentification non valide",
+            "invalid_host": "L'entr\u00e9e d'h\u00f4te n'\u00e9tait pas au format URL complet, par exemple http://192.168.10.100:80",
+            "unknown": "Erreur inattendue"
+        },
         "flow_title": "Appareils universels ISY994 {name} ( {host} )",
         "step": {
             "user": {
                 "data": {
-                    "host": "URL"
-                }
+                    "host": "URL",
+                    "password": "Mot de passe",
+                    "tls": "La version TLS du contr\u00f4leur ISY.",
+                    "username": "Username"
+                },
+                "description": "L'entr\u00e9e d'h\u00f4te doit \u00eatre au format URL complet, par exemple, http://192.168.10.100:80",
+                "title": "Connect\u00e9 \u00e0 votre ISY994"
             }
         }
     },
@@ -13,9 +27,14 @@
         "step": {
             "init": {
                 "data": {
-                    "ignore_string": "Ignorer la cha\u00eene"
-                }
+                    "ignore_string": "Ignorer la cha\u00eene",
+                    "restore_light_state": "Restaurer la luminosit\u00e9",
+                    "sensor_string": "Node Sensor String"
+                },
+                "description": "D\u00e9finir les options pour l'int\u00e9gration ISY: \n \u2022 Node Sensor String: tout p\u00e9riph\u00e9rique ou dossier contenant \u00abNode Sensor String\u00bb dans le nom sera trait\u00e9 comme un capteur ou un capteur binaire. \n \u2022 Ignore String : tout p\u00e9riph\u00e9rique avec \u00abIgnore String\u00bb dans le nom sera ignor\u00e9. \n \u2022 Variable Sensor String : toute variable contenant \u00abVariable Sensor String\u00bb sera ajout\u00e9e en tant que capteur. \n \u2022 Restaurer la luminosit\u00e9 : si cette option est activ\u00e9e, la luminosit\u00e9 pr\u00e9c\u00e9dente sera restaur\u00e9e lors de l'allumage d'une lumi\u00e8re au lieu de la fonction int\u00e9gr\u00e9e de l'appareil.",
+                "title": "Options ISY994"
             }
         }
-    }
+    },
+    "title": "Universal Devices ISY994"
 }

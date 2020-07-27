@@ -10,6 +10,7 @@
             "incorrect_username": "Nome de Utilizador incorreto",
             "incorrect_username_or_password": "Nome de utilizador ou palavra passe incorretos"
         },
+        "flow_title": "Huawei LTE: {name}",
         "step": {
             "user": {
                 "data": {

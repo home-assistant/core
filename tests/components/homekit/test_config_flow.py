@@ -1,11 +1,10 @@
 """Test the HomeKit config flow."""
-from asynctest import patch
-
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.homekit.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_PORT
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -18,6 +17,7 @@ def _mock_config_entry_with_options_populated():
             "filter": {
                 "include_domains": [
                     "fan",
+                    "humidifier",
                     "vacuum",
                     "media_player",
                     "climate",
@@ -134,7 +134,8 @@ async def test_options_flow_advanced(hass):
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"include_domains": ["fan", "vacuum", "climate"]},
+        result["flow_id"],
+        user_input={"include_domains": ["fan", "vacuum", "climate", "humidifier"]},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -157,7 +158,7 @@ async def test_options_flow_advanced(hass):
         "filter": {
             "exclude_domains": [],
             "exclude_entities": ["climate.old"],
-            "include_domains": ["fan", "vacuum", "climate"],
+            "include_domains": ["fan", "vacuum", "climate", "humidifier"],
             "include_entities": [],
         },
         "safe_mode": True,
@@ -332,6 +333,7 @@ async def test_options_flow_blocked_when_from_yaml(hass):
             "filter": {
                 "include_domains": [
                     "fan",
+                    "humidifier",
                     "vacuum",
                     "media_player",
                     "climate",

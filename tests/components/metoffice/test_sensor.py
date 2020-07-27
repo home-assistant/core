@@ -23,9 +23,8 @@ from tests.common import MockConfigEntry, load_fixture
     "datapoint.Forecast.datetime.datetime",
     Mock(now=Mock(return_value=datetime(2020, 4, 25, 12, tzinfo=timezone.utc))),
 )
-async def test_one_sensor_site_running(hass, requests_mock):
+async def test_one_sensor_site_running(hass, requests_mock, legacy_patchable_time):
     """Test the Met Office sensor platform."""
-
     # all metoffice test data encapsulated in here
     mock_json = json.loads(load_fixture("metoffice.json"))
     all_sites = json.dumps(mock_json["all_sites"])
@@ -62,7 +61,7 @@ async def test_one_sensor_site_running(hass, requests_mock):
     "datapoint.Forecast.datetime.datetime",
     Mock(now=Mock(return_value=datetime(2020, 4, 25, 12, tzinfo=timezone.utc))),
 )
-async def test_two_sensor_sites_running(hass, requests_mock):
+async def test_two_sensor_sites_running(hass, requests_mock, legacy_patchable_time):
     """Test we handle two sets of sensors running for two different sites."""
 
     # all metoffice test data encapsulated in here
