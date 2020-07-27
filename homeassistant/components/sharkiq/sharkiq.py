@@ -30,7 +30,6 @@ from .const import DOMAIN, SHARK
 _LOGGER = logging.getLogger(__name__)
 
 # Supported features
-# TODO: Add support for mapping
 SUPPORT_SHARKIQ = (
     SUPPORT_BATTERY
     | SUPPORT_FAN_SPEED
@@ -56,7 +55,7 @@ FAN_SPEEDS_MAP = {
     "Max": PowerModes.MAX,
 }
 
-STATE_RECHARGING_TO_RESUME = "recharging_to_resume"  # TODO: Add strings for this
+STATE_RECHARGING_TO_RESUME = "recharging_to_resume"
 
 # Attributes to expose
 ATTR_RECHARGE_RESUME = "recharge_and_resume"
@@ -69,6 +68,11 @@ class SharkVacuumEntity(StateVacuumEntity):
     def __init__(self, sharkiq: SharkIqVacuum):
         """Create a new SharkVacuumEntity."""
         self.sharkiq = sharkiq
+
+    @property
+    def should_poll(self):
+        """Device updates via polling Ayla API."""
+        return True
 
     def clean_spot(self, **kwargs):
         """Clean a spot. Not yet implemented."""
@@ -93,8 +97,7 @@ class SharkVacuumEntity(StateVacuumEntity):
         """Vacuum model number."""
         if self.sharkiq.vac_model_number:
             return self.sharkiq.vac_model_number
-        else:
-            return self.sharkiq.oem_model_number
+        return self.sharkiq.oem_model_number
 
     @property
     def device_info(self) -> Dict:
@@ -129,8 +132,7 @@ class SharkVacuumEntity(StateVacuumEntity):
             and not self.is_docked
         ):
             return self.sharkiq.get_property_value(Properties.ERROR_CODE)
-        else:
-            return None
+        return None
 
     @property
     def operating_mode(self) -> Optional[str]:
@@ -148,12 +150,11 @@ class SharkVacuumEntity(StateVacuumEntity):
         """Get the current vacuum state."""
         if self.recharging_to_resume:
             return STATE_RECHARGING_TO_RESUME
-        elif self.is_docked:
+        if self.is_docked:
             return STATE_DOCKED
-        elif self.error_code:
+        if self.error_code:
             return STATE_ERROR
-        else:
-            return self.operating_mode
+        return self.operating_mode
 
     @property
     def unique_id(self) -> str:

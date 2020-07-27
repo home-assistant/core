@@ -19,5 +19,5 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     devices = await ayla_api.async_get_devices()  # type: List[SharkIqVacuum]
     device_names = ", ".join([d.name for d in devices])
-    _LOGGER.debug("Found % Shark IQ device(s): %", len(devices), device_names)
+    _LOGGER.debug("Found %d Shark IQ device(s): %s", len(devices), device_names)
     async_add_entities([SharkVacuumEntity(d) for d in devices], True)

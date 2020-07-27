@@ -4,6 +4,7 @@ import asyncio
 import logging
 
 import async_timeout
+from datetime import timedelta
 from sharkiqpy import AylaApi, SharkIqAuthError, get_ayla_api
 import voluptuous as vol
 
@@ -15,12 +16,11 @@ from .const import COMPONENTS, DOMAIN, SHARKIQ_SESSION
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
+SCAN_INTERVAL = timedelta(seconds=5)
 
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-    pass
 
 
 async def async_setup(hass, config):

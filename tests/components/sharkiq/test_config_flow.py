@@ -17,7 +17,7 @@ TEST_PASSWORD = "test-password"
 def _create_mocked_ayla(connect=None):
     """Create a mocked AylaApi object."""
     mocked_ayla = MagicMock()
-    type(mocked_ayla).connect = MagicMock(side_effect=connect)
+    type(mocked_ayla).connect = PropertyMock(side_effect=connect)
     return mocked_ayla
 
 
@@ -40,7 +40,7 @@ async def test_form(hass):
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: TEST_USERNAME, CONF_PASSWORD: TEST_PASSWORD,},
+            {CONF_USERNAME: TEST_USERNAME, CONF_PASSWORD: TEST_PASSWORD},
         )
 
     assert result2["type"] == "create_entry"
@@ -64,7 +64,7 @@ async def test_form_invalid_auth(hass):
     with patch("sharkiqpy.get_ayla_api", return_value=mocked_ayla):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: TEST_USERNAME, CONF_PASSWORD: TEST_PASSWORD,},
+            {CONF_USERNAME: TEST_USERNAME, CONF_PASSWORD: TEST_PASSWORD},
         )
 
     assert result2["type"] == "form"
@@ -81,7 +81,7 @@ async def test_form_cannot_connect(hass):
     with patch("sharkiqpy.get_ayla_api", return_value=mocked_ayla):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: TEST_USERNAME, CONF_PASSWORD: TEST_PASSWORD,},
+            {CONF_USERNAME: TEST_USERNAME, CONF_PASSWORD: TEST_PASSWORD},
         )
 
     assert result2["type"] == "form"
