@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONTENT_TYPE_JSON,
     DATA_RATE_MEGABYTES_PER_SECOND,
+    CONF_COUNT,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -30,12 +31,14 @@ DEFAULT_PORT = 8000
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 
-SENSOR_TYPES = {"speed": ["speed", "Speed", DATA_RATE_MEGABYTES_PER_SECOND]}
+SENSOR_TYPES = {"speed": ["speed", "Speed", DATA_RATE_MEGABYTES_PER_SECOND],
+                "active": ["active", "Active", CONF_COUNT],
+                "queue": ["queue", "Queue", CONF_COUNT]}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_MONITORED_VARIABLES, default=["speed"]): vol.All(
+        vol.Optional(CONF_MONITORED_VARIABLES, default=["speed", "active", "queue"]): vol.All(
             cv.ensure_list, [vol.In(SENSOR_TYPES)]
         ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
