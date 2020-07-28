@@ -6,7 +6,12 @@ import speedtest
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS,
+    CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_STARTED,
+)
+from homeassistant.core import CoreState
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -70,10 +75,25 @@ async def async_setup_entry(hass, config_entry):
     coordinator = SpeedTestDataCoordinator(hass, config_entry)
     await coordinator.async_setup()
 
-    if not config_entry.options[CONF_MANUAL]:
+    async def _enable_scheduled_speedtests(*_):
+        """Activate the data update coordinator."""
+        coordinator.update_interval = timedelta(
+            minutes=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        )
         await coordinator.async_refresh()
-        if not coordinator.last_update_success:
-            raise ConfigEntryNotReady
+
+    if not config_entry.options[CONF_MANUAL]:
+        if hass.state == CoreState.running:
+            await _enable_scheduled_speedtests()
+            if not coordinator.last_update_success:
+                raise ConfigEntryNotReady
+        else:
+            # Running a speed test during startup can prevent
+            # integrations from being able to setup because it
+            # can saturate the network interface.
+            hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STARTED, _enable_scheduled_speedtests
+            )
 
     hass.data[DOMAIN] = coordinator
 
@@ -107,12 +127,6 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         super().__init__(
             self.hass, _LOGGER, name=DOMAIN, update_method=self.async_update,
         )
-        if not self.config_entry.options.get(CONF_MANUAL):
-            self.update_interval = timedelta(
-                minutes=self.config_entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                )
-            )
 
     def update_servers(self):
         """Update list of test servers."""
