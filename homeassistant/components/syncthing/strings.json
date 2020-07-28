@@ -6,8 +6,8 @@
         "data": {
           "title": "Setup Syncthing integration",
           "name": "Name",
-          "host": "[%key:common::config_flow::data::host%]",
-          "use_https": "Use HTTPS",
+          "url": "URL",
+          "verify_ssl": "Verify SSL",
           "token": "Token",
           "port": "[%key:common::config_flow::data::port%]"
         }

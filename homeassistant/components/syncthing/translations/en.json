@@ -14,10 +14,10 @@
                 "title": "Setup Syncthing integration",
                 "data": {
                     "name": "Name",
-                    "host": "Host",
+                    "url": "URL",
                     "token": "Token",
                     "port": "Port",
-                    "use_https": "Use HTTPS"
+                    "verify_ssl": "Verify SSL"
                 }
             }
         }

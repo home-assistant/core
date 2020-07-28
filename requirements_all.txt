@@ -232,6 +232,9 @@ aioshelly==0.6.2
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
 
+# homeassistant.components.syncthing
+aiosyncthing==0.2.2
+
 # homeassistant.components.unifi
 aiounifi==26
 
@@ -2185,9 +2188,6 @@ surepy==0.6.0
 
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.1.0
-
-# homeassistant.components.syncthing
-syncthing==2.4.2
 
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
