@@ -10,6 +10,7 @@ from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Cam
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import TemplateError
 
 from . import CONF_EXTRA_ARGUMENTS, CONF_INPUT, DATA_FFMPEG
 
@@ -20,7 +21,7 @@ DEFAULT_ARGUMENTS = "-pred 1"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_INPUT): cv.string,
+        vol.Required(CONF_INPUT): cv.template,
         vol.Optional(CONF_EXTRA_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
@@ -42,6 +43,7 @@ class FFmpegCamera(Camera):
         self._manager = hass.data[DATA_FFMPEG]
         self._name = config.get(CONF_NAME)
         self._input = config.get(CONF_INPUT)
+        self._input.hass = hass
         self._extra_arguments = config.get(CONF_EXTRA_ARGUMENTS)
 
     @property
@@ -51,6 +53,10 @@ class FFmpegCamera(Camera):
 
     async def stream_source(self):
         """Return the stream source."""
+        try:
+            self._input = self._input.async_render()
+         except TemplateError as exc:
+            _LOGGER.error("Error parsing template %s: %s", self._input, exc)
         return self._input.split(" ")[-1]
 
     async def async_camera_image(self):
