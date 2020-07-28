@@ -42,10 +42,10 @@ SERVICE_SCHEMAS = {
 
 
 @callback
-def async_load_services(hass):
+def async_load_services(hass: HomeAssistantType):
     """Load the services exposed by the Flo component."""
 
-    async def async_set_mode_home(hass: HomeAssistantType, service):
+    async def async_set_mode_home(service):
         """Set the Flo location to home mode."""
         location_id: str = service.data.get(ATTR_LOCATION_ID)
         api: API = hass.data[FLO_DOMAIN][CLIENT]
@@ -58,7 +58,7 @@ def async_load_services(hass):
         schema=SERVICE_SCHEMAS[LOCATION_ID_SERVICE],
     )
 
-    async def async_set_mode_away(hass: HomeAssistantType, service):
+    async def async_set_mode_away(service):
         """Set the Flo location to away mode."""
         location_id: str = service.data.get(ATTR_LOCATION_ID)
         api: API = hass.data[FLO_DOMAIN][CLIENT]
@@ -67,11 +67,11 @@ def async_load_services(hass):
     hass.helpers.service.async_register_admin_service(
         FLO_DOMAIN,
         SERVICE_SET_AWAY_MODE,
-        async_set_mode_home,
+        async_set_mode_away,
         schema=SERVICE_SCHEMAS[LOCATION_ID_SERVICE],
     )
 
-    async def async_set_mode_sleep(hass: HomeAssistantType, service):
+    async def async_set_mode_sleep(service):
         """Set the Flo location to sleep mode."""
         location_id: str = service.data.get(ATTR_LOCATION_ID)
         sleep_minutes: int = service.data.get(ATTR_SLEEP_MINUTES)
@@ -82,11 +82,11 @@ def async_load_services(hass):
     hass.helpers.service.async_register_admin_service(
         FLO_DOMAIN,
         SERVICE_SET_SLEEP_MODE,
-        async_set_mode_home,
+        async_set_mode_sleep,
         schema=SERVICE_SCHEMAS[SERVICE_SET_SLEEP_MODE],
     )
 
-    async def async_run_health_test(hass: HomeAssistantType, service):
+    async def async_run_health_test(service):
         """Run a Flo device health test."""
         device_id: str = service.data.get(ATTR_DEVICE_ID)
         api: API = hass.data[FLO_DOMAIN][CLIENT]
@@ -95,7 +95,7 @@ def async_load_services(hass):
     hass.helpers.service.async_register_admin_service(
         FLO_DOMAIN,
         SERVICE_RUN_HEALTH_TEST,
-        async_set_mode_home,
+        async_run_health_test,
         schema=SERVICE_SCHEMAS[DEVICE_ID_SERVICE],
     )
 
