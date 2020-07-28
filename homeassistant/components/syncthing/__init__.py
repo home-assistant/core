@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         loop=hass.loop,
     )
 
-    listen_task = hass.async_run_job(listen, hass, client, name)
+    listen_task = hass.loop.create_task(listen(hass, client, name))
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -65,12 +65,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     }
 
     async def cancel_listen_task(_):
-        await listen_task.cancel()
+        listen_task.cancel()
+        await hass.data[DOMAIN][name]["client"].close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cancel_listen_task)
-
-    if not entry.unique_id:
-        hass.config_entries.async_update_entry(entry, unique_id=name)
 
     return True
 
@@ -87,7 +85,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     if unload_ok:
         name = entry.data[CONF_NAME]
-        await hass.data[DOMAIN][name]["listen_task"].cancel()
+        hass.data[DOMAIN][name]["listen_task"].cancel()
         await hass.data[DOMAIN][name]["client"].close()
         hass.data[DOMAIN].pop(name)
 
