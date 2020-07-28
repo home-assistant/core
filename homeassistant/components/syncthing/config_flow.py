@@ -2,11 +2,10 @@
 import logging
 
 import aiosyncthing
-import requests
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_URL, HTTP_FORBIDDEN
+from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_URL
 
 from .const import (
     CONF_VERIFY_SSL,
@@ -41,14 +40,12 @@ async def validate_input(hass: core.HomeAssistant, data):
             verify_ssl=data[CONF_VERIFY_SSL],
             loop=hass.loop,
         ) as client:
-            await client.system.ping()
-    except aiosyncthing.exceptions.PingError as err:
-        if type(err.__cause__) is requests.exceptions.HTTPError:
-            if err.__cause__.response.status_code == HTTP_FORBIDDEN:
-                raise InvalidAuth
-        raise CannotConnect
-
-    return {"title": f"{data[CONF_NAME]} ({data[CONF_URL]})"}
+            await client.system.config()
+            return {"title": f"{data[CONF_NAME]} ({data[CONF_URL]})"}
+    except aiosyncthing.exceptions.UnauthorizedError as error:
+        raise InvalidAuth from error
+    except Exception as error:
+        raise CannotConnect from error
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
