@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONTENT_TYPE_JSON,
-    DATA_RATE_MEGABYTES_PER_SECOND
+    DATA_RATE_MEGABYTES_PER_SECOND,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
