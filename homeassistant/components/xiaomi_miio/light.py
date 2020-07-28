@@ -14,7 +14,7 @@ from miio import (  # pylint: disable=import-error
     PhilipsEyecare,
     PhilipsMoonlight,
 )
-from miio.gateway import GatewayException
+from miio.gateway import GatewayException, GATEWAY_MODEL_AC_V1, GATEWAY_MODEL_AC_V2, GATEWAY_MODEL_AC_V3
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -132,9 +132,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
         gateway = hass.data[DOMAIN][config_entry.entry_id]
         # Gateway light
-        entities.append(
-            XiaomiGatewayLight(gateway, config_entry.title, config_entry.unique_id)
-        )
+        if gateway.model not in [GATEWAY_MODEL_AC_V1, GATEWAY_MODEL_AC_V2, GATEWAY_MODEL_AC_V3]:
+            entities.append(
+                XiaomiGatewayLight(gateway, config_entry.title, config_entry.unique_id)
+            )
 
     async_add_entities(entities, update_before_add=True)
 

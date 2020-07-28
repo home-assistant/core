@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import logging
 
 from miio import AirQualityMonitor, DeviceException  # pylint: disable=import-error
-from miio.gateway import DeviceType, GatewayException
+from miio.gateway import DeviceType, GatewayException, GATEWAY_MODEL_AC_V1, GATEWAY_MODEL_AC_V2, GATEWAY_MODEL_AC_V3
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -82,11 +82,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
         gateway = hass.data[DOMAIN][config_entry.entry_id]
         # Gateway illuminance sensor
-        entities.append(
-            XiaomiGatewayIlluminanceSensor(
-                gateway, config_entry.title, config_entry.unique_id
+        if gateway.model not in [GATEWAY_MODEL_AC_V1, GATEWAY_MODEL_AC_V2, GATEWAY_MODEL_AC_V3]:
+            entities.append(
+                XiaomiGatewayIlluminanceSensor(
+                    gateway, config_entry.title, config_entry.unique_id
+                )
             )
-        )
         # Gateway sub devices
         sub_devices = gateway.devices
         for sub_device in sub_devices.values():
