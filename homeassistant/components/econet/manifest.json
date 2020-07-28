@@ -2,7 +2,7 @@
   "domain": "econet",
   "name": "Rheem EcoNet Products",
   "documentation": "https://www.home-assistant.io/integrations/econet",
-  "requirements": ["pyeconet==0.1.3b2"],
+  "requirements": ["pyeconet==0.1.3b6"],
   "codeowners": [],
   "config_flow": true
 }
