@@ -710,6 +710,11 @@ omit =
     homeassistant/components/rest/binary_sensor.py
     homeassistant/components/rest/notify.py
     homeassistant/components/rest/switch.py
+    homeassistant/components/rfxtrx/binary_sensor.py
+    homeassistant/components/rfxtrx/cover.py
+    homeassistant/components/rfxtrx/light.py
+    homeassistant/components/rfxtrx/sensor.py
+    homeassistant/components/rfxtrx/switch.py
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
     homeassistant/components/rocketchat/notify.py
