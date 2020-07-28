@@ -137,7 +137,7 @@ class LdapAuthProvider(AuthProvider):
             conn.open(read_server_info=False)
             # Upgrade connection with START_TLS if requested.
             if encryption == CONF_ENCRYPTION_STARTTLS:
-                conn.starttls(read_server_info=False)
+                conn.start_tls(read_server_info=False)
             conn.bind()
 
             _LOGGER.debug("Server info: %s", server.info)
