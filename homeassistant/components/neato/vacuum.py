@@ -264,12 +264,13 @@ class NeatoConnectedVacuum(StateVacuumEntity):
                     maps["name"],
                     robot_boundaries,
                 )
-                self._robot_boundaries += robot_boundaries["data"]["boundaries"]
-                _LOGGER.debug(
-                    "List of boundaries for '%s': %s",
-                    self.entity_id,
-                    self._robot_boundaries,
-                )
+                if "boundaries" in robot_boundaries["data"]:
+                    self._robot_boundaries += robot_boundaries["data"]["boundaries"]
+                    _LOGGER.debug(
+                        "List of boundaries for '%s': %s",
+                        self.entity_id,
+                        self._robot_boundaries,
+                    )
 
     @property
     def name(self):

@@ -372,18 +372,18 @@ class Light(BaseLight, ZhaEntity):
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
-        await self.async_accept_signal(
+        self.async_accept_signal(
             self._on_off_channel, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
         if self._level_channel:
-            await self.async_accept_signal(
+            self.async_accept_signal(
                 self._level_channel, SIGNAL_SET_LEVEL, self.set_level
             )
         refresh_interval = random.randint(*[x * 60 for x in self._REFRESH_INTERVAL])
         self._cancel_refresh_handle = async_track_time_interval(
             self.hass, self._refresh, timedelta(seconds=refresh_interval)
         )
-        await self.async_accept_signal(
+        self.async_accept_signal(
             None,
             SIGNAL_LIGHT_GROUP_STATE_CHANGED,
             self._maybe_force_refresh,

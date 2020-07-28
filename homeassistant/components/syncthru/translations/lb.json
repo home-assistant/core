@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "invalid_url": "Ong\u00eblteg URL"
+        },
+        "flow_title": "Samsung SyncThru Printer: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Numm",
+                    "url": "Web interface URL"
+                }
+            }
+        }
+    }
+}

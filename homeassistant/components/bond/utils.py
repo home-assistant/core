@@ -2,7 +2,7 @@
 
 from typing import List, Optional
 
-from bond import Actions, Bond
+from bond_api import Action, Bond
 
 
 class BondDevice:
@@ -24,21 +24,20 @@ class BondDevice:
         """Get the type of this device."""
         return self._attrs["type"]
 
+    @property
+    def trust_state(self) -> bool:
+        """Check if Trust State is turned on."""
+        return self.props.get("trust_state", False)
+
     def supports_speed(self) -> bool:
         """Return True if this device supports any of the speed related commands."""
         actions: List[str] = self._attrs["actions"]
-        return bool([action for action in actions if action in [Actions.SET_SPEED]])
+        return bool([action for action in actions if action in [Action.SET_SPEED]])
 
     def supports_direction(self) -> bool:
         """Return True if this device supports any of the direction related commands."""
         actions: List[str] = self._attrs["actions"]
-        return bool(
-            [
-                action
-                for action in actions
-                if action in [Actions.SET_DIRECTION, Actions.TOGGLE_DIRECTION]
-            ]
-        )
+        return bool([action for action in actions if action in [Action.SET_DIRECTION]])
 
     def supports_light(self) -> bool:
         """Return True if this device supports any of the light related commands."""
@@ -47,7 +46,7 @@ class BondDevice:
             [
                 action
                 for action in actions
-                if action in [Actions.TURN_LIGHT_ON, Actions.TOGGLE_LIGHT]
+                if action in [Action.TURN_LIGHT_ON, Action.TURN_LIGHT_OFF]
             ]
         )
 
@@ -61,17 +60,17 @@ class BondHub:
         self._version: Optional[dict] = None
         self._devices: Optional[List[BondDevice]] = None
 
-    def setup(self):
+    async def setup(self):
         """Read hub version information."""
-        self._version = self.bond.getVersion()
+        self._version = await self.bond.version()
 
         # Fetch all available devices using Bond API.
-        device_ids = self.bond.getDeviceIds()
+        device_ids = await self.bond.devices()
         self._devices = [
             BondDevice(
                 device_id,
-                self.bond.getDevice(device_id),
-                self.bond.getProperties(device_id),
+                await self.bond.device(device_id),
+                await self.bond.device_properties(device_id),
             )
             for device_id in device_ids
         ]
@@ -95,3 +94,8 @@ class BondHub:
     def devices(self) -> List[BondDevice]:
         """Return a list of all devices controlled by this hub."""
         return self._devices
+
+    @property
+    def is_bridge(self) -> bool:
+        """Return if the Bond is a Bond Bridge. If False, it means that it is a Smart by Bond product. Assumes that it is if the model is not available."""
+        return self._version.get("model", "BD-").startswith("BD-")

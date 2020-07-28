@@ -7,6 +7,7 @@ import aiohttp
 from defusedxml import ElementTree
 from netdisco import ssdp, util
 
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.generated.ssdp import SSDP
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -33,12 +34,12 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass, config):
     """Set up the SSDP integration."""
 
-    async def initialize():
+    async def initialize(_):
         scanner = Scanner(hass)
         await scanner.async_scan(None)
         async_track_time_interval(hass, scanner.async_scan, SCAN_INTERVAL)
 
-    hass.loop.create_task(initialize())
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, initialize)
 
     return True
 

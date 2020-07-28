@@ -297,8 +297,11 @@ def gather_constraints():
     return (
         "\n".join(
             sorted(
-                core_requirements()
-                + list(gather_recursive_requirements("default_config"))
+                {
+                    *core_requirements(),
+                    *gather_recursive_requirements("default_config"),
+                    *gather_recursive_requirements("mqtt"),
+                }
             )
             + [""]
         )

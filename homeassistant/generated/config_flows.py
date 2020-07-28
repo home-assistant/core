@@ -7,6 +7,7 @@ To update, run python3 -m script.hassfest
 
 FLOWS = [
     "abode",
+    "accuweather",
     "acmeda",
     "adguard",
     "agent_dvr",
@@ -21,6 +22,7 @@ FLOWS = [
     "avri",
     "awair",
     "axis",
+    "azure_devops",
     "blebox",
     "blink",
     "bond",
@@ -183,10 +185,12 @@ FLOWS = [
     "vesync",
     "vilfo",
     "vizio",
+    "volumio",
     "wemo",
     "wiffi",
     "withings",
     "wled",
+    "wolflink",
     "xiaomi_aqara",
     "xiaomi_miio",
     "zerproc",

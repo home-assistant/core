@@ -1,0 +1,17 @@
+{
+    "config": {
+        "step": {
+            "reauth": {
+                "title": "Reautenticaci\u00f3n"
+            },
+            "user": {
+                "data": {
+                    "organization": "Organizaci\u00f3n",
+                    "project": "Proyecto"
+                },
+                "title": "A\u00f1adir Proyecto Azure DevOps"
+            }
+        }
+    },
+    "title": "Azure DevOps"
+}
