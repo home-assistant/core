@@ -15,13 +15,11 @@ from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
 
 # Configuration labels
-CONF_ACTIVE_DIRECTORY = "active_directory"
 CONF_ALLOWED_GROUP_DNS = "allowed_group_dns"
 CONF_BASE_DN = "base_dn"
 CONF_BIND_AS_USER = "bind_as_user"
 CONF_BIND_DN = "bind_dn"
 CONF_BIND_PASSWORD = "bind_password"
-CONF_BIND_USERNAME = "bind_username"
 CONF_CA_CERTS_FILE = "ca_certs_file"
 CONF_CERT_VALIDATION = "validate_certificates"
 CONF_ENCRYPTION = "encryption"
@@ -34,7 +32,6 @@ CONF_TIMEOUT = "timeout"
 CONF_USERNAME_ATTR = "username_attribute"
 
 # Default values
-DEFAULT_CONF_ACTIVE_DIRECTORY = False
 DEFAULT_CONF_BIND_AS_USER = True
 DEFAULT_CONF_CERT_VALIDATION = True
 DEFAULT_CONF_PORT = 636
@@ -43,15 +40,11 @@ DEFAULT_CONF_USERNAME_ATTR = "uid"
 
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
     {
-        vol.Required(
-            CONF_ACTIVE_DIRECTORY, default=DEFAULT_CONF_ACTIVE_DIRECTORY
-        ): bool,
         vol.Optional(CONF_ALLOWED_GROUP_DNS, default=[]): vol.All(
             cv.ensure_list, [str]
         ),
         vol.Required(CONF_BASE_DN): str,
         vol.Required(CONF_BIND_AS_USER, default=DEFAULT_CONF_BIND_AS_USER): bool,
-        vol.Optional(CONF_BIND_USERNAME): str,
         vol.Optional(CONF_BIND_DN): str,
         vol.Optional(CONF_BIND_PASSWORD): str,
         vol.Optional(CONF_CA_CERTS_FILE, default=None): str,
@@ -110,35 +103,24 @@ class LdapAuthProvider(AuthProvider):
                 get_info=ldap3.ALL,
             )
 
-            is_ad = self.config[CONF_ACTIVE_DIRECTORY]
             base_dn = self.config[CONF_BASE_DN]
-            username_attr = (
-                "sAMAccountName" if is_ad else self.config[CONF_USERNAME_ATTR]
-            )
+            username_attr = self.config[CONF_USERNAME_ATTR]
             bind_as_user = self.config[CONF_BIND_AS_USER]
             bind_password = (
                 password if bind_as_user else self.config[CONF_BIND_PASSWORD]
             )
 
+            bind_dn = (
+                f"{username_attr}={username},{base_dn}"
+                if bind_as_user
+                else self.config[CONF_BIND_DN]
+            )
+            _LOGGER.debug("Binding as %s", bind_dn)
+
             # LDAP bind
-            if is_ad:
-                conn = ldap3.Connection(
-                    server,
-                    user=self.config[CONF_BIND_USERNAME],
-                    password=bind_password,
-                    authentication=ldap3.NTLM,
-                    auto_bind=False,
-                )
-            else:
-                bind_dn = (
-                    f"{username_attr}={username},{base_dn}"
-                    if bind_as_user
-                    else self.config[CONF_BIND_DN]
-                )
-                _LOGGER.debug("Binding as %s", bind_dn)
-                conn = ldap3.Connection(
-                    server, user=bind_dn, password=bind_password, auto_bind=False,
-                )
+            conn = ldap3.Connection(
+                server, user=bind_dn, password=bind_password, auto_bind=False,
+            )
             conn.open(read_server_info=False)
             # Upgrade connection with START_TLS if requested.
             if encryption == CONF_ENCRYPTION_STARTTLS:
@@ -150,7 +132,7 @@ class LdapAuthProvider(AuthProvider):
 
             # Query the directory server for the connecting user
             if not conn.search(
-                self.config[CONF_BASE_DN],
+                base_dn,
                 f"(&({username_attr}={username})(objectclass=person))",
                 size_limit=1,
                 time_limit=self.config[CONF_TIMEOUT],
