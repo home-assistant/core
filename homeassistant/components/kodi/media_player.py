@@ -1,4 +1,5 @@
 """Support for interfacing with the XBMC/Kodi JSON-RPC API."""
+import asyncio
 from collections import OrderedDict
 from datetime import timedelta
 from functools import wraps
@@ -444,7 +445,7 @@ class KodiDevice(MediaPlayerEntity):
         if not self._enable_websocket:
             return
 
-        self.hass.loop.create_task(self.async_ws_connect())
+        asyncio.create_task(self.async_ws_connect())
 
         self.async_on_remove(
             async_track_time_interval(
