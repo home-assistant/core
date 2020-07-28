@@ -72,6 +72,7 @@ class SmappeeFlowHandler(
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         user_input[CONF_SERIALNUMBER] = self.context.get(CONF_SERIALNUMBER)
 
+        # Attempt to make a connection to the local device
         if user_input.get(CONF_IP_ADDRESS) is not None or not prepare:
             smappee_api = api.api.SmappeeLocalApi(ip=user_input[CONF_IP_ADDRESS])
             try:
@@ -132,13 +133,13 @@ class SmappeeFlowHandler(
                 errors=errors or {},
             )
 
-        # Show LOCAL/CLOUD option or prepare zeroconf discovery flow
         if user_input is None and not prepare:
             # Show environment form with CLOUD or LOCAL option
             return show_environment_setup_form(self)
 
         # Environment chosen, request additional host information for LOCAL or OAuth2 flow for CLOUD
         if user_input is not None and "environment" in user_input:
+            # Ask for host detail
             if user_input["environment"] == ENV_LOCAL:
                 # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
                 self.context.update({"environment": ENV_LOCAL})
@@ -149,8 +150,8 @@ class SmappeeFlowHandler(
             self.context.update({"environment": ENV_CLOUD})
             return await self.async_step_pick_implementation()
 
+        # LOCAL flow, host still needs to be resolved to serialnumber
         user_input[CONF_IP_ADDRESS] = user_input["host"]
-
         if user_input.get(CONF_IP_ADDRESS) is not None or not prepare:
             smappee_api = api.api.SmappeeLocalApi(ip=user_input[CONF_IP_ADDRESS])
             try:
