@@ -6,6 +6,7 @@ from homeassistant.components.smappee.const import (
     CONF_SERIALNUMBER,
     DOMAIN,
     ENV_CLOUD,
+    ENV_LOCAL,
     TOKEN_URL,
 )
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -27,6 +28,24 @@ async def test_show_user_form(hass):
 
     assert result["step_id"] == "user"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+
+async def test_show_user_host_form(hass):
+    """Test that the host form is served after choosing the local option."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER},
+    )
+    assert result["step_id"] == "user"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"environment": ENV_LOCAL}
+    )
+
+    assert result["step_id"] == "user"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
 async def test_show_zeroconf_connection_error_form(hass):
