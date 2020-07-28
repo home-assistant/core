@@ -1,0 +1,10 @@
+{
+  "domain": "huisbaasje",
+  "name": "Huisbaasje",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/huisbaasje",
+  "requirements": [
+    "git+https://github.com/denniss17/huisbaasje-client.git@master#huisbaasje-client==0.0.1"
+  ],
+  "codeowners": ["@denniss17"]
+}
