@@ -2,7 +2,10 @@
 import logging
 import socket
 
-from requests.exceptions import ConnectionError, ConnectTimeout
+from requests.exceptions import (
+    ConnectionError as RequestConnectionError,
+    ConnectTimeout,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -75,7 +78,12 @@ class SmappeeFlowHandler(
             smappee_api = api.api.SmappeeLocalApi(ip=user_input[CONF_IP_ADDRESS])
             try:
                 await self.hass.async_add_executor_job(smappee_api.logon)
-            except (socket.gaierror, socket.timeout, ConnectTimeout, ConnectionError):
+            except (
+                socket.gaierror,
+                socket.timeout,
+                ConnectTimeout,
+                RequestConnectionError,
+            ):
                 return self.async_abort(reason="connection_error")
 
         # Check if already configured
@@ -163,7 +171,12 @@ class SmappeeFlowHandler(
                     # We currently only support Energy and Solar models (legacy)
                     return self.async_abort(reason="invalid_mdns")
                 user_input[CONF_SERIALNUMBER] = serialnumber.replace("Smappee", "")
-            except (socket.gaierror, socket.timeout, ConnectTimeout, ConnectionError):
+            except (
+                socket.gaierror,
+                socket.timeout,
+                ConnectTimeout,
+                RequestConnectionError,
+            ):
                 return self.async_abort(reason="connection_error")
 
         # Check if already configured
