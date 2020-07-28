@@ -967,7 +967,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
 
 
 class XiaomiGatewayLight(LightEntity):
-    """Representation of a XiaomiGatewayLight."""
+    """Representation of a gateway device's light."""
 
     def __init__(self, gateway_device, gateway_name, gateway_device_id):
         """Initialize the XiaomiGatewayLight."""
