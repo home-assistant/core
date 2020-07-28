@@ -107,7 +107,11 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     conf = config.get(DOMAIN)
 
     if conf and CONF_ECO_IOS in conf:
-        hass.http.register_view(iOSPushConfigView(conf[CONF_ECO_IOS]))
+        hass.http.register_view(iOSConfigView(conf[CONF_ECO_IOS]))
+        if CONF_PUSH in conf[CONF_ECO_IOS]:
+            # Create old endpoint for back compatibility with older apps
+            hass.http.register_view(iOSPushConfigView(conf[CONF_ECO_IOS][CONF_PUSH]))
+
     return True
 
 
@@ -174,11 +178,29 @@ async def async_remove_entry(hass, entry):
             pass
 
 
-class iOSPushConfigView(HomeAssistantView):
+# pylint: disable=invalid-name
+class iOSConfigView(HomeAssistantView):
     """A view that provides the iOOS push categories configuration."""
 
     url = "/api/mobile_app/ios"
     name = "api:mobile_app:ios"
+
+    def __init__(self, push_config):
+        """Init the view."""
+        self.push_config = push_config
+
+    @callback
+    def get(self, request):
+        """Handle the GET request for the push configuration."""
+        return self.json(self.push_config)
+
+
+# pylint: disable=invalid-name
+class iOSPushConfigView(HomeAssistantView):
+    """A view that provides the push categories configuration."""
+
+    url = "/api/ios/push"
+    name = "api:ios:push"
 
     def __init__(self, push_config):
         """Init the view."""
