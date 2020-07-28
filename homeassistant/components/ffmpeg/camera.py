@@ -55,7 +55,7 @@ class FFmpegCamera(Camera):
         """Return the stream source."""
         try:
             self._input = self._input.async_render()
-         except TemplateError as exc:
+        except TemplateError as exc:
             _LOGGER.error("Error parsing template %s: %s", self._input, exc)
         return self._input.split(" ")[-1]
 
