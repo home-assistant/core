@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DEVICES,
     CONF_HOST,
+    CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
     POWER_WATT,
@@ -113,6 +114,7 @@ DEVICE_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_COMMAND_ON): cv.byte,
         vol.Optional(CONF_COMMAND_OFF): cv.byte,
         vol.Optional(CONF_SIGNAL_REPETITIONS, default=1): cv.positive_int,
+        vol.Optional(CONF_NAME): cv.string,
     }
 )
 
@@ -411,9 +413,12 @@ class RfxtrxEntity(RestoreEntity):
     Contains the common logic for Rfxtrx lights and switches.
     """
 
-    def __init__(self, device, device_id, event=None):
+    def __init__(self, device, device_id, event=None, name=None):
         """Initialize the device."""
-        self._name = f"{device.type_string} {device.id_string}"
+        if name:
+            self._name = name
+        else:
+            self._name = f"{device.type_string} {device.id_string}"
         self._device = device
         self._event = event
         self._device_id = device_id
@@ -481,9 +486,9 @@ class RfxtrxCommandEntity(RfxtrxEntity):
     Contains the common logic for Rfxtrx lights and switches.
     """
 
-    def __init__(self, device, device_id, signal_repetitions=1, event=None):
+    def __init__(self, device, device_id, signal_repetitions=1, event=None, name=None):
         """Initialzie a switch or light device."""
-        super().__init__(device, device_id, event=event)
+        super().__init__(device, device_id, event=event, name=name)
         self.signal_repetitions = signal_repetitions
         self._state = None
 

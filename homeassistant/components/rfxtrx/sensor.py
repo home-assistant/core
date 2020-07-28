@@ -9,7 +9,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
 )
-from homeassistant.const import CONF_DEVICES
+from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.core import callback
 
 from . import (
@@ -82,7 +82,9 @@ async def async_setup_entry(
                 continue
             data_ids.add(data_id)
 
-            entity = RfxtrxSensor(event.device, device_id, data_type)
+            entity = RfxtrxSensor(
+                event.device, device_id, data_type, name=entity_info.get(CONF_NAME)
+            )
             entities.append(entity)
 
     async_add_entities(entities)
@@ -118,12 +120,15 @@ async def async_setup_entry(
 class RfxtrxSensor(RfxtrxEntity):
     """Representation of a RFXtrx sensor."""
 
-    def __init__(self, device, device_id, data_type, event=None):
+    def __init__(self, device, device_id, data_type, event=None, name=None):
         """Initialize the sensor."""
         super().__init__(device, device_id, event=event)
         self.data_type = data_type
         self._unit_of_measurement = DATA_TYPES.get(data_type, "")
-        self._name = f"{device.type_string} {device.id_string} {data_type}"
+        if name:
+            self._name = f"{name} {data_type}"
+        else:
+            self._name = f"{device.type_string} {device.id_string} {data_type}"
         self._unique_id = "_".join(x for x in (*self._device_id, data_type))
 
         self._device_class = DEVICE_CLASSES.get(data_type)

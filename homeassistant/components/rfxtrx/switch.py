@@ -4,7 +4,7 @@ import logging
 import RFXtrx as rfxtrxmod
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import CONF_DEVICES, STATE_ON
+from homeassistant.const import CONF_DEVICES, CONF_NAME, STATE_ON
 from homeassistant.core import callback
 
 from . import (
@@ -58,7 +58,10 @@ async def async_setup_entry(
         device_ids.add(device_id)
 
         entity = RfxtrxSwitch(
-            event.device, device_id, entity_info[CONF_SIGNAL_REPETITIONS]
+            event.device,
+            device_id,
+            entity_info[CONF_SIGNAL_REPETITIONS],
+            name=entity_info.get(CONF_NAME),
         )
         entities.append(entity)
 

@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_COMMAND_ON,
     CONF_DEVICE_CLASS,
     CONF_DEVICES,
+    CONF_NAME,
     STATE_ON,
 )
 from homeassistant.core import callback
@@ -112,6 +113,7 @@ async def async_setup_entry(
             entity_info.get(CONF_DATA_BITS),
             entity_info.get(CONF_COMMAND_ON),
             entity_info.get(CONF_COMMAND_OFF),
+            name=entity_info.get(CONF_NAME),
         )
         sensors.append(device)
 
@@ -162,9 +164,10 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
         cmd_on=None,
         cmd_off=None,
         event=None,
+        name=None,
     ):
         """Initialize the RFXtrx sensor."""
-        super().__init__(device, device_id, event=event)
+        super().__init__(device, device_id, event=event, name=name)
         self._device_class = device_class
         self._data_bits = data_bits
         self._off_delay = off_delay
