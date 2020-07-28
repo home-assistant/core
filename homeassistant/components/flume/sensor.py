@@ -30,6 +30,7 @@ from .const import (
     KEY_DEVICE_ID,
     KEY_DEVICE_LOCATION,
     KEY_DEVICE_LOCATION_NAME,
+    KEY_DEVICE_LOCATION_TIMEZONE,
     KEY_DEVICE_TYPE,
 )
 
@@ -76,10 +77,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         device_id = device[KEY_DEVICE_ID]
         device_name = device[KEY_DEVICE_LOCATION][KEY_DEVICE_LOCATION_NAME]
+        device_timezone = device[KEY_DEVICE_LOCATION][KEY_DEVICE_LOCATION_TIMEZONE]
         device_friendly_name = f"{name} {device_name}"
         flume_device = FlumeData(
             flume_auth,
             device_id,
+            device_timezone,
             SCAN_INTERVAL,
             update_on_init=False,
             http_session=http_session,
@@ -187,6 +190,9 @@ class FlumeSensorData:
 
         try:
             self.flume_device.update_force()
+            self.available = True
+            _LOGGER.debug("Returned Flume query: %s", self.flume_device.query_payload)
+            _LOGGER.debug("Returned Flume values: %s", self.flume_device.values)
         except Exception as ex:  # pylint: disable=broad-except
             if self.available:
                 _LOGGER.error("Update of Flume data failed: %s", ex)
