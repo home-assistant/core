@@ -3,6 +3,7 @@ import logging
 
 from huisbaasje import (
     Huisbaasje,
+    HuisbaasjeException,
     HuisbaasjeConnectionException,
     HuisbaasjeUnauthenticatedException,
 )
@@ -36,18 +37,22 @@ class HuisbaasjeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             valid = await self._validate_input(user_input)
 
-            if valid:
-                return self.async_create_entry(
-                    title="Huisbaasje",
-                    data={
-                        CONF_USERNAME: user_input[CONF_USERNAME],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    },
-                )
+            _LOGGER.info("Input for Huisbaasje is valid!")
+
+            return self.async_create_entry(
+                title="Huisbaasje",
+                data={
+                    CONF_USERNAME: user_input[CONF_USERNAME],
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                },
+            )
         except HuisbaasjeUnauthenticatedException:
             errors["base"] = "unauthenticated_exception"
         except HuisbaasjeConnectionException:
             errors["base"] = "connection_exception"
+        except HuisbaasjeException as e:
+            _LOGGER.warning(e)
+            errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"

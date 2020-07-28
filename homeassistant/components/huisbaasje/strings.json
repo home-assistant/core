@@ -3,6 +3,8 @@
   "config": {
     "step": {
       "user": {
+        "title": "Huisbaasje",
+        "description": "Setup your integration with Huisbaasje",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -10,8 +12,9 @@
       }
     },
     "error": {
-      "unauthenticated_exception": "[%key:common::config_flow::error::cannot_connect%]",
-      "connection_exception": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unauthenticated_exception": "[%key:common::config_flow::error::invalid_auth%]",
+      "connection_exception": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
