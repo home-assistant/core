@@ -100,7 +100,7 @@ async def listen(hass, client, name):
         try:
             await client.system.ping()
             if server_was_unavailable:
-                _LOGGER.info(f"The syncthing server {name} is back online.")
+                _LOGGER.info("The syncthing server '%s' is back online." % name)
                 async_dispatcher_send(hass, f"{SERVER_AVAILABLE}-{name}")
                 server_was_unavailable = False
 
@@ -122,7 +122,8 @@ async def listen(hass, client, name):
             return
         except aiosyncthing.exceptions.SyncthingError:
             _LOGGER.info(
-                f"The syncthing event listener crashed. Probably, the server is not available. Sleeping {RECONNECT_INTERVAL.seconds} seconds and retrying..."
+                "The syncthing server '%s' is not available. Sleeping %i seconds and retrying..."
+                % (name, RECONNECT_INTERVAL.seconds)
             )
             async_dispatcher_send(hass, f"{SERVER_UNAVAILABLE}-{name}")
             await asyncio.sleep(RECONNECT_INTERVAL.seconds)
