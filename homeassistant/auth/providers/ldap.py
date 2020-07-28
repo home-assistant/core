@@ -20,8 +20,9 @@ CONF_ALLOWED_GROUP_DNS = "allowed_group_dns"
 CONF_BASE_DN = "base_dn"
 CONF_CERT_VALIDATION = "validate_certificates"
 CONF_BIND_AS_USER = "bind_as_user"
-CONF_BIND_USERNAME = "bind_username"
+CONF_BIND_DN = "bind_dn"
 CONF_BIND_PASSWORD = "bind_password"
+CONF_BIND_USERNAME = "bind_username"
 CONF_ENCRYPTION = "encryption"
 CONF_ENCRYPTION_LDAPS = "ldaps"
 CONF_ENCRYPTION_NONE = "none"
@@ -50,6 +51,7 @@ CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
         vol.Required(CONF_BASE_DN): str,
         vol.Required(CONF_BIND_AS_USER, default=DEFAULT_CONF_BIND_AS_USER): bool,
         vol.Optional(CONF_BIND_USERNAME): str,
+        vol.Optional(CONF_BIND_DN): str,
         vol.Optional(CONF_BIND_PASSWORD): str,
         vol.Required(CONF_CERT_VALIDATION, default=DEFAULT_CONF_CERT_VALIDATION): bool,
         vol.Required(CONF_ENCRYPTION, default=CONF_ENCRYPTION_LDAPS): vol.In(
@@ -89,9 +91,11 @@ class LdapAuthProvider(AuthProvider):
         """Validate a username and password."""
         try:
             tls = ldap3.Tls()
-            # Disable cert validation if required.
-            if not self.config[CONF_CERT_VALIDATION]:
-                tls.validate = ssl.CERT_NONE
+            tls.validate = (
+                ssl.CERT_REQUIRED
+                if self.config[CONF_CERT_VALIDATION]
+                else ssl.CERT_NONE
+            )
             encryption = self.config[CONF_ENCRYPTION]
             # Server setup
             server = ldap3.Server(
@@ -103,35 +107,34 @@ class LdapAuthProvider(AuthProvider):
                 get_info=ldap3.ALL,
             )
 
-            bind_as_user = self.config[CONF_BIND_AS_USER]
-            bind_username = (
-                self.config[CONF_BIND_USERNAME] if bind_as_user else username
+            is_ad = self.config[CONF_ACTIVE_DIRECTORY]
+            base_dn = self.config[CONF_BASE_DN]
+            username_attr = (
+                "sAMAccountName" if is_ad else self.config[CONF_USERNAME_ATTR]
             )
+            bind_as_user = self.config[CONF_BIND_AS_USER]
             bind_password = (
-                self.config[CONF_BIND_PASSWORD] if bind_as_user else password
+                password if bind_as_user else self.config[CONF_BIND_PASSWORD]
             )
 
             # LDAP bind
-            base_dn = self.config[CONF_BASE_DN]
-            username_attr = (
-                "sAMAccountName"
-                if self.config[CONF_ACTIVE_DIRECTORY]
-                else self.config[CONF_USERNAME_ATTR]
-            )
-            if self.config[CONF_ACTIVE_DIRECTORY]:
+            if is_ad:
                 conn = ldap3.Connection(
                     server,
-                    user=bind_username,
+                    user=self.config[CONF_BIND_USERNAME],
                     password=bind_password,
                     authentication=ldap3.NTLM,
                     auto_bind=True,
                 )
             else:
+                bind_dn = (
+                    f"{username_attr}={username},{base_dn}"
+                    if bind_as_user
+                    else self.config[CONF_BIND_DN]
+                )
+                _LOGGER.debug("Binding as %s", bind_dn)
                 conn = ldap3.Connection(
-                    server,
-                    user=f"{username_attr}={bind_username},{base_dn}",
-                    password=bind_password,
-                    auto_bind=True,
+                    server, user=bind_dn, password=bind_password, auto_bind=True,
                 )
 
             # Upgrade connection with START_TLS if requested.
@@ -145,7 +148,7 @@ class LdapAuthProvider(AuthProvider):
             # Query the directory server for the connecting user
             if not conn.search(
                 self.config[CONF_BASE_DN],
-                "(objectclass=person)",
+                f"(&({username_attr}={username})(objectclass=person))",
                 size_limit=1,
                 time_limit=self.config[CONF_TIMEOUT],
                 attributes=[username_attr, "displayName", "memberOf"],
@@ -156,7 +159,7 @@ class LdapAuthProvider(AuthProvider):
             uid = getattr(conn.entries[0], username_attr).value
             # Full name: Firstname Lastname
             display_name = conn.entries[0].displayName.value
-            _LOGGER.info("Found user %s (%s)", display_name, uid)
+            _LOGGER.info("Found user %s (%s)", uid, display_name)
 
             # Check group membership
             if self.config[CONF_ALLOWED_GROUP_DNS]:
@@ -171,7 +174,14 @@ class LdapAuthProvider(AuthProvider):
                 for group in self.config[CONF_ALLOWED_GROUP_DNS]:
                     if group.lower() in [g.lower() for g in user_groups]:
                         member = True
+                        _LOGGER.debug(
+                            "Group membership test passed. The user belongs to one the whitelisted groups."
+                        )
+                _LOGGER.warning(f"Member: {member}")
                 if not member:
+                    _LOGGER.debug(
+                        "Group membership test failed. The user is a member of NONE of the whitelisted groups."
+                    )
                     raise InvalidAuthError(
                         "User {} is not a member of any of the required groups".format(
                             uid
