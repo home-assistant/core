@@ -75,7 +75,7 @@ async def async_setup_entry(hass, config_entry):
     coordinator = SpeedTestDataCoordinator(hass, config_entry)
     await coordinator.async_setup()
 
-    async def _enable_scheduled_speedtests():
+    async def _enable_scheduled_speedtests(*_):
         """Activate the data update coordinator."""
         coordinator.update_interval = timedelta(
             minutes=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
