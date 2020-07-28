@@ -110,6 +110,34 @@ async def test_zerconf_wrong_mdns(hass):
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
+async def test_full_user_wrong_mdns(hass):
+    """Test we abort user flow if unsupported mDNS name got resolved."""
+    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}), patch(
+        "pysmappee.api.SmappeeLocalApi.load_advanced_config",
+        return_value=[{"key": "mdnsHostName", "value": "Smappee2006000212"}],
+    ), patch(
+        "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
+    ), patch(
+        "pysmappee.api.SmappeeLocalApi.load_instantaneous",
+        return_value=[{"key": "phase0ActivePower", "value": 0}],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={"host": "1.2.3.4", "environment": ENV_LOCAL},
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "1.2.3.4"}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "invalid_mdns"
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+
+
 async def test_user_device_exists_abort(hass):
     """Test we abort user flow if Smappee device already configured."""
     with patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}), patch(
