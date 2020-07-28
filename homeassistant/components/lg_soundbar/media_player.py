@@ -33,8 +33,8 @@ class LGDevice(MediaPlayerEntity):
 
     def __init__(self, discovery_info):
         """Initialize the LG speakers."""
-        host = discovery_info.get("host")
-        port = discovery_info.get("port")
+        self._host = discovery_info.get("host")
+        self._port = discovery_info.get("port")
 
         self._name = ""
         self._volume = 0
@@ -53,8 +53,13 @@ class LGDevice(MediaPlayerEntity):
         self._woofer_volume_max = 0
         self._bass = 0
         self._treble = 0
+        self._device = None
 
-        self._device = temescal.temescal(host, port=port, callback=self.handle_event)
+    async def async_added_to_hass(self):
+        """Register the callback after hass is ready for it."""
+        self._device = temescal.temescal(
+            self._host, port=self._port, callback=self.handle_event
+        )
         self.update()
 
     def handle_event(self, response):
