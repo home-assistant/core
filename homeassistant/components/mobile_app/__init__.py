@@ -1,6 +1,5 @@
 """Integrates Native Apps to Home Assistant."""
 import asyncio
-import logging
 
 import voluptuous as vol
 
@@ -69,8 +68,6 @@ from .webhook import handle_webhook
 
 PLATFORMS = "sensor", "binary_sensor", "device_tracker"
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up the mobile app component."""
@@ -111,7 +108,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     if conf and CONF_ECO_IOS in conf:
         hass.http.register_view(iOSPushConfigView(conf[CONF_ECO_IOS]))
-        _LOGGER.warning(f"-----------------THIS-------------{conf[CONF_ECO_IOS]}")
     return True
 
 
