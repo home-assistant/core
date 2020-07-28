@@ -102,7 +102,7 @@ class FolderSensor(Entity):
         """Return device information."""
         return {
             "identifiers": {(DOMAIN, self._name)},
-            "name": "Syncthing",
+            "name": self._name,
             "manufacturer": "Syncthing Team",
             "sw_version": self._version,
             "entry_type": "service",
