@@ -18,11 +18,12 @@ from ..models import Credentials, UserMeta
 CONF_ACTIVE_DIRECTORY = "active_directory"
 CONF_ALLOWED_GROUP_DNS = "allowed_group_dns"
 CONF_BASE_DN = "base_dn"
-CONF_CERT_VALIDATION = "validate_certificates"
 CONF_BIND_AS_USER = "bind_as_user"
 CONF_BIND_DN = "bind_dn"
 CONF_BIND_PASSWORD = "bind_password"
 CONF_BIND_USERNAME = "bind_username"
+CONF_CA_CERTS_FILE = "ca_certs_file"
+CONF_CERT_VALIDATION = "validate_certificates"
 CONF_ENCRYPTION = "encryption"
 CONF_ENCRYPTION_LDAPS = "ldaps"
 CONF_ENCRYPTION_NONE = "none"
@@ -53,6 +54,7 @@ CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
         vol.Optional(CONF_BIND_USERNAME): str,
         vol.Optional(CONF_BIND_DN): str,
         vol.Optional(CONF_BIND_PASSWORD): str,
+        vol.Optional(CONF_CA_CERTS_FILE, default=None): str,
         vol.Required(CONF_CERT_VALIDATION, default=DEFAULT_CONF_CERT_VALIDATION): bool,
         vol.Required(CONF_ENCRYPTION, default=CONF_ENCRYPTION_LDAPS): vol.In(
             [CONF_ENCRYPTION_LDAPS, CONF_ENCRYPTION_NONE, CONF_ENCRYPTION_STARTTLS],
@@ -96,6 +98,7 @@ class LdapAuthProvider(AuthProvider):
                 if self.config[CONF_CERT_VALIDATION]
                 else ssl.CERT_NONE
             )
+            tls.ca_certs_file = self.config[CONF_CA_CERTS_FILE]
             encryption = self.config[CONF_ENCRYPTION]
             # Server setup
             server = ldap3.Server(
