@@ -204,7 +204,6 @@ async def test_option_flow_wrong_coordinates(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "public_weather_areas"
-    # assert result.keys() == []
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={}
