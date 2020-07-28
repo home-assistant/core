@@ -1,8 +1,10 @@
 """Reusable utilities for the Bond component."""
-
+import logging
 from typing import List, Optional
 
 from bond_api import Action, Bond
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class BondDevice:
@@ -13,6 +15,14 @@ class BondDevice:
         self.device_id = device_id
         self.props = props
         self._attrs = attrs
+
+    def __repr__(self):
+        """Return readable representation of a bond device."""
+        return {
+            "device_id": self.device_id,
+            "props": self.props,
+            "attrs": self._attrs,
+        }.__repr__()
 
     @property
     def name(self) -> str:
@@ -75,6 +85,8 @@ class BondHub:
             for device_id in device_ids
         ]
 
+        _LOGGER.debug("Discovered Bond devices: %s", self._devices)
+
     @property
     def bond_id(self) -> str:
         """Return unique Bond ID for this hub."""
@@ -97,5 +109,6 @@ class BondHub:
 
     @property
     def is_bridge(self) -> bool:
-        """Return if the Bond is a Bond Bridge. If False, it means that it is a Smart by Bond product. Assumes that it is if the model is not available."""
+        """Return if the Bond is a Bond Bridge."""
+        # If False, it means that it is a Smart by Bond product. Assumes that it is if the model is not available.
         return self._version.get("model", "BD-").startswith("BD-")
