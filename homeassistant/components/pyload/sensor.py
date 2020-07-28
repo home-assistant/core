@@ -16,8 +16,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONTENT_TYPE_JSON,
-    DATA_RATE_MEGABYTES_PER_SECOND,
-    CONF_COUNT,
+    DATA_RATE_MEGABYTES_PER_SECOND
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -32,8 +31,8 @@ DEFAULT_PORT = 8000
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 
 SENSOR_TYPES = {"speed": ["speed", "Speed", DATA_RATE_MEGABYTES_PER_SECOND],
-                "active": ["active", "Active", CONF_COUNT],
-                "queue": ["queue", "Queue", CONF_COUNT]}
+                "active": ["active", "Active"],
+                "queue": ["queue", "Queue"]}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -89,7 +88,8 @@ class PyLoadSensor(Entity):
         self.type = sensor_type[0]
         self.api = api
         self._state = None
-        self._unit_of_measurement = sensor_type[2]
+        if len(sensor_type) > 2:
+            self._unit_of_measurement = sensor_type[2]
 
     @property
     def name(self):
@@ -104,7 +104,10 @@ class PyLoadSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+        try:
+            return self._unit_of_measurement
+        except AttributeError:
+            return
 
     def update(self):
         """Update state of sensor."""
