@@ -12,6 +12,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.util.json import load_json, save_json
 
+from ..mobile_app.const import DOMAIN as DOMAIN_MOBILE_APP
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "ios"
@@ -240,6 +242,15 @@ async def async_setup(hass, config):
             )
         )
 
+    if not config.get(DOMAIN_MOBILE_APP)[CONF_PUSH]:
+        conf = config.get(DOMAIN)
+        if conf[CONF_PUSH]:
+            _LOGGER.warning(
+                "Deprecitation Warning: Defining push configuration with "
+                "the iOS integration is depreciated. Use mobile_app instead."
+            )
+            hass.http.register_view(iOSPushConfigView(conf[CONF_PUSH]))
+
     return True
 
 
@@ -250,7 +261,6 @@ async def async_setup_entry(hass, entry):
     )
 
     hass.http.register_view(iOSIdentifyDeviceView(hass.config.path(CONFIGURATION_FILE)))
-    hass.http.register_view(iOSPushConfigView(hass.data[DOMAIN][CONF_PUSH]))
 
     return True
 
