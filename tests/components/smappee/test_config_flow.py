@@ -1,5 +1,5 @@
 """Test the Smappee config flow."""
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import data_entry_flow, setup
 from homeassistant.components.smappee.const import (
     AUTHORIZE_URL,
     CONF_HOSTNAME,
@@ -216,9 +216,7 @@ async def test_full_user_flow(hass, aiohttp_client, aioclient_mock):
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={"environment": ENV_CLOUD},
+        DOMAIN, context={"source": SOURCE_USER}, data={"environment": ENV_CLOUD},
     )
     state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
 
@@ -283,6 +281,34 @@ async def test_full_zeroconf_flow(hass):
             result["flow_id"], {"host": "1.2.3.4"}
         )
 
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == "Smappee1006000212"
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+async def test_full_user_local_flow(hass):
+    """Test the full zeroconf flow."""
+    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}), patch(
+        "pysmappee.api.SmappeeLocalApi.load_advanced_config",
+        return_value=[{"key": "mdnsHostName", "value": "Smappee1006000212"}],
+    ), patch(
+        "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
+    ), patch(
+        "pysmappee.api.SmappeeLocalApi.load_instantaneous",
+        return_value=[{"key": "phase0ActivePower", "value": 0}],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={"host": "1.2.3.4", "environment": ENV_LOCAL},
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "1.2.3.4"}
+        )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "Smappee1006000212"
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
