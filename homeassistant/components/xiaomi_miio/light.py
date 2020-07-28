@@ -14,7 +14,12 @@ from miio import (  # pylint: disable=import-error
     PhilipsEyecare,
     PhilipsMoonlight,
 )
-from miio.gateway import GatewayException, GATEWAY_MODEL_AC_V1, GATEWAY_MODEL_AC_V2, GATEWAY_MODEL_AC_V3
+from miio.gateway import (
+    GATEWAY_MODEL_AC_V1,
+    GATEWAY_MODEL_AC_V2,
+    GATEWAY_MODEL_AC_V3,
+    GatewayException,
+)
 import voluptuous as vol
 
 from homeassistant.components.light import (

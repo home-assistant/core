@@ -3,7 +3,13 @@ from dataclasses import dataclass
 import logging
 
 from miio import AirQualityMonitor, DeviceException  # pylint: disable=import-error
-from miio.gateway import DeviceType, GatewayException, GATEWAY_MODEL_AC_V1, GATEWAY_MODEL_AC_V2, GATEWAY_MODEL_AC_V3
+from miio.gateway import (
+    GATEWAY_MODEL_AC_V1,
+    GATEWAY_MODEL_AC_V2,
+    GATEWAY_MODEL_AC_V3,
+    DeviceType,
+    GatewayException,
+)
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
