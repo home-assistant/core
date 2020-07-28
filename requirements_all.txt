@@ -1734,7 +1734,7 @@ python-nest==4.1.0
 python-nmap==0.6.1
 
 # homeassistant.components.ozw
-python-openzwave-mqtt==1.0.2
+python-openzwave-mqtt==1.0.4
 
 # homeassistant.components.qbittorrent
 python-qbittorrent==0.4.1
