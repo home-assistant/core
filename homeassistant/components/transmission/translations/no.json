@@ -12,9 +12,11 @@
             "user": {
                 "data": {
                     "host": "Vert",
+                    "limit": "Grense",
                     "name": "Navn",
+                    "order": "Rekkef\u00f8lge",
                     "password": "Passord",
-                    "port": "Port",
+                    "port": "",
                     "username": "Brukernavn"
                 },
                 "title": "Oppsett av Transmission-klient"
@@ -25,6 +27,8 @@
         "step": {
             "init": {
                 "data": {
+                    "limit": "Grense",
+                    "order": "Rekkef\u00f8lge",
                     "scan_interval": "Oppdater frekvens"
                 },
                 "title": "Konfigurer alternativer for Transmission"

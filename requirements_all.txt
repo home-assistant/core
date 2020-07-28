@@ -100,7 +100,7 @@ WazeRouteCalculator==0.12
 YesssSMS==0.4.1
 
 # homeassistant.components.abode
-abodepy==0.19.0
+abodepy==1.1.0
 
 # homeassistant.components.accuweather
 accuweather==0.0.9
@@ -730,7 +730,7 @@ hlk-sw16==0.0.8
 hole==0.5.1
 
 # homeassistant.components.workday
-holidays==0.10.2
+holidays==0.10.3
 
 # homeassistant.components.frontend
 home-assistant-frontend==20200716.0
@@ -1827,6 +1827,9 @@ pyvizio==0.1.49
 # homeassistant.components.velux
 pyvlx==0.2.16
 
+# homeassistant.components.volumio
+pyvolumio==0.1
+
 # homeassistant.components.html5
 pywebpush==1.9.2
 
@@ -1963,7 +1966,7 @@ simplisafe-python==9.2.1
 sisyphus-control==2.2.1
 
 # homeassistant.components.skybell
-skybellpy==0.4.0
+skybellpy==0.6.1
 
 # homeassistant.components.slack
 slackclient==2.5.0
@@ -2225,7 +2228,7 @@ wolf_smartset==0.1.4
 xbee-helper==0.0.7
 
 # homeassistant.components.xbox_live
-xboxapi==2.0.0
+xboxapi==2.0.1
 
 # homeassistant.components.xfinity
 xfinity-gateway==0.0.4

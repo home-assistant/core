@@ -16,6 +16,8 @@ EVENT_MOTION_DETECTOR_NO_MOTION = "08200100a109000570"
 EVENT_LIGHT_DETECTOR_LIGHT = "08200100a109001570"
 EVENT_LIGHT_DETECTOR_DARK = "08200100a109001470"
 
+EVENT_AC_118CDEA_2_ON = "0b1100100118cdea02010f70"
+
 
 async def test_one(hass, rfxtrx):
     """Test with 1 sensor."""
@@ -135,6 +137,37 @@ async def test_discover(hass, rfxtrx_automatic):
     state = hass.states.get("binary_sensor.ac_118cdeb_2")
     assert state
     assert state.state == "on"
+
+
+async def test_off_delay_restore(hass, rfxtrx):
+    """Make sure binary sensor restore as off, if off delay is active."""
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                "binary_sensor.ac_118cdea_2",
+                "on",
+                attributes={ATTR_EVENT: EVENT_AC_118CDEA_2_ON},
+            )
+        ],
+    )
+
+    assert await async_setup_component(
+        hass,
+        "rfxtrx",
+        {
+            "rfxtrx": {
+                "device": "abcd",
+                "devices": {EVENT_AC_118CDEA_2_ON: {"off_delay": 5}},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    state = hass.states.get("binary_sensor.ac_118cdea_2")
+    assert state
+    assert state.state == "off"
 
 
 async def test_off_delay(hass, rfxtrx, timestep):

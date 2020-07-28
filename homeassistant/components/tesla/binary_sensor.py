@@ -2,7 +2,8 @@
 import logging
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES, BinarySensorEntity
-from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN, TeslaDevice
+
+from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
 _LOGGER = logging.getLogger(__name__)
 

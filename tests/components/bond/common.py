@@ -73,7 +73,9 @@ async def setup_platform(
     return mock_entry
 
 
-def patch_bond_version(enabled: bool = True, return_value: Optional[dict] = None):
+def patch_bond_version(
+    enabled: bool = True, return_value: Optional[dict] = None, side_effect=None
+):
     """Patch Bond API version endpoint."""
     if not enabled:
         return nullcontext()
@@ -82,7 +84,9 @@ def patch_bond_version(enabled: bool = True, return_value: Optional[dict] = None
         return_value = {"bondid": "test-bond-id"}
 
     return patch(
-        "homeassistant.components.bond.Bond.version", return_value=return_value
+        "homeassistant.components.bond.Bond.version",
+        return_value=return_value,
+        side_effect=side_effect,
     )
 
 

@@ -184,6 +184,7 @@ FLOWS = [
     "vesync",
     "vilfo",
     "vizio",
+    "volumio",
     "wemo",
     "wiffi",
     "withings",
