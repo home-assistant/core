@@ -29,6 +29,15 @@ from .const import (
     ATTR_MODEL,
     ATTR_OS_VERSION,
     ATTR_TEXT_INPUT_BEHAVIOR,
+    CONF_ACTION_BACKGROUND_COLOR,
+    CONF_ACTION_ICON,
+    CONF_ACTION_ICON_COLOR,
+    CONF_ACTION_ICON_ICON,
+    CONF_ACTION_LABEL,
+    CONF_ACTION_LABEL_COLOR,
+    CONF_ACTION_LABEL_TEXT,
+    CONF_ACTION_NAME,
+    CONF_ACTIONS,
     CONF_CLOUDHOOK_URL,
     CONF_ECO_IOS,
     CONF_PUSH,
@@ -100,10 +109,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     conf = config.get(DOMAIN)
 
-    if conf:
-        if CONF_ECO_IOS in conf:
-            hass.http.register_view(iOSPushConfigView(conf[CONF_ECO_IOS]))
-
+    if conf and CONF_ECO_IOS in conf:
+        hass.http.register_view(iOSPushConfigView(conf[CONF_ECO_IOS]))
+        _LOGGER.warning(f"-----------------THIS-------------{conf[CONF_ECO_IOS]}")
     return True
 
 
@@ -210,45 +218,46 @@ PUSH_ACTION_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PUSH_ACTION_SCHEMA_LIST = vol.All(cv.ensure_list, [PUSH_ACTION_SCHEMA])
+PUSH_ACTION_LIST_SCHEMA = vol.All(cv.ensure_list, [PUSH_ACTION_SCHEMA])
+
+PUSH_CATEGORY_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PUSH_CATEGORIES_NAME): cv.string,
+        vol.Required(CONF_PUSH_CATEGORIES_IDENTIFIER): vol.Lower,
+        vol.Required(CONF_PUSH_CATEGORIES_ACTIONS): PUSH_ACTION_LIST_SCHEMA,
+    }
+)
+
+PUSH_CATEGORY_LIST_SCHEMA = vol.All(cv.ensure_list, [PUSH_CATEGORY_SCHEMA])
 
 ACTION_SCHEMA = vol.Schema(
     {
-        vol.Required("name"): cv.string,
-        vol.Required("background"): cv.string,
-        vol.Required("text"): vol.All(
-            {vol.Required("label"): cv.string, vol.Required("color"): cv.string}
+        vol.Required(CONF_ACTION_NAME): cv.string,
+        vol.Required(CONF_ACTION_BACKGROUND_COLOR): cv.string,
+        vol.Required(CONF_ACTION_LABEL): vol.All(
+            {
+                vol.Required(CONF_ACTION_LABEL_TEXT): cv.string,
+                vol.Required(CONF_ACTION_LABEL_COLOR): cv.string,
+            }
         ),
-        vol.Required("icon"): vol.All(
-            {vol.Required("icon"): cv.string, vol.Required("color"): cv.string}
+        vol.Required(CONF_ACTION_ICON): vol.All(
+            {
+                vol.Required(CONF_ACTION_ICON_ICON): cv.string,
+                vol.Required(CONF_ACTION_ICON_COLOR): cv.string,
+            }
         ),
     },
     extra=vol.ALLOW_EXTRA,
 )
 
-ACTION_SCHEMA_LIST = vol.All(cv.ensure_list, [ACTION_SCHEMA])
+ACTION_LIST_SCHEMA = vol.All(cv.ensure_list, [ACTION_SCHEMA])
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: {
             CONF_ECO_IOS: {
-                CONF_PUSH: {
-                    CONF_PUSH_CATEGORIES: vol.All(
-                        cv.ensure_list,
-                        [
-                            {
-                                vol.Required(CONF_PUSH_CATEGORIES_NAME): cv.string,
-                                vol.Required(
-                                    CONF_PUSH_CATEGORIES_IDENTIFIER
-                                ): vol.Lower,
-                                vol.Required(
-                                    CONF_PUSH_CATEGORIES_ACTIONS
-                                ): PUSH_ACTION_SCHEMA_LIST,
-                            }
-                        ],
-                    )
-                },
-                vol.Optional("actions"): ACTION_SCHEMA_LIST,
+                CONF_PUSH: {CONF_PUSH_CATEGORIES: PUSH_CATEGORY_LIST_SCHEMA},
+                CONF_ACTIONS: ACTION_LIST_SCHEMA,
             }
         }
     },
