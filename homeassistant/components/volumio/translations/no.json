@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Kan ikke koble til oppdaget Volumio"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Vil du legge Volumio (` {name} `) til Home Assistant?",
+                "title": "Oppdaget Volumio"
+            }
+        }
+    }
+}

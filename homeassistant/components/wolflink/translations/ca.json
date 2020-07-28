@@ -12,13 +12,15 @@
             "device": {
                 "data": {
                     "device_name": "Dispositiu"
-                }
+                },
+                "title": "Selecci\u00f3 de dispositiu WOLF"
             },
             "user": {
                 "data": {
                     "password": "Contrasenya",
                     "username": "Nom d'usuari"
-                }
+                },
+                "title": "Connexi\u00f3 WOLF SmartSet"
             }
         }
     }

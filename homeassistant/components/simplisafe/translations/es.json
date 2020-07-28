@@ -5,9 +5,15 @@
         },
         "error": {
             "identifier_exists": "Cuenta ya registrada",
-            "invalid_credentials": "Credenciales no v\u00e1lidas"
+            "invalid_credentials": "Credenciales no v\u00e1lidas",
+            "unknown": "Error inesperado"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrase\u00f1a"
+                }
+            },
             "user": {
                 "data": {
                     "code": "C\u00f3digo (utilizado en el interfaz de usuario de Home Assistant)",
