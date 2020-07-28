@@ -330,10 +330,10 @@ class XiaomiGatewayIlluminanceSensor(Entity):
             self._state = await self.hass.async_add_executor_job(
                 self._gateway.get_illumination
             )
+            self._available = True
         except GatewayException as ex:
             if self._available:
                 self._available = False
                 _LOGGER.error(
                     "Got exception while fetching the gateway illuminance state: %s", ex
                 )
-        self._available = True
