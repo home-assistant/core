@@ -5,15 +5,9 @@ import aiosyncthing
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_URL
+from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 
-from .const import (
-    CONF_VERIFY_SSL,
-    DEFAULT_NAME,
-    DEFAULT_URL,
-    DEFAULT_VERIFY_SSL,
-    DOMAIN,
-)
+from .const import DEFAULT_NAME, DEFAULT_URL, DEFAULT_VERIFY_SSL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
