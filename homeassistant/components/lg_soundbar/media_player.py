@@ -25,7 +25,7 @@ SUPPORT_LG = (
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LG platform."""
     if discovery_info is not None:
-        add_entities([LGDevice(discovery_info)], True)
+        add_entities([LGDevice(discovery_info)])
 
 
 class LGDevice(MediaPlayerEntity):
@@ -57,6 +57,10 @@ class LGDevice(MediaPlayerEntity):
 
     async def async_added_to_hass(self):
         """Register the callback after hass is ready for it."""
+        return await self.hass.async_add_executor_job(self._connect)
+
+    def _connect(self):
+        """Perform the actual devices setup."""
         self._device = temescal.temescal(
             self._host, port=self._port, callback=self.handle_event
         )
