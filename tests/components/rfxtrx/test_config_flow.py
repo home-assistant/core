@@ -1,6 +1,10 @@
 """Test the Tado config flow."""
-from homeassistant import config_entries, setup
+from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.rfxtrx import DOMAIN
+from homeassistant.helpers.device_registry import (
+    async_entries_for_config_entry,
+    async_get_registry,
+)
 
 from tests.common import MockConfigEntry
 
@@ -44,3 +48,189 @@ async def test_import_update(hass):
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
+
+
+async def test_options_global(hass):
+    """Test if we can set global options."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "debug": False,
+            "automatic_add": False,
+            "devices": {},
+        },
+        unique_id=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "prompt_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"debug": True, "automatic_add": True}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    await hass.async_block_till_done()
+
+    assert entry.data["debug"]
+    assert entry.data["automatic_add"]
+
+
+async def test_options_add_device(hass):
+    """Test we can add a device."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "debug": False,
+            "automatic_add": False,
+            "devices": {},
+        },
+        unique_id=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "prompt_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "debug": True,
+            "automatic_add": True,
+            "device_id": "0b1100cd0213c7f230010f71",
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "set_device_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"fire_event": True, "signal_repetitions": 5}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    await hass.async_block_till_done()
+
+    assert entry.data["debug"]
+    assert entry.data["automatic_add"]
+
+    assert entry.data["devices"]["0b1100cd0213c7f230010f71"]
+    assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["fire_event"]
+    assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["signal_repetitions"] == 5
+    assert "delay_off" not in entry.data["devices"]["0b1100cd0213c7f230010f71"]
+
+    state = hass.states.get("binary_sensor.ac_213c7f2_48")
+    assert state
+    assert state.state == "off"
+    assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
+
+
+async def test_options_add_remove_device(hass):
+    """Test we can add a device."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "debug": False,
+            "automatic_add": False,
+            "devices": {},
+        },
+        unique_id=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "prompt_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "debug": True,
+            "automatic_add": True,
+            "device_id": "0b1100cd0213c7f230010f71",
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "set_device_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "fire_event": True,
+            "signal_repetitions": 5,
+            "off_delay_enabled": True,
+            "off_delay": 4,
+        },
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    await hass.async_block_till_done()
+
+    assert entry.data["debug"]
+    assert entry.data["automatic_add"]
+
+    assert entry.data["devices"]["0b1100cd0213c7f230010f71"]
+    assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["fire_event"]
+    assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["signal_repetitions"] == 5
+    assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["off_delay"] == 4
+
+    state = hass.states.get("binary_sensor.ac_213c7f2_48")
+    assert state
+    assert state.state == "off"
+    assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
+
+    device_registry = await async_get_registry(hass)
+    device_entries = async_entries_for_config_entry(device_registry, entry.entry_id)
+
+    assert device_entries[0].id
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "prompt_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "debug": False,
+            "automatic_add": False,
+            "remove_device": device_entries[0].id,
+        },
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    await hass.async_block_till_done()
+
+    assert not entry.data["debug"]
+    assert not entry.data["automatic_add"]
+
+    assert "0b1100cd0213c7f230010f71" not in entry.data["devices"]
+
+    state = hass.states.get("binary_sensor.ac_213c7f2_48")
+    assert not state
