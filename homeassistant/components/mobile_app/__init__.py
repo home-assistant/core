@@ -104,16 +104,14 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         discovery.async_load_platform(hass, "notify", DOMAIN, {}, config)
     )
 
-    conf = config.get(DOMAIN)
-
-    if conf:
-        if CONF_ECO_IOS in conf:
-            hass.http.register_view(iOSConfigView(conf[CONF_ECO_IOS]))
-            if CONF_PUSH in conf[CONF_ECO_IOS]:
-                # Create old endpoint for back compatibility with older apps
-                hass.http.register_view(
-                    iOSPushConfigView(conf[CONF_ECO_IOS][CONF_PUSH])
-                )
+    try:
+        conf = config.get(DOMAIN)[CONF_ECO_IOS]
+        hass.http.register_view(iOSConfigView(conf))
+        if CONF_PUSH in conf:
+            # Create old endpoint for back compatibility with older apps
+            hass.http.register_view(iOSPushConfigView(conf[CONF_PUSH]))
+    except (TypeError, KeyError):
+        pass
 
     return True
 
