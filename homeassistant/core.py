@@ -393,12 +393,28 @@ class HomeAssistant:
         """Block until all pending work is done."""
         # To flush out any call_soon_threadsafe
         await asyncio.sleep(0)
+        start_time: Optional[float] = None
 
         while self._pending_tasks:
             pending = [task for task in self._pending_tasks if not task.done()]
             self._pending_tasks.clear()
             if pending:
                 await self._await_and_log_pending(pending)
+
+                if start_time is None:
+                    # Avoid calling monotonic() until we know
+                    # we may need to start logging blocked tasks.
+                    start_time = 0
+                elif start_time == 0:
+                    # If we have waited twice then we set the start
+                    # time
+                    start_time = monotonic()
+                elif monotonic() - start_time > BLOCK_LOG_TIMEOUT:
+                    # We have waited at least three loops and new tasks
+                    # continue to block. At this point we start
+                    # logging all waiting tasks.
+                    for task in pending:
+                        _LOGGER.debug("Waiting for task: %s", task)
             else:
                 await asyncio.sleep(0)
 
