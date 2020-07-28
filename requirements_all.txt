@@ -233,7 +233,7 @@ aioshelly==0.6.2
 aioswitcher==1.2.1
 
 # homeassistant.components.syncthing
-aiosyncthing==0.2.4
+aiosyncthing==0.3.4
 
 # homeassistant.components.unifi
 aiounifi==26
