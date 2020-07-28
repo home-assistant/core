@@ -48,7 +48,7 @@ async def validate_input(hass: core.HomeAssistant, data):
                 raise InvalidAuth
         raise CannotConnect
 
-    return {"title": f"{DOMAIN}_{data['name']}"}
+    return {"title": f"{data[CONF_NAME]} ({data[CONF_URL]})"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
