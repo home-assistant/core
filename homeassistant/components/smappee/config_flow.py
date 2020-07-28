@@ -33,8 +33,6 @@ class SmappeeFlowHandler(
 
     async def async_step_zeroconf(self, user_input):
         """Handle zeroconf discovery."""
-        if user_input is None:
-            return self.async_abort(reason="connection_error")
 
         if not user_input[CONF_HOSTNAME].startswith("Smappee1"):
             # We currently only support Energy and Solar models (legacy)
