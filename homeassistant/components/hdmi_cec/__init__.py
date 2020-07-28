@@ -347,7 +347,7 @@ def setup(hass: HomeAssistant, base_config):
     def _shutdown(call):
         hdmi_network.stop()
 
-    def _start_cec(event):
+    def _start_cec(callback_event):
         """Register services and start HDMI network to watch for devices."""
         hass.services.register(
             DOMAIN, SERVICE_SEND_COMMAND, _tx, SERVICE_SEND_COMMAND_SCHEMA
@@ -384,7 +384,7 @@ class CecEntity(Entity):
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
 
-    def _hdmi_cec_unavailable(self, event):
+    def _hdmi_cec_unavailable(self, callback_event):
         # Change state to unavailable. Without this, entity would remain in
         # its last state, since the state changes are pushed.
         self._state = STATE_UNAVAILABLE
