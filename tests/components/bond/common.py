@@ -51,6 +51,7 @@ async def setup_platform(
     discovered_device: Dict[str, Any],
     bond_device_id: str = "bond-device-id",
     props: Dict[str, Any] = None,
+    bond_version: Dict[str, Any] = None,
 ):
     """Set up the specified Bond platform."""
     mock_entry = MockConfigEntry(
@@ -60,7 +61,7 @@ async def setup_platform(
     mock_entry.add_to_hass(hass)
 
     with patch("homeassistant.components.bond.PLATFORMS", [platform]):
-        with patch_bond_version(), patch_bond_device_ids(
+        with patch_bond_version(return_value=bond_version), patch_bond_device_ids(
             return_value=[bond_device_id]
         ), patch_bond_device(
             return_value=discovered_device
