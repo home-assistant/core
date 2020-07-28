@@ -4,7 +4,7 @@ import aiohttp
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.adguard import config_flow
-from homeassistant.components.adguard.const import DOMAIN, MIN_ADGUARD_HOME_VERSION
+from homeassistant.components.adguard.const import DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -229,52 +229,3 @@ async def test_hassio_connection_error(hass, aioclient_mock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "hassio_confirm"
     assert result["errors"] == {"base": "connection_error"}
-
-
-async def test_outdated_adguard_version(hass, aioclient_mock):
-    """Test we show abort when connecting with unsupported AdGuard version."""
-    aioclient_mock.get(
-        f"{'https' if FIXTURE_USER_INPUT[CONF_SSL] else 'http'}"
-        f"://{FIXTURE_USER_INPUT[CONF_HOST]}"
-        f":{FIXTURE_USER_INPUT[CONF_PORT]}/control/status",
-        json={"version": "v0.98.0"},
-        headers={"Content-Type": "application/json"},
-    )
-
-    flow = config_flow.AdGuardHomeFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_user(user_input=None)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-    result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "adguard_home_outdated"
-    assert result["description_placeholders"] == {
-        "current_version": "v0.98.0",
-        "minimal_version": MIN_ADGUARD_HOME_VERSION,
-    }
-
-
-async def test_outdated_adguard_addon_version(hass, aioclient_mock):
-    """Test we show abort when connecting with unsupported AdGuard add-on version."""
-    aioclient_mock.get(
-        "http://mock-adguard:3000/control/status",
-        json={"version": "v0.98.0"},
-        headers={"Content-Type": "application/json"},
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        "adguard",
-        data={"addon": "AdGuard Home Addon", "host": "mock-adguard", "port": 3000},
-        context={"source": "hassio"},
-    )
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "adguard_home_addon_outdated"
-    assert result["description_placeholders"] == {
-        "current_version": "v0.98.0",
-        "minimal_version": MIN_ADGUARD_HOME_VERSION,
-    }
