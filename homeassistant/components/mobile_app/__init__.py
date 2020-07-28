@@ -181,7 +181,7 @@ async def async_remove_entry(hass, entry):
 
 # pylint: disable=invalid-name
 class iOSConfigView(HomeAssistantView):
-    """A view that provides the iOOS push categories configuration."""
+    """A view that provides the iOS push categories configuration."""
 
     url = "/api/mobile_app/ios"
     name = "api:mobile_app:ios"
