@@ -289,7 +289,10 @@ class ZoneTimeout:
     def asnyc_timeout(
         self, timeout: float, zone_name: str = ZONE_ALL
     ) -> Union[_TaskZone, _TaskGlobal]:
-        """Timeout based on a zone."""
+        """Timeout based on a zone.
+
+        For using as Async Context Manager.
+        """
         current_task: asyncio.Task[Any] = asyncio.current_task()
 
         # Zone all
@@ -308,6 +311,9 @@ class ZoneTimeout:
         return task
 
     def freeze(self) -> _Freeze:
-        """Freeze all timer until job is done."""
+        """Freeze all timer until job is done.
+
+        For using as (Async) Context Manager.
+        """
         freeze = _Freeze(self, self._loop)
         return freeze
