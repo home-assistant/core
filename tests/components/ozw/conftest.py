@@ -27,6 +27,12 @@ def light_data_fixture():
     return load_fixture("ozw/light_network_dump.csv")
 
 
+@pytest.fixture(name="light_new_ozw_data", scope="session")
+def light_new_ozw_data_fixture():
+    """Load light dimmer MQTT data and return it."""
+    return load_fixture("ozw/light_new_ozw_network_dump.csv")
+
+
 @pytest.fixture(name="light_no_rgb_data", scope="session")
 def light_no_rgb_data_fixture():
     """Load light dimmer MQTT data and return it."""
