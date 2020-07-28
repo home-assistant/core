@@ -251,7 +251,7 @@ async def async_setup(hass, config):
                         "Deprecitation Warning: Defining push configuration with "
                         "the iOS integration is depreciated. Use mobile_app instead."
                     )
-                hass.http.register_view(iOSPushConfigView(conf[CONF_PUSH]))
+                    hass.http.register_view(iOSPushConfigView(conf[CONF_PUSH]))
 
     return True
 
