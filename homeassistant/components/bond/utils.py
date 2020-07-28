@@ -24,6 +24,11 @@ class BondDevice:
         """Get the type of this device."""
         return self._attrs["type"]
 
+    @property
+    def trust_state(self) -> bool:
+        """Check if Trust State is turned on."""
+        return self.props.get("trust_state", False)
+
     def supports_speed(self) -> bool:
         """Return True if this device supports any of the speed related commands."""
         actions: List[str] = self._attrs["actions"]
@@ -89,3 +94,8 @@ class BondHub:
     def devices(self) -> List[BondDevice]:
         """Return a list of all devices controlled by this hub."""
         return self._devices
+
+    @property
+    def is_bridge(self) -> bool:
+        """Return if the Bond is a Bond Bridge. If False, it means that it is a Smart by Bond product. Assumes that it is if the model is not available."""
+        return self._version.get("model", "BD-").startswith("BD-")
