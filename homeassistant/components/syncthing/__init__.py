@@ -10,13 +10,13 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_TOKEN,
     CONF_URL,
+    CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
-    CONF_VERIFY_SSL,
     DOMAIN,
     EVENTS,
     RECONNECT_INTERVAL,

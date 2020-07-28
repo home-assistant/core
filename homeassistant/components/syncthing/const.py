@@ -4,7 +4,6 @@ from datetime import timedelta
 DOMAIN = "syncthing"
 DEFAULT_NAME = "syncthing"
 
-CONF_VERIFY_SSL = "verify_ssl"
 DEFAULT_VERIFY_SSL = True
 
 DEFAULT_URL = "http://127.0.0.1:8384"
