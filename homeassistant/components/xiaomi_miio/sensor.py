@@ -271,7 +271,7 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice):
 
 
 class XiaomiGatewayIlluminanceSensor(Entity):
-    """Representation of the XiaomiGatewayIlluminanceSensor."""
+    """Representation of the gateway device's illuminance sensor."""
 
     def __init__(self, gateway_device, gateway_name, gateway_device_id):
         """Initialize the entity."""
