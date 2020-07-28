@@ -52,9 +52,18 @@ class SmappeeFlowHandler(
     async def async_step_zeroconf_initiate(self, user_input=None, prepare=False):
         """Handle a flow initiated by zeroconf."""
 
+        def show_zeroconf_confirm_dialog(self, errors=None):
+            """Show the confirm dialog to the user."""
+            serialnumber = self.context.get(CONF_SERIALNUMBER)
+            return self.async_show_form(
+                step_id="zeroconf_confirm",
+                description_placeholders={"serialnumber": serialnumber},
+                errors=errors or {},
+            )
+
         # Prepare zeroconf discovery flow
         if user_input is None and not prepare:
-            return self._show_zeroconf_confirm_dialog()
+            return show_zeroconf_confirm_dialog(self)
 
         user_input[CONF_IP_ADDRESS] = self.context.get(CONF_IP_ADDRESS)
         user_input[CONF_SERIALNUMBER] = self.context.get(CONF_SERIALNUMBER)
@@ -85,15 +94,6 @@ class SmappeeFlowHandler(
         """Confirm zeroconf flow."""
         return await self.async_step_zeroconf_initiate(user_input)
 
-    def _show_zeroconf_confirm_dialog(self, errors=None):
-        """Show the confirm dialog to the user."""
-        serialnumber = self.context.get(CONF_SERIALNUMBER)
-        return self.async_show_form(
-            step_id="zeroconf_confirm",
-            description_placeholders={"serialnumber": serialnumber},
-            errors=errors or {},
-        )
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         return await self._handle_config_flow(user_input)
@@ -101,16 +101,38 @@ class SmappeeFlowHandler(
     async def _handle_config_flow(self, user_input=None, prepare=False):
         """Config flow handler for Smappee."""
 
+        def show_environment_setup_form(self, errors=None):
+            """Show the environment form to the user."""
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required("environment", default=ENV_CLOUD): vol.In(
+                            [ENV_CLOUD, ENV_LOCAL]
+                        )
+                    }
+                ),
+                errors=errors or {},
+            )
+
+        def show_host_setup_form(self, errors=None):
+            """Show the host form to the user."""
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+                errors=errors or {},
+            )
+
         # Show LOCAL/CLOUD option or prepare zeroconf discovery flow
         if user_input is None and not prepare:
             # Show environment form with CLOUD or LOCAL option
-            return self._show_environment_setup_form()
+            return show_environment_setup_form(self)
 
         # Environment chosen, request additional host information for LOCAL or OAuth2 flow for CLOUD
         if user_input is not None and "environment" in user_input:
             if user_input["environment"] == ENV_LOCAL:
                 self.context.update({"environment": ENV_LOCAL})
-                return self._show_host_setup_form()
+                return show_host_setup_form(self)
 
             # Use configuration.yaml CLOUD setup
             self.context.update({"environment": ENV_CLOUD})
@@ -149,26 +171,4 @@ class SmappeeFlowHandler(
                 CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
                 CONF_SERIALNUMBER: user_input[CONF_SERIALNUMBER],
             },
-        )
-
-    def _show_environment_setup_form(self, errors=None):
-        """Show the environment form to the user."""
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required("environment", default=ENV_CLOUD): vol.In(
-                        [ENV_CLOUD, ENV_LOCAL]
-                    )
-                }
-            ),
-            errors=errors or {},
-        )
-
-    def _show_host_setup_form(self, errors=None):
-        """Show the host form to the user."""
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
-            errors=errors or {},
         )
