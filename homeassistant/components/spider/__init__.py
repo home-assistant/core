@@ -45,7 +45,7 @@ async def async_setup(hass, config):
     if DOMAIN not in config:
         return True
 
-    conf = config.get(DOMAIN, {})
+    conf = config[DOMAIN]
 
     if not hass.config_entries.async_entries(DOMAIN):
         hass.async_create_task(
@@ -63,16 +63,16 @@ async def async_setup_entry(hass, entry):
         hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(
             _spider_startup_wrapper, entry
         )
-
-        for component in PLATFORMS:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, component)
-            )
-
-        return True
     except UnauthorizedException:
         _LOGGER.error("Can't connect to the Spider API")
         return False
+
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
+
+    return True
 
 
 async def async_unload_entry(hass, entry):
