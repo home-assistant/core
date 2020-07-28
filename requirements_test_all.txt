@@ -43,7 +43,7 @@ WSDiscovery==2.0.0
 YesssSMS==0.4.1
 
 # homeassistant.components.abode
-abodepy==0.19.0
+abodepy==1.1.0
 
 # homeassistant.components.accuweather
 accuweather==0.0.9
@@ -356,7 +356,7 @@ herepy==2.0.0
 hole==0.5.1
 
 # homeassistant.components.workday
-holidays==0.10.2
+holidays==0.10.3
 
 # homeassistant.components.frontend
 home-assistant-frontend==20200716.0
@@ -616,7 +616,7 @@ pyeverlights==0.1.0
 pyfido==2.1.1
 
 # homeassistant.components.flume
-pyflume==0.4.0
+pyflume==0.5.5
 
 # homeassistant.components.flunearyou
 pyflunearyou==1.0.7
@@ -782,7 +782,7 @@ python-izone==1.1.2
 python-juicenet==1.0.1
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.2.1
+python-miio==0.5.3
 
 # homeassistant.components.nest
 python-nest==4.1.0
@@ -825,6 +825,9 @@ pyvesync==1.1.0
 
 # homeassistant.components.vizio
 pyvizio==0.1.49
+
+# homeassistant.components.volumio
+pyvolumio==0.1
 
 # homeassistant.components.html5
 pywebpush==1.9.2
@@ -927,7 +930,7 @@ tellduslive==0.10.11
 tesla-powerwall==0.2.11
 
 # homeassistant.components.tesla
-teslajsonpy==0.9.3
+teslajsonpy==0.10.1
 
 # homeassistant.components.toon
 toonapi==0.1.0

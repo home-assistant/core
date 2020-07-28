@@ -29,8 +29,10 @@ async def test_show_form(hass):
     assert result["step_id"] == SOURCE_USER
 
 
-async def test_invalid_api_key_1(hass):
-    """Test that errors are shown when API key is invalid."""
+async def test_api_key_too_short(hass):
+    """Test that errors are shown when API key is too short."""
+    # The API key length check is done by the library without polling the AccuWeather
+    # server so we don't need to patch the library method.
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -45,7 +47,7 @@ async def test_invalid_api_key_1(hass):
     assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
 
 
-async def test_invalid_api_key_2(hass):
+async def test_invalid_api_key(hass):
     """Test that errors are shown when API key is invalid."""
     with patch(
         "accuweather.AccuWeather._async_get_data",
@@ -112,6 +114,8 @@ async def test_create_entry(hass):
     with patch(
         "accuweather.AccuWeather._async_get_data",
         return_value=json.loads(load_fixture("accuweather/location_data.json")),
+    ), patch(
+        "homeassistant.components.accuweather.async_setup_entry", return_value=True
     ):
 
         result = await hass.config_entries.flow.async_init(

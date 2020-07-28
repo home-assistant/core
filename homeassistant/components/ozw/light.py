@@ -140,29 +140,41 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
     def async_set_duration(self, **kwargs):
         """Set the transition time for the brightness value.
 
-        Zwave Dimming Duration values:
-        0       = instant
-        0-127   = 1 second to 127 seconds
-        128-254 = 1 minute to 127 minutes
-        255     = factory default
+        Zwave Dimming Duration values now use seconds as an
+        integer (max: 7620 seconds or 127 mins)
+        Build 1205 https://github.com/OpenZWave/open-zwave/commit/f81bc04
         """
         if self.values.dimming_duration is None:
             return
 
+        ozw_version = tuple(
+            int(x)
+            for x in self.values.primary.ozw_instance.get_status().openzwave_version.split(
+                "."
+            )
+        )
+
         if ATTR_TRANSITION not in kwargs:
             # no transition specified by user, use defaults
-            new_value = 255
+            new_value = 7621  # anything over 7620 uses the factory default
+            if ozw_version < (1, 6, 1205):
+                new_value = 255  # default for older version
+
         else:
-            # transition specified by user, convert to zwave value
-            transition = kwargs[ATTR_TRANSITION]
-            if transition <= 127:
-                new_value = int(transition)
-            else:
-                minutes = int(transition / 60)
-                _LOGGER.debug(
-                    "Transition rounded to %d minutes for %s", minutes, self.entity_id
-                )
-                new_value = minutes + 128
+            # transition specified by user
+            new_value = max(0, min(7620, kwargs[ATTR_TRANSITION]))
+            if ozw_version < (1, 6, 1205):
+                transition = kwargs[ATTR_TRANSITION]
+                if transition <= 127:
+                    new_value = int(transition)
+                else:
+                    minutes = int(transition / 60)
+                    _LOGGER.debug(
+                        "Transition rounded to %d minutes for %s",
+                        minutes,
+                        self.entity_id,
+                    )
+                    new_value = minutes + 128
 
         # only send value if it differs from current
         # this prevents a command for nothing

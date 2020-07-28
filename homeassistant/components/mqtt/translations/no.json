@@ -12,7 +12,7 @@
                     "broker": "Megler",
                     "discovery": "Aktiver oppdagelse",
                     "password": "Passord",
-                    "port": "Port",
+                    "port": "",
                     "username": "Brukernavn"
                 },
                 "description": "Vennligst fyll ut tilkoblingsinformasjonen for din MQTT megler."

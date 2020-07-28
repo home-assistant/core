@@ -71,7 +71,6 @@ SERVICE_HANDLERS = {
     "bose_soundtouch": ("media_player", "soundtouch"),
     "bluesound": ("media_player", "bluesound"),
     "kodi": ("media_player", "kodi"),
-    "volumio": ("media_player", "volumio"),
     "lg_smart_device": ("media_player", "lg_soundbar"),
     "nanoleaf_aurora": ("light", "nanoleaf"),
 }
@@ -93,6 +92,7 @@ MIGRATED_SERVICE_HANDLERS = [
     "songpal",
     SERVICE_WEMO,
     SERVICE_XIAOMI_GW,
+    "volumio",
 ]
 
 DEFAULT_ENABLED = (
