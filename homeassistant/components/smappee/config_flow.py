@@ -37,6 +37,7 @@ class SmappeeFlowHandler(
             # We currently only support Energy and Solar models (legacy)
             return self.async_abort(reason="invalid_mdns")
 
+        # pylint: disable=no-member
         self.context.update(
             {
                 CONF_IP_ADDRESS: user_input["host"],
@@ -65,7 +66,9 @@ class SmappeeFlowHandler(
         if user_input is None and not prepare:
             return show_zeroconf_confirm_dialog(self)
 
+        # pylint: disable=no-member
         user_input[CONF_IP_ADDRESS] = self.context.get(CONF_IP_ADDRESS)
+        # pylint: disable=no-member
         user_input[CONF_SERIALNUMBER] = self.context.get(CONF_SERIALNUMBER)
 
         if user_input.get(CONF_IP_ADDRESS) is not None or not prepare:
@@ -131,10 +134,12 @@ class SmappeeFlowHandler(
         # Environment chosen, request additional host information for LOCAL or OAuth2 flow for CLOUD
         if user_input is not None and "environment" in user_input:
             if user_input["environment"] == ENV_LOCAL:
+                # pylint: disable=no-member
                 self.context.update({"environment": ENV_LOCAL})
                 return show_host_setup_form(self)
 
             # Use configuration.yaml CLOUD setup
+            # pylint: disable=no-member
             self.context.update({"environment": ENV_CLOUD})
             return await self.async_step_pick_implementation()
 
