@@ -431,7 +431,7 @@ nessclient==0.9.15
 
 # homeassistant.components.discovery
 # homeassistant.components.ssdp
-netdisco==2.8.0
+netdisco==2.8.1
 
 # homeassistant.components.nexia
 nexia==0.9.3
@@ -767,7 +767,7 @@ python-izone==1.1.2
 python-juicenet==1.0.1
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.2.1
+python-miio==0.5.3
 
 # homeassistant.components.nest
 python-nest==4.1.0
@@ -909,7 +909,7 @@ sunwatcher==0.2.1
 tellduslive==0.10.11
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.2.11
+tesla-powerwall==0.2.12
 
 # homeassistant.components.tesla
 teslajsonpy==0.9.3
