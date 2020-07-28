@@ -268,7 +268,7 @@ class XiaomiGatewayIlluminanceSensor(Entity):
         self._name = f"{gateway_name} Illuminance"
         self._gateway_device_id = gateway_device_id
         self._unique_id = f"{gateway_device_id}-illuminance"
-        self._available = None
+        self._available = False
         self._state = None
 
     @property
@@ -320,8 +320,9 @@ class XiaomiGatewayIlluminanceSensor(Entity):
                 self._gateway.get_illumination
             )
         except GatewayException as ex:
-            self._available = False
-            _LOGGER.error(
-                "Got exception while fetching the gateway illuminance state: %s", ex
-            )
+            if self._available:
+                self._available = False
+                _LOGGER.error(
+                    "Got exception while fetching the gateway illuminance state: %s", ex
+                )
         self._available = True

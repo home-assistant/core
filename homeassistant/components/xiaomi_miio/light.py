@@ -15,7 +15,6 @@ from miio import (  # pylint: disable=import-error
     PhilipsMoonlight,
 )
 from miio.gateway import GatewayException
-from miio.utils import brightness_and_color_to_int, int_to_brightness, int_to_rgb
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -966,7 +965,7 @@ class XiaomiGatewayLight(LightEntity):
         self._name = f"{gateway_name} Light"
         self._gateway_device_id = gateway_device_id
         self._unique_id = f"{gateway_device_id}-light"
-        self._available = None
+        self._available = False
         self._is_on = None
         self._brightness_pct = 100
         self._rgb = (255, 255, 255)
@@ -1031,39 +1030,33 @@ class XiaomiGatewayLight(LightEntity):
         else:
             brightness_pct = self._brightness_pct
 
-        brightness_and_color = brightness_and_color_to_int(brightness_pct, rgb)
-        self._gateway.send("set_rgb", [brightness_and_color])
+        self._gateway.light.set_rgb(brightness_pct, rgb)
 
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
-        brightness_and_color = brightness_and_color_to_int(0, self._rgb)
-        self._gateway.send("set_rgb", [brightness_and_color])
-
+        self._gateway.light.set_rgb(0, self._rgb)
         self.schedule_update_ha_state()
 
     async def async_update(self):
         """Fetch state from the device."""
         try:
-            state_int = await self.hass.async_add_executor_job(
-                partial(self._gateway.send, "get_rgb")
+            state_dict = await self.hass.async_add_executor_job(
+                self._gateway.light.rgb_status
             )
         except GatewayException as ex:
-            self._available = False
-            _LOGGER.error(
-                "Got exception while fetching the gateway light state: %s", ex
-            )
+            if self._available:
+                self._available = False
+                _LOGGER.error(
+                    "Got exception while fetching the gateway light state: %s", ex
+                )
             return
 
-        state_int = state_int.pop()
         self._available = True
-        brightness_pct = int_to_brightness(state_int)
+        self._is_on = state_dict["is_on"]
 
-        if brightness_pct > 0:
-            self._is_on = True
-            self._brightness_pct = brightness_pct
-            self._rgb = int_to_rgb(state_int)
+        if self._is_on:
+            self._brightness_pct = state_dict["brightness"]
+            self._rgb = state_dict["rgb"]
             self._hs = color.color_RGB_to_hs(*self._rgb)
-        else:
-            self._is_on = False
