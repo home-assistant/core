@@ -57,7 +57,7 @@ class LGDevice(MediaPlayerEntity):
 
     async def async_added_to_hass(self):
         """Register the callback after hass is ready for it."""
-        return await self.hass.async_add_executor_job(self._connect)
+        await self.hass.async_add_executor_job(self._connect)
 
     def _connect(self):
         """Perform the actual devices setup."""
