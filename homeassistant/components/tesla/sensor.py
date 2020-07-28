@@ -1,6 +1,7 @@
 """Support for the Tesla sensors."""
 import logging
 
+from homeassistant.components.sensor import DEVICE_CLASSES
 from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_MILES,
@@ -17,28 +18,30 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Tesla binary_sensors by config_entry."""
-    controller = hass.data[TESLA_DOMAIN][config_entry.entry_id]["controller"]
+    coordinator = hass.data[TESLA_DOMAIN][config_entry.entry_id]["coordinator"]
     entities = []
     for device in hass.data[TESLA_DOMAIN][config_entry.entry_id]["devices"]["sensor"]:
         if device.type == "temperature sensor":
-            entities.append(TeslaSensor(device, controller, config_entry, "inside"))
-            entities.append(TeslaSensor(device, controller, config_entry, "outside"))
+            entities.append(TeslaSensor(device, coordinator, "inside"))
+            entities.append(TeslaSensor(device, coordinator, "outside"))
         else:
-            entities.append(TeslaSensor(device, controller, config_entry))
+            entities.append(TeslaSensor(device, coordinator))
     async_add_entities(entities, True)
 
 
 class TeslaSensor(TeslaDevice, Entity):
     """Representation of Tesla sensors."""
 
-    def __init__(self, tesla_device, controller, config_entry, sensor_type=None):
+    def __init__(self, tesla_device, coordinator, sensor_type=None):
         """Initialize of the sensor."""
         self.current_value = None
         self.units = None
         self.last_changed_time = None
         self.type = sensor_type
-        self._device_class = tesla_device.device_class
-        super().__init__(tesla_device, controller, config_entry)
+        self._device_class = None
+        if tesla_device.device_class in DEVICE_CLASSES:
+            self._device_class = tesla_device.device_class
+        super().__init__(tesla_device, coordinator)
 
         if self.type:
             self._name = f"{self.tesla_device.name} ({self.type})"

@@ -13,9 +13,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Tesla binary_sensors by config_entry."""
     entities = [
         TeslaDeviceEntity(
-            device,
-            hass.data[TESLA_DOMAIN][config_entry.entry_id]["controller"],
-            config_entry,
+            device, hass.data[TESLA_DOMAIN][config_entry.entry_id]["coordinator"],
         )
         for device in hass.data[TESLA_DOMAIN][config_entry.entry_id]["devices"][
             "devices_tracker"
@@ -27,9 +25,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class TeslaDeviceEntity(TeslaDevice, TrackerEntity):
     """A class representing a Tesla device."""
 
-    def __init__(self, tesla_device, controller, config_entry):
+    def __init__(self, tesla_device, coordinator):
         """Initialize the Tesla device scanner."""
-        super().__init__(tesla_device, controller, config_entry)
+        super().__init__(tesla_device, coordinator)
         self._latitude = None
         self._longitude = None
         self._attributes = {"trackr_id": self.unique_id}
@@ -58,11 +56,6 @@ class TeslaDeviceEntity(TeslaDevice, TrackerEntity):
     def longitude(self) -> float:
         """Return longitude value of the device."""
         return self._longitude
-
-    @property
-    def should_poll(self):
-        """Return whether polling is needed."""
-        return True
 
     @property
     def source_type(self):

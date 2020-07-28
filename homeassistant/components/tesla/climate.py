@@ -25,9 +25,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(
         [
             TeslaThermostat(
-                device,
-                hass.data[TESLA_DOMAIN][config_entry.entry_id]["controller"],
-                config_entry,
+                device, hass.data[TESLA_DOMAIN][config_entry.entry_id]["coordinator"],
             )
             for device in hass.data[TESLA_DOMAIN][config_entry.entry_id]["devices"][
                 "climate"
@@ -40,9 +38,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class TeslaThermostat(TeslaDevice, ClimateEntity):
     """Representation of a Tesla climate."""
 
-    def __init__(self, tesla_device, controller, config_entry):
+    def __init__(self, tesla_device, coordinator):
         """Initialize the Tesla device."""
-        super().__init__(tesla_device, controller, config_entry)
+        super().__init__(tesla_device, coordinator)
         self._target_temperature = None
         self._temperature = None
 

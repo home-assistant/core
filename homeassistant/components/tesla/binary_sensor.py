@@ -13,9 +13,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(
         [
             TeslaBinarySensor(
-                device,
-                hass.data[TESLA_DOMAIN][config_entry.entry_id]["controller"],
-                config_entry,
+                device, hass.data[TESLA_DOMAIN][config_entry.entry_id]["coordinator"],
             )
             for device in hass.data[TESLA_DOMAIN][config_entry.entry_id]["devices"][
                 "binary_sensor"
@@ -28,9 +26,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class TeslaBinarySensor(TeslaDevice, BinarySensorEntity):
     """Implement an Tesla binary sensor for parking and charger."""
 
-    def __init__(self, tesla_device, controller, config_entry):
+    def __init__(self, tesla_device, coordinator):
         """Initialise of a Tesla binary sensor."""
-        super().__init__(tesla_device, controller, config_entry)
+        super().__init__(tesla_device, coordinator)
         self._state = None
         self._sensor_type = None
         if tesla_device.sensor_type in DEVICE_CLASSES:
