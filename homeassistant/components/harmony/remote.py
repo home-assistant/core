@@ -300,10 +300,10 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
             # Save the activity so we can restore
             # to that activity if none is specified
             # when turning on
+            self._activity_starting = True
             self._last_activity = activity_name
         self._state = bool(activity_id != -1)
         self._available = True
-        self._activity_starting = True
         self.async_write_ha_state()
 
     async def new_config(self, _=None):
