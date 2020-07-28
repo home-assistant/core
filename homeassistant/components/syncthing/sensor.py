@@ -34,10 +34,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     try:
         config = await client.system.config()
+        version = await client.system.version()
         dev = []
 
         for folder in config["folders"]:
-            dev.append(FolderSensor(hass, client, name, folder))
+            dev.append(FolderSensor(hass, client, name, folder, version["version"]))
 
         async_add_entities(dev)
     except aiosyncthing.exceptions.SyncthingError as exception:
@@ -47,7 +48,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FolderSensor(Entity):
     """A Syncthing folder sensor."""
 
-    def __init__(self, hass, client, name, folder):
+    def __init__(self, hass, client, name, folder, version):
         """Initialize the sensor."""
         self.hass = hass
         self._client = client
@@ -55,6 +56,7 @@ class FolderSensor(Entity):
         self._folder = folder
         self._state = None
         self._unsub_timer = None
+        self._version = version
 
     @property
     def name(self):
@@ -94,6 +96,17 @@ class FolderSensor(Entity):
     def should_poll(self):
         """Return the polling requirement for this sensor."""
         return False
+
+    @property
+    def device_info(self):
+        """Return device information."""
+        return {
+            "identifiers": {(DOMAIN, self._name)},
+            "name": "Syncthing",
+            "manufacturer": "Syncthing Team",
+            "sw_version": self._version,
+            "entry_type": "service",
+        }
 
     async def async_update_status(self):
         """Request folder status and update state."""
