@@ -185,7 +185,7 @@ class EcoNetEntity(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of the entity."""
-        return self._econet.device_id
+        return self._econet.serial_number
 
     @property
     def should_poll(self) -> bool:
