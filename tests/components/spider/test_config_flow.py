@@ -89,7 +89,7 @@ async def test_abort_if_already_setup(hass, spider):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
 
     # Should fail, config exist (flow)
     result = await hass.config_entries.flow.async_init(
@@ -97,4 +97,4 @@ async def test_abort_if_already_setup(hass, spider):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
