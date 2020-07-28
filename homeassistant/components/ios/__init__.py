@@ -242,14 +242,15 @@ async def async_setup(hass, config):
             )
         )
 
-    if not config.get(DOMAIN_MOBILE_APP)[CONF_PUSH]:
-        conf = config.get(DOMAIN)
-        if conf[CONF_PUSH]:
-            _LOGGER.warning(
-                "Deprecitation Warning: Defining push configuration with "
-                "the iOS integration is depreciated. Use mobile_app instead."
-            )
-            hass.http.register_view(iOSPushConfigView(conf[CONF_PUSH]))
+    if not config.get(DOMAIN_MOBILE_APP):
+        if not [CONF_PUSH] in config.get(DOMAIN_MOBILE_APP):
+            conf = config.get(DOMAIN)
+            if conf[CONF_PUSH]:
+                _LOGGER.warning(
+                    "Deprecitation Warning: Defining push configuration with "
+                    "the iOS integration is depreciated. Use mobile_app instead."
+                )
+                hass.http.register_view(iOSPushConfigView(conf[CONF_PUSH]))
 
     return True
 

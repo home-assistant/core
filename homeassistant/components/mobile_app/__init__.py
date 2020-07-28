@@ -106,11 +106,14 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     conf = config.get(DOMAIN)
 
-    if conf and CONF_ECO_IOS in conf:
-        hass.http.register_view(iOSConfigView(conf[CONF_ECO_IOS]))
-        if CONF_PUSH in conf[CONF_ECO_IOS]:
-            # Create old endpoint for back compatibility with older apps
-            hass.http.register_view(iOSPushConfigView(conf[CONF_ECO_IOS][CONF_PUSH]))
+    if conf:
+        if CONF_ECO_IOS in conf:
+            hass.http.register_view(iOSConfigView(conf[CONF_ECO_IOS]))
+            if CONF_PUSH in conf[CONF_ECO_IOS]:
+                # Create old endpoint for back compatibility with older apps
+                hass.http.register_view(
+                    iOSPushConfigView(conf[CONF_ECO_IOS][CONF_PUSH])
+                )
 
     return True
 
