@@ -5,7 +5,7 @@
                 "data": {
                   "debug": "Enable debugging",
                   "automatic_add": "Enable automatic add",
-                  "device_id": "Select device id to add",
+                  "device_id": "Enter device id to add",
                   "device": "Select device to configure",
                   "remove_device": "Select device to delete"
                 },
