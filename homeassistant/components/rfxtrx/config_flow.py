@@ -65,20 +65,26 @@ class OptionsFlow(config_entries.OptionsFlow):
                 CONF_AUTOMATIC_ADD: user_input[CONF_AUTOMATIC_ADD],
             }
             if CONF_DEVICE in user_input:
-                event_code = self._get_event_code(user_input[CONF_DEVICE])
-                if not event_code:
+                device_data = self._get_device_data(user_input[CONF_DEVICE])
+                if not device_data.get("event_code"):
                     errors = {"base": "unknown_event_code"}
                 else:
+                    event_code = device_data["event_code"]
                     self._selected_device_event_code = event_code
                     self._selected_device = self._config_entry.data[CONF_DEVICES][
                         event_code
                     ]
                     return await self.async_step_set_device_options()
             if CONF_REMOVE_DEVICE in user_input:
-                event_code = self._get_event_code(user_input[CONF_REMOVE_DEVICE])
-                if not event_code:
+                device_data = self._get_device_data(user_input[CONF_REMOVE_DEVICE])
+                if not device_data.get("event_code"):
                     errors = {"base": "unknown_event_code"}
                 else:
+                    event_code = device_data["event_code"]
+                    device_id = device_data["device_id"]
+                    self.hass.helpers.dispatcher.async_dispatcher_send(
+                        f"{DOMAIN}_{device_id}"
+                    )
                     device_registry = await async_get_registry(self.hass)
                     device_registry.async_remove_device(user_input[CONF_REMOVE_DEVICE])
                     devices = {event_code: None}
@@ -233,7 +239,7 @@ class OptionsFlow(config_entries.OptionsFlow):
             errors=errors,
         )
 
-    def _get_event_code(self, entry_id):
+    def _get_device_data(self, entry_id):
         """Get event code based on device identifier."""
         event_code = None
         device_id = None
@@ -242,11 +248,13 @@ class OptionsFlow(config_entries.OptionsFlow):
                 device_id = next(iter(entry.identifiers))[1:]
                 break
         for packet_id, entity_info in self._config_entry.data[CONF_DEVICES].items():
-            if entity_info.get(CONF_DEVICE_ID) == device_id:
+            if tuple(entity_info.get(CONF_DEVICE_ID)) == device_id:
                 event_code = packet_id
                 break
 
-        return event_code
+        data = {"event_code": event_code, "device_id": device_id}
+
+        return data
 
     @callback
     def update_config_data(self, global_options=None, devices=None):
