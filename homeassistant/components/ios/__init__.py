@@ -248,7 +248,7 @@ async def async_setup(hass, config):
         try:
             conf = config.get(DOMAIN)[CONF_PUSH]
             _LOGGER.warning(
-                "Deprecitation Warning: Defining push configuration with "
+                "Deprecation Warning: Defining push configuration with "
                 "the iOS integration is deprecated. Use mobile_app instead."
             )
             hass.http.register_view(iOSPushConfigView(conf))
