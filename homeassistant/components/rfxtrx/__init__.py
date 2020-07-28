@@ -418,7 +418,6 @@ class RfxtrxEntity(RestoreEntity):
         self._event = event
         self._device_id = device_id
         self._unique_id = "_".join(x for x in self._device_id)
-        # hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _start_rfxtrx)
 
     async def async_added_to_hass(self):
         """Restore RFXtrx device state (ON/OFF)."""
