@@ -124,7 +124,7 @@ class LdapAuthProvider(AuthProvider):
                     user=self.config[CONF_BIND_USERNAME],
                     password=bind_password,
                     authentication=ldap3.NTLM,
-                    auto_bind=True,
+                    auto_bind=False,
                 )
             else:
                 bind_dn = (
@@ -134,13 +134,13 @@ class LdapAuthProvider(AuthProvider):
                 )
                 _LOGGER.debug("Binding as %s", bind_dn)
                 conn = ldap3.Connection(
-                    server, user=bind_dn, password=bind_password, auto_bind=True,
+                    server, user=bind_dn, password=bind_password, auto_bind=False,
                 )
-
+            conn.open(read_server_info=False)
             # Upgrade connection with START_TLS if requested.
-            # TODO START_TLS before binding
             if encryption == CONF_ENCRYPTION_STARTTLS:
-                conn.starttls()
+                conn.starttls(read_server_info=False)
+            conn.bind()
 
             _LOGGER.debug("Server info: %s", server.info)
             _LOGGER.debug("Connection: %s", conn)
@@ -177,7 +177,6 @@ class LdapAuthProvider(AuthProvider):
                         _LOGGER.debug(
                             "Group membership test passed. The user belongs to one the whitelisted groups."
                         )
-                _LOGGER.warning(f"Member: {member}")
                 if not member:
                     _LOGGER.debug(
                         "Group membership test failed. The user is a member of NONE of the whitelisted groups."
