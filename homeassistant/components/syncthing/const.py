@@ -3,10 +3,11 @@ from datetime import timedelta
 
 DOMAIN = "syncthing"
 DEFAULT_NAME = "syncthing"
-DEFAULT_PORT = 8384
 
-CONF_USE_HTTPS = "use_https"
-DEFAULT_USE_HTTPS = False
+CONF_VERIFY_SSL = "verify_ssl"
+DEFAULT_VERIFY_SSL = True
+
+DEFAULT_URL = "http://127.0.0.1:8384"
 
 RECONNECT_INTERVAL = timedelta(seconds=10)
 SCAN_INTERVAL = timedelta(seconds=120)

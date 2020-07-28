@@ -2,10 +2,9 @@
 
 import logging
 
-import syncthing
+import aiosyncthing
 
 from homeassistant.const import CONF_NAME
-from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -34,14 +33,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     client = hass.data[DOMAIN][name]["client"]
 
     try:
-        config = await hass.async_add_executor_job(client.system.config)
+        config = await client.system.config()
         dev = []
 
         for folder in config["folders"]:
             dev.append(FolderSensor(hass, client, name, folder))
 
         async_add_entities(dev)
-    except syncthing.SyncthingError as exception:
+    except aiosyncthing.exceptions.SyncthingError as exception:
         raise PlatformNotReady from exception
 
 
@@ -99,14 +98,12 @@ class FolderSensor(Entity):
     async def async_update_status(self):
         """Request folder status and update state."""
         try:
-            state = await self.hass.async_add_executor_job(
-                self._client.database.status, self._folder["id"]
-            )
+            state = await self._client.database.status(self._folder["id"])
             # A workaround, for some reason, state of paused folders is an empty string
             if state["state"] == "":
                 state["state"] = "paused"
             self._state = state
-        except syncthing.SyncthingError:
+        except aiosyncthing.exceptions.SyncthingError:
             self._state = None
         self.async_write_ha_state()
 
@@ -114,9 +111,9 @@ class FolderSensor(Entity):
         """Start polling syncthing folder status."""
         if self._unsub_timer is None:
 
-            def refresh(event_time):
+            async def refresh(event_time):
                 """Get the latest data from Syncthing."""
-                self.hass.add_job(self.async_update_status)
+                await self.async_update_status()
 
             self._unsub_timer = async_track_time_interval(
                 self.hass, refresh, SCAN_INTERVAL
@@ -131,8 +128,7 @@ class FolderSensor(Entity):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
 
-        @callback
-        def handle_folder_summary(event):
+        async def handle_folder_summary(event):
             if self._state is not None:
                 # A workaround, for some reason, state of paused folder is an empty string
                 if event["data"]["summary"]["state"] == "":
@@ -148,8 +144,7 @@ class FolderSensor(Entity):
             )
         )
 
-        @callback
-        def handle_state_chaged(event):
+        async def handle_state_chaged(event):
             if self._state is not None:
                 self._state["state"] = event["data"]["to"]
                 self.async_write_ha_state()
@@ -162,8 +157,7 @@ class FolderSensor(Entity):
             )
         )
 
-        @callback
-        def handle_folder_paused(event):
+        async def handle_folder_paused(event):
             if self._state is not None:
                 self._state["state"] = "paused"
                 self.async_write_ha_state()
@@ -176,8 +170,7 @@ class FolderSensor(Entity):
             )
         )
 
-        @callback
-        def handle_server_unavailable():
+        async def handle_server_unavailable():
             self._state = None
             self.unsubscribe()
             self.async_write_ha_state()
@@ -190,10 +183,9 @@ class FolderSensor(Entity):
             )
         )
 
-        @callback
-        def handle_server_available():
+        async def handle_server_available():
             self.subscribe()
-            self.hass.add_job(self.async_update_status)
+            await self.async_update_status()
 
         self.async_on_remove(
             async_dispatcher_connect(

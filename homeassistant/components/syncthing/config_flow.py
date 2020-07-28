@@ -1,30 +1,29 @@
 """Config flow for syncthing integration."""
 import logging
 
+import aiosyncthing
 import requests
-import syncthing
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_TOKEN,
-    HTTP_FORBIDDEN,
-)
+from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_URL, HTTP_FORBIDDEN
 
-from .const import CONF_USE_HTTPS, DEFAULT_NAME, DEFAULT_PORT, DEFAULT_USE_HTTPS, DOMAIN
+from .const import (
+    CONF_VERIFY_SSL,
+    DEFAULT_NAME,
+    DEFAULT_URL,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
-        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_URL, default=DEFAULT_URL): str,
         vol.Required(CONF_TOKEN): str,
-        vol.Required(CONF_USE_HTTPS, default=DEFAULT_USE_HTTPS): bool,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
     }
 )
 
@@ -32,18 +31,18 @@ DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
-    if data[CONF_NAME] in hass.data[DOMAIN]:
+    if DOMAIN in hass.data and data[CONF_NAME] in hass.data[DOMAIN]:
         raise AlreadyConfigured
 
     try:
-        client = syncthing.Syncthing(
+        async with aiosyncthing.Syncthing(
             data[CONF_TOKEN],
-            host=data[CONF_HOST],
-            port=data[CONF_PORT],
-            is_https=data[CONF_USE_HTTPS],
-        )
-        await hass.async_add_executor_job(client.system.config)
-    except syncthing.SyncthingError as err:
+            url=data[CONF_URL],
+            verify_ssl=data[CONF_VERIFY_SSL],
+            loop=hass.loop,
+        ) as client:
+            await client.system.ping()
+    except aiosyncthing.exceptions.PingError as err:
         if type(err.__cause__) is requests.exceptions.HTTPError:
             if err.__cause__.response.status_code == HTTP_FORBIDDEN:
                 raise InvalidAuth
