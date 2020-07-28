@@ -155,7 +155,6 @@ class FlumeSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the states."""
-        _LOGGER.debug("Updating flume sensor: %s", self._name)
 
         def format_state_value(value):
             return round(value, 1) if isinstance(value, Number) else None
@@ -164,8 +163,11 @@ class FlumeSensor(Entity):
         self._state = format_state_value(
             self._flume_data.flume_device.values[self._flume_query_sensor[0]]
         )
-        _LOGGER.debug("Successful update of flume sensor: %s", self._name)
-
+        _LOGGER.debug(
+            "Updating sensor: '%s', value: '%s'",
+            self._name,
+            self._flume_data.flume_device.values[self._flume_query_sensor[0]],
+        )
         self._available = self._flume_data.available
 
     async def async_added_to_hass(self):
@@ -187,15 +189,18 @@ class FlumeSensorData:
     def update(self):
         """Get the latest data from the Flume."""
         _LOGGER.debug("Updating Flume data")
-
         try:
             self.flume_device.update_force()
-            self.available = True
-            _LOGGER.debug("Returned Flume query: %s", self.flume_device.query_payload)
-            _LOGGER.debug("Returned Flume values: %s", self.flume_device.values)
         except Exception as ex:  # pylint: disable=broad-except
             if self.available:
                 _LOGGER.error("Update of Flume data failed: %s", ex)
             self.available = False
             return
-        _LOGGER.debug("Successful update of Flume data")
+        self.available = True
+        _LOGGER.debug(
+            "Flume update details: %s",
+            {
+                "values": self.flume_device.values,
+                "query_payload": self.flume_device.query_payload,
+            },
+        )
