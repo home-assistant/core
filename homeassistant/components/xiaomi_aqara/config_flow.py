@@ -113,7 +113,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         schema = GATEWAY_CONFIG
         if (self.host is None and self.sid is None) or errors:
-            schema = GATEWAY_CONFIG_HOST            
+            schema = GATEWAY_CONFIG_HOST
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
