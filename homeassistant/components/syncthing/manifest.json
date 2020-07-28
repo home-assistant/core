@@ -10,5 +10,6 @@
   "dependencies": [],
   "codeowners": [
     "@zhulik"
-  ]
+  ],
+  "quality_scale": "silver"
 }
