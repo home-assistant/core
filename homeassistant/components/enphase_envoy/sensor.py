@@ -74,7 +74,7 @@ async def async_setup_platform(
         """Fetch data from API endpoint."""
         async with async_timeout.timeout(30):
             i = 0
-            while i < 2:
+            while i < 3:
                 try:
                     data = await envoy_reader.update()
                 except httpcore.ProtocolError as err:
@@ -219,6 +219,11 @@ class Envoy(Entity):
 
     async def async_update(self):
         """Update the energy production data."""
+
+        if self.coordinator.data is None:
+            _LOGGER.debug("No data found!")
+            return
+
         if self._type != "inverters":
             if isinstance(self.coordinator.data.get(self._type), int):
                 self._state = self.coordinator.data.get(self._type)
@@ -230,10 +235,7 @@ class Envoy(Entity):
                     isinstance(self.coordinator.data.get(self._type), int),
                 )
 
-        elif (
-            self._type == "inverters"
-            and self.coordinator.data.get("inverters_production") is not None
-        ):
+        elif self._type == "inverters":
             serial_number = self._name.split(" ")[2]
             if isinstance(self.coordinator.data.get("inverters_production"), dict):
                 self._state = self.coordinator.data.get("inverters_production").get(
@@ -252,3 +254,5 @@ class Envoy(Entity):
                     isinstance(self.coordinator.data.get("inverters_production"), dict),
                     self._state,
                 )
+        else:
+            _LOGGER.error("Update loop - API returned invalid data!")
