@@ -30,6 +30,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .const import (
     ACTIVITY_POWER_OFF,
     ATTR_ACTIVITY_LIST,
+    ATTR_ACTIVITY_STARTING,
     ATTR_CURRENT_ACTIVITY,
     ATTR_DEVICES_LIST,
     ATTR_LAST_ACTIVITY,
@@ -138,6 +139,7 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         self._state = None
         self._current_activity = ACTIVITY_POWER_OFF
         self.default_activity = activity
+        self._activity_starting = False
         self._client = HarmonyClient(ip_address=host)
         self._config_path = out_path
         self.delay_secs = delay_secs
@@ -172,9 +174,14 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
             "connect": self.got_connected,
             "disconnect": self.got_disconnected,
             "new_activity_starting": self.new_activity,
-            "new_activity": None,
+            "new_activity": self._new_activity_finished,
         }
         self._client.callbacks = ClientCallbackType(**callbacks)
+
+    def _new_activity_finished(self, activity_info: tuple) -> None:
+        """Call for finished updated current activity."""
+        self._activity_starting = False
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Complete the initialization."""
@@ -252,6 +259,7 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
     def device_state_attributes(self):
         """Add platform specific attributes."""
         return {
+            ATTR_ACTIVITY_STARTING: self._activity_starting,
             ATTR_CURRENT_ACTIVITY: self._current_activity,
             ATTR_ACTIVITY_LIST: list_names_from_hublist(
                 self._client.hub_config.activities
@@ -295,6 +303,7 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
             self._last_activity = activity_name
         self._state = bool(activity_id != -1)
         self._available = True
+        self._activity_starting = True
         self.async_write_ha_state()
 
     async def new_config(self, _=None):
