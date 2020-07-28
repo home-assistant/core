@@ -3,7 +3,7 @@
   "name": "Flo",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/flo",
-  "requirements": ["aioflo==0.4.0"],
+  "requirements": ["aioflo==0.4.1"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
