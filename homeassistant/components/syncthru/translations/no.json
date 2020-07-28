@@ -1,5 +1,11 @@
 {
     "config": {
+        "error": {
+            "invalid_url": "Ugyldig URL-adresse",
+            "syncthru_not_supported": "Enheten st\u00f8tter ikke SyncThru",
+            "unknown_state": "Skrivertilstand ukjent, kontroller URL-adresse og nettverkstilkobling"
+        },
+        "flow_title": "Samsung SyncThru-skriver: {name}",
         "step": {
             "user": {
                 "data": {
