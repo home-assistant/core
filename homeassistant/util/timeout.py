@@ -169,7 +169,7 @@ class _TaskZone:
 
 
 class _Zone:
-    """Internal Timeout Context Manager object."""
+    """Internal Zone Timeout Manager."""
 
     def __init__(self, manager: ZoneTimeout, zone: str, timeout: float) -> None:
         """Initalize internal timeout context manager."""
