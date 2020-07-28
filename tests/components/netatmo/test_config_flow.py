@@ -211,7 +211,5 @@ async def test_option_flow_wrong_coordinates(hass):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    # assert result.keys() == []
-    # assert result["step_id"] == "public_weather_areas"
     for k, v in expected_result.items():
         assert config_entry.options[CONF_WEATHER_AREAS]["Home"][k] == v
