@@ -17,7 +17,10 @@ from ..models import Credentials, UserMeta
 # Configuration labels
 CONF_ALLOWED_GROUP_DNS = "allowed_group_dns"
 CONF_BASE_DN = "base_dn"
-CONF_BIND_AS_USER = "bind_as_user"
+CONF_BIND_TYPE = "bind_type"
+CONF_BIND_TYPE_ANONYMOUS = "anonymous"
+CONF_BIND_TYPE_AS_SERVICE_USER = "service-user"
+CONF_BIND_TYPE_AS_USER = "user"
 CONF_BIND_DN = "bind_dn"
 CONF_BIND_PASSWORD = "bind_password"
 CONF_CA_CERTS_FILE = "ca_certs_file"
@@ -32,7 +35,7 @@ CONF_TIMEOUT = "timeout"
 CONF_USERNAME_ATTR = "username_attribute"
 
 # Default values
-DEFAULT_CONF_BIND_AS_USER = True
+DEFAULT_CONF_BIND_TYPE = CONF_BIND_TYPE_AS_SERVICE_USER
 DEFAULT_CONF_CERT_VALIDATION = True
 DEFAULT_CONF_PORT = 636
 DEFAULT_CONF_TIMEOUT = 10
@@ -44,13 +47,19 @@ CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
             cv.ensure_list, [str]
         ),
         vol.Required(CONF_BASE_DN): str,
-        vol.Required(CONF_BIND_AS_USER, default=DEFAULT_CONF_BIND_AS_USER): bool,
+        vol.Required(CONF_BIND_TYPE, default=DEFAULT_CONF_BIND_TYPE): vol.In(
+            [
+                CONF_BIND_TYPE_ANONYMOUS,
+                CONF_BIND_TYPE_AS_SERVICE_USER,
+                CONF_BIND_TYPE_AS_USER,
+            ]
+        ),
         vol.Optional(CONF_BIND_DN): str,
         vol.Optional(CONF_BIND_PASSWORD): str,
         vol.Optional(CONF_CA_CERTS_FILE, default=None): str,
         vol.Required(CONF_CERT_VALIDATION, default=DEFAULT_CONF_CERT_VALIDATION): bool,
         vol.Required(CONF_ENCRYPTION, default=CONF_ENCRYPTION_LDAPS): vol.In(
-            [CONF_ENCRYPTION_LDAPS, CONF_ENCRYPTION_NONE, CONF_ENCRYPTION_STARTTLS],
+            [CONF_ENCRYPTION_LDAPS, CONF_ENCRYPTION_NONE, CONF_ENCRYPTION_STARTTLS]
         ),
         vol.Required(CONF_PORT, default=DEFAULT_CONF_PORT): int,
         vol.Required(CONF_SERVER): str,
@@ -104,23 +113,27 @@ class LdapAuthProvider(AuthProvider):
             )
 
             base_dn = self.config[CONF_BASE_DN]
+            bind_type = self.config[CONF_BIND_TYPE]
+            bind_as_user = bind_type == CONF_BIND_TYPE_AS_USER
             username_attr = self.config[CONF_USERNAME_ATTR]
-            bind_as_user = self.config[CONF_BIND_AS_USER]
-            bind_password = (
-                password if bind_as_user else self.config[CONF_BIND_PASSWORD]
-            )
 
-            bind_dn = (
-                f"{username_attr}={username},{base_dn}"
-                if bind_as_user
-                else self.config[CONF_BIND_DN]
-            )
-            _LOGGER.debug("Binding as %s", bind_dn)
-
-            # LDAP bind
-            conn = ldap3.Connection(
-                server, user=bind_dn, password=bind_password, auto_bind=False,
-            )
+            if bind_type == CONF_BIND_TYPE_ANONYMOUS:
+                _LOGGER.debug("Binding anonymously")
+                conn = ldap3.Connection(server, auto_bind=False)
+            else:
+                bind_dn = (
+                    f"{username_attr}={username},{base_dn}"
+                    if bind_as_user
+                    else self.config[CONF_BIND_DN]
+                )
+                bind_password = (
+                    password if bind_as_user else self.config[CONF_BIND_PASSWORD]
+                )
+                _LOGGER.debug("Binding as %s", bind_dn)
+                # LDAP bind
+                conn = ldap3.Connection(
+                    server, user=bind_dn, password=bind_password, auto_bind=False,
+                )
             conn.open(read_server_info=False)
             # Upgrade connection with START_TLS if requested.
             if encryption == CONF_ENCRYPTION_STARTTLS:
