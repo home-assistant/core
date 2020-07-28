@@ -1,7 +1,7 @@
 """Ldap auth provider."""
 from collections import OrderedDict
 import logging
-from pathlib import Path
+import os
 import ssl
 from typing import Any, Dict, Optional, cast
 
@@ -103,25 +103,12 @@ class LdapAuthProvider(AuthProvider):
             )
 
             ca_certs_file = self.config[CONF_CA_CERTS_FILE]
-            if ca_certs_file:
-                abs_path = None
-                path = Path(ca_certs_file)
-                if path.is_absolute():
-                    abs_path = path
-                else:
-                    # Relative paths are relative to either cwd, or the config dir.
-                    for path_candidate in [
-                        Path.cwd().joinpath(path),
-                        Path(self.hass.config.path(ca_certs_file)),
-                    ]:
-                        if path_candidate.exists():
-                            abs_path = path_candidate
-                            break
 
-                if not abs_path:
-                    _LOGGER.error("File %s doesn't exist", ca_certs_file)
+            if ca_certs_file:
+                tls.ca_certs_file = self.hass.config.path(ca_certs_file)
+                if not os.path.isfile(tls.ca_certs_file):
+                    _LOGGER.error("ca_certs_file %s doesn't exist", tls.ca_certs_file)
                     return
-                tls.ca_certs_file = abs_path.resolve()
 
             encryption = self.config[CONF_ENCRYPTION]
             # Server setup
