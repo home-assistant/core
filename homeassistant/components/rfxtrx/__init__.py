@@ -27,7 +27,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_registry import (
+    async_get_registry as async_get_entity_registry,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     ATTR_EVENT,
@@ -407,18 +411,32 @@ def get_device_id(device, data_bits=None):
     return (f"{device.packettype:x}", f"{device.subtype:x}", id_string)
 
 
+async def force_entity_name(
+    hass: HomeAssistantType, domain: str, unique_id: str, name: str
+):
+    """Force the user name to name set in config."""
+    reg = await async_get_entity_registry(hass)
+    entry = reg.async_get_or_create(domain, DOMAIN, unique_id, suggested_object_id=name)
+    entity_id = reg.async_generate_entity_id(domain, name)
+
+    updates = {}
+    if entry.name != name:
+        updates["name"] = name
+    if entry.entity_id != entity_id:
+        updates["new_entity_id"] = entity_id
+    if updates:
+        reg.async_update_entity(entry.entity_id, **updates)
+
+
 class RfxtrxEntity(RestoreEntity):
     """Represents a Rfxtrx device.
 
     Contains the common logic for Rfxtrx lights and switches.
     """
 
-    def __init__(self, device, device_id, event=None, name=None):
+    def __init__(self, device, device_id, event=None):
         """Initialize the device."""
-        if name:
-            self._name = name
-        else:
-            self._name = f"{device.type_string} {device.id_string}"
+        self._name = f"{device.type_string} {device.id_string}"
         self._device = device
         self._event = event
         self._device_id = device_id
@@ -488,7 +506,7 @@ class RfxtrxCommandEntity(RfxtrxEntity):
 
     def __init__(self, device, device_id, signal_repetitions=1, event=None, name=None):
         """Initialzie a switch or light device."""
-        super().__init__(device, device_id, event=event, name=name)
+        super().__init__(device, device_id, event=event)
         self.signal_repetitions = signal_repetitions
         self._state = None
 

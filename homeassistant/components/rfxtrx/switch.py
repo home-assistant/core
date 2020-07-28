@@ -15,6 +15,7 @@ from . import (
     DOMAIN,
     SIGNAL_EVENT,
     RfxtrxCommandEntity,
+    force_entity_name,
     get_device_id,
     get_rfx_object,
 )
@@ -58,11 +59,14 @@ async def async_setup_entry(
         device_ids.add(device_id)
 
         entity = RfxtrxSwitch(
-            event.device,
-            device_id,
-            entity_info[CONF_SIGNAL_REPETITIONS],
-            name=entity_info.get(CONF_NAME),
+            event.device, device_id, entity_info[CONF_SIGNAL_REPETITIONS],
         )
+
+        if entity_info.get(CONF_NAME):
+            await force_entity_name(
+                hass, "switch", entity.unique_id, entity_info.get(CONF_NAME)
+            )
+
         entities.append(entity)
 
     async_add_entities(entities)

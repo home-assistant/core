@@ -18,6 +18,7 @@ from . import (
     DATA_TYPES,
     SIGNAL_EVENT,
     RfxtrxEntity,
+    force_entity_name,
     get_device_id,
     get_rfx_object,
 )
@@ -82,9 +83,16 @@ async def async_setup_entry(
                 continue
             data_ids.add(data_id)
 
-            entity = RfxtrxSensor(
-                event.device, device_id, data_type, name=entity_info.get(CONF_NAME)
-            )
+            entity = RfxtrxSensor(event.device, device_id, data_type)
+
+            if entity_info.get(CONF_NAME):
+                await force_entity_name(
+                    hass,
+                    "sensor",
+                    entity.unique_id,
+                    f"{entity_info.get(CONF_NAME)} {data_type}",
+                )
+
             entities.append(entity)
 
     async_add_entities(entities)
@@ -120,15 +128,12 @@ async def async_setup_entry(
 class RfxtrxSensor(RfxtrxEntity):
     """Representation of a RFXtrx sensor."""
 
-    def __init__(self, device, device_id, data_type, event=None, name=None):
+    def __init__(self, device, device_id, data_type, event=None):
         """Initialize the sensor."""
         super().__init__(device, device_id, event=event)
         self.data_type = data_type
         self._unit_of_measurement = DATA_TYPES.get(data_type, "")
-        if name:
-            self._name = f"{name} {data_type}"
-        else:
-            self._name = f"{device.type_string} {device.id_string} {data_type}"
+        self._name = f"{device.type_string} {device.id_string} {data_type}"
         self._unique_id = "_".join(x for x in (*self._device_id, data_type))
 
         self._device_class = DEVICE_CLASSES.get(data_type)

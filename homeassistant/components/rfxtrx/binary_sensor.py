@@ -26,6 +26,7 @@ from . import (
     SIGNAL_EVENT,
     RfxtrxEntity,
     find_possible_pt2262_device,
+    force_entity_name,
     get_device_id,
     get_pt2262_cmd,
     get_rfx_object,
@@ -113,8 +114,13 @@ async def async_setup_entry(
             entity_info.get(CONF_DATA_BITS),
             entity_info.get(CONF_COMMAND_ON),
             entity_info.get(CONF_COMMAND_OFF),
-            name=entity_info.get(CONF_NAME),
         )
+
+        if entity_info.get(CONF_NAME):
+            await force_entity_name(
+                hass, "binary_sensor", device.unique_id, entity_info.get(CONF_NAME)
+            )
+
         sensors.append(device)
 
     async_add_entities(sensors)
@@ -164,10 +170,9 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
         cmd_on=None,
         cmd_off=None,
         event=None,
-        name=None,
     ):
         """Initialize the RFXtrx sensor."""
-        super().__init__(device, device_id, event=event, name=name)
+        super().__init__(device, device_id, event=event)
         self._device_class = device_class
         self._data_bits = data_bits
         self._off_delay = off_delay
