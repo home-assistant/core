@@ -35,6 +35,7 @@ jobs:
     wheelsRequirement: 'requirements.txt'
     wheelsRequirementDiff: 'requirements_diff.txt'
     wheelsConstraint: 'homeassistant/package_constraints.txt'
+    jobName: 'Wheels_Core'
     preBuild:
     - script: |
         if [[ "$(Build.Reason)" =~ (Schedule|Manual) ]]; then
@@ -52,6 +53,7 @@ jobs:
     wheelsRequirement: 'requirements_wheels.txt'
     wheelsRequirementDiff: 'requirements_diff.txt'
     wheelsConstraint: 'homeassistant/package_constraints.txt'
+    jobName: 'Wheels_Integrations'
     preBuild:
     - script: |
         cp requirements_all.txt requirements_wheels.txt
