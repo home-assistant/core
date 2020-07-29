@@ -49,7 +49,7 @@ abodepy==1.1.0
 accuweather==0.0.9
 
 # homeassistant.components.androidtv
-adb-shell[async]==0.2.0
+adb-shell[async]==0.2.1
 
 # homeassistant.components.adguard
 adguardhome==0.4.2
@@ -141,7 +141,7 @@ airly==0.0.2
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.46
+androidtv[async]==0.0.47
 
 # homeassistant.components.apns
 apns2==0.3.0
