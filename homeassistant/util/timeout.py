@@ -2,7 +2,8 @@
 from __future__ import annotations
 import asyncio
 import enum
-from typing import Any, Dict, List, Union, Type, TracebackType, Optional
+from typing import Any, Dict, List, Union, Type, Optional
+from types import TracebackType
 
 ZONE_GLOBAL = "global"
 
