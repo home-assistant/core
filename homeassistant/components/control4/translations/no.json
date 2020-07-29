@@ -1,0 +1,18 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Vennligst skriv inn Control4-kontodetaljene og IP-adressen til din lokale kontroller."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Sekunder mellom oppdateringer"
+                }
+            }
+        }
+    }
+}

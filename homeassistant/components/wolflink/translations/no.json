@@ -1,6 +1,12 @@
 {
     "config": {
         "step": {
+            "device": {
+                "data": {
+                    "device_name": "Enhet"
+                },
+                "title": "Velg WOLF-enhet"
+            },
             "user": {
                 "title": "WOLF SmartSet-tilkobling"
             }
