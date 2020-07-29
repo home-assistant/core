@@ -115,7 +115,7 @@ adafruit-circuitpython-bmp280==3.1.1
 adafruit-circuitpython-mcp230xx==2.2.2
 
 # homeassistant.components.androidtv
-adb-shell[async]==0.2.0
+adb-shell[async]==0.2.1
 
 # homeassistant.components.alarmdecoder
 adext==0.3
@@ -142,7 +142,7 @@ aio_geojson_nsw_rfs_incidents==0.3
 aio_georss_gdacs==0.3
 
 # homeassistant.components.ambient_station
-aioambient==1.1.1
+aioambient==1.2.0
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.2.7
@@ -170,7 +170,7 @@ aioftp==0.12.0
 aioguardian==1.0.1
 
 # homeassistant.components.harmony
-aioharmony==0.2.5
+aioharmony==0.2.6
 
 # homeassistant.components.homekit_controller
 aiohomekit[IP]==0.2.45
@@ -240,7 +240,7 @@ ambiclimate==0.2.1
 amcrest==1.7.0
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.46
+androidtv[async]==0.0.47
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -524,7 +524,7 @@ elgato==0.2.0
 eliqonline==1.2.2
 
 # homeassistant.components.elkm1
-elkm1-lib==0.7.18
+elkm1-lib==0.7.19
 
 # homeassistant.components.mobile_app
 emoji==0.5.4
@@ -2257,7 +2257,7 @@ yeelight==0.5.2
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2020.06.16.1
+youtube_dl==2020.07.28
 
 # homeassistant.components.zengge
 zengge==0.2

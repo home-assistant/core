@@ -49,7 +49,7 @@ abodepy==1.1.0
 accuweather==0.0.9
 
 # homeassistant.components.androidtv
-adb-shell[async]==0.2.0
+adb-shell[async]==0.2.1
 
 # homeassistant.components.adguard
 adguardhome==0.4.2
@@ -70,7 +70,7 @@ aio_geojson_nsw_rfs_incidents==0.3
 aio_georss_gdacs==0.3
 
 # homeassistant.components.ambient_station
-aioambient==1.1.1
+aioambient==1.2.0
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.2.7
@@ -95,7 +95,7 @@ aiofreepybox==0.0.8
 aioguardian==1.0.1
 
 # homeassistant.components.harmony
-aioharmony==0.2.5
+aioharmony==0.2.6
 
 # homeassistant.components.homekit_controller
 aiohomekit[IP]==0.2.45
@@ -141,7 +141,7 @@ airly==0.0.2
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.46
+androidtv[async]==0.0.47
 
 # homeassistant.components.apns
 apns2==0.3.0
@@ -267,7 +267,7 @@ eebrightbox==0.0.4
 elgato==0.2.0
 
 # homeassistant.components.elkm1
-elkm1-lib==0.7.18
+elkm1-lib==0.7.19
 
 # homeassistant.components.mobile_app
 emoji==0.5.4
