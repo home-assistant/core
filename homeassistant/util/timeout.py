@@ -61,7 +61,7 @@ class _FreezeGlobal:
             task.pause()
 
         # Zones reset
-        for zone in self._manager.zones:
+        for zone in self._manager.zones.values():
             if not zone.freezes_done:
                 continue
             zone.pause()
@@ -79,7 +79,7 @@ class _FreezeGlobal:
             task.reset()
 
         # Zones reset
-        for zone in self._manager.zones:
+        for zone in self._manager.zones.values():
             if not zone.freezes_done:
                 continue
             zone.reset()
