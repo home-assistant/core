@@ -32,14 +32,13 @@ jobs:
     builderApk: 'build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev'
     builderPip: 'Cython;numpy'
     skipBinary: 'aiohttp'
-    wheelsRequirement: 'requirements_wheels.txt'
+    wheelsRequirement: 'requirements.txt'
     wheelsRequirementDiff: 'requirements_diff.txt'
     wheelsConstraint: 'homeassistant/package_constraints.txt'
     preBuild:
     - script: |
-        cp requirements.txt requirements_wheels.txt
         if [[ "$(Build.Reason)" =~ (Schedule|Manual) ]]; then
-          touch requirements_diff.txt
+          exit 0
         else
           curl -s -o requirements_diff.txt https://raw.githubusercontent.com/home-assistant/core/master/requirements.txt
         fi
