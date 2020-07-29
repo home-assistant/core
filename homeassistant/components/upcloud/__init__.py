@@ -3,7 +3,7 @@
 import dataclasses
 from datetime import timedelta
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import requests.exceptions
 import upcloud_api
@@ -16,12 +16,11 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
     STATE_ON,
     STATE_PROBLEM,
 )
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import CALLBACK_TYPE
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -29,9 +28,8 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.util import dt
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE, DEFAULT_SCAN_INTERVAL, DOMAIN
 
@@ -74,6 +72,51 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+class UpCloudDataUpdateCoordinator(
+    DataUpdateCoordinator[Dict[str, upcloud_api.Server]]
+):
+    """UpCloud data update coordinator."""
+
+    def __init__(
+        self,
+        hass: HomeAssistantType,
+        *,
+        cloud_manager: upcloud_api.CloudManager,
+        update_interval: timedelta,
+        username: str,
+    ) -> None:
+        """Initialize coordinator."""
+        super().__init__(
+            hass, _LOGGER, name=f"{username}@UpCloud", update_interval=update_interval
+        )
+        self.cloud_manager = cloud_manager
+        self.unsub_handlers: List[CALLBACK_TYPE] = []
+
+    async def async_update_config(self, config_entry: ConfigEntry) -> None:
+        """Handle config update."""
+        self.update_interval = timedelta(
+            seconds=config_entry.options[CONF_SCAN_INTERVAL]
+        )
+
+    async def _async_update_data(self) -> Dict[str, upcloud_api.Server]:
+        return {
+            x.uuid: x
+            for x in await self.hass.async_add_executor_job(
+                self.cloud_manager.get_servers
+            )
+        }
+
+
+@dataclasses.dataclass
+class UpCloudHassData:
+    """Home Assistant UpCloud runtime data."""
+
+    coordinators: Dict[str, UpCloudDataUpdateCoordinator] = dataclasses.field(
+        default_factory=dict
+    )
+    scan_interval_migrations: Dict[str, int] = dataclasses.field(default_factory=dict)
+
+
 async def async_setup(hass: HomeAssistantType, config) -> bool:
     """Set up UpCloud component."""
     _LOGGER.warning(
@@ -94,51 +137,13 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
         )
 
         if domain_config[CONF_SCAN_INTERVAL]:
-            # Migrate scan interval config as an option: populate a UpCloudData to be
-            # picked up by config entry setup later.
-            hass.data.setdefault(DATA_UPCLOUD, {})[
-                domain_config[CONF_USERNAME]
-            ] = UpCloudData(
-                upcloud=UpCloud(  # unused, but set here because it's required
-                    hass=hass,
-                    manager=upcloud_api.CloudManager(
-                        domain_config[CONF_USERNAME], domain_config[CONF_PASSWORD]
-                    ),
-                ),
-                scan_interval=domain_config[CONF_SCAN_INTERVAL],
-            )
+            hass.data.setdefault(
+                DATA_UPCLOUD, UpCloudHassData()
+            ).scan_interval_migrations[domain_config[CONF_USERNAME]] = domain_config[
+                CONF_SCAN_INTERVAL
+            ]
+
     return True
-
-
-@dataclasses.dataclass
-class UpCloudData:
-    """Data related to single UpCloud config entry."""
-
-    upcloud: "UpCloud"
-    scan_interval: timedelta
-    unload_scan_handler: Optional[CALLBACK_TYPE] = None
-    unload_handlers: List[CALLBACK_TYPE] = dataclasses.field(default_factory=list)
-
-    def async_update_config(self, config_entry: ConfigEntry) -> None:
-        """Handle config update."""
-        self.scan_interval = timedelta(seconds=config_entry.options[CONF_SCAN_INTERVAL])
-        self.async_init_scan()
-
-    def async_init_scan(self) -> None:
-        """Initialize polling."""
-        if self.unload_scan_handler:
-            self.unload_scan_handler()
-        self.unload_scan_handler = async_track_time_interval(
-            self.upcloud.hass, self.upcloud.async_update, self.scan_interval
-        )
-
-    def cleanup(self, *_) -> None:
-        """Clean up resources."""
-        while self.unload_handlers:
-            self.unload_handlers.pop(0)()
-        if self.unload_scan_handler:
-            self.unload_scan_handler()
-            self.unload_scan_handler = None
 
 
 def _config_entry_update_signal_name(config_entry: ConfigEntry) -> str:
@@ -171,58 +176,56 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         _LOGGER.error("Failed to connect", exc_info=True)
         raise ConfigEntryNotReady
 
-    upcloud_data = UpCloudData(
-        upcloud=UpCloud(hass=hass, manager=manager),
-        scan_interval=timedelta(seconds=config_entry.options.get(CONF_SCAN_INTERVAL))
-        if config_entry.options.get(CONF_SCAN_INTERVAL)
-        else DEFAULT_SCAN_INTERVAL,
+    upcloud_data = hass.data.setdefault(DATA_UPCLOUD, UpCloudHassData())
+
+    # Handle pre config entry (0.114) scan interval migration to options
+    migrated_scan_interval = upcloud_data.scan_interval_migrations.pop(
+        config_entry.data[CONF_USERNAME], None
+    )
+    if migrated_scan_interval and (
+        not config_entry.options.get(CONF_SCAN_INTERVAL)
+        or config_entry.options[CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL.seconds
+    ):
+        update_interval = migrated_scan_interval
+        hass.config_entries.async_update_entry(
+            config_entry, options={CONF_SCAN_INTERVAL: update_interval.seconds},
+        )
+    elif config_entry.options.get(CONF_SCAN_INTERVAL):
+        update_interval = timedelta(seconds=config_entry.options[CONF_SCAN_INTERVAL])
+    else:
+        update_interval = DEFAULT_SCAN_INTERVAL
+
+    coordinator = upcloud_data.coordinators[
+        config_entry.data[CONF_USERNAME]
+    ] = UpCloudDataUpdateCoordinator(
+        hass,
+        update_interval=update_interval,
+        cloud_manager=manager,
+        username=config_entry.data[CONF_USERNAME],
     )
 
-    upcloud_data.unload_handlers.append(
-        config_entry.add_update_listener(_async_signal_options_update),
+    # Listen to config entry updates
+    coordinator.unsub_handlers.append(
+        config_entry.add_update_listener(_async_signal_options_update)
     )
-    upcloud_data.unload_handlers.append(
+    coordinator.unsub_handlers.append(
         async_dispatcher_connect(
             hass,
             _config_entry_update_signal_name(config_entry),
-            upcloud_data.async_update_config,
+            coordinator.async_update_config,
         )
     )
 
-    connections = hass.data.setdefault(DATA_UPCLOUD, {})
-
-    # Handle pre config entry scan interval migration to options
-    migrated_data = connections.get(config_entry.data[CONF_USERNAME])
-    if (
-        migrated_data
-        and migrated_data.scan_interval
-        and (
-            not config_entry.options.get(CONF_SCAN_INTERVAL)
-            or config_entry.options.get(CONF_SCAN_INTERVAL)
-            == DEFAULT_SCAN_INTERVAL.seconds
-        )
-    ):
-        upcloud_data.scan_interval = migrated_data.scan_interval
-        hass.config_entries.async_update_entry(
-            config_entry,
-            options={CONF_SCAN_INTERVAL: upcloud_data.scan_interval.seconds},
-        )
-    else:
-        upcloud_data.async_init_scan()
-
-    connections[config_entry.data[CONF_USERNAME]] = upcloud_data
-
     # Call the UpCloud API to refresh data
-    await upcloud_data.upcloud.async_update(dt.utcnow())
+    await coordinator.async_request_refresh()
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady
 
     # Forward entry setup
     for domain in CONFIG_ENTRY_DOMAINS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, domain)
         )
-
-    # Clean up at end
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, upcloud_data.cleanup)
 
     return True
 
@@ -232,39 +235,32 @@ async def async_unload_entry(hass, config_entry):
     for domain in CONFIG_ENTRY_DOMAINS:
         await hass.config_entries.async_forward_entry_unload(config_entry, domain)
 
-    data = hass.data[DATA_UPCLOUD].pop(config_entry.data[CONF_USERNAME])
-    await hass.async_add_executor_job(data.cleanup)
+    coordinator: UpCloudDataUpdateCoordinator = hass.data[
+        DATA_UPCLOUD
+    ].coordinators.pop(config_entry.data[CONF_USERNAME])
+    while coordinator.unsub_handlers:
+        coordinator.unsub_handlers.pop(0)()
 
     return True
-
-
-class UpCloud:
-    """Handle all communication with the UpCloud API."""
-
-    def __init__(
-        self, hass: HomeAssistantType, manager: upcloud_api.CloudManager
-    ) -> None:
-        """Initialize the UpCloud connection."""
-        self.hass = hass
-        self.manager = manager
-        self.data: Dict[str, upcloud_api.Server] = {}
-
-    async def async_update(self, event_time):
-        """Update data from UpCloud API."""
-        _LOGGER.debug("Updating UpCloud data")
-        servers = await self.hass.async_add_executor_job(self.manager.get_servers)
-        self.data = {server.uuid: server for server in servers}
 
 
 class UpCloudServerEntity(Entity):
     """Entity class for UpCloud servers."""
 
-    def __init__(self, upcloud, uuid):
+    def __init__(self, coordinator, uuid):
         """Initialize the UpCloud server entity."""
-        self._upcloud = upcloud
+        self._coordinator = coordinator
         self.uuid = uuid
-        self.data = None
         self._unsub_handlers = []
+
+    @property
+    def _server(self) -> upcloud_api.Server:
+        return self._coordinator.data[self.uuid]
+
+    @property
+    def should_poll(self) -> bool:
+        """Individual entities do not poll."""
+        return False
 
     @property
     def unique_id(self) -> str:
@@ -275,28 +271,15 @@ class UpCloudServerEntity(Entity):
     def name(self):
         """Return the name of the component."""
         try:
-            return DEFAULT_COMPONENT_NAME.format(self.data.title)
+            return DEFAULT_COMPONENT_NAME.format(self._server.title)
         except (AttributeError, KeyError, TypeError):
             return DEFAULT_COMPONENT_NAME.format(self.uuid)
 
     async def async_added_to_hass(self):
-        """Register callbacks."""
-        self._unsub_handlers.append(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_UPDATE_UPCLOUD, self._update_callback
-            )
+        """Connect to dispatcher listening for entity data notifications."""
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
         )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Invoke unsubscription handlers."""
-        for unsub in self._unsub_handlers:
-            unsub()
-        self._unsub_handlers.clear()
-
-    @callback
-    def _update_callback(self):
-        """Call update method."""
-        self.async_schedule_update_ha_state(True)
 
     @property
     def icon(self):
@@ -307,7 +290,7 @@ class UpCloudServerEntity(Entity):
     def state(self):
         """Return state of the server."""
         try:
-            return STATE_MAP.get(self.data.state)
+            return STATE_MAP.get(self._server.state)
         except AttributeError:
             return None
 
@@ -325,7 +308,7 @@ class UpCloudServerEntity(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the UpCloud server."""
         return {
-            x: getattr(self.data, x, None)
+            x: getattr(self._server, x, None)
             for x in (
                 ATTR_UUID,
                 ATTR_TITLE,
@@ -337,6 +320,6 @@ class UpCloudServerEntity(Entity):
             )
         }
 
-    def update(self):
-        """Update data of the UpCloud server."""
-        self.data = self._upcloud.data.get(self.uuid)
+    async def async_update(self):
+        """Update entity."""
+        await self._coordinator.async_request_refresh()

@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
-from homeassistant.const import STATE_OFF
+from homeassistant.const import CONF_USERNAME, STATE_OFF
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 
@@ -28,10 +28,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the UpCloud server switch."""
-    devices = []
-    for data in hass.data[DATA_UPCLOUD].values():
-        devices.extend(UpCloudSwitch(data.upcloud, uuid) for uuid in data.upcloud.data)
-    async_add_entities(devices, True)
+    coordinator = hass.data[DATA_UPCLOUD].coordinators[config_entry.data[CONF_USERNAME]]
+    entities = [UpCloudSwitch(coordinator, uuid) for uuid in coordinator.data]
+    async_add_entities(entities, True)
 
 
 class UpCloudSwitch(UpCloudServerEntity, SwitchEntity):
@@ -40,10 +39,10 @@ class UpCloudSwitch(UpCloudServerEntity, SwitchEntity):
     def turn_on(self, **kwargs):
         """Start the server."""
         if self.state == STATE_OFF:
-            self.data.start()
+            self._server.start()
             dispatcher_send(self.hass, SIGNAL_UPDATE_UPCLOUD)
 
     def turn_off(self, **kwargs):
         """Stop the server."""
         if self.is_on:
-            self.data.stop()
+            self._server.stop()

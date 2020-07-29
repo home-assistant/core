@@ -5,6 +5,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.const import CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
 from . import CONF_SERVERS, DATA_UPCLOUD, UpCloudServerEntity
@@ -27,12 +28,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the UpCloud server binary sensor."""
-    devices = []
-    for data in hass.data[DATA_UPCLOUD].values():
-        devices.extend(
-            UpCloudBinarySensor(data.upcloud, uuid) for uuid in data.upcloud.data
-        )
-    async_add_entities(devices, True)
+    coordinator = hass.data[DATA_UPCLOUD].coordinators[config_entry.data[CONF_USERNAME]]
+    entities = [UpCloudBinarySensor(coordinator, uuid) for uuid in coordinator.data]
+    async_add_entities(entities, True)
 
 
 class UpCloudBinarySensor(UpCloudServerEntity, BinarySensorEntity):
