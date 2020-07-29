@@ -49,3 +49,48 @@ UPDATE = {
     "model": "Test",
     "os_version": "1.0",
 }
+
+VALID_CONFIG = {
+    "push": {
+        "categories": [
+            {
+                "name": "Mobile_App Alarm",
+                "identifier": "alarm",
+                "actions": [
+                    {
+                        "identifier": "SOUND_ALARM",
+                        "title": "Sound Alarm",
+                        "activationMode": "background",
+                        "authenticationRequired": True,
+                        "destructive": True,
+                        "behavior": "default",
+                    },
+                    {
+                        "identifier": "SILENCE_ALARM",
+                        "title": "Silence Alarm",
+                        "activationMode": "background",
+                        "authenticationRequired": True,
+                        "destructive": False,
+                        "behavior": "textInput",
+                        "textInputButtonTitle": "Silencio!",
+                        "textInputPlaceholder": "Placeholder",
+                    },
+                ],
+            }
+        ]
+    },
+    "actions": [
+        {
+            "name": "Fred",
+            "background_color": "#000000",
+            "label": {"text": "Hello, World", "color": "#ff0000"},
+            "icon": {"icon": "an-icon", "color": "#ff0000"},
+        },
+        {
+            "name": "George",
+            "background_color": "#000000",
+            "label": {"text": "Hello, World", "color": "#ff0000"},
+            "icon": {"icon": "an-icon", "color": "#ff0000"},
+        },
+    ],
+}

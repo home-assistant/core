@@ -5,7 +5,7 @@ import pytest
 from homeassistant.components.mobile_app.const import DOMAIN
 from homeassistant.setup import async_setup_component
 
-from .const import REGISTER, REGISTER_CLEARTEXT
+from .const import REGISTER, REGISTER_CLEARTEXT, VALID_CONFIG
 
 from tests.common import mock_device_registry
 
@@ -19,7 +19,7 @@ def registry(hass):
 @pytest.fixture
 async def create_registrations(hass, authed_api_client):
     """Return two new registrations."""
-    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await async_setup_component(hass, DOMAIN, {DOMAIN: VALID_CONFIG})
 
     enc_reg = await authed_api_client.post(
         "/api/mobile_app/registrations", json=REGISTER
@@ -53,7 +53,7 @@ async def webhook_client(hass, authed_api_client, aiohttp_client):
 @pytest.fixture
 async def authed_api_client(hass, hass_client):
     """Provide an authenticated client for mobile_app to use."""
-    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await async_setup_component(hass, DOMAIN, {DOMAIN: VALID_CONFIG})
     await hass.async_block_till_done()
     return await hass_client()
 

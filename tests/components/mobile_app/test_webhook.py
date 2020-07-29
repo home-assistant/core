@@ -4,7 +4,12 @@ import logging
 import pytest
 
 from homeassistant.components.camera import SUPPORT_STREAM as CAMERA_SUPPORT_STREAM
-from homeassistant.components.mobile_app.const import CONF_SECRET
+from homeassistant.components.mobile_app.const import (
+    CONF_ACTION_NAME,
+    CONF_ACTIONS,
+    CONF_PUSH,
+    CONF_SECRET,
+)
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
@@ -406,3 +411,23 @@ async def test_webhook_camera_stream_stream_available_but_errors(
     webhook_json = await resp.json()
     assert webhook_json["hls_path"] is None
     assert webhook_json["mjpeg_path"] == "/api/camera_proxy_stream/camera.stream_camera"
+
+
+async def test_webhook_handle_get_yaml_config(
+    hass, create_registrations, webhook_client
+):
+    """Test fetching the YAML config (push and actions)."""
+
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        json={"type": "get_yaml_config"},
+    )
+
+    assert resp.status == 200
+
+    json = await resp.json()
+
+    assert CONF_ACTIONS in json
+    assert CONF_PUSH in json
+    assert len(json[CONF_ACTIONS]) == 2
+    assert json[CONF_ACTIONS][0][CONF_ACTION_NAME] == "Fred"
