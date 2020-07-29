@@ -69,7 +69,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
                 # format sid from mac_address
                 if mac_address is not None:
-                    self.sid = mac_address.replace(":", "").lower()
+                    self.sid = format_mac(mac_address).replace(":", "")
 
             # if host is already known by zeroconf discovery or manual optional settings
             if self.host is not None and self.sid is not None:
@@ -156,11 +156,11 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return self.async_abort(reason="not_xiaomi_aqara")
 
-        # format sid from mac_address
-        self.sid = mac_address.replace(":", "").lower()
-
-        # format mac (include semicolns and make uppercase)
+        # format mac (include semicolns and make lowercase)
         mac_address = format_mac(mac_address)
+
+        # format sid from mac_address
+        self.sid = mac_address.replace(":", "")
 
         unique_id = mac_address
         await self.async_set_unique_id(unique_id)
