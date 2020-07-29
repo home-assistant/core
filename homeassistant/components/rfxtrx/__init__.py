@@ -32,6 +32,7 @@ from homeassistant.helpers.entity_registry import (
 )
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import slugify
 
 from .const import (
     ATTR_EVENT,
@@ -414,10 +415,15 @@ def get_device_id(device, data_bits=None):
 async def force_entity_name(
     hass: HomeAssistantType, domain: str, unique_id: str, name: str
 ):
-    """Force the user name to name set in config."""
+    """Force the user name to name set in config.
+
+    This is a temporary measure to ensure old configurations get upgraded to
+    new format.
+    """
+
     reg = await async_get_entity_registry(hass)
     entry = reg.async_get_or_create(domain, DOMAIN, unique_id, suggested_object_id=name)
-    entity_id = reg.async_generate_entity_id(domain, name)
+    entity_id = f"{domain}.{slugify(name)}"
 
     updates = {}
     if entry.name != name:
@@ -425,7 +431,10 @@ async def force_entity_name(
     if entry.entity_id != entity_id:
         updates["new_entity_id"] = entity_id
     if updates:
-        reg.async_update_entity(entry.entity_id, **updates)
+        try:
+            reg.async_update_entity(entry.entity_id, **updates)
+        except ValueError as err:
+            _LOGGER.warning("Unable to force name and entity_id %s", err)
 
 
 class RfxtrxEntity(RestoreEntity):
