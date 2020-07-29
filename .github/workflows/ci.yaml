@@ -46,7 +46,7 @@ jobs:
         run: |
           python -m venv venv
           . venv/bin/activate
-          pip install -U pip setuptools
+          pip install -U pip==20.1.1 setuptools
           pip install -r requirements.txt -r requirements_test.txt
           # Uninstalling typing as a workaround. Eventually we should make sure
           # all our dependencies drop typing.
@@ -603,7 +603,7 @@ jobs:
         run: |
           python -m venv venv
           . venv/bin/activate
-          pip install -U pip setuptools wheel
+          pip install -U pip==20.1.1 setuptools wheel
           pip install -r requirements_all.txt
           pip install -r requirements_test.txt
           # Uninstalling typing as a workaround. Eventually we should make sure
