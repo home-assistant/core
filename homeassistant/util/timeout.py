@@ -4,7 +4,7 @@ import asyncio
 import enum
 from typing import Any, Dict, List, Union, Type, TracebackType, Optional
 
-ZONE_ALL = "all"
+ZONE_GLOBAL = "global"
 
 
 class _StateZone(enum.Enum, str):
@@ -12,17 +12,18 @@ class _StateZone(enum.Enum, str):
     ENTER = "ENTER"
     TIMEOUT = "TIMEOUT"
     EXIT = "EXIT"
+    FREEZE = "FREEZE"
 
 
-class _Freeze:
-    """Internal Freeze Context Manager object."""
+class _FreezeGlobal:
+    """Internal Freeze Context Manager object for Global."""
 
     def __init__(self, manager: ZoneTimeout, loop: asyncio.AbstractEventLoop) -> None:
         """Initalize internal timeout context manager."""
         self._loop: asyncio.AbstractEventLoop = loop
         self._manager: ZoneTimeout = manager
 
-    async def __aenter__(self) -> _Freeze:
+    async def __aenter__(self) -> _FreezeGlobal:
         self._enter()
         return self
 
@@ -35,7 +36,7 @@ class _Freeze:
         self._exit()
         return None
 
-    def __enter__(self) -> _Freeze:
+    def __enter__(self) -> _FreezeGlobal:
         self._loop.call_soon_threadsafe(self._enter)
         return self
 
@@ -49,12 +50,18 @@ class _Freeze:
 
     def _enter(self) -> None:
         """Run freeze."""
-        if self._manager.freezes_done:
-            # Zones & Global reset
-            for zone in self._manager.zones:
-                zone.stop()
-            for task in self._manager.global_tasks:
-                task.stop()
+        if not self._manager.freezes_done:
+            return
+
+        # Global reset
+        for task in self._manager.global_tasks:
+            task.pause()
+
+        # Zones reset
+        for zone in self._manager.zones:
+            if not zone.freezes_done:
+                continue
+            zone.pause()
 
         self._manager.freezes.append(self)
 
@@ -64,11 +71,62 @@ class _Freeze:
         if not self._manager.freezes_done:
             return
 
-        # Zones & Global reset
-        for zone in self._manager.zones:
-            zone.reset()
+        # Global reset
         for task in self._manager.global_tasks:
             task.reset()
+
+        # Zones reset
+        for zone in self._manager.zones:
+            if not zone.freezes_done:
+                continue
+            zone.reset()
+
+
+class _FreezeZone:
+    """Internal Freeze Context Manager object for Zone."""
+
+    def __init__(self, zone: _Zone, loop: asyncio.AbstractEventLoop) -> None:
+        """Initalize internal timeout context manager."""
+        self._loop: asyncio.AbstractEventLoop = loop
+        self._zone: _Zone = zone
+
+    async def __aenter__(self) -> _FreezeZone:
+        self._enter()
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: Type[BaseException],
+        exc_val: BaseException,
+        exc_tb: TracebackType,
+    ) -> Optional[bool]:
+        self._exit()
+        return None
+
+    def __enter__(self) -> _FreezeZone:
+        self._loop.call_soon_threadsafe(self._enter)
+        return self
+
+    def __exit__(
+        self,
+        exc_type: Type[BaseException],
+        exc_val: BaseException,
+        exc_tb: TracebackType,
+    ) -> Optional[bool]:
+        self._loop.call_soon_threadsafe(self._exit)
+
+    def _enter(self) -> None:
+        """Run freeze."""
+        if self._zone.freezes_done:
+            self._zone.pause()
+        self._zone.freezes.append(self)
+
+    def _exit(self) -> None:
+        """Finish freeze."""
+        self._zone.freezes.pop(self, None)
+        if not self._zone.freezes_done:
+            return
+        self._zone.reset()
 
 
 class _TaskGlobal:
@@ -129,8 +187,8 @@ class _TaskGlobal:
             return
         self._task.cancel()
 
-    def stop(self) -> None:
-        """Stop timers while it freeze."""
+    def pause(self) -> None:
+        """Pause timers while it freeze."""
         self._stop_timer()
 
     def reset(self) -> None:
@@ -177,6 +235,7 @@ class _Zone:
         self._manager: ZoneTimeout = manager
         self._zone: str = zone
         self._tasks: List[_TaskZone] = []
+        self._freezes: List[_FreezeZone] = []
         self._timeout: float = timeout
         self._state: _StateZone = _StateZone.INIT
         self._count: int = 0
@@ -190,6 +249,16 @@ class _Zone:
     @property
     def state(self) -> _StateZone:
         """Return state of the Zone."""
+
+    @property
+    def freezes(self) -> List[_FreezeZone]:
+        """Return list of zone freezes."""
+        return self._freezes
+
+    @property
+    def freezes_done(self) -> bool:
+        """Return True if all freeze are done."""
+        return len(self._freezes) == 0 and self._manager.freezes_done
 
     def enter_task(self, task: _TaskZone) -> None:
         """Start into new Task."""
@@ -242,12 +311,18 @@ class _Zone:
                 continue
             task.cancel()
 
-    def stop(self) -> None:
+    def pause(self) -> None:
         """Stop timers while it freeze."""
+        if self._state != _StateZone.ENTER:
+            return
+        self._state = _StateZone.FREEZE
         self._stop_timer()
 
     def reset(self) -> None:
         """Reset timer after freeze."""
+        if self._state != _StateZone.FREEZE:
+            return
+        self._state = _StateZone.ENTER
         self._start_timer()
 
 
@@ -259,7 +334,7 @@ class ZoneTimeout:
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self._zones: Dict[str, _Zone] = {}
         self._globals: List[_TaskGlobal] = []
-        self._freezes: List[_Freeze] = []
+        self._freezes: List[_FreezeGlobal] = []
 
     @property
     def zones_done(self) -> bool:
@@ -278,16 +353,16 @@ class ZoneTimeout:
 
     @property
     def global_tasks(self) -> List[_TaskGlobal]:
-        """Return all Zones."""
+        """Return all global Tasks."""
         return self._globals
 
     @property
-    def freezes(self) -> List[_Freeze]:
-        """Return all freezes."""
+    def global_freezes(self) -> List[_FreezeGlobal]:
+        """Return all global Freezes."""
         return self._freezes
 
     def asnyc_timeout(
-        self, timeout: float, zone_name: str = ZONE_ALL
+        self, timeout: float, zone_name: str = ZONE_GLOBAL
     ) -> Union[_TaskZone, _TaskGlobal]:
         """Timeout based on a zone.
 
@@ -295,8 +370,8 @@ class ZoneTimeout:
         """
         current_task: asyncio.Task[Any] = asyncio.current_task()
 
-        # Zone all
-        if zone_name == ZONE_ALL:
+        # Global Zone
+        if zone_name == ZONE_GLOBAL:
             task = _TaskGlobal(self, current_task, timeout)
             return task
 
@@ -310,10 +385,19 @@ class ZoneTimeout:
         task = _TaskZone(zone, current_task)
         return task
 
-    def freeze(self) -> _Freeze:
+    def freeze(self, zone_name: str = ZONE_GLOBAL) -> Union[_FreezeZone, _FreezeGlobal]:
         """Freeze all timer until job is done.
 
         For using as (Async) Context Manager.
         """
-        freeze = _Freeze(self, self._loop)
-        return freeze
+        # Global Freeze
+        if zone_name == ZONE_GLOBAL:
+            return _FreezeGlobal(self, self._loop)
+
+        # Zone Freeze
+        if zone_name in self.zones:
+            zone: _Zone = self.zones[zone_name]
+            return _FreezeZone(zone, self._loop)
+
+        # Should not happens...
+        return _FreezeGlobal(self, self._loop)
