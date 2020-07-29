@@ -56,7 +56,8 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.gateways = None
         self.selected_gateway = None
 
-    async def show_form_step_user(self, errors):
+    async def async_show_form_step_user(self, errors):
+        """Show the form belonging to the user step."""
         schema = GATEWAY_CONFIG
         if (self.host is None and self.sid is None) or errors:
             schema = GATEWAY_CONFIG_HOST
@@ -67,7 +68,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is None:
-            return await show_form_step_user(errors)
+            return await async_show_form_step_user(errors)
 
         self.interface = user_input[CONF_INTERFACE]
 
@@ -96,10 +97,10 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             if self.selected_gateway.connection_error:
                 errors[CONF_HOST] = "invalid_host"
-                return await show_form_step_user(errors)
+                return await async_show_form_step_user(errors)
             elif self.selected_gateway.mac_error:
                 errors[CONF_MAC] = "invalid_mac"
-                return await show_form_step_user(errors)
+                return await async_show_form_step_user(errors)
 
             return await self.async_step_settings()
 
@@ -109,7 +110,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(xiaomi.discover_gateways)
         except gaierror:
             errors[CONF_INTERFACE] = "invalid_interface"
-            return await show_form_step_user(errors)
+            return await async_show_form_step_user(errors)
 
         self.gateways = xiaomi.gateways
 
@@ -121,7 +122,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_select()
 
         errors["base"] = "discovery_error"
-        return await show_form_step_user(errors)
+        return await async_show_form_step_user(errors)
 
     async def async_step_select(self, user_input=None):
         """Handle multiple aqara gateways found."""
