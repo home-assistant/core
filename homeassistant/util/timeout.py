@@ -199,7 +199,7 @@ class _TaskGlobal:
 
         # Reset timer if zones are running
         if not self._manager.zones_done:
-            asyncio.create_task(self._on_wait)
+            asyncio.create_task(self._on_wait())
         else:
             self._cancel_task()
 
@@ -396,7 +396,7 @@ class ZoneTimeout:
     def drop_zone(self, zone_name: str) -> None:
         """Drop a zone out of scope."""
         self._zones.pop(zone_name, None)
-        if not self._zones:
+        if self._zones:
             return
 
         # Signal Global task, all zones are done
