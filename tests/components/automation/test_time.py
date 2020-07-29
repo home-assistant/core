@@ -68,29 +68,45 @@ async def test_if_fires_using_at(hass, calls):
 
 async def test_if_fires_using_multiple_at(hass, calls):
     """Test for firing at."""
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {"platform": "time", "at": ["5:00:00", "6:00:00"]},
-                "action": {
-                    "service": "test.automation",
-                    "data_template": {
-                        "some": "{{ trigger.platform }} - {{ trigger.now.hour }}"
-                    },
-                },
-            }
-        },
+
+    now = dt_util.utcnow()
+
+    time_that_will_not_match_right_away = now.replace(
+        year=now.year + 1, hour=4, minute=59, second=0
     )
 
-    async_fire_time_changed(hass, dt_util.utcnow().replace(hour=5, minute=0, second=0))
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "trigger": {"platform": "time", "at": ["5:00:00", "6:00:00"]},
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "{{ trigger.platform }} - {{ trigger.now.hour }}"
+                        },
+                    },
+                }
+            },
+        )
+
+    now = dt_util.utcnow()
+
+    async_fire_time_changed(
+        hass, now.replace(year=now.year + 1, hour=5, minute=0, second=0)
+    )
 
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == "time - 5"
 
-    async_fire_time_changed(hass, dt_util.utcnow().replace(hour=6, minute=0, second=0))
+    async_fire_time_changed(
+        hass, now.replace(year=now.year + 1, hour=6, minute=0, second=0)
+    )
 
     await hass.async_block_till_done()
     assert len(calls) == 2
