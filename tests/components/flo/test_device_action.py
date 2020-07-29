@@ -1,4 +1,6 @@
 """Tests for Flo device automation actions."""
+from aioflo.location import SYSTEM_MODE_HOME
+
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import (
     _async_get_device_automations as async_get_device_automations,
@@ -7,6 +9,9 @@ from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
 from homeassistant.components.flo.device import FloDevice
 from homeassistant.components.flo.services import (
     ATTR_DEVICE_ID,
+    ATTR_LOCATION_ID,
+    ATTR_REVERT_TO_MODE,
+    ATTR_SLEEP_MINUTES,
     SERVICE_RUN_HEALTH_TEST,
     SERVICE_SET_AWAY_MODE,
     SERVICE_SET_HOME_MODE,
@@ -94,13 +99,26 @@ async def test_action(hass, config_entry, aioclient_mock_fixture):
                         "device_id": reg_device.id,
                         "type": SERVICE_RUN_HEALTH_TEST,
                     },
-                }
+                },
+                {
+                    "trigger": {
+                        "event_type": "test_event",
+                        "platform": "event",
+                        "event_data": {},
+                    },
+                    "action": {
+                        "domain": FLO_DOMAIN,
+                        "device_id": reg_device.id,
+                        "type": SERVICE_SET_SLEEP_MODE,
+                    },
+                },
             ]
         },
     )
 
     await hass.async_block_till_done()
     calls = async_mock_service(hass, FLO_DOMAIN, SERVICE_RUN_HEALTH_TEST)
+    calls2 = async_mock_service(hass, FLO_DOMAIN, SERVICE_SET_SLEEP_MODE)
 
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
@@ -109,3 +127,10 @@ async def test_action(hass, config_entry, aioclient_mock_fixture):
     assert calls[0].domain == FLO_DOMAIN
     assert calls[0].service == SERVICE_RUN_HEALTH_TEST
     assert calls[0].data[ATTR_DEVICE_ID] == device.id
+
+    assert len(calls2) == 1
+    assert calls2[0].domain == FLO_DOMAIN
+    assert calls2[0].service == SERVICE_SET_SLEEP_MODE
+    assert calls2[0].data[ATTR_LOCATION_ID] == device.location_id
+    assert calls2[0].data[ATTR_SLEEP_MINUTES] == 120
+    assert calls2[0].data[ATTR_REVERT_TO_MODE] == SYSTEM_MODE_HOME
