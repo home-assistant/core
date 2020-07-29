@@ -134,3 +134,8 @@ async def test_action(hass, config_entry, aioclient_mock_fixture):
     assert calls2[0].data[ATTR_LOCATION_ID] == device.location_id
     assert calls2[0].data[ATTR_SLEEP_MINUTES] == 120
     assert calls2[0].data[ATTR_REVERT_TO_MODE] == SYSTEM_MODE_HOME
+
+    # remove the Flo device and make sure we don't explode
+    hass.data[FLO_DOMAIN]["devices"] = []
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
