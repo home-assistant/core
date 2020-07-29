@@ -98,7 +98,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if self.selected_gateway.connection_error:
                 errors[CONF_HOST] = "invalid_host"
                 return await self.async_show_form_step_user(errors)
-            elif self.selected_gateway.mac_error:
+            if self.selected_gateway.mac_error:
                 errors[CONF_MAC] = "invalid_mac"
                 return await self.async_show_form_step_user(errors)
 
