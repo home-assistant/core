@@ -513,7 +513,7 @@ class RfxtrxCommandEntity(RfxtrxEntity):
     Contains the common logic for Rfxtrx lights and switches.
     """
 
-    def __init__(self, device, device_id, signal_repetitions=1, event=None, name=None):
+    def __init__(self, device, device_id, signal_repetitions=1, event=None):
         """Initialzie a switch or light device."""
         super().__init__(device, device_id, event=event)
         self.signal_repetitions = signal_repetitions

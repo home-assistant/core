@@ -48,7 +48,7 @@ async def async_setup_entry(
         device_ids.add(device_id)
 
         entity = RfxtrxCover(
-            event.device, device_id, entity_info[CONF_SIGNAL_REPETITIONS],
+            event.device, device_id, entity_info[CONF_SIGNAL_REPETITIONS]
         )
 
         if entity_info.get(CONF_NAME):
@@ -81,7 +81,6 @@ async def async_setup_entry(
         entity = RfxtrxCover(
             event.device, device_id, DEFAULT_SIGNAL_REPETITIONS, event=event
         )
-
         async_add_entities([entity])
 
     # Subscribe to main RFXtrx events
