@@ -1,6 +1,6 @@
 """Weather component that handles meteorological data for your location."""
 import logging
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import pytz
 
@@ -81,7 +81,7 @@ def _forecast_dict(
     condition: str,
     precipitation: str,
     precipitation_probability: Optional[float],
-    temp: float,
+    temp: Optional[float],
     temp_low: Optional[float],
     wind_direction: Optional[float],
     wind_speed: Optional[float],
@@ -114,7 +114,9 @@ def _forecast_dict(
             ATTR_FORECAST_PRECIPITATION: distance_convert(
                 precipitation / 12, LENGTH_FEET, LENGTH_METERS
             )
-            * 1000,
+            * 1000
+            if precipitation
+            else None,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_probability,
             ATTR_FORECAST_TEMP: temp_convert(temp, TEMP_FAHRENHEIT, TEMP_CELSIUS),
             ATTR_FORECAST_TEMP_LOW: temp_convert(
@@ -268,17 +270,23 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
             and self._coordinator.data[FORECASTS]
         ):
             for forecast in self._coordinator.data[FORECASTS]:
+                # Precipitation is forecasted in CONF_TIMESTEP increments
+                # but per hour, so this converts to an amount
+                precipitation: Optional[Union[float, int]] = forecast["precipitation"][
+                    "value"
+                ]
+                precipitation = (
+                    precipitation / 60 * self._config_entry.options[CONF_TIMESTEP]
+                    if precipitation
+                    else None
+                )
                 forecasts.append(
                     _forecast_dict(
                         self.hass,
                         forecast["observation_time"]["value"],
                         True,
                         forecast["weather_code"]["value"],
-                        (
-                            forecast["precipitation"]["value"]
-                            * self._config_entry.options[CONF_TIMESTEP]
-                            / 60
-                        ),
+                        precipitation,
                         None,
                         forecast["temp"]["value"],
                         None,
