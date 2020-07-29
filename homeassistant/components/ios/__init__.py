@@ -248,8 +248,9 @@ async def async_setup(hass, config):
         try:
             conf = config.get(DOMAIN)[CONF_PUSH]
             _LOGGER.warning(
-                "Deprecitation Warning: Defining push configuration with "
-                "the iOS integration is depreciated. Use mobile_app instead."
+                "Deprecation Warning: Defining push configuration with "
+                "the iOS integration is deprecated. Use mobile_app instead. "
+                "The iOS integration will be removed in Home Assistant 0.115."
             )
             hass.http.register_view(iOSPushConfigView(conf))
         except (TypeError, KeyError):
