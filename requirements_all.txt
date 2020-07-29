@@ -1960,7 +1960,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.2.1
+simplisafe-python==9.2.2
 
 # homeassistant.components.sisyphus
 sisyphus-control==2.2.1
