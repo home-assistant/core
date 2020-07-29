@@ -4846,6 +4846,10 @@ class PersonStatusIntent(intent.IntentHandler):
         else:
             if entity.state == STATE_UNKNOWN:
                 location = "lokalizacja nieznana"
+            elif entity.state == STATE_HOME:
+                location = "jest w domu"
+            elif entity.state == STATE_NOT_HOME:
+                location = "jest poza domem"
             else:
                 location = "lokalizacja " + entity.state
             message = format(entity.name) + ": " + location
