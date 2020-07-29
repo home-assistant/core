@@ -27,6 +27,10 @@ ATTR_ICON = "icon"
 ATTR_LABEL = "label"
 ATTR_UNIT = "unit"
 
+# An update of this entity is not making a web request, but uses internal data only to
+# not exceed allowed numbers of requests.
+PARALLEL_UPDATES = 0
+
 SENSOR_TYPES = {
     ATTR_API_PM1: {
         ATTR_DEVICE_CLASS: None,

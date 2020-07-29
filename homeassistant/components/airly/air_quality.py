@@ -31,6 +31,10 @@ LABEL_PM_2_5_PERCENT = f"{ATTR_PM_2_5}_percent_of_limit"
 LABEL_PM_10_LIMIT = f"{ATTR_PM_10}_limit"
 LABEL_PM_10_PERCENT = f"{ATTR_PM_10}_percent_of_limit"
 
+# An update of this entity is not making a web request, but uses internal data only to
+# not exceed allowed numbers of requests.
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Airly air_quality entity based on a config entry."""
