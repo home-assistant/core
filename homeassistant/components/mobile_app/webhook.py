@@ -545,8 +545,9 @@ async def webhook_get_config(hass, config_entry, data):
 @WEBHOOK_COMMANDS.register("get_yaml_config")
 async def webhook_get_yaml_config(hass, config_entry, data):
     """Handle a get yaml config webhook for user-defined config options."""
-    try:
-        resp = hass.data[DOMAIN][CONF]
+    resp = hass.data[DOMAIN][CONF]
+
+    if resp:
         return webhook_response(resp, registration=config_entry.data)
-    except (TypeError):
-        return empty_okay_response(status=HTTP_NOT_FOUND)
+
+    return empty_okay_response(status=HTTP_NOT_FOUND)
