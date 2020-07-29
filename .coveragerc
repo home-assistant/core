@@ -31,10 +31,6 @@ omit =
     homeassistant/components/agent_dvr/camera.py
     homeassistant/components/agent_dvr/const.py
     homeassistant/components/agent_dvr/helpers.py
-    homeassistant/components/airly/__init__.py
-    homeassistant/components/airly/air_quality.py
-    homeassistant/components/airly/sensor.py
-    homeassistant/components/airly/const.py
     homeassistant/components/airvisual/__init__.py
     homeassistant/components/airvisual/air_quality.py
     homeassistant/components/airvisual/sensor.py
