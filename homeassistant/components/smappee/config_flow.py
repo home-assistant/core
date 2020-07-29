@@ -1,11 +1,6 @@
 """Config flow for Smappee."""
 import logging
-import socket
 
-from requests.exceptions import (
-    ConnectionError as RequestConnectionError,
-    ConnectTimeout,
-)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -75,14 +70,8 @@ class SmappeeFlowHandler(
         # Attempt to make a connection to the local device
         if user_input.get(CONF_IP_ADDRESS) is not None or not prepare:
             smappee_api = api.api.SmappeeLocalApi(ip=user_input[CONF_IP_ADDRESS])
-            try:
-                await self.hass.async_add_executor_job(smappee_api.logon)
-            except (
-                socket.gaierror,
-                socket.timeout,
-                ConnectTimeout,
-                RequestConnectionError,
-            ):
+            logon = await self.hass.async_add_executor_job(smappee_api.logon)
+            if logon is None:
                 return self.async_abort(reason="connection_error")
 
         # Check if already configured
@@ -154,29 +143,23 @@ class SmappeeFlowHandler(
         user_input[CONF_IP_ADDRESS] = user_input["host"]
         if user_input.get(CONF_IP_ADDRESS) is not None or not prepare:
             smappee_api = api.api.SmappeeLocalApi(ip=user_input[CONF_IP_ADDRESS])
-            try:
-                await self.hass.async_add_executor_job(smappee_api.logon)
-
-                # In a LOCAL setup we still need to resolve the host to serialnumber
-                advanced_config = await self.hass.async_add_executor_job(
-                    smappee_api.load_advanced_config
-                )
-                serialnumber = None
-                for config_item in advanced_config:
-                    if config_item["key"] == "mdnsHostName":
-                        serialnumber = config_item["value"]
-
-                if serialnumber is None or not serialnumber.startswith("Smappee1"):
-                    # We currently only support Energy and Solar models (legacy)
-                    return self.async_abort(reason="invalid_mdns")
-                user_input[CONF_SERIALNUMBER] = serialnumber.replace("Smappee", "")
-            except (
-                socket.gaierror,
-                socket.timeout,
-                ConnectTimeout,
-                RequestConnectionError,
-            ):
+            logon = await self.hass.async_add_executor_job(smappee_api.logon)
+            if logon is None:
                 return self.async_abort(reason="connection_error")
+
+            # In a LOCAL setup we still need to resolve the host to serialnumber
+            advanced_config = await self.hass.async_add_executor_job(
+                smappee_api.load_advanced_config
+            )
+            serialnumber = None
+            for config_item in advanced_config:
+                if config_item["key"] == "mdnsHostName":
+                    serialnumber = config_item["value"]
+
+            if serialnumber is None or not serialnumber.startswith("Smappee1"):
+                # We currently only support Energy and Solar models (legacy)
+                return self.async_abort(reason="invalid_mdns")
+            user_input[CONF_SERIALNUMBER] = serialnumber.replace("Smappee", "")
 
         # Check if already configured
         await self.async_set_unique_id(f"Smappee{user_input[CONF_SERIALNUMBER]}")
