@@ -140,6 +140,7 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         self._current_activity = ACTIVITY_POWER_OFF
         self.default_activity = activity
         self._activity_starting = None
+        self._is_initial_update = False
         self._client = HarmonyClient(ip_address=host)
         self._config_path = out_path
         self.delay_secs = delay_secs
@@ -296,7 +297,10 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         activity_id, activity_name = activity_info
         _LOGGER.debug("%s: activity reported as: %s", self._name, activity_name)
         self._current_activity = activity_name
-        self._activity_starting = activity_name
+        if self._is_initial_update:
+            self._is_initial_update = False
+        else:
+            self._activity_starting = activity_name
         if activity_id != -1:
             # Save the activity so we can restore
             # to that activity if none is specified
