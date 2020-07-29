@@ -29,7 +29,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
         """Listen for time changes and calls action."""
         hass.async_run_job(action, {"trigger": {"platform": "time", "now": now}})
 
-    return [
+    removes = [
         async_track_time_change(
             hass,
             time_automation_listener,
@@ -39,3 +39,11 @@ async def async_attach_trigger(hass, config, action, automation_info):
         )
         for at_time in at_times
     ]
+
+    @callback
+    def remove_track_time_changes():
+        """Remove tracked time changes."""
+        for remove in removes:
+            remove()
+
+    return remove_track_time_changes
