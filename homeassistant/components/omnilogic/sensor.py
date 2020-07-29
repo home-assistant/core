@@ -98,9 +98,7 @@ class OmnilogicSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the attributes."""
-        attributes = self._attributes
-        attributes["MspSystemId"] = self._msp_system_id
-        attributes["SystemId"] = self._system_id
+        
         return self.attrs
 
     @property
