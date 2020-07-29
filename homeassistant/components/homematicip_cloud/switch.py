@@ -4,6 +4,7 @@ from typing import Any, Dict
 
 from homematicip.aio.device import (
     AsyncBrandSwitchMeasuring,
+    AsyncFullFlushInputSwitch,
     AsyncFullFlushSwitchMeasuring,
     AsyncHeatingSwitch2,
     AsyncMultiIOBox,
@@ -43,7 +44,12 @@ async def async_setup_entry(
         ):
             entities.append(HomematicipSwitchMeasuring(hap, device))
         elif isinstance(
-            device, (AsyncPlugableSwitch, AsyncPrintedCircuitBoardSwitchBattery)
+            device,
+            (
+                AsyncPlugableSwitch,
+                AsyncPrintedCircuitBoardSwitchBattery,
+                AsyncFullFlushInputSwitch,
+            ),
         ):
             entities.append(HomematicipSwitch(hap, device))
         elif isinstance(device, AsyncOpenCollector8Module):

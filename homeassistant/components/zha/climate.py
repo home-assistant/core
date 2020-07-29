@@ -393,7 +393,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
-        await self.async_accept_signal(
+        self.async_accept_signal(
             self._thrm, SIGNAL_ATTR_UPDATED, self.async_attribute_updated
         )
 

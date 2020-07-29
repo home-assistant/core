@@ -301,7 +301,7 @@ async def async_send_message(
             _LOGGER.info("Uploading file from path, %s", path)
 
             if not hass.config.is_allowed_path(path):
-                raise PermissionError("Could not access file. Not in whitelist")
+                raise PermissionError("Could not access file. Path not allowed")
 
             with open(path, "rb") as upfile:
                 _LOGGER.debug("Reading file %s", path)

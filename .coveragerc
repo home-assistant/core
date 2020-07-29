@@ -8,6 +8,9 @@ omit =
     homeassistant/scripts/*.py
 
     # omit pieces of code that rely on external devices being present
+    homeassistant/components/accuweather/__init__.py
+    homeassistant/components/accuweather/const.py
+    homeassistant/components/accuweather/weather.py
     homeassistant/components/acer_projector/switch.py
     homeassistant/components/actiontec/device_tracker.py
     homeassistant/components/acmeda/__init__.py
@@ -69,6 +72,9 @@ omit =
     homeassistant/components/avion/light.py
     homeassistant/components/avri/const.py
     homeassistant/components/avri/sensor.py
+    homeassistant/components/azure_devops/__init__.py
+    homeassistant/components/azure_devops/const.py
+    homeassistant/components/azure_devops/sensor.py
     homeassistant/components/azure_service_bus/*
     homeassistant/components/baidu/tts.py
     homeassistant/components/beewi_smartclim/sensor.py
@@ -139,6 +145,10 @@ omit =
     homeassistant/components/comfoconnect/*
     homeassistant/components/concord232/alarm_control_panel.py
     homeassistant/components/concord232/binary_sensor.py
+    homeassistant/components/control4/__init__.py
+    homeassistant/components/control4/light.py
+    homeassistant/components/control4/const.py
+    homeassistant/components/control4/director_utils.py
     homeassistant/components/coolmaster/__init__.py
     homeassistant/components/coolmaster/climate.py
     homeassistant/components/coolmaster/const.py
@@ -254,6 +264,13 @@ omit =
     homeassistant/components/fibaro/*
     homeassistant/components/filesize/sensor.py
     homeassistant/components/fints/sensor.py
+    homeassistant/components/firmata/__init__.py
+    homeassistant/components/firmata/binary_sensor.py
+    homeassistant/components/firmata/board.py
+    homeassistant/components/firmata/const.py
+    homeassistant/components/firmata/entity.py
+    homeassistant/components/firmata/pin.py
+    homeassistant/components/firmata/switch.py
     homeassistant/components/fitbit/sensor.py
     homeassistant/components/fixer/sensor.py
     homeassistant/components/fleetgo/device_tracker.py
@@ -729,7 +746,7 @@ omit =
     homeassistant/components/simplisafe/lock.py
     homeassistant/components/simulated/sensor.py
     homeassistant/components/sisyphus/*
-    homeassistant/components/sky_hub/device_tracker.py
+    homeassistant/components/sky_hub/*
     homeassistant/components/skybeacon/sensor.py
     homeassistant/components/skybell/*
     homeassistant/components/slack/notify.py
@@ -909,6 +926,7 @@ omit =
     homeassistant/components/vlc/media_player.py
     homeassistant/components/vlc_telnet/media_player.py
     homeassistant/components/volkszaehler/sensor.py
+    homeassistant/components/volumio/__init__.py
     homeassistant/components/volumio/media_player.py
     homeassistant/components/volvooncall/*
     homeassistant/components/w800rf32/*
@@ -923,6 +941,9 @@ omit =
     homeassistant/components/wiffi/*
     homeassistant/components/wink/*
     homeassistant/components/wirelesstag/*
+    homeassistant/components/wolflink/__init__.py
+    homeassistant/components/wolflink/sensor.py
+    homeassistant/components/wolflink/const.py
     homeassistant/components/worldtidesinfo/sensor.py
     homeassistant/components/worxlandroid/sensor.py
     homeassistant/components/x10/light.py

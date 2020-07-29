@@ -25,7 +25,7 @@ SUPPORT_LG = (
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LG platform."""
     if discovery_info is not None:
-        add_entities([LGDevice(discovery_info)], True)
+        add_entities([LGDevice(discovery_info)])
 
 
 class LGDevice(MediaPlayerEntity):
@@ -33,8 +33,8 @@ class LGDevice(MediaPlayerEntity):
 
     def __init__(self, discovery_info):
         """Initialize the LG speakers."""
-        host = discovery_info.get("host")
-        port = discovery_info.get("port")
+        self._host = discovery_info.get("host")
+        self._port = discovery_info.get("port")
 
         self._name = ""
         self._volume = 0
@@ -53,8 +53,17 @@ class LGDevice(MediaPlayerEntity):
         self._woofer_volume_max = 0
         self._bass = 0
         self._treble = 0
+        self._device = None
 
-        self._device = temescal.temescal(host, port=port, callback=self.handle_event)
+    async def async_added_to_hass(self):
+        """Register the callback after hass is ready for it."""
+        await self.hass.async_add_executor_job(self._connect)
+
+    def _connect(self):
+        """Perform the actual devices setup."""
+        self._device = temescal.temescal(
+            self._host, port=self._port, callback=self.handle_event
+        )
         self.update()
 
     def handle_event(self, response):

@@ -12,6 +12,7 @@
                 "data": {
                     "api_key": "API-n\u00f8kkel (valgfritt)",
                     "host": "Vert",
+                    "location": "Beliggenhet",
                     "name": "Navn",
                     "port": "",
                     "ssl": "Bruk SSL",

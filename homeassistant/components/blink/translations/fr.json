@@ -30,6 +30,7 @@
                 "data": {
                     "scan_interval": "Intervalle de balayage (secondes)"
                 },
+                "description": "Configurer l'int\u00e9gration Blink",
                 "title": "Options de clignotement"
             }
         }

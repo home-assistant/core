@@ -16,7 +16,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
-    async_track_state_change,
+    async_track_state_change_event,
     async_track_time_change,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -131,8 +131,10 @@ class UtilityMeterSensor(RestoreEntity):
         self._tariff_entity = tariff_entity
 
     @callback
-    def async_reading(self, entity, old_state, new_state):
+    def async_reading(self, event):
         """Handle the sensor state changes."""
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
         if (
             old_state is None
             or new_state is None
@@ -166,11 +168,14 @@ class UtilityMeterSensor(RestoreEntity):
         self.async_write_ha_state()
 
     @callback
-    def async_tariff_change(self, entity, old_state, new_state):
+    def async_tariff_change(self, event):
         """Handle tariff changes."""
+        new_state = event.data.get("new_state")
+        if new_state is None:
+            return
         if self._tariff == new_state.state:
-            self._collecting = async_track_state_change(
-                self.hass, self._sensor_source_id, self.async_reading
+            self._collecting = async_track_state_change_event(
+                self.hass, [self._sensor_source_id], self.async_reading
             )
         else:
             if self._collecting:
@@ -263,8 +268,8 @@ class UtilityMeterSensor(RestoreEntity):
             """Wait for source to be ready, then start meter."""
             if self._tariff_entity is not None:
                 _LOGGER.debug("Track %s", self._tariff_entity)
-                async_track_state_change(
-                    self.hass, self._tariff_entity, self.async_tariff_change
+                async_track_state_change_event(
+                    self.hass, [self._tariff_entity], self.async_tariff_change
                 )
 
                 tariff_entity_state = self.hass.states.get(self._tariff_entity)
@@ -272,8 +277,8 @@ class UtilityMeterSensor(RestoreEntity):
                     return
 
             _LOGGER.debug("tracking source: %s", self._sensor_source_id)
-            self._collecting = async_track_state_change(
-                self.hass, self._sensor_source_id, self.async_reading
+            self._collecting = async_track_state_change_event(
+                self.hass, [self._sensor_source_id], self.async_reading
             )
 
         self.hass.bus.async_listen_once(

@@ -190,6 +190,7 @@ DEMO_DEVICES = [
         "id": "media_player.lounge_room",
         "name": {"name": "Lounge room"},
         "traits": [
+            "action.devices.traits.InputSelector",
             "action.devices.traits.OnOff",
             "action.devices.traits.Modes",
             "action.devices.traits.TransportControl",

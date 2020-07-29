@@ -27,7 +27,7 @@ SENSORS = [
         None,
         TEMP_FAHRENHEIT,
     ),
-    (SENSOR_KIND_UPTIME, "Uptime", None, "mdi:timer", TIME_MINUTES),
+    (SENSOR_KIND_UPTIME, "Uptime", None, "mdi:timer-outline", TIME_MINUTES),
 ]
 
 

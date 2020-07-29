@@ -1,13 +1,14 @@
 """Test the Bond config flow."""
-from json import JSONDecodeError
 
-from requests.exceptions import ConnectionError
+from aiohttp import ClientConnectionError, ClientResponseError
 
 from homeassistant import config_entries, core, setup
 from homeassistant.components.bond.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 
-from tests.async_mock import patch
+from .common import patch_bond_device_ids
+
+from tests.async_mock import Mock, patch
 
 
 async def test_form(hass: core.HomeAssistant):
@@ -19,21 +20,20 @@ async def test_form(hass: core.HomeAssistant):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.bond.config_flow.Bond.getDeviceIds", return_value=[],
-    ), patch(
+    with patch_bond_device_ids(), patch(
         "homeassistant.components.bond.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.bond.async_setup_entry", return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: "1.1.1.1", CONF_ACCESS_TOKEN: "test-token"},
+            result["flow_id"],
+            {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "1.1.1.1"
+    assert result2["title"] == "some host"
     assert result2["data"] == {
-        CONF_HOST: "1.1.1.1",
+        CONF_HOST: "some host",
         CONF_ACCESS_TOKEN: "test-token",
     }
     await hass.async_block_till_done()
@@ -47,12 +47,12 @@ async def test_form_invalid_auth(hass: core.HomeAssistant):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.bond.config_flow.Bond.getDeviceIds",
-        side_effect=JSONDecodeError("test-message", "test-doc", 0),
+    with patch_bond_device_ids(
+        side_effect=ClientResponseError(Mock(), Mock(), status=401),
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: "1.1.1.1", CONF_ACCESS_TOKEN: "test-token"},
+            result["flow_id"],
+            {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
         )
 
     assert result2["type"] == "form"
@@ -65,12 +65,10 @@ async def test_form_cannot_connect(hass: core.HomeAssistant):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.bond.config_flow.Bond.getDeviceIds",
-        side_effect=ConnectionError,
-    ):
+    with patch_bond_device_ids(side_effect=ClientConnectionError()):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: "1.1.1.1", CONF_ACCESS_TOKEN: "test-token"},
+            result["flow_id"],
+            {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
         )
 
     assert result2["type"] == "form"
@@ -83,12 +81,12 @@ async def test_form_unexpected_error(hass: core.HomeAssistant):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.bond.config_flow.Bond.getDeviceIds",
-        side_effect=Exception,
+    with patch_bond_device_ids(
+        side_effect=ClientResponseError(Mock(), Mock(), status=500)
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: "1.1.1.1", CONF_ACCESS_TOKEN: "test-token"},
+            result["flow_id"],
+            {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
         )
 
     assert result2["type"] == "form"
