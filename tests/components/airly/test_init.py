@@ -1,4 +1,5 @@
 """Test init of Airly integration."""
+from datetime import timedelta
 import json
 
 from homeassistant.components.airly.const import DOMAIN
@@ -88,6 +89,41 @@ async def test_config_with_turned_off_station(hass):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state == ENTRY_STATE_SETUP_RETRY
+
+
+async def test_update_interval(hass):
+    """Test correct update interval when the number of configured instances changes."""
+    entry = await init_integration(hass)
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.state == ENTRY_STATE_LOADED
+    for instance in hass.data[DOMAIN].values():
+        assert instance.update_interval == timedelta(minutes=15)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Work",
+        unique_id="66.66-111.11",
+        data={
+            "api_key": "foo",
+            "latitude": 66.66,
+            "longitude": 111.11,
+            "name": "Work",
+        },
+    )
+
+    with patch(
+        "airly._private._RequestsHandler.get",
+        return_value=json.loads(load_fixture("airly_valid_station.json")),
+    ):
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+    assert entry.state == ENTRY_STATE_LOADED
+    for instance in hass.data[DOMAIN].values():
+        assert instance.update_interval == timedelta(minutes=30)
 
 
 async def test_unload_entry(hass):
