@@ -69,3 +69,8 @@ class ClimaCellAirQualityEntity(ClimaCellEntity, AirQualityEntity):
     def nitrogen_dioxide(self):
         """Return the NO2 (nitrogen dioxide) level."""
         return self._coordinator.data[CURRENT].get("no2", {}).get("value")
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return False

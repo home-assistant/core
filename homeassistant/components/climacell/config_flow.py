@@ -12,10 +12,15 @@ from pyclimacell.exceptions import (
 import voluptuous as vol
 
 from homeassistant import config_entries, core
+from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_registry import (
+    async_entries_for_config_entry,
+    async_get_registry,
+)
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
@@ -99,14 +104,24 @@ class ClimaCellOptionsConfigFlow(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        options_schema = {
-            vol.Required(
-                CONF_AQI_COUNTRY,
-                default=self._config_entry.options.get(
-                    CONF_AQI_COUNTRY, DEFAULT_AQI_COUNTRY
-                ),
-            ): vol.In((USA, CHINA)),
-        }
+        options_schema = {}
+
+        # Check if air_quality entity is enabled to display relevant option
+        entity_registry = await async_get_registry(self.hass)
+        for entity in async_entries_for_config_entry(
+            entity_registry, self._config_entry.entry_id
+        ):
+            if entity.domain == AIR_QUALITY_DOMAIN and not entity.disabled:
+                options_schema.update(
+                    {
+                        vol.Required(
+                            CONF_AQI_COUNTRY,
+                            default=self._config_entry.options.get(
+                                CONF_AQI_COUNTRY, DEFAULT_AQI_COUNTRY
+                            ),
+                        ): vol.In((USA, CHINA))
+                    }
+                )
 
         if self._config_entry.data[CONF_FORECAST_TYPE] == NOWCAST:
             options_schema.update(
@@ -116,12 +131,12 @@ class ClimaCellOptionsConfigFlow(config_entries.OptionsFlow):
                         default=self._config_entry.options.get(
                             CONF_TIMESTEP, DEFAULT_TIMESTEP
                         ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=60)),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=60))
                 }
             )
 
         return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(options_schema),
+            step_id="init", data_schema=vol.Schema(options_schema)
         )
 
 

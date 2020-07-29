@@ -1,4 +1,5 @@
 """Test the ClimaCell config flow."""
+from datetime import timedelta
 import logging
 
 from pyclimacell.exceptions import (
@@ -7,8 +8,10 @@ from pyclimacell.exceptions import (
     RateLimitedException,
     UnknownException,
 )
+import pytest
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_DOMAIN
 from homeassistant.components.climacell import SCHEMA
 from homeassistant.components.climacell.config_flow import (
     _get_config_schema,
@@ -26,13 +29,19 @@ from homeassistant.components.climacell.const import (
     NOWCAST,
     USA,
 )
+from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.helpers.entity_registry import (
+    async_entries_for_config_entry,
+    async_get_registry,
+)
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import dt
 
 from .const import API_KEY, MIN_CONFIG
 
 from tests.async_mock import patch
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -260,6 +269,55 @@ async def test_options_flow(hass: HomeAssistantType) -> None:
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
+
+    assert CONF_AQI_COUNTRY not in result["data_schema"].schema
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_TIMESTEP: 1}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == ""
+    assert result["data"][CONF_TIMESTEP] == 1
+    assert entry.options[CONF_TIMESTEP] == 1
+
+
+async def test_options_flow_after_enabling_aq_entity(
+    hass: HomeAssistantType, climacell_config_entry_update: pytest.fixture
+) -> None:
+    """Test options flow includes `aqi_country` after enabling air_quality entity."""
+    import_config = SCHEMA(MIN_CONFIG)
+    import_config[CONF_FORECAST_TYPE] = NOWCAST
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=import_config,
+        source=config_entries.SOURCE_IMPORT,
+        unique_id=_get_unique_id(hass, import_config),
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids(WEATHER_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(AIR_QUALITY_DOMAIN)) == 0
+
+    entity_registry = await async_get_registry(hass)
+    for entity in async_entries_for_config_entry(entity_registry, entry.entry_id):
+        if entity.domain == AIR_QUALITY_DOMAIN:
+            entity_registry.async_update_entity(entity.entity_id, disabled_by=None)
+            # Force reload of entry to finish enabling entity
+            await hass.config_entries.async_reload(entry.entry_id)
+            async_fire_time_changed(hass, dt.now() + timedelta(hours=1))
+            await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids(AIR_QUALITY_DOMAIN)) == 1
+
+    result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    assert CONF_AQI_COUNTRY in result["data_schema"].schema
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_TIMESTEP: 1, CONF_AQI_COUNTRY: "china"}

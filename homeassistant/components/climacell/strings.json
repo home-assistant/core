@@ -29,10 +29,10 @@
     "step": {
       "init": {
         "title": "Update [%key:component::climacell::title%] Options",
-        "description": "If you choose the `nowcast` forecast type, you can configure the number of minutes between each forecast. The number of forecasts provided will be dependent on the number of minutes chosen between forecasts, but the maximum number of forecasts is 30 and the maximum overall forecast period is 5 hours.",
+        "description": "If you choose the `nowcast` forecast type, you can configure the number of minutes between each forecast. The number of forecasts provided depends on the number of minutes chosen between forecasts.",
         "data": {
           "timestep": "Number of Minutes Between NowCast Forecasts",
-          "aqi_contry": "Air Quality Index Country Standard"
+          "aqi_country": "Air Quality Index Country Standard"
         }
       }
     }

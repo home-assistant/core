@@ -228,9 +228,7 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
 
             if self._forecast_type == DAILY:
                 data[FORECASTS] = await self._api.forecast_daily(
-                    self._api.available_fields(FORECAST_DAILY),
-                    None,
-                    timedelta(days=14),
+                    self._api.available_fields(FORECAST_DAILY), None, timedelta(days=14)
                 )
 
             if self._forecast_type == NOWCAST:

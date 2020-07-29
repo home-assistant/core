@@ -29,7 +29,7 @@ async def test_setup_component(
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: MIN_CONFIG})
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(WEATHER_DOMAIN)) == 1
-    assert len(hass.states.async_entity_ids(AIR_QUALITY_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(AIR_QUALITY_DOMAIN)) == 0
 
 
 async def test_load_and_unload(
@@ -45,7 +45,7 @@ async def test_load_and_unload(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(WEATHER_DOMAIN)) == 1
-    assert len(hass.states.async_entity_ids(AIR_QUALITY_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(AIR_QUALITY_DOMAIN)) == 0
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
