@@ -8,7 +8,9 @@ from types import TracebackType
 ZONE_GLOBAL = "global"
 
 
-class _StateZone(enum.Enum, str):
+class _StateZone(str, enum.Enum):
+    """States of a Zone."""
+
     INIT = "INIT"
     ENTER = "ENTER"
     TIMEOUT = "TIMEOUT"
@@ -68,7 +70,7 @@ class _FreezeGlobal:
 
     def _exit(self) -> None:
         """Finish freeze."""
-        self._manager.freezes.pop(self, None)
+        self._manager.freezes.remove(self)
         if not self._manager.freezes_done:
             return
 
@@ -124,7 +126,7 @@ class _FreezeZone:
 
     def _exit(self) -> None:
         """Finish freeze."""
-        self._zone.freezes.pop(self, None)
+        self._zone.freezes.remove(self)
         if not self._zone.freezes_done:
             return
         self._zone.reset()
@@ -155,7 +157,9 @@ class _TaskGlobal:
         exc_tb: TracebackType,
     ) -> Optional[bool]:
         self._stop_timer()
-        self._manager.global_tasks.pop(self, None)
+        self._manager.global_tasks.remove(self)
+
+        # Timeout on exit
         if exc_type is asyncio.CancelledError:
             raise asyncio.TimeoutError
 
@@ -211,7 +215,7 @@ class _TaskZone:
 
     def cancel(self) -> None:
         """Cancel a running task."""
-        self._task.canel()
+        self._task.cancel()
 
     async def __aenter__(self) -> _TaskZone:
         self._zone.enter_task(self)
@@ -250,6 +254,7 @@ class _Zone:
     @property
     def state(self) -> _StateZone:
         """Return state of the Zone."""
+        return self._state
 
     @property
     def freezes(self) -> List[_FreezeZone]:
@@ -275,6 +280,7 @@ class _Zone:
         """Exit a running Task."""
         self._count -= 1
 
+        # Timeout exit
         if exc_type is asyncio.CancelledError and self.state == _StateZone.TIMEOUT:
             if self._count == 0:
                 self._manager.zones.pop(self.name, None)
@@ -286,13 +292,13 @@ class _Zone:
             self._stop_timer()
             self._manager.zones.pop(self.name, None)
 
-        self._tasks.pop(task)
+        self._tasks.remove(task)
 
     def _start_timer(self) -> None:
         """Start timeout handler."""
         self._state = _StateZone.ENTER
         self._timeout_handler = self._loop.call_at(
-            self._loop.timer() + self._timeout, self._on_timeout
+            self._loop.time() + self._timeout, self._on_timeout
         )
 
     def _stop_timer(self) -> None:
@@ -304,6 +310,7 @@ class _Zone:
 
     def _on_timeout(self) -> None:
         """Process timeout."""
+        self._timeout_handler = None
         self._state = _StateZone.TIMEOUT
 
         # Cancel all running tasks
