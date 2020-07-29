@@ -5,7 +5,8 @@
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
-            "invalid_api_key": "Clave API no v\u00e1lida"
+            "invalid_api_key": "Clave API no v\u00e1lida",
+            "requests_exceeded": "Se ha excedido el n\u00famero permitido de solicitudes a la API de Accuweather. Tienes que esperar o cambiar la Clave API."
         },
         "step": {
             "user": {
@@ -15,6 +16,7 @@
                     "longitude": "Longitud",
                     "name": "Nombre de la integraci\u00f3n"
                 },
+                "description": "Si necesitas ayuda con la configuraci\u00f3n, echa un vistazo aqu\u00ed: https://www.home-assistant.io/integrations/accuweather/ \n\nEl pron\u00f3stico del tiempo no est\u00e1 habilitado por defecto. Puedes habilitarlo en las opciones de la integraci\u00f3n.",
                 "title": "AccuWeather"
             }
         }
@@ -25,6 +27,7 @@
                 "data": {
                     "forecast": "Pron\u00f3stico del tiempo"
                 },
+                "description": "Debido a las limitaciones de la versi\u00f3n gratuita de la clave API de AccuWeather, cuando habilitas el pron\u00f3stico del tiempo, las actualizaciones de datos se realizar\u00e1n cada 64 minutos en lugar de cada 32 minutos.",
                 "title": "Opciones de AccuWeather"
             }
         }

@@ -1,6 +1,13 @@
 {
     "config": {
+        "flow_title": "ENOcean oppsett",
         "step": {
+            "detect": {
+                "data": {
+                    "path": "USB-donglebane"
+                },
+                "title": "Velg banen til din ENOcean dongle"
+            },
             "manual": {
                 "data": {
                     "path": "USB-donglebane"
