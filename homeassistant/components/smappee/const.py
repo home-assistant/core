@@ -12,8 +12,6 @@ CONF_TITLE = "title"
 ENV_CLOUD = "cloud"
 ENV_LOCAL = "local"
 
-BASE = "BASE"
-
 SMAPPEE_PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)

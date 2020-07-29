@@ -18,7 +18,6 @@ from homeassistant.util import Throttle
 from . import api, config_flow
 from .const import (
     AUTHORIZE_URL,
-    BASE,
     CONF_SERIALNUMBER,
     DOMAIN,
     MIN_TIME_BETWEEN_UPDATES,
@@ -46,11 +45,14 @@ async def async_setup(hass: HomeAssistant, config: dict):
     if DOMAIN not in config:
         return True
 
+    client_id = config[DOMAIN][CONF_CLIENT_ID]
+    hass.data[DOMAIN][client_id] = {}
+
     # decide platform
     platform = "PRODUCTION"
-    if config[DOMAIN][CONF_CLIENT_ID] == "homeassistant_f2":
+    if client_id == "homeassistant_f2":
         platform = "ACCEPTANCE"
-    elif config[DOMAIN][CONF_CLIENT_ID] == "homeassistant_f3":
+    elif client_id == "homeassistant_f3":
         platform = "DEVELOPMENT"
 
     hass.data[DOMAIN][CONF_PLATFORM] = platform
@@ -86,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         smappee = Smappee(api=smappee_api)
         await hass.async_add_executor_job(smappee.load_service_locations)
 
-    hass.data[DOMAIN][BASE] = SmappeeBase(hass, smappee)
+    hass.data[DOMAIN][entry.entry_id] = SmappeeBase(hass, smappee)
 
     for component in SMAPPEE_PLATFORMS:
         hass.async_create_task(
@@ -108,8 +110,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     if unload_ok:
-        hass.data[DOMAIN].pop(BASE, None)
-        hass.data[DOMAIN].pop(CONF_PLATFORM, None)
+        hass.data[DOMAIN].pop(entry.entry_id, None)
 
     return unload_ok
 

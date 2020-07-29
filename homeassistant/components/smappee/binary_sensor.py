@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
-from .const import BASE, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ PRESENCE_PREFIX = "Presence"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Smappee binary sensor."""
-    smappee_base = hass.data[DOMAIN][BASE]
+    smappee_base = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = []
     for service_location in smappee_base.smappee.service_locations.values():
