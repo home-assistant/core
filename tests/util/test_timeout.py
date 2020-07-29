@@ -49,3 +49,15 @@ async def test_mix_zone_timeout_freeze():
     async with timeout.asnyc_timeout(0.2, "test"):
         async with timeout.freeze():
             await asyncio.sleep(0.3)
+
+
+async def test_mix_zone_timeout():
+    """Test a mix zone timeout global."""
+    timeout = ZoneTimeout()
+
+    async with timeout.asnyc_timeout(0.1):
+        try:
+            async with timeout.asnyc_timeout(0.2, "test"):
+                await asyncio.sleep(0.4)
+        except asyncio.TimeoutError:
+            pass

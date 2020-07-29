@@ -8,7 +8,7 @@ from types import TracebackType
 ZONE_GLOBAL = "global"
 
 
-class _StateZone(str, enum.Enum):
+class _State(str, enum.Enum):
     """States of a Zone."""
 
     INIT = "INIT"
@@ -144,10 +144,13 @@ class _TaskGlobal:
         self._task: asyncio.Task[Any] = task
         self._timeout: float = timeout
         self._timeout_handler: Optional[asyncio.Handle] = None
+        self._wait_zone: asyncio.Event = asyncio.Event()
+        self._state: _State = _State.INIT
 
     async def __aenter__(self) -> _TaskGlobal:
         self._manager.global_tasks.append(self)
         self._start_timer()
+        self._state = _State.ENTER
         return self
 
     async def __aexit__(
@@ -160,16 +163,26 @@ class _TaskGlobal:
         self._manager.global_tasks.remove(self)
 
         # Timeout on exit
-        if exc_type is asyncio.CancelledError:
+        if exc_type is asyncio.CancelledError and self.state == _State.TIMEOUT:
             raise asyncio.TimeoutError
 
+        self._state == _State.EXIT
+        self._wait_zone.set()
         return None
 
-    def _start_timer(self, timeout: Optional[float] = None) -> None:
+    @property
+    def state(self) -> _State:
+        """Return state of the Global task."""
+        return self._state
+
+    def zones_done_signal(self) -> None:
+        """Signal that all zones are done."""
+        self._wait_zone.set()
+
+    def _start_timer(self) -> None:
         """Start timeout handler."""
-        timeout = timeout or self._timeout
         self._timeout_handler = self._loop.call_at(
-            self._loop.time() + timeout, self._on_timeout
+            self._loop.time() + self._timeout, self._on_timeout
         )
 
     def _stop_timer(self) -> None:
@@ -181,13 +194,17 @@ class _TaskGlobal:
 
     def _on_timeout(self) -> None:
         """Process timeout."""
+        self._state = _State.TIMEOUT
         self._timeout_handler = None
 
         # Reset timer if zones are running
         if not self._manager.zones_done:
-            self._start_timer(30)
+            asyncio.create_task(self._on_wait)
+        else:
+            self._cancel_task()
 
-        # Cancel task
+    def _cancel_task(self) -> None:
+        """Cancel own task."""
         if self._task.done():
             return
         self._task.cancel()
@@ -199,6 +216,13 @@ class _TaskGlobal:
     def reset(self) -> None:
         """Reset timer after freeze."""
         self._start_timer()
+
+    async def _on_wait(self) -> None:
+        """Wait until zones are done."""
+        await self._wait_zone.wait()
+        if not self.state == _State.TIMEOUT:
+            return
+        self._cancel_task()
 
 
 class _TaskZone:
@@ -242,7 +266,7 @@ class _Zone:
         self._tasks: List[_TaskZone] = []
         self._freezes: List[_FreezeZone] = []
         self._timeout: float = timeout
-        self._state: _StateZone = _StateZone.INIT
+        self._state: _State = _State.INIT
         self._count: int = 0
         self._timeout_handler: Optional[asyncio.Handle] = None
 
@@ -252,7 +276,7 @@ class _Zone:
         return self._zone
 
     @property
-    def state(self) -> _StateZone:
+    def state(self) -> _State:
         """Return state of the Zone."""
         return self._state
 
@@ -268,9 +292,9 @@ class _Zone:
 
     def enter_task(self, task: _TaskZone) -> None:
         """Start into new Task."""
-        if self.state == _StateZone.TIMEOUT:
+        if self.state == _State.TIMEOUT:
             raise asyncio.TimeoutError
-        elif self.state != _StateZone.ENTER:
+        elif self.state != _State.ENTER:
             self._start_timer()
 
         self._count += 1
@@ -281,22 +305,22 @@ class _Zone:
         self._count -= 1
 
         # Timeout exit
-        if exc_type is asyncio.CancelledError and self.state == _StateZone.TIMEOUT:
+        if exc_type is asyncio.CancelledError and self.state == _State.TIMEOUT:
             if self._count == 0:
-                self._manager.zones.pop(self.name, None)
+                self._manager.drop_zone(self.name)
             raise asyncio.TimeoutError
 
         # On latest listener
-        if self._count == 0 and self.state != _StateZone.EXIT:
-            self._state = _StateZone.EXIT
+        if self._count == 0 and self.state != _State.EXIT:
+            self._state = _State.EXIT
             self._stop_timer()
-            self._manager.zones.pop(self.name, None)
+            self._manager.drop_zone(self.name)
 
         self._tasks.remove(task)
 
     def _start_timer(self) -> None:
         """Start timeout handler."""
-        self._state = _StateZone.ENTER
+        self._state = _State.ENTER
         self._timeout_handler = self._loop.call_at(
             self._loop.time() + self._timeout, self._on_timeout
         )
@@ -311,7 +335,7 @@ class _Zone:
     def _on_timeout(self) -> None:
         """Process timeout."""
         self._timeout_handler = None
-        self._state = _StateZone.TIMEOUT
+        self._state = _State.TIMEOUT
 
         # Cancel all running tasks
         for task in self._tasks:
@@ -321,16 +345,16 @@ class _Zone:
 
     def pause(self) -> None:
         """Stop timers while it freeze."""
-        if self._state != _StateZone.ENTER:
+        if self._state != _State.ENTER:
             return
-        self._state = _StateZone.FREEZE
+        self._state = _State.FREEZE
         self._stop_timer()
 
     def reset(self) -> None:
         """Reset timer after freeze."""
-        if self._state != _StateZone.FREEZE:
+        if self._state != _State.FREEZE:
             return
-        self._state = _StateZone.ENTER
+        self._state = _State.ENTER
         self._start_timer()
 
 
@@ -368,6 +392,16 @@ class ZoneTimeout:
     def global_freezes(self) -> List[_FreezeGlobal]:
         """Return all global Freezes."""
         return self._freezes
+
+    def drop_zone(self, zone_name: str) -> None:
+        """Drop a zone out of scope."""
+        self._zones.pop(zone_name, None)
+        if not self._zones:
+            return
+
+        # Signal Global task, all zones are done
+        for task in self._globals:
+            task.zones_done_signal()
 
     def asnyc_timeout(
         self, timeout: float, zone_name: str = ZONE_GLOBAL
