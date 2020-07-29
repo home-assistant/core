@@ -296,11 +296,11 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         activity_id, activity_name = activity_info
         _LOGGER.debug("%s: activity reported as: %s", self._name, activity_name)
         self._current_activity = activity_name
+        self._activity_starting = activity_name
         if activity_id != -1:
             # Save the activity so we can restore
             # to that activity if none is specified
             # when turning on
-            self._activity_starting = activity_name
             self._last_activity = activity_name
         self._state = bool(activity_id != -1)
         self._available = True
