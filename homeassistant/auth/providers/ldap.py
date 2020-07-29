@@ -130,8 +130,9 @@ class LdapAuthProvider(AuthProvider):
                 _LOGGER.debug("Binding anonymously")
                 conn = ldap3.Connection(server, auto_bind=False)
             else:
+                username_safe = ldap3.utils.dn.escape_rdn(username)
                 bind_dn = (
-                    f"{username_attr}={username},{base_dn}"
+                    f"{username_attr}={username_safe},{base_dn}"
                     if bind_as_user
                     else self.config[CONF_BIND_DN]
                 )
@@ -153,9 +154,10 @@ class LdapAuthProvider(AuthProvider):
             _LOGGER.debug("Connection: %s", conn)
 
             # Query the directory server for the connecting user
+            username_safe = ldap3.utils.conv.escape_filter_chars(username)
             if not conn.search(
                 base_dn,
-                f"(&({username_attr}={username})(objectclass=person))",
+                f"(&({username_attr}={username_safe})(objectclass=person))",
                 size_limit=1,
                 time_limit=self.config[CONF_TIMEOUT],
                 attributes=[username_attr, "displayName", "memberOf"],
