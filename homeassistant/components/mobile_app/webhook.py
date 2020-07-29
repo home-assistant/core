@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_WEBHOOK_ID,
     HTTP_BAD_REQUEST,
     HTTP_CREATED,
+    HTTP_NOT_FOUND,
 )
 from homeassistant.core import EventOrigin
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, TemplateError
@@ -69,6 +70,7 @@ from .const import (
     ATTR_WEBHOOK_ENCRYPTED,
     ATTR_WEBHOOK_ENCRYPTED_DATA,
     ATTR_WEBHOOK_TYPE,
+    CONF,
     CONF_CLOUDHOOK_URL,
     CONF_REMOTE_UI_URL,
     CONF_SECRET,
@@ -538,3 +540,13 @@ async def webhook_get_config(hass, config_entry, data):
         pass
 
     return webhook_response(resp, registration=config_entry.data)
+
+
+@WEBHOOK_COMMANDS.register("get_yaml_config")
+async def webhook_get_yaml_config(hass, config_entry, data):
+    """Handle a get yaml config webhook for user-defined config options."""
+    try:
+        resp = hass.data[DOMAIN][CONF]
+        return webhook_response(resp, registration=config_entry.data)
+    except (TypeError):
+        return empty_okay_response(status=HTTP_NOT_FOUND)

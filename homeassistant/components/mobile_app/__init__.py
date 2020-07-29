@@ -28,6 +28,7 @@ from .const import (
     ATTR_MODEL,
     ATTR_OS_VERSION,
     ATTR_TEXT_INPUT_BEHAVIOR,
+    CONF,
     CONF_ACTION_BACKGROUND_COLOR,
     CONF_ACTION_ICON,
     CONF_ACTION_ICON_COLOR,
@@ -105,8 +106,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     )
 
     try:
-        conf = config.get(DOMAIN)[CONF_ECO_IOS]
-        hass.http.register_view(iOSConfigView(conf))
+        conf = config.get(DOMAIN)
+        hass.data[DOMAIN][CONF] = conf
         if CONF_PUSH in conf:
             # Create old endpoint for back compatibility with older apps
             hass.http.register_view(iOSPushConfigView(conf[CONF_PUSH]))

@@ -11,6 +11,8 @@ ATTR_BACKGROUND = "background"
 ATTR_DEFAULT_BEHAVIOR = "default"
 ATTR_TEXT_INPUT_BEHAVIOR = "textInput"
 
+CONF = "config"
+
 CONF_ACTION_NAME = "name"
 CONF_ACTION_BACKGROUND_COLOR = "background_color"
 CONF_ACTION_LABEL = "label"
@@ -22,8 +24,6 @@ CONF_ACTION_ICON_ICON = "icon"
 CONF_ACTIONS = "actions"
 
 CONF_CLOUDHOOK_URL = "cloudhook_url"
-
-CONF_ECO_IOS = "ios"
 
 CONF_PUSH = "push"
 CONF_PUSH_CATEGORIES = "categories"
