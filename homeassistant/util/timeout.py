@@ -66,11 +66,11 @@ class _FreezeGlobal:
                 continue
             zone.pause()
 
-        self._manager.freezes.append(self)
+        self._manager.global_freezes.append(self)
 
     def _exit(self) -> None:
         """Finish freeze."""
-        self._manager.freezes.remove(self)
+        self._manager.global_freezes.remove(self)
         if not self._manager.freezes_done:
             return
 
