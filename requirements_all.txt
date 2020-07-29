@@ -936,7 +936,7 @@ netdata==0.2.0
 
 # homeassistant.components.discovery
 # homeassistant.components.ssdp
-netdisco==2.8.0
+netdisco==2.8.1
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
@@ -1701,7 +1701,7 @@ python-juicenet==1.0.1
 # python-lirc==1.2.3
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.2.1
+python-miio==0.5.3
 
 # homeassistant.components.mpd
 python-mpd2==1.0.0
@@ -1945,7 +1945,7 @@ simplisafe-python==9.2.1
 sisyphus-control==2.2.1
 
 # homeassistant.components.skybell
-skybellpy==0.4.0
+skybellpy==0.6.1
 
 # homeassistant.components.slack
 slackclient==2.5.0
@@ -2080,7 +2080,7 @@ temperusb==1.5.3
 # tensorflow==1.13.2
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.2.11
+tesla-powerwall==0.2.12
 
 # homeassistant.components.tesla
 teslajsonpy==0.9.3
@@ -2204,7 +2204,7 @@ wled==0.4.3
 xbee-helper==0.0.7
 
 # homeassistant.components.xbox_live
-xboxapi==2.0.0
+xboxapi==2.0.1
 
 # homeassistant.components.xfinity
 xfinity-gateway==0.0.4
