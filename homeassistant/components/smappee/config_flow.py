@@ -66,10 +66,25 @@ class SmappeeFlowHandler(
         serial_number = self.context.get(CONF_SERIALNUMBER)
 
         # Attempt to make a connection to the local device
+<<<<<<< HEAD
         smappee_api = api.api.SmappeeLocalApi(ip=ip_address)
         logon = await self.hass.async_add_executor_job(smappee_api.logon)
         if logon is None:
             return self.async_abort(reason="connection_error")
+=======
+        if user_input.get(CONF_IP_ADDRESS) is not None or not prepare:
+            smappee_api = api.api.SmappeeLocalApi(ip=user_input[CONF_IP_ADDRESS])
+            logon = await self.hass.async_add_executor_job(smappee_api.logon)
+            if logon is None:
+                return self.async_abort(reason="connection_error")
+
+        # Check if already configured
+        await self.async_set_unique_id(f"Smappee{user_input[CONF_SERIALNUMBER]}")
+        self._abort_if_unique_id_configured()
+
+        if prepare:
+            return await self.async_step_zeroconf_confirm()
+>>>>>>> c7037ab5d3... move exception handling to wrapper
 
         return self.async_create_entry(
             title=f"Smappee{serial_number}",
@@ -130,7 +145,44 @@ class SmappeeFlowHandler(
             # We currently only support Energy and Solar models (legacy)
             return self.async_abort(reason="invalid_mdns")
 
+<<<<<<< HEAD
         serial_number = serial_number.replace("Smappee", "")
+=======
+        # Environment chosen, request additional host information for LOCAL or OAuth2 flow for CLOUD
+        if user_input is not None and "environment" in user_input:
+            # Ask for host detail
+            if user_input["environment"] == ENV_LOCAL:
+                # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+                self.context.update({"environment": ENV_LOCAL})
+                return show_host_setup_form(self)
+
+            # Use configuration.yaml CLOUD setup
+            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+            self.context.update({"environment": ENV_CLOUD})
+            return await self.async_step_pick_implementation()
+
+        # LOCAL flow, host still needs to be resolved to serialnumber
+        user_input[CONF_IP_ADDRESS] = user_input["host"]
+        if user_input.get(CONF_IP_ADDRESS) is not None or not prepare:
+            smappee_api = api.api.SmappeeLocalApi(ip=user_input[CONF_IP_ADDRESS])
+            logon = await self.hass.async_add_executor_job(smappee_api.logon)
+            if logon is None:
+                return self.async_abort(reason="connection_error")
+>>>>>>> c7037ab5d3... move exception handling to wrapper
+
+            # In a LOCAL setup we still need to resolve the host to serialnumber
+            advanced_config = await self.hass.async_add_executor_job(
+                smappee_api.load_advanced_config
+            )
+            serialnumber = None
+            for config_item in advanced_config:
+                if config_item["key"] == "mdnsHostName":
+                    serialnumber = config_item["value"]
+
+            if serialnumber is None or not serialnumber.startswith("Smappee1"):
+                # We currently only support Energy and Solar models (legacy)
+                return self.async_abort(reason="invalid_mdns")
+            user_input[CONF_SERIALNUMBER] = serialnumber.replace("Smappee", "")
 
         # Check if already configured
         await self.async_set_unique_id(
