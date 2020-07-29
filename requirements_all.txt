@@ -115,7 +115,7 @@ adafruit-circuitpython-bmp280==3.1.1
 adafruit-circuitpython-mcp230xx==2.2.2
 
 # homeassistant.components.androidtv
-adb-shell[async]==0.2.0
+adb-shell[async]==0.2.1
 
 # homeassistant.components.alarmdecoder
 adext==0.3
@@ -240,7 +240,7 @@ ambiclimate==0.2.1
 amcrest==1.7.0
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.46
+androidtv[async]==0.0.47
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
