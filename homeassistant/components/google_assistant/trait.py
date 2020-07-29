@@ -1,5 +1,7 @@
 """Implement the Google Smart Home traits."""
+import itertools
 import logging
+from typing import Iterable, Optional
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -68,6 +70,7 @@ from .const import (
     ERR_CHALLENGE_NOT_SETUP,
     ERR_FUNCTION_NOT_SUPPORTED,
     ERR_NOT_SUPPORTED,
+    ERR_UNSUPPORTED_INPUT,
     ERR_VALUE_OUT_OF_RANGE,
 )
 from .error import ChallengeNeeded, SmartHomeError
@@ -114,6 +117,8 @@ COMMAND_LOCKUNLOCK = f"{PREFIX_COMMANDS}LockUnlock"
 COMMAND_FANSPEED = f"{PREFIX_COMMANDS}SetFanSpeed"
 COMMAND_MODES = f"{PREFIX_COMMANDS}SetModes"
 COMMAND_INPUT = f"{PREFIX_COMMANDS}SetInput"
+COMMAND_NEXT_INPUT = f"{PREFIX_COMMANDS}NextInput"
+COMMAND_PREVIOUS_INPUT = f"{PREFIX_COMMANDS}PreviousInput"
 COMMAND_OPENCLOSE = f"{PREFIX_COMMANDS}OpenClose"
 COMMAND_SET_VOLUME = f"{PREFIX_COMMANDS}setVolume"
 COMMAND_VOLUME_RELATIVE = f"{PREFIX_COMMANDS}volumeRelative"
@@ -143,6 +148,26 @@ def _google_temp_unit(units):
     if units == TEMP_FAHRENHEIT:
         return "F"
     return "C"
+
+
+def _next_selected(items: Iterable[str], selected: Optional[str]) -> Optional[str]:
+    """Return the next item in a item list starting at given value.
+
+    If selected is missing in items, None is returned
+    """
+    try:
+        cycle = itertools.cycle(items)
+        current = next(cycle)
+        starting = current
+        while True:
+            if current == selected:
+                break
+            current = next(cycle)
+            if current == starting:
+                return None
+        return next(cycle)
+    except StopIteration:
+        return None
 
 
 class _Trait:
@@ -1361,7 +1386,7 @@ class InputSelectorTrait(_Trait):
     """
 
     name = TRAIT_INPUTSELECTOR
-    commands = [COMMAND_INPUT]
+    commands = [COMMAND_INPUT, COMMAND_NEXT_INPUT, COMMAND_PREVIOUS_INPUT]
 
     SYNONYMS = {}
 
@@ -1394,7 +1419,20 @@ class InputSelectorTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute an SetInputSource command."""
-        requested_source = params.get("newInput")
+        sources = self.state.attributes.get(media_player.ATTR_INPUT_SOURCE_LIST) or []
+        source = self.state.attributes.get(media_player.ATTR_INPUT_SOURCE)
+
+        if command == COMMAND_INPUT:
+            requested_source = params.get("newInput")
+        elif command == COMMAND_NEXT_INPUT:
+            requested_source = _next_selected(sources, source)
+        elif command == COMMAND_PREVIOUS_INPUT:
+            requested_source = _next_selected(reversed(sources), source)
+        else:
+            raise SmartHomeError(ERR_NOT_SUPPORTED, "Unsupported command")
+
+        if requested_source not in sources:
+            raise SmartHomeError(ERR_UNSUPPORTED_INPUT, "Unsupported input")
 
         await self.hass.services.async_call(
             media_player.DOMAIN,
