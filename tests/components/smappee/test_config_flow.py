@@ -63,6 +63,7 @@ async def test_show_zeroconf_connection_error_form(hass):
         },
     )
 
+    assert result["description_placeholders"] is None
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "connection_error"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
@@ -304,6 +305,7 @@ async def test_full_user_local_flow(hass):
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "user"
+        assert result["description_placeholders"] is None
         assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
         result = await hass.config_entries.flow.async_configure(
