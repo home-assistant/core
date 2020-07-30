@@ -65,8 +65,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Fetch data from API endpoint."""
         try:
             return await hass.data[DOMAIN][unique_id].fetch_data()
-        except Exception as e:
-            raise UpdateFailed(f"Update failed: {e}")
+        except Exception as err:
+            raise UpdateFailed(f"Update failed: {err}")
 
     coordinator = DataUpdateCoordinator(
         hass,
