@@ -6,7 +6,7 @@ from homeassistant import config_entries, core, setup
 from homeassistant.components.bond.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 
-from .common import patch_bond_device_ids
+from .common import patch_bond_device_ids, patch_bond_version
 
 from tests.async_mock import Mock, patch
 
@@ -20,7 +20,9 @@ async def test_form(hass: core.HomeAssistant):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch_bond_device_ids(), patch(
+    with patch_bond_version(
+        return_value={"bondid": "test-bond-id"}
+    ), patch_bond_device_ids(), patch(
         "homeassistant.components.bond.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.bond.async_setup_entry", return_value=True,
@@ -31,7 +33,7 @@ async def test_form(hass: core.HomeAssistant):
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "some host"
+    assert result2["title"] == "test-bond-id"
     assert result2["data"] == {
         CONF_HOST: "some host",
         CONF_ACCESS_TOKEN: "test-token",
@@ -47,7 +49,9 @@ async def test_form_invalid_auth(hass: core.HomeAssistant):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch_bond_device_ids(
+    with patch_bond_version(
+        return_value={"bond_id": "test-bond-id"}
+    ), patch_bond_device_ids(
         side_effect=ClientResponseError(Mock(), Mock(), status=401),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -81,7 +85,9 @@ async def test_form_unexpected_error(hass: core.HomeAssistant):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch_bond_device_ids(
+    with patch_bond_version(
+        return_value={"bond_id": "test-bond-id"}
+    ), patch_bond_device_ids(
         side_effect=ClientResponseError(Mock(), Mock(), status=500)
     ):
         result2 = await hass.config_entries.flow.async_configure(
