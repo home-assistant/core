@@ -234,7 +234,8 @@ class AdsHub:
         # get dynamically sized data array
         data_size = contents.cbSampleSize
         data = (ctypes.c_ubyte * data_size).from_address(
-            ctypes.addressof(contents) + pyads.structs.SAdsNotificationHeader.data.offset
+            ctypes.addressof(contents)
+            + pyads.structs.SAdsNotificationHeader.data.offset
         )
 
         try:
