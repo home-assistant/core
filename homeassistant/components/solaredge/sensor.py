@@ -7,8 +7,8 @@ import solaredge
 from stringcase import snakecase
 
 from homeassistant.const import (
-    CONF_API_KEY,
     ATTR_BATTERY_CHARGING,
+    CONF_API_KEY,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_POWER,
 )
