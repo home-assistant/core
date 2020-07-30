@@ -1,8 +1,8 @@
 """Support for Met.no weather service."""
 import logging
+from datetime import timedelta
 from random import randrange
 
-import metno
 import voluptuous as vol
 
 from homeassistant.components.weather import PLATFORM_SCHEMA, WeatherEntity
@@ -12,7 +12,6 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     EVENT_CORE_CONFIG_UPDATE,
-    LENGTH_FEET,
     LENGTH_METERS,
     LENGTH_MILES,
     PRESSURE_HPA,
@@ -20,13 +19,11 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.distance import convert as convert_distance
-import homeassistant.util.dt as dt_util
 from homeassistant.util.pressure import convert as convert_pressure
 
-from .const import CONF_TRACK_HOME
+from .const import CONF_TRACK_HOME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +33,6 @@ ATTRIBUTION = (
 )
 DEFAULT_NAME = "Met.no"
 
-URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/1.9/"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -62,65 +58,70 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if config.get(CONF_LATITUDE) is None:
         config[CONF_TRACK_HOME] = True
 
-    async_add_entities([MetWeather(config, hass.config.units.is_metric)])
+    await async_setup(hass, config, async_add_entities)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
-    async_add_entities([MetWeather(config_entry.data, hass.config.units.is_metric)])
+    await async_setup(hass, config_entry.data, async_add_entities)
+
+
+async def async_setup(hass, config, async_add_entities):
+    """Create DataUpdateCoordinator and add entities."""
+    if config.get(CONF_TRACK_HOME, False):
+        unique_id = "home"
+    else:
+        unique_id = f"{config[CONF_LATITUDE]}-{config[CONF_LONGITUDE]}"
+
+    async def async_update_data():
+        """Fetch data from API endpoint."""
+        try:
+            return await hass.data[DOMAIN][unique_id].fetch_data()
+        except Exception as err:
+            raise UpdateFailed(f"Update failed: {err}")
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=unique_id,
+        update_method=async_update_data,
+        # Polling interval. Will only be polled if there are subscribers.
+        update_interval=timedelta(minutes=randrange(55, 65)),
+    )
+
+    # Fetch initial data so we have data when entities subscribe
+    hass.data[DOMAIN][unique_id].init_data()
+    await hass.data[DOMAIN][unique_id].fetch_data()
+
+    async_add_entities([MetWeather(coordinator, config, hass.config.units.is_metric)])
 
 
 class MetWeather(WeatherEntity):
     """Implementation of a Met.no weather condition."""
 
-    def __init__(self, config, is_metric):
+    def __init__(self, coordinator, config, is_metric):
         """Initialise the platform with a data instance and site."""
         self._config = config
+        self._coordinator = coordinator
         self._is_metric = is_metric
         self._unsub_track_home = None
-        self._unsub_fetch_data = None
-        self._weather_data = None
-        self._current_weather_data = {}
-        self._coordinates = {}
-        self._forecast_data = None
 
     async def async_added_to_hass(self):
         """Start fetching data."""
-        await self._init_data()
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )
         if self._config.get(CONF_TRACK_HOME):
             self._unsub_track_home = self.hass.bus.async_listen(
-                EVENT_CORE_CONFIG_UPDATE, self._init_data
+                EVENT_CORE_CONFIG_UPDATE, self._core_config_updated
             )
+        await self.async_update()
 
-    async def _init_data(self, _event=None):
-        """Initialize and fetch data object."""
-        if self.track_home:
-            latitude = self.hass.config.latitude
-            longitude = self.hass.config.longitude
-            elevation = self.hass.config.elevation
-        else:
-            conf = self._config
-            latitude = conf[CONF_LATITUDE]
-            longitude = conf[CONF_LONGITUDE]
-            elevation = conf[CONF_ELEVATION]
-
-        if not self._is_metric:
-            elevation = int(
-                round(convert_distance(elevation, LENGTH_FEET, LENGTH_METERS))
-            )
-        coordinates = {
-            "lat": str(latitude),
-            "lon": str(longitude),
-            "msl": str(elevation),
-        }
-        if coordinates == self._coordinates:
-            return
-        self._coordinates = coordinates
-
-        self._weather_data = metno.MetWeatherData(
-            coordinates, async_get_clientsession(self.hass), URL
-        )
-        await self._fetch_data()
+    async def _core_config_updated(self, _event):
+        """Handle core config updated."""
+        if self._config.get(CONF_TRACK_HOME):
+            self.hass.data[DOMAIN]["home"].init_data()
+            await self.hass.data[DOMAIN]["home"].fetch_data()
 
     async def will_remove_from_hass(self):
         """Handle entity will be removed from hass."""
@@ -128,35 +129,9 @@ class MetWeather(WeatherEntity):
             self._unsub_track_home()
             self._unsub_track_home = None
 
-        if self._unsub_fetch_data:
-            self._unsub_fetch_data()
-            self._unsub_fetch_data = None
-
-    async def _fetch_data(self, *_):
-        """Get the latest data from met.no."""
-        if self._unsub_fetch_data:
-            self._unsub_fetch_data()
-            self._unsub_fetch_data = None
-
-        if not await self._weather_data.fetching_data():
-            # Retry in 15 to 20 minutes.
-            minutes = 15 + randrange(6)
-            _LOGGER.error("Retrying in %i minutes", minutes)
-            self._unsub_fetch_data = async_call_later(
-                self.hass, minutes * 60, self._fetch_data
-            )
-            return
-
-        # Wait between 55-65 minutes. If people update HA on the hour, this
-        # will make sure it will spread it out.
-
-        self._unsub_fetch_data = async_call_later(
-            self.hass, randrange(55, 65) * 60, self._fetch_data
-        )
-
-        self._current_weather_data = self._weather_data.get_current_weather()
-        time_zone = dt_util.DEFAULT_TIME_ZONE
-        self._forecast_data = self._weather_data.get_forecast(time_zone)
+    async def async_update(self):
+        """Only used by the generic entity update service."""
+        await self._coordinator.async_request_refresh()
         self.async_write_ha_state()
 
     @property
@@ -193,12 +168,12 @@ class MetWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        return self._current_weather_data.get("condition")
+        return self._coordinator.data.current_weather_data.get("condition")
 
     @property
     def temperature(self):
         """Return the temperature."""
-        return self._current_weather_data.get("temperature")
+        return self._coordinator.data.current_weather_data.get("temperature")
 
     @property
     def temperature_unit(self):
@@ -208,7 +183,7 @@ class MetWeather(WeatherEntity):
     @property
     def pressure(self):
         """Return the pressure."""
-        pressure_hpa = self._current_weather_data.get("pressure")
+        pressure_hpa = self._coordinator.data.current_weather_data.get("pressure")
         if self._is_metric or pressure_hpa is None:
             return pressure_hpa
 
@@ -217,12 +192,12 @@ class MetWeather(WeatherEntity):
     @property
     def humidity(self):
         """Return the humidity."""
-        return self._current_weather_data.get("humidity")
+        return self._coordinator.data.current_weather_data.get("humidity")
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        speed_m_s = self._current_weather_data.get("wind_speed")
+        speed_m_s = self._coordinator.data.current_weather_data.get("wind_speed")
         if self._is_metric or speed_m_s is None:
             return speed_m_s
 
@@ -233,7 +208,7 @@ class MetWeather(WeatherEntity):
     @property
     def wind_bearing(self):
         """Return the wind direction."""
-        return self._current_weather_data.get("wind_bearing")
+        return self._coordinator.data.current_weather_data.get("wind_bearing")
 
     @property
     def attribution(self):
@@ -243,4 +218,4 @@ class MetWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        return self._forecast_data
+        return self._coordinator.data.forecast_data
