@@ -27,6 +27,8 @@ ATTR_ICON = "icon"
 ATTR_LABEL = "label"
 ATTR_UNIT = "unit"
 
+PARALLEL_UPDATES = 1
+
 SENSOR_TYPES = {
     ATTR_API_PM1: {
         ATTR_DEVICE_CLASS: None,
