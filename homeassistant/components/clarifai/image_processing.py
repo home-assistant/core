@@ -17,6 +17,7 @@ from .const import (
     CONF_APP_ID,
     CONF_RESULT_FORMAT,
     CONF_WORKFLOW_ID,
+    DEFAULT,
     DOMAIN,
     EVENT_PREDICTION,
     WORKFLOW_ERROR,
@@ -28,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_APP_ID): cv.string,
         vol.Required(CONF_WORKFLOW_ID): cv.string,
-        vol.Optional(CONF_RESULT_FORMAT): cv.string,
+        vol.Optional(CONF_RESULT_FORMAT, default=DEFAULT): cv.string,
     }
 )
 

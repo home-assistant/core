@@ -64,7 +64,7 @@ def _validate_response(response):
     return True
 
 
-def _parse_workflow_response(response, result_format=DEFAULT):
+def _parse_workflow_response(response, result_format):
     """Parse a response containing a WorkflowResult object."""
     workflow_result = response.results[0]  # we send 1 input so we get 1 result
 

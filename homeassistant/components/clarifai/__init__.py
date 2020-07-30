@@ -14,6 +14,7 @@ from .const import (
     ATTR_APP_ID,
     ATTR_RESULT_FORMAT,
     ATTR_WORKFLOW_ID,
+    DEFAULT,
     DOMAIN,
     EVENT_PREDICTION,
     SERVICE_PREDICT,
@@ -55,7 +56,7 @@ def register_services(hass):
             vol.Required(ATTR_APP_ID): cv.string,
             vol.Required(ATTR_WORKFLOW_ID): cv.string,
             vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-            vol.Optional(ATTR_RESULT_FORMAT): cv.string,
+            vol.Optional(ATTR_RESULT_FORMAT, default=DEFAULT): cv.string,
         }
     )
 
