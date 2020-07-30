@@ -21,6 +21,7 @@ from homeassistant.components.fan import (
 from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
     MATCH_ALL,
@@ -71,6 +72,7 @@ FAN_SCHEMA = vol.Schema(
             CONF_SPEED_LIST, default=[SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
         ): cv.ensure_list,
         vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -99,6 +101,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         set_direction_action = device_config.get(CONF_SET_DIRECTION_ACTION)
 
         speed_list = device_config[CONF_SPEED_LIST]
+        unique_id = device_config.get(CONF_UNIQUE_ID)
 
         templates = {
             CONF_VALUE_TEMPLATE: state_template,
@@ -128,6 +131,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 set_direction_action,
                 speed_list,
                 entity_ids,
+                unique_id,
             )
         )
 
@@ -154,6 +158,7 @@ class TemplateFan(FanEntity):
         set_direction_action,
         speed_list,
         entity_ids,
+        unique_id,
     ):
         """Initialize the fan."""
         self.hass = hass
@@ -198,6 +203,8 @@ class TemplateFan(FanEntity):
             self._supported_features |= SUPPORT_DIRECTION
 
         self._entities = entity_ids
+        self._unique_id = unique_id
+
         # List of valid speeds
         self._speed_list = speed_list
 
@@ -205,6 +212,11 @@ class TemplateFan(FanEntity):
     def name(self):
         """Return the display name of this fan."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id of this fan."""
+        return self._unique_id
 
     @property
     def supported_features(self) -> int:
