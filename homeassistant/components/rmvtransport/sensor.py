@@ -235,7 +235,7 @@ class RMVDepartureData:
                 self._station_id,
                 products=self._products,
                 direction_id=self._direction,
-                max_journeys=150,
+                max_journeys=50,
             )
 
         except RMVtransportApiConnectionError:
