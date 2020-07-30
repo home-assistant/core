@@ -975,7 +975,7 @@ nsw-fuel-api-client==1.0.10
 nuheat==0.3.0
 
 # homeassistant.components.numato
-numato-gpio==0.7.1
+numato-gpio==0.8.0
 
 # homeassistant.components.iqvia
 # homeassistant.components.opencv
