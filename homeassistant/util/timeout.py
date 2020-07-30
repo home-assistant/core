@@ -143,6 +143,7 @@ class _TaskGlobal:
         self._manager: ZoneTimeout = manager
         self._task: asyncio.Task[Any] = task
         self._timeout: float = timeout
+        self._time: Optional[float] = None
         self._timeout_handler: Optional[asyncio.Handle] = None
         self._wait_zone: asyncio.Event = asyncio.Event()
         self._state: _State = _State.INIT
@@ -181,16 +182,18 @@ class _TaskGlobal:
 
     def _start_timer(self) -> None:
         """Start timeout handler."""
-        self._timeout_handler = self._loop.call_at(
-            self._loop.time() + self._timeout, self._on_timeout
-        )
+        self._time = self._loop.time() + self._timeout
+        self._timeout_handler = self._loop.call_at(self._time, self._on_timeout)
 
     def _stop_timer(self) -> None:
         """Stop zone timer."""
         if self._timeout_handler is None:
             return
+
         self._timeout_handler.cancel()
         self._timeout_handler = None
+        # Calculate new timeout
+        self._timeout = self._time - self._loop.time()
 
     def _on_timeout(self) -> None:
         """Process timeout."""
@@ -266,6 +269,7 @@ class _Zone:
         self._tasks: List[_TaskZone] = []
         self._freezes: List[_FreezeZone] = []
         self._timeout: float = timeout
+        self._time: Optional[float] = None
         self._state: _State = _State.INIT
         self._count: int = 0
         self._timeout_handler: Optional[asyncio.Handle] = None
@@ -321,16 +325,18 @@ class _Zone:
     def _start_timer(self) -> None:
         """Start timeout handler."""
         self._state = _State.ENTER
-        self._timeout_handler = self._loop.call_at(
-            self._loop.time() + self._timeout, self._on_timeout
-        )
+        self._time = self._loop.time() + self._timeout
+        self._timeout_handler = self._loop.call_at(self._time, self._on_timeout)
 
     def _stop_timer(self) -> None:
         """Stop zone timer."""
         if self._timeout_handler is None:
             return
+
         self._timeout_handler.cancel()
         self._timeout_handler = None
+        # Calculate new timeout
+        self._timeout = self._time - self._loop.time()
 
     def _on_timeout(self) -> None:
         """Process timeout."""
