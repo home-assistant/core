@@ -18,7 +18,6 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
     CONF_PORT,
-    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     POWER_WATT,
     TEMP_CELSIUS,
@@ -289,22 +288,16 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
         hass.config_entries.async_update_entry(entry=entry, data=data)
         devices[device_id] = config
 
-    @callback
-    def _start_rfxtrx(event):
-        """Start receiving events."""
-        rfx_object.event_callback = lambda event: hass.add_job(
-            async_handle_receive, event
-        )
-
     def _shutdown_rfxtrx(event):
         """Close connection with RFXtrx."""
         rfx_object.close_connection()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _start_rfxtrx)
     listener = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_rfxtrx)
 
     hass.data[DOMAIN][DATA_LISTENER] = listener
     hass.data[DOMAIN][DATA_RFXOBJECT] = rfx_object
+
+    rfx_object.event_callback = lambda event: hass.add_job(async_handle_receive, event)
 
     def send(call):
         event = call.data[ATTR_EVENT]
@@ -494,38 +487,7 @@ class RfxtrxCommandEntity(RfxtrxEntity):
         self.signal_repetitions = signal_repetitions
         self._state = None
 
-    def _send_command(self, command, brightness=0):
+    async def _async_send(self, fun, *args):
         rfx_object = self.hass.data[DOMAIN][DATA_RFXOBJECT]
-
-        if command == "turn_on":
-            for _ in range(self.signal_repetitions):
-                self._device.send_on(rfx_object.transport)
-            self._state = True
-
-        elif command == "dim":
-            for _ in range(self.signal_repetitions):
-                self._device.send_dim(rfx_object.transport, brightness)
-            self._state = True
-
-        elif command == "turn_off":
-            for _ in range(self.signal_repetitions):
-                self._device.send_off(rfx_object.transport)
-            self._state = False
-
-        elif command == "roll_up":
-            for _ in range(self.signal_repetitions):
-                self._device.send_open(rfx_object.transport)
-            self._state = True
-
-        elif command == "roll_down":
-            for _ in range(self.signal_repetitions):
-                self._device.send_close(rfx_object.transport)
-            self._state = False
-
-        elif command == "stop_roll":
-            for _ in range(self.signal_repetitions):
-                self._device.send_stop(rfx_object.transport)
-            self._state = True
-
-        if self.hass:
-            self.schedule_update_ha_state()
+        for _ in range(self.signal_repetitions):
+            await self.hass.async_add_executor_job(fun, rfx_object.transport, *args)
