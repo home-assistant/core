@@ -45,8 +45,7 @@ class MullvadSensor(Entity):
         """Return the name for this sensor."""
         if self._name.startswith(DOMAIN):
             return self._name.replace("_", " ").title()
-        else:
-            return f"{DOMAIN}_{self._name}".replace("_", " ").title()
+        return f"{DOMAIN}_{self._name}".replace("_", " ").title()
 
     @property
     def state(self):
