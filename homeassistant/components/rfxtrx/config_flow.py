@@ -99,10 +99,14 @@ class OptionsFlow(config_entries.OptionsFlow):
             if CONF_DEVICE_ID in user_input:
                 self._selected_device_event_code = user_input[CONF_DEVICE_ID]
                 self._selected_device = {}
-                self._selected_device_object = get_rfx_object(
+                selected_device_object = get_rfx_object(
                     self._selected_device_event_code
                 )
-                return await self.async_step_set_device_options()
+                if selected_device_object is None:
+                    errors = {"base": "invalid_event_code"}
+                else:
+                    self._selected_device_object = selected_device_object
+                    return await self.async_step_set_device_options()
 
             if not errors:
                 self.update_config_data(global_options=self._global_options)
