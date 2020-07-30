@@ -168,7 +168,7 @@ class _TaskGlobal:
         if exc_type is asyncio.CancelledError and self.state == _State.TIMEOUT:
             raise asyncio.TimeoutError
 
-        self._state == _State.EXIT
+        self._state = _State.EXIT
         self._wait_zone.set()
         return None
 
