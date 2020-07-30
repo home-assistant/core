@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "reauth_successful": "Tilgangstoken oppdatert"
+        },
         "error": {
             "unknown": "Ukjent Awair API-feil."
         },
