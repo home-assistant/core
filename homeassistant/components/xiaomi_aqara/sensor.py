@@ -2,6 +2,8 @@
 import logging
 
 from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_PRESSURE,
@@ -11,7 +13,7 @@ from homeassistant.const import (
 )
 
 from . import XiaomiDevice
-from .const import DOMAIN, GATEWAYS_KEY
+from .const import BATTERY_MODELS, DOMAIN, GATEWAYS_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,6 +81,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
         else:
             _LOGGER.warning("Unmapped Device Model")
+
+    # Set up battery sensors
+    for devices in gateway.devices.values():
+        for device in devices:
+            if device["model"] in BATTERY_MODELS:
+                entities.append(
+                    XiaomiBatterySensor(device, "Battery", gateway, config_entry)
+                )
+
     async_add_entities(entities)
 
 
@@ -144,3 +155,37 @@ class XiaomiSensor(XiaomiDevice):
         else:
             self._state = round(value, 1)
         return True
+
+
+class XiaomiBatterySensor(XiaomiDevice):
+    """Representation of a XiaomiSensor."""
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return UNIT_PERCENTAGE
+
+    @property
+    def device_class(self):
+        """Return the device class of this entity."""
+        return DEVICE_CLASS_BATTERY
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    def parse_data(self, data, raw_data):
+        """Parse data sent by gateway."""
+        succeed = super().parse_voltage(data)
+        if not succeed:
+            return False
+        battery_level = int(self._device_state_attributes.pop(ATTR_BATTERY_LEVEL))
+        if battery_level <= 0 or battery_level > 100:
+            return False
+        self._state = battery_level
+        return True
+
+    def parse_voltage(self, data):
+        """Parse battery level data sent by gateway."""
+        return False  # Override parse_voltage to do nothing
