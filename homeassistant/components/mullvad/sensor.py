@@ -54,8 +54,7 @@ class MullvadSensor(Entity):
         if self._name == "blacklisted":
             self._state_attributes = self.coordinator.data[self._name]
             return self.coordinator.data[self._name]["blacklisted"]
-        else:
-            return self.coordinator.data[self._name]
+        return self.coordinator.data[self._name]
 
     @property
     def state_attributes(self):
