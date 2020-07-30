@@ -122,6 +122,7 @@ class ClimaCellOptionsConfigFlow(config_entries.OptionsFlow):
                         ): vol.In((USA, CHINA))
                     }
                 )
+                break
 
         if self._config_entry.data[CONF_FORECAST_TYPE] == NOWCAST:
             options_schema.update(

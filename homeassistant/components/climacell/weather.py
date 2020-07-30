@@ -79,7 +79,7 @@ def _forecast_dict(
     time: str,
     use_datetime: bool,
     condition: str,
-    precipitation: str,
+    precipitation: Optional[float],
     precipitation_probability: Optional[float],
     temp: Optional[float],
     temp_low: Optional[float],

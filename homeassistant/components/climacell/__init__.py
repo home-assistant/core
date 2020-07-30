@@ -87,14 +87,13 @@ def _set_update_interval(
     # calculate interval to not exceed allowed numbers of requests. Divide 90% of
     # MAX_REQUESTS_PER_DAY by 2 because every update requires two API calls and we want
     # a buffer in the number of API calls left at the end of the day.
-    entries = hass.config_entries.async_entries(DOMAIN)
-    other_instance_entry_ids = []
-    for entry in entries:
-        if (
-            entry.entry_id != current_entry.entry_id
-            and current_entry.data[CONF_API_KEY] == entry.data[CONF_API_KEY]
-        ):
-            other_instance_entry_ids.append(entry.entry_id)
+    other_instance_entry_ids = [
+        entry.entry_id
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.entry_id != current_entry.entry_id
+        and entry.data[CONF_API_KEY] == current_entry.data[CONF_API_KEY]
+    ]
+
     interval = timedelta(
         minutes=(
             ceil(
