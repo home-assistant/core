@@ -197,29 +197,29 @@ ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
 SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 AUDIO_VIDEO_INFORMATION_UPDATE_INTERVAL = 10
 
-AUDIO_INFORMATION_MAPPING = {
-    "audio_input_port": 0,
-    "input_signal_format": 1,
-    "input_frequency": 2,
-    "input_channels": 3,
-    "listening_mode": 4,
-    "output_channels": 5,
-    "output_frequency": 6,
-    "precision_quartz_lock_system": 7,
-    "auto_phase_control_delay": 8,
-    "auto_phase_control_phase": 9,
-}
+AUDIO_INFORMATION_MAPPING = [
+    "audio_input_port",
+    "input_signal_format",
+    "input_frequency",
+    "input_channels",
+    "listening_mode",
+    "output_channels",
+    "output_frequency",
+    "precision_quartz_lock_system",
+    "auto_phase_control_delay",
+    "auto_phase_control_phase",
+]
 
-VIDEO_INFORMATION_MAPPING = {
-    "video_input_port": 0,
-    "input_resolution": 1,
-    "input_color_schema": 2,
-    "input_color_depth": 3,
-    "output_resolution": 5,
-    "output_color_schema": 6,
-    "output_color_depth": 7,
-    "picture_mode": 8,
-}
+VIDEO_INFORMATION_MAPPING = [
+    "video_input_port",
+    "input_resolution",
+    "input_color_schema",
+    "input_color_depth",
+    "output_resolution",
+    "output_color_schema",
+    "output_color_depth",
+    "picture_mode",
+]
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -511,31 +511,31 @@ class OnkyoAVR(MediaPlayerEntity):
     def _parse_audio_inforamtion(self, audio_information):
         # If audio information is not available, N/A is returned
         # so only update the audio information when it is not N/A
-        if audio_information != "N/A":
-            info = {}
-
-            for key, value in AUDIO_INFORMATION_MAPPING.items():
-                if len(audio_information) > value and len(audio_information[value]) > 0:
-                    info[key] = audio_information[value]
-
-            self._attributes[ATTR_AUDIO_INFORMATION] = info
-        else:
+        if audio_information == "N/A":
             self._attributes.pop(ATTR_AUDIO_INFORMATION, None)
+            return
+
+        info = {
+            name: value
+            for name, value in zip(AUDIO_INFORMATION_MAPPING, audio_information)
+            if len(value) > 0
+        }
+        self._attributes[ATTR_AUDIO_INFORMATION] = info
 
     @callback
     def _parse_video_inforamtion(self, video_information):
         # If video information is not available, N/A is returned
         # so only update the video information when it is not N/A
-        if video_information != "N/A":
-            info = {}
-
-            for key, value in VIDEO_INFORMATION_MAPPING.items():
-                if len(video_information) > value and len(video_information[value]) > 0:
-                    info[key] = video_information[value]
-
-            self._attributes[ATTR_VIDEO_INFORMATION] = info
-        else:
+        if video_information == "N/A":
             self._attributes.pop(ATTR_VIDEO_INFORMATION, None)
+            return
+
+        info = {
+            name: value
+            for name, value in zip(VIDEO_INFORMATION_MAPPING, video_information)
+            if len(value) > 0
+        }
+        self._attributes[ATTR_VIDEO_INFORMATION] = info
 
     def _query_delayed_av_info(self):
         if not self._query_timer:
