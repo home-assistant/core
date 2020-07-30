@@ -35,8 +35,17 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Plugwise Smiles from a config entry."""
     websession = async_get_clientsession(hass, verify_ssl=False)
+
+    if ":" in entry.data["host"]:
+        port = int(entry.data["host"].split(":")[1])
+    else:
+        port = 80
+
     api = Smile(
-        host=entry.data["host"], password=entry.data["password"], websession=websession
+        host=entry.data["host"].split(":")[0],
+        password=entry.data["password"],
+        port=port,
+        websession=websession,
     )
 
     try:
