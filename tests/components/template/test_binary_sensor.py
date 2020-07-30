@@ -316,6 +316,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
             None,
             None,
             None,
+            None,
         ).result()
         mock_render.side_effect = TemplateError("foo")
         run_callback_threadsafe(self.hass.loop, vs.async_check_state).result()
