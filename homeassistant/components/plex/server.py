@@ -337,7 +337,7 @@ class PlexServer:
                 _LOGGER.debug("Photo session detected, skipping: %s", session)
                 continue
 
-            session_username = session.usernames[0]
+            session_username = getattr(session, "usernames", [])[0]
             for player in session.players:
                 if session_username and session_username not in monitored_users:
                     ignored_clients.add(player.machineIdentifier)
