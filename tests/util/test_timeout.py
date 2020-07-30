@@ -6,6 +6,14 @@ import pytest
 from homeassistant.util.timeout import ZoneTimeout
 
 
+@pytest.fixture(autouse=True)
+def fix_cool_down():
+    """Patch cool down of the module."""
+    from homeassistant.util import timeout
+
+    timeout.COOL_DOWN = 0
+
+
 async def test_simple_global_timeout():
     """Test a simple global timeout."""
     timeout = ZoneTimeout()

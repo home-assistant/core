@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Union, Type, Optional
 from types import TracebackType
 
 ZONE_GLOBAL = "global"
+COOL_DOWN = 1
 
 
 class _State(str, enum.Enum):
@@ -223,7 +224,7 @@ class _TaskGlobal:
     async def _on_wait(self) -> None:
         """Wait until zones are done."""
         await self._wait_zone.wait()
-        await asyncio.sleep(0)  # Allow context switch
+        await asyncio.sleep(COOL_DOWN)  # Allow context switch
         if not self.state == _State.TIMEOUT:
             return
         self._cancel_task()
