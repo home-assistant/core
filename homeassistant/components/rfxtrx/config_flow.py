@@ -37,6 +37,7 @@ from .switch import supported as switch_supported
 _LOGGER = logging.getLogger(__name__)
 
 CONF_OFF_DELAY_ENABLED = CONF_OFF_DELAY + "_enabled"
+CONF_EVENT_CODE = "event_code"
 
 
 class OptionsFlow(config_entries.OptionsFlow):
@@ -66,10 +67,10 @@ class OptionsFlow(config_entries.OptionsFlow):
             }
             if CONF_DEVICE in user_input:
                 device_data = self._get_device_data(user_input[CONF_DEVICE])
-                if not device_data.get("event_code"):
+                if not device_data.get(CONF_EVENT_CODE):
                     errors = {"base": "unknown_event_code"}
                 else:
-                    event_code = device_data["event_code"]
+                    event_code = device_data[CONF_EVENT_CODE]
                     self._selected_device_event_code = event_code
                     self._selected_device = self._config_entry.data[CONF_DEVICES][
                         event_code
@@ -80,11 +81,11 @@ class OptionsFlow(config_entries.OptionsFlow):
                     return await self.async_step_set_device_options()
             if CONF_REMOVE_DEVICE in user_input:
                 device_data = self._get_device_data(user_input[CONF_REMOVE_DEVICE])
-                if not device_data.get("event_code"):
+                if not device_data.get(CONF_EVENT_CODE):
                     errors = {"base": "unknown_event_code"}
                 else:
-                    event_code = device_data["event_code"]
-                    device_id = device_data["device_id"]
+                    event_code = device_data[CONF_EVENT_CODE]
+                    device_id = device_data[CONF_DEVICE_ID]
                     self.hass.helpers.dispatcher.async_dispatcher_send(
                         f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{device_id}"
                     )
@@ -96,8 +97,8 @@ class OptionsFlow(config_entries.OptionsFlow):
                     )
 
                     return self.async_create_entry(title="", data={})
-            if CONF_DEVICE_ID in user_input:
-                self._selected_device_event_code = user_input[CONF_DEVICE_ID]
+            if CONF_EVENT_CODE in user_input:
+                self._selected_device_event_code = user_input[CONF_EVENT_CODE]
                 self._selected_device = {}
                 selected_device_object = get_rfx_object(
                     self._selected_device_event_code
@@ -129,7 +130,7 @@ class OptionsFlow(config_entries.OptionsFlow):
             vol.Optional(
                 CONF_AUTOMATIC_ADD, default=self._config_entry.data[CONF_AUTOMATIC_ADD],
             ): bool,
-            vol.Optional(CONF_DEVICE_ID): str,
+            vol.Optional(CONF_EVENT_CODE): str,
             vol.Optional(CONF_DEVICE): vol.In(devices),
             vol.Optional(CONF_REMOVE_DEVICE): vol.In(devices),
         }
@@ -264,7 +265,7 @@ class OptionsFlow(config_entries.OptionsFlow):
                 event_code = packet_id
                 break
 
-        data = {"event_code": event_code, "device_id": device_id}
+        data = {CONF_EVENT_CODE: event_code, CONF_DEVICE_ID: device_id}
 
         return data
 
