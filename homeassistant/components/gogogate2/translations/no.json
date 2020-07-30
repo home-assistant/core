@@ -7,7 +7,7 @@
                     "password": "Passord",
                     "username": "Brukernavn"
                 },
-                "description": "Gi n\u00f8dvendig informasjon nedenfor. Merk: bare \"admin\" brukeren er kjent for \u00e5 fungere.",
+                "description": "Gi n\u00f8dvendig informasjon nedenfor.",
                 "title": "Konfigurer GogoGate2"
             }
         }
