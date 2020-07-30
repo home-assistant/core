@@ -74,6 +74,9 @@ class OptionsFlow(config_entries.OptionsFlow):
                     self._selected_device = self._config_entry.data[CONF_DEVICES][
                         event_code
                     ]
+                    self._selected_device_object = get_rfx_object(
+                        self._selected_device_event_code
+                    )
                     return await self.async_step_set_device_options()
             if CONF_REMOVE_DEVICE in user_input:
                 device_data = self._get_device_data(user_input[CONF_REMOVE_DEVICE])
@@ -96,6 +99,9 @@ class OptionsFlow(config_entries.OptionsFlow):
             if CONF_DEVICE_ID in user_input:
                 self._selected_device_event_code = user_input[CONF_DEVICE_ID]
                 self._selected_device = {}
+                self._selected_device_object = get_rfx_object(
+                    self._selected_device_event_code
+                )
                 return await self.async_step_set_device_options()
 
             if not errors:
@@ -180,11 +186,6 @@ class OptionsFlow(config_entries.OptionsFlow):
                 return self.async_create_entry(title="", data={})
 
         device_data = self._selected_device
-
-        if self._selected_device_object is None:
-            self._selected_device_object = get_rfx_object(
-                self._selected_device_event_code
-            )
 
         data_scheme = {
             vol.Optional(
