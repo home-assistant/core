@@ -2213,7 +2213,7 @@ websocket-client==0.54.0
 wiffi==1.0.0
 
 # homeassistant.components.wirelesstag
-wirelesstagpy==0.4.0
+wirelesstagpy==0.4.1
 
 # homeassistant.components.withings
 withings-api==2.1.6
