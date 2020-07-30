@@ -363,8 +363,6 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
         # The input needs to be a tensor, convert it using `tf.convert_to_tensor`.
         input_tensor = tf.convert_to_tensor(inp_expanded, dtype=tf.float32)
-        # The model expects a batch of images, so add an axis with `tf.newaxis`.
-        # input_tensor = input_tensor[tf.newaxis, ...]
 
         detections = model(input_tensor)
         boxes = detections["detection_boxes"][0].numpy()
@@ -372,16 +370,6 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         classes = (
             detections["detection_classes"][0].numpy() + self._label_id_offset
         ).astype(int)
-
-        # image_tensor = self._graph.get_tensor_by_name("image_tensor:0")
-        # boxes = self._graph.get_tensor_by_name("detection_boxes:0")
-        # scores = self._graph.get_tensor_by_name("detection_scores:0")
-        # classes = self._graph.get_tensor_by_name("detection_classes:0")
-        # boxes, scores, classes = self._session.run(
-        #     [boxes, scores, classes], feed_dict={image_tensor: inp_expanded}
-        # )
-        # boxes, scores, classes = map(np.squeeze, [boxes, scores, classes])
-        # classes = classes.astype(int)
 
         matches = {}
         total_matches = 0
