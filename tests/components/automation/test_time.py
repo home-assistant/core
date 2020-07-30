@@ -4,10 +4,11 @@ from datetime import timedelta
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
+from tests.async_mock import AsyncMock, patch
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
@@ -278,3 +279,35 @@ async def test_if_action_list_weekday(hass, calls):
         await hass.async_block_till_done()
 
     assert len(calls) == 2
+
+
+async def test_untrack_time_change(hass):
+    """Test for removing tracked time changes."""
+    mock_track_time_change = AsyncMock()
+    with patch(
+        "homeassistant.components.automation.time.async_track_time_change",
+        return_value=mock_track_time_change,
+    ):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "alias": "test",
+                    "trigger": {
+                        "platform": "time",
+                        "at": ["5:00:00", "6:00:00", "7:00:00"],
+                    },
+                    "action": {"service": "test.automation", "data": {"test": "test"}},
+                }
+            },
+        )
+
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "automation.test"},
+        blocking=True,
+    )
+
+    assert len(mock_track_time_change.mock_calls) == 3
