@@ -37,13 +37,15 @@ async def test_form(hass):
         "homeassistant.components.plugwise.async_setup_entry", return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "1.1.1.1", "password": "test-password"},
+            result["flow_id"],
+            {"host": "1.1.1.1", "password": "test-password", "port": 80},
         )
 
     assert result2["type"] == "create_entry"
     assert result2["data"] == {
         "host": "1.1.1.1",
         "password": "test-password",
+        "port": 80,
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -60,7 +62,7 @@ async def test_form_invalid_auth(hass, mock_smile):
     mock_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": "1.1.1.1", "password": "test-password"},
+        result["flow_id"], {"host": "1.1.1.1", "password": "test-password", "port": 80},
     )
 
     assert result2["type"] == "form"
@@ -77,7 +79,7 @@ async def test_form_cannot_connect(hass, mock_smile):
     mock_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": "1.1.1.1", "password": "test-password"},
+        result["flow_id"], {"host": "1.1.1.1", "password": "test-password", "port": 80},
     )
 
     assert result2["type"] == "form"
