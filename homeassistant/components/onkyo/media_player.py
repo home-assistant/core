@@ -485,28 +485,29 @@ class OnkyoAVR(MediaPlayerEntity):
     @callback
     def _parse_source(self, source):
         # source is either a tuple of values or a single value,
-        # so we determine the source based on the type of source
-        if isinstance(source, str):
-            if source in self._source_mapping:
-                self._source = self._source_mapping[source]
-            else:
-                self._source = source
-        else:
-            for value in source:
-                if value in self._source_mapping:
-                    self._source = self._source_mapping[value]
-                    break
-                self._source = "_".join(source)
+        # so we convert to a tuple when it is a single value
+        if not isinstance(source, tuple):
+            source = (source,)
+        for value in source:
+            if value in self._source_mapping:
+                self._source = self._source_mapping[value]
+                break
+            self._source = "_".join(source)
 
     @callback
     def _parse_sound_mode(self, sound_mode):
         # If the selected sound mode is not available, N/A is returned
         # so only update the sound mode when it is not N/A
+        # Also, sound_mode is either a tuple of values or a single value,
+        # so we convert to a tuple when it is a single value
         if sound_mode != "N/A":
-            if sound_mode in SOUND_MODE_REVERSE_MAPPING:
-                self._sound_mode = SOUND_MODE_REVERSE_MAPPING[sound_mode]
-            else:
-                self._sound_mode = sound_mode
+            if not isinstance(sound_mode, tuple):
+                sound_mode = (sound_mode,)
+            for value in sound_mode:
+                if value in SOUND_MODE_REVERSE_MAPPING:
+                    self._sound_mode = SOUND_MODE_REVERSE_MAPPING[value]
+                    break
+                self._sound_mode = "_".join(sound_mode)
 
     @callback
     def _parse_audio_inforamtion(self, audio_information):
