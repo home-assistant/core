@@ -8,7 +8,7 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import AsyncMock, patch
+from tests.async_mock import Mock, patch
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
@@ -283,7 +283,7 @@ async def test_if_action_list_weekday(hass, calls):
 
 async def test_untrack_time_change(hass):
     """Test for removing tracked time changes."""
-    mock_track_time_change = AsyncMock()
+    mock_track_time_change = Mock()
     with patch(
         "homeassistant.components.automation.time.async_track_time_change",
         return_value=mock_track_time_change,
