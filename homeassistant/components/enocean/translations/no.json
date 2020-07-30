@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "invalid_dongle_path": "Ugyldig donglesti"
+        },
         "flow_title": "ENOcean oppsett",
         "step": {
             "detect": {
