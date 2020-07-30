@@ -186,6 +186,7 @@ ACCEPTED_VALUES = [
     "both",
     "up",
 ]
+
 ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
@@ -194,21 +195,31 @@ ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
 )
 
 SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
+AUDIO_VIDEO_INFORMATION_UPDATE_INTERVAL = 10
 
+AUDIO_INFORMATION_MAPPING = {
+    "audio_input_port": 0,
+    "input_signal_format": 1,
+    "input_frequency": 2,
+    "input_channels": 3,
+    "listening_mode": 4,
+    "output_channels": 5,
+    "output_frequency": 6,
+    "precision_quartz_lock_system": 7,
+    "auto_phase_control_delay": 8,
+    "auto_phase_control_phase": 9,
+}
 
-@callback
-def _parse_onkyo_tuple(value):
-    """Parse a value returned from the eiscp library into a tuple."""
-    if isinstance(value, str):
-        return value.split(",")
-
-    return value
-
-
-@callback
-def _tuple_get(tup, index, default=None):
-    """Return a tuple item at index or a default value if it doesn't exist."""
-    return (tup[index : index + 1] or [default])[0]
+VIDEO_INFORMATION_MAPPING = {
+    "video_input_port": 0,
+    "input_resolution": 1,
+    "input_color_schema": 2,
+    "input_color_depth": 3,
+    "output_resolution": 5,
+    "output_color_schema": 6,
+    "output_color_depth": 7,
+    "picture_mode": 8,
+}
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -471,64 +482,66 @@ class OnkyoAVR(MediaPlayerEntity):
         self._update_avr("hdmi-output-selector", output)
 
     @callback
-    def _parse_source(self, source_raw):
-        values = _parse_onkyo_tuple(source_raw)
-
-        for source in values:
+    def _parse_source(self, source):
+        # source is either a tuple of values or a single value,
+        # so we determine the source based on the type of source
+        if isinstance(source, str):
             if source in self._source_mapping:
                 self._source = self._source_mapping[source]
-                break
-            self._source = "_".join(values)
+            else:
+                self._source = source
+        else:
+            for value in source:
+                if value in self._source_mapping:
+                    self._source = self._source_mapping[value]
+                    break
+                self._source = "_".join(source)
 
     @callback
-    def _parse_sound_mode(self, sound_mode_raw):
-        values = _parse_onkyo_tuple(sound_mode_raw)
-
+    def _parse_sound_mode(self, sound_mode):
         # If the selected sound mode is not available, N/A is returned
         # so only update the sound mode when it is not N/A
-        if "N/A" not in values:
-            for sound_mode in values:
-                if sound_mode in SOUND_MODE_REVERSE_MAPPING:
-                    self._sound_mode = SOUND_MODE_REVERSE_MAPPING[sound_mode]
-                    break
-                self._sound_mode = "_".join(values)
+        if sound_mode != "N/A":
+            if sound_mode in SOUND_MODE_REVERSE_MAPPING:
+                self._sound_mode = SOUND_MODE_REVERSE_MAPPING[sound_mode]
+            else:
+                self._sound_mode = sound_mode
 
     @callback
-    def _parse_audio_inforamtion(self, audio_information_raw):
-        values = _parse_onkyo_tuple(audio_information_raw)
-        if "N/A" not in values:
-            info = {
-                "format": _tuple_get(values, 1),
-                "input_frequency": _tuple_get(values, 2),
-                "input_channels": _tuple_get(values, 3),
-                "listening_mode": _tuple_get(values, 4),
-                "output_channels": _tuple_get(values, 5),
-                "output_frequency": _tuple_get(values, 6),
-            }
+    def _parse_audio_inforamtion(self, audio_information):
+        # If audio information is not available, N/A is returned
+        # so only update the audio information when it is not N/A
+        if audio_information != "N/A":
+            info = {}
+
+            for key, value in AUDIO_INFORMATION_MAPPING.items():
+                if len(audio_information) > value and len(audio_information[value]) > 0:
+                    info[key] = audio_information[value]
+
             self._attributes[ATTR_AUDIO_INFORMATION] = info
         else:
             self._attributes.pop(ATTR_AUDIO_INFORMATION, None)
 
     @callback
-    def _parse_video_inforamtion(self, video_information_raw):
-        values = _parse_onkyo_tuple(video_information_raw)
-        if "N/A" not in values:
-            info = {
-                "input_resolution": _tuple_get(values, 1),
-                "input_color_schema": _tuple_get(values, 2),
-                "input_color_depth": _tuple_get(values, 3),
-                "output_resolution": _tuple_get(values, 5),
-                "output_color_schema": _tuple_get(values, 6),
-                "output_color_depth": _tuple_get(values, 7),
-                "picture_mode": _tuple_get(values, 8),
-            }
+    def _parse_video_inforamtion(self, video_information):
+        # If video information is not available, N/A is returned
+        # so only update the video information when it is not N/A
+        if video_information != "N/A":
+            info = {}
+
+            for key, value in VIDEO_INFORMATION_MAPPING.items():
+                if len(video_information) > value and len(video_information[value]) > 0:
+                    info[key] = video_information[value]
+
             self._attributes[ATTR_VIDEO_INFORMATION] = info
         else:
             self._attributes.pop(ATTR_VIDEO_INFORMATION, None)
 
     def _query_delayed_av_info(self):
         if not self._query_timer:
-            self._query_timer = self.hass.loop.call_later(10, self._query_av_info)
+            self._query_timer = self.hass.loop.call_later(
+                AUDIO_VIDEO_INFORMATION_UPDATE_INTERVAL, self._query_av_info
+            )
 
     @callback
     def _query_av_info(self):
@@ -538,8 +551,8 @@ class OnkyoAVR(MediaPlayerEntity):
 
     def _update_avr(self, propname, value):
         """Update a property in the AVR."""
-        self.avr.send(f"{self._zone}.{propname}={value}")
+        self.avr.update_property(self._zone, propname, value)
 
     def _query_avr(self, propname):
         """Cause the AVR to send an update about propname."""
-        self.avr.send(f"{self._zone}.{propname}=query")
+        self.avr.query_property(self._zone, propname)
