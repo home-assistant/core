@@ -7,6 +7,8 @@ CONF_SIGNAL_REPETITIONS = "signal_repetitions"
 CONF_DEBUG = "debug"
 CONF_OFF_DELAY = "off_delay"
 
+CONF_REMOVE_DEVICE = "remove_device"
+
 COMMAND_ON_LIST = [
     "On",
     "Up",

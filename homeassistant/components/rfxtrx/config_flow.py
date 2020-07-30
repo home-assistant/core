@@ -26,6 +26,7 @@ from .const import (
     CONF_DEBUG,
     CONF_FIRE_EVENT,
     CONF_OFF_DELAY,
+    CONF_REMOVE_DEVICE,
     CONF_SIGNAL_REPETITIONS,
     DEVICE_PACKET_TYPE_LIGHTING4,
 )
@@ -36,7 +37,6 @@ from .switch import supported as switch_supported
 _LOGGER = logging.getLogger(__name__)
 
 CONF_OFF_DELAY_ENABLED = CONF_OFF_DELAY + "_enabled"
-CONF_REMOVE_DEVICE = "remove_device"
 
 
 class OptionsFlow(config_entries.OptionsFlow):
@@ -48,7 +48,7 @@ class OptionsFlow(config_entries.OptionsFlow):
         self._global_options = None
         self._selected_device = None
         self._selected_device_event_code = None
-        self._rfxobj = None
+        self._selected_device_object = None
         self._device_entries = None
 
     async def async_step_init(self, user_input=None):
@@ -83,7 +83,7 @@ class OptionsFlow(config_entries.OptionsFlow):
                     event_code = device_data["event_code"]
                     device_id = device_data["device_id"]
                     self.hass.helpers.dispatcher.async_dispatcher_send(
-                        f"{DOMAIN}_{device_id}"
+                        f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{device_id}"
                     )
                     device_registry = await async_get_registry(self.hass)
                     device_registry.async_remove_device(user_input[CONF_REMOVE_DEVICE])
@@ -134,7 +134,8 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         if user_input is not None:
             device_id = get_device_id(
-                self._rfxobj.device, data_bits=user_input.get(CONF_DATA_BITS)
+                self._selected_device_object.device,
+                data_bits=user_input.get(CONF_DATA_BITS),
             )
             try:
                 command_on = (
@@ -152,23 +153,24 @@ class OptionsFlow(config_entries.OptionsFlow):
 
             if not errors:
                 devices = {}
-                devices[self._selected_device_event_code] = {
+                device = {
                     CONF_DEVICE_ID: device_id,
                     CONF_FIRE_EVENT: user_input.get(CONF_FIRE_EVENT, False),
                     CONF_SIGNAL_REPETITIONS: user_input.get(CONF_SIGNAL_REPETITIONS, 1),
                 }
 
-                device = devices[self._selected_device_event_code]
+                devices[self._selected_device_event_code] = device
+
                 if (
                     user_input.get(CONF_OFF_DELAY_ENABLED)
                     and user_input.get(CONF_OFF_DELAY) is not None
                 ):
                     device[CONF_OFF_DELAY] = user_input[CONF_OFF_DELAY]
-                if user_input.get(CONF_DATA_BITS) is not None:
+                if user_input.get(CONF_DATA_BITS):
                     device[CONF_DATA_BITS] = user_input.get(CONF_DATA_BITS)
-                if command_on is not None:
+                if command_on:
                     device[CONF_COMMAND_ON] = command_on
-                if command_off is not None:
+                if command_off:
                     device[CONF_COMMAND_OFF] = command_off
 
                 self.update_config_data(
@@ -179,8 +181,10 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         device_data = self._selected_device
 
-        if self._rfxobj is None:
-            self._rfxobj = get_rfx_object(self._selected_device_event_code)
+        if self._selected_device_object is None:
+            self._selected_device_object = get_rfx_object(
+                self._selected_device_event_code
+            )
 
         data_scheme = {
             vol.Optional(
@@ -188,7 +192,7 @@ class OptionsFlow(config_entries.OptionsFlow):
             ): bool,
         }
 
-        if binary_supported(self._rfxobj):
+        if binary_supported(self._selected_device_object):
             data_scheme.update(
                 {
                     vol.Optional(
@@ -202,10 +206,10 @@ class OptionsFlow(config_entries.OptionsFlow):
             )
 
         if (
-            binary_supported(self._rfxobj)
-            or cover_supported(self._rfxobj)
-            or light_supported(self._rfxobj)
-            or switch_supported(self._rfxobj)
+            binary_supported(self._selected_device_object)
+            or cover_supported(self._selected_device_object)
+            or light_supported(self._selected_device_object)
+            or switch_supported(self._selected_device_object)
         ):
             data_scheme.update(
                 {
@@ -216,7 +220,10 @@ class OptionsFlow(config_entries.OptionsFlow):
                 }
             )
 
-        if self._rfxobj.device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
+        if (
+            self._selected_device_object.device.packettype
+            == DEVICE_PACKET_TYPE_LIGHTING4
+        ):
             data_scheme.update(
                 {
                     vol.Optional(
@@ -225,11 +232,11 @@ class OptionsFlow(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_COMMAND_ON,
                         default=hex(device_data.get(CONF_COMMAND_ON, 0)),
-                    ): str,
+                    ): vol.All(str, lambda value: int(value, 16)),
                     vol.Optional(
                         CONF_COMMAND_OFF,
                         default=hex(device_data.get(CONF_COMMAND_OFF, 0)),
-                    ): str,
+                    ): vol.All(str, lambda value: int(value, 16)),
                 }
             )
 

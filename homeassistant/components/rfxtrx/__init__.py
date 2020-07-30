@@ -35,6 +35,7 @@ from .const import (
     CONF_DEBUG,
     CONF_FIRE_EVENT,
     CONF_OFF_DELAY,
+    CONF_REMOVE_DEVICE,
     CONF_SIGNAL_REPETITIONS,
     DEVICE_PACKET_TYPE_LIGHTING4,
     EVENT_RFXTRX_EVENT,
@@ -432,7 +433,7 @@ class RfxtrxEntity(RestoreEntity):
 
         self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
-                f"{DOMAIN}_{self._device_id}", self.async_remove
+                f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{self._device_id}", self.async_remove
             )
         )
 
