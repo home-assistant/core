@@ -1,4 +1,4 @@
-"""Setup Mullvad sensors."""
+"""Setup Mullvad VPN sensors."""
 from homeassistant.helpers.entity import Entity
 
 from . import get_coordinator
