@@ -71,9 +71,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             info = None
+            self._host = user_input[CONF_HOST]
+            self._port = user_input[CONF_PORT]
             try:
-                self._host = user_input[CONF_HOST]
-                self._port = user_input[CONF_PORT]
                 info = await validate_input(self.hass, self._host, self._port)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -83,7 +83,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if info is not None:
                 self._name = info.get("name", self._host)
-                self._uuid = info.get("id", None)
+                self._uuid = info.get("id")
                 if self._uuid is not None:
                     await self._set_uid_and_abort()
 
