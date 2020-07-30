@@ -56,7 +56,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ClarifaiImageProcessingEntity(ImageProcessingEntity):
     """Component for continually processing an image on a regular interval using Clarifai workflows."""
 
-    def __init__(self, camera_entity, api, app_id, workflow_id, result_format):
+    def __init__(
+        self, camera_entity, api, app_id, workflow_id, result_format, name=None
+    ):
         """Initialize Clarifai image processing entity."""
         super().__init__()
 
@@ -65,9 +67,10 @@ class ClarifaiImageProcessingEntity(ImageProcessingEntity):
         self._app_id = app_id
         self._workflow_id = workflow_id
         self._result_format = result_format
-        self._name = (
-            f"Clarifai {workflow_id}, Camera {split_entity_id(camera_entity)[1]}"
-        )
+        if name:
+            self._name = name
+        else:
+            self._name = f"{DOMAIN} {split_entity_id(camera_entity)[1]}"
 
     @property
     def camera_entity(self):
