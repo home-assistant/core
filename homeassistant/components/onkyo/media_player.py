@@ -215,6 +215,7 @@ VIDEO_INFORMATION_MAPPING = [
     "input_resolution",
     "input_color_schema",
     "input_color_depth",
+    "video_output_port",
     "output_resolution",
     "output_color_schema",
     "output_color_depth",
@@ -515,12 +516,11 @@ class OnkyoAVR(MediaPlayerEntity):
             self._attributes.pop(ATTR_AUDIO_INFORMATION, None)
             return
 
-        info = {
+        self._attributes[ATTR_AUDIO_INFORMATION] = {
             name: value
             for name, value in zip(AUDIO_INFORMATION_MAPPING, audio_information)
             if len(value) > 0
         }
-        self._attributes[ATTR_AUDIO_INFORMATION] = info
 
     @callback
     def _parse_video_inforamtion(self, video_information):
@@ -530,12 +530,11 @@ class OnkyoAVR(MediaPlayerEntity):
             self._attributes.pop(ATTR_VIDEO_INFORMATION, None)
             return
 
-        info = {
+        self._attributes[ATTR_VIDEO_INFORMATION] = {
             name: value
             for name, value in zip(VIDEO_INFORMATION_MAPPING, video_information)
             if len(value) > 0
         }
-        self._attributes[ATTR_VIDEO_INFORMATION] = info
 
     def _query_delayed_av_info(self):
         if not self._query_timer:
