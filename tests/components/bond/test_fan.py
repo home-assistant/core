@@ -96,6 +96,20 @@ async def test_non_standard_speed_list(hass: core.HomeAssistant):
         )
 
 
+async def test_fan_speed_with_no_max_seed(hass: core.HomeAssistant):
+    """Tests that fans without max speed (increase/decrease controls) map speed to HA standard."""
+    await setup_platform(
+        hass,
+        FAN_DOMAIN,
+        ceiling_fan("name-1"),
+        bond_device_id="test-device-id",
+        props={"no": "max_speed"},
+        state={"power": 1, "speed": 14},
+    )
+
+    assert hass.states.get("fan.name_1").attributes["speed"] == fan.SPEED_HIGH
+
+
 async def test_turn_on_fan_with_speed(hass: core.HomeAssistant):
     """Tests that turn on command delegates to set speed API."""
     await setup_platform(

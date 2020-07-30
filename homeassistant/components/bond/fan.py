@@ -75,7 +75,7 @@ class BondFan(BondEntity, FanEntity):
             return None
 
         # map 1..max_speed Bond speed to 1..3 HA speed
-        max_speed = self._device.props.get("max_speed", 3)
+        max_speed = max(self._device.props.get("max_speed", 3), self._speed)
         ha_speed = math.ceil(self._speed * (len(self.speed_list) - 1) / max_speed)
         return self.speed_list[ha_speed]
 
