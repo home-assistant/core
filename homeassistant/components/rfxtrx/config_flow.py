@@ -238,11 +238,11 @@ class OptionsFlow(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_COMMAND_ON,
                         default=hex(device_data.get(CONF_COMMAND_ON, 0)),
-                    ): vol.All(str, lambda value: int(value, 16)),
+                    ): str,
                     vol.Optional(
                         CONF_COMMAND_OFF,
                         default=hex(device_data.get(CONF_COMMAND_OFF, 0)),
-                    ): vol.All(str, lambda value: int(value, 16)),
+                    ): str,
                 }
             )
 

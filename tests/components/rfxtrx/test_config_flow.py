@@ -113,7 +113,7 @@ async def test_options_add_device(hass):
         user_input={
             "debug": True,
             "automatic_add": True,
-            "device_id": "0b1100cd0213c7f230010f71",
+            "event_code": "0b1100cd0213c7f230010f71",
         },
     )
 
@@ -170,7 +170,7 @@ async def test_options_add_remove_device(hass):
         user_input={
             "debug": True,
             "automatic_add": True,
-            "device_id": "0b1100cd0213c7f230010f71",
+            "event_code": "0b1100cd0213c7f230010f71",
         },
     )
 
@@ -264,7 +264,7 @@ async def test_options_add_and_configure_device(hass):
         user_input={
             "debug": True,
             "automatic_add": True,
-            "device_id": "0913000022670e013970",
+            "event_code": "0913000022670e013970",
         },
     )
 
