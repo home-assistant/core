@@ -6,7 +6,6 @@ from typing import Any, Dict, List, Union, Type, Optional
 from types import TracebackType
 
 ZONE_GLOBAL = "global"
-COOL_DOWN = 1
 
 
 class _State(str, enum.Enum):
@@ -137,7 +136,11 @@ class _TaskGlobal:
     """Internal Timeout Context Manager object for ALL Zones."""
 
     def __init__(
-        self, manager: ZoneTimeout, task: asyncio.Task[Any], timeout: float
+        self,
+        manager: ZoneTimeout,
+        task: asyncio.Task[Any],
+        timeout: float,
+        cool_down: float,
     ) -> None:
         """Initalize internal timeout context manager."""
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
@@ -148,6 +151,7 @@ class _TaskGlobal:
         self._timeout_handler: Optional[asyncio.Handle] = None
         self._wait_zone: asyncio.Event = asyncio.Event()
         self._state: _State = _State.INIT
+        self._cool_down: float = cool_down
 
     async def __aenter__(self) -> _TaskGlobal:
         self._manager.global_tasks.append(self)
@@ -224,7 +228,7 @@ class _TaskGlobal:
     async def _on_wait(self) -> None:
         """Wait until zones are done."""
         await self._wait_zone.wait()
-        await asyncio.sleep(COOL_DOWN)  # Allow context switch
+        await asyncio.sleep(self._cool_down)  # Allow context switch
         if not self.state == _State.TIMEOUT:
             return
         self._cancel_task()
@@ -412,7 +416,7 @@ class ZoneTimeout:
             task.zones_done_signal()
 
     def asnyc_timeout(
-        self, timeout: float, zone_name: str = ZONE_GLOBAL
+        self, timeout: float, zone_name: str = ZONE_GLOBAL, cool_down: float = 0
     ) -> Union[_TaskZone, _TaskGlobal]:
         """Timeout based on a zone.
 
@@ -422,7 +426,7 @@ class ZoneTimeout:
 
         # Global Zone
         if zone_name == ZONE_GLOBAL:
-            task = _TaskGlobal(self, current_task, timeout)
+            task = _TaskGlobal(self, current_task, timeout, cool_down)
             return task
 
         # Zone Handling

@@ -106,3 +106,17 @@ async def test_mix_zone_timeout_trigger_global():
                 pass
 
             await asyncio.sleep(0.3)
+
+
+async def test_mix_zone_timeout_trigger_global_cool_down():
+    """Test a mix zone timeout global with trigger it with cool_down."""
+    timeout = ZoneTimeout()
+
+    async with timeout.asnyc_timeout(0.1, cool_down=0.3):
+        try:
+            async with timeout.asnyc_timeout(0.1, "test"):
+                await asyncio.sleep(0.3)
+        except asyncio.TimeoutError:
+            pass
+
+        await asyncio.sleep(0.2)
