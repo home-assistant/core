@@ -71,6 +71,9 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator):
                 self.entry.data[CONF_WEBHOOK_ID]
             )
 
+        # Ensure the webhook is not registered already
+        webhook_unregister(self.hass, self.entry.data[CONF_WEBHOOK_ID])
+
         webhook_register(
             self.hass,
             DOMAIN,
