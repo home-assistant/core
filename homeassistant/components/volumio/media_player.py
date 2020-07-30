@@ -63,16 +63,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     uid = config_entry.data[CONF_ID]
     name = config_entry.data[CONF_NAME]
 
-    entity = Volumio(hass, volumio, uid, name, info)
+    entity = Volumio(volumio, uid, name, info)
     async_add_entities([entity])
 
 
 class Volumio(MediaPlayerEntity):
     """Volumio Player Object."""
 
-    def __init__(self, hass, volumio, uid, name, info):
+    def __init__(self, volumio, uid, name, info):
         """Initialize the media player."""
-        self._hass = hass
         self._volumio = volumio
         self._uid = uid
         self._name = name
