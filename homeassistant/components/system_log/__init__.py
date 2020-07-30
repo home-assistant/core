@@ -172,7 +172,7 @@ class LogErrorHandler(logging.Handler):
         default upper limit is set to 50 (older entries are discarded) but can
         be changed if needed.
         """
-        if record.levelno >= logging.WARN:
+        if record.levelno >= logging.DEBUG:
             stack = []
             if not record.exc_info:
                 stack = [(f[0], f[1]) for f in traceback.extract_stack()]
