@@ -1,31 +1,28 @@
 """Setup Mullvad Binary Sensors."""
-import logging
-
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
-from . import BINARY_SENSORS, DOMAIN
+from . import get_coordinator
+from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+BINARY_SENSORS = ("mullvad_exit_ip",)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Mullvad binary sensors."""
-    if discovery_info is None:
-        return
-    binary_sensors = []
-    for name in hass.data[DOMAIN]:
-        if name in BINARY_SENSORS:
-            binary_sensors.append(MullvadBinarySensor(name, hass.data[DOMAIN][name]))
-    add_entities(binary_sensors, True)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Defer sensor setup to the shared sensor module."""
+    coordinator = await get_coordinator(hass)
+
+    async_add_entities(
+        MullvadBinarySensor(coordinator, sensor_name) for sensor_name in BINARY_SENSORS
+    )
 
 
 class MullvadBinarySensor(BinarySensorEntity):
     """Represents a Mullvad binary sensor."""
 
-    def __init__(self, name, state):
+    def __init__(self, coordinator, name):
         """Initialize the Mullvad binary sensor."""
+        self.coordinator = coordinator
         self._name = name
-        self._state = state
 
     @property
     def icon(self):
@@ -43,8 +40,4 @@ class MullvadBinarySensor(BinarySensorEntity):
     @property
     def state(self):
         """Return the state for this binary sensor."""
-        return self._state
-
-    def update(self):
-        """Update the binary sensor."""
-        self._state = self.hass.data[DOMAIN][self._name]
+        return self.coordinator.data[self._name]

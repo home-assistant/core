@@ -107,6 +107,7 @@ FLOWS = [
     "mobile_app",
     "monoprice",
     "mqtt",
+    "mullvad",
     "myq",
     "neato",
     "nest",

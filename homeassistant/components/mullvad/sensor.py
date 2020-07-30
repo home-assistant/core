@@ -1,31 +1,38 @@
 """Setup Mullvad sensors."""
-import logging
-
 from homeassistant.helpers.entity import Entity
 
-from . import DOMAIN, SENSORS
+from . import get_coordinator
+from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+SENSORS = (
+    "ip",
+    "country",
+    "city",
+    "longitude",
+    "latitude",
+    "mullvad_exit_ip_hostname",
+    "mullvad_server_type",
+    "blacklisted",
+    "organization",
+)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Mullvad sensors."""
-    if discovery_info is None:
-        return
-    sensors = []
-    for name in hass.data[DOMAIN]:
-        if name in SENSORS:
-            sensors.append(MullvadSensor(name, hass.data[DOMAIN][name]))
-    add_entities(sensors, True)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Defer sensor setup to the shared sensor module."""
+    coordinator = await get_coordinator(hass)
+
+    async_add_entities(
+        MullvadSensor(coordinator, sensor_name) for sensor_name in SENSORS
+    )
 
 
 class MullvadSensor(Entity):
     """Represents a Mullvad sensor."""
 
-    def __init__(self, name, state):
+    def __init__(self, coordinator, name):
         """Initialize the Mullvad sensor."""
+        self.coordinator = coordinator
         self._name = name
-        self._state = state
         self._state_attributes = None
 
     @property
@@ -46,16 +53,12 @@ class MullvadSensor(Entity):
         """Return the state for this sensor."""
         # Handle blacklisted differently
         if self._name == "blacklisted":
-            self._state_attributes = self._state
-            return self._state["blacklisted"]
+            self._state_attributes = self.coordinator.data[self._name]
+            return self.coordinator.data[self._name]["blacklisted"]
         else:
-            return self._state
+            return self.coordinator.data[self._name]
 
     @property
     def state_attributes(self):
         """Return the state attributes for this sensor."""
         return self._state_attributes
-
-    def update(self):
-        """Update the sensor."""
-        self._state = self.hass.data[DOMAIN][self._name]
