@@ -223,9 +223,9 @@ class _TaskGlobal:
     async def _on_wait(self) -> None:
         """Wait until zones are done."""
         await self._wait_zone.wait()
+        await asyncio.sleep(0)  # Allow context switch
         if not self.state == _State.TIMEOUT:
             return
-        await asyncio.sleep(0)  # Allow context switch
         self._cancel_task()
 
 
