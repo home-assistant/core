@@ -115,7 +115,7 @@ class PlexServer:
             self._plextv_clients = [
                 x
                 for x in self.account.resources()
-                if "player" in x.provides and x.presence and x.publicAddressMatches
+                if "player" in x.provides and x.presence
             ]
             _LOGGER.debug(
                 "Current available clients from plex.tv: %s", self._plextv_clients
