@@ -62,7 +62,7 @@ def async_generate_entity_id(
     return test_string
 
 
-generate_entity_id = async_generate_entity_id
+generate_entity_id = async_generate_entity_id  # pylint: disable=invalid-name
 
 
 class Entity(ABC):
