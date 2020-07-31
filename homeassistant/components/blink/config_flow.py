@@ -22,13 +22,13 @@ from homeassistant.core import callback
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: core.HomeAssistant, auth):
+def validate_input(hass: core.HomeAssistant, auth):
     """Validate the user input allows us to connect."""
     try:
-        await hass.async_add_executor_job(auth.startup)
+        auth.startup()
     except (LoginError, TokenRefreshFailed):
         raise InvalidAuth
-    if await hass.async_add_executor_job(auth.check_key_required):
+    if auth.check_key_required():
         raise Require2FA
 
 
@@ -69,7 +69,9 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.auth = Auth(self.data, no_prompt=True)
 
             try:
-                await validate_input(self.hass, self.auth)
+                await self.hass.async_add_executor_job(
+                    validate_input, self.hass, self.auth
+                )
                 return await self.async_step_finish()
             except Require2FA:
                 return await self.async_step_2fa()
