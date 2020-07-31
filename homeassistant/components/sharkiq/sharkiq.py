@@ -9,7 +9,6 @@ from sharkiqpy import OperatingModes, PowerModes, Properties, SharkIqVacuum
 from homeassistant.components.vacuum import (
     STATE_CLEANING,
     STATE_DOCKED,
-    STATE_ERROR,
     STATE_IDLE,
     STATE_PAUSED,
     STATE_RETURNING,
@@ -26,8 +25,9 @@ from homeassistant.components.vacuum import (
 )
 
 from .const import DOMAIN, SHARK
+from .update_coordinator import SharkIqUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 # Supported features
 SUPPORT_SHARKIQ = (
@@ -58,6 +58,9 @@ FAN_SPEEDS_MAP = {
 STATE_RECHARGING_TO_RESUME = "recharging_to_resume"
 
 # Attributes to expose
+ATTR_ERROR_CODE = "last_error_code"
+ATTR_ERROR_MSG = "last_error_message"
+ATTR_LOW_LIGHT = "low_light"
 ATTR_RECHARGE_RESUME = "recharge_and_resume"
 ATTR_RSSI = "rssi"
 
@@ -65,14 +68,19 @@ ATTR_RSSI = "rssi"
 class SharkVacuumEntity(StateVacuumEntity):
     """Shark IQ vacuum entity."""
 
-    def __init__(self, sharkiq: SharkIqVacuum):
+    def __init__(self, sharkiq: SharkIqVacuum, coordinator: SharkIqUpdateCoordinator):
         """Create a new SharkVacuumEntity."""
+        if sharkiq.serial_number not in coordinator.shark_vacs:
+            raise RuntimeError(
+                f"Shark IQ robot {sharkiq.serial_number} is not known to the coordinator"
+            )
+        self.coordinator = coordinator
         self.sharkiq = sharkiq
 
     @property
     def should_poll(self):
-        """Device updates via polling Ayla API."""
-        return True
+        """Don't poll this entity. Polling is done via the coordinator."""
+        return False
 
     def clean_spot(self, **kwargs):
         """Clean a spot. Not yet implemented."""
@@ -81,6 +89,11 @@ class SharkVacuumEntity(StateVacuumEntity):
     def send_command(self, command, params=None, **kwargs):
         """Send a command to the vacuum. Not yet implemented."""
         raise NotImplementedError()
+
+    @property
+    def is_online(self) -> bool:
+        """Tell us if the device is online."""
+        return self.coordinator.is_online(self.sharkiq.serial_number)
 
     @property
     def name(self) -> str:
@@ -124,15 +137,15 @@ class SharkVacuumEntity(StateVacuumEntity):
 
     @property
     def error_code(self) -> Optional[int]:
-        """Error code or None."""
-        # Errors remain for a while, so we should only show an error if the device is stopped
-        if (
-            self.sharkiq.get_property_value(Properties.OPERATING_MODE)
-            == OperatingModes.STOP
-            and not self.is_docked
-        ):
-            return self.sharkiq.get_property_value(Properties.ERROR_CODE)
-        return None
+        """Return the last observed error code (or None)."""
+        return self.sharkiq.error_code
+
+    @property
+    def error_message(self) -> Optional[str]:
+        """Return the last observed error message (or None)."""
+        if not self.error_code:
+            return None
+        return self.sharkiq.error_code
 
     @property
     def operating_mode(self) -> Optional[str]:
@@ -147,13 +160,17 @@ class SharkVacuumEntity(StateVacuumEntity):
 
     @property
     def state(self):
-        """Get the current vacuum state."""
+        """
+        Get the current vacuum state.
+
+        NB: Currently, we do not return an error state because they can be very, very stale.
+        In the app, these are (usually) handled by showing the robot as stopped and sending the
+        user a notification.
+        """
         if self.recharging_to_resume:
             return STATE_RECHARGING_TO_RESUME
         if self.is_docked:
             return STATE_DOCKED
-        if self.error_code:
-            return STATE_ERROR
         return self.operating_mode
 
     @property
@@ -163,57 +180,48 @@ class SharkVacuumEntity(StateVacuumEntity):
 
     @property
     def available(self) -> bool:
-        """Return True if entity is available."""
-        return True  # Always available, otherwise setup will fail
+        """Determine if the sensor is available based on API results."""
+        # If the last update was successful...
+        if self.coordinator.last_update_success and self.is_online:
+            return True
+
+        # Otherwise, we are not.
+        return False
 
     @property
     def battery_level(self):
         """Get the current battery level."""
         return self.sharkiq.get_property_value(Properties.BATTERY_CAPACITY)
 
-    def update(self, property_list=None):
-        """Update the known properties."""
-        self.sharkiq.update(property_list)
-
-    async def async_update(self, property_list=None):
+    async def async_update(self):
         """Update the known properties asynchronously."""
-        await self.sharkiq.async_update(property_list)
+        await self.coordinator.async_request_refresh()
 
-    def return_to_base(self, **kwargs):
-        """Have the device return to base."""
-        self.sharkiq.set_operating_mode(OperatingModes.RETURN)
-
-    def pause(self):
-        """Pause the cleaning task."""
-        self.sharkiq.set_operating_mode(OperatingModes.PAUSE)
-
-    def start(self):
-        """Start the device."""
-        self.sharkiq.set_operating_mode(OperatingModes.START)
-
-    def stop(self, **kwargs):
-        """Stop the device."""
-        self.sharkiq.set_operating_mode(OperatingModes.STOP)
-
-    def locate(self, **kwargs):
-        """Cause the device to generate a loud chirp."""
-        self.sharkiq.find_device()
+    async def async_added_to_hass(self) -> None:
+        """Connect to dispatcher listening for entity data notifications."""
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     async def async_return_to_base(self, **kwargs):
         """Have the device return to base."""
         await self.sharkiq.async_set_operating_mode(OperatingModes.RETURN)
+        await self.coordinator.async_refresh()
 
     async def async_pause(self):
         """Pause the cleaning task."""
         await self.sharkiq.async_set_operating_mode(OperatingModes.PAUSE)
+        await self.coordinator.async_refresh()
 
     async def async_start(self):
         """Start the device."""
         await self.sharkiq.async_set_operating_mode(OperatingModes.START)
+        await self.coordinator.async_refresh()
 
     async def async_stop(self, **kwargs):
         """Stop the device."""
         await self.sharkiq.async_set_operating_mode(OperatingModes.STOP)
+        await self.coordinator.async_refresh()
 
     async def async_locate(self, **kwargs):
         """Cause the device to generate a loud chirp."""
@@ -229,11 +237,12 @@ class SharkVacuumEntity(StateVacuumEntity):
                 fan_speed = k
         return fan_speed
 
-    def set_fan_speed(self, fan_speed: str, **kwargs):
+    async def async_set_fan_speed(self, fan_speed: str, **kwargs):
         """Set the fan speed."""
-        self.sharkiq.set_property_value(
+        await self.sharkiq.async_set_property_value(
             Properties.POWER_MODE, FAN_SPEEDS_MAP.get(fan_speed.capitalize())
         )
+        await self.coordinator.async_refresh()
 
     @property
     def fan_speed_list(self):
@@ -252,9 +261,17 @@ class SharkVacuumEntity(StateVacuumEntity):
         return self.sharkiq.get_property_value(Properties.RSSI)
 
     @property
+    def low_light(self):
+        """Let us know if the robot is operating in low-light mode."""
+        return self.sharkiq.get_property_value(Properties.LOW_LIGHT_MISSION)
+
+    @property
     def state_attributes(self) -> Dict:
         """Return a dictionary of device state attributes."""
         data = super().state_attributes
         data[ATTR_RSSI] = self.rssi
         data[ATTR_RECHARGE_RESUME] = self.recharge_resume
+        data[ATTR_ERROR_CODE] = self.error_code
+        data[ATTR_ERROR_MSG] = self.sharkiq.error_text
+        data[ATTR_LOW_LIGHT] = self.low_light
         return data
