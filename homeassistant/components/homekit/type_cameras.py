@@ -218,7 +218,14 @@ class Camera(HomeAccessory, PyhapCamera):
                 serv_doorbell = self.add_preload_service(SERV_DOORBELL)
                 self.set_primary_service(serv_doorbell)
                 self._char_doorbell_detected = serv_doorbell.configure_char(
-                    CHAR_PROGRAMMABLE_SWITCH_EVENT, value=0
+                    CHAR_PROGRAMMABLE_SWITCH_EVENT,
+                    value=None,
+                    valid_values={
+                        "Default": None,
+                        "SinglePress": DOORBELL_SINGLE_PRESS,
+                        "DoublePress": DOORBELL_DOUBLE_PRESS,
+                        "LongPress": DOORBELL_LONG_PRESS,
+                    },
                 )
                 serv_speaker = self.add_preload_service(SERV_SPEAKER)
                 serv_speaker.configure_char(CHAR_MUTE, value=0)
