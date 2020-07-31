@@ -157,7 +157,9 @@ async def test_shark_metadata(hass: HomeAssistant) -> None:
     shark_vac = _get_mock_shark_vac(ayla_api)
     coordinator = SharkIqUpdateCoordinator(hass, None, ayla_api, [shark_vac])
     shark = SharkVacuumEntity(shark_vac, coordinator)
-    shark.sharkiq._update_metadata(SHARK_METADATA_DICT)  # pylint: disable=protected-access
+    shark.sharkiq._update_metadata(
+        SHARK_METADATA_DICT
+    )  # pylint: disable=protected-access
 
     target_device_info = {
         "identifiers": {("sharkiq", "AC000Wxxxxxxxxx")},
@@ -189,7 +191,9 @@ async def test_updates(hass: HomeAssistant) -> None:
     coordinator = SharkIqUpdateCoordinator(hass, mock_config, ayla_api, [shark_vac])
 
     with patch.object(SharkIqVacuum, "async_update", new=_get_async_update()):
-        update_called = await coordinator._async_update_data()  # pylint: disable=protected-access
+        update_called = (
+            await coordinator._async_update_data()
+        )  # pylint: disable=protected-access
     assert update_called
 
     update_failed = False
