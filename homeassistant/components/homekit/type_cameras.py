@@ -217,12 +217,7 @@ class Camera(HomeAccessory, PyhapCamera):
                 serv_doorbell = self.add_preload_service(SERV_DOORBELL)
                 self.set_primary_service(serv_doorbell)
                 self._char_doorbell_detected = serv_doorbell.configure_char(
-                    CHAR_PROGRAMMABLE_SWITCH_EVENT,
-                    value=DOORBELL_NOT_PRESSED,
-                    valid_values={
-                        DOORBELL_SINGLE_PRESS: DOORBELL_SINGLE_PRESS,
-                        DOORBELL_NOT_PRESSED: DOORBELL_NOT_PRESSED,
-                    },
+                    CHAR_PROGRAMMABLE_SWITCH_EVENT, value=None
                 )
                 self._async_update_doorbell_state(state)
 
@@ -283,7 +278,6 @@ class Camera(HomeAccessory, PyhapCamera):
 
         if new_state.state == STATE_ON:
             self._char_doorbell_detected.set_value(DOORBELL_SINGLE_PRESS)
-            self._char_doorbell_detected.set_value(None, should_notify=False)
             _LOGGER.debug(
                 "%s: Set linked doorbell %s sensor to %d",
                 self.entity_id,
