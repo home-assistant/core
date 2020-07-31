@@ -35,6 +35,16 @@ _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
 
 
+def generate_entity_id(
+    entity_id_format: str,
+    name: Optional[str],
+    current_ids: Optional[List[str]] = None,
+    hass: Optional[HomeAssistant] = None,
+) -> str:
+    """Generate a unique entity ID based on given entity IDs or used IDs."""
+    return async_generate_entity_id(entity_id_format, name, current_ids, hass)
+
+
 @callback
 def async_generate_entity_id(
     entity_id_format: str,
@@ -51,7 +61,7 @@ def async_generate_entity_id(
         return ensure_unique_string(preferred_string, current_ids)
 
     if hass is None:
-        raise ValueError("Missing required parameter currentids or hass")
+        raise ValueError("Missing required parameter current_ids or hass")
 
     test_string = preferred_string
     tries = 1
@@ -60,9 +70,6 @@ def async_generate_entity_id(
         test_string = f"{preferred_string}_{tries}"
 
     return test_string
-
-
-generate_entity_id = async_generate_entity_id  # pylint: disable=invalid-name
 
 
 class Entity(ABC):
