@@ -140,7 +140,7 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         self._current_activity = ACTIVITY_POWER_OFF
         self.default_activity = activity
         self._activity_starting = None
-        self._is_initial_update = False
+        self._is_initial_update = True
         self._client = HarmonyClient(ip_address=host)
         self._config_path = out_path
         self.delay_secs = delay_secs
