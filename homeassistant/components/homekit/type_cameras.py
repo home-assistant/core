@@ -58,6 +58,7 @@ from .util import pid_is_alive
 
 _LOGGER = logging.getLogger(__name__)
 
+DOORBELL_NOT_PRESSED = None
 DOORBELL_SINGLE_PRESS = 0
 DOORBELL_DOUBLE_PRESS = 1
 DOORBELL_LONG_PRESS = 2
@@ -216,7 +217,12 @@ class Camera(HomeAccessory, PyhapCamera):
                 serv_doorbell = self.add_preload_service(SERV_DOORBELL)
                 self.set_primary_service(serv_doorbell)
                 self._char_doorbell_detected = serv_doorbell.configure_char(
-                    CHAR_PROGRAMMABLE_SWITCH_EVENT, value=0
+                    CHAR_PROGRAMMABLE_SWITCH_EVENT,
+                    value=DOORBELL_NOT_PRESSED,
+                    valid_values={
+                        DOORBELL_SINGLE_PRESS: DOORBELL_SINGLE_PRESS,
+                        DOORBELL_NOT_PRESSED: DOORBELL_NOT_PRESSED,
+                    },
                 )
                 self._async_update_doorbell_state(state)
 
