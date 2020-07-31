@@ -214,6 +214,7 @@ class Camera(HomeAccessory, PyhapCamera):
             state = self.hass.states.get(self.linked_doorbell_sensor)
             if state:
                 serv_doorbell = self.add_preload_service(SERV_DOORBELL)
+                self.set_primary_service(serv_doorbell)
                 self._char_doorbell_detected = serv_doorbell.configure_char(
                     CHAR_PROGRAMMABLE_SWITCH_EVENT, value=0
                 )
@@ -256,6 +257,7 @@ class Camera(HomeAccessory, PyhapCamera):
             return
 
         self._char_motion_detected.set_value(detected)
+        self._char_motion_detected.set_value(None, should_notify=False)
         _LOGGER.debug(
             "%s: Set linked motion %s sensor to %d",
             self.entity_id,
