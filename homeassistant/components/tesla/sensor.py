@@ -1,5 +1,6 @@
 """Support for the Tesla sensors."""
 import logging
+from typing import Optional
 
 from homeassistant.components.sensor import DEVICE_CLASSES
 from homeassistant.const import (
@@ -34,75 +35,89 @@ class TeslaSensor(TeslaDevice, Entity):
 
     def __init__(self, tesla_device, coordinator, sensor_type=None):
         """Initialize of the sensor."""
-        self.current_value = None
-        self.units = None
-        self.last_changed_time = None
-        self.type = sensor_type
-        self._device_class = None
-        if tesla_device.device_class in DEVICE_CLASSES:
-            self._device_class = tesla_device.device_class
         super().__init__(tesla_device, coordinator)
+        self.type = sensor_type
 
-        if self.type:
-            self._name = f"{self.tesla_device.name} ({self.type})"
+    @property
+    def name(self) -> str:
+        """Return the name of the device."""
+        return (
+            self.tesla_device.name
+            if not self.type
+            else f"{self.tesla_device.name} ({self.type})"
+        )
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        if self.type:
-            return f"{self.tesla_id}_{self.type}"
-        return self.tesla_id
+        return (
+            super().unique_id if not self.type else f"{super().unique_id}_{self.type}"
+        )
 
     @property
-    def state(self):
+    def state(self) -> Optional[float]:
         """Return the state of the sensor."""
-        return self.current_value
+        if self.tesla_device.type == "temperature sensor":
+            if self.type == "outside":
+                return self.tesla_device.get_outside_temp()
+            else:
+                return self.tesla_device.get_inside_temp()
+        elif self.tesla_device.type in ["range sensor", "mileage sensor"]:
+            units = self.tesla_device.measurement
+            if units == "LENGTH_MILES":
+                return self.tesla_device.get_value()
+            else:
+                return round(
+                    convert(
+                        self.tesla_device.get_value(), LENGTH_MILES, LENGTH_KILOMETERS
+                    ),
+                    2,
+                )
+        elif self.tesla_device.type == "charging rate sensor":
+            return self.tesla_device.charging_rate
+        return self.tesla_device.get_value()
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> Optional[str]:
         """Return the unit_of_measurement of the device."""
-        return self.units
+        units = self.tesla_device.measurement
+        if units == "F":
+            return TEMP_FAHRENHEIT
+        elif units == "C":
+            return TEMP_CELSIUS
+        elif units == "LENGTH_MILES":
+            return LENGTH_MILES
+        elif units == "LENGTH_KILOMETERS":
+            return LENGTH_KILOMETERS
+        return units
 
     @property
-    def device_class(self):
+    def device_class(self) -> Optional[str]:
         """Return the device_class of the device."""
-        return self._device_class
+        return (
+            self.tesla_device.device_class
+            if self.tesla_device.device_class in DEVICE_CLASSES
+            else None
+        )
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        attr = self._attributes.copy()
+        if self.tesla_device.type == "charging rate sensor":
+            attr.update(
+                {
+                    "time_left": self.tesla_device.time_left,
+                    "added_range": self.tesla_device.added_range,
+                    "charge_energy_added": self.tesla_device.charge_energy_added,
+                    "charge_current_request": self.tesla_device.charge_current_request,
+                    "charger_actual_current": self.tesla_device.charger_actual_current,
+                    "charger_voltage": self.tesla_device.charger_voltage,
+                }
+            )
+        return attr
 
     async def async_update(self):
         """Update the state from the sensor."""
-        _LOGGER.debug("Updating sensor: %s", self._name)
+        _LOGGER.debug("Updating sensor: %s", self.name)
         await super().async_update()
-        units = self.tesla_device.measurement
-
-        if self.tesla_device.type == "temperature sensor":
-            if self.type == "outside":
-                self.current_value = self.tesla_device.get_outside_temp()
-            else:
-                self.current_value = self.tesla_device.get_inside_temp()
-            if units == "F":
-                self.units = TEMP_FAHRENHEIT
-            else:
-                self.units = TEMP_CELSIUS
-        elif self.tesla_device.type in ["range sensor", "mileage sensor"]:
-            self.current_value = self.tesla_device.get_value()
-            if units == "LENGTH_MILES":
-                self.units = LENGTH_MILES
-            else:
-                self.units = LENGTH_KILOMETERS
-                self.current_value = round(
-                    convert(self.current_value, LENGTH_MILES, LENGTH_KILOMETERS), 2
-                )
-        elif self.tesla_device.type == "charging rate sensor":
-            self.current_value = self.tesla_device.charging_rate
-            self.units = units
-            self._attributes = {
-                "time_left": self.tesla_device.time_left,
-                "added_range": self.tesla_device.added_range,
-                "charge_energy_added": self.tesla_device.charge_energy_added,
-                "charge_current_request": self.tesla_device.charge_current_request,
-                "charger_actual_current": self.tesla_device.charger_actual_current,
-                "charger_voltage": self.tesla_device.charger_voltage,
-            }
-        else:
-            self.current_value = self.tesla_device.get_value()
-            self.units = units

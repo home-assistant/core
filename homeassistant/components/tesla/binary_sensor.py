@@ -29,24 +29,22 @@ class TeslaBinarySensor(TeslaDevice, BinarySensorEntity):
     def __init__(self, tesla_device, coordinator):
         """Initialise of a Tesla binary sensor."""
         super().__init__(tesla_device, coordinator)
-        self._state = None
-        self._sensor_type = None
-        if tesla_device.sensor_type in DEVICE_CLASSES:
-            self._sensor_type = tesla_device.sensor_type
 
     @property
     def device_class(self):
         """Return the class of this binary sensor."""
-        return self._sensor_type
+        return (
+            self.tesla_device.sensor_type
+            if self.tesla_device.sensor_type in DEVICE_CLASSES
+            else None
+        )
 
     @property
     def is_on(self):
         """Return the state of the binary sensor."""
-        return self._state
+        return self.tesla_device.get_value()
 
     async def async_update(self):
         """Update the state of the device."""
-        _LOGGER.debug("Updating sensor: %s", self._name)
+        _LOGGER.debug("Updating sensor: %s", self.name)
         await super().async_update()
-        self._state = self.tesla_device.get_value()
-        self._attributes = self.tesla_device.attrs

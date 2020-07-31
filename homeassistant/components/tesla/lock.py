@@ -2,7 +2,6 @@
 import logging
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 
 from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
@@ -25,26 +24,26 @@ class TeslaLock(TeslaDevice, LockEntity):
 
     def __init__(self, tesla_device, coordinator):
         """Initialise of the lock."""
-        self._state = None
         super().__init__(tesla_device, coordinator)
 
     async def async_lock(self, **kwargs):
         """Send the lock command."""
-        _LOGGER.debug("Locking doors for: %s", self._name)
+        _LOGGER.debug("Locking doors for: %s", self.name)
         await self.tesla_device.lock()
 
     async def async_unlock(self, **kwargs):
         """Send the unlock command."""
-        _LOGGER.debug("Unlocking doors for: %s", self._name)
+        _LOGGER.debug("Unlocking doors for: %s", self.name)
         await self.tesla_device.unlock()
 
     @property
     def is_locked(self):
         """Get whether the lock is in locked state."""
-        return self._state == STATE_LOCKED
+        if self.tesla_device.is_locked() is None:
+            return None
+        return True if self.tesla_device.is_locked() else False
 
     async def async_update(self):
         """Update state of the lock."""
-        _LOGGER.debug("Updating state for: %s", self._name)
+        _LOGGER.debug("Updating state for: %s", self.name)
         await super().async_update()
-        self._state = STATE_LOCKED if self.tesla_device.is_locked() else STATE_UNLOCKED

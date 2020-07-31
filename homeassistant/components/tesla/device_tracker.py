@@ -1,5 +1,6 @@
 """Support for tracking Tesla cars."""
 import logging
+from typing import Optional
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
@@ -28,36 +29,39 @@ class TeslaDeviceEntity(TeslaDevice, TrackerEntity):
     def __init__(self, tesla_device, coordinator):
         """Initialize the Tesla device scanner."""
         super().__init__(tesla_device, coordinator)
-        self._latitude = None
-        self._longitude = None
         self._attributes = {"trackr_id": self.unique_id}
-        self._listener = None
 
     async def async_update(self):
         """Update the device info."""
         _LOGGER.debug("Updating device position: %s", self.name)
         await super().async_update()
-        location = self.tesla_device.get_location()
-        if location:
-            self._latitude = location["latitude"]
-            self._longitude = location["longitude"]
-            self._attributes = {
-                "trackr_id": self.unique_id,
-                "heading": location["heading"],
-                "speed": location["speed"],
-            }
 
     @property
-    def latitude(self) -> float:
+    def latitude(self) -> Optional[float]:
         """Return latitude value of the device."""
-        return self._latitude
+        location = self.tesla_device.get_location()
+        return self.tesla_device.get_location().get("latitude") if location else None
 
     @property
-    def longitude(self) -> float:
+    def longitude(self) -> Optional[float]:
         """Return longitude value of the device."""
-        return self._longitude
+        location = self.tesla_device.get_location()
+        return self.tesla_device.get_location().get("longitude") if location else None
 
     @property
     def source_type(self):
         """Return the source type, eg gps or router, of the device."""
         return SOURCE_TYPE_GPS
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        attr = super().device_state_attributes.copy()
+        location = self.tesla_device.get_location()
+        if location:
+            self._attributes = {
+                "trackr_id": self.unique_id,
+                "heading": location["heading"],
+                "speed": location["speed"],
+            }
+        return attr

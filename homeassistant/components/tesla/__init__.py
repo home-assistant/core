@@ -241,20 +241,17 @@ class TeslaDevice(Entity):
         """Initialise the Tesla device."""
         self.tesla_device = tesla_device
         self.coordinator = coordinator
-        self._name = self.tesla_device.name
-        self.tesla_id = slugify(self.tesla_device.uniq_name)
-        self._attributes = {}
-        self._icon = ICONS.get(self.tesla_device.type)
+        self._attributes = self.tesla_device.attrs.copy()
 
     @property
     def name(self):
         """Return the name of the device."""
-        return self._name
+        return self.tesla_device.name
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return self.tesla_id
+        return slugify(self.tesla_device.uniq_name)
 
     @property
     def icon(self):
@@ -262,7 +259,7 @@ class TeslaDevice(Entity):
         if self.device_class:
             return None
 
-        return self._icon
+        return ICONS.get(self.tesla_device.type)
 
     @property
     def should_poll(self):
@@ -277,7 +274,7 @@ class TeslaDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        attr = self._attributes
+        attr = self._attributes.copy()
         if self.tesla_device.has_battery():
             attr[ATTR_BATTERY_LEVEL] = self.tesla_device.battery_level()
             attr[ATTR_BATTERY_CHARGING] = self.tesla_device.battery_charging()
@@ -296,9 +293,7 @@ class TeslaDevice(Entity):
 
     async def async_added_to_hass(self):
         """Register state update callback."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
+        self.async_on_remove(self.coordinator.async_add_listener(self.refresh))
 
     async def async_will_remove_from_hass(self):
         """Prepare for unload."""
@@ -306,4 +301,12 @@ class TeslaDevice(Entity):
     async def async_update(self):
         """Update the state of the device."""
         await self.coordinator.async_request_refresh()
-        await self.tesla_device.async_update()
+        self.refresh()
+
+    def refresh(self) -> None:
+        """Refresh the state of the device.
+
+        This assumes the coordinator has updated the controller.
+        """
+        self.tesla_device.refresh()
+        self.schedule_update_ha_state()

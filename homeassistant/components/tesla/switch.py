@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_ON
 
 from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
@@ -30,29 +30,29 @@ class ChargerSwitch(TeslaDevice, SwitchEntity):
 
     def __init__(self, tesla_device, coordinator):
         """Initialise of the switch."""
-        self._state = None
         super().__init__(tesla_device, coordinator)
 
     async def async_turn_on(self, **kwargs):
         """Send the on command."""
-        _LOGGER.debug("Enable charging: %s", self._name)
+        _LOGGER.debug("Enable charging: %s", self.name)
         await self.tesla_device.start_charge()
 
     async def async_turn_off(self, **kwargs):
         """Send the off command."""
-        _LOGGER.debug("Disable charging for: %s", self._name)
+        _LOGGER.debug("Disable charging for: %s", self.name)
         await self.tesla_device.stop_charge()
 
     @property
     def is_on(self):
         """Get whether the switch is in on state."""
-        return self._state == STATE_ON
+        if self.tesla_device.is_charging() is None:
+            return None
+        return self.tesla_device.is_charging() == STATE_ON
 
     async def async_update(self):
         """Update the state of the switch."""
-        _LOGGER.debug("Updating state for: %s", self._name)
+        _LOGGER.debug("Updating state for: %s", self.name)
         await super().async_update()
-        self._state = STATE_ON if self.tesla_device.is_charging() else STATE_OFF
 
 
 class RangeSwitch(TeslaDevice, SwitchEntity):
@@ -60,29 +60,29 @@ class RangeSwitch(TeslaDevice, SwitchEntity):
 
     def __init__(self, tesla_device, coordinator):
         """Initialise the switch."""
-        self._state = None
         super().__init__(tesla_device, coordinator)
 
     async def async_turn_on(self, **kwargs):
         """Send the on command."""
-        _LOGGER.debug("Enable max range charging: %s", self._name)
+        _LOGGER.debug("Enable max range charging: %s", self.name)
         await self.tesla_device.set_max()
 
     async def async_turn_off(self, **kwargs):
         """Send the off command."""
-        _LOGGER.debug("Disable max range charging: %s", self._name)
+        _LOGGER.debug("Disable max range charging: %s", self.name)
         await self.tesla_device.set_standard()
 
     @property
     def is_on(self):
         """Get whether the switch is in on state."""
-        return self._state
+        if self.tesla_device.is_maxrange() is None:
+            return None
+        return bool(self.tesla_device.is_maxrange())
 
     async def async_update(self):
         """Update the state of the switch."""
-        _LOGGER.debug("Updating state for: %s", self._name)
+        _LOGGER.debug("Updating state for: %s", self.name)
         await super().async_update()
-        self._state = bool(self.tesla_device.is_maxrange())
 
 
 class UpdateSwitch(TeslaDevice, SwitchEntity):
@@ -90,34 +90,41 @@ class UpdateSwitch(TeslaDevice, SwitchEntity):
 
     def __init__(self, tesla_device, coordinator, controller):
         """Initialise the switch."""
-        self._state = None
-        tesla_device.type = "update switch"
         super().__init__(tesla_device, coordinator)
-        self._name = self._name.replace("charger", "update")
-        self.tesla_id = self.tesla_id.replace("charger", "update")
         self.controller = controller
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return super().name.replace("charger", "update")
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return super().unique_id.replace("charger", "update")
 
     async def async_turn_on(self, **kwargs):
         """Send the on command."""
-        _LOGGER.debug("Enable updates: %s %s", self._name, self.tesla_device.id())
+        _LOGGER.debug("Enable updates: %s %s", self.name, self.tesla_device.id())
         self.controller.set_updates(self.tesla_device.id(), True)
 
     async def async_turn_off(self, **kwargs):
         """Send the off command."""
-        _LOGGER.debug("Disable updates: %s %s", self._name, self.tesla_device.id())
+        _LOGGER.debug("Disable updates: %s %s", self.name, self.tesla_device.id())
         self.controller.set_updates(self.tesla_device.id(), False)
 
     @property
     def is_on(self):
         """Get whether the switch is in on state."""
-        return self._state
+        if self.controller.get_updates(self.tesla_device.id()) is None:
+            return None
+        return bool(self.controller.get_updates(self.tesla_device.id()))
 
     async def async_update(self):
         """Update the state of the switch."""
         car_id = self.tesla_device.id()
-        _LOGGER.debug("Updating state for: %s %s", self._name, car_id)
+        _LOGGER.debug("Updating state for: %s %s", self.name, car_id)
         await super().async_update()
-        self._state = bool(self.controller.get_updates(car_id))
 
 
 class SentryModeSwitch(TeslaDevice, SwitchEntity):
@@ -125,26 +132,26 @@ class SentryModeSwitch(TeslaDevice, SwitchEntity):
 
     def __init__(self, tesla_device, coordinator):
         """Initialise the switch."""
-        self._state = None
         super().__init__(tesla_device, coordinator)
 
     async def async_turn_on(self, **kwargs):
         """Send the on command."""
-        _LOGGER.debug("Enable sentry mode: %s", self._name)
+        _LOGGER.debug("Enable sentry mode: %s", self.name)
         await self.tesla_device.enable_sentry_mode()
 
     async def async_turn_off(self, **kwargs):
         """Send the off command."""
-        _LOGGER.debug("Disable sentry mode: %s", self._name)
+        _LOGGER.debug("Disable sentry mode: %s", self.name)
         await self.tesla_device.disable_sentry_mode()
 
     @property
     def is_on(self):
         """Get whether the switch is in on state."""
-        return self._state
+        if self.tesla_device.is_on() is None:
+            return None
+        return self.tesla_device.is_on()
 
     async def async_update(self):
         """Update the state of the switch."""
-        _LOGGER.debug("Updating state for: %s", self._name)
+        _LOGGER.debug("Updating state for: %s", self.name)
         await super().async_update()
-        self._state = self.tesla_device.is_on()
