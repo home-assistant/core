@@ -23,6 +23,7 @@ from homeassistant.util import get_local_ip
 from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_MOTION_DETECTED,
+    CHAR_MUTE,
     CHAR_PROGRAMMABLE_SWITCH_EVENT,
     CONF_AUDIO_CODEC,
     CONF_AUDIO_MAP,
@@ -52,13 +53,13 @@ from .const import (
     DEFAULT_VIDEO_PACKET_SIZE,
     SERV_DOORBELL,
     SERV_MOTION_SENSOR,
+    SERV_SPEAKER,
 )
 from .img_util import scale_jpeg_camera_image
 from .util import pid_is_alive
 
 _LOGGER = logging.getLogger(__name__)
 
-DOORBELL_NOT_PRESSED = None
 DOORBELL_SINGLE_PRESS = 0
 DOORBELL_DOUBLE_PRESS = 1
 DOORBELL_LONG_PRESS = 2
@@ -217,8 +218,18 @@ class Camera(HomeAccessory, PyhapCamera):
                 serv_doorbell = self.add_preload_service(SERV_DOORBELL)
                 self.set_primary_service(serv_doorbell)
                 self._char_doorbell_detected = serv_doorbell.configure_char(
-                    CHAR_PROGRAMMABLE_SWITCH_EVENT, value=None
+                    CHAR_PROGRAMMABLE_SWITCH_EVENT,
+                    value=None,
+                    valid_values={
+                        "Default": None,
+                        "SinglePress": DOORBELL_SINGLE_PRESS,
+                        "DoublePress": DOORBELL_DOUBLE_PRESS,
+                        "LongPress": DOORBELL_LONG_PRESS,
+                    },
                 )
+                serv_speaker = self.add_preload_service(SERV_SPEAKER)
+                serv_speaker.configure_char(CHAR_MUTE, value=0)
+
                 self._async_update_doorbell_state(state)
 
     async def run_handler(self):
@@ -278,6 +289,7 @@ class Camera(HomeAccessory, PyhapCamera):
 
         if new_state.state == STATE_ON:
             self._char_doorbell_detected.set_value(DOORBELL_SINGLE_PRESS)
+            self._char_doorbell_detected.set_value(None, should_notify=False)
             _LOGGER.debug(
                 "%s: Set linked doorbell %s sensor to %d",
                 self.entity_id,
