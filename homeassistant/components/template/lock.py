@@ -7,6 +7,7 @@ from homeassistant.components.lock import PLATFORM_SCHEMA, LockEntity
 from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIMISTIC,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
     MATCH_ALL,
@@ -38,6 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -67,6 +69,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
                 config.get(CONF_LOCK),
                 config.get(CONF_UNLOCK),
                 config.get(CONF_OPTIMISTIC),
+                config.get(CONF_UNIQUE_ID),
             )
         ]
     )
@@ -85,6 +88,7 @@ class TemplateLock(LockEntity):
         command_lock,
         command_unlock,
         optimistic,
+        unique_id,
     ):
         """Initialize the lock."""
         self._state = None
@@ -97,6 +101,7 @@ class TemplateLock(LockEntity):
         self._command_unlock = Script(hass, command_unlock)
         self._optimistic = optimistic
         self._available = True
+        self._unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -134,6 +139,11 @@ class TemplateLock(LockEntity):
     def name(self):
         """Return the name of the lock."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id of this lock."""
+        return self._unique_id
 
     @property
     def is_locked(self):
