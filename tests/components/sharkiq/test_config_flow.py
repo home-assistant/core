@@ -1,6 +1,4 @@
 """Test the Shark IQ config flow."""
-import logging
-
 import aiohttp
 from sharkiqpy import SharkIqAuthError
 
@@ -8,16 +6,9 @@ from homeassistant import config_entries, setup
 from homeassistant.components.sharkiq.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
+from .const import TEST_PASSWORD, TEST_USERNAME
+
 from tests.async_mock import MagicMock, PropertyMock, patch
-
-VALID_CONFIG = {
-    CONF_PASSWORD: "P4s$w0rD$7r0nk",
-    CONF_USERNAME: "test_email@address.com",
-}
-TEST_USERNAME = "test-username"
-TEST_PASSWORD = "test-password"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def _create_mocked_ayla(connect=None):
