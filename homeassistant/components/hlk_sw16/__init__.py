@@ -41,7 +41,6 @@ async def async_setup_entry(hass, entry):
         hass.data[DATA_DEVICE_REGISTER] = {}
     if hass.data.get(DATA_DEVICE_LISTENER, None) is None:
         hass.data[DATA_DEVICE_LISTENER] = {}
-    address = f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
     device = entry.data[CONF_NAME]
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
@@ -50,13 +49,15 @@ async def async_setup_entry(hass, entry):
     def disconnected():
         """Schedule reconnect after connection has been lost."""
         _LOGGER.warning("HLK-SW16 %s disconnected", device)
-        async_dispatcher_send(hass, f"hlk_sw16_device_available_{address}", False)
+        async_dispatcher_send(
+            hass, f"hlk_sw16_device_available_{entry.entry_id}", False
+        )
 
     @callback
     def reconnected():
         """Schedule reconnect after connection has been lost."""
         _LOGGER.warning("HLK-SW16 %s connected", device)
-        async_dispatcher_send(hass, f"hlk_sw16_device_available_{address}", True)
+        async_dispatcher_send(hass, f"hlk_sw16_device_available_{entry.entry_id}", True)
 
     async def connect():
         """Set up connection and hook it into HA for reconnect/shutdown."""
@@ -73,7 +74,7 @@ async def async_setup_entry(hass, entry):
             keep_alive_interval=DEFAULT_KEEP_ALIVE_INTERVAL,
         )
 
-        hass.data[DATA_DEVICE_REGISTER][address] = client
+        hass.data[DATA_DEVICE_REGISTER][entry.entry_id] = client
 
         # Load entities
         hass.async_create_task(
@@ -81,7 +82,7 @@ async def async_setup_entry(hass, entry):
         )
 
         # handle shutdown of HLK-SW16 asyncio transport
-        hass.data[DATA_DEVICE_LISTENER][address] = hass.bus.async_listen_once(
+        hass.data[DATA_DEVICE_LISTENER][entry.entry_id] = hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, lambda x: client.stop()
         )
 
@@ -99,12 +100,11 @@ async def async_unload_entry(hass, entry):
 
 async def async_remove_entry(hass, entry):
     """Stop client config entry."""
-    address = f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
-    client = hass.data[DATA_DEVICE_REGISTER].pop(address)
+    client = hass.data[DATA_DEVICE_REGISTER].pop(entry.entry_id)
     client.stop()
     if not hass.data[DATA_DEVICE_REGISTER]:
         hass.data.pop(DATA_DEVICE_REGISTER)
-    remove_listener = hass.data[DATA_DEVICE_LISTENER].pop(address)
+    remove_listener = hass.data[DATA_DEVICE_LISTENER].pop(entry.entry_id)
     remove_listener()
     if not hass.data[DATA_DEVICE_LISTENER]:
         hass.data.pop(DATA_DEVICE_LISTENER)
@@ -116,10 +116,10 @@ class SW16Device(Entity):
     Contains the common logic for HLK-SW16 entities.
     """
 
-    def __init__(self, device_port, address, client):
+    def __init__(self, device_port, entry_id, client):
         """Initialize the device."""
         # HLK-SW16 specific attributes for every component type
-        self._address = address
+        self._entry_id = entry_id
         self._device_port = device_port
         self._is_on = None
         self._client = client
@@ -128,7 +128,7 @@ class SW16Device(Entity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return f"{self._address}:{self._device_port}"
+        return f"{self._entry_id}_{self._device_port}"
 
     @callback
     def handle_event_callback(self, event):
@@ -166,7 +166,7 @@ class SW16Device(Entity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"hlk_sw16_device_available_{self._address}",
+                f"hlk_sw16_device_available_{self._entry_id}",
                 self._availability_callback,
             )
         )
