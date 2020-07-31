@@ -135,7 +135,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 err_msg = str(err)
 
         else:
-            if device.cloud:
+            if device.is_locked:
                 return await self.async_step_unlock()
             return await self.async_step_finish()
 

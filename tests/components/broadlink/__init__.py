@@ -24,7 +24,7 @@ class BroadlinkDevice:
         mock_api.mac = bytes.fromhex(self.mac)
         mock_api.devtype = self.devtype
         mock_api.timeout = self.timeout
-        mock_api.cloud = False
+        mock_api.is_locked = False
         mock_api.auth.return_value = True
         return mock_api
 

@@ -293,7 +293,7 @@ async def test_flow_unlock_works(hass):
     """Test we finish a config flow with an unlock request."""
     device = pick_device(0)
     mock_api = device.get_mock_api()
-    mock_api.cloud = True
+    mock_api.is_locked = True
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -328,7 +328,7 @@ async def test_flow_unlock_device_offline(hass):
     """Test we handle a device offline during an unlock."""
     device = pick_device(0)
     mock_api = device.get_mock_api()
-    mock_api.cloud = True
+    mock_api.is_locked = True
     mock_api.set_lock.side_effect = blke.DeviceOfflineError
 
     result = await hass.config_entries.flow.async_init(
@@ -353,7 +353,7 @@ async def test_flow_unlock_firmware_error(hass):
     """Test we handle a firmware error during an unlock."""
     device = pick_device(0)
     mock_api = device.get_mock_api()
-    mock_api.cloud = True
+    mock_api.is_locked = True
     mock_api.set_lock.side_effect = blke.BroadlinkException
 
     result = await hass.config_entries.flow.async_init(
@@ -378,7 +378,7 @@ async def test_flow_unlock_network_unreachable(hass):
     """Test we handle a network unreachable during an unlock."""
     device = pick_device(0)
     mock_api = device.get_mock_api()
-    mock_api.cloud = True
+    mock_api.is_locked = True
     mock_api.set_lock.side_effect = OSError(errno.ENETUNREACH, None)
 
     result = await hass.config_entries.flow.async_init(
@@ -403,7 +403,7 @@ async def test_flow_do_not_unlock(hass):
     """Test we do not unlock the device if the user does not want to."""
     device = pick_device(0)
     mock_api = device.get_mock_api()
-    mock_api.cloud = True
+    mock_api.is_locked = True
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
