@@ -108,6 +108,18 @@ async def test_options_add_device(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "prompt_options"
 
+    # Try with invalid event code
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"debug": True, "automatic_add": True, "event_code": "1234"},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "prompt_options"
+    assert result["errors"]
+    assert result["errors"]["event_code"] == "invalid_event_code"
+
+    # Try with valid event code
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
@@ -179,12 +191,7 @@ async def test_options_add_remove_device(hass):
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={
-            "fire_event": True,
-            "signal_repetitions": 5,
-            "off_delay_enabled": True,
-            "off_delay": 4,
-        },
+        user_input={"fire_event": True, "signal_repetitions": 5, "off_delay": "4"},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -277,6 +284,25 @@ async def test_options_add_and_configure_device(hass):
             "fire_event": False,
             "signal_repetitions": 5,
             "data_bits": 4,
+            "off_delay": "abcdef",
+            "command_on": "xyz",
+            "command_off": "xyz",
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "set_device_options"
+    assert result["errors"]
+    assert result["errors"]["off_delay"] == "invalid_input_off_delay"
+    assert result["errors"]["command_on"] == "invalid_input_2262_on"
+    assert result["errors"]["command_off"] == "invalid_input_2262_off"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "fire_event": False,
+            "signal_repetitions": 5,
+            "data_bits": 4,
             "command_on": "0xE",
             "command_off": "0x7",
         },
@@ -329,8 +355,7 @@ async def test_options_add_and_configure_device(hass):
             "data_bits": 4,
             "command_on": "0xE",
             "command_off": "0x7",
-            "off_delay_enabled": True,
-            "off_delay": 9,
+            "off_delay": "9",
         },
     )
 
