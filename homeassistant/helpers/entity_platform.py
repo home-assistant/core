@@ -440,9 +440,9 @@ class EntityPlatform:
             if entity.unique_id is not None:
                 msg = f"Platform {self.platform_name} does not generate unique IDs. "
                 if requested_entity_id:
-                    msg += f"({entity.unique_id}) is already used by {entity.entity_id} - ignoring {requested_entity_id}"
+                    msg += f"ID {entity.unique_id} is already used by {entity.entity_id} - ignoring {requested_entity_id}"
                 else:
-                    msg += f"({entity.unique_id}) already exists - ignoring {entity.entity_id}"
+                    msg += f"ID {entity.unique_id} already exists - ignoring {entity.entity_id}"
             else:
                 msg = f"Entity id already exists - ignoring: {entity.entity_id}"
             self.logger.error(msg)
