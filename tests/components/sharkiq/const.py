@@ -23,6 +23,20 @@ SHARK_DEVICE_DICT = {
     "device_type": "Wifi",
 }
 
+# Dummy response for get_metadata
+SHARK_METADATA_DICT = [
+    {
+        "datum": {
+            "created_at": "2019-12-02T02:13:12Z",
+            "from_template": False,
+            "key": "sharkDeviceMobileData",
+            "updated_at": "2019-12-02T02:13:12Z",
+            "value": '{"vacModelNumber":"RV1001AE","vacSerialNumber":"S26xxxxxxxxx"}',
+            "dsn": "AC000Wxxxxxxxxx",
+        }
+    }
+]
+
 # Dummy shark.properties_full for testing.  NB: this only includes those properties in the tests
 SHARK_PROPERTIES_DICT = {
     "Battery_Capacity": {"base_type": "integer", "read_only": True, "value": 50},
@@ -47,7 +61,7 @@ SHARK_PROPERTIES_DICT = {
     "Robot_Firmware_Version": {
         "base_type": "string",
         "read_only": True,
-        "value": "AV3.4.11-20191015PMesaM1.8.32S2.1.45",
+        "value": "Dummy Firmware 1.0",
     },
 }
 
