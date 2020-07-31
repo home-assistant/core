@@ -36,9 +36,10 @@ class TestClarifaiImageProcessing:
         self.hass.stop()
 
     @patch(
-        "homeassistant.components.clarifai.api.Clarifai.list_apps", return_value=None,
+        "homeassistant.components.clarifai.api.Clarifai.verify_access",
+        return_value=None,
     )
-    def test_setup_platform(self, mock_list):
+    def test_setup_platform(self, mock_access):
         """Set up platform with one entity."""
         self.config[IP_DOMAIN] = {
             CONF_PLATFORM: CLARIFAI_DOMAIN,
@@ -54,3 +55,5 @@ class TestClarifaiImageProcessing:
         with assert_setup_component(1, IP_DOMAIN):
             setup_component(self.hass, IP_DOMAIN, self.config)
             self.hass.block_till_done()
+
+    # def test_process_image(self, mock_access):

@@ -36,7 +36,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
     # Validate connection with Clarifai API by listing user's applications
     try:
-        await hass.async_add_executor_job(clarifai.list_apps)
+        await hass.async_add_executor_job(clarifai.verify_access)
     except HomeAssistantError as err:
         _LOGGER.error("Could not connect to Clarifai API with error: %s", err)
 

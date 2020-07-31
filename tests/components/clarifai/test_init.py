@@ -31,25 +31,28 @@ class TestClarifaiSetup:
         self.hass.stop()
 
     @patch(
-        "homeassistant.components.clarifai.api.Clarifai.list_apps", return_value=None,
+        "homeassistant.components.clarifai.api.Clarifai.verify_access",
+        return_value=None,
     )
-    def test_setup_component(self, mock_list):
+    def test_setup_component(self, mock_access):
         """Set up component."""
         with assert_setup_component(1, CLARIFAI_DOMAIN):
             setup_component(self.hass, CLARIFAI_DOMAIN, self.config)
 
     @patch(
-        "homeassistant.components.clarifai.api.Clarifai.list_apps", return_value=None,
+        "homeassistant.components.clarifai.api.Clarifai.verify_access",
+        return_value=None,
     )
-    def test_setup_component_wrong_api_key(self, mock_list):
+    def test_setup_component_wrong_api_key(self, mock_access):
         """Set up component without api key."""
         with assert_setup_component(0, CLARIFAI_DOMAIN):
             setup_component(self.hass, CLARIFAI_DOMAIN, {CLARIFAI_DOMAIN: {}})
 
     @patch(
-        "homeassistant.components.clarifai.api.Clarifai.list_apps", return_value=None,
+        "homeassistant.components.clarifai.api.Clarifai.verify_access",
+        return_value=None,
     )
-    def test_setup_component_test_services(self, mock_list):
+    def test_setup_component_test_services(self, mock_access):
         """Set up component and test for services."""
         with assert_setup_component(1, CLARIFAI_DOMAIN):
             setup_component(self.hass, CLARIFAI_DOMAIN, self.config)
@@ -58,9 +61,10 @@ class TestClarifaiSetup:
         assert self.hass.services.has_service(CLARIFAI_DOMAIN, SERVICE_PREDICT)
 
     @patch(
-        "homeassistant.components.clarifai.api.Clarifai.list_apps", return_value=None,
+        "homeassistant.components.clarifai.api.Clarifai.verify_access",
+        return_value=None,
     )
-    def test_service_predict(self, mock_list):
+    def test_service_predict(self, mock_access):
         """Set up component with camera and test predict service."""
         self.config["camera"] = {"platform": "demo"}
         with assert_setup_component(1, CLARIFAI_DOMAIN):

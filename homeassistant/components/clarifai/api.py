@@ -21,21 +21,15 @@ class Clarifai:
         self._stub = service_pb2_grpc.V2Stub(ClarifaiChannel.get_json_channel())
         self._metadata = (("authorization", f"Key {access_token}"),)
 
-    def list_apps(self):
-        """List all applications available to user."""
+    def verify_access(self):
+        """Verify access to Clarifai apps using configured access token."""
         request = service_pb2.ListAppsRequest()
         response = self._stub.ListApps(request, metadata=self._metadata)
         if _validate_response(response):
-            return {app.name: app.id for app in response.apps}
-
-    def list_app_scopes(self, app_id):
-        """List allowed scopes for configured access_token and application."""
-        request = service_pb2.MyScopesRequest(
-            user_app_id=resources_pb2.UserAppIDSet(app_id=app_id)
-        )
-        response = self._stub.MyScopes(request, metadata=self._metadata)
-        if _validate_response(response):
-            return response.scopes
+            if len(response.apps) < 1:
+                raise HomeAssistantError(
+                    "No Clarifai apps found for configured access token."
+                )
 
     def post_workflow_results(self, app_id, workflow_id, result_format, image_bytes):
         """Run a workflow with a given image and return the results."""
