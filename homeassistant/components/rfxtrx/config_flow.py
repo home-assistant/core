@@ -67,18 +67,15 @@ class OptionsFlow(config_entries.OptionsFlow):
             }
             if CONF_DEVICE in user_input:
                 device_data = self._get_device_data(user_input[CONF_DEVICE])
-                if not device_data.get(CONF_EVENT_CODE):
-                    errors = {"base": "unknown_event_code"}
-                else:
-                    event_code = device_data[CONF_EVENT_CODE]
-                    self._selected_device_event_code = event_code
-                    self._selected_device = self._config_entry.data[CONF_DEVICES][
-                        event_code
-                    ]
-                    self._selected_device_object = get_rfx_object(
-                        self._selected_device_event_code
-                    )
-                    return await self.async_step_set_device_options()
+                event_code = device_data[CONF_EVENT_CODE]
+                self._selected_device_event_code = event_code
+                self._selected_device = self._config_entry.data[CONF_DEVICES][
+                    event_code
+                ]
+                self._selected_device_object = get_rfx_object(
+                    self._selected_device_event_code
+                )
+                return await self.async_step_set_device_options()
             if CONF_REMOVE_DEVICE in user_input:
                 device_data = self._get_device_data(user_input[CONF_REMOVE_DEVICE])
 
