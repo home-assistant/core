@@ -305,6 +305,7 @@ async def test_options_add_and_configure_device(hass):
             "data_bits": 4,
             "command_on": "0xE",
             "command_off": "0x7",
+            "off_delay": "9",
         },
     )
 
@@ -318,7 +319,7 @@ async def test_options_add_and_configure_device(hass):
     assert entry.data["devices"]["0913000022670e013970"]
     assert not entry.data["devices"]["0913000022670e013970"]["fire_event"]
     assert entry.data["devices"]["0913000022670e013970"]["signal_repetitions"] == 5
-    assert "delay_off" not in entry.data["devices"]["0913000022670e013970"]
+    assert entry.data["devices"]["0913000022670e013970"]["off_delay"] == 9
 
     state = hass.states.get("binary_sensor.pt2262_22670e")
     assert state
@@ -355,7 +356,6 @@ async def test_options_add_and_configure_device(hass):
             "data_bits": 4,
             "command_on": "0xE",
             "command_off": "0x7",
-            "off_delay": "9",
         },
     )
 
@@ -366,4 +366,4 @@ async def test_options_add_and_configure_device(hass):
     assert entry.data["devices"]["0913000022670e013970"]
     assert entry.data["devices"]["0913000022670e013970"]["fire_event"]
     assert entry.data["devices"]["0913000022670e013970"]["signal_repetitions"] == 5
-    assert entry.data["devices"]["0913000022670e013970"]["off_delay"] == 9
+    assert "delay_off" not in entry.data["devices"]["0913000022670e013970"]
