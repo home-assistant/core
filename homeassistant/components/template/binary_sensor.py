@@ -136,6 +136,12 @@ class BinarySensorTemplate(BinarySensorEntity):
         """Initialize the Template binary sensor."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device, hass=hass)
+        _LOGGER.warning(
+            "BinarySensorTemplate: device=%s, entity_id=%s, unique_id=%s",
+            device,
+            self.entity_id,
+            unique_id,
+        )
         self._name = friendly_name
         self._device_class = device_class
         self._template = value_template
