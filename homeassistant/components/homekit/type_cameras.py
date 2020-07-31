@@ -23,9 +23,12 @@ from homeassistant.util import get_local_ip
 from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_MOTION_DETECTED,
+    CHAR_MUTE,
+    CHAR_PROGRAMMABLE_SWITCH_EVENT,
     CONF_AUDIO_CODEC,
     CONF_AUDIO_MAP,
     CONF_AUDIO_PACKET_SIZE,
+    CONF_LINKED_DOORBELL_SENSOR,
     CONF_LINKED_MOTION_SENSOR,
     CONF_MAX_FPS,
     CONF_MAX_HEIGHT,
@@ -48,13 +51,18 @@ from .const import (
     DEFAULT_VIDEO_CODEC,
     DEFAULT_VIDEO_MAP,
     DEFAULT_VIDEO_PACKET_SIZE,
+    SERV_DOORBELL,
     SERV_MOTION_SENSOR,
+    SERV_SPEAKER,
 )
 from .img_util import scale_jpeg_camera_image
 from .util import pid_is_alive
 
 _LOGGER = logging.getLogger(__name__)
 
+DOORBELL_SINGLE_PRESS = 0
+DOORBELL_DOUBLE_PRESS = 1
+DOORBELL_LONG_PRESS = 2
 
 VIDEO_OUTPUT = (
     "-map {v_map} -an "
@@ -190,18 +198,32 @@ class Camera(HomeAccessory, PyhapCamera):
             category=CATEGORY_CAMERA,
             options=options,
         )
+
         self._char_motion_detected = None
         self.linked_motion_sensor = self.config.get(CONF_LINKED_MOTION_SENSOR)
-        if not self.linked_motion_sensor:
-            return
-        state = self.hass.states.get(self.linked_motion_sensor)
-        if not state:
-            return
-        serv_motion = self.add_preload_service(SERV_MOTION_SENSOR)
-        self._char_motion_detected = serv_motion.configure_char(
-            CHAR_MOTION_DETECTED, value=False
-        )
-        self._async_update_motion_state(state)
+        if self.linked_motion_sensor:
+            state = self.hass.states.get(self.linked_motion_sensor)
+            if state:
+                serv_motion = self.add_preload_service(SERV_MOTION_SENSOR)
+                self._char_motion_detected = serv_motion.configure_char(
+                    CHAR_MOTION_DETECTED, value=False
+                )
+                self._async_update_motion_state(state)
+
+        self._char_doorbell_detected = None
+        self.linked_doorbell_sensor = self.config.get(CONF_LINKED_DOORBELL_SENSOR)
+        if self.linked_doorbell_sensor:
+            state = self.hass.states.get(self.linked_doorbell_sensor)
+            if state:
+                serv_doorbell = self.add_preload_service(SERV_DOORBELL)
+                self.set_primary_service(serv_doorbell)
+                self._char_doorbell_detected = serv_doorbell.configure_char(
+                    CHAR_PROGRAMMABLE_SWITCH_EVENT, value=0,
+                )
+                serv_speaker = self.add_preload_service(SERV_SPEAKER)
+                serv_speaker.configure_char(CHAR_MUTE, value=0)
+
+                self._async_update_doorbell_state(state)
 
     async def run_handler(self):
         """Handle accessory driver started event.
@@ -213,6 +235,13 @@ class Camera(HomeAccessory, PyhapCamera):
                 self.hass,
                 [self.linked_motion_sensor],
                 self._async_update_motion_state_event,
+            )
+
+        if self._char_doorbell_detected:
+            async_track_state_change_event(
+                self.hass,
+                [self.linked_doorbell_sensor],
+                self._async_update_doorbell_state_event,
             )
 
         await super().run_handler()
@@ -239,6 +268,26 @@ class Camera(HomeAccessory, PyhapCamera):
             self.linked_motion_sensor,
             detected,
         )
+
+    @callback
+    def _async_update_doorbell_state_event(self, event):
+        """Handle state change event listener callback."""
+        self._async_update_doorbell_state(event.data.get("new_state"))
+
+    @callback
+    def _async_update_doorbell_state(self, new_state):
+        """Handle link doorbell sensor state change to update HomeKit value."""
+        if not new_state:
+            return
+
+        if new_state.state == STATE_ON:
+            self._char_doorbell_detected.set_value(DOORBELL_SINGLE_PRESS)
+            _LOGGER.debug(
+                "%s: Set linked doorbell %s sensor to %d",
+                self.entity_id,
+                self.linked_doorbell_sensor,
+                DOORBELL_SINGLE_PRESS,
+            )
 
     @callback
     def async_update_state(self, new_state):
