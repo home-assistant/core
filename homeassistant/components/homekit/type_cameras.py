@@ -23,6 +23,7 @@ from homeassistant.util import get_local_ip
 from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_MOTION_DETECTED,
+    CHAR_MUTE,
     CHAR_PROGRAMMABLE_SWITCH_EVENT,
     CONF_AUDIO_CODEC,
     CONF_AUDIO_MAP,
@@ -52,6 +53,7 @@ from .const import (
     DEFAULT_VIDEO_PACKET_SIZE,
     SERV_DOORBELL,
     SERV_MOTION_SENSOR,
+    SERV_SPEAKER,
 )
 from .img_util import scale_jpeg_camera_image
 from .util import pid_is_alive
@@ -218,6 +220,9 @@ class Camera(HomeAccessory, PyhapCamera):
                 self._char_doorbell_detected = serv_doorbell.configure_char(
                     CHAR_PROGRAMMABLE_SWITCH_EVENT, value=0
                 )
+                serv_speaker = self.add_preload_service(SERV_SPEAKER)
+                serv_speaker.configure_char(CHAR_MUTE, value=0)
+
                 self._async_update_doorbell_state(state)
 
     async def run_handler(self):
