@@ -1374,6 +1374,47 @@ async def test_script_mode_queued(hass):
         assert events[3].data["value"] == 2
 
 
+async def test_script_mode_queued_cancel(hass):
+    """Test canceling with a queued run."""
+    script_obj = script.Script(
+        hass,
+        cv.SCRIPT_SCHEMA({"wait_template": "{{ false }}"}),
+        "test",
+        script_mode="queued",
+        max_runs=2,
+    )
+    wait_started_flag = async_watch_for_action(script_obj, "wait")
+
+    try:
+        assert not script_obj.is_running
+        assert script_obj.runs == 0
+
+        task1 = hass.async_create_task(script_obj.async_run())
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
+        task2 = hass.async_create_task(script_obj.async_run())
+        await asyncio.sleep(0)
+
+        assert script_obj.is_running
+        assert script_obj.runs == 2
+
+        with pytest.raises(asyncio.CancelledError):
+            task2.cancel()
+            await task2
+
+        assert script_obj.is_running
+        assert script_obj.runs == 1
+
+        with pytest.raises(asyncio.CancelledError):
+            task1.cancel()
+            await task1
+
+        assert not script_obj.is_running
+        assert script_obj.runs == 0
+    except (AssertionError, asyncio.TimeoutError):
+        await script_obj.async_stop()
+        raise
+
+
 async def test_script_logging(hass, caplog):
     """Test script logging."""
     script_obj = script.Script(hass, [], "Script with % Name")
