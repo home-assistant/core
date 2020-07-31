@@ -9,6 +9,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from .common import patch_bond_device_ids, patch_bond_version
 
 from tests.async_mock import Mock, patch
+from tests.common import MockConfigEntry
 
 
 async def test_form(hass: core.HomeAssistant):
@@ -69,7 +70,9 @@ async def test_form_cannot_connect(hass: core.HomeAssistant):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch_bond_device_ids(side_effect=ClientConnectionError()):
+    with patch_bond_version(
+        side_effect=ClientConnectionError()
+    ), patch_bond_device_ids():
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
@@ -97,3 +100,37 @@ async def test_form_unexpected_error(hass: core.HomeAssistant):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_form_one_entry_per_device_allowed(hass: core.HomeAssistant):
+    """Test that only one entry allowed per unique ID reported by Bond hub device."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="already-registered-bond-id",
+        data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
+    ).add_to_hass(hass)
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch_bond_version(
+        return_value={"bondid": "already-registered-bond-id"}
+    ), patch_bond_device_ids(), patch(
+        "homeassistant.components.bond.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.bond.async_setup_entry", return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
+        )
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_configured"
+
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 0
+    assert len(mock_setup_entry.mock_calls) == 0
