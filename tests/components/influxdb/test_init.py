@@ -62,9 +62,11 @@ def mock_client_fixture(request):
 def get_mock_call_fixture(request):
     """Get version specific lambda to make write API call mock."""
     if request.param == influxdb.API_VERSION_2:
-        return lambda body: call(bucket=DEFAULT_BUCKET, record=body)
+        return lambda body, precision=None: call(
+            bucket=DEFAULT_BUCKET, record=body, write_precision=precision
+        )
     # pylint: disable=unnecessary-lambda
-    return lambda body: call(body)
+    return lambda body, precision=None: call(body, time_precision=precision)
 
 
 def _get_write_api_mock_v1(mock_influx_client):
@@ -1474,3 +1476,104 @@ async def test_invalid_inputs_error(
             == 1
         )
         sleep.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "mock_client, config_ext, get_write_api, get_mock_call, precision",
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+            "ns",
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+            "ns",
+        ),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+            "us",
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+            "us",
+        ),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+            "ms",
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+            "ms",
+        ),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+            "s",
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+            "s",
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
+async def test_precision(
+    hass, mock_client, config_ext, get_write_api, get_mock_call, precision
+):
+    """Test the precision setup."""
+    config = {
+        "precision": precision,
+    }
+    config.update(config_ext)
+    handler_method = await _setup(hass, mock_client, config, get_write_api)
+
+    value = "1.9"
+    attrs = {
+        "unit_of_measurement": "foobars",
+    }
+    state = MagicMock(
+        state=value,
+        domain="fake",
+        entity_id="fake.entity-id",
+        object_id="entity",
+        attributes=attrs,
+    )
+    event = MagicMock(data={"new_state": state}, time_fired=12345)
+    body = [
+        {
+            "measurement": "foobars",
+            "tags": {"domain": "fake", "entity_id": "entity"},
+            "time": 12345,
+            "fields": {"value": float(value)},
+        }
+    ]
+    handler_method(event)
+    hass.data[influxdb.DOMAIN].block_till_done()
+
+    write_api = get_write_api(mock_client)
+    assert write_api.call_count == 1
+    assert write_api.call_args == get_mock_call(body, precision)
+    write_api.reset_mock()
