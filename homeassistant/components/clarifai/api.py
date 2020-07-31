@@ -17,14 +17,13 @@ class Clarifai:
 
     def __init__(self, access_token):
         """Initialize Clarifai API."""
-        self._access_token = access_token
-        self._stub = service_pb2_grpc.V2Stub(ClarifaiChannel.get_json_channel())
+        self.stub = service_pb2_grpc.V2Stub(ClarifaiChannel.get_json_channel())
         self._metadata = (("authorization", f"Key {access_token}"),)
 
     def verify_access(self):
         """Verify access to Clarifai apps using configured access token."""
         request = service_pb2.ListAppsRequest()
-        response = self._stub.ListApps(request, metadata=self._metadata)
+        response = self.stub.ListApps(request, metadata=self._metadata)
         if _validate_response(response):
             if len(response.apps) < 1:
                 raise HomeAssistantError(
@@ -44,7 +43,7 @@ class Clarifai:
                 )
             ],
         )
-        response = self._stub.PostWorkflowResults(request, metadata=self._metadata)
+        response = self.stub.PostWorkflowResults(request, metadata=self._metadata)
         if _validate_response(response):
             return _parse_workflow_response(response, result_format)
 

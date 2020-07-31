@@ -56,4 +56,8 @@ class TestClarifaiImageProcessing:
             setup_component(self.hass, IP_DOMAIN, self.config)
             self.hass.block_till_done()
 
+    # def test_setup_platform_no_camera(self, mock_access):
+
+    # def test_setup_platform_multiple_cameras(self, mock_access):
+
     # def test_process_image(self, mock_access):
