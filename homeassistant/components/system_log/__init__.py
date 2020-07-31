@@ -1,6 +1,7 @@
 """Support for system log."""
 from collections import OrderedDict, deque
 import logging
+import queue
 import re
 import traceback
 
@@ -8,7 +9,8 @@ import voluptuous as vol
 
 from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 CONF_MAX_ENTRIES = "max_entries"
@@ -155,12 +157,12 @@ class DedupStore(OrderedDict):
         return [value.to_dict() for value in reversed(self.values())]
 
 
-class LogErrorHandler(logging.Handler):
+class LogErrorHandler(logging.handlers.QueueHandler):
     """Log handler for error messages."""
 
-    def __init__(self, hass, maxlen, fire_event):
+    def __init__(self, queue, hass, maxlen, fire_event):
         """Initialize a new LogErrorHandler."""
-        super().__init__()
+        super().__init__(queue)
         self.hass = hass
         self.records = DedupStore(maxlen=maxlen)
         self.fire_event = fire_event
@@ -191,8 +193,25 @@ async def async_setup(hass, config):
     if conf is None:
         conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
 
-    handler = LogErrorHandler(hass, conf[CONF_MAX_ENTRIES], conf[CONF_FIRE_EVENT])
-    logging.getLogger().addHandler(handler)
+    simple_queue = queue.SimpleQueue()
+    handler = LogErrorHandler(
+        simple_queue, hass, conf[CONF_MAX_ENTRIES], conf[CONF_FIRE_EVENT]
+    )
+    logging.root.addHandler(handler)
+
+    listener = logging.handlers.QueueListener(
+        simple_queue, handler, respect_handler_level=False
+    )
+
+    listener.start()
+
+    @callback
+    def _async_stop_queue_handler(_) -> None:
+        """Cleanup handler."""
+        logging.root.removeHandler(handler)
+        listener.stop()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_queue_handler)
 
     hass.http.register_view(AllErrorsView(handler))
 
