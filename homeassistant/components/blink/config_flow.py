@@ -49,7 +49,6 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the blink flow."""
         self.auth = None
-        self.data = {CONF_USERNAME: "", CONF_PASSWORD: "", "device_id": DEVICE_ID}
 
     @staticmethod
     @callback
@@ -60,13 +59,14 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         errors = {}
+        data = {CONF_USERNAME: "", CONF_PASSWORD: "", "device_id": DEVICE_ID}
         if user_input is not None:
-            self.data[CONF_USERNAME] = user_input["username"]
-            self.data[CONF_PASSWORD] = user_input["password"]
+            data[CONF_USERNAME] = user_input["username"]
+            data[CONF_PASSWORD] = user_input["password"]
 
-            await self.async_set_unique_id(self.data[CONF_USERNAME])
+            await self.async_set_unique_id(data[CONF_USERNAME])
 
-            self.auth = Auth(self.data, no_prompt=True)
+            self.auth = Auth(data, no_prompt=True)
 
             try:
                 await self.hass.async_add_executor_job(
