@@ -28,10 +28,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class ChargerSwitch(TeslaDevice, SwitchEntity):
     """Representation of a Tesla charger switch."""
 
-    def __init__(self, tesla_device, coordinator):
-        """Initialise of the switch."""
-        super().__init__(tesla_device, coordinator)
-
     async def async_turn_on(self, **kwargs):
         """Send the on command."""
         _LOGGER.debug("Enable charging: %s", self.name)
@@ -57,10 +53,6 @@ class ChargerSwitch(TeslaDevice, SwitchEntity):
 
 class RangeSwitch(TeslaDevice, SwitchEntity):
     """Representation of a Tesla max range charging switch."""
-
-    def __init__(self, tesla_device, coordinator):
-        """Initialise the switch."""
-        super().__init__(tesla_device, coordinator)
 
     async def async_turn_on(self, **kwargs):
         """Send the on command."""
@@ -129,10 +121,6 @@ class UpdateSwitch(TeslaDevice, SwitchEntity):
 
 class SentryModeSwitch(TeslaDevice, SwitchEntity):
     """Representation of a Tesla sentry mode switch."""
-
-    def __init__(self, tesla_device, coordinator):
-        """Initialise the switch."""
-        super().__init__(tesla_device, coordinator)
 
     async def async_turn_on(self, **kwargs):
         """Send the on command."""

@@ -60,20 +60,16 @@ class TeslaSensor(TeslaDevice, Entity):
         if self.tesla_device.type == "temperature sensor":
             if self.type == "outside":
                 return self.tesla_device.get_outside_temp()
-            else:
-                return self.tesla_device.get_inside_temp()
-        elif self.tesla_device.type in ["range sensor", "mileage sensor"]:
+            return self.tesla_device.get_inside_temp()
+        if self.tesla_device.type in ["range sensor", "mileage sensor"]:
             units = self.tesla_device.measurement
             if units == "LENGTH_MILES":
                 return self.tesla_device.get_value()
-            else:
-                return round(
-                    convert(
-                        self.tesla_device.get_value(), LENGTH_MILES, LENGTH_KILOMETERS
-                    ),
-                    2,
-                )
-        elif self.tesla_device.type == "charging rate sensor":
+            return round(
+                convert(self.tesla_device.get_value(), LENGTH_MILES, LENGTH_KILOMETERS),
+                2,
+            )
+        if self.tesla_device.type == "charging rate sensor":
             return self.tesla_device.charging_rate
         return self.tesla_device.get_value()
 
@@ -83,11 +79,11 @@ class TeslaSensor(TeslaDevice, Entity):
         units = self.tesla_device.measurement
         if units == "F":
             return TEMP_FAHRENHEIT
-        elif units == "C":
+        if units == "C":
             return TEMP_CELSIUS
-        elif units == "LENGTH_MILES":
+        if units == "LENGTH_MILES":
             return LENGTH_MILES
-        elif units == "LENGTH_KILOMETERS":
+        if units == "LENGTH_KILOMETERS":
             return LENGTH_KILOMETERS
         return units
 

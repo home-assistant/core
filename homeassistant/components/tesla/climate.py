@@ -38,10 +38,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class TeslaThermostat(TeslaDevice, ClimateEntity):
     """Representation of a Tesla climate."""
 
-    def __init__(self, tesla_device, coordinator):
-        """Initialize the Tesla device."""
-        super().__init__(tesla_device, coordinator)
-
     @property
     def supported_features(self):
         """Return the list of supported features."""

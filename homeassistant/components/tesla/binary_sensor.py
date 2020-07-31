@@ -26,10 +26,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class TeslaBinarySensor(TeslaDevice, BinarySensorEntity):
     """Implement an Tesla binary sensor for parking and charger."""
 
-    def __init__(self, tesla_device, coordinator):
-        """Initialise of a Tesla binary sensor."""
-        super().__init__(tesla_device, coordinator)
-
     @property
     def device_class(self):
         """Return the class of this binary sensor."""

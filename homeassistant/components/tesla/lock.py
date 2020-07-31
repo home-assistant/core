@@ -22,10 +22,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class TeslaLock(TeslaDevice, LockEntity):
     """Representation of a Tesla door lock."""
 
-    def __init__(self, tesla_device, coordinator):
-        """Initialise of the lock."""
-        super().__init__(tesla_device, coordinator)
-
     async def async_lock(self, **kwargs):
         """Send the lock command."""
         _LOGGER.debug("Locking doors for: %s", self.name)
@@ -41,7 +37,7 @@ class TeslaLock(TeslaDevice, LockEntity):
         """Get whether the lock is in locked state."""
         if self.tesla_device.is_locked() is None:
             return None
-        return True if self.tesla_device.is_locked() else False
+        return self.tesla_device.is_locked()
 
     async def async_update(self):
         """Update state of the lock."""
