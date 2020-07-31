@@ -1,0 +1,11 @@
+# Onkyo component services.yaml entry
+
+onkyo_select_hdmi_output:
+  description: Selects the HDMI output of an Onkyo AVR
+  fields:
+    entity_id:
+      description: Name of the Onkyo entity to set
+      example: "media_player.onkyo_avr"
+    hdmi_output:
+      description: The HDMI output to select (no/analog/yes/out/out-sub/sub/hdbaset/both/up)
+      example: 'yes'

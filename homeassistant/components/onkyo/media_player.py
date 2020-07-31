@@ -17,7 +17,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
@@ -28,7 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -187,13 +186,6 @@ ACCEPTED_VALUES = [
     "up",
 ]
 
-ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_HDMI_OUTPUT): vol.In(ACCEPTED_VALUES),
-    }
-)
-
 SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 AUDIO_VIDEO_INFORMATION_UPDATE_INTERVAL = 10
 
@@ -233,20 +225,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     zones = config[CONF_ZONES]
     sources = config[CONF_SOURCES]
 
-    def service_handle(service):
-        """Handle for services."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-        devices = [d for d in active_zones.values() if d.entity_id in entity_ids]
-
-        for device in devices:
-            if service.service == SERVICE_SELECT_HDMI_OUTPUT:
-                device.select_output(service.data.get(ATTR_HDMI_OUTPUT))
-
-    hass.services.async_register(
-        DOMAIN,
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(
         SERVICE_SELECT_HDMI_OUTPUT,
-        service_handle,
-        schema=ONKYO_SELECT_OUTPUT_SCHEMA,
+        {vol.Required(ATTR_HDMI_OUTPUT): vol.In(ACCEPTED_VALUES)},
+        "async_select_output",
     )
 
     _LOGGER.debug("Provisioning Onkyo AVR device at %s:%d", host, port)
@@ -255,18 +238,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     def async_onkyo_update_callback(message):
         """Receive notification from transport that new data exists."""
         _LOGGER.debug("Received update callback from AVR: %s", message)
-        zone, _, _ = message
-        if zone in active_zones.keys():
-            active_zones[zone].process_update(message)
-            active_zones[zone].async_write_ha_state()
+        for zone in active_zones:
+            zone.process_update(message)
 
-    active_zones = {}
+    active_zones = []
 
     @callback
     def async_onkyo_connect_callback():
         """Receiver (re)connected."""
         _LOGGER.debug("AVR (re)connected:")
-        for zone in active_zones.values():
+        for zone in active_zones:
             zone.backfill_state()
 
     try:
@@ -280,21 +261,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         raise PlatformNotReady
 
     for zone in ["main"] + zones:
-        active_zones[zone] = OnkyoAVR(avr, name, sources, zone, max_volume)
+        active_zones.append(OnkyoAVR(avr, name, sources, zone, max_volume))
 
     @callback
     def close_avr(_event):
-        for zone in active_zones.values():
-            zone.avr.close()
+        avr.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_avr)
 
-    # We can't rely on the initial connect_callback here
-    # because it may execute _before_ our zones are set up...
-    for zone in active_zones.values():
-        zone.backfill_state()
-
-    async_add_entities(active_zones.values())
+    async_add_entities(active_zones)
 
 
 class OnkyoAVR(MediaPlayerEntity):
@@ -303,7 +278,7 @@ class OnkyoAVR(MediaPlayerEntity):
     def __init__(self, avr, name, sources, zone, max_volume):
         """Initialize entity with transport."""
         super().__init__()
-        self.avr = avr
+        self._avr = avr
         self._name = f"{name} {zone if zone != 'main' else ''}"
         self._zone = zone
         self._volume = 0
@@ -320,10 +295,17 @@ class OnkyoAVR(MediaPlayerEntity):
         self._supports_sound_mode = False
         self._query_timer = None
 
+    async def async_added_to_hass(self):
+        """Entity has been added to hass."""
+        self.backfill_state()
+
     @callback
     def process_update(self, update):
         """Store relevant updates so they can be queried later."""
-        _, command, value = update
+        zone, command, value = update
+        if zone != self._zone:
+            return
+
         if command in ["system-power", "power"]:
             if value == "on":
                 self._powerstate = STATE_ON
@@ -359,6 +341,9 @@ class OnkyoAVR(MediaPlayerEntity):
         elif command == "fl-display-information":
             self._query_delayed_av_info()
 
+        self.async_write_ha_state()
+
+    @callback
     def backfill_state(self):
         """Get the receiver to send all the info we care about.
 
@@ -478,9 +463,9 @@ class OnkyoAVR(MediaPlayerEntity):
         if media_type.lower() == "radio" and source in DEFAULT_PLAYABLE_SOURCES:
             self._update_avr("preset", media_id)
 
-    async def async_select_output(self, output):
+    async def async_select_output(self, hdmi_output):
         """Set hdmi-out."""
-        self._update_avr("hdmi-output-selector", output)
+        self._update_avr("hdmi-output-selector", hdmi_output)
 
     @callback
     def _parse_source(self, source):
@@ -549,10 +534,12 @@ class OnkyoAVR(MediaPlayerEntity):
         self._query_avr("video-information")
         self._query_timer = None
 
+    @callback
     def _update_avr(self, propname, value):
         """Update a property in the AVR."""
-        self.avr.update_property(self._zone, propname, value)
+        self._avr.update_property(self._zone, propname, value)
 
+    @callback
     def _query_avr(self, propname):
         """Cause the AVR to send an update about propname."""
-        self.avr.query_property(self._zone, propname)
+        self._avr.query_property(self._zone, propname)
