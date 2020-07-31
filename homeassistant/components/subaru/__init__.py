@@ -244,6 +244,7 @@ def get_vehicle_info(controller, vin):
     info["api_gen"] = controller.get_api_gen(vin)
     info["has_res"] = controller.get_res_status(vin)
     info["has_remote"] = controller.get_remote_status(vin)
+    info["has_safety"] = controller.get_safety_status(vin)
     info["last_update"] = 0
     info["last_fetch"] = 0
     return info

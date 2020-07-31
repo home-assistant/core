@@ -22,4 +22,8 @@ ICONS = {
     "External Temp": "mdi:thermometer",
     "Odometer": "mdi:counter",
     "Range": "mdi:gas-station",
+    "Tire Pressure FL": "mdi:gauge",
+    "Tire Pressure FR": "mdi:gauge",
+    "Tire Pressure RL": "mdi:gauge",
+    "Tire Pressure RR": "mdi:gauge",
 }
