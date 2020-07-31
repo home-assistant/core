@@ -41,8 +41,6 @@ REQUIRES = [
     "ciso8601==2.1.3",
     "importlib-metadata==1.6.0;python_version<'3.8'",
     "jinja2>=2.11.1",
-    # ecdsa without gmpy2 slows down startup.
-    "gmpy2==2.0.8",
     "PyJWT==1.7.1",
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==2.9.2",
