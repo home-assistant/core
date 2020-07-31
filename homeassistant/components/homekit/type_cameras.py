@@ -257,7 +257,6 @@ class Camera(HomeAccessory, PyhapCamera):
             return
 
         self._char_motion_detected.set_value(detected)
-        self._char_motion_detected.set_value(None, should_notify=False)
         _LOGGER.debug(
             "%s: Set linked motion %s sensor to %d",
             self.entity_id,
@@ -278,6 +277,7 @@ class Camera(HomeAccessory, PyhapCamera):
 
         if new_state.state == STATE_ON:
             self._char_doorbell_detected.set_value(DOORBELL_SINGLE_PRESS)
+            self._char_doorbell_detected.set_value(None, should_notify=False)
             _LOGGER.debug(
                 "%s: Set linked doorbell %s sensor to %d",
                 self.entity_id,
