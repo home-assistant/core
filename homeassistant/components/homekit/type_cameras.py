@@ -218,7 +218,7 @@ class Camera(HomeAccessory, PyhapCamera):
                 serv_doorbell = self.add_preload_service(SERV_DOORBELL)
                 self.set_primary_service(serv_doorbell)
                 self._char_doorbell_detected = serv_doorbell.configure_char(
-                    CHAR_PROGRAMMABLE_SWITCH_EVENT, value=0
+                    CHAR_PROGRAMMABLE_SWITCH_EVENT, value=0,
                 )
                 serv_speaker = self.add_preload_service(SERV_SPEAKER)
                 serv_speaker.configure_char(CHAR_MUTE, value=0)
