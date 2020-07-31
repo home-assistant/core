@@ -18,11 +18,9 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.blink.config_flow.Auth.startup", Mock()
-    ), patch(
+    with patch("homeassistant.components.blink.config_flow.Auth.startup"), patch(
         "homeassistant.components.blink.config_flow.Auth.check_key_required",
-        Mock(return_value=False),
+        return_value=False,
     ), patch(
         "homeassistant.components.blink.async_setup", return_value=True
     ) as mock_setup, patch(
