@@ -1,5 +1,6 @@
 """The met component."""
 import metno
+
 from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LATITUDE,
@@ -11,6 +12,7 @@ from homeassistant.core import Config, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.distance import convert as convert_distance
 import homeassistant.util.dt as dt_util
+
 from .const import CONF_TRACK_HOME, DOMAIN
 
 URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/1.9/"

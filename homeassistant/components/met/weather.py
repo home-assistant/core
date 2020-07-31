@@ -1,6 +1,6 @@
 """Support for Met.no weather service."""
-import logging
 from datetime import timedelta
+import logging
 from random import randrange
 
 import voluptuous as vol
