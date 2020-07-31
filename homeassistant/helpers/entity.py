@@ -30,7 +30,6 @@ from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.event import Event, async_track_entity_registry_updated_event
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
-from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -43,21 +42,7 @@ def generate_entity_id(
     hass: Optional[HomeAssistant] = None,
 ) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
-    if current_ids is None:
-        if hass is None:
-            raise ValueError("Missing required parameter currentids or hass")
-        return run_callback_threadsafe(
-            hass.loop,
-            async_generate_entity_id,
-            entity_id_format,
-            name,
-            current_ids,
-            hass,
-        ).result()
-
-    name = (slugify(name or "") or slugify(DEVICE_DEFAULT_NAME)).lower()
-
-    return ensure_unique_string(entity_id_format.format(name), current_ids)
+    return async_generate_entity_id(entity_id_format, name, current_ids, hass)
 
 
 @callback
@@ -68,14 +53,23 @@ def async_generate_entity_id(
     hass: Optional[HomeAssistant] = None,
 ) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
-    if current_ids is None:
-        if hass is None:
-            raise ValueError("Missing required parameter currentids or hass")
 
-        current_ids = hass.states.async_entity_ids()
     name = (name or DEVICE_DEFAULT_NAME).lower()
+    preferred_string = entity_id_format.format(slugify(name))
 
-    return ensure_unique_string(entity_id_format.format(slugify(name)), current_ids)
+    if current_ids is not None:
+        return ensure_unique_string(preferred_string, current_ids)
+
+    if hass is None:
+        raise ValueError("Missing required parameter current_ids or hass")
+
+    test_string = preferred_string
+    tries = 1
+    while hass.states.get(test_string):
+        tries += 1
+        test_string = f"{preferred_string}_{tries}"
+
+    return test_string
 
 
 class Entity(ABC):
