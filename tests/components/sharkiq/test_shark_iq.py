@@ -1,7 +1,7 @@
 """Test the Shark IQ vacuum entity."""
 from copy import deepcopy
-from typing import List, Dict
 import enum
+from typing import Dict, List
 
 from sharkiqpy import AylaApi, Properties, SharkIqAuthError, SharkIqVacuum, get_ayla_api
 
