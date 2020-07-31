@@ -36,7 +36,6 @@ from .switch import supported as switch_supported
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_OFF_DELAY_ENABLED = CONF_OFF_DELAY + "_enabled"
 CONF_EVENT_CODE = "event_code"
 
 
@@ -104,7 +103,7 @@ class OptionsFlow(config_entries.OptionsFlow):
                     self._selected_device_event_code
                 )
                 if selected_device_object is None:
-                    errors = {"base": "invalid_event_code"}
+                    errors[CONF_EVENT_CODE] = "invalid_event_code"
                 else:
                     self._selected_device_object = selected_device_object
                     return await self.async_step_set_device_options()
@@ -150,13 +149,25 @@ class OptionsFlow(config_entries.OptionsFlow):
                 data_bits=user_input.get(CONF_DATA_BITS),
             )
 
-            def none_or_int16(value):
+            def none_or_int(value, base):
                 if value is None:
                     return None
-                return int(value, 16)
+                return int(value, base)
 
-            command_on = none_or_int16(user_input.get(CONF_COMMAND_ON))
-            command_off = none_or_int16(user_input.get(CONF_COMMAND_OFF))
+            try:
+                command_on = none_or_int(user_input.get(CONF_COMMAND_ON), 16)
+            except ValueError:
+                errors[CONF_COMMAND_ON] = "invalid_input_2262_on"
+
+            try:
+                command_off = none_or_int(user_input.get(CONF_COMMAND_OFF), 16)
+            except ValueError:
+                errors[CONF_COMMAND_OFF] = "invalid_input_2262_off"
+
+            try:
+                off_delay = none_or_int(user_input.get(CONF_OFF_DELAY), 10)
+            except ValueError:
+                errors[CONF_OFF_DELAY] = "invalid_input_off_delay"
 
             if not errors:
                 devices = {}
@@ -168,11 +179,8 @@ class OptionsFlow(config_entries.OptionsFlow):
 
                 devices[self._selected_device_event_code] = device
 
-                if (
-                    user_input.get(CONF_OFF_DELAY_ENABLED)
-                    and user_input.get(CONF_OFF_DELAY) is not None
-                ):
-                    device[CONF_OFF_DELAY] = user_input[CONF_OFF_DELAY]
+                if off_delay:
+                    device[CONF_OFF_DELAY] = off_delay
                 if user_input.get(CONF_DATA_BITS):
                     device[CONF_DATA_BITS] = user_input[CONF_DATA_BITS]
                 if command_on:
@@ -195,17 +203,18 @@ class OptionsFlow(config_entries.OptionsFlow):
         }
 
         if binary_supported(self._selected_device_object):
-            data_schema.update(
-                {
+            if device_data.get(CONF_OFF_DELAY):
+                off_delay_schema = {
                     vol.Optional(
-                        CONF_OFF_DELAY_ENABLED,
-                        default=device_data.get(CONF_OFF_DELAY) is not None,
-                    ): bool,
-                    vol.Optional(
-                        CONF_OFF_DELAY, default=device_data.get(CONF_OFF_DELAY, 0)
-                    ): int,
+                        CONF_OFF_DELAY,
+                        description={"suggested_value": device_data[CONF_OFF_DELAY]},
+                    ): str,
                 }
-            )
+            else:
+                off_delay_schema = {
+                    vol.Optional(CONF_OFF_DELAY): str,
+                }
+            data_schema.update(off_delay_schema)
 
         if (
             binary_supported(self._selected_device_object)
