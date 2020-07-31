@@ -26,7 +26,6 @@
         },
         "error": {
             "invalid_event_code": "Invalid event code",
-            "unknown_event_code": "Unable to find event code",
             "invalid_input_2262": "Invalid input for command on/off",
             "unknown": "Unexpected error"
         }

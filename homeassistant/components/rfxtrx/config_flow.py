@@ -51,6 +51,7 @@ class OptionsFlow(config_entries.OptionsFlow):
         self._selected_device_event_code = None
         self._selected_device_object = None
         self._device_entries = None
+        self._device_registry = None
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
@@ -81,22 +82,21 @@ class OptionsFlow(config_entries.OptionsFlow):
                     return await self.async_step_set_device_options()
             if CONF_REMOVE_DEVICE in user_input:
                 device_data = self._get_device_data(user_input[CONF_REMOVE_DEVICE])
-                if not device_data.get(CONF_EVENT_CODE):
-                    errors = {"base": "unknown_event_code"}
-                else:
-                    event_code = device_data[CONF_EVENT_CODE]
-                    device_id = device_data[CONF_DEVICE_ID]
-                    self.hass.helpers.dispatcher.async_dispatcher_send(
-                        f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{device_id}"
-                    )
-                    device_registry = await async_get_registry(self.hass)
-                    device_registry.async_remove_device(user_input[CONF_REMOVE_DEVICE])
-                    devices = {event_code: None}
-                    self.update_config_data(
-                        global_options=self._global_options, devices=devices
-                    )
 
-                    return self.async_create_entry(title="", data={})
+                event_code = device_data[CONF_EVENT_CODE]
+                device_id = device_data[CONF_DEVICE_ID]
+                self.hass.helpers.dispatcher.async_dispatcher_send(
+                    f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{device_id}"
+                )
+                self._device_registry.async_remove_device(
+                    user_input[CONF_REMOVE_DEVICE]
+                )
+                devices = {event_code: None}
+                self.update_config_data(
+                    global_options=self._global_options, devices=devices
+                )
+
+                return self.async_create_entry(title="", data={})
             if CONF_EVENT_CODE in user_input:
                 self._selected_device_event_code = user_input[CONF_EVENT_CODE]
                 self._selected_device = {}
@@ -118,6 +118,7 @@ class OptionsFlow(config_entries.OptionsFlow):
         device_entries = async_entries_for_config_entry(
             device_registry, self._config_entry.entry_id
         )
+        self._device_registry = device_registry
         self._device_entries = device_entries
 
         devices = {
@@ -148,19 +149,14 @@ class OptionsFlow(config_entries.OptionsFlow):
                 self._selected_device_object.device,
                 data_bits=user_input.get(CONF_DATA_BITS),
             )
-            try:
-                command_on = (
-                    int(user_input.get(CONF_COMMAND_ON), 16)
-                    if user_input.get(CONF_COMMAND_ON)
-                    else None
-                )
-                command_off = (
-                    int(user_input.get(CONF_COMMAND_OFF), 16)
-                    if user_input.get(CONF_COMMAND_OFF)
-                    else None
-                )
-            except (NameError, ValueError):
-                errors = {"base": "invalid_input_2262"}
+
+            def none_or_int16(value):
+                if value is None:
+                    return None
+                return int(value, 16)
+
+            command_on = none_or_int16(user_input.get(CONF_COMMAND_ON))
+            command_off = none_or_int16(user_input.get(CONF_COMMAND_OFF))
 
             if not errors:
                 devices = {}
@@ -178,7 +174,7 @@ class OptionsFlow(config_entries.OptionsFlow):
                 ):
                     device[CONF_OFF_DELAY] = user_input[CONF_OFF_DELAY]
                 if user_input.get(CONF_DATA_BITS):
-                    device[CONF_DATA_BITS] = user_input.get(CONF_DATA_BITS)
+                    device[CONF_DATA_BITS] = user_input[CONF_DATA_BITS]
                 if command_on:
                     device[CONF_COMMAND_ON] = command_on
                 if command_off:
@@ -192,14 +188,14 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         device_data = self._selected_device
 
-        data_scheme = {
+        data_schema = {
             vol.Optional(
                 CONF_FIRE_EVENT, default=device_data.get(CONF_FIRE_EVENT, False)
             ): bool,
         }
 
         if binary_supported(self._selected_device_object):
-            data_scheme.update(
+            data_schema.update(
                 {
                     vol.Optional(
                         CONF_OFF_DELAY_ENABLED,
@@ -217,7 +213,7 @@ class OptionsFlow(config_entries.OptionsFlow):
             or light_supported(self._selected_device_object)
             or switch_supported(self._selected_device_object)
         ):
-            data_scheme.update(
+            data_schema.update(
                 {
                     vol.Optional(
                         CONF_SIGNAL_REPETITIONS,
@@ -230,7 +226,7 @@ class OptionsFlow(config_entries.OptionsFlow):
             self._selected_device_object.device.packettype
             == DEVICE_PACKET_TYPE_LIGHTING4
         ):
-            data_scheme.update(
+            data_schema.update(
                 {
                     vol.Optional(
                         CONF_DATA_BITS, default=device_data.get(CONF_DATA_BITS, 0)
@@ -248,7 +244,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="set_device_options",
-            data_schema=vol.Schema(data_scheme),
+            data_schema=vol.Schema(data_schema),
             errors=errors,
         )
 
