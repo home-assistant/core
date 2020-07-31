@@ -9,7 +9,8 @@
         "step": {
             "user": {
                 "data": {
-                    "name": "Navn"
+                    "name": "Navn",
+                    "url": "URL-adresse for webgrensesnitt"
                 }
             }
         }

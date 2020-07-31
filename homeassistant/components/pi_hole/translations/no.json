@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API-n\u00f8kkel (valgfritt)",
+                    "api_key": "API-n\u00f8kkel",
                     "host": "Vert",
                     "location": "Beliggenhet",
                     "name": "Navn",

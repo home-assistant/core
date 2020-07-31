@@ -1,6 +1,6 @@
 """Support for UPnP/IGD Sensors."""
 from datetime import timedelta
-from typing import Mapping
+from typing import Any, Mapping
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND
@@ -94,7 +94,7 @@ async def async_setup_entry(
     update_interval = timedelta(seconds=update_interval_sec)
     _LOGGER.debug("update_interval: %s", update_interval)
     _LOGGER.debug("Adding sensors")
-    coordinator = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator[Mapping[str, Any]](
         hass,
         _LOGGER,
         name=device.name,
@@ -122,7 +122,7 @@ class UpnpSensor(Entity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[Mapping[str, Any]],
         device: Device,
         sensor_type: Mapping[str, str],
         update_multiplier: int = 2,
@@ -169,7 +169,7 @@ class UpnpSensor(Entity):
         return self._sensor_type["unit"]
 
     @property
-    def device_info(self) -> Mapping[str, any]:
+    def device_info(self) -> Mapping[str, Any]:
         """Get device info."""
         return {
             "connections": {(dr.CONNECTION_UPNP, self._device.udn)},

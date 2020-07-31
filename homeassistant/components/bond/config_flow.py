@@ -17,11 +17,13 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(data):
+async def validate_input(data) -> str:
     """Validate the user input allows us to connect."""
 
     try:
         bond = Bond(data[CONF_HOST], data[CONF_ACCESS_TOKEN])
+        version = await bond.version()
+        # call to non-version API is needed to validate authentication
         await bond.devices()
     except ClientConnectionError:
         raise CannotConnect
@@ -30,8 +32,8 @@ async def validate_input(data):
             raise InvalidAuth
         raise
 
-    # Return info to be stored in the config entry.
-    return {"title": data[CONF_HOST]}
+    # Return unique ID from the hub to be stored in the config entry.
+    return version["bondid"]
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -45,7 +47,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                info = await validate_input(user_input)
+                bond_id = await validate_input(user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -54,7 +56,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                await self.async_set_unique_id(bond_id)
+                return self.async_create_entry(title=bond_id, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
