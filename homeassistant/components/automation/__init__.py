@@ -455,6 +455,8 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             self._async_detach_triggers()
             self._async_detach_triggers = None
 
+        await self.action_script.async_stop()
+
         self.async_write_ha_state()
 
     async def _async_attach_triggers(

@@ -53,6 +53,7 @@ class MockResource:
             self.provides = ["player"]
             self.device = MockPlexClient(f"http://192.168.0.1{index}:32500", index + 10)
             self.presence = index == 0
+            self.publicAddressMatches = True
 
     def connect(self, timeout):
         """Mock the resource connect method."""
