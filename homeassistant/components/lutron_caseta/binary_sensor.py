@@ -58,12 +58,12 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
 
     @property
     def device_info(self):
-        """Return the device info."""
-        """Sensor entities are aggregated from one or more physical
+        """Return the device info.
+
+        Sensor entities are aggregated from one or more physical
         sensors by each room. Therefore, there shouldn't be devices
         related to any sensor entities.
         """
-        return None
 
     @property
     def device_state_attributes(self):
