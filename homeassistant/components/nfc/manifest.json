@@ -1,0 +1,14 @@
+{
+  "domain": "nfc",
+  "name": "NFC",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/nfc",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@dmulcahey"
+  ]
+}

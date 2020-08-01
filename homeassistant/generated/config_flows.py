@@ -116,6 +116,7 @@ FLOWS = [
     "netatmo",
     "nexia",
     "nightscout",
+    "nfc",
     "notion",
     "nuheat",
     "nut",

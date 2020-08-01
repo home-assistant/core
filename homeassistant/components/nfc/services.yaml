@@ -1,0 +1,14 @@
+# Describes the format for available nfc services
+
+register_nfc_tag:
+  description: Register an NFC tag as a HA device.
+  fields:
+    nfc_tag_id:
+      description: The id of the NFC tag to register.
+      example: "123456789"
+nfc_tag_scanned:
+  description: Fire an event when an NFC tag is scanned.
+  fields:
+    nfc_tag_id:
+      description: The id of the NFC tag that was scanned.
+      example: "123456789"

@@ -274,6 +274,7 @@ homeassistant/components/nexia/* @ryannazaretian @bdraco
 homeassistant/components/nextbus/* @vividboarder
 homeassistant/components/nextcloud/* @meichthys
 homeassistant/components/nightscout/* @marciogranzotto
+homeassistant/components/nfc/* @dmulcahey
 homeassistant/components/nilu/* @hfurubotten
 homeassistant/components/nissan_leaf/* @filcole
 homeassistant/components/nmbs/* @thibmaek
