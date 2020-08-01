@@ -1181,7 +1181,7 @@ class FanSpeedTrait(_Trait):
                 self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
                 & fan.SUPPORT_DIRECTION
             )
-        if domain == climate.DOMAIN:
+        elif domain == climate.DOMAIN:
             modes = self.state.attributes.get(climate.ATTR_FAN_MODES, [])
             for mode in modes:
                 speed = {
