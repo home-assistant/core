@@ -43,14 +43,11 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
 
 from tests.async_mock import patch
-from tests.common import (
-    async_fire_time_changed,
-    async_mock_service,
-    get_test_instance_port,
-)
+from tests.common import async_fire_time_changed, get_test_instance_port
 
 HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()
@@ -258,9 +255,18 @@ async def test_light_without_brightness_supported(hass_hue, hue_client):
 async def test_light_without_brightness_can_be_turned_off(hass_hue, hue_client):
     """Test that light without brightness can be turned off."""
     hass_hue.states.async_set("light.no_brightness", "on", {})
+    turn_off_calls = []
 
     # Check if light can be turned off
-    turn_off_calls = async_mock_service(hass_hue, light.DOMAIN, SERVICE_TURN_OFF)
+    @callback
+    def mock_service_call(call):
+        """Mock service call."""
+        turn_off_calls.append(call)
+        hass_hue.states.async_set("light.no_brightness", "off", {})
+
+    hass_hue.services.async_register(
+        light.DOMAIN, SERVICE_TURN_OFF, mock_service_call, schema=None
+    )
 
     no_brightness_result = await perform_put_light_state(
         hass_hue, hue_client, "light.no_brightness", False
@@ -286,7 +292,17 @@ async def test_light_without_brightness_can_be_turned_on(hass_hue, hue_client):
     hass_hue.states.async_set("light.no_brightness", "off", {})
 
     # Check if light can be turned on
-    turn_on_calls = async_mock_service(hass_hue, light.DOMAIN, SERVICE_TURN_ON)
+    turn_on_calls = []
+
+    @callback
+    def mock_service_call(call):
+        """Mock service call."""
+        turn_on_calls.append(call)
+        hass_hue.states.async_set("light.no_brightness", "on", {})
+
+    hass_hue.services.async_register(
+        light.DOMAIN, SERVICE_TURN_ON, mock_service_call, schema=None
+    )
 
     no_brightness_result = await perform_put_light_state(
         hass_hue,
