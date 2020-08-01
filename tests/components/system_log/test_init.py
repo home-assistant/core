@@ -1,5 +1,7 @@
 """Test system log component."""
+import asyncio
 import logging
+import time
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import system_log
@@ -13,11 +15,16 @@ BASIC_CONFIG = {"system_log": {"max_entries": 2}}
 
 async def get_error_log(hass, hass_client, expected_count):
     """Fetch all entries from system_log via the API."""
+    await asyncio.sleep(0.1)
+
     client = await hass_client()
     resp = await client.get("/api/error/all")
     assert resp.status == 200
 
     data = await resp.json()
+    import pprint
+
+    pprint.pprint(["data", data])
     assert len(data) == expected_count
     return data
 
@@ -114,6 +121,7 @@ async def test_error_posted_as_event(hass):
 
     _LOGGER.error("error message")
     await hass.async_block_till_done()
+    await asyncio.sleep(0.1)
 
     assert len(events) == 1
     assert_log(events[0].data, "", "error message", "ERROR")
@@ -183,11 +191,13 @@ async def test_clear_logs(hass, hass_client):
     """Test that the log can be cleared via a service call."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     _LOGGER.error("error message")
+    await asyncio.sleep(0.1)
 
     hass.async_add_job(
         hass.services.async_call(system_log.DOMAIN, system_log.SERVICE_CLEAR, {})
     )
     await hass.async_block_till_done()
+    await asyncio.sleep(0.1)
 
     # Assert done by get_error_log
     await get_error_log(hass, hass_client, 0)
@@ -266,6 +276,7 @@ def log_error_from_test_path(path):
             ),
         ):
             _LOGGER.error("error message")
+            time.sleep(0.1)
 
 
 async def test_homeassistant_path(hass, hass_client):

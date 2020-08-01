@@ -1,4 +1,5 @@
 """Support for system log."""
+import asyncio
 from collections import OrderedDict, deque
 import logging
 import queue
@@ -157,12 +158,28 @@ class DedupStore(OrderedDict):
         return [value.to_dict() for value in reversed(self.values())]
 
 
-class LogErrorHandler(logging.handlers.QueueHandler):
+class LogErrorQueueHandler(logging.handlers.QueueHandler):
+    """Process the log in another thread."""
+
+    def emit(self, record):
+        """Emit a log record."""
+        if record.levelno < logging.WARN:
+            return
+
+        try:
+            self.enqueue(record)
+        except asyncio.CancelledError:  # pylint: disable=try-except-raise
+            raise
+        except Exception:  # pylint: disable=broad-except
+            self.handleError(record)
+
+
+class LogErrorHandler(logging.Handler):
     """Log handler for error messages."""
 
-    def __init__(self, queue, hass, maxlen, fire_event):
+    def __init__(self, hass, maxlen, fire_event):
         """Initialize a new LogErrorHandler."""
-        super().__init__(queue)
+        super().__init__()
         self.hass = hass
         self.records = DedupStore(maxlen=maxlen)
         self.fire_event = fire_event
@@ -174,17 +191,14 @@ class LogErrorHandler(logging.handlers.QueueHandler):
         default upper limit is set to 50 (older entries are discarded) but can
         be changed if needed.
         """
-        if record.levelno >= logging.DEBUG:
-            stack = []
-            if not record.exc_info:
-                stack = [(f[0], f[1]) for f in traceback.extract_stack()]
+        stack = []
+        if not record.exc_info:
+            stack = [(f[0], f[1]) for f in traceback.extract_stack()]
 
-            entry = LogEntry(
-                record, stack, _figure_out_source(record, stack, self.hass)
-            )
-            self.records.add_entry(entry)
-            if self.fire_event:
-                self.hass.bus.fire(EVENT_SYSTEM_LOG, entry.to_dict())
+        entry = LogEntry(record, stack, _figure_out_source(record, stack, self.hass))
+        self.records.add_entry(entry)
+        if self.fire_event:
+            self.hass.bus.fire(EVENT_SYSTEM_LOG, entry.to_dict())
 
 
 async def async_setup(hass, config):
@@ -194,10 +208,10 @@ async def async_setup(hass, config):
         conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
 
     simple_queue = queue.SimpleQueue()
-    handler = LogErrorHandler(
-        simple_queue, hass, conf[CONF_MAX_ENTRIES], conf[CONF_FIRE_EVENT]
-    )
-    logging.root.addHandler(handler)
+    queue_handler = LogErrorQueueHandler(simple_queue)
+    logging.root.addHandler(queue_handler)
+
+    handler = LogErrorHandler(hass, conf[CONF_MAX_ENTRIES], conf[CONF_FIRE_EVENT])
 
     listener = logging.handlers.QueueListener(
         simple_queue, handler, respect_handler_level=False
@@ -208,7 +222,7 @@ async def async_setup(hass, config):
     @callback
     def _async_stop_queue_handler(_) -> None:
         """Cleanup handler."""
-        logging.root.removeHandler(handler)
+        logging.root.removeHandler(queue_handler)
         listener.stop()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_queue_handler)
