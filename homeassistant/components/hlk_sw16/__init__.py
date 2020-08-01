@@ -37,8 +37,6 @@ async def async_setup_entry(hass, entry):
     port = entry.data[CONF_PORT]
     address = f"{host}:{port}"
 
-    hass.config_entries.async_update_entry(entry, options=entry.data)
-
     hass.data[DOMAIN][entry.entry_id] = {}
 
     @callback
