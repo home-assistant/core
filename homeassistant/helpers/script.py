@@ -539,32 +539,23 @@ class _QueuedScriptRun(_ScriptRun):
 
     async def async_run(self) -> None:
         """Run script."""
-        queue_lock = self._script._queue_lck  # pylint: disable=protected-access
-        # Is there a previous run still active?
-        if queue_lock.locked():
-            # Yes: Wait for all previous runs to finish by attempting to acquire the
-            # script's shared lock. At the same time monitor if we've been told to stop.
-            # But first indicate state has changed since the number of active runs just
-            # increased.
-            self._changed()
-            lock_task = self._hass.async_create_task(queue_lock.acquire())
-            stop_task = self._hass.async_create_task(self._stop.wait())
-            try:
-                await asyncio.wait(
-                    {lock_task, stop_task}, return_when=asyncio.FIRST_COMPLETED
-                )
-            except asyncio.CancelledError:
-                lock_task.cancel()
-                self._finish()
-                raise
-            finally:
-                stop_task.cancel()
-            self.lock_acquired = lock_task.done() and not lock_task.cancelled()
-        else:
-            # No: We can just go ahead and grab the lock which will be immediately
-            # successful.
-            await queue_lock.acquire()
-            self.lock_acquired = True
+        # Wait for previous run, if any, to finish by attempting to acquire the script's
+        # shared lock. At the same time monitor if we've been told to stop.
+        lock_task = self._hass.async_create_task(
+            self._script._queue_lck.acquire()  # pylint: disable=protected-access
+        )
+        stop_task = self._hass.async_create_task(self._stop.wait())
+        try:
+            await asyncio.wait(
+                {lock_task, stop_task}, return_when=asyncio.FIRST_COMPLETED
+            )
+        except asyncio.CancelledError:
+            lock_task.cancel()
+            self._finish()
+            raise
+        finally:
+            stop_task.cancel()
+        self.lock_acquired = lock_task.done() and not lock_task.cancelled()
 
         # If we've been told to stop, then just finish up. Otherwise, we've acquired the
         # lock so we can go ahead and start the run.
@@ -806,6 +797,7 @@ class Script:
             self._hass, self, cast(dict, variables), context, self._log_exceptions
         )
         self._runs.append(run)
+        self._changed()
 
         try:
             await asyncio.shield(run.async_run())
