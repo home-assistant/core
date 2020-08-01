@@ -216,6 +216,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         existing_host_port_aliases = {
             _format_host_port_alias(entry.data)
             for entry in self._async_current_entries()
+            if CONF_HOST in entry.data
         }
         return _format_host_port_alias(user_input) in existing_host_port_aliases
 
