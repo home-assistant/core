@@ -494,7 +494,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
             domain=result["handler"],
             title=result["title"],
             data=result["data"],
-            options={},
+            options=result["options"] or {},
             system_options={},
             source=flow.context["source"],
             connection_class=flow.CONNECTION_CLASS,
