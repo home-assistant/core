@@ -758,3 +758,48 @@ async def _register_components(hass, speed_list=None):
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
+
+
+async def test_unique_id(hass):
+    """Test unique_id option only creates one fan per id."""
+    await setup.async_setup_component(
+        hass,
+        "fan",
+        {
+            "fan": {
+                "platform": "template",
+                "fans": {
+                    "test_template_fan_01": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ true }}",
+                        "turn_on": {
+                            "service": "fan.turn_on",
+                            "entity_id": "fan.test_state",
+                        },
+                        "turn_off": {
+                            "service": "fan.turn_off",
+                            "entity_id": "fan.test_state",
+                        },
+                    },
+                    "test_template_fan_02": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ false }}",
+                        "turn_on": {
+                            "service": "fan.turn_on",
+                            "entity_id": "fan.test_state",
+                        },
+                        "turn_off": {
+                            "service": "fan.turn_off",
+                            "entity_id": "fan.test_state",
+                        },
+                    },
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
