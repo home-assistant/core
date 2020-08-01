@@ -513,8 +513,7 @@ async def test_wc_light(hass, light_wc_data, light_msg, light_rgb_msg, sent_mess
     state = hass.states.get("light.led_bulb_6_multi_colour_level")
     assert state is not None
     assert state.state == "on"
-<<<<<<< HEAD
-    assert state.attributes["color_temp"] == 191
+    assert state.attributes["color_temp"] == 190
 
 
 async def test_new_ozw_light(hass, light_new_ozw_data, light_msg, sent_messages):
