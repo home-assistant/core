@@ -325,11 +325,13 @@ class EntityPlatform:
                 entity.platform = None
                 return
 
+        requested_entity_id = None
         suggested_object_id = None
 
         # Get entity_id from unique ID registration
         if entity.unique_id is not None:
             if entity.entity_id is not None:
+                requested_entity_id = entity.entity_id
                 suggested_object_id = split_entity_id(entity.entity_id)[1]
             else:
                 suggested_object_id = entity.name
@@ -435,9 +437,14 @@ class EntityPlatform:
                 already_exists = True
 
         if already_exists:
-            msg = f"Entity id already exists - ignoring: {entity.entity_id}"
             if entity.unique_id is not None:
-                msg += f". Platform {self.platform_name} does not generate unique IDs"
+                msg = f"Platform {self.platform_name} does not generate unique IDs. "
+                if requested_entity_id:
+                    msg += f"ID {entity.unique_id} is already used by {entity.entity_id} - ignoring {requested_entity_id}"
+                else:
+                    msg += f"ID {entity.unique_id} already exists - ignoring {entity.entity_id}"
+            else:
+                msg = f"Entity id already exists - ignoring: {entity.entity_id}"
             self.logger.error(msg)
             entity.hass = None
             entity.platform = None
