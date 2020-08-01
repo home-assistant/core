@@ -105,6 +105,8 @@ port = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
 # typing typevar
 T = TypeVar("T")
 
+_LOGGER = logging.getLogger(__name__)
+
 
 # Adapted from:
 # https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
@@ -503,6 +505,8 @@ def template(value: Optional[Any]) -> template_helper.Template:
         raise vol.Invalid("template value is None")
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
+
+    _LOGGER.warning("template: %s", value)
 
     template_value = template_helper.Template(str(value))  # type: ignore
 
