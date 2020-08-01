@@ -5,13 +5,12 @@ from hlk_sw16 import create_hlk_sw16_connection
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 
 from .const import (
     CONNECTION_TIMEOUT,
     DEFAULT_KEEP_ALIVE_INTERVAL,
-    DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_RECONNECT_INTERVAL,
     DOMAIN,
@@ -20,7 +19,6 @@ from .errors import AlreadyConfigured, CannotConnect, NameExists
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_HOST): str,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
     }
@@ -35,8 +33,6 @@ async def validate_input(hass: HomeAssistant, user_input):
             and entry.data[CONF_PORT] == user_input[CONF_PORT]
         ):
             raise AlreadyConfigured
-        if entry.data[CONF_NAME] == user_input[CONF_NAME]:
-            raise NameExists
 
     client_aw = create_hlk_sw16_connection(
         host=user_input[CONF_HOST],
@@ -86,9 +82,8 @@ class SW16FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await validate_input(self.hass, user_input)
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
-                )
+                address = f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
+                return self.async_create_entry(title=address, data=user_input)
             except AlreadyConfigured:
                 errors["base"] = "already_configured"
             except NameExists:
@@ -114,9 +109,6 @@ class SW16OptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         options = {
-            vol.Required(
-                CONF_NAME, default=self.config_entry.options.get(CONF_NAME),
-            ): str,
             vol.Required(
                 CONF_HOST, default=self.config_entry.options.get(CONF_HOST),
             ): str,

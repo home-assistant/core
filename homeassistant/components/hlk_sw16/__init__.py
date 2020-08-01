@@ -3,7 +3,7 @@ import logging
 
 from hlk_sw16 import create_hlk_sw16_connection
 
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -38,16 +38,16 @@ async def async_setup_entry(hass, entry):
         hass.data[DATA_DEVICE_REGISTER] = {}
     if hass.data.get(DATA_DEVICE_LISTENER, None) is None:
         hass.data[DATA_DEVICE_LISTENER] = {}
-    device = entry.data[CONF_NAME]
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
+    address = f"{host}:{port}"
 
     hass.data[DOMAIN][entry.entry_id] = {}
 
     @callback
     def disconnected():
         """Schedule reconnect after connection has been lost."""
-        _LOGGER.warning("HLK-SW16 %s disconnected", device)
+        _LOGGER.warning("HLK-SW16 %s disconnected", address)
         async_dispatcher_send(
             hass, f"hlk_sw16_device_available_{entry.entry_id}", False
         )
@@ -55,12 +55,12 @@ async def async_setup_entry(hass, entry):
     @callback
     def reconnected():
         """Schedule reconnect after connection has been lost."""
-        _LOGGER.warning("HLK-SW16 %s connected", device)
+        _LOGGER.warning("HLK-SW16 %s connected", address)
         async_dispatcher_send(hass, f"hlk_sw16_device_available_{entry.entry_id}", True)
 
     async def connect():
         """Set up connection and hook it into HA for reconnect/shutdown."""
-        _LOGGER.info("Initiating HLK-SW16 connection to %s", device)
+        _LOGGER.info("Initiating HLK-SW16 connection to %s", address)
 
         client = await create_hlk_sw16_connection(
             host=host,
@@ -80,7 +80,7 @@ async def async_setup_entry(hass, entry):
             hass.config_entries.async_forward_entry_setup(entry, "switch")
         )
 
-        _LOGGER.info("Connected to HLK-SW16 device: %s", device)
+        _LOGGER.info("Connected to HLK-SW16 device: %s", address)
 
     hass.loop.create_task(connect())
 
