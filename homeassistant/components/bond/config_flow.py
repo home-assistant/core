@@ -77,7 +77,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data = user_input.copy()
             data[CONF_HOST] = self._discovered[CONF_HOST]
             try:
-                return await self._try_crete_entry(data)
+                return await self._try_create_entry(data)
             except InputValidationError as error:
                 errors["base"] = error.base
 
@@ -95,7 +95,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                return await self._try_crete_entry(user_input)
+                return await self._try_create_entry(user_input)
             except InputValidationError as error:
                 errors["base"] = error.base
 
@@ -103,7 +103,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA_USER, errors=errors
         )
 
-    async def _try_crete_entry(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _try_create_entry(self, data: Dict[str, Any]) -> Dict[str, Any]:
         bond_id = await _validate_input(data)
         await self.async_set_unique_id(bond_id)
         self._abort_if_unique_id_configured()
