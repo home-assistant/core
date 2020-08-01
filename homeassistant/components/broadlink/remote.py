@@ -22,10 +22,11 @@ from homeassistant.components.remote import (
     ATTR_DEVICE,
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
+    PLATFORM_SCHEMA,
     SUPPORT_LEARN_COMMAND,
     RemoteEntity,
 )
-from homeassistant.const import STATE_ON
+from homeassistant.const import CONF_HOST, STATE_ON
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -34,7 +35,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
-from .helpers import data_packet
+from .helpers import data_packet, import_device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,6 +67,19 @@ SERVICE_LEARN_SCHEMA = COMMAND_SCHEMA.extend(
         vol.Optional(ATTR_ALTERNATIVE, default=False): cv.boolean,
     }
 )
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_HOST): cv.string}, extra=vol.ALLOW_EXTRA
+)
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Import the device.
+
+    This is for backwards compatibility.
+    Do not use this method.
+    """
+    import_device(hass, config[CONF_HOST])
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

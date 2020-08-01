@@ -32,7 +32,10 @@
     },
     "abort": {
       "already_configured": "Device is already configured",
-      "already_in_progress": "There is already a configuration flow in progress for this device"
+      "already_in_progress": "There is already a configuration flow in progress for this device",
+      "cannot_connect": "Failed to connect",
+      "invalid_host": "Invalid hostname or IP address",
+      "unknown": "Unexpected error"
     },
     "error": {
       "cannot_connect": "Failed to connect",

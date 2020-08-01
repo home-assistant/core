@@ -1,9 +1,14 @@
 """Support for Broadlink sensors."""
-from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_HOST, TEMP_CELSIUS, UNIT_PERCENTAGE
 from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
+from .helpers import import_device
 
 SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_CELSIUS],
@@ -12,6 +17,19 @@ SENSOR_TYPES = {
     "light": ["Light", " "],
     "noise": ["Noise", " "],
 }
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_HOST): cv.string}, extra=vol.ALLOW_EXTRA
+)
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Import the device.
+
+    This is for backwards compatibility.
+    Do not use this method.
+    """
+    import_device(hass, config[CONF_HOST])
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

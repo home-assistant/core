@@ -9,6 +9,7 @@ from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
+    CONF_HOST,
     CONF_MAC,
     CONF_NAME,
     CONF_SWITCHES,
@@ -19,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN, SWITCH_DOMAIN
-from .helpers import data_packet, mac_address
+from .helpers import data_packet, import_device, mac_address
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,18 +34,32 @@ SWITCH_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_MAC): mac_address,
-        vol.Required(CONF_SWITCHES, default=[]): vol.All(
+        vol.Optional(CONF_HOST): cv.string,
+        vol.Optional(CONF_MAC): mac_address,
+        vol.Optional(CONF_SWITCHES, default=[]): vol.All(
             [SWITCH_SCHEMA], cv.ensure_list
         ),
-    }
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Broadlink switches."""
-    platform_data = hass.data[DOMAIN].platforms.setdefault(SWITCH_DOMAIN, {})
-    platform_data.setdefault(config[CONF_MAC], []).extend(config[CONF_SWITCHES])
+    """Set up custom switches and import the device.
+
+    This is for backwards compatibility.
+    Do not use this method.
+    """
+    host = config.get(CONF_HOST)
+    mac_addr = config.get(CONF_MAC)
+    switches = config.get(CONF_SWITCHES)
+
+    if mac_addr and switches:
+        platform_data = hass.data[DOMAIN].platforms.setdefault(SWITCH_DOMAIN, {})
+        platform_data.setdefault(mac_addr, []).extend(switches)
+
+    if host:
+        import_device(hass, host)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

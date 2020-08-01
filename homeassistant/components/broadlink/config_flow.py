@@ -53,7 +53,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             host = user_input[CONF_HOST]
-            timeout = user_input[CONF_TIMEOUT]
+            timeout = user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
 
             try:
                 hello = partial(blk.discover, discover_ip_address=host, timeout=timeout)
@@ -97,6 +97,9 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
             LOGGER.error("Failed to discover the device at %s: %s", host, err_msg)
+
+            if self.source == config_entries.SOURCE_IMPORT:
+                return self.async_abort(reason=errors["base"])
 
         data_schema = {
             vol.Required(CONF_HOST): str,
@@ -210,6 +213,9 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         device = self.device
         errors = {}
 
+        # Abort import already in progress.
+        await self.async_set_unique_id(device.mac.hex())
+
         # Abort reauthentication flow.
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: device.host[0], CONF_TIMEOUT: device.timeout}
@@ -230,6 +236,15 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="finish", data_schema=vol.Schema(data_schema), errors=errors
         )
+
+    async def async_step_import(self, import_info):
+        """Import a device."""
+        if any(
+            import_info[CONF_HOST] == entry.data[CONF_HOST]
+            for entry in self._async_current_entries()
+        ):
+            return self.async_abort(reason="already_configured")
+        return await self.async_step_user(import_info)
 
     async def async_step_reauth(self, data):
         """Reauthenticate to the device."""
