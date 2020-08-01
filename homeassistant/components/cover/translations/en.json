@@ -28,9 +28,9 @@
     },
     "state": {
         "_": {
-            "closed": "[%key:common::state::closed%]",
+            "closed": "Closed",
             "closing": "Closing",
-            "open": "[%key:common::state::open%]",
+            "open": "Open",
             "opening": "Opening",
             "stopped": "Stopped"
         }
