@@ -247,7 +247,25 @@ async def test_form_import_dupe(hass):
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "import"}, data=VALID_CONFIG
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=VALID_CONFIG
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+
+async def test_form_import_with_ignored_entry(hass):
+    """Test we get abort on duplicate import when there is an ignored one."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG)
+    entry.add_to_hass(hass)
+    ignored_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, source=config_entries.SOURCE_IGNORE
+    )
+    ignored_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=VALID_CONFIG
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
