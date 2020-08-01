@@ -4,6 +4,17 @@
             "user": {
                 "data": {
                     "server": ""
+                },
+                "description": "Angi Dexcom Share-legitimasjon",
+                "title": "Setup Dexcom integrasjon"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "unit_of_measurement": "M\u00e5leenhet"
                 }
             }
         }

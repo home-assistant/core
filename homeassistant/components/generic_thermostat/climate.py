@@ -37,7 +37,7 @@ from homeassistant.core import DOMAIN as HA_DOMAIN, callback
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
-    async_track_state_change,
+    async_track_state_change_event,
     async_track_time_interval,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -182,11 +182,11 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         await super().async_added_to_hass()
 
         # Add listener
-        async_track_state_change(
-            self.hass, self.sensor_entity_id, self._async_sensor_changed
+        async_track_state_change_event(
+            self.hass, [self.sensor_entity_id], self._async_sensor_changed
         )
-        async_track_state_change(
-            self.hass, self.heater_entity_id, self._async_switch_changed
+        async_track_state_change_event(
+            self.hass, [self.heater_entity_id], self._async_switch_changed
         )
 
         if self._keep_alive:
@@ -354,8 +354,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         # Get default temp from super class
         return super().max_temp
 
-    async def _async_sensor_changed(self, entity_id, old_state, new_state):
+    async def _async_sensor_changed(self, event):
         """Handle temperature changes."""
+        new_state = event.data.get("new_state")
         if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return
 
@@ -364,8 +365,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @callback
-    def _async_switch_changed(self, entity_id, old_state, new_state):
+    def _async_switch_changed(self, event):
         """Handle heater switch state changes."""
+        new_state = event.data.get("new_state")
         if new_state is None:
             return
         self.async_write_ha_state()

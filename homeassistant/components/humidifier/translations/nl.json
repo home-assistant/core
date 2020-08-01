@@ -1,0 +1,9 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "target_humidity_changed": "{entity_name} doel luchtvochtigheid gewijzigd",
+            "turned_off": "{entity_name} is uitgeschakeld",
+            "turned_on": "{entity_name} is ingeschakeld"
+        }
+    }
+}

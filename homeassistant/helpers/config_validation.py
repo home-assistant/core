@@ -38,9 +38,12 @@ from homeassistant.const import (
     CONF_ABOVE,
     CONF_ALIAS,
     CONF_BELOW,
+    CONF_CHOOSE,
     CONF_CONDITION,
+    CONF_CONDITIONS,
     CONF_CONTINUE_ON_TIMEOUT,
     CONF_COUNT,
+    CONF_DEFAULT,
     CONF_DELAY,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -83,7 +86,7 @@ import homeassistant.util.dt as dt_util
 
 # pylint: disable=invalid-name
 
-TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM' or 'HH:MM:SS'"
+TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
 
 # Home Assistant types
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
@@ -296,11 +299,11 @@ time_period_dict = vol.All(
     dict,
     vol.Schema(
         {
-            "days": vol.Coerce(int),
-            "hours": vol.Coerce(int),
-            "minutes": vol.Coerce(int),
-            "seconds": vol.Coerce(int),
-            "milliseconds": vol.Coerce(int),
+            "days": vol.Coerce(float),
+            "hours": vol.Coerce(float),
+            "minutes": vol.Coerce(float),
+            "seconds": vol.Coerce(float),
+            "milliseconds": vol.Coerce(float),
         }
     ),
     has_at_least_one_key("days", "hours", "minutes", "seconds", "milliseconds"),
@@ -354,17 +357,17 @@ def time_period_str(value: str) -> timedelta:
     elif value.startswith("+"):
         value = value[1:]
 
-    try:
-        parsed = [int(x) for x in value.split(":")]
-    except ValueError:
+    parsed = value.split(":")
+    if len(parsed) not in (2, 3):
         raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
-
-    if len(parsed) == 2:
-        hour, minute = parsed
-        second = 0
-    elif len(parsed) == 3:
-        hour, minute, second = parsed
-    else:
+    try:
+        hour = int(parsed[0])
+        minute = int(parsed[1])
+        try:
+            second = float(parsed[2])
+        except IndexError:
+            second = 0
+    except ValueError:
         raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
 
     offset = timedelta(hours=hour, minutes=minute, seconds=second)
@@ -375,10 +378,10 @@ def time_period_str(value: str) -> timedelta:
     return offset
 
 
-def time_period_seconds(value: Union[int, str]) -> timedelta:
+def time_period_seconds(value: Union[float, str]) -> timedelta:
     """Validate and transform seconds to a time offset."""
     try:
-        return timedelta(seconds=int(value))
+        return timedelta(seconds=float(value))
     except (ValueError, TypeError):
         raise vol.Invalid(f"Expected seconds, got {value}")
 
@@ -930,7 +933,7 @@ ZONE_CONDITION_SCHEMA = vol.Schema(
 AND_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONDITION): "and",
-        vol.Required("conditions"): vol.All(
+        vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
             # pylint: disable=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
@@ -941,7 +944,7 @@ AND_CONDITION_SCHEMA = vol.Schema(
 OR_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONDITION): "or",
-        vol.Required("conditions"): vol.All(
+        vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
             # pylint: disable=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
@@ -952,7 +955,7 @@ OR_CONDITION_SCHEMA = vol.Schema(
 NOT_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONDITION): "not",
-        vol.Required("conditions"): vol.All(
+        vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
             # pylint: disable=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
@@ -1031,6 +1034,24 @@ _SCRIPT_REPEAT_SCHEMA = vol.Schema(
     }
 )
 
+_SCRIPT_CHOOSE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ALIAS): string,
+        vol.Required(CONF_CHOOSE): vol.All(
+            ensure_list,
+            [
+                {
+                    vol.Required(CONF_CONDITIONS): vol.All(
+                        ensure_list, [CONDITION_SCHEMA]
+                    ),
+                    vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
+                }
+            ],
+        ),
+        vol.Optional(CONF_DEFAULT): SCRIPT_SCHEMA,
+    }
+)
+
 SCRIPT_ACTION_DELAY = "delay"
 SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
 SCRIPT_ACTION_CHECK_CONDITION = "condition"
@@ -1039,6 +1060,7 @@ SCRIPT_ACTION_CALL_SERVICE = "call_service"
 SCRIPT_ACTION_DEVICE_AUTOMATION = "device"
 SCRIPT_ACTION_ACTIVATE_SCENE = "scene"
 SCRIPT_ACTION_REPEAT = "repeat"
+SCRIPT_ACTION_CHOOSE = "choose"
 
 
 def determine_script_action(action: dict) -> str:
@@ -1064,6 +1086,9 @@ def determine_script_action(action: dict) -> str:
     if CONF_REPEAT in action:
         return SCRIPT_ACTION_REPEAT
 
+    if CONF_CHOOSE in action:
+        return SCRIPT_ACTION_CHOOSE
+
     return SCRIPT_ACTION_CALL_SERVICE
 
 
@@ -1076,4 +1101,5 @@ ACTION_TYPE_SCHEMAS: Dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_DEVICE_AUTOMATION: DEVICE_ACTION_SCHEMA,
     SCRIPT_ACTION_ACTIVATE_SCENE: _SCRIPT_SCENE_SCHEMA,
     SCRIPT_ACTION_REPEAT: _SCRIPT_REPEAT_SCHEMA,
+    SCRIPT_ACTION_CHOOSE: _SCRIPT_CHOOSE_SCHEMA,
 }

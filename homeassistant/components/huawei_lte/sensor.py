@@ -156,7 +156,7 @@ SENSOR_META = {
         exclude=re.compile(r"^showtraffic$", re.IGNORECASE)
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentConnectTime"): dict(
-        name="Current connection duration", unit=TIME_SECONDS, icon="mdi:timer"
+        name="Current connection duration", unit=TIME_SECONDS, icon="mdi:timer-outline"
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentDownload"): dict(
         name="Current connection download", unit=DATA_BYTES, icon="mdi:download"
@@ -165,7 +165,7 @@ SENSOR_META = {
         name="Current connection upload", unit=DATA_BYTES, icon="mdi:upload"
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalConnectTime"): dict(
-        name="Total connected duration", unit=TIME_SECONDS, icon="mdi:timer"
+        name="Total connected duration", unit=TIME_SECONDS, icon="mdi:timer-outline"
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalDownload"): dict(
         name="Total download", unit=DATA_BYTES, icon="mdi:download"

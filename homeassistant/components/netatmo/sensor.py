@@ -66,7 +66,7 @@ SENSOR_TYPES = {
         "mdi:thermometer",
         DEVICE_CLASS_TEMPERATURE,
     ],
-    "co2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, "mdi:periodic-table-co2", None],
+    "co2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, "mdi:molecule-co2", None],
     "pressure": ["Pressure", "mbar", "mdi:gauge", None],
     "noise": ["Noise", "dB", "mdi:volume-high", None],
     "humidity": [
@@ -555,7 +555,7 @@ class NetatmoPublicSensor(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return bool(self._state)
+        return self._state is not None
 
     def update(self):
         """Get the latest data from Netatmo API and updates the states."""

@@ -20,6 +20,7 @@
         "step": {
             "manual_setup": {
                 "data": {
+                    "port": "",
                     "ssl": "Bruk SSL",
                     "token": "Token (valgfritt)",
                     "verify_ssl": "Verifisere SSL-sertifikat"
@@ -35,13 +36,13 @@
             },
             "user": {
                 "description": "Fortsett til [plex.tv] (https://plex.tv) for \u00e5 koble en Plex-server.",
-                "title": "Plex Media Server"
+                "title": ""
             },
             "user_advanced": {
                 "data": {
                     "setup_method": "Oppsettmetode"
                 },
-                "title": "Plex Media Server"
+                "title": ""
             }
         }
     },

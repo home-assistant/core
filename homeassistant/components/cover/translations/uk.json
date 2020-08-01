@@ -1,4 +1,9 @@
 {
+    "device_automation": {
+        "action_type": {
+            "stop": "\u0417\u0443\u043f\u0438\u043d\u0438\u0442\u0438 {entity_name}"
+        }
+    },
     "state": {
         "_": {
             "closed": "\u0417\u0430\u0447\u0438\u043d\u0435\u043d\u043e",

@@ -35,6 +35,7 @@ from .entity import (
     create_value_id,
 )
 from .services import ZWaveServices
+from .websocket_api import ZWaveWebsocketApi
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -205,6 +206,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Register Services
     services = ZWaveServices(hass, manager)
     services.async_register()
+
+    # Register WebSocket API
+    ws_api = ZWaveWebsocketApi(hass, manager)
+    ws_api.async_register_api()
 
     @callback
     def async_receive_message(msg):

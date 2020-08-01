@@ -9,10 +9,12 @@ if [ -s .python-version ]; then
 fi
 
 # other common virtualenvs
+my_path=$(git rev-parse --show-toplevel)
+
 for venv in venv .venv .; do
-    if [ -f $venv/bin/activate ]; then
-        . $venv/bin/activate
-    fi
+  if [ -f "${my_path}/${venv}/bin/activate" ]; then
+    . "${my_path}/${venv}/bin/activate"
+  fi
 done
 
 exec "$@"

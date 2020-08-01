@@ -450,7 +450,7 @@ WITHINGS_ATTRIBUTES = [
         NotifyAppli.BED_IN,
         "In bed",
         "",
-        "mdi:hotel",
+        "mdi:bed",
         BINARY_SENSOR_DOMAIN,
         True,
         UpdateType.WEBHOOK,
@@ -582,7 +582,9 @@ class DataManager:
             update_interval=timedelta(minutes=120),
             update_method=self.async_subscribe_webhook,
         )
-        self.poll_data_update_coordinator = DataUpdateCoordinator(
+        self.poll_data_update_coordinator = DataUpdateCoordinator[
+            Dict[MeasureType, Any]
+        ](
             hass,
             _LOGGER,
             name="poll_data_update_coordinator",

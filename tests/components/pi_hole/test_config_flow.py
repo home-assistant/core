@@ -1,5 +1,4 @@
 """Test pi_hole config flow."""
-import copy
 import logging
 
 from homeassistant.components.pi_hole.const import DOMAIN
@@ -13,7 +12,6 @@ from homeassistant.data_entry_flow import (
 from . import (
     CONF_CONFIG_FLOW,
     CONF_DATA,
-    CONF_HOST,
     NAME,
     _create_mocked_hole,
     _patch_config_flow_hole,
@@ -54,16 +52,6 @@ async def test_flow_import(hass, caplog):
         assert result["type"] == RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
 
-        # duplicated name
-        conf_data = copy.deepcopy(CONF_DATA)
-        conf_data[CONF_HOST] = "4.3.2.1"
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf_data
-        )
-        assert result["type"] == RESULT_TYPE_ABORT
-        assert result["reason"] == "duplicated_name"
-        assert len([x for x in caplog.records if x.levelno == logging.ERROR]) == 1
-
 
 async def test_flow_import_invalid(hass, caplog):
     """Test import flow with invalid server."""
@@ -102,15 +90,6 @@ async def test_flow_user(hass):
         )
         assert result["type"] == RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
-
-        # duplicated name
-        conf_data = copy.deepcopy(CONF_CONFIG_FLOW)
-        conf_data[CONF_HOST] = "4.3.2.1"
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=conf_data
-        )
-        assert result["type"] == RESULT_TYPE_ABORT
-        assert result["reason"] == "duplicated_name"
 
 
 async def test_flow_user_invalid(hass):

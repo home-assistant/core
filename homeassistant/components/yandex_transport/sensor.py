@@ -3,11 +3,12 @@
 from datetime import timedelta
 import logging
 
+from aioymaps import YandexMapsRequester
 import voluptuous as vol
-from ya_ma import YandexMapsRequester
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, DEVICE_CLASS_TIMESTAMP
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
@@ -35,20 +36,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Yandex transport sensor."""
     stop_id = config[CONF_STOP_ID]
     name = config[CONF_NAME]
     routes = config[CONF_ROUTE]
 
-    data = YandexMapsRequester(user_agent=USER_AGENT)
-    add_entities([DiscoverMoscowYandexTransport(data, stop_id, routes, name)], True)
+    client_session = async_create_clientsession(hass, requote_redirect_url=False)
+    data = YandexMapsRequester(user_agent=USER_AGENT, client_session=client_session)
+    async_add_entities([DiscoverYandexTransport(data, stop_id, routes, name)], True)
 
 
-class DiscoverMoscowYandexTransport(Entity):
+class DiscoverYandexTransport(Entity):
     """Implementation of yandex_transport sensor."""
 
-    def __init__(self, requester, stop_id, routes, name):
+    def __init__(self, requester: YandexMapsRequester, stop_id, routes, name):
         """Initialize sensor."""
         self.requester = requester
         self._stop_id = stop_id
@@ -58,12 +60,12 @@ class DiscoverMoscowYandexTransport(Entity):
         self._name = name
         self._attrs = None
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data from maps.yandex.ru and update the states."""
         attrs = {}
         closer_time = None
+        yandex_reply = await self.requester.get_stop_info(self._stop_id)
         try:
-            yandex_reply = self.requester.get_stop_info(self._stop_id)
             data = yandex_reply["data"]
         except KeyError as key_error:
             _LOGGER.warning(
@@ -71,8 +73,8 @@ class DiscoverMoscowYandexTransport(Entity):
                 key_error,
                 yandex_reply,
             )
-            self.requester.set_new_session()
-            data = self.requester.get_stop_info(self._stop_id)["data"]
+            await self.requester.set_new_session()
+            data = (await self.requester.get_stop_info(self._stop_id))["data"]
         stop_name = data["name"]
         transport_list = data["transports"]
         for transport in transport_list:

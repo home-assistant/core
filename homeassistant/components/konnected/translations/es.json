@@ -20,8 +20,8 @@
             },
             "user": {
                 "data": {
-                    "host": "Direcci\u00f3n IP del dispositivo Konnected",
-                    "port": "Puerto del dispositivo Konnected"
+                    "host": "Direcci\u00f3n IP",
+                    "port": "Puerto"
                 },
                 "description": "Introduzca la informaci\u00f3n del host de su panel Konnected."
             }
@@ -32,9 +32,7 @@
             "not_konn_panel": "No es un dispositivo Konnected.io reconocido"
         },
         "error": {
-            "bad_host": "URL del host de la API de invalidaci\u00f3n no v\u00e1lida",
-            "one": "",
-            "other": "otros"
+            "bad_host": "URL del host de la API de invalidaci\u00f3n no v\u00e1lida"
         },
         "step": {
             "options_binary": {
@@ -101,7 +99,7 @@
                     "pause": "Pausa entre pulsos (ms) (opcional)",
                     "repeat": "Tiempos de repetici\u00f3n (-1 = infinito) (opcional)"
                 },
-                "description": "Por favor, seleccione las opciones de salida para {zone}",
+                "description": "Selecciona las opciones de salida para {zone}: state {state}",
                 "title": "Configurar la salida conmutable"
             }
         }
