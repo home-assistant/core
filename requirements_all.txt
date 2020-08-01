@@ -362,7 +362,7 @@ blockchain==1.4.4
 bomradarloop==0.1.4
 
 # homeassistant.components.bond
-bond-api==0.1.7
+bond-api==0.1.8
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
