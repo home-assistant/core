@@ -1,0 +1,8 @@
+{
+  "status": {
+    "code": "CONN_TOKEN_INVALID",
+    "description": "Invalid authentication token",
+    "details": "user identified by path /users/ov2nn5ghecgs not found",
+    "reqId": "a4240499e16f40aa94b52ba96ad5398a"
+  }
+}
