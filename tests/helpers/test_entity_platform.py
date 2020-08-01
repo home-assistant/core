@@ -375,8 +375,9 @@ async def test_async_remove_with_platform(hass):
     assert len(hass.states.async_entity_ids()) == 0
 
 
-async def test_not_adding_duplicate_entities_with_unique_id(hass):
+async def test_not_adding_duplicate_entities_with_unique_id(hass, caplog):
     """Test for not adding duplicate entities."""
+    caplog.set_level(logging.ERROR)
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     await component.async_add_entities(
@@ -384,9 +385,20 @@ async def test_not_adding_duplicate_entities_with_unique_id(hass):
     )
 
     assert len(hass.states.async_entity_ids()) == 1
+    assert not caplog.text
 
     ent2 = MockEntity(name="test2", unique_id="not_very_unique")
     await component.async_add_entities([ent2])
+    assert "test1" in caplog.text
+    assert DOMAIN in caplog.text
+
+    ent3 = MockEntity(
+        name="test2", entity_id="test_domain.test3", unique_id="not_very_unique"
+    )
+    await component.async_add_entities([ent3])
+    assert "test1" in caplog.text
+    assert "test3" in caplog.text
+    assert DOMAIN in caplog.text
 
     assert ent2.hass is None
     assert ent2.platform is None
