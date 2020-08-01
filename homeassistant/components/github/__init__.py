@@ -1,5 +1,4 @@
 """The GitHub integration."""
-# TODO: Tests
 # TODO: Device triggers? (scaffold)
 # TODO: Breaking changes (flow, url, options flow, split etc.)
 import asyncio
