@@ -60,7 +60,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured({CONF_HOST: host})
 
         self._discovered = {
-            CONF_HOST: discovery_info["host"],
+            CONF_HOST: host,
             "bond_id": bond_id,
         }
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
