@@ -243,7 +243,7 @@ homeassistant/components/mediaroom/* @dgomes
 homeassistant/components/melcloud/* @vilppuvuorinen
 homeassistant/components/melissa/* @kennedyshead
 homeassistant/components/met/* @danielhiversen
-homeassistant/components/meteo_france/* @victorcerutti @oncleben31 @Quentame
+homeassistant/components/meteo_france/* @hacf-fr @oncleben31 @Quentame
 homeassistant/components/meteoalarm/* @rolfberkenbosch
 homeassistant/components/metoffice/* @MrHarcombe
 homeassistant/components/miflora/* @danielhiversen @ChristianKuehnel

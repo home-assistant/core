@@ -902,7 +902,7 @@ messagebird==1.2.0
 meteoalertapi==0.1.6
 
 # homeassistant.components.meteo_france
-meteofrance==0.3.7
+meteofrance-api==0.1.0
 
 # homeassistant.components.mfi
 mficlient==0.3.0
@@ -2169,9 +2169,6 @@ vallox-websocket-api==2.4.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.12
-
-# homeassistant.components.meteo_france
-vigilancemeteo==3.0.1
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.3.2
