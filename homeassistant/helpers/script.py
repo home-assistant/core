@@ -176,8 +176,6 @@ class _ScriptRun:
         try:
             if self._stop.is_set():
                 return
-            self._script.last_triggered = utcnow()
-            self._changed()
             self._log("Running script")
             for self._step, self._action in enumerate(self._script.sequence):
                 if self._stop.is_set():
@@ -797,6 +795,8 @@ class Script:
             self._hass, self, cast(dict, variables), context, self._log_exceptions
         )
         self._runs.append(run)
+        self.last_triggered = utcnow()
+        self._changed()
 
         try:
             await asyncio.shield(run.async_run())
