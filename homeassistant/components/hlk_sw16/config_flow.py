@@ -106,18 +106,23 @@ class SW16OptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry):
         """Initialize options flow."""
-        self.entry_id = config_entry.entry_id
+        self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
         """Manage options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
-        prev_options = self.hass.data[DOMAIN][self.entry_id].data
+
         options = {
-            vol.Required(CONF_NAME, default=prev_options.get(CONF_NAME),): str,
-            vol.Required(CONF_HOST, default=prev_options.get(CONF_HOST),): str,
+            vol.Required(
+                CONF_NAME, default=self.config_entry.options.get(CONF_NAME),
+            ): str,
+            vol.Required(
+                CONF_HOST, default=self.config_entry.options.get(CONF_HOST),
+            ): str,
             vol.Optional(
-                CONF_PORT, default=prev_options.get(CONF_PORT, DEFAULT_PORT),
+                CONF_PORT,
+                default=self.config_entry.options.get(CONF_PORT, DEFAULT_PORT),
             ): vol.Coerce(int),
         }
 

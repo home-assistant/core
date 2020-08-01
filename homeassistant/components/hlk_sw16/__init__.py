@@ -3,12 +3,7 @@ import logging
 
 from hlk_sw16 import create_hlk_sw16_connection
 
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -31,6 +26,7 @@ DATA_DEVICE_LISTENER = "hlk_sw16_device_listener"
 
 async def async_setup(hass, config):
     """Component setup, do nothing."""
+    hass.data.setdefault(DOMAIN, {})
     return True
 
 
@@ -46,8 +42,7 @@ async def async_setup_entry(hass, entry):
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = entry
+    hass.data[DOMAIN][entry.entry_id] = {}
 
     @callback
     def disconnected():
@@ -78,16 +73,11 @@ async def async_setup_entry(hass, entry):
             keep_alive_interval=DEFAULT_KEEP_ALIVE_INTERVAL,
         )
 
-        hass.data[DATA_DEVICE_REGISTER][entry.entry_id] = client
+        hass.data[DOMAIN][entry.entry_id][DATA_DEVICE_REGISTER] = client
 
         # Load entities
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, "switch")
-        )
-
-        # handle shutdown of HLK-SW16 asyncio transport
-        hass.data[DATA_DEVICE_LISTENER][entry.entry_id] = hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, lambda x: client.stop()
         )
 
         _LOGGER.info("Connected to HLK-SW16 device: %s", device)
@@ -99,19 +89,17 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
+    client = hass.data[DOMAIN][entry.entry_id].pop(DATA_DEVICE_REGISTER)
+    client.stop()
     return await hass.config_entries.async_forward_entry_unload(entry, "switch")
 
 
 async def async_remove_entry(hass, entry):
     """Stop client config entry."""
-    client = hass.data[DATA_DEVICE_REGISTER].pop(entry.entry_id)
-    client.stop()
-    if not hass.data[DATA_DEVICE_REGISTER]:
-        hass.data.pop(DATA_DEVICE_REGISTER)
-    remove_listener = hass.data[DATA_DEVICE_LISTENER].pop(entry.entry_id)
-    remove_listener()
-    if not hass.data[DATA_DEVICE_LISTENER]:
-        hass.data.pop(DATA_DEVICE_LISTENER)
+    if hass.data[DOMAIN][entry.entry_id]:
+        hass.data[DOMAIN].pop(entry.entry_id)
+    if not hass.data[DOMAIN]:
+        hass.data.pop(DOMAIN)
 
 
 class SW16Device(Entity):

@@ -2,6 +2,7 @@
 from homeassistant.components.switch import ToggleEntity
 
 from . import DATA_DEVICE_REGISTER, SW16Device
+from .const import DOMAIN
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -10,7 +11,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 def devices_from_entities(hass, entry):
     """Parse configuration and add HLK-SW16 switch devices."""
-    device_client = hass.data[DATA_DEVICE_REGISTER][entry.entry_id]
+    device_client = hass.data[DOMAIN][entry.entry_id][DATA_DEVICE_REGISTER]
     devices = []
     for i in range(16):
         device_port = f"{i:01x}"
