@@ -235,17 +235,17 @@ PUSH_CATEGORY_LIST_SCHEMA = vol.All(cv.ensure_list, [PUSH_CATEGORY_SCHEMA])
 ACTION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ACTION_NAME): cv.string,
-        vol.Required(CONF_ACTION_BACKGROUND_COLOR): cv.string,
+        vol.Optional(CONF_ACTION_BACKGROUND_COLOR): cv.string,
         vol.Required(CONF_ACTION_LABEL): vol.All(
             {
                 vol.Required(CONF_ACTION_LABEL_TEXT): cv.string,
-                vol.Required(CONF_ACTION_LABEL_COLOR): cv.string,
+                vol.Optional(CONF_ACTION_LABEL_COLOR): cv.string,
             }
         ),
         vol.Required(CONF_ACTION_ICON): vol.All(
             {
                 vol.Required(CONF_ACTION_ICON_ICON): cv.string,
-                vol.Required(CONF_ACTION_ICON_COLOR): cv.string,
+                vol.Optional(CONF_ACTION_ICON_COLOR): cv.string,
             }
         ),
     },
