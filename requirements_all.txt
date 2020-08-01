@@ -100,7 +100,7 @@ WazeRouteCalculator==0.12
 YesssSMS==0.4.1
 
 # homeassistant.components.abode
-abodepy==0.19.0
+abodepy==1.1.0
 
 # homeassistant.components.mcp23017
 adafruit-blinka==3.9.0
@@ -112,7 +112,7 @@ adafruit-circuitpython-bmp280==3.1.1
 adafruit-circuitpython-mcp230xx==2.2.2
 
 # homeassistant.components.androidtv
-adb-shell[async]==0.2.0
+adb-shell[async]==0.2.1
 
 # homeassistant.components.alarmdecoder
 adext==0.3
@@ -164,7 +164,7 @@ aioftp==0.12.0
 aioguardian==1.0.1
 
 # homeassistant.components.harmony
-aioharmony==0.2.5
+aioharmony==0.2.6
 
 # homeassistant.components.homekit_controller
 aiohomekit[IP]==0.2.45
@@ -231,7 +231,7 @@ ambiclimate==0.2.1
 amcrest==1.7.0
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.46
+androidtv[async]==0.0.47
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -1190,7 +1190,7 @@ py_nextbusnext==0.1.4
 # py_noaa==0.3.0
 
 # homeassistant.components.ads
-pyads==3.1.3
+pyads==3.2.1
 
 # homeassistant.components.hisense_aehw4a1
 pyaehw4a1==0.3.5
@@ -1241,7 +1241,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==7.1.2
+pychromecast==7.2.0
 
 # homeassistant.components.cmus
 pycmus==0.1.1

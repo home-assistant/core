@@ -153,6 +153,9 @@ async def test_form_ssdp_aborts_before_checking_remoteid_if_host_known(hass):
     )
     config_entry.add_to_hass(hass)
 
+    config_entry_without_host = MockConfigEntry(domain=DOMAIN, data={"name": "other"},)
+    config_entry_without_host.add_to_hass(hass)
+
     harmonyapi = _get_mock_harmonyapi(connect=True)
 
     with patch(

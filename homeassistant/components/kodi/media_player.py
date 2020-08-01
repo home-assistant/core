@@ -1,5 +1,7 @@
 """Support for interfacing with the XBMC/Kodi JSON-RPC API."""
+import asyncio
 from collections import OrderedDict
+from datetime import timedelta
 from functools import wraps
 import logging
 import re
@@ -53,6 +55,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, script
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.template import Template
 import homeassistant.util.dt as dt_util
 from homeassistant.util.yaml import dump
@@ -81,6 +84,8 @@ DEPRECATED_TURN_OFF_ACTIONS = {
     "reboot": "System.Reboot",
     "shutdown": "System.Shutdown",
 }
+
+WEBSOCKET_WATCHDOG_INTERVAL = timedelta(minutes=3)
 
 # https://github.com/xbmc/xbmc/blob/master/xbmc/media/MediaType.h
 MEDIA_TYPES = {
@@ -435,6 +440,26 @@ class KodiDevice(MediaPlayerEntity):
         # run until the websocket connection is closed.
         self.hass.loop.create_task(ws_loop_wrapper())
 
+    async def async_added_to_hass(self):
+        """Connect the websocket if needed."""
+        if not self._enable_websocket:
+            return
+
+        asyncio.create_task(self.async_ws_connect())
+
+        self.async_on_remove(
+            async_track_time_interval(
+                self.hass,
+                self._async_connect_websocket_if_disconnected,
+                WEBSOCKET_WATCHDOG_INTERVAL,
+            )
+        )
+
+    async def _async_connect_websocket_if_disconnected(self, *_):
+        """Reconnect the websocket if it fails."""
+        if not self._ws_server.connected:
+            await self.async_ws_connect()
+
     async def async_update(self):
         """Retrieve latest state."""
         self._players = await self._get_players()
@@ -444,9 +469,6 @@ class KodiDevice(MediaPlayerEntity):
             self._item = {}
             self._app_properties = {}
             return
-
-        if self._enable_websocket and not self._ws_server.connected:
-            self.hass.async_create_task(self.async_ws_connect())
 
         self._app_properties = await self.server.Application.GetProperties(
             ["volume", "muted"]
