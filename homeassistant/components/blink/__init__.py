@@ -15,6 +15,7 @@ from homeassistant.components.blink.const import (
     SERVICE_SAVE_VIDEO,
     SERVICE_SEND_PIN,
 )
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_FILENAME, CONF_NAME, CONF_PIN, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
@@ -41,6 +42,19 @@ def _blink_startup_wrapper(entry):
 async def async_setup(hass, config):
     """Set up a Blink component."""
     hass.data[DOMAIN] = {}
+    return True
+
+
+async def async_migrate_entry(hass, entry):
+    """Handle migration of a previous version config entry."""
+    data = {**entry.data}
+    if entry.version == 1:
+        data.pop("login_response", None)
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_USER}, data=data,
+            )
+        )
     return True
 
 

@@ -43,7 +43,7 @@ def _send_blink_2fa_pin(auth, pin):
 class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Blink config flow."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
@@ -65,7 +65,6 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data[CONF_PASSWORD] = user_input["password"]
 
             await self.async_set_unique_id(data[CONF_USERNAME])
-
             self.auth = Auth(data, no_prompt=True)
 
             try:
