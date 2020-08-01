@@ -1153,55 +1153,89 @@ class FanSpeedTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class):
         """Test if state is supported."""
-        if domain != fan.DOMAIN:
-            return False
-
-        return features & fan.SUPPORT_SET_SPEED
+        if domain == fan.DOMAIN:
+            return features & fan.SUPPORT_SET_SPEED
+        if domain == climate.DOMAIN:
+            return features & climate.SUPPORT_FAN_MODE
+        return False
 
     def sync_attributes(self):
         """Return speed point and modes attributes for a sync request."""
-        modes = self.state.attributes.get(fan.ATTR_SPEED_LIST, [])
+        domain = self.state.domain
         speeds = []
-        for mode in modes:
-            if mode not in self.speed_synonyms:
-                continue
-            speed = {
-                "speed_name": mode,
-                "speed_values": [
-                    {"speed_synonym": self.speed_synonyms.get(mode), "lang": "en"}
-                ],
-            }
-            speeds.append(speed)
+        reversible = False
+
+        if domain == fan.DOMAIN:
+            modes = self.state.attributes.get(fan.ATTR_SPEED_LIST, [])
+            for mode in modes:
+                if mode not in self.speed_synonyms:
+                    continue
+                speed = {
+                    "speed_name": mode,
+                    "speed_values": [
+                        {"speed_synonym": self.speed_synonyms.get(mode), "lang": "en"}
+                    ],
+                }
+                speeds.append(speed)
+            reversible = bool(
+                self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                & fan.SUPPORT_DIRECTION
+            )
+        elif domain == climate.DOMAIN:
+            modes = self.state.attributes.get(climate.ATTR_FAN_MODES, [])
+            for mode in modes:
+                speed = {
+                    "speed_name": mode,
+                    "speed_values": [{"speed_synonym": [mode], "lang": "en"}],
+                }
+                speeds.append(speed)
 
         return {
             "availableFanSpeeds": {"speeds": speeds, "ordered": True},
-            "reversible": bool(
-                self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-                & fan.SUPPORT_DIRECTION
-            ),
+            "reversible": reversible,
         }
 
     def query_attributes(self):
         """Return speed point and modes query attributes."""
         attrs = self.state.attributes
+        domain = self.state.domain
         response = {}
-
-        speed = attrs.get(fan.ATTR_SPEED)
-        if speed is not None:
-            response["on"] = speed != fan.SPEED_OFF
-            response["currentFanSpeedSetting"] = speed
-
+        if domain == climate.DOMAIN:
+            speed = attrs.get(climate.ATTR_FAN_MODE)
+            if speed is not None:
+                response["currentFanSpeedSetting"] = speed
+        if domain == fan.DOMAIN:
+            speed = attrs.get(fan.ATTR_SPEED)
+            if speed is not None:
+                response["on"] = speed != fan.SPEED_OFF
+                response["currentFanSpeedSetting"] = speed
         return response
 
     async def execute(self, command, data, params, challenge):
         """Execute an SetFanSpeed command."""
-        await self.hass.services.async_call(
-            fan.DOMAIN,
-            fan.SERVICE_SET_SPEED,
-            {ATTR_ENTITY_ID: self.state.entity_id, fan.ATTR_SPEED: params["fanSpeed"]},
-            blocking=True,
-            context=data.context,
-        )
+        domain = self.state.domain
+        if domain == climate.DOMAIN:
+            await self.hass.services.async_call(
+                climate.DOMAIN,
+                climate.SERVICE_SET_FAN_MODE,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    climate.ATTR_FAN_MODE: params["fanSpeed"],
+                },
+                blocking=True,
+                context=data.context,
+            )
+        if domain == fan.DOMAIN:
+            await self.hass.services.async_call(
+                fan.DOMAIN,
+                fan.SERVICE_SET_SPEED,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    fan.ATTR_SPEED: params["fanSpeed"],
+                },
+                blocking=True,
+                context=data.context,
+            )
 
 
 @register_trait
