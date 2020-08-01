@@ -7,7 +7,7 @@ from bond_api import Bond
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
@@ -53,8 +53,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Handle a flow initialized by zeroconf discovery."""
-        name: str = discovery_info["name"]
-        host: str = discovery_info["host"]
+        name: str = discovery_info[CONF_NAME]
+        host: str = discovery_info[CONF_HOST]
         bond_id = name.partition(".")[0]
         await self.async_set_unique_id(bond_id)
         self._abort_if_unique_id_configured({CONF_HOST: host})
