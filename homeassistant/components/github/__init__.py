@@ -1,6 +1,4 @@
 """The GitHub integration."""
-# TODO: Device triggers? (scaffold)
-# TODO: Breaking changes (flow, url, options flow, split etc.)
 import asyncio
 from datetime import timedelta
 import logging
