@@ -3,7 +3,7 @@ import asyncio
 import imghdr
 import io
 import logging
-import os
+import pathlib
 
 # pylint: disable=import-error
 import face_recognition
@@ -61,20 +61,25 @@ async def async_generate_encodings(hass, faces):
     """Generate face encodings."""
     face_encodings = {}
 
-    if isinstance(faces, str):
+    if not isinstance(faces, dict):
+        faces_root_path = pathlib.Path(faces)
+        if not faces_root_path.is_dir():
+            _LOGGER.error(
+                "Path '%s' does not exist or is not a valid directory. No face encodings generated.",
+                faces_root_path.resolve(),
+            )
+            return face_encodings
 
-        immediate_subfolders = [n.name for n in os.scandir(faces) if n.is_dir()]
+        face_directories = [
+            faces_root_path / n for n in faces_root_path.iterdir() if n.is_dir()
+        ]
 
-        for person_subfolder in immediate_subfolders:
-
-            current_folder = os.path.join(faces, person_subfolder)
-
-            face_encodings[person_subfolder] = []
+        for face_images in face_directories:
+            face_encodings[face_images.stem] = []
 
             for face_file in [
-                i.path for i in os.scandir(current_folder) if i.is_file()
+                face_images / i for i in face_images.iterdir() if i.is_file()
             ]:
-
                 if imghdr.what(face_file) is None:
                     continue
 
@@ -92,7 +97,7 @@ async def async_generate_encodings(hass, faces):
                             face_file,
                         )
                     else:
-                        face_encodings[person_subfolder].append(encodings_list[0])
+                        face_encodings[face_images.stem].append(encodings_list[0])
 
                 except IndexError as err:
                     _LOGGER.error("Failed to parse %s. Error: %s", face_file, err)
@@ -142,9 +147,7 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
             self._name = f"Dlib Face {split_entity_id(camera_entity)[1]}"
 
         self._faces = {}
-
         face_encodings_task.add_done_callback(self.async_encodings_ready)
-
         self._tolerance = tolerance
 
     @callback
@@ -176,7 +179,6 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
         fak_file.seek(0)
 
         image = face_recognition.load_image_file(fak_file)
-
         unknowns = face_recognition.face_encodings(image)
 
         found = []
@@ -186,7 +188,6 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
             smallest_average_distance = None
 
             for name, known_encodings in self._faces.items():
-
                 distances = face_recognition.face_distance(
                     known_encodings, unknown_face
                 )
