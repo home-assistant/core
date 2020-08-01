@@ -123,6 +123,7 @@ async def test_several_lights(hass, rfxtrx):
         },
     )
     await hass.async_block_till_done()
+    await hass.async_start()
 
     state = hass.states.get("light.ac_213c7f2_48")
     assert state
@@ -138,6 +139,22 @@ async def test_several_lights(hass, rfxtrx):
     assert state
     assert state.state == "off"
     assert state.attributes.get("friendly_name") == "AC 1118cdea:2"
+
+    await rfxtrx.signal("0b1100cd0213c7f230010f71")
+    state = hass.states.get("light.ac_213c7f2_48")
+    assert state
+    assert state.state == "on"
+
+    await rfxtrx.signal("0b1100cd0213c7f230000f71")
+    state = hass.states.get("light.ac_213c7f2_48")
+    assert state
+    assert state.state == "off"
+
+    await rfxtrx.signal("0b1100cd0213c7f230020f71")
+    state = hass.states.get("light.ac_213c7f2_48")
+    assert state
+    assert state.state == "on"
+    assert state.attributes.get("brightness") == 255
 
 
 @pytest.mark.parametrize("repetitions", [1, 3])
