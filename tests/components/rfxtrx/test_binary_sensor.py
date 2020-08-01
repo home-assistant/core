@@ -204,6 +204,24 @@ async def test_off_delay(hass, rfxtrx, timestep):
     assert state
     assert state.state == "off"
 
+    await rfxtrx.signal("0b1100100118cdea02010f70")
+    state = hass.states.get("binary_sensor.ac_118cdea_2")
+    assert state
+    assert state.state == "on"
+
+    await timestep(3)
+    await rfxtrx.signal("0b1100100118cdea02010f70")
+
+    await timestep(4)
+    state = hass.states.get("binary_sensor.ac_118cdea_2")
+    assert state
+    assert state.state == "on"
+
+    await timestep(4)
+    state = hass.states.get("binary_sensor.ac_118cdea_2")
+    assert state
+    assert state.state == "off"
+
 
 async def test_panic(hass, rfxtrx_automatic):
     """Test panic entities."""
