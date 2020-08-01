@@ -620,13 +620,11 @@ def async_track_utc_time_change(
 
         calculate_next(now + timedelta(seconds=1))
 
-        _LOGGER.debug("new callback at: %s", next_time.timestamp())
         cancel_callback = hass.loop.call_at(
             hass.loop.time() + next_time.timestamp() - time.time(),
             pattern_time_change_listener,
         )
 
-    _LOGGER.debug("first callback at: %s", next_time.timestamp())
     cancel_callback = hass.loop.call_at(
         hass.loop.time() + next_time.timestamp() - time.time(),
         pattern_time_change_listener,
