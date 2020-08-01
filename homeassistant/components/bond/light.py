@@ -82,7 +82,7 @@ class BondLight(BondEntity, LightEntity):
         if brightness:
             await self._hub.bond.action(
                 self._device.device_id,
-                Action(Action.SET_BRIGHTNESS, round((brightness * 100) / 255)),
+                Action.set_brightness(round((brightness * 100) / 255)),
             )
         else:
             await self._hub.bond.action(self._device.device_id, Action.turn_light_on())
