@@ -56,6 +56,8 @@ class TestClarifaiImageProcessing:
             setup_component(self.hass, IP_DOMAIN, self.config)
             self.hass.block_till_done()
 
+        assert self.hass.states.get("image_processing.clarifai_demo_camera")
+
     # def test_setup_platform_no_camera(self, mock_access):
 
     # def test_setup_platform_multiple_cameras(self, mock_access):

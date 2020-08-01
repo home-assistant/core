@@ -201,6 +201,9 @@ buienradar==1.0.4
 # homeassistant.components.caldav
 caldav==0.6.1
 
+# homeassistant.components.clarifai
+clarifai-grpc==0.1.1
+
 # homeassistant.components.coinmarketcap
 coinmarketcap==5.0.3
 
