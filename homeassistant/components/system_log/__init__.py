@@ -163,9 +163,6 @@ class LogErrorQueueHandler(logging.handlers.QueueHandler):
 
     def emit(self, record):
         """Emit a log record."""
-        if record.levelno < logging.WARN:
-            return
-
         try:
             self.enqueue(record)
         except asyncio.CancelledError:  # pylint: disable=try-except-raise
@@ -209,12 +206,13 @@ async def async_setup(hass, config):
 
     simple_queue = queue.SimpleQueue()
     queue_handler = LogErrorQueueHandler(simple_queue)
+    queue_handler.setLevel(logging.WARN)
     logging.root.addHandler(queue_handler)
 
     handler = LogErrorHandler(hass, conf[CONF_MAX_ENTRIES], conf[CONF_FIRE_EVENT])
 
     listener = logging.handlers.QueueListener(
-        simple_queue, handler, respect_handler_level=False
+        simple_queue, handler, respect_handler_level=True
     )
 
     listener.start()
