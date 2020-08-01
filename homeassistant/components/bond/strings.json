@@ -1,6 +1,13 @@
 {
   "config": {
+    "flow_title": "Bond: {bond_id} ({host})",
     "step": {
+      "confirm": {
+        "description": "Do you want to set up {bond_id}?",
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        }
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",

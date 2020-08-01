@@ -16,6 +16,9 @@ ZEROCONF = {
         "axis",
         "doorbird"
     ],
+    "_bond._tcp.local.": [
+        "bond"
+    ],
     "_daap._tcp.local.": [
         "forked_daapd"
     ],

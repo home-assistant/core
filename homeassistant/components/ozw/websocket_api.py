@@ -76,6 +76,7 @@ class ZWaveWebsocketApi:
                 "node_basic_string": node.node_basic_string,
                 "node_generic_string": node.node_generic_string,
                 "node_specific_string": node.node_specific_string,
+                "neighbors": node.neighbors,
                 OZW_INSTANCE: msg[OZW_INSTANCE],
             },
         )
