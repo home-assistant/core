@@ -86,15 +86,11 @@ async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     client = hass.data[DOMAIN][entry.entry_id].pop(DATA_DEVICE_REGISTER)
     client.stop()
-    return await hass.config_entries.async_forward_entry_unload(entry, "switch")
-
-
-async def async_remove_entry(hass, entry):
-    """Stop client config entry."""
     if hass.data[DOMAIN][entry.entry_id]:
         hass.data[DOMAIN].pop(entry.entry_id)
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
+    return await hass.config_entries.async_forward_entry_unload(entry, "switch")
 
 
 class SW16Device(Entity):

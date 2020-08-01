@@ -46,22 +46,21 @@ async def validate_input(hass: HomeAssistant, user_input):
         client = await asyncio.wait_for(client_aw, timeout=CONNECTION_TIMEOUT)
     except asyncio.TimeoutError:
         raise CannotConnect
+    try:
+
+        def disconnect_callback():
+            if client.in_transaction:
+                client.active_transaction.set_exception(CannotConnect)
+
+        client.disconnect_callback = disconnect_callback
+        await client.status()
+    except CannotConnect:
+        client.disconnect_callback = None
+        client.stop()
+        raise CannotConnect
     else:
-        try:
-
-            def disconnect_callback():
-                if client.in_transaction:
-                    client.active_transaction.set_exception(CannotConnect)
-
-            client.disconnect_callback = disconnect_callback
-            await client.status()
-        except CannotConnect:
-            client.disconnect_callback = None
-            client.stop()
-            raise CannotConnect
-        else:
-            client.disconnect_callback = None
-            client.stop()
+        client.disconnect_callback = None
+        client.stop()
 
 
 class SW16FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
