@@ -20,6 +20,7 @@ from .const import (
     CONNECTION_TIMEOUT,
     DEFAULT_KEEP_ALIVE_INTERVAL,
     DEFAULT_RECONNECT_INTERVAL,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,6 +45,9 @@ async def async_setup_entry(hass, entry):
     device = entry.data[CONF_NAME]
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = entry
 
     @callback
     def disconnected():
@@ -133,7 +137,7 @@ class SW16Device(Entity):
     @callback
     def handle_event_callback(self, event):
         """Propagate changes through ha."""
-        _LOGGER.debug("Relay %s new state callback: %r", self._device_port, event)
+        _LOGGER.debug("Relay %s new state callback: %r", self.unique_id, event)
         self._is_on = event
         self.async_write_ha_state()
 
