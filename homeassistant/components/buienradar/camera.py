@@ -95,6 +95,8 @@ class BuienradarCam(Camera):
         # deadline for image refresh - self.delta after last successful load
         self._deadline: Optional[datetime] = None
 
+        self._unique_id = f"{self._dimension}_{self._country}"
+
     @property
     def name(self) -> str:
         """Return the component name."""
@@ -186,3 +188,8 @@ class BuienradarCam(Camera):
             async with self._condition:
                 self._loading = False
                 self._condition.notify_all()
+
+    @property
+    def unique_id(self):
+        """Return the unique id."""
+        return self._unique_id
