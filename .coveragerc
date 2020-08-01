@@ -315,9 +315,9 @@ omit =
     homeassistant/components/github/sensor.py
     homeassistant/components/gios/__init__.py
     homeassistant/components/gios/air_quality.py
-    homeassistant/components/azure_devops/__init__.py
-    homeassistant/components/azure_devops/const.py
-    homeassistant/components/azure_devops/sensor.py
+    homeassistant/components/github/__init__.py
+    homeassistant/components/github/const.py
+    homeassistant/components/github/sensor.py
     homeassistant/components/gitlab_ci/sensor.py
     homeassistant/components/gitter/sensor.py
     homeassistant/components/glances/__init__.py
