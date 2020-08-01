@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME
 
+from .const import CONF_BOND_ID
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,7 +62,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._discovered = {
             CONF_HOST: host,
-            "bond_id": bond_id,
+            CONF_BOND_ID: bond_id,
         }
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": self._discovered})
