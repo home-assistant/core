@@ -139,8 +139,8 @@ class Control4Light(Control4Entity, LightEntity):
         )
         self._is_dimmer = is_dimmer
 
-    def create_API_object(self):
-        """Create a pyControl4 device control object.
+    def create_api_object(self):
+        """Create a pyControl4 device object.
 
         This exists so the director token used is always the latest one, without needing to re-init the entire entity.
         """
@@ -168,7 +168,7 @@ class Control4Light(Control4Entity, LightEntity):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
-        c4_light = self.create_API_object()
+        c4_light = self.create_api_object()
         if self._is_dimmer:
             if ATTR_TRANSITION in kwargs:
                 transition_length = kwargs[ATTR_TRANSITION] * 1000
@@ -191,7 +191,7 @@ class Control4Light(Control4Entity, LightEntity):
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
-        c4_light = self.create_API_object()
+        c4_light = self.create_api_object()
         if self._is_dimmer:
             if ATTR_TRANSITION in kwargs:
                 transition_length = kwargs[ATTR_TRANSITION] * 1000
