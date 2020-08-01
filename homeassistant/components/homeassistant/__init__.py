@@ -104,10 +104,19 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
             hass.async_create_task(hass.async_stop())
             return
 
+        import cProfile
+
+        pr = cProfile.Profile()
+        pr.enable()
+
         try:
             errors = await conf_util.async_check_ha_config_file(hass)
         except HomeAssistantError:
             return
+        finally:
+            pr.disable()
+            pr.create_stats()
+            pr.dump_stats("check_config.cprof")
 
         if errors:
             _LOGGER.error(errors)
