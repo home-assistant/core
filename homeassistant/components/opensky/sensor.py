@@ -1,6 +1,7 @@
 """Sensor for the Open Sky Network."""
 from datetime import timedelta
 import logging
+import math
 
 import requests
 import voluptuous as vol
@@ -104,6 +105,8 @@ class OpenSkySensor(Entity):
         self._hass = hass
         self._name = name
         self._previously_tracked = None
+        self._params = {}
+        self._calc_bbox()
 
     @property
     def name(self):
@@ -114,6 +117,54 @@ class OpenSkySensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    def _calc_bbox(self):
+        """
+        Calculate the rectangular bounding box for a circle on Earth's surface.
+
+        Credit:
+          - Based on code written in Java by Jan Matuschek:
+            http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#Java
+          - Later ported to Python by Jeremy Fein:
+            https://github.com/jfein/PyGeoTools
+        License: https://creativecommons.org/licenses/by/3.0/
+        Changes: Adapted for Home Assistant's opensky sensor
+        """
+        MIN_LAT = math.radians(-90)
+        MAX_LAT = math.radians(90)
+        MIN_LON = math.radians(-180)
+        MAX_LON = math.radians(180)
+
+        rad_lat = math.radians(self._latitude)
+        rad_lon = math.radians(self._longitude)
+
+        # angular distance in radians on a great circle
+        rad_dist = self._radius / util_location.AXIS_A
+
+        min_lat = rad_lat - rad_dist
+        max_lat = rad_lat + rad_dist
+
+        if min_lat > MIN_LAT and max_lat < MAX_LAT:
+            delta_lon = math.asin(math.sin(rad_dist) / math.cos(rad_lat))
+
+            min_lon = rad_lon - delta_lon
+            if min_lon < MIN_LON:
+                min_lon += 2 * math.pi
+
+            max_lon = rad_lon + delta_lon
+            if max_lon > MAX_LON:
+                max_lon -= 2 * math.pi
+        # a pole is within the distance
+        else:
+            min_lat = max(min_lat, MIN_LAT)
+            max_lat = min(max_lat, MAX_LAT)
+            min_lon = MIN_LON
+            max_lon = MAX_LON
+
+        self._params["lamin"] = round(math.degrees(min_lat), 4)
+        self._params["lomin"] = round(math.degrees(min_lon), 4)
+        self._params["lamax"] = round(math.degrees(max_lat), 4)
+        self._params["lomax"] = round(math.degrees(max_lon), 4)
 
     def _handle_boundary(self, flights, event, metadata):
         """Handle flights crossing region boundary."""
@@ -135,7 +186,12 @@ class OpenSkySensor(Entity):
         """Update device state."""
         currently_tracked = set()
         flight_metadata = {}
-        states = self._session.get(OPENSKY_API_URL).json().get(ATTR_STATES)
+        states = (
+            self._session.get(OPENSKY_API_URL, params=self._params)
+            .json()
+            .get(ATTR_STATES)
+            or []
+        )
         for state in states:
             flight = dict(zip(OPENSKY_API_FIELDS, state))
             callsign = flight[ATTR_CALLSIGN].strip()
