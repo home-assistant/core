@@ -381,12 +381,7 @@ class RoonDevice(MediaPlayerEntity):
     def set_volume_level(self, volume):
         """Send new volume_level to device."""
         volume = int(volume * 100)
-        try:
-            self._server.roonapi.change_volume(self.output_id, volume)
-        except Exception as exc:  # pylint: disable=broad-except
-            _LOGGER.error(
-                "set_volume_level failed for entity %s \n %s", self.entity_id, str(exc)
-            )
+        self._server.roonapi.change_volume(self.output_id, volume)
 
     def mute_volume(self, mute=True):
         """Send mute/unmute to device."""
