@@ -159,6 +159,7 @@ HM_DEVICE_TYPES = {
         "IPKeyBlindTilt",
         "IPGarage",
         "IPKeyBlindMulti",
+        "IPWKeyBlindMulti",
     ],
     DISCOVER_LOCKS: ["KeyMatic"],
 }
