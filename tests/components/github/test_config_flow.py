@@ -131,3 +131,65 @@ async def test_reauth_form(hass: HomeAssistant, aioclient_mock: AiohttpClientMoc
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result2["reason"] == "reauth_successful"
+
+
+async def test_reauth_form_cannot_connect(hass: HomeAssistant):
+    """Test we handle cannot connect error."""
+    with patch(
+        "homeassistant.components.github.config_flow.GitHub.get_repo",
+        side_effect=AIOGitHubAPIAuthenticationException,
+    ):
+        mock_config = MockConfigEntry(
+            domain=DOMAIN, unique_id=UNIQUE_ID, data=FIXTURE_USER_INPUT
+        )
+        mock_config.add_to_hass(hass)
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "reauth"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    with patch(
+        "homeassistant.components.github.config_flow.GitHub.get_repo",
+        side_effect=AIOGitHubAPIException,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_REAUTH_INPUT
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reauth_form_cannot_find_repo(hass: HomeAssistant):
+    """Test we handle cannot connect error."""
+    with patch(
+        "homeassistant.components.github.config_flow.GitHub.get_repo",
+        side_effect=AIOGitHubAPIAuthenticationException,
+    ):
+        mock_config = MockConfigEntry(
+            domain=DOMAIN, unique_id=UNIQUE_ID, data=FIXTURE_USER_INPUT
+        )
+        mock_config.add_to_hass(hass)
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "reauth"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    with patch(
+        "homeassistant.components.github.config_flow.GitHub.get_repo",
+        return_value=None,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_REAUTH_INPUT
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "cannot_find_repo"}
