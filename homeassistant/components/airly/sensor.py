@@ -20,6 +20,7 @@ from .const import (
     ATTR_API_TEMPERATURE,
     DEFAULT_NAME,
     DOMAIN,
+    MANUFACTURER,
 )
 
 ATTRIBUTION = "Data provided by Airly"
@@ -134,7 +135,7 @@ class AirlySensor(Entity):
                 (DOMAIN, self.coordinator.latitude, self.coordinator.longitude)
             },
             "name": DEFAULT_NAME,
-            "manufacturer": "Airly sp. z o.o.",
+            "manufacturer": MANUFACTURER,
             "entry_type": "service",
         }
 

@@ -20,6 +20,7 @@ from .const import (
     ATTR_API_PM25_PERCENT,
     DEFAULT_NAME,
     DOMAIN,
+    MANUFACTURER,
 )
 
 ATTRIBUTION = "Data provided by Airly"
@@ -116,6 +117,7 @@ class AirlyAirQuality(AirQualityEntity):
                 (DOMAIN, self.coordinator.latitude, self.coordinator.longitude)
             },
             "name": DEFAULT_NAME,
+            "manufacturer": MANUFACTURER,
             "entry_type": "service",
         }
 
