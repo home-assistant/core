@@ -18,6 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_PING_COUNT = "count"
 
+PING_ATTEMPTS_COUNT = 3
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(const.CONF_HOSTS): {cv.slug: cv.string},
@@ -37,19 +39,19 @@ class Host:
 
     def ping(self):
         """Send an ICMP echo request and return True if success."""
-        return icmp_ping(self.ip_address, count=1).is_alive
+        return icmp_ping(self.ip_address, count=PING_ATTEMPTS_COUNT).is_alive
 
     def update(self, see):
         """Update device state by sending one or more ping messages."""
-        failed = 0
-        while failed < self._count:  # check more times if host is unreachable
-            if self.ping():
-                see(dev_id=self.dev_id, source_type=SOURCE_TYPE_ROUTER)
-                return True
-            failed += 1
+        if self.ping():
+            see(dev_id=self.dev_id, source_type=SOURCE_TYPE_ROUTER)
+            return True
 
         _LOGGER.debug(
-            "No response from %s (%s) failed=%d", self.ip_address, self.dev_id, failed
+            "No response from %s (%s) failed=%d",
+            self.ip_address,
+            self.dev_id,
+            PING_ATTEMPTS_COUNT,
         )
 
 
