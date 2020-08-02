@@ -250,7 +250,7 @@ async def test_reauth_form_invalid_auth(hass: HomeAssistant):
         side_effect=AIOGitHubAPIAuthenticationException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], FIXTURE_USER_INPUT
+            result["flow_id"], FIXTURE_REAUTH_INPUT
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
