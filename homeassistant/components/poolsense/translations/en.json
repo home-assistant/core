@@ -1,22 +1,22 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
         "step": {
             "user": {
-                "title": "PoolSense",
-                "description": "Set up PoolSense integration. Register on the dedicated app to get your username and password. Serial is optional.",
                 "data": {
                     "email": "Email",
                     "password": "Password"
-                }
+                },
+                "description": "[%key:common::config_flow::description%]",
+                "title": "PoolSense"
             }
-        },
-        "error": {
-            "cannot_connect": "Can't connect to PoolSense.",
-            "invalid_auth": "Invalid authorisation details.",
-            "unknown": "Unknown Error."
-        },
-        "abort": {
-            "already_configured": "Device already configured."
         }
     }
 }

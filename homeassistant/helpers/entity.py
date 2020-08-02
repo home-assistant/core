@@ -27,13 +27,9 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.helpers.entity_platform import EntityPlatform
-from homeassistant.helpers.entity_registry import (
-    EVENT_ENTITY_REGISTRY_UPDATED,
-    RegistryEntry,
-)
-from homeassistant.helpers.event import Event
+from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.helpers.event import Event, async_track_entity_registry_updated_event
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
-from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -46,21 +42,7 @@ def generate_entity_id(
     hass: Optional[HomeAssistant] = None,
 ) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
-    if current_ids is None:
-        if hass is None:
-            raise ValueError("Missing required parameter currentids or hass")
-        return run_callback_threadsafe(
-            hass.loop,
-            async_generate_entity_id,
-            entity_id_format,
-            name,
-            current_ids,
-            hass,
-        ).result()
-
-    name = (slugify(name or "") or slugify(DEVICE_DEFAULT_NAME)).lower()
-
-    return ensure_unique_string(entity_id_format.format(name), current_ids)
+    return async_generate_entity_id(entity_id_format, name, current_ids, hass)
 
 
 @callback
@@ -71,14 +53,23 @@ def async_generate_entity_id(
     hass: Optional[HomeAssistant] = None,
 ) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
-    if current_ids is None:
-        if hass is None:
-            raise ValueError("Missing required parameter currentids or hass")
 
-        current_ids = hass.states.async_entity_ids()
     name = (name or DEVICE_DEFAULT_NAME).lower()
+    preferred_string = entity_id_format.format(slugify(name))
 
-    return ensure_unique_string(entity_id_format.format(slugify(name)), current_ids)
+    if current_ids is not None:
+        return ensure_unique_string(preferred_string, current_ids)
+
+    if hass is None:
+        raise ValueError("Missing required parameter current_ids or hass")
+
+    test_string = preferred_string
+    tries = 1
+    while hass.states.get(test_string):
+        tries += 1
+        test_string = f"{preferred_string}_{tries}"
+
+    return test_string
 
 
 class Entity(ABC):
@@ -518,8 +509,8 @@ class Entity(ABC):
         if self.registry_entry is not None:
             assert self.hass is not None
             self.async_on_remove(
-                self.hass.bus.async_listen(
-                    EVENT_ENTITY_REGISTRY_UPDATED, self._async_registry_updated
+                async_track_entity_registry_updated_event(
+                    self.hass, self.entity_id, self._async_registry_updated
                 )
             )
 
@@ -532,14 +523,11 @@ class Entity(ABC):
     async def _async_registry_updated(self, event: Event) -> None:
         """Handle entity registry update."""
         data = event.data
-        if data["action"] == "remove" and data["entity_id"] == self.entity_id:
+        if data["action"] == "remove":
             await self.async_removed_from_registry()
             await self.async_remove()
 
-        if (
-            data["action"] != "update"
-            or data.get("old_entity_id", data["entity_id"]) != self.entity_id
-        ):
+        if data["action"] != "update":
             return
 
         assert self.hass is not None

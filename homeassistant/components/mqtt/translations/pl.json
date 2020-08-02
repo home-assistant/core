@@ -58,9 +58,9 @@
             "broker": {
                 "data": {
                     "broker": "Po\u015brednik",
-                    "password": "Has\u0142o",
+                    "password": "[%key_id:common::config_flow::data::password%]",
                     "port": "Port",
-                    "username": "U\u017cytkownik"
+                    "username": "[%key_id:common::config_flow::data::username%]"
                 },
                 "description": "Wprowad\u017a informacje o po\u0142\u0105czeniu po\u015brednika MQTT"
             },

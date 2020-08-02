@@ -2,7 +2,7 @@
   "domain": "elkm1",
   "name": "Elk-M1 Control",
   "documentation": "https://www.home-assistant.io/integrations/elkm1",
-  "requirements": ["elkm1-lib==0.7.18"],
-  "codeowners": ["@bdraco"],
+  "requirements": ["elkm1-lib==0.7.19"],
+  "codeowners": ["@gwww", "@bdraco"],
   "config_flow": true
 }

@@ -618,10 +618,11 @@ async def test_no_template_match_all(hass, caplog):
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.invalid_state").state == "2"
-    assert hass.states.get("sensor.invalid_icon").state == "startup"
-    assert hass.states.get("sensor.invalid_entity_picture").state == "startup"
-    assert hass.states.get("sensor.invalid_friendly_name").state == "startup"
-    assert hass.states.get("sensor.invalid_attribute").state == "startup"
+    # Will now process because we have at least one valid template
+    assert hass.states.get("sensor.invalid_icon").state == "hello"
+    assert hass.states.get("sensor.invalid_entity_picture").state == "hello"
+    assert hass.states.get("sensor.invalid_friendly_name").state == "hello"
+    assert hass.states.get("sensor.invalid_attribute").state == "hello"
 
     await hass.helpers.entity_component.async_update_entity("sensor.invalid_state")
     await hass.helpers.entity_component.async_update_entity("sensor.invalid_icon")
@@ -638,3 +639,32 @@ async def test_no_template_match_all(hass, caplog):
     assert hass.states.get("sensor.invalid_entity_picture").state == "hello"
     assert hass.states.get("sensor.invalid_friendly_name").state == "hello"
     assert hass.states.get("sensor.invalid_attribute").state == "hello"
+
+
+async def test_unique_id(hass):
+    """Test unique_id option only creates one sensor per id."""
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test_template_sensor_01": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ true }}",
+                    },
+                    "test_template_sensor_02": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ false }}",
+                    },
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1

@@ -1,0 +1,33 @@
+{
+  "config": {
+    "flow_title": "Azure DevOps: {project_url}",
+    "error": {
+      "authorization_error": "Authorization error. Check you have access to the project and have the correct credentials.",
+      "connection_error": "Could not connect to Azure DevOps.",
+      "project_error": "Could not get project info."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "organization": "Organization",
+          "project": "Project",
+          "personal_access_token": "Personal Access Token (PAT)"
+        },
+        "description": "Set up an Azure DevOps instance to access your project. A Personal Access Token is only required for a private project.",
+        "title": "Add Azure DevOps Project"
+      },
+      "reauth": {
+        "data": {
+          "personal_access_token": "Personal Access Token (PAT)"
+        },
+        "description": "Authentication failed for {project_url}. Please enter your current credentials.",
+        "title": "Reauthentication"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::data::access_token%] updated successfully"
+    }
+  },
+  "title": "Azure DevOps"
+}

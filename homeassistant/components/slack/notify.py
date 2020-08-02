@@ -224,7 +224,10 @@ class SlackNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message, **kwargs):
         """Send a message to Slack."""
-        data = kwargs.get(ATTR_DATA, {})
+        data = kwargs.get(ATTR_DATA)
+
+        if data is None:
+            data = {}
 
         try:
             DATA_SCHEMA(data)

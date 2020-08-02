@@ -36,8 +36,6 @@ SERVICE_RECORD_SCHEMA = STREAM_SERVICE_SCHEMA.extend(
         vol.Optional(CONF_LOOKBACK, default=0): int,
     }
 )
-# Set log level to error for libav
-logging.getLogger("libav").setLevel(logging.ERROR)
 
 
 @bind_hass
@@ -80,6 +78,9 @@ def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=N
 
 async def async_setup(hass, config):
     """Set up stream."""
+    # Set log level to error for libav
+    logging.getLogger("libav").setLevel(logging.ERROR)
+
     # Keep import here so that we can import stream integration without installing reqs
     # pylint: disable=import-outside-toplevel
     from .recorder import async_setup_recorder

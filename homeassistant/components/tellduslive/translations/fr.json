@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "TelldusLive est d\u00e9j\u00e0 configur\u00e9",
             "already_setup": "TelldusLive est d\u00e9j\u00e0 configur\u00e9",
             "authorize_url_fail": "Erreur inconnue lors de la g\u00e9n\u00e9ration d'une URL d'autorisation.",
             "authorize_url_timeout": "D\u00e9lai de g\u00e9n\u00e9ration de l'URL d'authentification d\u00e9pass\u00e9.",

@@ -54,20 +54,19 @@ async def async_setup_entry(
         [ToonDisplayDeviceSensor(coordinator, key="current_display_temperature")]
     )
 
-    if coordinator.data.gas_usage and coordinator.data.gas_usage.is_smart:
-        sensors.extend(
-            [
-                ToonGasMeterDeviceSensor(coordinator, key=key)
-                for key in (
-                    "gas_average_daily",
-                    "gas_average",
-                    "gas_daily_cost",
-                    "gas_daily_usage",
-                    "gas_meter_reading",
-                    "gas_value",
-                )
-            ]
-        )
+    sensors.extend(
+        [
+            ToonGasMeterDeviceSensor(coordinator, key=key)
+            for key in (
+                "gas_average_daily",
+                "gas_average",
+                "gas_daily_cost",
+                "gas_daily_usage",
+                "gas_meter_reading",
+                "gas_value",
+            )
+        ]
+    )
 
     if coordinator.data.agreement.is_toon_solar:
         sensors.extend(
@@ -89,8 +88,9 @@ async def async_setup_entry(
     if coordinator.data.thermostat.have_opentherm_boiler:
         sensors.extend(
             [
-                ToonBoilerDeviceSensor(coordinator, key=key)
-                for key in ["thermostat_info_current_modulation_level"]
+                ToonBoilerDeviceSensor(
+                    coordinator, key="thermostat_info_current_modulation_level"
+                )
             ]
         )
 

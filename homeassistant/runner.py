@@ -37,7 +37,7 @@ else:
     PolicyBase = asyncio.DefaultEventLoopPolicy  # pylint: disable=invalid-name
 
 
-class HassEventLoopPolicy(PolicyBase):
+class HassEventLoopPolicy(PolicyBase):  # type: ignore
     """Event loop policy for Home Assistant."""
 
     def __init__(self, debug: bool) -> None:
@@ -48,11 +48,11 @@ class HassEventLoopPolicy(PolicyBase):
     @property
     def loop_name(self) -> str:
         """Return name of the loop."""
-        return self._loop_factory.__name__
+        return self._loop_factory.__name__  # type: ignore
 
-    def new_event_loop(self):
+    def new_event_loop(self) -> asyncio.AbstractEventLoop:
         """Get the event loop."""
-        loop = super().new_event_loop()
+        loop: asyncio.AbstractEventLoop = super().new_event_loop()
         loop.set_exception_handler(_async_loop_exception_handler)
         if self.debug:
             loop.set_debug(True)
@@ -68,14 +68,14 @@ class HassEventLoopPolicy(PolicyBase):
             return loop
 
         # Copied from Python 3.9 source
-        def _do_shutdown(future):
+        def _do_shutdown(future: asyncio.Future) -> None:
             try:
                 executor.shutdown(wait=True)
                 loop.call_soon_threadsafe(future.set_result, None)
             except Exception as ex:  # pylint: disable=broad-except
                 loop.call_soon_threadsafe(future.set_exception, ex)
 
-        async def shutdown_default_executor():
+        async def shutdown_default_executor() -> None:
             """Schedule the shutdown of the default executor."""
             future = loop.create_future()
             thread = threading.Thread(target=_do_shutdown, args=(future,))
@@ -85,7 +85,7 @@ class HassEventLoopPolicy(PolicyBase):
             finally:
                 thread.join()
 
-        loop.shutdown_default_executor = shutdown_default_executor
+        setattr(loop, "shutdown_default_executor", shutdown_default_executor)
 
         return loop
 
