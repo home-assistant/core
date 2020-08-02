@@ -52,21 +52,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         loop=hass.loop,
     )
 
-    listen_task = hass.loop.create_task(listen(hass, client, name))
+    syncthing = SyncthingClient(hass, client, name)
+
+    syncthing.subscribe()
+
+    hass.data[DOMAIN][name] = syncthing
 
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
-    hass.data[DOMAIN][name] = {
-        "client": client,
-        "listen_task": listen_task,
-    }
-
     async def cancel_listen_task(_):
-        listen_task.cancel()
-        await hass.data[DOMAIN][name]["client"].close()
+        await syncthing.unsubscribe()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cancel_listen_task)
 
@@ -85,48 +83,81 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     if unload_ok:
         name = entry.data[CONF_NAME]
-        hass.data[DOMAIN][name]["listen_task"].cancel()
-        await hass.data[DOMAIN][name]["client"].close()
+        await hass.data[DOMAIN][name].unsubscribe()
         hass.data[DOMAIN].pop(name)
 
     return unload_ok
 
 
-async def listen(hass, client, name):
-    """Listen to Syncthing events."""
-    events = client.events
-    server_was_unavailable = False
-    while True:
-        try:
-            await client.system.ping()
-            if server_was_unavailable:
-                _LOGGER.info("The syncthing server '%s' is back online.", name)
-                async_dispatcher_send(hass, f"{SERVER_AVAILABLE}-{name}")
-                server_was_unavailable = False
+class SyncthingClient:
+    """A Syncthing client."""
 
-            async for event in events.listen():
-                if events.last_seen_id == 0:
-                    continue  # skipping historical events from the first batch
-                if event["type"] not in EVENTS:
-                    continue
+    def __init__(self, hass, client, name):
+        """Initialize the client."""
+        self._hass = hass
+        self._client = client
+        self._name = name
+        self._listen_task = None
 
-                signal_name = EVENTS[event["type"]]
-                folder = None
-                if "folder" in event["data"]:
-                    folder = event["data"]["folder"]
-                else:  # A workaround, some events store folder id under `id` key
-                    folder = event["data"]["id"]
-                async_dispatcher_send(
-                    hass, f"{signal_name}-{name}-{folder}", event,
+    @property
+    def database(self):
+        """Get database namespace client."""
+        return self._client.database
+
+    @property
+    def system(self):
+        """Get system namespace client."""
+        return self._client.system
+
+    def subscribe(self):
+        """Start event listener coroutine."""
+        self._listen_task = self._hass.loop.create_task(self._listen())
+
+    async def unsubscribe(self):
+        """Stop event listener coroutine."""
+        if self._listen_task:
+            self._listen_task.cancel()
+        await self._client.close()
+
+    async def _listen(self):
+        """Listen to Syncthing events."""
+        events = self._client.events
+        server_was_unavailable = False
+        while True:
+            try:
+                await self._client.system.ping()
+                if server_was_unavailable:
+                    _LOGGER.info(
+                        "The syncthing server '%s' is back online.", self._name
+                    )
+                    async_dispatcher_send(
+                        self._hass, f"{SERVER_AVAILABLE}-{self._name}"
+                    )
+                    server_was_unavailable = False
+
+                async for event in events.listen():
+                    if events.last_seen_id == 0:
+                        continue  # skipping historical events from the first batch
+                    if event["type"] not in EVENTS:
+                        continue
+
+                    signal_name = EVENTS[event["type"]]
+                    folder = None
+                    if "folder" in event["data"]:
+                        folder = event["data"]["folder"]
+                    else:  # A workaround, some events store folder id under `id` key
+                        folder = event["data"]["id"]
+                    async_dispatcher_send(
+                        self._hass, f"{signal_name}-{self._name}-{folder}", event,
+                    )
+                return
+            except aiosyncthing.exceptions.SyncthingError:
+                _LOGGER.info(
+                    "The syncthing server '%s' is not available. Sleeping %i seconds and retrying...",
+                    self._name,
+                    RECONNECT_INTERVAL.seconds,
                 )
-            return
-        except aiosyncthing.exceptions.SyncthingError:
-            _LOGGER.info(
-                "The syncthing server '%s' is not available. Sleeping %i seconds and retrying...",
-                name,
-                RECONNECT_INTERVAL.seconds,
-            )
-            async_dispatcher_send(hass, f"{SERVER_UNAVAILABLE}-{name}")
-            await asyncio.sleep(RECONNECT_INTERVAL.seconds)
-            server_was_unavailable = True
-            continue
+                async_dispatcher_send(self._hass, f"{SERVER_UNAVAILABLE}-{self._name}")
+                await asyncio.sleep(RECONNECT_INTERVAL.seconds)
+                server_was_unavailable = True
+                continue
