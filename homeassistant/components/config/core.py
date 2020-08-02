@@ -26,14 +26,8 @@ class CheckConfigView(HomeAssistantView):
 
     async def post(self, request):
         """Validate configuration and return results."""
-        import cProfile
-
-        pr = cProfile.Profile()
-        pr.enable()
         errors = await async_check_ha_config_file(request.app["hass"])
-        pr.disable()
-        pr.create_stats()
-        pr.dump_stats("check_config.cprof")
+
         state = "invalid" if errors else "valid"
 
         return self.json({"result": state, "errors": errors})
