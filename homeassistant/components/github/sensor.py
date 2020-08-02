@@ -1,6 +1,7 @@
 """Sensor platform for GitHub integration."""
 import logging
 
+from aiogithubapi.helpers import short_message, short_sha
 from aiogithubapi.objects.repository import AIOGitHubAPIRepository
 
 from homeassistant.const import ATTR_DATE, ATTR_ID, ATTR_NAME
@@ -211,18 +212,18 @@ class LatestCommitSensor(GitHubSensor):
         await self._coordinator.async_request_refresh()
         data: GitHubData = self._coordinator.data
 
-        # self._state = data.latest_commit.sha
+        self._state = short_sha(data.latest_commit.sha)
 
         self._attributes = {
-            # ATTR_MESSAGE: data.latest_commit.commit.message_short,
+            ATTR_MESSAGE: short_message(data.latest_commit.commit.message),
             ATTR_REPO_DESCRIPTION: data.repository.description,
             ATTR_REPO_HOMEPAGE: data.repository.homepage,
             ATTR_REPO_NAME: data.repository.name,
             ATTR_REPO_PATH: data.repository.full_name,
             ATTR_REPO_TOPICS: data.repository.topics,
-            # ATTR_SHA: data.latest_commit.sha,
-            # ATTR_URL: data.latest_commit.html_url,
-            # ATTR_USER: data.latest_commit.author.login,
+            ATTR_SHA: data.latest_commit.sha,
+            ATTR_URL: data.latest_commit.html_url,
+            ATTR_USER: data.latest_commit.author.login,
         }
 
         return True

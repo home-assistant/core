@@ -9,6 +9,7 @@ from aiogithubapi import (
     AIOGitHubAPIException,
     GitHub,
 )
+from aiogithubapi.objects.repos.commit import AIOGitHubAPIReposCommit
 from aiogithubapi.objects.repos.traffic.clones import AIOGitHubAPIReposTrafficClones
 from aiogithubapi.objects.repos.traffic.pageviews import (
     AIOGitHubAPIReposTrafficPageviews,
@@ -18,7 +19,6 @@ from aiogithubapi.objects.repository import (
     AIOGitHubAPIRepositoryIssue,
     AIOGitHubAPIRepositoryRelease,
 )
-from aiogithubapi.objects.repository.commit import AIOGitHubAPIRepositoryCommit
 import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
@@ -51,7 +51,7 @@ class GitHubData:
     def __init__(
         self,
         repository: AIOGitHubAPIRepository,
-        latest_commit: AIOGitHubAPIRepositoryCommit = None,
+        latest_commit: AIOGitHubAPIReposCommit = None,
         clones: AIOGitHubAPIReposTrafficClones = None,
         issues: List[AIOGitHubAPIRepositoryIssue] = None,
         releases: List[AIOGitHubAPIRepositoryRelease] = None,
@@ -108,7 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     entry.data[CONF_REPOSITORY]
                 )
                 if entry.options.get(CONF_LATEST_COMMIT, True) is True:
-                    latest_commit: AIOGitHubAPIRepositoryCommit = await repository.get_last_commit()
+                    latest_commit: AIOGitHubAPIReposCommit = await repository.get_last_commit()
                 else:
                     latest_commit = None
                 if entry.options.get(CONF_ISSUES_PRS, False) is True:
