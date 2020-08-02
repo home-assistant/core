@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from icmplib import ping
+from icmplib import icmp_ping
 import voluptuous as vol
 
 from homeassistant import const, util
@@ -38,7 +38,7 @@ class Host:
 
     def ping(self):
         """Send an ICMP echo request and return True if success."""
-        return ping(self.ip_address, count=1).is_alive
+        return icmp_ping(self.ip_address, count=1).is_alive
 
     def update(self, see):
         """Update device state by sending one or more ping messages."""
