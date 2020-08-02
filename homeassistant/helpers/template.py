@@ -2,7 +2,7 @@
 import base64
 import collections.abc
 from datetime import datetime
-from functools import wraps
+from functools import lru_cache, wraps
 import json
 import logging
 import math
@@ -50,6 +50,7 @@ _RE_GET_ENTITIES = re.compile(
     re.I | re.M,
 )
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{")
+_TEMPLATE_CACHE_SIZE_PER_ENV = 1024
 
 
 @bind_hass
@@ -1041,6 +1042,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
         return isinstance(obj, Namespace) or super().is_safe_attribute(obj, attr, value)
+
+    @lru_cache(maxsize=_TEMPLATE_CACHE_SIZE_PER_ENV)
+    def compile(self, value):
+        """Compile the template."""
+        return super().compile(value)
 
 
 _NO_HASS_ENV = TemplateEnvironment(None)
