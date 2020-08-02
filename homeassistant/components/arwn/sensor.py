@@ -30,26 +30,26 @@ def discover_sensors(topic, payload):
             unit = TEMP_FAHRENHEIT
         else:
             unit = TEMP_CELSIUS
-        return ArwnSensor(name, "temp", unit)
+        return ArwnSensor(name, "temp", unit, topic)
     if domain == "moisture":
         name = f"{parts[2]} Moisture"
-        return ArwnSensor(name, "moisture", unit, "mdi:water-percent")
+        return ArwnSensor(name, "moisture", unit, topic, "mdi:water-percent")
     if domain == "rain":
         if len(parts) >= 3 and parts[2] == "today":
             return ArwnSensor(
-                "Rain Since Midnight", "since_midnight", "in", "mdi:water"
+                "Rain Since Midnight", "since_midnight", "in", topic, "mdi:water"
             )
         return (
-            ArwnSensor("Total Rainfall", "total", unit, "mdi:water"),
-            ArwnSensor("Rainfall Rate", "rate", unit, "mdi:water"),
+            ArwnSensor("Total Rainfall", "total", unit, topic, "mdi:water"),
+            ArwnSensor("Rainfall Rate", "rate", unit, topic, "mdi:water"),
         )
     if domain == "barometer":
-        return ArwnSensor("Barometer", "pressure", unit, "mdi:thermometer-lines")
+        return ArwnSensor("Barometer", "pressure", unit, topic, "mdi:thermometer-lines")
     if domain == "wind":
         return (
-            ArwnSensor("Wind Speed", "speed", unit, "mdi:speedometer"),
-            ArwnSensor("Wind Gust", "gust", unit, "mdi:speedometer"),
-            ArwnSensor("Wind Direction", "direction", DEGREE, "mdi:compass"),
+            ArwnSensor("Wind Speed", "speed", unit, topic, "mdi:speedometer"),
+            ArwnSensor("Wind Gust", "gust", unit, topic, "mdi:speedometer"),
+            ArwnSensor("Wind Direction", "direction", DEGREE, topic, "mdi:compass"),
         )
 
 
@@ -99,8 +99,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     dict(name=sensor.name, event=event),
                 )
                 async_add_entities((sensor,), True)
-            else:
-                store[sensor.name].set_event(event)
 
     await mqtt.async_subscribe(hass, TOPIC, async_sensor_event_received, 0)
     return True
@@ -109,7 +107,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class ArwnSensor(Entity):
     """Representation of an ARWN sensor."""
 
-    def __init__(self, name, state_key, units, icon=None):
+    def __init__(self, name, state_key, units, topic, icon=None):
         """Initialize the sensor."""
         self.hass = None
         self.entity_id = _slug(name)
@@ -118,12 +116,24 @@ class ArwnSensor(Entity):
         self.event = {}
         self._unit_of_measurement = units
         self._icon = icon
+        self._topic = topic
 
     def set_event(self, event):
         """Update the sensor with the most recent event."""
         self.event = {}
         self.event.update(event)
         self.async_write_ha_state()
+    
+    async def async_added_to_hass(self):
+        @callback
+        def message_received(msg):
+            event = json.loads(msg.payload)
+            if "timestamp" in event:
+                del event["timestamp"]
+            
+            self.set_event(event)
+
+        await mqtt.async_subscribe(self.hass, self._topic, message_received, 0)
 
     @property
     def state(self):
