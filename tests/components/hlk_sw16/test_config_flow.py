@@ -5,6 +5,8 @@ import socket
 from homeassistant import config_entries, setup
 from homeassistant.components.hlk_sw16.const import DOMAIN
 
+from tests.async_mock import patch
+
 hlk_sw16_test_config = {
     "host": "1.1.1.1",
     "port": 8080,
@@ -150,13 +152,17 @@ async def test_form_cannot_connect(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    port = free_port()
-
     conf = {
         "host": "127.0.0.1",
-        "port": port,
+        "port": 8080,
     }
 
+    with patch(
+        "asyncio.wait_for", side_effect=asyncio.TimeoutError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], conf,
+        )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], conf,)
 
     assert result2["type"] == "form"
