@@ -10,9 +10,5 @@ class AlreadyConfigured(SW16Exception):
     """HLK-SW16 is already configured."""
 
 
-class NameExists(SW16Exception):
-    """HLK-SW16 name already configured."""
-
-
 class CannotConnect(SW16Exception):
     """Unable to connect to the HLK-SW16."""
