@@ -81,7 +81,6 @@ from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template as template_helper
 from homeassistant.helpers.logging import KeywordStyleAdapter
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
@@ -105,8 +104,6 @@ port = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
 
 # typing typevar
 T = TypeVar("T")
-
-_LOGGER = logging.getLogger(__name__)
 
 
 # Adapted from:
@@ -499,9 +496,7 @@ unit_system = vol.All(
 )
 
 
-def template(
-    value: Optional[Any], hass: Optional[HomeAssistantType] = None
-) -> template_helper.Template:
+def template(value: Optional[Any]) -> template_helper.Template:
     """Validate a jinja2 template."""
 
     if value is None:
@@ -509,9 +504,7 @@ def template(
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
 
-    _LOGGER.warning("template: %s", value)
-
-    template_value = template_helper.Template(str(value), hass)  # type: ignore
+    template_value = template_helper.Template(str(value))  # type: ignore
 
     try:
         template_value.ensure_valid()
@@ -520,20 +513,20 @@ def template(
         raise vol.Invalid(f"invalid template ({ex})")
 
 
-def template_complex(value: Any, hass: Optional[HomeAssistantType] = None) -> Any:
+def template_complex(value: Any) -> Any:
     """Validate a complex jinja2 template."""
     if isinstance(value, list):
         return_list = value.copy()
         for idx, element in enumerate(return_list):
-            return_list[idx] = template_complex(element, hass)
+            return_list[idx] = template_complex(element)
         return return_list
     if isinstance(value, dict):
         return_dict = value.copy()
         for key, element in return_dict.items():
-            return_dict[key] = template_complex(element, hass)
+            return_dict[key] = template_complex(element)
         return return_dict
     if isinstance(value, str):
-        return template(value, hass)
+        return template(value)
     return value
 
 

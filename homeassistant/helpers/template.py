@@ -174,10 +174,6 @@ class Template:
         """Instantiate a template."""
         if not isinstance(template, str):
             raise TypeError("Expected template to be a string")
-        if not hass:
-            _LOGGER.warning("Hass not passed for: %s", template)
-        else:
-            _LOGGER.warning("Hass passed for: %s", template)
 
         self.template: str = template
         self._compiled_code = None
