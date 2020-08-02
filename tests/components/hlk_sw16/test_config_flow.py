@@ -73,6 +73,17 @@ async def test_form(hass):
         "host": "127.0.0.1",
         "port": port,
     }
+
+    result3 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result3["type"] == "form"
+    assert result3["errors"] == {}
+
+    result4 = await hass.config_entries.flow.async_configure(result3["flow_id"], conf,)
+
+    assert result4["type"] == "form"
+    assert result4["errors"] == {"base": "already_configured"}
     await hass.async_block_till_done()
     server.close()
 
