@@ -9,11 +9,16 @@ from aiogithubapi import (
     AIOGitHubAPIException,
     GitHub,
 )
+from aiogithubapi.objects.repos.traffic.clones import AIOGitHubAPIReposTrafficClones
+from aiogithubapi.objects.repos.traffic.pageviews import (
+    AIOGitHubAPIReposTrafficPageviews,
+)
 from aiogithubapi.objects.repository import (
     AIOGitHubAPIRepository,
     AIOGitHubAPIRepositoryIssue,
     AIOGitHubAPIRepositoryRelease,
 )
+from aiogithubapi.objects.repository.commit import AIOGitHubAPIRepositoryCommit
 import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
@@ -40,45 +45,17 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor"]
 
 
-class GitHubClones:
-    """Represents a GitHub clones object."""
-
-    def __init__(self, count: int, count_uniques: int) -> None:
-        """Initialize a GitHub clones object."""
-        self.count = count
-        self.count_uniques = count_uniques
-
-
-class GitHubLatestCommit:
-    """Represents a GitHub last commit object."""
-
-    def __init__(self, sha: int, message: str) -> None:
-        """Initialize a GitHub last commit object."""
-        self.sha = sha
-        self.sha_short = sha[0:7]
-        self.message = message.splitlines()[0]
-
-
-class GitHubViews:
-    """Represents a GitHub views object."""
-
-    def __init__(self, count: int, count_uniques: int) -> None:
-        """Initialize a GitHub views object."""
-        self.count = count
-        self.count_uniques = count_uniques
-
-
 class GitHubData:
     """Represents a GitHub data object."""
 
     def __init__(
         self,
         repository: AIOGitHubAPIRepository,
-        latest_commit: GitHubLatestCommit = None,
-        clones: GitHubClones = None,
+        latest_commit: AIOGitHubAPIRepositoryCommit = None,
+        clones: AIOGitHubAPIReposTrafficClones = None,
         issues: List[AIOGitHubAPIRepositoryIssue] = None,
         releases: List[AIOGitHubAPIRepositoryRelease] = None,
-        views: GitHubViews = None,
+        views: AIOGitHubAPIReposTrafficPageviews = None,
     ) -> None:
         """Initialize the GitHub data object."""
         self.repository = repository
@@ -131,9 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     entry.data[CONF_REPOSITORY]
                 )
                 if entry.options.get(CONF_LATEST_COMMIT, True) is True:
-                    latest_commit = await repository.client.get(
-                        endpoint=f"/repos/{repository.full_name}/branches/{repository.default_branch}"
-                    )
+                    latest_commit: AIOGitHubAPIRepositoryCommit = await repository.get_last_commit()
                 else:
                     latest_commit = None
                 if entry.options.get(CONF_ISSUES_PRS, False) is True:
@@ -150,15 +125,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     releases = None
                 if repository.attributes.get("permissions").get("push") is True:
                     if entry.options.get(CONF_CLONES, False) is True:
-                        clones = await repository.client.get(
-                            endpoint=f"/repos/{repository.full_name}/traffic/clones"
-                        )
+                        clones: AIOGitHubAPIReposTrafficClones = await repository.traffic.get_clones()
                     else:
                         clones = None
                     if entry.options.get(CONF_VIEWS, False) is True:
-                        views = await repository.client.get(
-                            endpoint=f"/repos/{repository.full_name}/traffic/views"
-                        )
+                        views: AIOGitHubAPIReposTrafficPageviews = await repository.traffic.get_views()
                     else:
                         views = None
                 else:
@@ -166,21 +137,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     views = None
 
                 return GitHubData(
-                    repository,
-                    GitHubLatestCommit(
-                        latest_commit["commit"]["sha"],
-                        latest_commit["commit"]["commit"]["message"],
-                    )
-                    if latest_commit is not None
-                    else None,
-                    GitHubClones(clones["count"], clones["uniques"])
-                    if clones is not None
-                    else None,
-                    issues,
-                    releases,
-                    GitHubViews(views["count"], views["uniques"])
-                    if views is not None
-                    else None,
+                    repository, latest_commit, clones, issues, releases, views
                 )
         except (AIOGitHubAPIAuthenticationException, AIOGitHubAPIException) as err:
             raise UpdateFailed(f"Error communicating with GitHub: {err}")

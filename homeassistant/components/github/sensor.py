@@ -136,7 +136,7 @@ class ClonesSensor(GitHubSensor):
         self, coordinator: DataUpdateCoordinator, repository: AIOGitHubAPIRepository
     ) -> None:
         """Initialize the sensor."""
-        name = repository.attributes.get("name")
+        name = repository.name
         super().__init__(
             coordinator, repository, "clones", f"{name} Clones", "mdi:github"
         )
@@ -150,11 +150,11 @@ class ClonesSensor(GitHubSensor):
 
         self._attributes = {
             ATTR_REPO_DESCRIPTION: data.repository.description,
-            ATTR_REPO_HOMEPAGE: data.repository.attributes.get("homepage"),
-            ATTR_REPO_NAME: data.repository.attributes.get("name"),
+            ATTR_REPO_HOMEPAGE: data.repository.homepage,
+            ATTR_REPO_NAME: data.repository.name,
             ATTR_REPO_PATH: data.repository.full_name,
             ATTR_REPO_TOPICS: data.repository.topics,
-            ATTR_UNIQUE: data.clones.count_uniques,
+            ATTR_UNIQUE: data.clones.uniques,
         }
 
         return True
@@ -167,7 +167,7 @@ class ForksSensor(GitHubSensor):
         self, coordinator: DataUpdateCoordinator, repository: AIOGitHubAPIRepository
     ) -> None:
         """Initialize the sensor."""
-        name = repository.attributes.get("name")
+        name = repository.name
         super().__init__(
             coordinator, repository, "forks", f"{name} Forks", "mdi:github"
         )
@@ -177,12 +177,12 @@ class ForksSensor(GitHubSensor):
         await self._coordinator.async_request_refresh()
         data: GitHubData = self._coordinator.data
 
-        self._state = data.repository.attributes.get("forks")
+        self._state = data.repository.forks_count
 
         self._attributes = {
             ATTR_REPO_DESCRIPTION: data.repository.description,
-            ATTR_REPO_HOMEPAGE: data.repository.attributes.get("homepage"),
-            ATTR_REPO_NAME: data.repository.attributes.get("name"),
+            ATTR_REPO_HOMEPAGE: data.repository.homepage,
+            ATTR_REPO_NAME: data.repository.name,
             ATTR_REPO_PATH: data.repository.full_name,
             ATTR_REPO_TOPICS: data.repository.topics,
         }
@@ -197,7 +197,7 @@ class LatestCommitSensor(GitHubSensor):
         self, coordinator: DataUpdateCoordinator, repository: AIOGitHubAPIRepository
     ) -> None:
         """Initialize the sensor."""
-        name = repository.attributes.get("name")
+        name = repository.name
         super().__init__(
             coordinator,
             repository,
@@ -211,16 +211,18 @@ class LatestCommitSensor(GitHubSensor):
         await self._coordinator.async_request_refresh()
         data: GitHubData = self._coordinator.data
 
-        self._state = data.latest_commit.sha_short
+        # self._state = data.latest_commit.sha
 
         self._attributes = {
-            ATTR_MESSAGE: data.latest_commit.message,
-            ATTR_SHA: data.latest_commit.sha,
+            # ATTR_MESSAGE: data.latest_commit.commit.message_short,
             ATTR_REPO_DESCRIPTION: data.repository.description,
-            ATTR_REPO_HOMEPAGE: data.repository.attributes.get("homepage"),
-            ATTR_REPO_NAME: data.repository.attributes.get("name"),
+            ATTR_REPO_HOMEPAGE: data.repository.homepage,
+            ATTR_REPO_NAME: data.repository.name,
             ATTR_REPO_PATH: data.repository.full_name,
             ATTR_REPO_TOPICS: data.repository.topics,
+            # ATTR_SHA: data.latest_commit.sha,
+            # ATTR_URL: data.latest_commit.html_url,
+            # ATTR_USER: data.latest_commit.author.login,
         }
 
         return True
@@ -233,7 +235,7 @@ class LatestOpenIssueSensor(GitHubSensor):
         self, coordinator: DataUpdateCoordinator, repository: AIOGitHubAPIRepository
     ) -> None:
         """Initialize the sensor."""
-        name = repository.attributes.get("name")
+        name = repository.name
         super().__init__(
             coordinator,
             repository,
@@ -263,8 +265,8 @@ class LatestOpenIssueSensor(GitHubSensor):
             ATTR_NUMBER: data.open_issues[0].number,
             ATTR_OPEN: len(data.open_issues),
             ATTR_REPO_DESCRIPTION: data.repository.description,
-            ATTR_REPO_HOMEPAGE: data.repository.attributes.get("homepage"),
-            ATTR_REPO_NAME: data.repository.attributes.get("name"),
+            ATTR_REPO_HOMEPAGE: data.repository.homepage,
+            ATTR_REPO_NAME: data.repository.name,
             ATTR_REPO_PATH: data.repository.full_name,
             ATTR_REPO_TOPICS: data.repository.topics,
             ATTR_URL: data.open_issues[0].html_url,
@@ -281,7 +283,7 @@ class LatestPullRequestSensor(GitHubSensor):
         self, coordinator: DataUpdateCoordinator, repository: AIOGitHubAPIRepository
     ) -> None:
         """Initialize the sensor."""
-        name = repository.attributes.get("name")
+        name = repository.name
         super().__init__(
             coordinator,
             repository,
@@ -311,8 +313,8 @@ class LatestPullRequestSensor(GitHubSensor):
             ATTR_NUMBER: data.open_pull_requests[0].number,
             ATTR_OPEN: len(data.open_pull_requests),
             ATTR_REPO_DESCRIPTION: data.repository.description,
-            ATTR_REPO_HOMEPAGE: data.repository.attributes.get("homepage"),
-            ATTR_REPO_NAME: data.repository.attributes.get("name"),
+            ATTR_REPO_HOMEPAGE: data.repository.homepage,
+            ATTR_REPO_NAME: data.repository.name,
             ATTR_REPO_PATH: data.repository.full_name,
             ATTR_REPO_TOPICS: data.repository.topics,
             ATTR_USER: data.open_pull_requests[0].user.login,
@@ -328,7 +330,7 @@ class LatestReleaseSensor(GitHubSensor):
         self, coordinator: DataUpdateCoordinator, repository: AIOGitHubAPIRepository
     ) -> None:
         """Initialize the sensor."""
-        name = repository.attributes.get("name")
+        name = repository.name
         super().__init__(
             coordinator,
             repository,
@@ -354,8 +356,8 @@ class LatestReleaseSensor(GitHubSensor):
             ATTR_PRERELEASE: data.releases[0].prerelease,
             ATTR_RELEASES: len(data.releases),
             ATTR_REPO_DESCRIPTION: data.repository.description,
-            ATTR_REPO_HOMEPAGE: data.repository.attributes.get("homepage"),
-            ATTR_REPO_NAME: data.repository.attributes.get("name"),
+            ATTR_REPO_HOMEPAGE: data.repository.homepage,
+            ATTR_REPO_NAME: data.repository.name,
             ATTR_REPO_PATH: data.repository.full_name,
             ATTR_REPO_TOPICS: data.repository.topics,
             ATTR_URL: f"https://github.com/{data.repository.full_name}/releases/{data.releases[0].tag_name}",
@@ -371,7 +373,7 @@ class StargazersSensor(GitHubSensor):
         self, coordinator: DataUpdateCoordinator, repository: AIOGitHubAPIRepository
     ) -> None:
         """Initialize the sensor."""
-        name = repository.attributes.get("name")
+        name = repository.name
         super().__init__(
             coordinator, repository, "stargazers", f"{name} Stargazers", "mdi:github"
         )
@@ -381,12 +383,12 @@ class StargazersSensor(GitHubSensor):
         await self._coordinator.async_request_refresh()
         data: GitHubData = self._coordinator.data
 
-        self._state = data.repository.attributes.get("stargazers_count")
+        self._state = data.repository.stargazers_count
 
         self._attributes = {
             ATTR_REPO_DESCRIPTION: data.repository.description,
-            ATTR_REPO_HOMEPAGE: data.repository.attributes.get("homepage"),
-            ATTR_REPO_NAME: data.repository.attributes.get("name"),
+            ATTR_REPO_HOMEPAGE: data.repository.homepage,
+            ATTR_REPO_NAME: data.repository.name,
             ATTR_REPO_PATH: data.repository.full_name,
             ATTR_REPO_TOPICS: data.repository.topics,
         }
@@ -401,7 +403,7 @@ class ViewsSensor(GitHubSensor):
         self, coordinator: DataUpdateCoordinator, repository: AIOGitHubAPIRepository
     ) -> None:
         """Initialize the sensor."""
-        name = repository.attributes.get("name")
+        name = repository.name
         super().__init__(
             coordinator, repository, "views", f"{name} Views", "mdi:github"
         )
@@ -415,11 +417,11 @@ class ViewsSensor(GitHubSensor):
 
         self._attributes = {
             ATTR_REPO_DESCRIPTION: data.repository.description,
-            ATTR_REPO_HOMEPAGE: data.repository.attributes.get("homepage"),
-            ATTR_REPO_NAME: data.repository.attributes.get("name"),
+            ATTR_REPO_HOMEPAGE: data.repository.homepage,
+            ATTR_REPO_NAME: data.repository.name,
             ATTR_REPO_PATH: data.repository.full_name,
             ATTR_REPO_TOPICS: data.repository.topics,
-            ATTR_UNIQUE: data.views.count_uniques,
+            ATTR_UNIQUE: data.views.uniques,
         }
 
         return True
@@ -432,7 +434,7 @@ class WatchersSensor(GitHubSensor):
         self, coordinator: DataUpdateCoordinator, repository: AIOGitHubAPIRepository
     ) -> None:
         """Initialize the sensor."""
-        name = repository.attributes.get("name")
+        name = repository.name
         super().__init__(
             coordinator, repository, "watchers", f"{name} Watchers", "mdi:github"
         )
@@ -442,12 +444,12 @@ class WatchersSensor(GitHubSensor):
         await self._coordinator.async_request_refresh()
         data: GitHubData = self._coordinator.data
 
-        self._state = data.repository.attributes.get("watchers_count")
+        self._state = data.repository.watchers_count
 
         self._attributes = {
             ATTR_REPO_DESCRIPTION: data.repository.description,
-            ATTR_REPO_HOMEPAGE: data.repository.attributes.get("homepage"),
-            ATTR_REPO_NAME: data.repository.attributes.get("name"),
+            ATTR_REPO_HOMEPAGE: data.repository.homepage,
+            ATTR_REPO_NAME: data.repository.name,
             ATTR_REPO_PATH: data.repository.full_name,
             ATTR_REPO_TOPICS: data.repository.topics,
         }
