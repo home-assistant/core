@@ -28,15 +28,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PING_COUNT, default=DEFAULT_PING_COUNT): cv.positive_int,
+        vol.Optional(CONF_PING_COUNT, default=DEFAULT_PING_COUNT): vol.Range(
+            min=1, max=60
+        ),
     }
 )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ping Binary sensor."""
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME, f"Ping {host}")
+    host = config[CONF_HOST]
+    name = config.get(CONF_NAME) or f"Ping {host}"
     count = config.get(CONF_PING_COUNT)
 
     add_entities([PingBinarySensor(name, PingData(host, count))], True)
