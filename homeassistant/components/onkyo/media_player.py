@@ -134,6 +134,8 @@ def determine_zones(receiver):
         if str(error) != TIMEOUT_MESSAGE:
             raise error
         _LOGGER.debug("Zone 3 timed out, assuming no functionality")
+    except AssertionError:
+        _LOGGER.error("Zone 3 detection failed")
 
     return out
 
