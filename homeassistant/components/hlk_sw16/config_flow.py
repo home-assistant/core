@@ -15,7 +15,7 @@ from .const import (
     DEFAULT_RECONNECT_INTERVAL,
     DOMAIN,
 )
-from .errors import AlreadyConfigured, CannotConnect, NameExists
+from .errors import AlreadyConfigured, CannotConnect
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -69,6 +69,10 @@ class SW16FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
+    async def async_step_import(self, user_input):
+        """Handle import."""
+        return await self.async_step_user(user_input)
+
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
@@ -79,8 +83,6 @@ class SW16FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=address, data=user_input)
             except AlreadyConfigured:
                 errors["base"] = "already_configured"
-            except NameExists:
-                errors["base"] = "name_exists"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
 
