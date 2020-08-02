@@ -167,6 +167,31 @@ async def test_create_saves_data(manager):
     assert entry["source"] is None
 
 
+async def test_create_with_options(manager):
+    """Test creating a config entry."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 5
+
+        async def async_step_init(self, user_input=None):
+            return self.async_create_entry(
+                title="Test Title", data="Test Data", options={"option": 1}
+            )
+
+    await manager.async_init("test")
+    assert len(manager.async_progress()) == 0
+    assert len(manager.mock_created_entries) == 1
+
+    entry = manager.mock_created_entries[0]
+    assert entry["version"] == 5
+    assert entry["handler"] == "test"
+    assert entry["title"] == "Test Title"
+    assert entry["data"] == "Test Data"
+    assert entry["source"] is None
+    assert entry["options"] == {"option": 1}
+
+
 async def test_discovery_init_flow(manager):
     """Test a flow initialized by discovery."""
 
