@@ -2,9 +2,12 @@
 import logging
 
 from hlk_sw16 import create_hlk_sw16_connection
+import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SWITCHES
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -14,6 +17,7 @@ from homeassistant.helpers.entity import Entity
 from .const import (
     CONNECTION_TIMEOUT,
     DEFAULT_KEEP_ALIVE_INTERVAL,
+    DEFAULT_PORT,
     DEFAULT_RECONNECT_INTERVAL,
     DOMAIN,
 )
@@ -23,10 +27,43 @@ _LOGGER = logging.getLogger(__name__)
 DATA_DEVICE_REGISTER = "hlk_sw16_device_register"
 DATA_DEVICE_LISTENER = "hlk_sw16_device_listener"
 
+SWITCH_SCHEMA = vol.Schema({vol.Optional(CONF_NAME): cv.string})
+
+RELAY_ID = vol.All(
+    vol.Any(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "a", "b", "c", "d", "e", "f"), vol.Coerce(str)
+)
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                cv.string: vol.Schema(
+                    {
+                        vol.Required(CONF_HOST): cv.string,
+                        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                        vol.Required(CONF_SWITCHES): vol.Schema(
+                            {RELAY_ID: SWITCH_SCHEMA}
+                        ),
+                    }
+                )
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
 
 async def async_setup(hass, config):
     """Component setup, do nothing."""
     hass.data.setdefault(DOMAIN, {})
+    conf = config.get(DOMAIN)
+    if not conf:
+        return True
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+        )
+    )
     return True
 
 
