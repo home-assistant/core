@@ -304,7 +304,7 @@ class EntityPlatform:
                 continue
 
             self.logger.warning(
-                "Creating entity %s for domain %s with platform %s timed out after %ds.",
+                "Adding entity %s for domain %s with platform %s timed out after %ds.",
                 entity,
                 self.domain,
                 self.platform_name,
