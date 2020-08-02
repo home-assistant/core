@@ -48,7 +48,9 @@ class Host:
                 return True
             failed += 1
 
-        _LOGGER.debug("No response from %s failed=%d", self.ip_address, failed)
+        _LOGGER.debug(
+            "No response from %s (%s) failed=%d", self.ip_address, self.dev_id, failed
+        )
 
 
 def setup_scanner(hass, config, see, discovery_info=None):
