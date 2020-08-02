@@ -127,7 +127,7 @@ class ArwnSensor(Entity):
 
         @callback
         def message_received(msg):
-            """On message received on entity's topic"""
+            """On message received on entity's topic."""
             event = json.loads(msg.payload)
             if "timestamp" in event:
                 del event["timestamp"]
