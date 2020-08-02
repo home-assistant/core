@@ -972,7 +972,6 @@ omit =
     homeassistant/components/yale_smart_alarm/alarm_control_panel.py
     homeassistant/components/yamaha_musiccast/media_player.py
     homeassistant/components/yandex_transport/*
-    homeassistant/components/yeelight/*
     homeassistant/components/yeelightsunflower/light.py
     homeassistant/components/yi/camera.py
     homeassistant/components/zabbix/*
