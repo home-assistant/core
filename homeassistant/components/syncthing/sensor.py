@@ -30,15 +30,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Syncthing sensors."""
 
     name = config_entry.data[CONF_NAME]
-    client = hass.data[DOMAIN][name]["client"]
+    synchting = hass.data[DOMAIN][name]
 
     try:
-        config = await client.system.config()
-        version = await client.system.version()
+        config = await synchting.system.config()
+        version = await synchting.system.version()
         dev = []
 
         for folder in config["folders"]:
-            dev.append(FolderSensor(hass, client, name, folder, version["version"]))
+            dev.append(FolderSensor(hass, synchting, name, folder, version["version"]))
 
         async_add_entities(dev)
     except aiosyncthing.exceptions.SyncthingError as exception:
@@ -48,10 +48,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FolderSensor(Entity):
     """A Syncthing folder sensor."""
 
-    def __init__(self, hass, client, name, folder, version):
+    def __init__(self, hass, syncthing, name, folder, version):
         """Initialize the sensor."""
         self.hass = hass
-        self._client = client
+        self._syncthing = syncthing
         self._name = name
         self._folder = folder
         self._state = None
@@ -111,7 +111,7 @@ class FolderSensor(Entity):
     async def async_update_status(self):
         """Request folder status and update state."""
         try:
-            state = await self._client.database.status(self._folder["id"])
+            state = await self._syncthing.database.status(self._folder["id"])
             # A workaround, for some reason, state of paused folders is an empty string
             if state["state"] == "":
                 state["state"] = "paused"
