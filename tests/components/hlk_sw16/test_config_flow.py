@@ -1,17 +1,48 @@
 """Test the Hi-Link HLK-SW16 config flow."""
-from homeassistant import config_entries, setup
-from homeassistant.components.hlk_sw16.config_flow import (
-    AlreadyConfigured,
-    CannotConnect,
-)
-from homeassistant.components.hlk_sw16.const import DOMAIN
+import asyncio
+import socket
 
-from tests.async_mock import patch
+from homeassistant import config_entries, setup
+from homeassistant.components.hlk_sw16.const import DOMAIN
 
 hlk_sw16_test_config = {
     "host": "1.1.1.1",
     "port": 8080,
 }
+
+
+def free_port():
+    """Determine a free port using sockets."""
+    free_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    free_socket.bind(("127.0.0.1", 0))
+    free_socket.listen(5)
+    port = free_socket.getsockname()[1]
+    free_socket.close()
+    return port
+
+
+async def handle_hlk_sw16_status_read(reader, writer):
+    """Echo a good status read back."""
+    await reader.read(20)
+
+    status_packet = b"\xcc\x0c\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x1b\xdd"
+
+    writer.write(status_packet)
+    await writer.drain()
+
+    writer.close()
+
+
+async def handle_hlk_sw16_bad_checksum(reader, writer):
+    """Echo a status read with a bad checksum back."""
+    await reader.read(20)
+
+    status_packet = b"\xcc\x0c\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x1a\xdd"
+
+    writer.write(status_packet)
+    await writer.drain()
+
+    writer.close()
 
 
 async def test_form(hass):
@@ -23,45 +54,51 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.hlk_sw16.config_flow.validate_input",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.hlk_sw16.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.hlk_sw16.async_setup_entry", return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], hlk_sw16_test_config,
-        )
+    port = free_port()
+
+    server = await asyncio.start_server(handle_hlk_sw16_status_read, "127.0.0.1", port)
+
+    await server.start_serving()
+
+    conf = {
+        "host": "127.0.0.1",
+        "port": port,
+    }
+
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], conf,)
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "1.1.1.1:8080"
+    assert result2["title"] == "127.0.0.1:" + str(port)
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "port": 8080,
+        "host": "127.0.0.1",
+        "port": port,
     }
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    server.close()
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_data(hass):
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.hlk_sw16.config_flow.validate_input",
-        side_effect=AlreadyConfigured,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], hlk_sw16_test_config,
-        )
+    port = free_port()
+
+    server = await asyncio.start_server(handle_hlk_sw16_bad_checksum, "127.0.0.1", port)
+
+    await server.start_serving()
+
+    conf = {
+        "host": "127.0.0.1",
+        "port": port,
+    }
+
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], conf,)
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "already_configured"}
+    assert result2["errors"] == {"base": "cannot_connect"}
+    server.close()
 
 
 async def test_form_cannot_connect(hass):
@@ -70,13 +107,14 @@ async def test_form_cannot_connect(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.hlk_sw16.config_flow.validate_input",
-        side_effect=CannotConnect,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], hlk_sw16_test_config,
-        )
+    port = free_port()
+
+    conf = {
+        "host": "127.0.0.1",
+        "port": port,
+    }
+
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], conf,)
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
