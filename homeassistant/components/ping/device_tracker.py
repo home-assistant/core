@@ -38,7 +38,7 @@ class Host:
 
     def ping(self):
         """Send an ICMP echo request and return True if success."""
-        return ping(self.ip_address, count=self._count, interval=1, timeout=2).is_alive
+        return ping(self.ip_address, count=self._count).is_alive
 
     def update(self, see):
         """Update device state by sending one or more ping messages."""
