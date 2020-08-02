@@ -1,10 +1,8 @@
 """Tracks the latency of a host by sending ICMP echo requests (ping)."""
 from datetime import timedelta
 import logging
-import re
-import subprocess
-import sys
 
+from icmplib import ping as icmp_ping
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
@@ -15,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_ROUND_TRIP_TIME_AVG = "round_trip_time_avg"
 ATTR_ROUND_TRIP_TIME_MAX = "round_trip_time_max"
-ATTR_ROUND_TRIP_TIME_MDEV = "round_trip_time_mdev"
+ATTR_PACKET_LOSS = "packet_loss"
 ATTR_ROUND_TRIP_TIME_MIN = "round_trip_time_min"
 
 CONF_PING_COUNT = "count"
@@ -25,16 +23,6 @@ DEFAULT_PING_COUNT = 5
 DEFAULT_DEVICE_CLASS = "connectivity"
 
 SCAN_INTERVAL = timedelta(minutes=5)
-
-PING_MATCHER = re.compile(
-    r"(?P<min>\d+.\d+)\/(?P<avg>\d+.\d+)\/(?P<max>\d+.\d+)\/(?P<mdev>\d+.\d+)"
-)
-
-PING_MATCHER_BUSYBOX = re.compile(
-    r"(?P<min>\d+.\d+)\/(?P<avg>\d+.\d+)\/(?P<max>\d+.\d+)"
-)
-
-WIN32_PING_MATCHER = re.compile(r"(?P<min>\d+)ms.+(?P<max>\d+)ms.+(?P<avg>\d+)ms")
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -79,13 +67,13 @@ class PingBinarySensor(BinarySensorEntity):
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes of the ICMP checo request."""
+        """Return the state attributes of the ICMP echo request."""
         if self.ping.data is not False:
             return {
                 ATTR_ROUND_TRIP_TIME_AVG: self.ping.data["avg"],
                 ATTR_ROUND_TRIP_TIME_MAX: self.ping.data["max"],
-                ATTR_ROUND_TRIP_TIME_MDEV: self.ping.data["mdev"],
                 ATTR_ROUND_TRIP_TIME_MIN: self.ping.data["min"],
+                ATTR_PACKET_LOSS: self.ping.data["packet_loss"],
             }
 
     def update(self):
@@ -103,47 +91,15 @@ class PingData:
         self.data = {}
         self.available = False
 
-        if sys.platform == "win32":
-            self._ping_cmd = [
-                "ping",
-                "-n",
-                str(self._count),
-                "-w",
-                "1000",
-                self._ip_address,
-            ]
-        else:
-            self._ping_cmd = [
-                "ping",
-                "-n",
-                "-q",
-                "-c",
-                str(self._count),
-                "-W1",
-                self._ip_address,
-            ]
-
     def ping(self):
         """Send ICMP echo request and return details if success."""
-        pinger = subprocess.Popen(
-            self._ping_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        try:
-            out = pinger.communicate()
-            _LOGGER.debug("Output is %s", str(out))
-            if sys.platform == "win32":
-                match = WIN32_PING_MATCHER.search(str(out).split("\n")[-1])
-                rtt_min, rtt_avg, rtt_max = match.groups()
-                return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": ""}
-            if "max/" not in str(out):
-                match = PING_MATCHER_BUSYBOX.search(str(out).split("\n")[-1])
-                rtt_min, rtt_avg, rtt_max = match.groups()
-                return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": ""}
-            match = PING_MATCHER.search(str(out).split("\n")[-1])
-            rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
-            return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
-        except (subprocess.CalledProcessError, AttributeError):
-            return False
+        host = icmp_ping(self._ip_address, count=self._count, interval=1, timeout=2)
+        return {
+            "min": host.min_rtt,
+            "avg": host.avg_rtt,
+            "max": host.max_rtt,
+            "packet_loss": host.packet_loss,
+        }
 
     def update(self):
         """Retrieve the latest details from the host."""
