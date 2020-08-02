@@ -1,9 +1,8 @@
 """Tracks devices by sending a ICMP echo request (ping)."""
 from datetime import timedelta
 import logging
-import subprocess
-import sys
 
+from icmplib import ping
 import voluptuous as vol
 
 from homeassistant import const, util
@@ -36,21 +35,10 @@ class Host:
         self.ip_address = ip_address
         self.dev_id = dev_id
         self._count = config[CONF_PING_COUNT]
-        if sys.platform == "win32":
-            self._ping_cmd = ["ping", "-n", "1", "-w", "1000", self.ip_address]
-        else:
-            self._ping_cmd = ["ping", "-n", "-q", "-c1", "-W1", self.ip_address]
 
     def ping(self):
         """Send an ICMP echo request and return True if success."""
-        pinger = subprocess.Popen(
-            self._ping_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
-        )
-        try:
-            pinger.communicate()
-            return pinger.returncode == 0
-        except subprocess.CalledProcessError:
-            return False
+        return ping(self.ip_address, count=self._count, interval=1, timeout=2).is_alive
 
     def update(self, see):
         """Update device state by sending one or more ping messages."""
