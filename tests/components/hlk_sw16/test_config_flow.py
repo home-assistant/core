@@ -1,50 +1,51 @@
 """Test the Hi-Link HLK-SW16 config flow."""
 import asyncio
-import socket
 
 from homeassistant import config_entries, setup
 from homeassistant.components.hlk_sw16.const import DOMAIN
 
 from tests.async_mock import patch
 
-hlk_sw16_test_config = {
-    "host": "1.1.1.1",
-    "port": 8080,
-}
+
+class MockSW16Client:
+    """Class to mock the SW16Client client."""
+
+    def __init__(self, fail):
+        """Initialise client with failure modes."""
+        self.fail = fail
+        self.disconnect_callback = None
+        self.in_transaction = False
+        self.active_transaction = None
+
+    async def setup(self):
+        """Mock successful setup."""
+        fut = asyncio.Future()
+        fut.set_result(True)
+        return fut
+
+    async def status(self):
+        """Mock status based on failure mode."""
+        self.in_transaction = True
+        self.active_transaction = asyncio.Future()
+        if self.fail:
+            if self.disconnect_callback:
+                self.disconnect_callback()
+            return await self.active_transaction
+        else:
+            self.active_transaction.set_result(True)
+            return self.active_transaction
+
+    def stop(self):
+        """Mock client stop."""
+        self.in_transaction = False
+        self.active_transaction = None
 
 
-def free_port():
-    """Determine a free port using sockets."""
-    free_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    free_socket.bind(("127.0.0.1", 0))
-    free_socket.listen(5)
-    port = free_socket.getsockname()[1]
-    free_socket.close()
-    return port
-
-
-async def handle_hlk_sw16_status_read(reader, writer):
-    """Echo a good status read back."""
-    await reader.read(20)
-
-    status_packet = b"\xcc\x0c\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x1b\xdd"
-
-    writer.write(status_packet)
-    await writer.drain()
-
-    writer.close()
-
-
-async def handle_hlk_sw16_bad_checksum(reader, writer):
-    """Echo a status read with a bad checksum back."""
-    await reader.read(20)
-
-    status_packet = b"\xcc\x0c\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x1a\xdd"
-
-    writer.write(status_packet)
-    await writer.drain()
-
-    writer.close()
+async def create_mock_hlk_sw16_connection(fail):
+    """Create a mock HLK-SW16 client."""
+    client = MockSW16Client(fail)
+    await client.setup()
+    return client
 
 
 async def test_form(hass):
@@ -56,29 +57,37 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    port = free_port()
-
-    server = await asyncio.start_server(handle_hlk_sw16_status_read, "127.0.0.1", port)
-
-    await server.start_serving()
-
     conf = {
         "host": "127.0.0.1",
-        "port": port,
+        "port": 8080,
     }
 
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], conf,)
+    mock_hlk_sw16_connection = await create_mock_hlk_sw16_connection(False)
+
+    with patch(
+        "homeassistant.components.hlk_sw16.config_flow.create_hlk_sw16_connection",
+        return_value=mock_hlk_sw16_connection,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], conf,
+        )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "127.0.0.1:" + str(port)
+    assert result2["title"] == "127.0.0.1:8080"
     assert result2["data"] == {
         "host": "127.0.0.1",
-        "port": port,
+        "port": 8080,
     }
 
-    result3 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    mock_hlk_sw16_connection = await create_mock_hlk_sw16_connection(False)
+
+    with patch(
+        "homeassistant.components.hlk_sw16.config_flow.create_hlk_sw16_connection",
+        return_value=mock_hlk_sw16_connection,
+    ):
+        result3 = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
     assert result3["type"] == "form"
     assert result3["errors"] == {}
 
@@ -87,7 +96,6 @@ async def test_form(hass):
     assert result4["type"] == "form"
     assert result4["errors"] == {"base": "already_configured"}
     await hass.async_block_till_done()
-    server.close()
 
 
 async def test_import(hass):
@@ -99,27 +107,28 @@ async def test_import(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    port = free_port()
-
-    server = await asyncio.start_server(handle_hlk_sw16_status_read, "127.0.0.1", port)
-
-    await server.start_serving()
-
     conf = {
         "host": "127.0.0.1",
-        "port": port,
+        "port": 8080,
     }
 
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], conf,)
+    mock_hlk_sw16_connection = await create_mock_hlk_sw16_connection(False)
+
+    with patch(
+        "homeassistant.components.hlk_sw16.config_flow.connect_client",
+        return_value=mock_hlk_sw16_connection,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], conf,
+        )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "127.0.0.1:" + str(port)
+    assert result2["title"] == "127.0.0.1:8080"
     assert result2["data"] == {
         "host": "127.0.0.1",
-        "port": port,
+        "port": 8080,
     }
     await hass.async_block_till_done()
-    server.close()
 
 
 async def test_form_invalid_data(hass):
@@ -128,22 +137,23 @@ async def test_form_invalid_data(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    port = free_port()
-
-    server = await asyncio.start_server(handle_hlk_sw16_bad_checksum, "127.0.0.1", port)
-
-    await server.start_serving()
+    mock_hlk_sw16_connection = await create_mock_hlk_sw16_connection(True)
 
     conf = {
         "host": "127.0.0.1",
-        "port": port,
+        "port": 8080,
     }
 
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], conf,)
+    with patch(
+        "homeassistant.components.hlk_sw16.config_flow.connect_client",
+        return_value=mock_hlk_sw16_connection,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], conf,
+        )
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
-    server.close()
 
 
 async def test_form_cannot_connect(hass):
