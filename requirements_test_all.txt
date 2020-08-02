@@ -43,10 +43,10 @@ WSDiscovery==2.0.0
 YesssSMS==0.4.1
 
 # homeassistant.components.abode
-abodepy==0.19.0
+abodepy==1.1.0
 
 # homeassistant.components.androidtv
-adb-shell[async]==0.2.0
+adb-shell[async]==0.2.1
 
 # homeassistant.components.adguard
 adguardhome==0.4.2
@@ -89,7 +89,7 @@ aiofreepybox==0.0.8
 aioguardian==1.0.1
 
 # homeassistant.components.harmony
-aioharmony==0.2.5
+aioharmony==0.2.6
 
 # homeassistant.components.homekit_controller
 aiohomekit[IP]==0.2.45
@@ -132,7 +132,7 @@ airly==0.0.2
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.46
+androidtv[async]==0.0.47
 
 # homeassistant.components.apns
 apns2==0.3.0
@@ -577,7 +577,7 @@ pyblackbird==0.5
 pybotvac==0.0.17
 
 # homeassistant.components.cast
-pychromecast==7.1.2
+pychromecast==7.2.0
 
 # homeassistant.components.coolmaster
 pycoolmasternet==0.0.4
