@@ -38,7 +38,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         dev = []
 
         for folder in config["folders"]:
-            dev.append(FolderSensor(hass, synchting, name, folder, version["version"]))
+            dev.append(
+                FolderSensor(
+                    hass,
+                    synchting,
+                    name,
+                    folder["id"],
+                    folder["label"],
+                    version["version"],
+                )
+            )
 
         async_add_entities(dev)
     except aiosyncthing.exceptions.SyncthingError as exception:
@@ -48,12 +57,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FolderSensor(Entity):
     """A Syncthing folder sensor."""
 
-    def __init__(self, hass, syncthing, name, folder, version):
+    def __init__(self, hass, syncthing, name, folder_id, folder_label, version):
         """Initialize the sensor."""
         self.hass = hass
         self._syncthing = syncthing
         self._name = name
-        self._folder = folder
+        self._folder_id = folder_id
+        self._folder_label = folder_label
         self._state = None
         self._unsub_timer = None
         self._version = version
@@ -61,12 +71,12 @@ class FolderSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._name} {self._folder['id']} {self._folder['label']}"
+        return f"{self._name} {self._folder_id} {self._folder_label}"
 
     @property
     def unique_id(self):
         """Return the unique id of the entity."""
-        return f"{DOMAIN}-{self._name}-{self._folder['id']}"
+        return f"{DOMAIN}-{self._name}-{self._folder_id}"
 
     @property
     def state(self):
@@ -111,11 +121,12 @@ class FolderSensor(Entity):
     async def async_update_status(self):
         """Request folder status and update state."""
         try:
-            state = await self._syncthing.database.status(self._folder["id"])
+            state = await self._syncthing.database.status(self._folder_id)
             # A workaround, for some reason, state of paused folders is an empty string
             if state["state"] == "":
                 state["state"] = "paused"
             self._state = state
+            self._state.update({"id": self._folder_id})
         except aiosyncthing.exceptions.SyncthingError:
             self._state = None
         self.async_write_ha_state()
@@ -147,12 +158,13 @@ class FolderSensor(Entity):
                 if event["data"]["summary"]["state"] == "":
                     event["data"]["summary"]["state"] = "paused"
                 self._state = event["data"]["summary"]
+                self._state.update({"id": self._folder_id})
                 self.async_write_ha_state()
 
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{FOLDER_SUMMARY_RECEIVED}-{self._name}-{self._folder['id']}",
+                f"{FOLDER_SUMMARY_RECEIVED}-{self._name}-{self._folder_id}",
                 handle_folder_summary,
             )
         )
@@ -165,7 +177,7 @@ class FolderSensor(Entity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{STATE_CHANGED_RECEIVED}-{self._name}-{self._folder['id']}",
+                f"{STATE_CHANGED_RECEIVED}-{self._name}-{self._folder_id}",
                 handle_state_chaged,
             )
         )
@@ -178,7 +190,7 @@ class FolderSensor(Entity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{FOLDER_PAUSED_RECEIVED}-{self._name}-{self._folder['id']}",
+                f"{FOLDER_PAUSED_RECEIVED}-{self._name}-{self._folder_id}",
                 handle_folder_paused,
             )
         )
