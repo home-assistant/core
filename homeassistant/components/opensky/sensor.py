@@ -105,6 +105,7 @@ class OpenSkySensor(Entity):
         self._hass = hass
         self._name = name
         self._previously_tracked = None
+        self._cache = {}
         self._params = {}
         self._calc_bbox()
 
@@ -218,11 +219,17 @@ class OpenSkySensor(Entity):
             if altitude > self._altitude and self._altitude != 0:
                 continue
             currently_tracked.add(callsign)
+
+        self._cache.update(flight_metadata)
         if self._previously_tracked is not None:
             entries = currently_tracked - self._previously_tracked
             exits = self._previously_tracked - currently_tracked
-            self._handle_boundary(entries, EVENT_OPENSKY_ENTRY, flight_metadata)
-            self._handle_boundary(exits, EVENT_OPENSKY_EXIT, flight_metadata)
+            self._handle_boundary(entries, EVENT_OPENSKY_ENTRY, self._cache)
+            self._handle_boundary(exits, EVENT_OPENSKY_EXIT, self._cache)
+
+            for flight in exits:
+                self._cache.pop(flight, None)
+
         self._state = len(currently_tracked)
         self._previously_tracked = currently_tracked
 
