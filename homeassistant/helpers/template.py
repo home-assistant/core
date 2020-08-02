@@ -2,7 +2,7 @@
 import base64
 import collections.abc
 from datetime import datetime
-from functools import wraps
+from functools import lru_cache, wraps
 import json
 import logging
 import math
@@ -174,6 +174,8 @@ class Template:
         """Instantiate a template."""
         if not isinstance(template, str):
             raise TypeError("Expected template to be a string")
+        if not hass:
+            _LOGGER.warning("Hass not passed for: %s", template)
 
         self.template: str = template
         self._compiled_code = None
@@ -1041,6 +1043,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
         return isinstance(obj, Namespace) or super().is_safe_attribute(obj, attr, value)
+
+    @lru_cache(maxsize=256)
+    def compile(self, value):
+        """Compile the template."""
+        return super().compile(value)
 
 
 _NO_HASS_ENV = TemplateEnvironment(None)

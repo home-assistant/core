@@ -81,6 +81,7 @@ from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template as template_helper
 from homeassistant.helpers.logging import KeywordStyleAdapter
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
@@ -498,7 +499,9 @@ unit_system = vol.All(
 )
 
 
-def template(value: Optional[Any]) -> template_helper.Template:
+def template(
+    value: Optional[Any], hass: Optional[HomeAssistantType] = None
+) -> template_helper.Template:
     """Validate a jinja2 template."""
 
     if value is None:
@@ -508,7 +511,7 @@ def template(value: Optional[Any]) -> template_helper.Template:
 
     _LOGGER.warning("template: %s", value)
 
-    template_value = template_helper.Template(str(value))  # type: ignore
+    template_value = template_helper.Template(str(value), hass)  # type: ignore
 
     try:
         template_value.ensure_valid()
@@ -517,20 +520,20 @@ def template(value: Optional[Any]) -> template_helper.Template:
         raise vol.Invalid(f"invalid template ({ex})")
 
 
-def template_complex(value: Any) -> Any:
+def template_complex(value: Any, hass: Optional[HomeAssistantType] = None) -> Any:
     """Validate a complex jinja2 template."""
     if isinstance(value, list):
         return_list = value.copy()
         for idx, element in enumerate(return_list):
-            return_list[idx] = template_complex(element)
+            return_list[idx] = template_complex(element, hass)
         return return_list
     if isinstance(value, dict):
         return_dict = value.copy()
         for key, element in return_dict.items():
-            return_dict[key] = template_complex(element)
+            return_dict[key] = template_complex(element, hass)
         return return_dict
     if isinstance(value, str):
-        return template(value)
+        return template(value, hass)
     return value
 
 
