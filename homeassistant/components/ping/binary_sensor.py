@@ -35,8 +35,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ping Binary sensor."""
-    name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
+    name = config.get(CONF_NAME, f"Ping {host}")
     count = config.get(CONF_PING_COUNT)
 
     add_entities([PingBinarySensor(name, PingData(host, count))], True)
@@ -95,6 +95,7 @@ class PingData:
         """Send ICMP echo request and return details if success."""
         host = icmp_ping(self._ip_address, count=self._count, interval=1, timeout=2)
         return {
+            "alive": host.is_alive,
             "min": host.min_rtt,
             "avg": host.avg_rtt,
             "max": host.max_rtt,
@@ -104,4 +105,4 @@ class PingData:
     def update(self):
         """Retrieve the latest details from the host."""
         self.data = self.ping()
-        self.available = bool(self.data)
+        self.available = self.data and self.data["alive"]
