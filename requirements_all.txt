@@ -1611,7 +1611,7 @@ pysher==1.0.1
 pysignalclirestapi==0.3.4
 
 # homeassistant.components.sky_hub
-pyskyqhub==0.1.0
+pyskyqhub==0.1.1
 
 # homeassistant.components.sma
 pysma==0.3.5
