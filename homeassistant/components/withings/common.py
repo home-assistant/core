@@ -926,6 +926,12 @@ class BaseWithingsSensor(Entity):
         if self._attribute.update_type == UpdateType.POLL:
             return self._data_manager.poll_data_update_coordinator.last_update_success
 
+        if self._attribute.update_type == UpdateType.WEBHOOK:
+            return self._data_manager.webhook_config.enabled and (
+                self._attribute.measurement
+                in self._data_manager.webhook_update_coordinator.data
+            )
+
         return True
 
     @property
