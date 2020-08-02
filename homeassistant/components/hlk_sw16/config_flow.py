@@ -25,6 +25,19 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
+async def connect_client(hass, user_input):
+    """Connect the HLK-SW16 client."""
+    client_aw = create_hlk_sw16_connection(
+        host=user_input[CONF_HOST],
+        port=user_input[CONF_PORT],
+        loop=hass.loop,
+        timeout=CONNECTION_TIMEOUT,
+        reconnect_interval=DEFAULT_RECONNECT_INTERVAL,
+        keep_alive_interval=DEFAULT_KEEP_ALIVE_INTERVAL,
+    )
+    return await asyncio.wait_for(client_aw, timeout=CONNECTION_TIMEOUT)
+
+
 async def validate_input(hass: HomeAssistant, user_input):
     """Validate the user input allows us to connect."""
     for entry in hass.config_entries.async_entries(DOMAIN):
@@ -34,16 +47,8 @@ async def validate_input(hass: HomeAssistant, user_input):
         ):
             raise AlreadyConfigured
 
-    client_aw = create_hlk_sw16_connection(
-        host=user_input[CONF_HOST],
-        port=user_input[CONF_PORT],
-        loop=hass.loop,
-        timeout=CONNECTION_TIMEOUT,
-        reconnect_interval=DEFAULT_RECONNECT_INTERVAL,
-        keep_alive_interval=DEFAULT_KEEP_ALIVE_INTERVAL,
-    )
     try:
-        client = await asyncio.wait_for(client_aw, timeout=CONNECTION_TIMEOUT)
+        client = await connect_client(hass, user_input)
     except asyncio.TimeoutError:
         raise CannotConnect
     try:

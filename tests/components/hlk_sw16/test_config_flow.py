@@ -158,12 +158,13 @@ async def test_form_cannot_connect(hass):
     }
 
     with patch(
-        "asyncio.wait_for", side_effect=asyncio.TimeoutError,
+        "homeassistant.components.hlk_sw16.config_flow.connect_client",
+        side_effect=asyncio.TimeoutError,
+        return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], conf,
         )
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], conf,)
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
