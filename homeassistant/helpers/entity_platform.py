@@ -24,10 +24,11 @@ if TYPE_CHECKING:
 
 SLOW_SETUP_WARNING = 10
 SLOW_SETUP_MAX_WAIT = 60
+SLOW_ADD_ENTITIES_MAX_WAIT = 60
+
 PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
-ADD_ENTITIES_TIMEOUT = 60
 
 
 class EntityPlatform:
@@ -295,7 +296,7 @@ class EntityPlatform:
         if not tasks:
             return
 
-        await asyncio.wait(tasks, timeout=ADD_ENTITIES_TIMEOUT)
+        await asyncio.wait(tasks, timeout=SLOW_ADD_ENTITIES_MAX_WAIT)
 
         for idx, entity in enumerate(new_entities):
             task = tasks[idx]
@@ -304,11 +305,11 @@ class EntityPlatform:
                 continue
 
             self.logger.warning(
-                "Adding entity %s for domain %s with platform %s timed out after %ds.",
-                entity,
+                "Timed out adding entity %s for domain %s with platform %s after %ds.",
+                entity.entity_id,
                 self.domain,
                 self.platform_name,
-                ADD_ENTITIES_TIMEOUT,
+                SLOW_ADD_ENTITIES_MAX_WAIT,
             )
             task.cancel()
             with suppress(asyncio.CancelledError):
