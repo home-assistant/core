@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ALTITUDE = "altitude"
 
-ATTR_CALLSIGN = "callsign"
+ATTR_ICAO24 = "icao24"
 ATTR_ALTITUDE = "altitude"
 ATTR_ON_GROUND = "on_ground"
 ATTR_SENSOR = "sensor"
@@ -45,8 +45,8 @@ OPENSKY_ATTRIBUTION = (
 )
 OPENSKY_API_URL = "https://opensky-network.org/api/states/all"
 OPENSKY_API_FIELDS = [
-    "icao24",
-    ATTR_CALLSIGN,
+    ATTR_ICAO24,
+    "callsign",
     "origin_country",
     "time_position",
     "last_contact",
@@ -171,22 +171,6 @@ class OpenSkySensor(Entity):
         self._params["lamax"] = round(math.degrees(max_lat), 4)
         self._params["lomax"] = round(math.degrees(max_lon), 4)
 
-    def _handle_boundary(self, flights, event, metadata):
-        """Handle flights crossing region boundary."""
-        for flight in flights:
-            if flight in metadata:
-                altitude = metadata[flight].get(ATTR_ALTITUDE)
-            else:
-                # Assume Flight has landed if missing.
-                altitude = 0
-
-            data = {
-                ATTR_CALLSIGN: flight,
-                ATTR_ALTITUDE: altitude,
-                ATTR_SENSOR: self._name,
-            }
-            self._hass.bus.fire(event, data)
-
     def update(self):
         """Update device state."""
         currently_tracked = set()
@@ -198,41 +182,49 @@ class OpenSkySensor(Entity):
             or []
         )
         for state in states:
+            if len(state) < len(OPENSKY_API_FIELDS):
+                _LOGGER.warning("Skipping invalid state")
+                continue
+
             flight = dict(zip(OPENSKY_API_FIELDS, state))
-            callsign = flight[ATTR_CALLSIGN].strip()
-            if callsign != "":
-                flight_metadata[callsign] = flight
-            else:
+
+            icao24 = flight[ATTR_ICAO24]
+            flight_metadata[icao24] = flight
+
+            if flight[ATTR_ON_GROUND]:
                 continue
-            missing_location = (
-                flight.get(ATTR_LONGITUDE) is None or flight.get(ATTR_LATITUDE) is None
-            )
-            if missing_location:
+
+            lat = flight[ATTR_LATITUDE]
+            lon = flight[ATTR_LONGITUDE]
+            if None in (lat, lon):
                 continue
-            if flight.get(ATTR_ON_GROUND):
-                continue
-            distance = util_location.distance(
-                self._latitude,
-                self._longitude,
-                flight.get(ATTR_LATITUDE),
-                flight.get(ATTR_LONGITUDE),
-            )
+
+            distance = util_location.distance(self._latitude, self._longitude, lat, lon)
             if distance is None or distance > self._radius:
                 continue
-            altitude = flight.get(ATTR_ALTITUDE)
+
+            altitude = flight[ATTR_ALTITUDE] or 0
             if altitude > self._altitude and self._altitude != 0:
                 continue
-            currently_tracked.add(callsign)
+
+            currently_tracked.add(icao24)
 
         self._cache.update(flight_metadata)
         if self._previously_tracked is not None:
             entries = currently_tracked - self._previously_tracked
             exits = self._previously_tracked - currently_tracked
-            self._handle_boundary(entries, EVENT_OPENSKY_ENTRY, self._cache)
-            self._handle_boundary(exits, EVENT_OPENSKY_EXIT, self._cache)
+
+            for flight in entries:
+                self._hass.bus.fire(
+                    EVENT_OPENSKY_ENTRY,
+                    {**self._cache[flight], ATTR_SENSOR: self._name},
+                )
 
             for flight in exits:
-                self._cache.pop(flight, None)
+                self._hass.bus.fire(
+                    EVENT_OPENSKY_EXIT, {**self._cache[flight], ATTR_SENSOR: self._name}
+                )
+                del self._cache[flight]
 
         self._state = len(currently_tracked)
         self._previously_tracked = currently_tracked
