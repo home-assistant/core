@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     verify_ssl = DEFAULT_VERIFY_SSL
     headers = {"X-Pvoutput-Apikey": api_key, "X-Pvoutput-SystemId": system_id}
 
-    rest = RestData(method, _ENDPOINT, auth, headers, payload, verify_ssl)
+    rest = RestData(method, _ENDPOINT, auth, headers, None, payload, verify_ssl)
     rest.update()
 
     if rest.data is None:

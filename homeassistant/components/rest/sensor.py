@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_HEADERS,
     CONF_METHOD,
     CONF_NAME,
+    CONF_PARAMS,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_RESOURCE,
@@ -55,6 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
         vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
+        vol.Optional(CONF_PARAMS): vol.Schema({cv.string: cv.string}),
         vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
         vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(METHODS),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -87,6 +89,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     headers = config.get(CONF_HEADERS)
+    params = config.get(CONF_PARAMS)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     device_class = config.get(CONF_DEVICE_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
@@ -109,7 +112,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             auth = HTTPBasicAuth(username, password)
     else:
         auth = None
-    rest = RestData(method, resource, auth, headers, payload, verify_ssl, timeout)
+    rest = RestData(
+        method, resource, auth, headers, params, payload, verify_ssl, timeout
+    )
     rest.update()
     if rest.data is None:
         raise PlatformNotReady
@@ -262,13 +267,22 @@ class RestData:
     """Class for handling the data retrieval."""
 
     def __init__(
-        self, method, resource, auth, headers, data, verify_ssl, timeout=DEFAULT_TIMEOUT
+        self,
+        method,
+        resource,
+        auth,
+        headers,
+        params,
+        data,
+        verify_ssl,
+        timeout=DEFAULT_TIMEOUT,
     ):
         """Initialize the data object."""
         self._method = method
         self._resource = resource
         self._auth = auth
         self._headers = headers
+        self._params = params
         self._request_data = data
         self._verify_ssl = verify_ssl
         self._timeout = timeout
@@ -292,6 +306,7 @@ class RestData:
                 self._method,
                 self._resource,
                 headers=self._headers,
+                params=self._params,
                 auth=self._auth,
                 data=self._request_data,
                 timeout=self._timeout,

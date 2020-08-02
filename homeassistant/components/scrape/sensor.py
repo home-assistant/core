@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_HEADERS,
     CONF_NAME,
+    CONF_PARAMS,
     CONF_PASSWORD,
     CONF_RESOURCE,
     CONF_UNIT_OF_MEASUREMENT,
@@ -43,6 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
         vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
+        vol.Optional(CONF_PARAMS): vol.Schema({cv.string: cv.string}),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
@@ -60,6 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     method = "GET"
     payload = None
     headers = config.get(CONF_HEADERS)
+    params = config.get(CONF_PARAMS)
     verify_ssl = config.get(CONF_VERIFY_SSL)
     select = config.get(CONF_SELECT)
     attr = config.get(CONF_ATTR)
@@ -78,7 +81,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             auth = HTTPBasicAuth(username, password)
     else:
         auth = None
-    rest = RestData(method, resource, auth, headers, payload, verify_ssl)
+    rest = RestData(method, resource, auth, headers, params, payload, verify_ssl)
     rest.update()
 
     if rest.data is None:

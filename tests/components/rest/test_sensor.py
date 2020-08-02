@@ -662,7 +662,14 @@ class TestRestData(unittest.TestCase):
         self.verify_ssl = True
         self.timeout = 10
         self.rest = rest.RestData(
-            self.method, self.resource, None, None, None, self.verify_ssl, self.timeout
+            self.method,
+            self.resource,
+            None,
+            None,
+            None,
+            None,
+            self.verify_ssl,
+            self.timeout,
         )
 
     @requests_mock.Mocker()
