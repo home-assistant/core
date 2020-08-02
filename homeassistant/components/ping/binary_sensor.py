@@ -72,7 +72,7 @@ class PingBinarySensor(BinarySensorEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the ICMP echo request."""
-        if not self._ping.data:
+        if not self._ping:
             return
 
         return {
