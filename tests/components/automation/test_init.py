@@ -390,6 +390,17 @@ async def test_services(hass, calls):
     await hass.async_block_till_done()
     assert len(calls) == 2
 
+    await common.async_toggle(hass, entity_id)
+    await hass.async_block_till_done()
+
+    assert not automation.is_on(hass, entity_id)
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    await common.async_toggle(hass, entity_id)
+    await hass.async_block_till_done()
+
     await common.async_trigger(hass, entity_id)
     await hass.async_block_till_done()
     assert len(calls) == 3

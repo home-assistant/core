@@ -394,7 +394,10 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self.async_disable(kwargs[CONF_STOP_ACTIONS])
+        if CONF_STOP_ACTIONS in kwargs:
+            await self.async_disable(kwargs[CONF_STOP_ACTIONS])
+        else:
+            await self.async_disable()
 
     async def async_trigger(self, variables, skip_condition=False, context=None):
         """Trigger automation.
