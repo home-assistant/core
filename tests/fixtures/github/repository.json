@@ -347,7 +347,7 @@
     "updated_at": "2011-01-26T19:14:43Z",
     "permissions": {
       "admin": false,
-      "push": false,
+      "push": true,
       "pull": true
     },
     "allow_rebase_merge": true,
