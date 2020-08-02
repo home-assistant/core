@@ -67,9 +67,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         When a new event on our topic (arwn/#) is received we map it
         into a known kind of sensor based on topic name. If we've
         never seen this before, we keep this sensor around in a global
-        cache. If we have seen it before, we update the values of the
-        existing sensor. Either way, we push an ha state update at the
-        end for the new event we've seen.
+        cache.
 
         This lets us dynamically incorporate sensors without any
         configuration on our side.
