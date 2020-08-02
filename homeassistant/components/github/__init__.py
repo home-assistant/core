@@ -252,7 +252,10 @@ class GitHubDeviceEntity(GitHubEntity):
         data: GitHubData = self._coordinator.data
 
         return {
-            "identifiers": {(DOMAIN, data.repository.full_name)},
+            "entry_type": "service",
+            "identifiers": {
+                (DOMAIN, data.repository.owner.login, data.repository.name)
+            },
             "manufacturer": data.repository.attributes.get("owner").get("login"),
             "name": data.repository.full_name,
         }
