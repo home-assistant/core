@@ -84,4 +84,4 @@ class PingBinarySensor(BinarySensorEntity):
 
     def update(self):
         """Get the latest data."""
-        self._ping = icmp_ping(self._host, count=self._count, interval=1, timeout=2)
+        self._ping = icmp_ping(self._host, count=self._count)
