@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from icmplib import icmp_ping
+from icmplib import ping as icmp_ping
 import voluptuous as vol
 
 from homeassistant import const, util
@@ -29,9 +29,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 class Host:
     """Host object with ping detection."""
 
-    def __init__(self, ip_address, dev_id, hass, config):
+    def __init__(self, ip_address, dev_id, config):
         """Initialize the Host pinger."""
-        self.hass = hass
         self.ip_address = ip_address
         self.dev_id = dev_id
         self._count = config[CONF_PING_COUNT]
@@ -55,8 +54,7 @@ class Host:
 def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Host objects and return the update function."""
     hosts = [
-        Host(ip, dev_id, hass, config)
-        for (dev_id, ip) in config[const.CONF_HOSTS].items()
+        Host(ip, dev_id, config) for (dev_id, ip) in config[const.CONF_HOSTS].items()
     ]
     interval = config.get(
         CONF_SCAN_INTERVAL,
