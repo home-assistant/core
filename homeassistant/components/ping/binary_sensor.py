@@ -13,12 +13,12 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_ROUND_TRIP_TIME_AVG = "round_trip_time_avg"
 ATTR_ROUND_TRIP_TIME_MAX = "round_trip_time_max"
-ATTR_PACKET_LOSS = "packet_loss"
 ATTR_ROUND_TRIP_TIME_MIN = "round_trip_time_min"
+ATTR_PACKET_LOSS = "packet_loss"
 
 CONF_PING_COUNT = "count"
 
-DEFAULT_NAME = "Ping Binary sensor"
+DEFAULT_NAME = "Ping"
 DEFAULT_PING_COUNT = 5
 DEFAULT_DEVICE_CLASS = "connectivity"
 
