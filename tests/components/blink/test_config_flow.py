@@ -55,11 +55,9 @@ async def test_form_2fa(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.blink.config_flow.Auth.startup", Mock()
-    ), patch(
+    with patch("homeassistant.components.blink.config_flow.Auth.startup"), patch(
         "homeassistant.components.blink.config_flow.Auth.check_key_required",
-        Mock(return_value=True),
+        return_value=True,
     ), patch(
         "homeassistant.components.blink.async_setup", return_value=True
     ) as mock_setup:
@@ -70,17 +68,15 @@ async def test_form_2fa(hass):
     assert result2["type"] == "form"
     assert result2["step_id"] == "2fa"
 
-    with patch(
-        "homeassistant.components.blink.config_flow.Auth.startup", Mock()
-    ), patch(
+    with patch("homeassistant.components.blink.config_flow.Auth.startup"), patch(
         "homeassistant.components.blink.config_flow.Auth.check_key_required",
-        Mock(return_value=False),
+        return_value=False,
     ), patch(
         "homeassistant.components.blink.config_flow.Auth.send_auth_key",
-        Mock(return_value=True),
+        return_value=True,
     ), patch(
         "homeassistant.components.blink.config_flow.Blink.setup_urls",
-        Mock(return_value=True),
+        return_value=True,
     ), patch(
         "homeassistant.components.blink.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -105,14 +101,10 @@ async def test_form_2fa_connect_error(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.blink.config_flow.Auth.startup", Mock()
-    ), patch(
+    with patch("homeassistant.components.blink.config_flow.Auth.startup"), patch(
         "homeassistant.components.blink.config_flow.Auth.check_key_required",
-        Mock(return_value=True),
-    ), patch(
-        "homeassistant.components.blink.async_setup", return_value=True
-    ):
+        return_value=True,
+    ), patch("homeassistant.components.blink.async_setup", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"username": "blink@example.com", "password": "example"},
         )
@@ -120,17 +112,15 @@ async def test_form_2fa_connect_error(hass):
     assert result2["type"] == "form"
     assert result2["step_id"] == "2fa"
 
-    with patch(
-        "homeassistant.components.blink.config_flow.Auth.startup", Mock()
-    ), patch(
+    with patch("homeassistant.components.blink.config_flow.Auth.startup"), patch(
         "homeassistant.components.blink.config_flow.Auth.check_key_required",
-        Mock(return_value=False),
+        return_value=False,
     ), patch(
         "homeassistant.components.blink.config_flow.Auth.send_auth_key",
-        Mock(return_value=True),
+        return_value=True,
     ), patch(
         "homeassistant.components.blink.config_flow.Blink.setup_urls",
-        Mock(side_effect=BlinkSetupError),
+        side_effect=BlinkSetupError,
     ), patch(
         "homeassistant.components.blink.async_setup", return_value=True
     ), patch(
@@ -151,14 +141,10 @@ async def test_form_2fa_invalid_key(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.blink.config_flow.Auth.startup", Mock()
-    ), patch(
+    with patch("homeassistant.components.blink.config_flow.Auth.startup"), patch(
         "homeassistant.components.blink.config_flow.Auth.check_key_required",
-        Mock(return_value=True),
-    ), patch(
-        "homeassistant.components.blink.async_setup", return_value=True
-    ):
+        return_value=True,
+    ), patch("homeassistant.components.blink.async_setup", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"username": "blink@example.com", "password": "example"},
         )
@@ -166,17 +152,15 @@ async def test_form_2fa_invalid_key(hass):
     assert result2["type"] == "form"
     assert result2["step_id"] == "2fa"
 
-    with patch(
-        "homeassistant.components.blink.config_flow.Auth.startup", Mock()
-    ), patch(
+    with patch("homeassistant.components.blink.config_flow.Auth.startup",), patch(
         "homeassistant.components.blink.config_flow.Auth.check_key_required",
-        Mock(return_value=False),
+        return_value=False,
     ), patch(
         "homeassistant.components.blink.config_flow.Auth.send_auth_key",
-        Mock(return_value=False),
+        return_value=False,
     ), patch(
         "homeassistant.components.blink.config_flow.Blink.setup_urls",
-        Mock(return_value=True),
+        return_value=True,
     ), patch(
         "homeassistant.components.blink.async_setup", return_value=True
     ), patch(
@@ -197,14 +181,10 @@ async def test_form_2fa_unknown_error(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.blink.config_flow.Auth.startup", Mock()
-    ), patch(
+    with patch("homeassistant.components.blink.config_flow.Auth.startup"), patch(
         "homeassistant.components.blink.config_flow.Auth.check_key_required",
-        Mock(return_value=True),
-    ), patch(
-        "homeassistant.components.blink.async_setup", return_value=True
-    ):
+        return_value=True,
+    ), patch("homeassistant.components.blink.async_setup", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"username": "blink@example.com", "password": "example"},
         )
@@ -212,17 +192,15 @@ async def test_form_2fa_unknown_error(hass):
     assert result2["type"] == "form"
     assert result2["step_id"] == "2fa"
 
-    with patch(
-        "homeassistant.components.blink.config_flow.Auth.startup", Mock()
-    ), patch(
+    with patch("homeassistant.components.blink.config_flow.Auth.startup"), patch(
         "homeassistant.components.blink.config_flow.Auth.check_key_required",
-        Mock(return_value=False),
+        return_value=False,
     ), patch(
         "homeassistant.components.blink.config_flow.Auth.send_auth_key",
-        Mock(return_value=True),
+        return_value=True,
     ), patch(
         "homeassistant.components.blink.config_flow.Blink.setup_urls",
-        Mock(side_effect=KeyError),
+        side_effect=KeyError,
     ), patch(
         "homeassistant.components.blink.async_setup", return_value=True
     ), patch(
@@ -271,6 +249,15 @@ async def test_form_unknown_error(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
+async def test_import_shows_user_step(hass):
+    """Test import source shows the user form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "import"}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+
 async def test_options_flow(hass):
     """Test config flow options."""
     config_entry = MockConfigEntry(
@@ -278,6 +265,7 @@ async def test_options_flow(hass):
         data={"username": "blink@example.com", "password": "example"},
         options={},
         entry_id=1,
+        version=2,
     )
     config_entry.add_to_hass(hass)
 

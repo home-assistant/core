@@ -64,8 +64,8 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data[CONF_USERNAME] = user_input["username"]
             data[CONF_PASSWORD] = user_input["password"]
 
-            await self.async_set_unique_id(data[CONF_USERNAME])
             self.auth = Auth(data, no_prompt=True)
+            await self.async_set_unique_id(data[CONF_USERNAME])
 
             try:
                 await self.hass.async_add_executor_job(
@@ -113,6 +113,10 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_import(self, entry_data):
+        """Perform import of old entries."""
+        return await self.async_step_user(entry_data)
 
     async def async_step_finish(self):
         """Finish with setup."""

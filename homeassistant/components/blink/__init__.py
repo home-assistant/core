@@ -7,6 +7,7 @@ from blinkpy.auth import Auth
 from blinkpy.blinkpy import Blink
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.blink.const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -15,7 +16,7 @@ from homeassistant.components.blink.const import (
     SERVICE_SAVE_VIDEO,
     SERVICE_SEND_PIN,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_FILENAME, CONF_NAME, CONF_PIN, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
@@ -52,9 +53,15 @@ async def async_migrate_entry(hass, entry):
         data.pop("login_response", None)
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_USER}, data=data,
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=data
             )
         )
+        persistent_notification.async_create(
+            hass,
+            "Blink configuration migrated to a new version. Please go to the integrations page to re-configure (such as sending a new 2FA key).",
+            "Blink Migration",
+        )
+        return False
     return True
 
 
