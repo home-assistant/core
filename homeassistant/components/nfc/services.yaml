@@ -6,6 +6,18 @@ register_nfc_tag:
     nfc_tag_id:
       description: The id of the NFC tag to register.
       example: "123456789"
+    manufacturer:
+      description: The manufacturer of the NFC tag..
+      example: "NXP"
+    model:
+      description: The model of the NFC tag.
+      example: "Mifare Ultralight"
+    name:
+      description: A custom name for the device that will represent the NFC tag.
+      example: "Test NFC Tag"
+    tag_format:
+      description: The format of the NFC tag.
+      example: "ISO 14443-3A NTAG215"
 nfc_tag_scanned:
   description: Fire an event when an NFC tag is scanned.
   fields:
