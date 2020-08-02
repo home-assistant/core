@@ -1044,9 +1044,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         return isinstance(obj, Namespace) or super().is_safe_attribute(obj, attr, value)
 
     @lru_cache(maxsize=_TEMPLATE_CACHE_SIZE_PER_ENV)
-    def compile(self, value):
+    def compile(self, source, name=None, filename=None, raw=False, defer_init=False):
         """Compile the template."""
-        return super().compile(value)
+        return super().compile(source, name, filename, raw, defer_init)
 
 
 _NO_HASS_ENV = TemplateEnvironment(None)
