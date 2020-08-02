@@ -5,7 +5,6 @@ import logging
 import os
 
 from adb_shell.auth.keygen import keygen
-from adb_shell.auth.sign_pythonrsa import PythonRSASigner
 from adb_shell.exceptions import (
     AdbTimeoutError,
     InvalidChecksumError,
@@ -14,6 +13,7 @@ from adb_shell.exceptions import (
     TcpTimeoutException,
 )
 from androidtv import ha_state_detection_rules_validator
+from androidtv.adb_manager.adb_manager_sync import ADBPythonSync
 from androidtv.constants import APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
 from androidtv.setup_async import setup
@@ -176,9 +176,7 @@ def setup_androidtv(hass, config):
             keygen(adbkey)
 
         # Load the ADB key
-        with open(adbkey) as priv_key:
-            priv = priv_key.read()
-        signer = PythonRSASigner("", priv)
+        signer = ADBPythonSync.load_adbkey(adbkey)
         adb_log = f"using Python ADB implementation with adbkey='{adbkey}'"
 
     else:
