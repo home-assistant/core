@@ -124,7 +124,11 @@ async def test_import(hass):
     with patch(
         "homeassistant.components.hlk_sw16.config_flow.connect_client",
         return_value=mock_hlk_sw16_connection,
-    ):
+    ), patch(
+        "homeassistant.components.hlk_sw16.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.hlk_sw16.async_setup_entry", return_value=True,
+    ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], conf,
         )
@@ -136,6 +140,8 @@ async def test_import(hass):
         "port": 8080,
     }
     await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_invalid_data(hass):
