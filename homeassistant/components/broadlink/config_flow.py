@@ -96,7 +96,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     f"{format_mac(self.device.mac)}, but {format_mac(device.mac)} was given"
                 )
 
-            LOGGER.error("Failed to discover the device at %s: %s", host, err_msg)
+            LOGGER.error("Failed to connect to the device at %s: %s", host, err_msg)
 
             if self.source == config_entries.SOURCE_IMPORT:
                 return self.async_abort(reason=errors["base"])

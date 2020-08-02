@@ -26,7 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Import the device.
 
-    This is for backwards compatibility.
+    This is for backward compatibility.
     Do not use this method.
     """
     import_device(hass, config[CONF_HOST])

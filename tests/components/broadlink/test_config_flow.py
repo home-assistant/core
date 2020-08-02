@@ -429,6 +429,77 @@ async def test_flow_do_not_unlock(hass):
     assert mock_api.set_lock.call_count == 0
 
 
+async def test_flow_import_works(hass):
+    """Test an import flow."""
+    device = pick_device(0)
+    mock_api = device.get_mock_api()
+    data = {"host": device.host}
+
+    with patch("broadlink.discover", return_value=[mock_api]) as mock_discover:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "finish"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"name": device.name},
+    )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == device.name
+    assert result["data"] == device.get_entry_data()
+
+    assert mock_api.auth.call_count == 1
+    assert mock_discover.call_count == 1
+
+
+async def test_flow_import_already_in_progress(hass):
+    """Test we do not accept more than one import flow per device."""
+    device = pick_device(0)
+    data = {"host": device.host}
+
+    with patch("broadlink.discover", return_value=[device.get_mock_api()]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data
+        )
+
+    with patch("broadlink.discover", return_value=[device.get_mock_api()]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_in_progress"
+
+
+async def test_flow_import_already_configured(hass):
+    """Test we do not accept more than one config entry per device.
+
+    We need to abort the flow and update the existing entry.
+    """
+    device = pick_device(0)
+    mock_entry = device.get_mock_entry()
+    mock_entry.add_to_hass(hass)
+
+    device.host = pick_device(1).host
+    mock_api = device.get_mock_api()
+    data = {"host": device.host}
+
+    with patch("broadlink.discover", return_value=[mock_api]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+    assert dict(mock_entry.data) == device.get_entry_data()
+    assert mock_api.auth.call_count == 0
+
+
 async def test_flow_reauth_works(hass):
     """Test a reauthentication flow."""
     device = pick_device(0)
