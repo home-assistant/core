@@ -1,5 +1,6 @@
 """Class to manage the entities for a single platform."""
 import asyncio
+from contextlib import suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
 from logging import Logger
@@ -26,6 +27,7 @@ SLOW_SETUP_MAX_WAIT = 60
 PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
+ADD_ENTITIES_TIMEOUT = 60
 
 
 class EntityPlatform:
@@ -281,8 +283,10 @@ class EntityPlatform:
         device_registry = await hass.helpers.device_registry.async_get_registry()
         entity_registry = await hass.helpers.entity_registry.async_get_registry()
         tasks = [
-            self._async_add_entity(  # type: ignore
-                entity, update_before_add, entity_registry, device_registry
+            asyncio.create_task(
+                self._async_add_entity(  # type: ignore
+                    entity, update_before_add, entity_registry, device_registry
+                )
             )
             for entity in new_entities
         ]
@@ -291,7 +295,24 @@ class EntityPlatform:
         if not tasks:
             return
 
-        await asyncio.gather(*tasks)
+        await asyncio.wait(tasks, timeout=ADD_ENTITIES_TIMEOUT)
+
+        for idx, entity in enumerate(new_entities):
+            task = tasks[idx]
+            if task.done():
+                await task
+                continue
+
+            self.logger.warning(
+                "Creating entity %s for domain %s with platform %s timed out after %ds.",
+                entity,
+                self.domain,
+                self.platform_name,
+                ADD_ENTITIES_TIMEOUT,
+            )
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
 
         if self._async_unsub_polling is not None or not any(
             entity.should_poll for entity in self.entities.values()
