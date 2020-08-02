@@ -121,14 +121,15 @@ class ArwnSensor(Entity):
         self.event = {}
         self.event.update(event)
         self.async_write_ha_state()
-    
+
     async def async_added_to_hass(self):
+        """Entity has been added to hass."""
         @callback
         def message_received(msg):
             event = json.loads(msg.payload)
             if "timestamp" in event:
                 del event["timestamp"]
-            
+
             self.set_event(event)
 
         await mqtt.async_subscribe(self.hass, self._topic, message_received, 0)
