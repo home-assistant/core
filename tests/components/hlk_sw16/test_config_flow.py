@@ -88,6 +88,38 @@ async def test_form(hass):
     server.close()
 
 
+async def test_import(hass):
+    """Test we get the form."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    port = free_port()
+
+    server = await asyncio.start_server(handle_hlk_sw16_status_read, "127.0.0.1", port)
+
+    await server.start_serving()
+
+    conf = {
+        "host": "127.0.0.1",
+        "port": port,
+    }
+
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], conf,)
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "127.0.0.1:" + str(port)
+    assert result2["data"] == {
+        "host": "127.0.0.1",
+        "port": port,
+    }
+    await hass.async_block_till_done()
+    server.close()
+
+
 async def test_form_invalid_data(hass):
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
