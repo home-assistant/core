@@ -60,8 +60,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the config flow."""
-        self.access_token = None
-        self.repository = None
+        self._repository = None
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -87,42 +86,33 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle configuration by re-auth."""
         errors = {}
 
-        if user_input is None:
-            user_input = {}
+        if user_input is not None:
+            if user_input.get(CONF_REPOSITORY) is not None:
+                self._repository = user_input[CONF_REPOSITORY]
+                # pylint: disable=no-member
+                self.context["title_placeholders"] = {
+                    "repository": user_input[CONF_REPOSITORY]
+                }
 
-        if user_input.get(CONF_ACCESS_TOKEN) is None and self.access_token is not None:
-            user_input[CONF_ACCESS_TOKEN] = self.access_token
-        else:
-            self.access_token = user_input[CONF_ACCESS_TOKEN]
+            elif user_input.get(CONF_ACCESS_TOKEN) is not None:
+                user_input[CONF_REPOSITORY] = self._repository
 
-        if user_input.get(CONF_REPOSITORY) is None and self.repository is not None:
-            user_input[CONF_REPOSITORY] = self.repository
-        else:
-            self.repository = user_input[CONF_REPOSITORY]
+                await self.async_set_unique_id(user_input[CONF_REPOSITORY])
 
-        if self.context is None:
-            self.context = {}
-        # pylint: disable=no-member
-        self.context["title_placeholders"] = {
-            "repository": user_input[CONF_REPOSITORY],
-        }
-
-        await self.async_set_unique_id(self.repository)
-
-        try:
-            await validate_input(self.hass, user_input)
-            for entry in self._async_current_entries():
-                if entry.unique_id == self.unique_id:
-                    self.hass.config_entries.async_update_entry(
-                        entry, data=user_input,
-                    )
-                    return self.async_abort(reason="reauth_successful")
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except CannotFindRepo:
-            errors["base"] = "cannot_find_repo"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
+                try:
+                    await validate_input(self.hass, user_input)
+                    for entry in self._async_current_entries():
+                        if entry.unique_id == self.unique_id:
+                            self.hass.config_entries.async_update_entry(
+                                entry, data=user_input,
+                            )
+                            return self.async_abort(reason="reauth_successful")
+                except CannotConnect:
+                    errors["base"] = "cannot_connect"
+                except CannotFindRepo:
+                    errors["base"] = "cannot_find_repo"
+                except InvalidAuth:
+                    errors["base"] = "invalid_auth"
 
         return self.async_show_form(
             step_id="reauth", data_schema=REAUTH_SCHEMA, errors=errors
