@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_ROUND_TRIP_TIME_AVG = "round_trip_time_avg"
 ATTR_ROUND_TRIP_TIME_MAX = "round_trip_time_max"
 ATTR_ROUND_TRIP_TIME_MIN = "round_trip_time_min"
-ATTR_PACKET_LOSS = "packet_loss"
+ATTR_PACKET_LOSS_PERCENT = "packet_loss_percent"
 
 CONF_PING_COUNT = "count"
 
@@ -41,16 +41,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     count = config[CONF_PING_COUNT]
     name = config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
 
-    add_entities([PingBinarySensor(name, PingData(host, count))], True)
+    add_entities([PingBinarySensor(name, host, count)], True)
 
 
 class PingBinarySensor(BinarySensorEntity):
     """Representation of a Ping Binary sensor."""
 
-    def __init__(self, name, ping):
+    def __init__(self, name, host, count):
         """Initialize the Ping Binary sensor."""
+        self._ping = None
         self._name = name
-        self.ping = ping
+        self._host = host
+        self._count = count
 
     @property
     def name(self):
@@ -65,46 +67,21 @@ class PingBinarySensor(BinarySensorEntity):
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self.ping.available
+        return self._ping and self._ping.is_alive
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the ICMP echo request."""
-        if self.ping.data is not False:
-            return {
-                ATTR_ROUND_TRIP_TIME_AVG: self.ping.data["avg"],
-                ATTR_ROUND_TRIP_TIME_MAX: self.ping.data["max"],
-                ATTR_ROUND_TRIP_TIME_MIN: self.ping.data["min"],
-                ATTR_PACKET_LOSS: self.ping.data["packet_loss"],
-            }
+        if not self._ping.data:
+            return
 
-    def update(self):
-        """Get the latest data."""
-        self.ping.update()
-
-
-class PingData:
-    """The Class for handling the data retrieval."""
-
-    def __init__(self, host, count):
-        """Initialize the data object."""
-        self._ip_address = host
-        self._count = count
-        self.data = {}
-        self.available = False
-
-    def ping(self):
-        """Send ICMP echo request and return details if success."""
-        host = icmp_ping(self._ip_address, count=self._count, interval=1, timeout=2)
         return {
-            "alive": host.is_alive,
-            "min": host.min_rtt,
-            "avg": host.avg_rtt,
-            "max": host.max_rtt,
-            "packet_loss": host.packet_loss,
+            ATTR_ROUND_TRIP_TIME_AVG: self._ping.avg_rtt,
+            ATTR_ROUND_TRIP_TIME_MAX: self._ping.max_rtt,
+            ATTR_ROUND_TRIP_TIME_MIN: self._ping.min_rtt,
+            ATTR_PACKET_LOSS_PERCENT: self._ping.packet_loss * 100,
         }
 
     def update(self):
-        """Retrieve the latest details from the host."""
-        self.data = self.ping()
-        self.available = self.data and self.data["alive"]
+        """Get the latest data."""
+        self._ping = icmp_ping(self._host, count=self._count)
