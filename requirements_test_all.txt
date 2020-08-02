@@ -995,6 +995,9 @@ wolf_smartset==0.1.4
 # homeassistant.components.zestimate
 xmltodict==0.12.0
 
+# homeassistant.components.yeelight
+yeelight==0.5.2
+
 # homeassistant.components.zeroconf
 zeroconf==0.28.0
 

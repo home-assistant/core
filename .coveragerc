@@ -10,6 +10,7 @@ omit =
     # omit pieces of code that rely on external devices being present
     homeassistant/components/accuweather/__init__.py
     homeassistant/components/accuweather/const.py
+    homeassistant/components/accuweather/sensor.py
     homeassistant/components/accuweather/weather.py
     homeassistant/components/acer_projector/switch.py
     homeassistant/components/actiontec/device_tracker.py
@@ -971,7 +972,6 @@ omit =
     homeassistant/components/yale_smart_alarm/alarm_control_panel.py
     homeassistant/components/yamaha_musiccast/media_player.py
     homeassistant/components/yandex_transport/*
-    homeassistant/components/yeelight/*
     homeassistant/components/yeelightsunflower/light.py
     homeassistant/components/yi/camera.py
     homeassistant/components/zabbix/*
