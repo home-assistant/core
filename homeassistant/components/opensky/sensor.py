@@ -49,15 +49,19 @@ OPENSKY_API_FIELDS = [
     ATTR_CALLSIGN,
     "origin_country",
     "time_position",
-    "time_velocity",
+    "last_contact",
     ATTR_LONGITUDE,
     ATTR_LATITUDE,
     ATTR_ALTITUDE,
     ATTR_ON_GROUND,
     "velocity",
-    "heading",
+    "true_track",
     "vertical_rate",
     "sensors",
+    "geo_altitude",
+    "squawk",
+    "spi",
+    "position_source",
 ]
 
 
