@@ -175,7 +175,7 @@ class GitHubOptionsFlowHandler(config_entries.OptionsFlow):
                 ): bool,
             }
 
-        return self.async_show_form(step_id="user", data_schema=vol.Schema(schema),)
+        return self.async_show_form(step_id="user", data_schema=vol.Schema(schema))
 
 
 class CannotConnect(exceptions.HomeAssistantError):

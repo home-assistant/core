@@ -146,7 +146,7 @@ async def test_reauth_form(hass: HomeAssistant, aioclient_mock: AiohttpClientMoc
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "reauth"
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.github.config_flow.GitHub.get_repo",
@@ -181,7 +181,7 @@ async def test_reauth_form_cannot_connect(hass: HomeAssistant):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "reauth"
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.github.config_flow.GitHub.get_repo",
@@ -212,7 +212,7 @@ async def test_reauth_form_cannot_find_repo(hass: HomeAssistant):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "reauth"
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.github.config_flow.GitHub.get_repo",
@@ -234,24 +234,22 @@ async def test_options_flow(hass: HomeAssistant, aioclient_mock: AiohttpClientMo
             aioclient_mock, json.loads(load_fixture("github/repository.json"))
         ),
     ), patch("homeassistant.components.github.async_setup", return_value=True), patch(
-        "homeassistant.components.github.async_setup_entry", return_value=True
+        "homeassistant.components.github.async_setup_entry", return_value=True,
     ):
-        config_entry = MockConfigEntry(
-            domain=DOMAIN,
-            unique_id=UNIQUE_ID,
-            data=FIXTURE_USER_INPUT,
-            options=FIXTURE_OPTIONS_DEFAULT,
+        mock_config = MockConfigEntry(
+            domain=DOMAIN, unique_id=UNIQUE_ID, data=FIXTURE_USER_INPUT
         )
-        config_entry.add_to_hass(hass)
+        mock_config.add_to_hass(hass)
+        await hass.async_block_till_done()
 
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        result2 = await hass.config_entries.options.async_init(mock_config.entry_id)
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        # assert result["step_id"] == "init"
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+        # assert result2["step_id"] == "init"
 
-        # result = await hass.config_entries.options.async_configure(
-        #     result["flow_id"], user_input=FIXTURE_OPTIONS_ALL
+        # result3 = await hass.config_entries.options.async_configure(
+        #     result2["flow_id"], user_input=FIXTURE_OPTIONS_ALL
         # )
 
-        # assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        # assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         # assert config_entry.options == FIXTURE_OPTIONS_ALL
