@@ -105,23 +105,12 @@ def _async_loop_exception_handler(_: Any, context: Dict) -> None:
 
 async def setup_and_run_hass(runtime_config: RuntimeConfig,) -> int:
     """Set up Home Assistant and run."""
-    import cProfile
-
-    pr = cProfile.Profile()
-    pr.enable()
-
     hass = await bootstrap.async_setup_hass(runtime_config)
 
     if hass is None:
         return 1
 
-    ret = await hass.async_run()
-
-    pr.disable()
-    pr.create_stats()
-    pr.dump_stats("setup_and_run_hass.cprof")
-
-    return ret
+    return await hass.async_run()
 
 
 def run(runtime_config: RuntimeConfig) -> int:
