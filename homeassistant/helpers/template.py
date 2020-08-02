@@ -195,6 +195,7 @@ class Template:
             return
 
         try:
+            _LOGGER.warning("About to compile: %s", self.template)
             self._compiled_code = self._env.compile(self.template)
         except jinja2.exceptions.TemplateSyntaxError as err:
             raise TemplateError(err)
@@ -1045,6 +1046,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
     @lru_cache(maxsize=256)
     def compile(self, value):
         """Compile the template."""
+        _LOGGER.warning("Compile: %s", value)
         return super().compile(value)
 
 
