@@ -1,0 +1,15 @@
+{
+  "domain": "climate_ip",
+  "name": "Climate IP",
+  "documentation": "https://github.com/SebuZet/samsungrac",
+  "dependencies": [],
+  "config_flow": false,
+  "codeowners": [
+    "@SebuZet"
+  ],
+  "requirements": [
+    "requests>=2.21.0",
+    "xmljson>=0.2.0"
+  ],
+  "homeassistant": "0.89.0"
+}

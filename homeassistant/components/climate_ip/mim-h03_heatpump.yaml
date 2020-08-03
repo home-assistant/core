@@ -1,0 +1,65 @@
+# Configuration for MIM-H03 controller attached to a Samsung Heat pump
+# Please pay attention that the device ID is not the usual 0 but 032000000 in this particular case
+# Use the following command to determine the appropriate device ID and adjust accordingly the params
+#   curl -v -k -H "Content-Type: application/json" -H "Authorization: Bearer __CLIMATE_IP_TOKEN__" --cert ac14k_m.pem -X GET https://__CLIMATE_IP_HOST__:8888/devices/
+device:
+  name: 'mim-h03_heatpump'
+  connection:
+    type: request
+    params: 
+      verify: False
+      headers: { "Authorization": "Bearer __CLIMATE_IP_TOKEN__", "Content-Type": "application/json" }
+  status:
+    type: 'json_status'
+    connection:
+      params: { method : 'GET', url: 'https://__CLIMATE_IP_HOST__:8888/devices' }
+    status_template: '{{ device_state.Devices.1 }}'
+  operations:
+    hvac: # hvac_mode
+      type: modes
+      connection:
+        params: { method: 'PUT', url: 'https://__CLIMATE_IP_HOST__:8888/devices/032000000/mode' }
+      values:
+        'cool': { value : 'Opmode_Cool', connection: { params: { json: { "Operation": { "power" : "On" }, "Mode": { "modes": ["Opmode_Cool"] } } } } }
+        'heat': { value : 'Opmode_Heat', connection: { params: { json: { "Operation": { "power" : "On" }, "Mode": { "modes": ["Opmode_Heat"] } } } } }
+        'off': { value: 'Off', connection: { params: { json: { "Operation": { "power" : "Off" } } } } }
+        # When switched to "Auto" mode the controller refuses to accept a temperature set command. For this reason the auto command is disabled
+        # auto: { value : 'Opmode_Auto', connection: { params: { json: { "Operation": { "power" : "On" }, "Mode": { "modes": ["Opmode_Auto"] } } } } }
+      status_template: "{% if device_state.Operation.power == 'Off' -%}Off{%- elif device_state.Operation.power == 'On' -%}{{ device_state.Mode.modes.0 }}{%- endif %}"
+#    power:
+#      type: switch
+#      connection:
+#        params: { method: 'PUT', url: 'https://__CLIMATE_IP_HOST__:8888/devices/032000000/operation' }
+#      values:
+#        'off': { value: 'Off', connection: { params: { json: { "Operation": { "power" : "Off" } } } } }
+#        'on': { value: 'On', connection: { params: { json: { "Operation": { "power" : "On" } } } } }
+#      status_template: '{{ device_state.Operation.power }}'
+    beep:
+      type: switch
+      connection:
+        params: { method: 'PUT', url: 'https://__CLIMATE_IP_HOST__:8888/devices/032000000/mode' }
+      values:
+        'off': { value: 'Volume_Mute', connection: { params: { json: { "options": [ "Volume_Mute"] } } } }
+        'on': { value: 'Volume_100', connection: { params: { json: { "options": [ "Volume_100"] } } } }
+      status_template: '{{ device_state.Mode.options.0 }}'
+    temperature:
+      type: number
+      connection:
+        params: { method: 'PUT', url: 'https://__CLIMATE_IP_HOST__:8888/devices/032000000/temperatures/0' }
+      min: 16
+      max: 55
+      status_template: '{{ device_state.Temperatures.0.desired | int }}'
+      connection_template: '{ "json": { "Temperature": { "desired": {{ value | int }} } } }'
+  attributes:
+    current_temperature:
+      type: number
+      status_template: '{{ device_state.Temperatures.0.current }}'
+    current_outside_temperature:
+      type: number
+      status_template: '{{ device_state.Temperatures.2.current }}'
+    min_temp:
+      type: number
+      status_template: '{{ device_state.Temperatures.0.minimum }}'
+    max_temp:
+      type: number
+      status_template: '{{ device_state.Temperatures.0.maximum }}'
