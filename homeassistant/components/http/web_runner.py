@@ -15,6 +15,9 @@ class HomeAssistantTCPSite(web.BaseSite):
     host IP's. To support multiple server_host entries (e.g. to enable dual-stack
     explicitly), we would like to pass an array of strings. Bring our own
     implementation inspired by TCPSite.
+
+    Custom TCPSite can be dropped when https://github.com/aio-libs/aiohttp/pull/4894
+    is merged.
     """
 
     __slots__ = ("_host", "_port", "_reuse_address", "_reuse_port", "_hosturl")
