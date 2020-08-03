@@ -185,12 +185,12 @@ class HomeAssistant:
         self.helpers = loader.Helpers(self)
         # This is a dictionary that any component can store any data on.
         self.data: dict = {}
-        self.state = CoreState.not_running
-        self.exit_code = 0
+        self.state: CoreState = CoreState.not_running
+        self.exit_code: int = 0
         # If not None, use to signal end-of-loop
         self._stopped: Optional[asyncio.Event] = None
         # Timeout handler for Core/Helper namespace
-        self.timeout = ZoneTimeout()
+        self.timeout: ZoneTimeout = ZoneTimeout()
 
     @property
     def is_running(self) -> bool:

@@ -1,6 +1,5 @@
 """Schema migration helpers."""
 import logging
-import os
 
 from sqlalchemy import Table, text
 from sqlalchemy.engine import reflection
@@ -36,7 +35,7 @@ def migrate_schema(instance):
             "Database is about to upgrade. Schema version: %s", current_version
         )
 
-        with instance.hass.timeout.freeze(zone_name=DOMAIN):
+        with instance.hass.timeout.freeze(DOMAIN):
             for version in range(current_version, SCHEMA_VERSION):
                 new_version = version + 1
                 _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
