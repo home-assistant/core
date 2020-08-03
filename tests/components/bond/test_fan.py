@@ -52,10 +52,17 @@ async def turn_fan_on(
 
 async def test_entity_registry(hass: core.HomeAssistant):
     """Tests that the devices are registered in the entity registry."""
-    await setup_platform(hass, FAN_DOMAIN, ceiling_fan("name-1"))
+    await setup_platform(
+        hass,
+        FAN_DOMAIN,
+        ceiling_fan("name-1"),
+        bond_version={"bondid": "test-hub-id"},
+        bond_device_id="test-device-id",
+    )
 
     registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
-    assert [key for key in registry.entities] == ["fan.name_1"]
+    entity = registry.entities["fan.name_1"]
+    assert entity.unique_id == "test-hub-id_test-device-id"
 
 
 async def test_non_standard_speed_list(hass: core.HomeAssistant):
