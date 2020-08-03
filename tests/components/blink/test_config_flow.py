@@ -249,10 +249,10 @@ async def test_form_unknown_error(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_import_shows_user_step(hass):
-    """Test import source shows the user form."""
+async def test_reauth_shows_user_step(hass):
+    """Test reauth shows the user form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "import"}
+        DOMAIN, context={"source": "reauth"}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"

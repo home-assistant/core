@@ -16,7 +16,6 @@ from homeassistant.components.blink.const import (
     SERVICE_SAVE_VIDEO,
     SERVICE_SEND_PIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_FILENAME, CONF_NAME, CONF_PIN, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
@@ -53,7 +52,7 @@ async def async_migrate_entry(hass, entry):
         data.pop("login_response", None)
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+                DOMAIN, context={"source": "reauth"}, data=data
             )
         )
         persistent_notification.async_create(

@@ -71,7 +71,7 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(
                     validate_input, self.hass, self.auth
                 )
-                return await self.async_step_finish()
+                return self._async_finish_flow()
             except Require2FA:
                 return await self.async_step_2fa()
             except InvalidAuth:
@@ -95,16 +95,19 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             pin = user_input.get(CONF_PIN)
             try:
-                if await self.hass.async_add_executor_job(
+                valid_token = await self.hass.async_add_executor_job(
                     _send_blink_2fa_pin, self.auth, pin
-                ):
-                    return await self.async_step_finish()
-                errors["base"] = "invalid_access_token"
+                )
             except BlinkSetupError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+
+            else:
+                if valid_token:
+                    return self._async_finish_flow()
+                errors["base"] = "invalid_access_token"
 
         return self.async_show_form(
             step_id="2fa",
@@ -114,11 +117,12 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, entry_data):
-        """Perform import of old entries."""
+    async def async_step_reauth(self, entry_data):
+        """Perform reauth upon migration of old entries."""
         return await self.async_step_user(entry_data)
 
-    async def async_step_finish(self):
+    @callback
+    def _async_finish_flow(self):
         """Finish with setup."""
         return self.async_create_entry(title=DOMAIN, data=self.auth.login_attributes)
 
