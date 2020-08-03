@@ -51,7 +51,6 @@ _RE_GET_ENTITIES = re.compile(
     re.I | re.M,
 )
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{")
-_TEMPLATE_CACHE_SIZE_PER_ENV = 1024
 
 
 @bind_hass
