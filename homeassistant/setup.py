@@ -190,7 +190,8 @@ async def _async_setup_component(
             hass.data[DATA_SETUP_STARTED].pop(domain)
             return False
 
-        result = await asyncio.wait_for(task, SLOW_SETUP_MAX_WAIT)
+        async with hass.timeout.asnyc_timeout(SLOW_SETUP_MAX_WAIT, zone_name=domain):
+            result = await task
     except asyncio.TimeoutError:
         _LOGGER.error(
             "Setup of %s is taking longer than %s seconds."
