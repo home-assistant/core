@@ -11,7 +11,10 @@ from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensor
 from homeassistant.const import CONF_HOST, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
+from .const import PING_TIMEOUT
+
 _LOGGER = logging.getLogger(__name__)
+
 
 ATTR_ROUND_TRIP_TIME_AVG = "round_trip_time_avg"
 ATTR_ROUND_TRIP_TIME_MAX = "round_trip_time_max"
@@ -20,11 +23,13 @@ ATTR_ROUND_TRIP_TIME_MIN = "round_trip_time_min"
 
 CONF_PING_COUNT = "count"
 
-DEFAULT_NAME = "Ping Binary sensor"
+DEFAULT_NAME = "Ping"
 DEFAULT_PING_COUNT = 5
 DEFAULT_DEVICE_CLASS = "connectivity"
 
 SCAN_INTERVAL = timedelta(minutes=5)
+
+PARALLEL_UPDATES = 0
 
 PING_MATCHER = re.compile(
     r"(?P<min>\d+.\d+)\/(?P<avg>\d+.\d+)\/(?P<max>\d+.\d+)\/(?P<mdev>\d+.\d+)"
@@ -39,17 +44,19 @@ WIN32_PING_MATCHER = re.compile(r"(?P<min>\d+)ms.+(?P<max>\d+)ms.+(?P<avg>\d+)ms
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PING_COUNT, default=DEFAULT_PING_COUNT): cv.positive_int,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_PING_COUNT, default=DEFAULT_PING_COUNT): vol.Range(
+            min=1, max=100
+        ),
     }
 )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ping Binary sensor."""
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    count = config.get(CONF_PING_COUNT)
+    host = config[CONF_HOST]
+    count = config[CONF_PING_COUNT]
+    name = config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
 
     add_entities([PingBinarySensor(name, PingData(host, count))], True)
 
@@ -129,7 +136,7 @@ class PingData:
             self._ping_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         try:
-            out = pinger.communicate()
+            out = pinger.communicate(timeout=self._count + PING_TIMEOUT)
             _LOGGER.debug("Output is %s", str(out))
             if sys.platform == "win32":
                 match = WIN32_PING_MATCHER.search(str(out).split("\n")[-1])
@@ -142,7 +149,11 @@ class PingData:
             match = PING_MATCHER.search(str(out).split("\n")[-1])
             rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
             return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
-        except (subprocess.CalledProcessError, AttributeError):
+        except (
+            subprocess.TimeoutExpired,
+            subprocess.CalledProcessError,
+            AttributeError,
+        ):
             return False
 
     def update(self):
