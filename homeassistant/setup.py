@@ -89,7 +89,8 @@ async def _async_process_dependencies(
         return True
 
     _LOGGER.debug("Dependency %s will wait for %s", integration.domain, list(tasks))
-    results = await asyncio.gather(*tasks.values())
+    async with hass.timeout.freeze(zone_name=integration.domain):
+        results = await asyncio.gather(*tasks.values())
 
     failed = [
         domain
