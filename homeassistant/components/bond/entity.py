@@ -27,7 +27,9 @@ class BondEntity(Entity):
     @property
     def unique_id(self) -> Optional[str]:
         """Get unique ID for the entity."""
-        return self._device.device_id
+        hub_id = self._hub.bond_id
+        device_id = self._device.device_id
+        return f"{hub_id}_{device_id}"
 
     @property
     def name(self) -> Optional[str]:
