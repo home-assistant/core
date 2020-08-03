@@ -8,7 +8,14 @@
             "invalid_auth": "Autenticazione non valida",
             "unknown": "Errore imprevisto"
         },
+        "flow_title": "Bond: {bond_id} ({host})",
         "step": {
+            "confirm": {
+                "data": {
+                    "access_token": "Token di accesso"
+                },
+                "description": "Vuoi configurare {bond_id}?"
+            },
             "user": {
                 "data": {
                     "access_token": "Token di accesso",
