@@ -10,6 +10,7 @@ from homeassistant.components.image_processing import DOMAIN as IP_DOMAIN
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_ENTITY_ID,
+    CONF_NAME,
     CONF_PLATFORM,
     CONF_SOURCE,
 )
@@ -58,8 +59,31 @@ class TestClarifaiImageProcessing:
 
         assert self.hass.states.get("image_processing.clarifai_demo_camera")
 
-    # def test_setup_platform_no_camera(self, mock_access):
+    @patch(
+        "homeassistant.components.clarifai.api.Clarifai.verify_access",
+        return_value=None,
+    )
+    def test_setup_platform_name(self, mock_access):
+        """Set up platform with one entity and name."""
+        self.config[IP_DOMAIN] = {
+            CONF_PLATFORM: CLARIFAI_DOMAIN,
+            CONF_SOURCE: {CONF_ENTITY_ID: ENTITY_CAMERA, CONF_NAME: "test local"},
+            CONF_APP_ID: "12345678abcdef",
+            CONF_WORKFLOW_ID: "Face",
+        }
+
+        self.config[CAMERA_DOMAIN] = {
+            CONF_PLATFORM: DEMO_DOMAIN,
+        }
+
+        with assert_setup_component(1, IP_DOMAIN):
+            setup_component(self.hass, IP_DOMAIN, self.config)
+            self.hass.block_till_done()
+
+        assert self.hass.states.get("image_processing.test_local")
 
     # def test_setup_platform_multiple_cameras(self, mock_access):
+
+    # def test_setup_platform_no_camera(self, mock_access):
 
     # def test_process_image(self, mock_access):

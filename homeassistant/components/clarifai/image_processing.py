@@ -9,6 +9,7 @@ from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
+from homeassistant.const import CONF_NAME
 from homeassistant.core import split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -46,7 +47,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for camera in config[CONF_SOURCE]:
         entities.append(
             ClarifaiImageProcessingEntity(
-                camera[CONF_ENTITY_ID], clarifai, app_id, workflow_id, result_format
+                camera[CONF_ENTITY_ID],
+                clarifai,
+                app_id,
+                workflow_id,
+                result_format,
+                camera.get(CONF_NAME),
             )
         )
 
