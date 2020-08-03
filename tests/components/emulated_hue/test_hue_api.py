@@ -1310,6 +1310,57 @@ async def test_put_then_get_cached_properly(hass, hass_hue, hue_client):
         assert ceiling_json["state"][HUE_API_STATE_BRI] == 127
 
 
+async def test_put_than_get_when_service_call_fails(hass, hass_hue, hue_client):
+    """Test putting and getting the light state when the service call fails."""
+
+    # Turn the bedroom light off first
+    await hass_hue.services.async_call(
+        light.DOMAIN,
+        const.SERVICE_TURN_OFF,
+        {const.ATTR_ENTITY_ID: "light.ceiling_lights"},
+        blocking=True,
+    )
+
+    turn_on_calls = []
+
+    # Now break the turn on service
+    @callback
+    def mock_service_call(call):
+        """Mock service call."""
+        turn_on_calls.append(call)
+
+    hass_hue.services.async_register(
+        light.DOMAIN, SERVICE_TURN_ON, mock_service_call, schema=None
+    )
+
+    ceiling_lights = hass_hue.states.get("light.ceiling_lights")
+    assert ceiling_lights.state == STATE_OFF
+
+    with patch.object(hue_api, "STATE_CHANGE_WAIT_TIMEOUT", 0.000001):
+        await asyncio.sleep(0.000001)
+        # update light state through api
+        await perform_put_light_state(
+            hass_hue,
+            hue_client,
+            "light.ceiling_lights",
+            True,
+            hue=4369,
+            saturation=127,
+            brightness=254,
+        )
+
+    # Ensure we did not actually turn on
+    assert hass.states.get("light.ceiling_lights").state == STATE_OFF
+
+    # go through api to get the state back, the value returned should NOT match those set in the last PUT request
+    # as the waiting to check the state change timed out
+    ceiling_json = await perform_get_light_state(
+        hue_client, "light.ceiling_lights", HTTP_OK
+    )
+
+    assert ceiling_json["state"][HUE_API_STATE_ON] is False
+
+
 async def test_get_invalid_entity(hass, hass_hue, hue_client):
     """Test the setting of light states and an immediate readback reads the same values."""
 

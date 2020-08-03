@@ -72,6 +72,8 @@ from homeassistant.util.network import is_local
 
 _LOGGER = logging.getLogger(__name__)
 
+# How long to wait for a state change to happen
+STATE_CHANGE_WAIT_TIMEOUT = 2.0
 # How long an entry state's cache will be valid for in seconds.
 STATE_CACHED_TIMEOUT = 2.0
 
@@ -833,7 +835,7 @@ async def wait_for_state_change_or_timeout(hass, entity_id, timeout):
     unsub = async_track_state_change_event(hass, [entity_id], _async_event_changed)
 
     try:
-        await asyncio.wait_for(ev.wait(), timeout=STATE_CACHED_TIMEOUT)
+        await asyncio.wait_for(ev.wait(), timeout=STATE_CHANGE_WAIT_TIMEOUT)
     except asyncio.TimeoutError:
         pass
     finally:
