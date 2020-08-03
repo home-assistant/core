@@ -1,3 +1,4 @@
+device:
   poll: False
   connection:
     type: request
