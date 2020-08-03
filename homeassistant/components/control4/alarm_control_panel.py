@@ -17,6 +17,8 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
+    STATE_ALARM_ARMING,
+    STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -148,6 +150,16 @@ class Control4AlarmControlPanel(Control4Entity, AlarmControlPanelEntity):
     @property
     def state(self):
         """Return the state of the device."""
+        partition_state = self._coordinator.data[self._idx][
+            CONTROL4_PARTITION_STATE_VAR
+        ]
+        if partition_state == "EXIT_DELAY":
+            return STATE_ALARM_ARMING
+
+        alarm_state = bool(self._coordinator.data[self._idx][CONTROL4_ALARM_STATE_VAR])
+        if alarm_state:
+            return STATE_ALARM_TRIGGERED
+
         disarmed = self._coordinator.data[self._idx][CONTROL4_DISARMED_VAR]
         armed_home = self._coordinator.data[self._idx][CONTROL4_ARMED_HOME_VAR]
         armed_away = self._coordinator.data[self._idx][CONTROL4_ARMED_AWAY_VAR]
@@ -176,6 +188,9 @@ class Control4AlarmControlPanel(Control4Entity, AlarmControlPanelEntity):
         ]
         for var in all_vars:
             state_attr[var.lower()] = self._coordinator.data[self._idx][var]
+        state_attr[CONTROL4_ALARM_STATE_VAR.lower()] = bool(
+            self._coordinator.data[self._idx][CONTROL4_ALARM_STATE_VAR]
+        )
         return state_attr
 
     async def async_alarm_arm_away(self, code=None):
