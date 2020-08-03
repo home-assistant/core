@@ -125,3 +125,19 @@ class TestClarifaiAPI:
             self.api.post_workflow_results(
                 "12345678abcdef", "General", "default", b"Test"
             )
+
+    def test_post_workflow_results_invalid_result_format(self):
+        """Test an invalid result_format."""
+        result_format = "invalid"
+
+        message = Parse(
+            load_fixture("clarifai_response_success.json"),
+            service_pb2.PostWorkflowResultsResponse(),
+        )
+
+        self.api.stub.PostWorkflowResults.return_value = message
+
+        with pytest.raises(HomeAssistantError):
+            self.api.post_workflow_results(
+                "12345678abcdef", "General", result_format, b"Test"
+            )
