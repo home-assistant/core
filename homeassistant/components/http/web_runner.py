@@ -22,7 +22,7 @@ class HomeAssistantTCPSite(web.BaseSite):
     def __init__(
         self,
         runner: "web.BaseRunner",
-        host: Union[Optional[str], List[str]],
+        host: Union[None, str, List[str]],
         port: int,
         *,
         shutdown_timeout: float = 60.0,
