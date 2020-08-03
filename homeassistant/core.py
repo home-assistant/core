@@ -258,7 +258,7 @@ class HomeAssistant:
         try:
             # Only block for EVENT_HOMEASSISTANT_START listener
             self.async_stop_track_tasks()
-            async with timeout(TIMEOUT_EVENT_START):
+            async with self.timeout.async_timeout(TIMEOUT_EVENT_START):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
@@ -447,17 +447,29 @@ class HomeAssistant:
         self.state = CoreState.stopping
         self.async_track_tasks()
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        await self.async_block_till_done()
+        try:
+            async with self.timeout.asnyc_timeout(120):
+                await self.async_block_till_done()
+        except asyncio.TimeoutError:
+            _LOGGER.warning("Move hard forward after stage 1 shutodwn")
 
         # stage 2
         self.state = CoreState.final_write
         self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
-        await self.async_block_till_done()
+        try:
+            async with self.timeout.asnyc_timeout(60):
+                await self.async_block_till_done()
+        except asyncio.TimeoutError:
+            _LOGGER.warning("Move hard forward after stage 2 shutodwn")
 
         # stage 3
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
-        await self.async_block_till_done()
+        try:
+            async with self.timeout.asnyc_timeout(30):
+                await self.async_block_till_done()
+        except asyncio.TimeoutError:
+            _LOGGER.warning("Move hard forward after stage 3 shutodwn")
 
         # Python 3.9+ and backported in runner.py
         await self.loop.shutdown_default_executor()  # type: ignore
