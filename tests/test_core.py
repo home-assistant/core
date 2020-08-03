@@ -1436,14 +1436,14 @@ async def test_chained_logging_hits_log_timeout(hass, caplog):
     async def _task_chain_1():
         nonlocal created
         created += 1
-        if created > 10:
+        if created > 1000:
             return
         hass.async_create_task(_task_chain_2())
 
     async def _task_chain_2():
         nonlocal created
         created += 1
-        if created > 10:
+        if created > 1000:
             return
         hass.async_create_task(_task_chain_1())
 
