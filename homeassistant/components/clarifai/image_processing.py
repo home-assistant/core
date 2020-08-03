@@ -7,6 +7,7 @@ from homeassistant.components.image_processing import (
     CONF_ENTITY_ID,
     CONF_SOURCE,
     PLATFORM_SCHEMA,
+    SOURCE_SCHEMA,
     ImageProcessingEntity,
 )
 from homeassistant.const import CONF_NAME
@@ -31,6 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_APP_ID): cv.string,
         vol.Required(CONF_WORKFLOW_ID): cv.string,
         vol.Optional(CONF_RESULT_FORMAT, default=DEFAULT): cv.string,
+        vol.Required(CONF_SOURCE): vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
     }
 )
 

@@ -19,11 +19,9 @@ from homeassistant.setup import setup_component
 from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant
 
-ENTITY_CAMERA = "camera.demo_camera"
 
-
-class TestClarifaiImageProcessing:
-    """Test class for image processing."""
+class TestClarifaiImageProcessingSetup:
+    """Test class for image processing setup."""
 
     # pylint: disable=attribute-defined-outside-init
     def setup_method(self):
@@ -44,9 +42,9 @@ class TestClarifaiImageProcessing:
         """Set up platform with one entity."""
         self.config[IP_DOMAIN] = {
             CONF_PLATFORM: CLARIFAI_DOMAIN,
-            CONF_SOURCE: {CONF_ENTITY_ID: ENTITY_CAMERA},
             CONF_APP_ID: "12345678abcdef",
             CONF_WORKFLOW_ID: "Face",
+            CONF_SOURCE: {CONF_ENTITY_ID: "camera.demo_camera"},
         }
 
         self.config[CAMERA_DOMAIN] = {
@@ -57,6 +55,7 @@ class TestClarifaiImageProcessing:
             setup_component(self.hass, IP_DOMAIN, self.config)
             self.hass.block_till_done()
 
+        assert self.hass.states.get("camera.demo_camera")
         assert self.hass.states.get("image_processing.clarifai_demo_camera")
 
     @patch(
@@ -67,9 +66,12 @@ class TestClarifaiImageProcessing:
         """Set up platform with one entity and name."""
         self.config[IP_DOMAIN] = {
             CONF_PLATFORM: CLARIFAI_DOMAIN,
-            CONF_SOURCE: {CONF_ENTITY_ID: ENTITY_CAMERA, CONF_NAME: "test local"},
             CONF_APP_ID: "12345678abcdef",
             CONF_WORKFLOW_ID: "Face",
+            CONF_SOURCE: {
+                CONF_ENTITY_ID: "camera.demo_camera",
+                CONF_NAME: "test local",
+            },
         }
 
         self.config[CAMERA_DOMAIN] = {
@@ -82,8 +84,45 @@ class TestClarifaiImageProcessing:
 
         assert self.hass.states.get("image_processing.test_local")
 
-    # def test_setup_platform_multiple_cameras(self, mock_access):
+    @patch(
+        "homeassistant.components.clarifai.api.Clarifai.verify_access",
+        return_value=None,
+    )
+    def test_setup_platform_multiple_cameras(self, mock_access):
+        """Set up platform with multiple cameras."""
+        self.config[IP_DOMAIN] = {
+            CONF_PLATFORM: CLARIFAI_DOMAIN,
+            CONF_APP_ID: "12345678abcdef",
+            CONF_WORKFLOW_ID: "Face",
+            CONF_SOURCE: [
+                {CONF_ENTITY_ID: "camera.foo"},
+                {CONF_ENTITY_ID: "camera.bar"},
+            ],
+        }
 
-    # def test_setup_platform_no_camera(self, mock_access):
+        self.config[CAMERA_DOMAIN] = [
+            {CONF_PLATFORM: DEMO_DOMAIN, CONF_NAME: "foo"},
+            {CONF_PLATFORM: DEMO_DOMAIN, CONF_NAME: "bar"},
+        ]
 
-    # def test_process_image(self, mock_access):
+        with assert_setup_component(1, IP_DOMAIN):
+            setup_component(self.hass, IP_DOMAIN, self.config)
+            self.hass.block_till_done()
+
+        assert self.hass.states.get("image_processing.clarifai_foo")
+        assert self.hass.states.get("image_processing.clarifai_bar")
+
+    @patch(
+        "homeassistant.components.clarifai.api.Clarifai.verify_access",
+        return_value=None,
+    )
+    def test_setup_platform_no_camera(self, mock_access):
+        """Set up platform with no camera."""
+        self.config[IP_DOMAIN] = {
+            CONF_PLATFORM: CLARIFAI_DOMAIN,
+            CONF_APP_ID: "12345678abcdef",
+            CONF_WORKFLOW_ID: "Face",
+        }
+
+        with assert_setup_component(0, IP_DOMAIN):
+            setup_component(self.hass, IP_DOMAIN, self.config)
