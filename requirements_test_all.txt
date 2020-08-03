@@ -352,6 +352,9 @@ hdate==0.9.5
 # homeassistant.components.here_travel_time
 herepy==2.0.0
 
+# homeassistant.components.hlk_sw16
+hlk-sw16==0.0.8
+
 # homeassistant.components.pi_hole
 hole==0.5.1
 
@@ -359,7 +362,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200716.0
+home-assistant-frontend==20200803.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10

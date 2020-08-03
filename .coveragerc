@@ -351,7 +351,8 @@ omit =
     homeassistant/components/hisense_aehw4a1/*
     homeassistant/components/hitron_coda/device_tracker.py
     homeassistant/components/hive/*
-    homeassistant/components/hlk_sw16/*
+    homeassistant/components/hlk_sw16/__init__.py
+    homeassistant/components/hlk_sw16/switch.py
     homeassistant/components/home_connect/*
     homeassistant/components/homematic/*
     homeassistant/components/homematic/climate.py
