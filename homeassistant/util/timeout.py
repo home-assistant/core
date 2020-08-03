@@ -416,7 +416,7 @@ class ZoneTimeout:
         for task in self._globals:
             task.zones_done_signal()
 
-    def asnyc_timeout(
+    def async_timeout(
         self, timeout: float, zone_name: str = ZONE_GLOBAL, cool_down: float = 0
     ) -> Union[_TaskZone, _TaskGlobal]:
         """Timeout based on a zone.
