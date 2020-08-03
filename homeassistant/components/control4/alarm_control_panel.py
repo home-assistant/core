@@ -140,14 +140,14 @@ class Control4AlarmControlPanel(Control4Entity, AlarmControlPanelEntity):
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
         c4_alarm = self.create_api_object()
-        c4_alarm.setArmAway(code)
+        await c4_alarm.setArmAway(code)
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
         c4_alarm = self.create_api_object()
-        c4_alarm.setArmHome(code)
+        await c4_alarm.setArmHome(code)
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
         c4_alarm = self.create_api_object()
-        c4_alarm.setDisarm(code)
+        await c4_alarm.setDisarm(code)
