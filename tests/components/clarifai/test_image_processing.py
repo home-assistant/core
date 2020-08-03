@@ -184,7 +184,7 @@ class TestClarifaiImageProcessing:
         self.hass.bus.listen(EVENT_PREDICTION, prediction_events.append)
 
         message = Parse(
-            load_fixture("clarifai_response_failure.json"),
+            load_fixture("clarifai/response_failure.json"),
             service_pb2.PostWorkflowResultsResponse(),
         )
 

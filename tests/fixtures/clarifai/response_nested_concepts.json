@@ -1,0 +1,128 @@
+{
+  "status": {
+    "code": "SUCCESS",
+    "description": "Ok",
+    "reqId": "514754e96127498abfbc8d3e07998f6b"
+  },
+  "workflow": {
+    "id": "Detect-Foo",
+    "appId": "5fd9c2eca5564d1da2474be3709bfcf9",
+    "createdAt": "2020-06-16T18:23:19.875986Z"
+  },
+  "results": [
+    {
+      "status": {
+        "code": "SUCCESS",
+        "description": "Ok"
+      },
+      "input": {
+        "id": "0cf1c1f696084f9a9552e97e30a15350",
+        "data": {
+          "image": {
+            "url": "https://samples.clarifai.com/placeholder.gif",
+            "base64": "dHJ1ZQ=="
+          }
+        }
+      },
+      "outputs": [
+        {
+          "id": "049e22e3de474743ad40c3a40583fe54",
+          "status": {
+            "code": "SUCCESS",
+            "description": "Ok"
+          },
+          "createdAt": "2020-08-03T21:55:08.122248733Z",
+          "model": {
+            "id": "Detect Foo",
+            "name": "Detect Foo",
+            "createdAt": "2020-06-16T16:34:16.429648Z",
+            "appId": "5fd9c2eca5564d1da2474be3709bfcf9",
+            "outputInfo": {
+              "outputConfig": {},
+              "message": "Show output_info with: GET /models/{model_id}/output_info",
+              "type": "concept",
+              "typeExt": "concept"
+            },
+            "modelVersion": {
+              "id": "68e6b9696f3c4bfc9629b2b6169716b1",
+              "createdAt": "2020-06-16T16:35:20.573245Z",
+              "status": {
+                "code": "MODEL_TRAINED",
+                "description": "Model is trained and ready"
+              },
+              "completedAt": "2020-06-16T16:35:22.387766Z"
+            }
+          },
+          "data": {
+            "regions": [
+              {
+                "id": "c9wpy7m28xu2",
+                "regionInfo": {
+                  "boundingBox": {
+                    "topRow": 0.07539025,
+                    "leftCol": 0.2703206,
+                    "bottomRow": 0.7358365,
+                    "rightCol": 0.7092912
+                  }
+                },
+                "data": {
+                  "concepts": [
+                    {
+                      "id": "Foo",
+                      "name": "Foo",
+                      "value": 0.9753649,
+                      "appId": "5fd9c2eca5564d1da2474be3709bfcf9"
+                    }
+                  ],
+                  "regions": [
+                    {
+                      "regionInfo": {
+                        "point": {
+                          "row": 0.35424373,
+                          "col": 0.46167177,
+                          "z": 0.10693801
+                        }
+                      },
+                      "data": {}
+                    },
+                    {
+                      "regionInfo": {
+                        "point": {
+                          "row": 0.46036106,
+                          "col": 0.44651097,
+                          "z": 0.17083584
+                        }
+                      },
+                      "data": {}
+                    },
+                    {
+                      "regionInfo": {
+                        "point": {
+                          "row": 0.349274,
+                          "col": 0.28186882,
+                          "z": 0.013294702
+                        }
+                      },
+                      "data": {}
+                    },
+                    {
+                      "regionInfo": {
+                        "point": {
+                          "row": 0.35945112,
+                          "col": 0.66995263,
+                          "z": 0.030805083
+                        }
+                      },
+                      "data": {}
+                    }
+                  ]
+                },
+                "value": 0.9999126
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

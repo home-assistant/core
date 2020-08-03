@@ -62,7 +62,7 @@ class TestClarifaiAPI:
         result_format = DEFAULT
 
         message = Parse(
-            load_fixture("clarifai_response_success.json"),
+            load_fixture("clarifai/response_success.json"),
             service_pb2.PostWorkflowResultsResponse(),
         )
 
@@ -94,7 +94,7 @@ class TestClarifaiAPI:
         result_format = CONCEPTS
 
         message = Parse(
-            load_fixture("clarifai_response_success.json"),
+            load_fixture("clarifai/response_success.json"),
             service_pb2.PostWorkflowResultsResponse(),
         )
 
@@ -112,10 +112,33 @@ class TestClarifaiAPI:
         assert concept_name in concepts
         assert max(concepts[concept_name]) == pytest.approx(concept_value)
 
+    def test_post_workflow_results_nested_concepts(self):
+        """Test the recursive parser for collecting nested concepts."""
+        result_format = CONCEPTS
+
+        message = Parse(
+            load_fixture("clarifai/response_nested_concepts.json"),
+            service_pb2.PostWorkflowResultsResponse(),
+        )
+
+        self.api.stub.PostWorkflowResults.return_value = message
+
+        result = self.api.post_workflow_results(
+            "12345678abcdef", "General", result_format, b"Test"
+        )
+
+        concept_name = "Foo"
+        concept_value = 0.9753649
+
+        assert CONCEPTS in result
+        concepts = result[CONCEPTS]
+        assert concept_name in concepts
+        assert max(concepts[concept_name]) == pytest.approx(concept_value)
+
     def test_post_workflow_results_response_failure(self):
         """Test a failed response from post_workflow_results."""
         message = Parse(
-            load_fixture("clarifai_response_failure.json"),
+            load_fixture("clarifai/response_failure.json"),
             service_pb2.PostWorkflowResultsResponse(),
         )
 
@@ -131,7 +154,7 @@ class TestClarifaiAPI:
         result_format = "invalid"
 
         message = Parse(
-            load_fixture("clarifai_response_success.json"),
+            load_fixture("clarifai/response_success.json"),
             service_pb2.PostWorkflowResultsResponse(),
         )
 
