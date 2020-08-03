@@ -180,13 +180,14 @@ class TestCommandSwitch(unittest.TestCase):
             "echo 'off command'",
             None,
             None,
+            15,
         ]
 
         no_state_device = command_line.CommandSwitch(*init_args)
         assert no_state_device.assumed_state
 
         # Set state command
-        init_args[-2] = "cat {}"
+        init_args[-3] = "cat {}"
 
         state_device = command_line.CommandSwitch(*init_args)
         assert not state_device.assumed_state
@@ -201,6 +202,7 @@ class TestCommandSwitch(unittest.TestCase):
             "echo 'off command'",
             False,
             None,
+            15,
         ]
 
         test_switch = command_line.CommandSwitch(*init_args)
