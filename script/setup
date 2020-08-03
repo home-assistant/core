@@ -8,46 +8,58 @@ cd "$(dirname "$0")/.."
 
 mkdir -p config
 
+valid_vers="3.8 3.7"
+
+valid_ver()
+{
+    for ver in ${valid_vers//./\\.}; do
+        if [[ $1 =~ ^Python\ ${ver}[.0-9]*$ ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
 cur_python=
 # If a venv is active, get its version.
-if [[ -n "${VIRTUAL_ENV}" ]]; then
+if [[ -n $VIRTUAL_ENV ]]; then
     cur_python=$(python3 -V)
 else
     # No venv active.
     # If a venv exists, activate it and get its version.
     for dir in venv .venv; do
-        if [[ -e ${dir}/bin/activate ]]; then
-            source ${dir}/bin/activate
+        if [[ -e $dir/bin/activate ]]; then
+            source "$dir/bin/activate"
             cur_python=$(python3 -V)
             break
         fi
     done
 fi
 # If a venv was active or found, check its version.
-if [[ -n "${cur_python}" ]]; then
-    ver_ok=false
-    for ver in "3\.7" "3\.8"; do
-        if [[ ${cur_python} =~ ^Python\ ${ver}[.0-9]*$ ]]; then
-            ver_ok=true
-            break
-        fi
-    done
-    if ! $ver_ok; then
+if [[ -n $cur_python ]]; then
+    if ! valid_ver "$cur_python"; then
         echo $cur_python is not supported!
         exit 1
     fi
 else
     # No venv active or found.
     # Create one and activate it.
-    if [[ -x "$(command -v python3)" && "$(python3 -V)" =~ .*3\.[78].* ]]; then
+    # First try the "generic" python3.
+    if [[ -x $(command -v python3) ]] && valid_ver "$(python3 -V)"; then
         cmd=python3
-    elif [[ -x "$(command -v python3.8)" ]]; then
-        cmd="python3.8"
-    elif [[ -x "$(command -v python3.7)" ]]; then
-        cmd="python3.7"
     else
-        echo Neither Python 3.7 nor 3.8 installed!
-        exit 2
+        # Try to use one of the valid versions specifically.
+        cmd=
+        for ver in $valid_vers; do
+            if [[ -x $(command -v python$ver) ]]; then
+                cmd=python$ver
+                break
+            fi
+        done
+        if [[ -z $cmd ]]; then
+            echo "No valid Python version installed: $valid_vers"
+            exit 2
+        fi
     fi
     $cmd -m venv venv
     source venv/bin/activate
