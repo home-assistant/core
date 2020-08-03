@@ -12,7 +12,7 @@ class _State(str, enum.Enum):
     """States of a Zone."""
 
     INIT = "INIT"
-    ENTER = "ENTER"
+    ACTIVE = "ACTIVE"
     TIMEOUT = "TIMEOUT"
     EXIT = "EXIT"
     FREEZE = "FREEZE"
@@ -156,7 +156,7 @@ class _TaskGlobal:
     async def __aenter__(self) -> _TaskGlobal:
         self._manager.global_tasks.append(self)
         self._start_timer()
-        self._state = _State.ENTER
+        self._state = _State.ACTIVE
         return self
 
     async def __aexit__(
@@ -304,7 +304,7 @@ class _Zone:
         """Start into new Task."""
         if self.state == _State.TIMEOUT:
             raise asyncio.TimeoutError
-        elif self.state != _State.ENTER:
+        elif self.state != _State.ACTIVE:
             self._start_timer()
 
         self._count += 1
@@ -330,7 +330,7 @@ class _Zone:
 
     def _start_timer(self) -> None:
         """Start timeout handler."""
-        self._state = _State.ENTER
+        self._state = _State.ACTIVE
         self._time = self._loop.time() + self._timeout
         self._timeout_handler = self._loop.call_at(self._time, self._on_timeout)
 
@@ -357,7 +357,7 @@ class _Zone:
 
     def pause(self) -> None:
         """Stop timers while it freeze."""
-        if self._state != _State.ENTER:
+        if self._state != _State.ACTIVE:
             return
         self._state = _State.FREEZE
         self._stop_timer()
@@ -366,7 +366,7 @@ class _Zone:
         """Reset timer after freeze."""
         if self._state != _State.FREEZE:
             return
-        self._state = _State.ENTER
+        self._state = _State.ACTIVE
         self._start_timer()
 
 
