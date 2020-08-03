@@ -22,6 +22,7 @@ from homeassistant.components import (
 from homeassistant.components.emulated_hue import Config, hue_api
 from homeassistant.components.emulated_hue.hue_api import (
     HUE_API_STATE_BRI,
+    HUE_API_STATE_CT,
     HUE_API_STATE_HUE,
     HUE_API_STATE_ON,
     HUE_API_STATE_SAT,
@@ -75,6 +76,8 @@ ENTITY_IDS_BY_NUMBER = {
     "16": "humidifier.humidifier",
     "17": "humidifier.dehumidifier",
     "18": "humidifier.hygrostat",
+    "19": "scene.light_on",
+    "20": "scene.light_off",
 }
 
 ENTITY_NUMBERS_BY_ID = {v: k for k, v in ENTITY_IDS_BY_NUMBER.items()}
@@ -162,6 +165,28 @@ def hass_hue(loop, hass):
         )
     )
 
+    # setup a dummy scene
+    loop.run_until_complete(
+        setup.async_setup_component(
+            hass,
+            "scene",
+            {
+                "scene": [
+                    {
+                        "id": "light_on",
+                        "name": "Light on",
+                        "entities": {"light.kitchen_lights": {"state": "on"}},
+                    },
+                    {
+                        "id": "light_off",
+                        "name": "Light off",
+                        "entities": {"light.kitchen_lights": {"state": "off"}},
+                    },
+                ]
+            },
+        )
+    )
+
     # create a lamp without brightness support
     hass.states.async_set("light.no_brightness", "on", {})
 
@@ -195,6 +220,9 @@ def hue_client(loop, hass_hue, aiohttp_client):
                 "humidifier.dehumidifier": {emulated_hue.CONF_ENTITY_HIDDEN: False},
                 # No expose setting (use default of not exposed)
                 "climate.nosetting": {},
+                # Expose scenes
+                "scene.light_on": {emulated_hue.CONF_ENTITY_HIDDEN: False},
+                "scene.light_off": {emulated_hue.CONF_ENTITY_HIDDEN: False},
             },
         },
     )
@@ -241,6 +269,8 @@ async def test_discover_lights(hue_client):
     assert "00:78:eb:f8:d5:0c:14:85-e7" in devices  # humidifier.humidifier
     assert "00:67:19:bd:ea:e4:2d:ef-22" in devices  # humidifier.dehumidifier
     assert "00:61:bf:ab:08:b1:a6:18-43" not in devices  # humidifier.hygrostat
+    assert "00:62:5c:3e:df:58:40:01-43" in devices  # scene.light_on
+    assert "00:1c:72:08:ed:09:e7:89-77" in devices  # scene.light_off
 
 
 async def test_light_without_brightness_supported(hass_hue, hue_client):
@@ -440,7 +470,7 @@ async def test_discover_config(hue_client):
 
 async def test_get_light_state(hass_hue, hue_client):
     """Test the getting of light state."""
-    # Turn office light on and set to 127 brightness, and set light color
+    # Turn ceiling lights on and set to 127 brightness, and set light color
     await hass_hue.services.async_call(
         light.DOMAIN,
         const.SERVICE_TURN_ON,
@@ -607,6 +637,23 @@ async def test_put_light_state(hass, hass_hue, hue_client):
         hass_hue, hue_client, "light.kitchen_lights", True
     )
     assert kitchen_result.status == HTTP_UNAUTHORIZED
+
+    # Turn the ceiling lights on first and color temp.
+    await hass_hue.services.async_call(
+        light.DOMAIN,
+        const.SERVICE_TURN_ON,
+        {const.ATTR_ENTITY_ID: "light.ceiling_lights", light.ATTR_COLOR_TEMP: 20},
+        blocking=True,
+    )
+
+    await perform_put_light_state(
+        hass_hue, hue_client, "light.ceiling_lights", True, color_temp=50
+    )
+
+    assert (
+        hass_hue.states.get("light.ceiling_lights").attributes[light.ATTR_COLOR_TEMP]
+        == 50
+    )
 
 
 async def test_put_light_state_script(hass, hass_hue, hue_client):
@@ -849,6 +896,71 @@ async def test_put_light_state_fan(hass_hue, hue_client):
     assert living_room_fan.state == "on"
     assert living_room_fan.attributes[fan.ATTR_SPEED] == fan.SPEED_MEDIUM
 
+    # Check setting the brightness of a fan to 0, 33%, 66% and 100% will respectively turn it off, low, medium or high
+    # We also check non-cached GET value to exercise the code.
+    await perform_put_light_state(
+        hass_hue, hue_client, "fan.living_room_fan", True, brightness=0
+    )
+    assert (
+        hass_hue.states.get("fan.living_room_fan").attributes[fan.ATTR_SPEED]
+        == fan.SPEED_OFF
+    )
+    await perform_put_light_state(
+        hass_hue,
+        hue_client,
+        "fan.living_room_fan",
+        True,
+        brightness=round(33 * 254 / 100),
+    )
+    assert (
+        hass_hue.states.get("fan.living_room_fan").attributes[fan.ATTR_SPEED]
+        == fan.SPEED_LOW
+    )
+    with patch.object(hue_api, "STATE_CACHED_TIMEOUT", 0.000001):
+        await asyncio.sleep(0.000001)
+        fan_json = await perform_get_light_state(
+            hue_client, "fan.living_room_fan", HTTP_OK
+        )
+        assert round(fan_json["state"][HUE_API_STATE_BRI] * 100 / 254) == 33
+
+    await perform_put_light_state(
+        hass_hue,
+        hue_client,
+        "fan.living_room_fan",
+        True,
+        brightness=round(66 * 254 / 100),
+    )
+    assert (
+        hass_hue.states.get("fan.living_room_fan").attributes[fan.ATTR_SPEED]
+        == fan.SPEED_MEDIUM
+    )
+    with patch.object(hue_api, "STATE_CACHED_TIMEOUT", 0.000001):
+        await asyncio.sleep(0.000001)
+        fan_json = await perform_get_light_state(
+            hue_client, "fan.living_room_fan", HTTP_OK
+        )
+        assert (
+            round(fan_json["state"][HUE_API_STATE_BRI] * 100 / 254) == 67
+        )  # small rounding error in inverse operation
+
+    await perform_put_light_state(
+        hass_hue,
+        hue_client,
+        "fan.living_room_fan",
+        True,
+        brightness=round(100 * 254 / 100),
+    )
+    assert (
+        hass_hue.states.get("fan.living_room_fan").attributes[fan.ATTR_SPEED]
+        == fan.SPEED_HIGH
+    )
+    with patch.object(hue_api, "STATE_CACHED_TIMEOUT", 0.000001):
+        await asyncio.sleep(0.000001)
+        fan_json = await perform_get_light_state(
+            hue_client, "fan.living_room_fan", HTTP_OK
+        )
+        assert round(fan_json["state"][HUE_API_STATE_BRI] * 100 / 254) == 100
+
 
 # pylint: disable=invalid-name
 async def test_put_with_form_urlencoded_content_type(hass_hue, hue_client):
@@ -969,9 +1081,8 @@ async def perform_put_test_on_ceiling_lights(
     assert ceiling_lights.attributes[light.ATTR_BRIGHTNESS] == 56
 
 
-async def perform_get_light_state(client, entity_id, expected_status):
+async def perform_get_light_state_by_number(client, entity_number, expected_status):
     """Test the getting of a light state."""
-    entity_number = ENTITY_NUMBERS_BY_ID[entity_id]
     result = await client.get(f"/api/username/lights/{entity_number}")
 
     assert result.status == expected_status
@@ -984,6 +1095,14 @@ async def perform_get_light_state(client, entity_id, expected_status):
     return None
 
 
+async def perform_get_light_state(client, entity_id, expected_status):
+    """Test the getting of a light state."""
+    entity_number = ENTITY_NUMBERS_BY_ID[entity_id]
+    return await perform_get_light_state_by_number(
+        client, entity_number, expected_status
+    )
+
+
 async def perform_put_light_state(
     hass_hue,
     client,
@@ -993,11 +1112,16 @@ async def perform_put_light_state(
     content_type="application/json",
     hue=None,
     saturation=None,
+    color_temp=None,
+    with_state=True,
 ):
     """Test the setting of a light state."""
     req_headers = {"Content-Type": content_type}
 
-    data = {HUE_API_STATE_ON: is_on}
+    data = {}
+
+    if with_state:
+        data[HUE_API_STATE_ON] = is_on
 
     if brightness is not None:
         data[HUE_API_STATE_BRI] = brightness
@@ -1005,6 +1129,8 @@ async def perform_put_light_state(
         data[HUE_API_STATE_HUE] = hue
     if saturation is not None:
         data[HUE_API_STATE_SAT] = saturation
+    if color_temp is not None:
+        data[HUE_API_STATE_CT] = color_temp
 
     entity_number = ENTITY_NUMBERS_BY_ID[entity_id]
     result = await client.put(
@@ -1182,3 +1308,118 @@ async def test_put_then_get_cached_properly(hass, hass_hue, hue_client):
         assert ceiling_json["state"][HUE_API_STATE_HUE] == 41869
         assert ceiling_json["state"][HUE_API_STATE_SAT] == 217
         assert ceiling_json["state"][HUE_API_STATE_BRI] == 127
+
+
+async def test_get_invalid_entity(hass, hass_hue, hue_client):
+    """Test the setting of light states and an immediate readback reads the same values."""
+
+    # Check that we get an error with an invalid entity number.
+    await perform_get_light_state_by_number(hue_client, 999, HTTP_NOT_FOUND)
+
+
+async def test_put_light_state_scene(hass, hass_hue, hue_client):
+    """Test the setting of scene variables."""
+    # Turn the kitchen lights off first
+    await hass_hue.services.async_call(
+        light.DOMAIN,
+        const.SERVICE_TURN_OFF,
+        {const.ATTR_ENTITY_ID: "light.kitchen_lights"},
+        blocking=True,
+    )
+
+    scene_result = await perform_put_light_state(
+        hass_hue, hue_client, "scene.light_on", True
+    )
+
+    scene_result_json = await scene_result.json()
+    assert scene_result.status == HTTP_OK
+    assert len(scene_result_json) == 1
+
+    assert hass_hue.states.get("light.kitchen_lights").state == STATE_ON
+
+    # Set the brightness on the entity; changing a scene brightness via the hue API will do nothing.
+    await hass_hue.services.async_call(
+        light.DOMAIN,
+        const.SERVICE_TURN_ON,
+        {const.ATTR_ENTITY_ID: "light.kitchen_lights", light.ATTR_BRIGHTNESS: 127},
+        blocking=True,
+    )
+
+    await perform_put_light_state(
+        hass_hue, hue_client, "scene.light_on", True, brightness=254
+    )
+
+    assert hass_hue.states.get("light.kitchen_lights").state == STATE_ON
+    assert (
+        hass_hue.states.get("light.kitchen_lights").attributes[light.ATTR_BRIGHTNESS]
+        == 127
+    )
+
+    await perform_put_light_state(hass_hue, hue_client, "scene.light_off", True)
+    assert hass_hue.states.get("light.kitchen_lights").state == STATE_OFF
+
+
+async def test_only_change_contrast(hass, hass_hue, hue_client):
+    """Test when only changing the contrast of a light state."""
+
+    # Turn the kitchen lights off first
+    await hass_hue.services.async_call(
+        light.DOMAIN,
+        const.SERVICE_TURN_OFF,
+        {const.ATTR_ENTITY_ID: "light.ceiling_lights"},
+        blocking=True,
+    )
+
+    await perform_put_light_state(
+        hass_hue,
+        hue_client,
+        "light.ceiling_lights",
+        True,
+        brightness=254,
+        with_state=False,
+    )
+
+    # Check that only setting the contrast will also turn on the light.
+    # TODO: It should be noted that a real Hue hub will not allow to change the brightness if the underlying entity is off.
+    # giving the error: [{"error":{"type":201,"address":"/lights/20/state/bri","description":"parameter, bri, is not modifiable. Device is set to off."}}]
+    # emulated_hue however will always turn on the light.
+    ceiling_lights = hass_hue.states.get("light.ceiling_lights")
+    assert ceiling_lights.state == STATE_ON
+    assert ceiling_lights.attributes[light.ATTR_BRIGHTNESS] == 255
+
+
+async def test_only_change_hue_or_saturation(hass, hass_hue, hue_client):
+    """Test setting either the hue or the saturation but not both."""
+
+    # TODO: The handling of this appears wrong, as setting only one will set the other to 0.
+    # The return values also appear wrong.
+
+    # Turn the ceiling lights on first and set hue and saturation.
+    await hass_hue.services.async_call(
+        light.DOMAIN,
+        const.SERVICE_TURN_ON,
+        {const.ATTR_ENTITY_ID: "light.ceiling_lights", light.ATTR_HS_COLOR: (10, 10)},
+        blocking=True,
+    )
+
+    await perform_put_light_state(
+        hass_hue, hue_client, "light.ceiling_lights", True, hue=4369
+    )
+
+    assert hass_hue.states.get("light.ceiling_lights").attributes[
+        light.ATTR_HS_COLOR
+    ] == (24, 0)
+
+    await hass_hue.services.async_call(
+        light.DOMAIN,
+        const.SERVICE_TURN_ON,
+        {const.ATTR_ENTITY_ID: "light.ceiling_lights", light.ATTR_HS_COLOR: (10, 10)},
+        blocking=True,
+    )
+    await perform_put_light_state(
+        hass_hue, hue_client, "light.ceiling_lights", True, saturation=10
+    )
+
+    assert hass_hue.states.get("light.ceiling_lights").attributes[
+        light.ATTR_HS_COLOR
+    ] == (0, 3)
