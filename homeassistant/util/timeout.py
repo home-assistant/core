@@ -1,9 +1,10 @@
 """Zone based timeout handling."""
 from __future__ import annotations
+
 import asyncio
 import enum
-from typing import Any, Dict, List, Union, Type, Optional
 from types import TracebackType
+from typing import Any, Dict, List, Optional, Type, Union
 
 ZONE_GLOBAL = "global"
 
