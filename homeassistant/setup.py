@@ -321,9 +321,10 @@ async def async_process_deps_reqs(
         raise HomeAssistantError("Could not set up all dependencies.")
 
     if not hass.config.skip_pip and integration.requirements:
-        await requirements.async_get_integration_with_requirements(
-            hass, integration.domain
-        )
+        async with hass.timeout.freeze(zone_name=integration.domain):
+            await requirements.async_get_integration_with_requirements(
+                hass, integration.domain
+            )
 
     processed.add(integration.domain)
 
