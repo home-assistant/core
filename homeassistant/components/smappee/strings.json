@@ -2,11 +2,16 @@
     "config": {
         "flow_title": "Smappee: {name}",
         "step": {
-            "user": {
+            "environment": {
                 "description": "Set up your Smappee to integrate with Home Assistant.",
                 "data": {
-                    "environment": "Environment",
-                    "host": "[%key:common::config_flow::data::host%]"
+                    "environment": "Environment"
+                }
+            },
+            "local": {
+                "description": "Enter the host to add the Smappee local integration",
+                "data": {
+                    "host": "Host"
                 }
             },
             "zeroconf_confirm": {
