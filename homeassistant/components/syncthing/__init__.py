@@ -46,10 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     name = data[CONF_NAME]
 
     client = aiosyncthing.Syncthing(
-        data[CONF_TOKEN],
-        url=data[CONF_URL],
-        verify_ssl=data[CONF_VERIFY_SSL],
-        loop=hass.loop,
+        data[CONF_TOKEN], url=data[CONF_URL], verify_ssl=data[CONF_VERIFY_SSL],
     )
 
     syncthing = SyncthingClient(hass, client, name)
