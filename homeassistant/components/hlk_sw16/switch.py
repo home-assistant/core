@@ -4,6 +4,8 @@ from homeassistant.components.switch import ToggleEntity
 from . import DATA_DEVICE_REGISTER, SW16Device
 from .const import DOMAIN
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the HLK-SW16 switches."""
