@@ -416,11 +416,6 @@ class HomeAssistantHTTP:
         self.runner = web.AppRunner(self.app)
         await self.runner.setup()
 
-        # The default of server_host is None, which enables dual-stack,
-        # from asyncio's create_server() documentation:
-        # "If host is an empty string or None, all interfaces are assumed
-        # and a list of multiple sockets will be returned (most likely one
-        # for IPv4 and another one for IPv6)."
         self.site = HomeAssistantTCPSite(
             self.runner, self.server_host, self.server_port, ssl_context=context
         )
