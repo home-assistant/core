@@ -55,7 +55,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Component setup, do nothing."""
-    hass.data.setdefault(DOMAIN, {})
     if DOMAIN not in config:
         return True
 
@@ -73,7 +72,7 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up the HLK-SW16 switch."""
-    # Allow platform to specify function to register new unknown devices
+    hass.data.setdefault(DOMAIN, {})
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
     address = f"{host}:{port}"
