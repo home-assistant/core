@@ -162,9 +162,9 @@ async def test_option_flow(hass):
 async def test_option_flow_wrong_coordinates(hass):
     """Test config flow options with mixed up coordinates."""
     valid_option = {
-        "lat_ne": 32.2345678,
+        "lat_ne": 32.1234567,
         "lon_ne": -117.2345678,
-        "lat_sw": 32.1234567,
+        "lat_sw": 32.2345678,
         "lon_sw": -117.1234567,
         "show_on_map": False,
         "area_name": "Home",
@@ -172,9 +172,9 @@ async def test_option_flow_wrong_coordinates(hass):
     }
 
     expected_result = {
-        "lat_ne": 32.1234567,
+        "lat_ne": 32.2345678,
         "lon_ne": -117.1234567,
-        "lat_sw": 32.2345678,
+        "lat_sw": 32.1234567,
         "lon_sw": -117.2345678,
         "show_on_map": False,
         "area_name": "Home",
