@@ -51,7 +51,6 @@ _RE_GET_ENTITIES = re.compile(
     re.I | re.M,
 )
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{")
-_TEMPLATE_CACHE_SIZE_PER_ENV = 1024
 
 
 @bind_hass
@@ -960,7 +959,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         """Initialise template environment."""
         super().__init__()
         self.hass = hass
-        self._template_cache = weakref.WeakValueDictionary()
+        self.template_cache = weakref.WeakValueDictionary()
         self.filters["round"] = forgiving_round
         self.filters["multiply"] = multiply
         self.filters["log"] = logarithm
@@ -1053,15 +1052,15 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             or raw is not False
             or defer_init is not False
         ):
+            # If there are any non-default keywords args, we do
+            # not cache.  In prodution we currently do not have
+            # any instance of this.
             return super().compile(source, name, filename, raw, defer_init)
 
-        cached = self._template_cache.get(source)
+        cached = self.template_cache.get(source)
 
         if cached is None:
-            _LOGGER.warning("Cache miss: %s", source)
-            cached = self._template_cache[source] = super().compile(source)
-        else:
-            _LOGGER.warning("Cache hit: %s", source)
+            cached = self.template_cache[source] = super().compile(source)
 
         return cached
 
