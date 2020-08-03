@@ -16,7 +16,7 @@
                     "longitude": "Longitude",
                     "name": "Name of the integration"
                 },
-                "description": "If you need help with the configuration have a look here: https://www.home-assistant.io/integrations/accuweather/\n\nWeather forecast is not enabled by default. You can enable it in the integration options.",
+                "description": "If you need help with the configuration have a look here: https://www.home-assistant.io/integrations/accuweather/\n\nSome sensors are not enabled by default. You can enable them in the entity registry after the integration configuration.\nWeather forecast is not enabled by default. You can enable it in the integration options.",
                 "title": "AccuWeather"
             }
         }
