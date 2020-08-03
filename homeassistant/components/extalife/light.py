@@ -25,6 +25,7 @@ from .helpers.const import DOMAIN
 from .helpers.core import Core
 from .pyextalife import (
     DEVICE_ARR_ALL_LIGHT,
+    DEVICE_ARR_EXTA_FREE_RGB,
     DEVICE_ARR_LIGHT_EFFECT,
     DEVICE_ARR_LIGHT_RGB,
     DEVICE_ARR_LIGHT_RGBW,
@@ -161,15 +162,22 @@ class ExtaLifeLight(ExtaLifeChannel, LightEntity):
         self._supported_flags = 0
         self._effect_list = None
         self.channel_data = channel_data.get("data")
+        self._assumed_on = False
 
         dev_type = self.channel_data.get("type")
         _LOGGER.debug("Light type: %s", dev_type)
         if dev_type in DEVICE_ARR_ALL_LIGHT:
-            self._supported_flags |= SUPPORT_BRIGHTNESS
+            if not self.is_exta_free:
+                self._supported_flags |= SUPPORT_BRIGHTNESS
+            # elif
+            # self.is_exta_free and DEVICE_ARR_EXTA_FREE_RGB:    # for Exta Free only RGB controller supports brightness level adjustment
+            #     self._supported_flags |= SUPPORT_BRIGHTNESS
 
         if dev_type in DEVICE_ARR_LIGHT_RGBW:
             self._supported_flags |= SUPPORT_COLOR | SUPPORT_WHITE_VALUE
-        elif dev_type in DEVICE_ARR_LIGHT_RGB:
+        elif (
+            dev_type in DEVICE_ARR_LIGHT_RGB
+        ):  # do not add Exta Free as RDP-11 support in controller is limited to on/off only
             self._supported_flags |= SUPPORT_COLOR
 
         if dev_type in DEVICE_ARR_LIGHT_EFFECT:
@@ -238,16 +246,25 @@ class ExtaLifeLight(ExtaLifeChannel, LightEntity):
                 {"mode_val": MAP_EFFECT_MODE_VAL[effect]}
             )  # mode - one of effects
 
-        if await self.async_action(ExtaLifeAPI.ACTN_TURN_ON, **params):
-            # update channel data with new values
-            data["power"] = 1
-            mode_val_new = params.get("mode_val")
-            if mode_val_new is not None:
-                params["mode_val"] = modeval_upd(
-                    mode_val, mode_val_new
-                )  # convert new value to the format of the old value from channel_data
-            data.update(params)
-            self.async_schedule_update_ha_state()
+        if not self.is_exta_free:
+            if await self.async_action(ExtaLifeAPI.ACTN_TURN_ON, **params):
+                # update channel data with new values
+                data["power"] = 1
+                mode_val_new = params.get("mode_val")
+                if mode_val_new is not None:
+                    params["mode_val"] = modeval_upd(
+                        mode_val, mode_val_new
+                    )  # convert new value to the format of the old value from channel_data
+                data.update(params)
+                self.async_schedule_update_ha_state()
+        else:
+            if await self.async_action(
+                ExtaLifeAPI.ACTN_EXFREE_TURN_ON_PRESS, **params
+            ) and await self.async_action(
+                ExtaLifeAPI.ACTN_EXFREE_TURN_ON_RELEASE, **params
+            ):
+                self._assumed_on = True
+                self.schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn off the switch."""
@@ -263,10 +280,19 @@ class ExtaLifeLight(ExtaLifeChannel, LightEntity):
         if value is not None:
             params.update({"value": value})
 
-        if await self.async_action(ExtaLifeAPI.ACTN_TURN_OFF, **params):
-            data["power"] = 0
-            data["mode"] = mode
-            self.async_schedule_update_ha_state()
+        if not self.is_exta_free:
+            if await self.async_action(ExtaLifeAPI.ACTN_TURN_OFF, **params):
+                data["power"] = 0
+                data["mode"] = mode
+                self.async_schedule_update_ha_state()
+        else:
+            if await self.async_action(
+                ExtaLifeAPI.ACTN_EXFREE_TURN_OFF_PRESS, **params
+            ) and await self.async_action(
+                ExtaLifeAPI.ACTN_EXFREE_TURN_OFF_RELEASE, **params
+            ):
+                self._assumed_on = False
+                self.schedule_update_ha_state()
 
     @property
     def effect(self):
@@ -315,6 +341,9 @@ class ExtaLifeLight(ExtaLifeChannel, LightEntity):
     @property
     def is_on(self):
         """Return true if switch is on."""
+        if self.is_exta_free:
+            return self._assumed_on
+
         state = self.channel_data.get("power")
 
         _LOGGER.debug("is_on for entity: %s, state: %s", self.entity_id, state)

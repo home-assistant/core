@@ -44,31 +44,50 @@ class ExtaLifeSwitch(ExtaLifeChannel, SwitchEntity):
         self._attributes = dict()
         self._type = data.get("type")
 
+        self._assumed_on = False
+
     async def async_turn_on(self, **kwargs):
         """Turn on the switch."""
-        if await self.async_action(ExtaLifeAPI.ACTN_TURN_ON):
-            field = (
-                "power"
-                if self.channel_data.get("output_state") is None
-                else "output_state"
-            )
-            self.channel_data[field] = 1
-            self.async_schedule_update_ha_state()
+        if not self.is_exta_free:
+            if await self.async_action(ExtaLifeAPI.ACTN_TURN_ON):
+                field = (
+                    "power"
+                    if self.channel_data.get("output_state") is None
+                    else "output_state"
+                )
+                self.channel_data[field] = 1
+                self.async_schedule_update_ha_state()
+        else:
+            if await self.async_action(
+                ExtaLifeAPI.ACTN_EXFREE_TURN_ON_PRESS
+            ) and await self.async_action(ExtaLifeAPI.ACTN_EXFREE_TURN_ON_RELEASE):
+                self._assumed_on = True
+                self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn off the switch."""
-        if await self.async_action(ExtaLifeAPI.ACTN_TURN_OFF):
-            field = (
-                "power"
-                if self.channel_data.get("output_state") is None
-                else "output_state"
-            )
-            self.channel_data[field] = 0
-            self.async_schedule_update_ha_state()
+        if not self.is_exta_free:
+            if await self.async_action(ExtaLifeAPI.ACTN_TURN_OFF):
+                field = (
+                    "power"
+                    if self.channel_data.get("output_state") is None
+                    else "output_state"
+                )
+                self.channel_data[field] = 0
+                self.async_schedule_update_ha_state()
+        else:
+            if await self.async_action(
+                ExtaLifeAPI.ACTN_EXFREE_TURN_OFF_PRESS
+            ) and await self.async_action(ExtaLifeAPI.ACTN_EXFREE_TURN_OFF_RELEASE):
+                self._assumed_on = False
+                self.async_schedule_update_ha_state()
 
     @property
     def is_on(self):
         """Return true if switch is on."""
+        if self.is_exta_free:
+            return self._assumed_on
+
         field = (
             "power" if self.channel_data.get("output_state") is None else "output_state"
         )

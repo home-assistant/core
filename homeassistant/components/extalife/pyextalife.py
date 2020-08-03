@@ -10,6 +10,7 @@ log = logging.getLogger(__name__)
 # controller info
 PRODUCT_MANUFACTURER = "ZAMEL"
 PRODUCT_SERIES = "Exta Life"
+PRODUCT_SERIES_EXTA_FREE = "Exta Free"
 PRODUCT_CONTROLLER_MODEL = "EFC-01"
 
 MODEL_RNK22 = "RNK-22"
@@ -50,6 +51,22 @@ MODEL_P520 = "P-520"
 MODEL_P521L = "P-521L"
 MODEL_BULIK_DRS985 = "bulik DRS-985"
 
+# Exta Free
+MODEL_ROP01 = "ROP-01"
+MODEL_ROP02 = "ROP-02"
+MODEL_ROM01 = "ROM-01"
+MODEL_ROM10 = "ROM-10"
+MODEL_ROP05 = "ROP-05"
+MODEL_ROP06 = "ROP-06"
+MODEL_ROP07 = "ROP-07"
+MODEL_RWG01 = "RWG-01"
+MODEL_ROB01 = "ROB-01"
+MODEL_SRP02 = "SRP-02"
+MODEL_RDP01 = "RDP-01"
+MODEL_RDP02 = "RDP-02"
+MODEL_RDP11 = "RDP-11"
+MODEL_SRP03 = "SRP-03"
+
 # device types string mapping
 DEVICE_MAP_TYPE_TO_MODEL = {
     1: MODEL_RNK22,
@@ -89,6 +106,21 @@ DEVICE_MAP_TYPE_TO_MODEL = {
     52: MODEL_P520,
     53: MODEL_P521L,
     238: MODEL_BULIK_DRS985,
+    # Exta Free
+    326: MODEL_ROP01,
+    327: MODEL_ROP02,
+    328: MODEL_ROM01,
+    329: MODEL_ROM10,
+    330: MODEL_ROP05,
+    331: MODEL_ROP06,
+    332: MODEL_ROP07,
+    333: MODEL_RWG01,
+    334: MODEL_ROB01,
+    335: MODEL_SRP02,
+    336: MODEL_RDP01,
+    337: MODEL_RDP02,
+    338: MODEL_RDP11,
+    339: MODEL_SRP03,
 }
 
 # reverse lookup
@@ -115,13 +147,26 @@ DEVICE_ARR_TRANS_REMOTE = [5, 6, 7, 8, 51, 52, 53]
 DEVICE_ARR_TRANS_NORMAL_BATTERY = [1, 3, 19]
 DEVICE_ARR_TRANS_NORMAL_MAINS = [17, 18]
 
-DEVICE_ARR_ALL_SWITCH = DEVICE_ARR_SWITCH
+# Exta Free devices
+DEVICE_ARR_EXTA_FREE_RECEIVER = [80]
+DEVICE_ARR_EXTA_FREE_SWITCH = [326, 327, 328, 329, 330, 331, 332, 333, 334]
+DEVICE_ARR_EXTA_FREE_COVER = [335, 339]
+DEVICE_ARR_EXTA_FREE_LIGHT = [336, 337]
+DEVICE_ARR_EXTA_FREE_RGB = [338]
+
+DEVICE_ARR_ALL_EXFREE_SWITCH = [*DEVICE_ARR_EXTA_FREE_SWITCH]
+DEVICE_ARR_ALL_EXFREE_LIGHT = [*DEVICE_ARR_EXTA_FREE_LIGHT, *DEVICE_ARR_EXTA_FREE_RGB]
+DEVICE_ARR_ALL_EXFREE_COVER = [*DEVICE_ARR_EXTA_FREE_COVER]
+
+# union of all subtypes
+DEVICE_ARR_ALL_SWITCH = [*DEVICE_ARR_SWITCH, *DEVICE_ARR_ALL_EXFREE_SWITCH]
 DEVICE_ARR_ALL_LIGHT = [
     *DEVICE_ARR_LIGHT,
     *DEVICE_ARR_LIGHT_RGB,
     *DEVICE_ARR_LIGHT_RGBW,
+    *DEVICE_ARR_ALL_EXFREE_LIGHT,
 ]
-DEVICE_ARR_ALL_COVER = [*DEVICE_ARR_COVER]
+DEVICE_ARR_ALL_COVER = [*DEVICE_ARR_COVER, *DEVICE_ARR_ALL_EXFREE_COVER]
 DEVICE_ARR_ALL_CLIMATE = [*DEVICE_ARR_CLIMATE]
 DEVICE_ARR_ALL_TRANSMITTER = [
     *DEVICE_ARR_TRANS_REMOTE,
@@ -129,6 +174,7 @@ DEVICE_ARR_ALL_TRANSMITTER = [
     *DEVICE_ARR_TRANS_NORMAL_MAINS,
 ]
 DEVICE_ARR_ALL_IGNORE = [*DEVICE_ARR_REPEATER]
+
 
 # measurable magnitude/quantity:
 DEVICE_ARR_ALL_SENSOR_MEAS = [*DEVICE_ARR_SENS_TEMP, *DEVICE_ARR_SENS_HUMID]
@@ -167,6 +213,7 @@ class ExtaLifeAPI:
     CMD_FETCH_SENSORS = 38
     CMD_FETCH_TRANSMITTERS = 39
     CMD_FETCH_NETW_SETTINGS = 102
+    CMD_FETCH_EXTAFREE = 203
     CMD_VERSION = 151
     CMD_RESTART = 150
 
@@ -184,10 +231,25 @@ class ExtaLifeAPI:
     ACTN_SET_RGT_MODE_MANUAL = "RGT_SET_MODE_MANUAL"
     ACTN_SET_RGT_MODE_AUTO = "RGT_SET_MODE_AUTO"
 
+    # Exta Free Actions
+    ACTN_EXFREE_TURN_ON_PRESS = "TURN_ON_PRESS"
+    ACTN_EXFREE_TURN_ON_RELEASE = "TURN_ON_RELEASE"
+    ACTN_EXFREE_TURN_OFF_PRESS = "TURN_OFF_PRESS"
+    ACTN_EXFREE_TURN_OFF_RELEASE = "TURN_OFF_RELEASE"
+    ACTN_EXFREE_UP_PRESS = "UP_PRESS"
+    ACTN_EXFREE_UP_RELEASE = "UP_RELEASE"
+    ACTN_EXFREE_DOWN_PRESS = "DOWN_PRESS"
+    ACTN_EXFREE_DOWN_RELEASE = "DOWN_RELEASE"
+    ACTN_EXFREE_BRIGHT_UP_PRESS = "BRIGHT_UP_PRESS"
+    ACTN_EXFREE_BRIGHT_UP_RELEASE = "BRIGHT_UP_RELEASE"
+    ACTN_EXFREE_BRIGHT_DOWN_PRESS = "BRIGHT_DOWN_PRESS"
+    ACTN_EXFREE_BRIGHT_DOWN_RELEASE = "BRIGHT_DOWN_RELEASE"
+
     # Channel Types
     CHN_TYP_RECEIVERS = "receivers"
     CHN_TYP_SENSORS = "sensors"
     CHN_TYP_TRANSMITTERS = "transmitters"
+    CHN_TYP_EXFREE_RECEIVERS = "exta_free_receivers"
 
     def __init__(self, on_connect=None, on_disconnect=None, **kwargs):
         """ API Object constructor
@@ -318,7 +380,13 @@ class ExtaLifeAPI:
         return self._name
 
     def get_channels(
-        self, include=(CHN_TYP_RECEIVERS, CHN_TYP_SENSORS, CHN_TYP_TRANSMITTERS)
+        self,
+        include=(
+            CHN_TYP_RECEIVERS,
+            CHN_TYP_SENSORS,
+            CHN_TYP_TRANSMITTERS,
+            CHN_TYP_EXFREE_RECEIVERS,
+        ),
     ):
         """
         Get list of dicts of Exta Life channels consisting of native Exta Life TCP JSON
@@ -342,6 +410,11 @@ class ExtaLifeAPI:
                 cmd = self.CMD_FETCH_TRANSMITTERS
                 resp = self.tcp.exec_command(cmd, None, 1)
                 channels.extend(self._get_channels_int(resp, dummy_ch=True))
+
+            if self.CHN_TYP_EXFREE_RECEIVERS in include:
+                cmd = self.CMD_FETCH_EXTAFREE
+                resp = self.tcp.exec_command(cmd, None, 1)
+                channels.extend(self._get_channels_int(resp))
 
             return channels
 
@@ -410,6 +483,12 @@ class ExtaLifeAPI:
         for cmd in data_js:
             for device in cmd["data"]["devices"]:
                 dev = device.copy()
+
+                if dev.get("exta_free_device") == True:
+                    dev["type"] = (
+                        int(dev["state"][0]["exta_free_type"]) + 300
+                    )  # do the same as the Exta Life app does - add 300 to move identifiers to Exta Life "namespace"
+
                 dev.pop("state")
                 for state in device["state"]:
                     ch_no = (
@@ -434,6 +513,7 @@ class ExtaLifeAPI:
         **fields - fields of the native JSON command e.g. value, mode, mode_val etc
         """
         MAP_ACION_STATE = {
+            # Exta Life:
             ExtaLifeAPI.ACTN_TURN_ON: 1,
             ExtaLifeAPI.ACTN_TURN_OFF: 0,
             ExtaLifeAPI.ACTN_OPEN: 1,
@@ -443,6 +523,19 @@ class ExtaLifeAPI:
             ExtaLifeAPI.ACTN_SET_RGT_MODE_AUTO: 0,
             ExtaLifeAPI.ACTN_SET_RGT_MODE_MANUAL: 1,
             ExtaLifeAPI.ACTN_SET_TMP: 1,
+            # Exta Free:
+            ExtaLifeAPI.ACTN_EXFREE_TURN_ON_PRESS: 1,
+            ExtaLifeAPI.ACTN_EXFREE_TURN_ON_RELEASE: 2,
+            ExtaLifeAPI.ACTN_EXFREE_TURN_OFF_PRESS: 3,
+            ExtaLifeAPI.ACTN_EXFREE_TURN_OFF_RELEASE: 4,
+            ExtaLifeAPI.ACTN_EXFREE_UP_PRESS: 1,
+            ExtaLifeAPI.ACTN_EXFREE_UP_RELEASE: 2,
+            ExtaLifeAPI.ACTN_EXFREE_DOWN_PRESS: 3,
+            ExtaLifeAPI.ACTN_EXFREE_DOWN_RELEASE: 4,
+            ExtaLifeAPI.ACTN_EXFREE_BRIGHT_UP_PRESS: 1,
+            ExtaLifeAPI.ACTN_EXFREE_BRIGHT_UP_RELEASE: 2,
+            ExtaLifeAPI.ACTN_EXFREE_BRIGHT_DOWN_PRESS: 3,
+            ExtaLifeAPI.ACTN_EXFREE_BRIGHT_DOWN_RELEASE: 4,
         }
         ch_id, channel = channel_id.split("-")
         ch_id = int(ch_id)
@@ -710,7 +803,7 @@ class TCPAdapter:
         """
         from datetime import datetime
 
-        SOCK_TIMEOUT = 5  # let it run maximum for 5 seconds
+        SOCK_TIMEOUT = 15  # let it run maximum for 15 seconds
 
         request = {"command": command, "data": data}
         cmd = self._json_to_tcp(request)
