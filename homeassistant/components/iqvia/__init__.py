@@ -72,6 +72,12 @@ async def async_setup_entry(hass, config_entry):
     """Set up IQVIA as config entry."""
     websession = aiohttp_client.async_get_clientsession(hass)
 
+    if not config_entry.unique_id:
+        # If the config entry doesn't already have a unique ID, set one:
+        hass.config_entries.async_update_entry(
+            config_entry, **{"unique_id": config_entry.data[CONF_ZIP_CODE]}
+        )
+
     iqvia = IQVIAData(hass, Client(config_entry.data[CONF_ZIP_CODE], websession))
 
     try:
