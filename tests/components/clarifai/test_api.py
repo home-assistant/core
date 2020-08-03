@@ -86,7 +86,7 @@ class TestClarifaiAPI:
                     assert VALUE in concept
                     if concept[NAME] == concept_name:
                         found_dog = True
-                        assert concept[VALUE] == concept_value
+                        assert concept[VALUE] == pytest.approx(concept_value)
         assert found_dog
 
     def test_post_workflow_results_response_with_concepts_parser(self):
@@ -110,7 +110,7 @@ class TestClarifaiAPI:
         assert CONCEPTS in result
         concepts = result[CONCEPTS]
         assert concept_name in concepts
-        assert max(concepts[concept_name]) == concept_value
+        assert max(concepts[concept_name]) == pytest.approx(concept_value)
 
     def test_post_workflow_results_response_failure(self):
         """Test a failed response from post_workflow_results."""
