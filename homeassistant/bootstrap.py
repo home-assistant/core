@@ -531,5 +531,5 @@ async def _async_set_up_integrations(
     try:
         async with hass.timeout.asnyc_timeout(300, cool_down=60):
             await hass.async_block_till_done()
-        except asyncio.TimeoutError:
-            _LOGGER.warning("Setup timeout on bootstrap - moving forward")
+    except asyncio.TimeoutError:
+        _LOGGER.warning("Setup timeout on bootstrap - moving forward")
