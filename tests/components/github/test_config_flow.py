@@ -6,12 +6,10 @@ from aiogithubapi.objects.repository import AIOGitHubAPIRepository
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.github.const import (
-    CONF_CLONES,
     CONF_ISSUES_PRS,
     CONF_LATEST_COMMIT,
     CONF_LATEST_RELEASE,
     CONF_REPOSITORY,
-    CONF_VIEWS,
     DOMAIN,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -27,18 +25,14 @@ FIXTURE_USER_INPUT = {
     CONF_REPOSITORY: "octocat/Hello-World",
 }
 FIXTURE_OPTIONS_DEFAULT = {
-    CONF_CLONES: False,
     CONF_ISSUES_PRS: False,
     CONF_LATEST_COMMIT: True,
     CONF_LATEST_RELEASE: False,
-    CONF_VIEWS: False,
 }
-FIXTURE_OPTIONS_ALL = {
-    CONF_CLONES: True,
+FIXTURE_OPTIONS_ENABLED = {
     CONF_ISSUES_PRS: True,
     CONF_LATEST_COMMIT: True,
     CONF_LATEST_RELEASE: True,
-    CONF_VIEWS: True,
 }
 
 UNIQUE_ID = "octocat/Hello-World"
@@ -264,23 +258,23 @@ async def test_options_flow(hass: HomeAssistant, aioclient_mock: AiohttpClientMo
         return_value=AIOGitHubAPIRepository(
             aioclient_mock, json.loads(load_fixture("github/repository.json"))
         ),
-    ), patch("homeassistant.components.github.async_setup", return_value=True), patch(
-        "homeassistant.components.github.async_setup_entry", return_value=True,
     ):
         mock_config = MockConfigEntry(
-            domain=DOMAIN, unique_id=UNIQUE_ID, data=FIXTURE_USER_INPUT
+            domain=DOMAIN,
+            unique_id=UNIQUE_ID,
+            data=FIXTURE_USER_INPUT,
+            options=FIXTURE_OPTIONS_DEFAULT,
         )
         mock_config.add_to_hass(hass)
-        await hass.async_block_till_done()
 
-        result2 = await hass.config_entries.options.async_init(mock_config.entry_id)
+        result = await hass.config_entries.options.async_init(mock_config.entry_id)
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-        # assert result2["step_id"] == "init"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        # assert result["step_id"] == "init"
 
-        # result3 = await hass.config_entries.options.async_configure(
-        #     result2["flow_id"], user_input=FIXTURE_OPTIONS_ALL
-        # )
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input=FIXTURE_OPTIONS_ENABLED,
+        )
 
-        # assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        # assert config_entry.options == FIXTURE_OPTIONS_ALL
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result2["data"] == FIXTURE_OPTIONS_ENABLED
