@@ -8,16 +8,37 @@ cd "$(dirname "$0")/.."
 
 mkdir -p config
 
-if [[ -e venv/bin/activate ]]; then
-    if [[ -z "${VIRTUAL_ENV}" ]]; then
-        source venv/bin/activate
-    fi
+cur_python=
+# If a venv is active, get its version.
+if [[ -n "${VIRTUAL_ENV}" ]]; then
     cur_python=$(python3 -V)
-    if [[ ! $cur_python =~ .*3\.[78].* ]]; then
+else
+    # No venv active.
+    # If a venv exists, activate it and get its version.
+    for dir in venv .venv; do
+        if [[ -e ${dir}/bin/activate ]]; then
+            source ${dir}/bin/activate
+            cur_python=$(python3 -V)
+            break
+        fi
+    done
+fi
+# If a venv was active or found, check its version.
+if [[ -n "${cur_python}" ]]; then
+    ver_ok=false
+    for ver in "3\.7" "3\.8"; do
+        if [[ ${cur_python} =~ ^Python\ ${ver}[.0-9]*$ ]]; then
+            ver_ok=true
+            break
+        fi
+    done
+    if ! $ver_ok; then
         echo $cur_python is not supported!
         exit 1
     fi
 else
+    # No venv active or found.
+    # Create one and activate it.
     if [[ -x "$(command -v python3)" && "$(python3 -V)" =~ .*3\.[78].* ]]; then
         cmd=python3
     elif [[ -x "$(command -v python3.8)" ]]; then
