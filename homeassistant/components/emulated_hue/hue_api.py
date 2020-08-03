@@ -73,7 +73,7 @@ from homeassistant.util.network import is_local
 _LOGGER = logging.getLogger(__name__)
 
 # How long to wait for a state change to happen
-STATE_CHANGE_WAIT_TIMEOUT = 2.0
+STATE_CHANGE_WAIT_TIMEOUT = 5.0
 # How long an entry state's cache will be valid for in seconds.
 STATE_CACHED_TIMEOUT = 2.0
 
@@ -522,15 +522,6 @@ class HueOneLightChangeView(HomeAssistantView):
         if entity.domain in config.off_maps_to_on_domains:
             service = SERVICE_TURN_ON
 
-            # Caching is required because things like scripts and scenes won't
-            # report as "off" to Alexa if an "off" command is received, because
-            # they'll map to "on". Thus, instead of reporting its actual
-            # status, we report what Alexa will want to see, which is the same
-            # as the actual requested command.
-            config.cached_states[entity_id] = [parsed, None]
-        else:
-            config.cached_states[entity_id] = [parsed, time.time()]
-
         # Separate call to turn on needed
         if turn_on_needed:
             hass.async_create_task(
@@ -572,6 +563,16 @@ class HueOneLightChangeView(HomeAssistantView):
                 json_response.append(
                     create_hue_success_response(entity_number, val, parsed[key])
                 )
+
+        if entity.domain in config.off_maps_to_on_domains:
+            # Caching is required because things like scripts and scenes won't
+            # report as "off" to Alexa if an "off" command is received, because
+            # they'll map to "on". Thus, instead of reporting its actual
+            # status, we report what Alexa will want to see, which is the same
+            # as the actual requested command.
+            config.cached_states[entity_id] = [parsed, None]
+        else:
+            config.cached_states[entity_id] = [parsed, time.time()]
 
         return self.json(json_response)
 
