@@ -14,7 +14,7 @@ ENV_LOCAL = "local"
 
 SMAPPEE_PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=20)
 
 AUTHORIZE_URL = {
     "PRODUCTION": "https://app1pub.smappee.net/dev/v1/oauth2/authorize",
