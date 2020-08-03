@@ -15,8 +15,6 @@ from homeassistant.components.device_tracker.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-from .const import PING_TIMEOUT
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PING_COUNT = "count"
@@ -49,9 +47,9 @@ class Host:
             self._ping_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
         )
         try:
-            pinger.communicate(timeout=1 + PING_TIMEOUT)
+            pinger.communicate()
             return pinger.returncode == 0
-        except (subprocess.TimeoutExpired, subprocess.CalledProcessError):
+        except subprocess.CalledProcessError:
             return False
 
     def update(self, see):
