@@ -1,4 +1,5 @@
 """Light platform support for yeelight."""
+from functools import partial
 import logging
 from typing import Optional
 
@@ -32,8 +33,15 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LightEntity,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, CONF_HOST, CONF_NAME
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_MODE,
+    CONF_DISCOVERY,
+    CONF_IP_ADDRESS,
+    CONF_NAME,
+)
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service import extract_entity_ids
@@ -48,18 +56,21 @@ from . import (
     ATTR_ACTION,
     ATTR_COUNT,
     ATTR_TRANSITIONS,
-    CONF_CUSTOM_EFFECTS,
     CONF_FLOW_PARAMS,
     CONF_MODE_MUSIC,
-    CONF_NIGHTLIGHT_SWITCH_TYPE,
+    CONF_NIGHTLIGHT_SWITCH,
     CONF_SAVE_ON_CHANGE,
     CONF_TRANSITION,
+    DATA_CONFIG_ENTRIES,
+    DATA_CUSTOM_EFFECTS,
+    DATA_DEVICES,
+    DATA_SETUP_LIGHT,
     DATA_UPDATED,
     DATA_YEELIGHT,
     DOMAIN,
-    NIGHTLIGHT_SWITCH_TYPE_LIGHT,
     YEELIGHT_FLOW_TRANSITION_SCHEMA,
     YEELIGHT_SERVICE_SCHEMA,
+    YeelightEntity,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -236,62 +247,68 @@ def _cmd(func):
     return _wrap
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Yeelight bulbs."""
-
-    if not discovery_info:
-        return
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+) -> None:
+    """Set up Yeelight from a config entry."""
 
     if PLATFORM_DATA_KEY not in hass.data:
         hass.data[PLATFORM_DATA_KEY] = []
 
-    device = hass.data[DATA_YEELIGHT][discovery_info[CONF_HOST]]
-    _LOGGER.debug("Adding %s", device.name)
+    custom_effects = _parse_custom_effects(hass.data[DOMAIN][DATA_CUSTOM_EFFECTS])
 
-    custom_effects = _parse_custom_effects(discovery_info[CONF_CUSTOM_EFFECTS])
-    nl_switch_light = (
-        discovery_info.get(CONF_NIGHTLIGHT_SWITCH_TYPE) == NIGHTLIGHT_SWITCH_TYPE_LIGHT
-    )
+    async def async_setup_light(ipaddr):
+        device = hass.data[DOMAIN][DATA_DEVICES][ipaddr]
+        _LOGGER.debug("Adding %s", device.name)
 
-    lights = []
+        nl_switch_light = device.config.get(CONF_NIGHTLIGHT_SWITCH)
 
-    device_type = device.type
+        lights = []
 
-    def _lights_setup_helper(klass):
-        lights.append(klass(device, custom_effects=custom_effects))
+        device_type = device.type
 
-    if device_type == BulbType.White:
-        _lights_setup_helper(YeelightGenericLight)
-    elif device_type == BulbType.Color:
-        if nl_switch_light and device.is_nightlight_supported:
-            _lights_setup_helper(YeelightColorLightWithNightlightSwitch)
-            _lights_setup_helper(YeelightNightLightModeWithWithoutBrightnessControl)
+        def _lights_setup_helper(klass):
+            lights.append(klass(device, custom_effects=custom_effects))
+
+        if device_type == BulbType.White:
+            _lights_setup_helper(YeelightGenericLight)
+        elif device_type == BulbType.Color:
+            if nl_switch_light and device.is_nightlight_supported:
+                _lights_setup_helper(YeelightColorLightWithNightlightSwitch)
+                _lights_setup_helper(YeelightNightLightModeWithWithoutBrightnessControl)
+            else:
+                _lights_setup_helper(YeelightColorLightWithoutNightlightSwitch)
+        elif device_type == BulbType.WhiteTemp:
+            if nl_switch_light and device.is_nightlight_supported:
+                _lights_setup_helper(YeelightWithNightLight)
+                _lights_setup_helper(YeelightNightLightMode)
+            else:
+                _lights_setup_helper(YeelightWhiteTempWithoutNightlightSwitch)
+        elif device_type == BulbType.WhiteTempMood:
+            if nl_switch_light and device.is_nightlight_supported:
+                _lights_setup_helper(YeelightNightLightModeWithAmbientSupport)
+                _lights_setup_helper(YeelightWithAmbientAndNightlight)
+            else:
+                _lights_setup_helper(YeelightWithAmbientWithoutNightlight)
+            _lights_setup_helper(YeelightAmbientLight)
         else:
-            _lights_setup_helper(YeelightColorLightWithoutNightlightSwitch)
-    elif device_type == BulbType.WhiteTemp:
-        if nl_switch_light and device.is_nightlight_supported:
-            _lights_setup_helper(YeelightWithNightLight)
-            _lights_setup_helper(YeelightNightLightMode)
-        else:
-            _lights_setup_helper(YeelightWhiteTempWithoutNightlightSwitch)
-    elif device_type == BulbType.WhiteTempMood:
-        if nl_switch_light and device.is_nightlight_supported:
-            _lights_setup_helper(YeelightNightLightModeWithAmbientSupport)
-            _lights_setup_helper(YeelightWithAmbientAndNightlight)
-        else:
-            _lights_setup_helper(YeelightWithAmbientWithoutNightlight)
-        _lights_setup_helper(YeelightAmbientLight)
+            _lights_setup_helper(YeelightGenericLight)
+            _LOGGER.warning(
+                "Cannot determine device type for %s, %s. Falling back to white only",
+                device.ipaddr,
+                device.name,
+            )
+
+        hass.data[PLATFORM_DATA_KEY] += lights
+        async_add_entities(lights, True)
+        await hass.async_add_executor_job(partial(setup_services, hass))
+
+    if config_entry.data[CONF_DISCOVERY]:
+        hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][
+            DATA_SETUP_LIGHT
+        ] = async_setup_light
     else:
-        _lights_setup_helper(YeelightGenericLight)
-        _LOGGER.warning(
-            "Cannot determine device type for %s, %s. Falling back to white only",
-            device.ipaddr,
-            device.name,
-        )
-
-    hass.data[PLATFORM_DATA_KEY] += lights
-    add_entities(lights, True)
-    setup_services(hass)
+        await async_setup_light(config_entry.data[CONF_IP_ADDRESS])
 
 
 def setup_services(hass):
@@ -406,13 +423,14 @@ def setup_services(hass):
     )
 
 
-class YeelightGenericLight(LightEntity):
+class YeelightGenericLight(YeelightEntity, LightEntity):
     """Representation of a Yeelight generic light."""
 
     def __init__(self, device, custom_effects=None):
         """Initialize the Yeelight light."""
+        super().__init__(device)
+
         self.config = device.config
-        self._device = device
 
         self._brightness = None
         self._color_temp = None
@@ -445,20 +463,10 @@ class YeelightGenericLight(LightEntity):
         )
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def unique_id(self) -> Optional[str]:
         """Return a unique ID."""
 
         return self.device.unique_id
-
-    @property
-    def available(self) -> bool:
-        """Return if bulb is available."""
-        return self.device.available
 
     @property
     def supported_features(self) -> int:

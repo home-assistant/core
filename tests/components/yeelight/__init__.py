@@ -11,7 +11,7 @@ from homeassistant.components.yeelight import (
 )
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 
-from tests.async_mock import MagicMock
+from tests.async_mock import MagicMock, patch
 
 IP_ADDRESS = "192.168.1.239"
 MODEL = "color"
@@ -85,3 +85,12 @@ def _mocked_bulb(cannot_connect=False):
     bulb.music_mode = False
 
     return bulb
+
+
+def _patch_discovery(prefix, no_device=False):
+    def _mocked_discovery(timeout=2, interface=False):
+        if no_device:
+            return []
+        return [{"ip": IP_ADDRESS, "port": 55443, "capabilities": CAPABILITIES}]
+
+    return patch(f"{prefix}.discover_bulbs", side_effect=_mocked_discovery)

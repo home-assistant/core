@@ -3,31 +3,45 @@ import logging
 from typing import Optional
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_DISCOVERY, CONF_IP_ADDRESS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DATA_UPDATED, DATA_YEELIGHT
+from . import (
+    DATA_CONFIG_ENTRIES,
+    DATA_DEVICES,
+    DATA_SETUP_BINARY_SENSOR,
+    DATA_UPDATED,
+    DOMAIN,
+    YeelightEntity,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Yeelight sensors."""
-    if not discovery_info:
-        return
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+) -> None:
+    """Set up Yeelight from a config entry."""
 
-    device = hass.data[DATA_YEELIGHT][discovery_info["host"]]
+    async def async_setup_binary_sensor(ipaddr):
+        device = hass.data[DOMAIN][DATA_DEVICES][ipaddr]
 
-    if device.is_nightlight_supported:
-        _LOGGER.debug("Adding nightlight mode sensor for %s", device.name)
-        add_entities([YeelightNightlightModeSensor(device)])
+        if device.is_nightlight_supported:
+            _LOGGER.debug("Adding nightlight mode sensor for %s", device.name)
+            async_add_entities([YeelightNightlightModeSensor(device)])
+
+    if config_entry.data[CONF_DISCOVERY]:
+        hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][
+            DATA_SETUP_BINARY_SENSOR
+        ] = async_setup_binary_sensor
+    else:
+        await async_setup_binary_sensor(config_entry.data[CONF_IP_ADDRESS])
 
 
-class YeelightNightlightModeSensor(BinarySensorEntity):
+class YeelightNightlightModeSensor(YeelightEntity, BinarySensorEntity):
     """Representation of a Yeelight nightlight mode sensor."""
-
-    def __init__(self, device):
-        """Initialize nightlight mode sensor."""
-        self._device = device
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -48,16 +62,6 @@ class YeelightNightlightModeSensor(BinarySensorEntity):
             return unique + "-nightlight_sensor"
 
         return None
-
-    @property
-    def available(self) -> bool:
-        """Return if bulb is available."""
-        return self._device.available
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):

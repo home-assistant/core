@@ -1,0 +1,48 @@
+{
+    "title": "Yeelight",
+    "config": {
+      "step": {
+        "user": {
+          "data": {
+            "type": "Type"
+          }
+        },
+        "discovery_setup": {
+          "description": "[%key:common::config_flow::description::confirm_setup%]"
+        },
+        "manual": {
+          "data": {
+            "ip_address": "[%key:common::config_flow::data::ip%]"
+          }
+        }
+      },
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+        "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+      }
+    },
+    "options": {
+      "step": {
+        "device": {
+          "description": "Pick a device to configure",
+          "data": {
+            "device": "Device"
+          }
+        },
+        "options": {
+          "data": {
+            "model": "Model (Optional)",
+            "transition": "Transition Time (ms)",
+            "use_music_mode": "Enable Music Mode",
+            "save_on_change": "Save Status On Change",
+            "nightlight_switch": "Use Nightlight Switch"
+          }
+        }
+      }
+    }
+  }
