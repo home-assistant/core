@@ -389,7 +389,7 @@ class ZoneTimeout:
     @property
     def freezes_done(self) -> bool:
         """Return True if all freezes are finish."""
-        return not bool(self._freezes)
+        return not self._freezes
 
     @property
     def zones(self) -> Dict[str, _Zone]:
