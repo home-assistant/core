@@ -28,9 +28,20 @@ from .director_utils import director_update_data_multi_variable
 _LOGGER = logging.getLogger(__name__)
 
 CONTROL4_CATEGORY = "security"
+
 CONTROL4_ARMED_AWAY_VAR = "AWAY_STATE"
 CONTROL4_ARMED_HOME_VAR = "HOME_STATE"
 CONTROL4_DISARMED_VAR = "DISARMED_STATE"
+CONTROL4_ALARM_STATE_VAR = "ALARM_STATE"
+CONTROL4_DISPLAY_TEXT_VAR = "DISPLAY_TEXT"
+CONTROL4_TROUBLE_TEXT_VAR = "TROUBLE_TEXT"
+CONTROL4_PARTITION_STATE_VAR = "PARTITION_STATE"
+CONTROL4_DELAY_TIME_REMAINING_VAR = "DELAY_TIME_REMAINING"
+CONTROL4_OPEN_ZONE_COUNT_VAR = "OPEN_ZONE_COUNT"
+CONTROL4_ALARM_TYPE_VAR = "ALARM_TYPE"
+CONTROL4_ARMED_TYPE = "ARMED_TYPE"
+CONTROL4_LAST_EMERGENCY = "LAST_EMERGENCY"
+CONTROL4_LAST_ARM_FAILURE = "LAST_ARM_FAILED"
 
 
 async def async_setup_entry(
@@ -45,16 +56,26 @@ async def async_setup_entry(
 
     async def async_update_data():
         """Fetch data from Control4 director for dimmer lights."""
+        variables = ","
+        variables = variables.join(
+            [
+                CONTROL4_ARMED_AWAY_VAR,
+                CONTROL4_ARMED_HOME_VAR,
+                CONTROL4_DISARMED_VAR,
+                CONTROL4_ALARM_STATE_VAR,
+                CONTROL4_DISPLAY_TEXT_VAR,
+                CONTROL4_TROUBLE_TEXT_VAR,
+                CONTROL4_PARTITION_STATE_VAR,
+                CONTROL4_DELAY_TIME_REMAINING_VAR,
+                CONTROL4_OPEN_ZONE_COUNT_VAR,
+                CONTROL4_ALARM_TYPE_VAR,
+                CONTROL4_ARMED_TYPE,
+                CONTROL4_LAST_EMERGENCY,
+                CONTROL4_LAST_ARM_FAILURE,
+            ]
+        )
         try:
-            return await director_update_data_multi_variable(
-                hass,
-                entry,
-                CONTROL4_ARMED_AWAY_VAR
-                + ","
-                + CONTROL4_ARMED_HOME_VAR
-                + ","
-                + CONTROL4_DISARMED_VAR,
-            )
+            return await director_update_data_multi_variable(hass, entry, variables)
         except C4Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}")
 
@@ -119,6 +140,12 @@ class Control4AlarmControlPanel(Control4Entity, AlarmControlPanelEntity):
         return FORMAT_NUMBER
 
     @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        flags = SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME
+        return flags
+
+    @property
     def state(self):
         """Return the state of the device."""
         disarmed = self._coordinator.data[self._idx][CONTROL4_DISARMED_VAR]
@@ -132,10 +159,24 @@ class Control4AlarmControlPanel(Control4Entity, AlarmControlPanelEntity):
             return STATE_ALARM_ARMED_AWAY
 
     @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        flags = SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME
-        return flags
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        state_attr = {}
+        all_vars = [
+            CONTROL4_DISPLAY_TEXT_VAR,
+            CONTROL4_TROUBLE_TEXT_VAR,
+            CONTROL4_PARTITION_STATE_VAR,
+            CONTROL4_DELAY_TIME_REMAINING_VAR,
+            CONTROL4_OPEN_ZONE_COUNT_VAR,
+            CONTROL4_ALARM_STATE_VAR,
+            CONTROL4_ALARM_TYPE_VAR,
+            CONTROL4_ARMED_TYPE,
+            CONTROL4_LAST_EMERGENCY,
+            CONTROL4_LAST_ARM_FAILURE,
+        ]
+        for var in all_vars:
+            state_attr[var.lower()] = self._coordinator.data[self._idx][var]
+        return state_attr
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
