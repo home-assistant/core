@@ -1,4 +1,4 @@
-"""Platform for Control4 Lights."""
+"""Platform for Control4 Alarm Control Panel."""
 from datetime import timedelta
 import logging
 
@@ -16,8 +16,8 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED,
     STATE_ALARM_ARMING,
+    STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant
@@ -49,7 +49,7 @@ CONTROL4_LAST_ARM_FAILURE = "LAST_ARM_FAILED"
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
-    """Set up Control4 lights from a config entry."""
+    """Set up Control4 alarm control panels from a config entry."""
     entry_data = hass.data[DOMAIN][entry.entry_id]
     scan_interval = entry_data[CONF_SCAN_INTERVAL]
     _LOGGER.debug(
@@ -57,7 +57,7 @@ async def async_setup_entry(
     )
 
     async def async_update_data():
-        """Fetch data from Control4 director for dimmer lights."""
+        """Fetch data from Control4 director for alarm control panels."""
         variables = ","
         variables = variables.join(
             [
@@ -127,7 +127,7 @@ async def async_setup_entry(
 
 
 class Control4AlarmControlPanel(Control4Entity, AlarmControlPanelEntity):
-    """Control4 light entity."""
+    """Control4 alarm control panel entity."""
 
     def create_api_object(self):
         """Create a pyControl4 device object.
