@@ -9,7 +9,6 @@ import sys
 from time import monotonic
 from typing import TYPE_CHECKING, Any, Dict, Optional, Set
 
-from async_timeout import timeout
 import voluptuous as vol
 import yarl
 
@@ -136,7 +135,7 @@ async def async_setup_hass(
         hass.async_track_tasks()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP, {})
         with contextlib.suppress(asyncio.TimeoutError):
-            async with timeout(10):
+            async with hass.timeout.async_timeout(10):
                 await hass.async_block_till_done()
 
         safe_mode = True
