@@ -5,7 +5,7 @@ import logging
 
 import av
 
-from .const import AUDIO_SAMPLE_RATE
+from .const import AUDIO_SAMPLE_RATE, MIN_SEGMENT_DURATION
 from .core import Segment, StreamBuffer
 
 _LOGGER = logging.getLogger(__name__)
@@ -110,8 +110,12 @@ def stream_worker(hass, stream, quit_event):
         packet.dts -= first_pts
         packet.pts -= first_pts
 
-        # Reset segment on every keyframe
-        if packet.is_keyframe:
+        # Reset segment on keyframe after we reach desired segment duration
+        if (
+            packet.is_keyframe
+            and (packet.pts - segment_start_v_pts) * packet.time_base
+            >= MIN_SEGMENT_DURATION
+        ):
             # Calculate the segment duration by multiplying the difference of the next and the current
             # keyframe presentation timestamps by the time base, which gets us total seconds.
             segment_duration = (packet.pts - segment_start_v_pts) * packet.time_base
