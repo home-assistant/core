@@ -74,9 +74,6 @@ _LOGGER = logging.getLogger(__name__)
 
 # How long an entry state's cache will be valid for in seconds.
 STATE_CACHED_TIMEOUT = 2.0
-# Index value when accessing a cached state.
-STATE_CACHE_STATE = 0
-STATE_CACHE_TIME = 1
 
 STATE_BRIGHTNESS = "bri"
 STATE_COLORMODE = "colormode"
