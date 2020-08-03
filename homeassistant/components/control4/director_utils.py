@@ -38,6 +38,28 @@ async def director_update_data(
     return {key["id"]: key for key in data}
 
 
+async def director_update_data_multi_variable(
+    hass: HomeAssistant, entry: ConfigEntry, var: str
+) -> dict:
+    """Retrieve data from the Control4 director for update_coordinator."""
+    # possibly implement usage of director_token_expiration to start
+    # token refresh without waiting for error to occur
+    try:
+        director = hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR]
+        data = await director.getAllItemVariableValue(var)
+    except BadToken:
+        _LOGGER.info("Updating Control4 director token")
+        await refresh_tokens(hass, entry)
+        director = hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR]
+        data = await director.getAllItemVariableValue(var)
+    return_dict = {}
+    for key in data:
+        if key["id"] not in return_dict:
+            return_dict[key["id"]] = {}
+        return_dict[key["id"]][key["varName"]] = key["value"]
+    return return_dict
+
+
 async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
     """Store updated authentication and director tokens in hass.data."""
     config = entry.data
