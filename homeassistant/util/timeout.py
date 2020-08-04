@@ -39,7 +39,7 @@ class _FreezeGlobal:
     """Internal Freeze Context Manager object for Global."""
 
     def __init__(self, manager: ZoneTimeout, loop: asyncio.AbstractEventLoop) -> None:
-        """Initalize internal timeout context manager."""
+        """Initialize internal timeout context manager."""
         self._loop: asyncio.AbstractEventLoop = loop
         self._manager: ZoneTimeout = manager
 
