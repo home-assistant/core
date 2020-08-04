@@ -22,7 +22,7 @@ DATA_SETUP = "setup_tasks"
 DATA_DEPS_REQS = "deps_reqs_processed"
 
 SLOW_SETUP_WARNING = 10
-SLOW_SETUP_MAX_WAIT = 180
+SLOW_SETUP_MAX_WAIT = 300
 
 
 @core.callback
