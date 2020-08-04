@@ -46,6 +46,7 @@ async def test_get_actions(hass, device_reg, entity_reg):
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_actions = [
         {
@@ -81,6 +82,7 @@ async def test_get_actions_tilt(hass, device_reg, entity_reg):
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_actions = [
         {
@@ -128,6 +130,7 @@ async def test_get_actions_set_pos(hass, device_reg, entity_reg):
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_actions = [
         {
@@ -157,6 +160,7 @@ async def test_get_actions_set_tilt_pos(hass, device_reg, entity_reg):
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_actions = [
         {
@@ -199,6 +203,7 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
     )
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     actions = await async_get_device_automations(hass, "action", device_entry.id)
     assert len(actions) == 2  # open, close
@@ -226,6 +231,7 @@ async def test_get_action_capabilities_set_pos(hass, device_reg, entity_reg):
     )
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_capabilities = {
         "extra_fields": [
@@ -268,6 +274,7 @@ async def test_get_action_capabilities_set_tilt_pos(hass, device_reg, entity_reg
     )
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_capabilities = {
         "extra_fields": [
@@ -325,6 +332,7 @@ async def test_action(hass):
             ]
         },
     )
+    await hass.async_block_till_done()
 
     open_calls = async_mock_service(hass, "cover", "open_cover")
     close_calls = async_mock_service(hass, "cover", "close_cover")
@@ -377,6 +385,7 @@ async def test_action_tilt(hass):
             ]
         },
     )
+    await hass.async_block_till_done()
 
     open_calls = async_mock_service(hass, "cover", "open_cover_tilt")
     close_calls = async_mock_service(hass, "cover", "close_cover_tilt")
@@ -437,6 +446,7 @@ async def test_action_set_position(hass):
             ]
         },
     )
+    await hass.async_block_till_done()
 
     cover_pos_calls = async_mock_service(hass, "cover", "set_cover_position")
     tilt_pos_calls = async_mock_service(hass, "cover", "set_cover_tilt_position")
