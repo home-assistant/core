@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # Fetch initial data so we have data when entities subscribe
     await metoffice_coordinator.async_refresh()
-    if metoffice_data.now is None:
+    if metoffice_data.now_3hourly is None or metoffice_data.now_daily is None:
         raise ConfigEntryNotReady()
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
