@@ -55,20 +55,19 @@ async def async_setup_entry(
         [ToonDisplayDeviceSensor(coordinator, key="current_display_temperature")]
     )
 
-    if coordinator.data.gas_usage:
-        sensors.extend(
-            [
-                ToonGasMeterDeviceSensor(coordinator, key=key)
-                for key in (
-                    "gas_average_daily",
-                    "gas_average",
-                    "gas_daily_cost",
-                    "gas_daily_usage",
-                    "gas_meter_reading",
-                    "gas_value",
-                )
-            ]
-        )
+    sensors.extend(
+        [
+            ToonGasMeterDeviceSensor(coordinator, key=key)
+            for key in (
+                "gas_average_daily",
+                "gas_average",
+                "gas_daily_cost",
+                "gas_daily_usage",
+                "gas_meter_reading",
+                "gas_value",
+            )
+        ]
+    )
 
     sensors.extend(
         [
