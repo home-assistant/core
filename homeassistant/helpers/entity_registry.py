@@ -135,7 +135,7 @@ class EntityRegistry:
         """Return a lookup for the device class by domain."""
         lookup: Dict[str, Dict[Tuple[Any, Any], str]] = {}
         for entity in self.entities.values():
-            if not entity.device_id:
+            if not entity.device_id or entity.disabled:
                 continue
             domain_device_class = (entity.domain, entity.device_class)
             if domain_device_class not in domain_device_classes:
