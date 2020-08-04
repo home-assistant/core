@@ -14,6 +14,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
@@ -48,6 +49,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     client = aiosyncthing.Syncthing(
         data[CONF_TOKEN], url=data[CONF_URL], verify_ssl=data[CONF_VERIFY_SSL],
     )
+
+    try:
+        await client.system.ping()
+    except aiosyncthing.exceptions.SyncthingError as exception:
+        await client.close()
+        raise ConfigEntryNotReady from exception
 
     syncthing = SyncthingClient(hass, client, name)
 
