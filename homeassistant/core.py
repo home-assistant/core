@@ -468,7 +468,7 @@ class HomeAssistant:
             async with self.timeout.async_timeout(30):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
-            _LOGGER.warning("Move hard forward after stage 3 shutodwn")
+            _LOGGER.warning("Timed out waiting for shutdown stage 3 to complete, the shutdown will continue")
 
         # Python 3.9+ and backported in runner.py
         await self.loop.shutdown_default_executor()  # type: ignore
