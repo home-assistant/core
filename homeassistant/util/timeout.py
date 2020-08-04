@@ -159,7 +159,7 @@ class _TaskGlobal:
         timeout: float,
         cool_down: float,
     ) -> None:
-        """Initalize internal timeout context manager."""
+        """Initialize internal timeout context manager."""
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self._manager: ZoneTimeout = manager
         self._task: asyncio.Task[Any] = task
