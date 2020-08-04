@@ -85,6 +85,10 @@ async def async_setup_entry(
             else:
                 item_coordinator = non_dimmer_coordinator
 
+            item_manufacturer = None
+            item_device_name = None
+            item_model = None
+
             for parent_item in items_of_category:
                 if parent_item["id"] == item_parent_id:
                     item_manufacturer = parent_item["manufacturer"]
