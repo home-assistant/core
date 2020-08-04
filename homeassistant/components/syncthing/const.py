@@ -2,7 +2,7 @@
 from datetime import timedelta
 
 DOMAIN = "syncthing"
-DEFAULT_NAME = "syncthing"
+DEFAULT_NAME = "Syncthing"
 
 DEFAULT_VERIFY_SSL = True
 
