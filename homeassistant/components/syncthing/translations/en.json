@@ -7,7 +7,7 @@
             "cannot_connect": "Unable to connect to the Syncthing server.",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error",
-            "already_configured": "Device is already configured"
+            "already_configured": "Service is already configured"
         },
         "step": {
             "user": {
