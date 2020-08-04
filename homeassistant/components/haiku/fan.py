@@ -138,7 +138,7 @@ class HaikuFan(Entity):
         if updatestate is None or updatestate is False:
             self._state = STATE_OFF
             self._speed = SPEED_OFF
-        elif updatstate == "0":
+        elif updatestate == "0":
             self._state = STATE_OFF
             self._speed = SPEED_OFF
         else:
