@@ -122,6 +122,7 @@ async def async_setup_entry(
                     item_manufacturer = parent_item["manufacturer"]
                     item_device_name = parent_item["name"]
                     item_model = parent_item["model"]
+                    break
             async_add_entities(
                 [
                     Control4AlarmControlPanel(
