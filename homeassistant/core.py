@@ -35,7 +35,6 @@ from typing import (
 )
 import uuid
 
-from async_timeout import timeout
 import attr
 import voluptuous as vol
 import yarl

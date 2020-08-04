@@ -22,11 +22,7 @@ DATA_SETUP = "setup_tasks"
 DATA_DEPS_REQS = "deps_reqs_processed"
 
 SLOW_SETUP_WARNING = 10
-
-# Since its possible for databases to be
-# upwards of 36GiB (or larger) in the wild
-# we wait up to 3 hours for startup
-SLOW_SETUP_MAX_WAIT = 10800
+SLOW_SETUP_MAX_WAIT = 180
 
 
 @core.callback
