@@ -78,6 +78,7 @@ DATA_THEMES = "frontend_themes"
 DATA_DEFAULT_THEME = "frontend_default_theme"
 DATA_DEFAULT_DARK_THEME = "frontend_default_dark_theme"
 DEFAULT_THEME = "default"
+VALUE_NO_THEME = "none"
 
 PRIMARY_COLOR = "primary-color"
 
@@ -367,6 +368,9 @@ def _async_setup_themes(hass, themes):
         if name == DEFAULT_THEME or name in hass.data[DATA_THEMES]:
             _LOGGER.info("Theme %s set as default dark", name)
             hass.data[DATA_DEFAULT_DARK_THEME] = name
+            update_theme_and_fire_event()
+        elif name == VALUE_NO_THEME:
+            hass.data[DATA_DEFAULT_DARK_THEME] = None
             update_theme_and_fire_event()
         else:
             _LOGGER.warning("Theme %s is not defined", name)

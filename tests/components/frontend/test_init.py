@@ -117,6 +117,7 @@ async def test_themes_api(hass, hass_ws_client):
     msg = await client.receive_json()
 
     assert msg["result"]["default_theme"] == "default"
+    assert msg["result"]["default_dark_theme"] is None
     assert msg["result"]["themes"] == {"happy": {"primary-color": "red"}}
 
     # safe mode
@@ -168,6 +169,55 @@ async def test_themes_set_theme_wrong_name(hass, hass_ws_client):
     msg = await client.receive_json()
 
     assert msg["result"]["default_theme"] == "default"
+
+
+async def test_themes_set_dark_theme(hass, hass_ws_client):
+    """Test frontend.set_dark_theme service."""
+    assert await async_setup_component(hass, "frontend", CONFIG_THEMES)
+    client = await hass_ws_client(hass)
+
+    await hass.services.async_call(
+        DOMAIN, "set_dark_theme", {"name": "happy"}, blocking=True
+    )
+
+    await client.send_json({"id": 5, "type": "frontend/get_themes"})
+    msg = await client.receive_json()
+
+    assert msg["result"]["default_dark_theme"] == "happy"
+
+    await hass.services.async_call(
+        DOMAIN, "set_dark_theme", {"name": "default"}, blocking=True
+    )
+
+    await client.send_json({"id": 6, "type": "frontend/get_themes"})
+    msg = await client.receive_json()
+
+    assert msg["result"]["default_dark_theme"] == "default"
+
+    await hass.services.async_call(
+        DOMAIN, "set_dark_theme", {"name": "none"}, blocking=True
+    )
+
+    await client.send_json({"id": 7, "type": "frontend/get_themes"})
+    msg = await client.receive_json()
+
+    assert msg["result"]["default_dark_theme"] is None
+
+
+async def test_themes_set_dark_theme_wrong_name(hass, hass_ws_client):
+    """Test frontend.set_dark_theme service called with wrong name."""
+    assert await async_setup_component(hass, "frontend", CONFIG_THEMES)
+    client = await hass_ws_client(hass)
+
+    await hass.services.async_call(
+        DOMAIN, "set_dark_theme", {"name": "wrong"}, blocking=True
+    )
+
+    await client.send_json({"id": 5, "type": "frontend/get_themes"})
+
+    msg = await client.receive_json()
+
+    assert msg["result"]["default_dark_theme"] is None
 
 
 async def test_themes_reload_themes(hass, hass_ws_client):
