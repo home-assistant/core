@@ -64,6 +64,9 @@ ZEROCONF = {
     ],
     "_wled._tcp.local.": [
         "wled"
+    ],
+    "_xbmc-jsonrpc-h._tcp.local.": [
+        "kodi"
     ]
 }
 
