@@ -486,6 +486,9 @@ async def test_wc_light(hass, light_wc_data, light_msg, light_rgb_msg, sent_mess
     assert state is not None
     assert state.state == "off"
 
+    assert state.attributes["min_mireds"] == 153
+    assert state.attributes["max_mireds"] == 370
+
     # Turn on the light
     new_color = 190
     await hass.services.async_call(
