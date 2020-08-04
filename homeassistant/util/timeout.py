@@ -391,7 +391,7 @@ class ZoneTimeout:
     """Async zone based timeout handler."""
 
     def __init__(self):
-        """Initalize ZoneTimeout handler."""
+        """Initialize ZoneTimeout handler."""
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self._zones: Dict[str, _Zone] = {}
         self._globals: List[_TaskGlobal] = []
