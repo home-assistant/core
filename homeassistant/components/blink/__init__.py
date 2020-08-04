@@ -18,6 +18,7 @@ from homeassistant.components.blink.const import (
 )
 from homeassistant.const import CONF_FILENAME, CONF_NAME, CONF_PIN, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +39,7 @@ def _blink_startup_wrapper(hass, entry):
     if blink.start():
         blink.setup_post_verify()
     elif blink.auth.check_key_required():
-        _LOGGER.debug("Attempting a reauth flow.")
+        _LOGGER.debug("Attempting a reauth flow")
         _reauth_flow_wrapper(hass, auth_data)
 
     return blink
@@ -46,7 +47,7 @@ def _blink_startup_wrapper(hass, entry):
 
 def _reauth_flow_wrapper(hass, data):
     """Reauth flow wrapper."""
-    hass.async_create_task(
+    hass.add_job(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "reauth"}, data=data
         )
@@ -83,8 +84,7 @@ async def async_setup_entry(hass, entry):
     )
 
     if not hass.data[DOMAIN][entry.entry_id].available:
-        _LOGGER.error("Blink unavailable for setup")
-        return False
+        raise ConfigEntryNotReady
 
     for component in PLATFORMS:
         hass.async_create_task(
