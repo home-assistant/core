@@ -43,6 +43,11 @@ DATA_LOGGING = "logging"
 
 LOG_SLOW_STARTUP_INTERVAL = 60
 
+STAGE_1_TIMEOUT = 120
+STAGE_2_TIMEOUT = 300
+WRAP_UP_TIMEOUT = 300
+COOLDOWN_TIME = 60
+
 DEBUGGER_INTEGRATIONS = {"debugpy", "ptvsd"}
 CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
 LOGGING_INTEGRATIONS = {
@@ -503,7 +508,9 @@ async def _async_set_up_integrations(
     if stage_1_domains:
         _LOGGER.info("Setting up stage 1: %s", stage_1_domains)
         try:
-            async with hass.timeout.async_timeout(120, cool_down=60):
+            async with hass.timeout.async_timeout(
+                STAGE_1_TIMEOUT, cool_down=COOLDOWN_TIME
+            ):
                 await async_setup_multi_components(
                     hass, stage_1_domains, config, setup_started
                 )
@@ -516,7 +523,9 @@ async def _async_set_up_integrations(
     if stage_2_domains:
         _LOGGER.info("Setting up stage 2: %s", stage_2_domains)
         try:
-            async with hass.timeout.async_timeout(300, cool_down=60):
+            async with hass.timeout.async_timeout(
+                STAGE_2_TIMEOUT, cool_down=COOLDOWN_TIME
+            ):
                 await async_setup_multi_components(
                     hass, stage_2_domains, config, setup_started
                 )
@@ -526,7 +535,7 @@ async def _async_set_up_integrations(
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
     try:
-        async with hass.timeout.async_timeout(300, cool_down=60):
+        async with hass.timeout.async_timeout(WRAP_UP_TIMEOUT, cool_down=COOLDOWN_TIME):
             await hass.async_block_till_done()
     except asyncio.TimeoutError:
         _LOGGER.warning("Setup timeout on bootstrap - moving forward")
