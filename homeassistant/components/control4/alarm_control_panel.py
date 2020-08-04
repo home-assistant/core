@@ -1,5 +1,6 @@
 """Platform for Control4 Alarm Control Panel."""
 from datetime import timedelta
+import json
 import logging
 
 from pyControl4.alarm import C4SecurityPanel
@@ -18,6 +19,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
+    STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant
@@ -41,9 +43,12 @@ CONTROL4_PARTITION_STATE_VAR = "PARTITION_STATE"
 CONTROL4_DELAY_TIME_REMAINING_VAR = "DELAY_TIME_REMAINING"
 CONTROL4_OPEN_ZONE_COUNT_VAR = "OPEN_ZONE_COUNT"
 CONTROL4_ALARM_TYPE_VAR = "ALARM_TYPE"
-CONTROL4_ARMED_TYPE = "ARMED_TYPE"
-CONTROL4_LAST_EMERGENCY = "LAST_EMERGENCY"
-CONTROL4_LAST_ARM_FAILURE = "LAST_ARM_FAILED"
+CONTROL4_ARMED_TYPE_VAR = "ARMED_TYPE"
+CONTROL4_LAST_EMERGENCY_VAR = "LAST_EMERGENCY"
+CONTROL4_LAST_ARM_FAILURE_VAR = "LAST_ARM_FAILED"
+
+CONTROL4_EXIT_DELAY_STATE = "EXIT_DELAY"
+CONTROL4_ENTRY_DELAY_STATE = "ENTRY_DELAY"
 
 
 async def async_setup_entry(
@@ -71,9 +76,9 @@ async def async_setup_entry(
                 CONTROL4_DELAY_TIME_REMAINING_VAR,
                 CONTROL4_OPEN_ZONE_COUNT_VAR,
                 CONTROL4_ALARM_TYPE_VAR,
-                CONTROL4_ARMED_TYPE,
-                CONTROL4_LAST_EMERGENCY,
-                CONTROL4_LAST_ARM_FAILURE,
+                CONTROL4_ARMED_TYPE_VAR,
+                CONTROL4_LAST_EMERGENCY_VAR,
+                CONTROL4_LAST_ARM_FAILURE_VAR,
             ]
         )
         try:
@@ -102,6 +107,10 @@ async def async_setup_entry(
             item_id = item["id"]
             item_parent_id = item["parentId"]
             item_coordinator = coordinator
+
+            item_manufacturer = None
+            item_device_name = None
+            item_model = None
 
             for parent_item in items_of_category:
                 if parent_item["id"] == item_parent_id:
@@ -137,6 +146,14 @@ class Control4AlarmControlPanel(Control4Entity, AlarmControlPanelEntity):
         return C4SecurityPanel(self.entry_data[CONF_DIRECTOR], self._idx)
 
     @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        director = self.entry_data[CONF_DIRECTOR]
+        item_setup_info = director.getItemSetup(self._idx)
+        item_setup_info = json.loads(item_setup_info)
+        return item_setup_info["setup"]["enabled"]
+
+    @property
     def code_format(self):
         """Regex for code format or None if no code is required."""
         return FORMAT_NUMBER
@@ -153,8 +170,10 @@ class Control4AlarmControlPanel(Control4Entity, AlarmControlPanelEntity):
         partition_state = self._coordinator.data[self._idx][
             CONTROL4_PARTITION_STATE_VAR
         ]
-        if partition_state == "EXIT_DELAY":
+        if partition_state == CONTROL4_EXIT_DELAY_STATE:
             return STATE_ALARM_ARMING
+        if partition_state == CONTROL4_ENTRY_DELAY_STATE:
+            return STATE_ALARM_PENDING
 
         alarm_state = bool(self._coordinator.data[self._idx][CONTROL4_ALARM_STATE_VAR])
         if alarm_state:
@@ -182,9 +201,9 @@ class Control4AlarmControlPanel(Control4Entity, AlarmControlPanelEntity):
             CONTROL4_OPEN_ZONE_COUNT_VAR,
             CONTROL4_ALARM_STATE_VAR,
             CONTROL4_ALARM_TYPE_VAR,
-            CONTROL4_ARMED_TYPE,
-            CONTROL4_LAST_EMERGENCY,
-            CONTROL4_LAST_ARM_FAILURE,
+            CONTROL4_ARMED_TYPE_VAR,
+            CONTROL4_LAST_EMERGENCY_VAR,
+            CONTROL4_LAST_ARM_FAILURE_VAR,
         ]
         for var in all_vars:
             state_attr[var.lower()] = self._coordinator.data[self._idx][var]
