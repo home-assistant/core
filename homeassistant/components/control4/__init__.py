@@ -36,7 +36,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["light", "alarm_control_panel"]
+PLATFORMS = ["light", "alarm_control_panel", "binary_sensor"]
 
 
 async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
