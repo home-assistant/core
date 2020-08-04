@@ -98,6 +98,7 @@ async def async_setup_entry(
     await coordinator.async_refresh()
 
     items_of_category = await get_items_of_category(hass, entry, CONTROL4_CATEGORY)
+    director = entry_data[CONF_DIRECTOR]
     for item in items_of_category:
         if (
             item["type"] == CONTROL4_ENTITY_TYPE
@@ -107,6 +108,10 @@ async def async_setup_entry(
             item_id = item["id"]
             item_parent_id = item["parentId"]
             item_coordinator = coordinator
+
+            item_setup_info = await director.getItemSetup(item_id)
+            item_setup_info = json.loads(item_setup_info)
+            item_enabled = item_setup_info["setup"]["enabled"]
 
             item_manufacturer = None
             item_device_name = None
@@ -129,6 +134,7 @@ async def async_setup_entry(
                         item_manufacturer,
                         item_model,
                         item_parent_id,
+                        item_enabled,
                     )
                 ],
                 True,
@@ -137,6 +143,33 @@ async def async_setup_entry(
 
 class Control4AlarmControlPanel(Control4Entity, AlarmControlPanelEntity):
     """Control4 alarm control panel entity."""
+
+    def __init__(
+        self,
+        entry_data: dict,
+        entry: ConfigEntry,
+        coordinator: DataUpdateCoordinator,
+        name: str,
+        idx: int,
+        device_name: str,
+        device_manufacturer: str,
+        device_model: str,
+        device_id: int,
+        is_enabled: bool,
+    ):
+        """Initialize Control4 light entity."""
+        super().__init__(
+            entry_data,
+            entry,
+            coordinator,
+            name,
+            idx,
+            device_name,
+            device_manufacturer,
+            device_model,
+            device_id,
+        )
+        self._is_enabled = is_enabled
 
     def create_api_object(self):
         """Create a pyControl4 device object.
@@ -148,10 +181,7 @@ class Control4AlarmControlPanel(Control4Entity, AlarmControlPanelEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        director = self.entry_data[CONF_DIRECTOR]
-        item_setup_info = director.getItemSetup(self._idx)
-        item_setup_info = json.loads(item_setup_info)
-        return item_setup_info["setup"]["enabled"]
+        return self._is_enabled
 
     @property
     def code_format(self):
