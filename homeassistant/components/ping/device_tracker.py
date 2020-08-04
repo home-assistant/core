@@ -14,11 +14,13 @@ from homeassistant.components.device_tracker.const import (
     SOURCE_TYPE_ROUTER,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.process import kill_subprocess
 
 from .const import PING_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
 CONF_PING_COUNT = "count"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -51,7 +53,11 @@ class Host:
         try:
             pinger.communicate(timeout=1 + PING_TIMEOUT)
             return pinger.returncode == 0
-        except (subprocess.TimeoutExpired, subprocess.CalledProcessError):
+        except subprocess.TimeoutExpired:
+            kill_subprocess(pinger)
+            return False
+
+        except subprocess.CalledProcessError:
             return False
 
     def update(self, see):
