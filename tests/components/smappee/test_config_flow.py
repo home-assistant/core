@@ -276,6 +276,8 @@ async def test_full_zeroconf_flow(hass):
     ), patch(
         "pysmappee.api.SmappeeLocalApi.load_instantaneous",
         return_value=[{"key": "phase0ActivePower", "value": 0}],
+    ), patch(
+        "homeassistant.components.smappee.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -315,6 +317,8 @@ async def test_full_user_local_flow(hass):
     ), patch(
         "pysmappee.api.SmappeeLocalApi.load_instantaneous",
         return_value=[{"key": "phase0ActivePower", "value": 0}],
+    ), patch(
+        "homeassistant.components.smappee.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER},
