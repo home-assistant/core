@@ -313,7 +313,7 @@ class _Zone:
         """Start into new Task."""
         if self.state == _State.TIMEOUT:
             raise asyncio.TimeoutError
-        elif self.state != _State.ACTIVE:
+        if self.state != _State.ACTIVE:
             self._start_timer()
 
         self._count += 1
