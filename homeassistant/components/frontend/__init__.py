@@ -74,6 +74,10 @@ DATA_EXTRA_HTML_URL = "frontend_extra_html_url"
 DATA_EXTRA_HTML_URL_ES5 = "frontend_extra_html_url_es5"
 DATA_EXTRA_MODULE_URL = "frontend_extra_module_url"
 DATA_EXTRA_JS_URL_ES5 = "frontend_extra_js_url_es5"
+
+THEMES_STORAGE_KEY = f"{DOMAIN}_theme"
+THEMES_STORAGE_VERSION = 1
+DATA_THEMES_STORE = "frontend_themes_store"
 DATA_THEMES = "frontend_themes"
 DATA_DEFAULT_THEME = "frontend_default_theme"
 DATA_DEFAULT_DARK_THEME = "frontend_default_dark_theme"
@@ -324,16 +328,30 @@ async def async_setup(hass, config):
     for url in conf.get(CONF_EXTRA_JS_URL_ES5, []):
         add_extra_js_url(hass, url, True)
 
-    _async_setup_themes(hass, conf.get(CONF_THEMES))
+    await _async_setup_themes(hass, conf.get(CONF_THEMES))
 
     return True
 
 
-@callback
-def _async_setup_themes(hass, themes):
+async def _async_setup_themes(hass, themes):
     """Set up themes data and services."""
-    hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
     hass.data[DATA_THEMES] = themes or {}
+
+    store = hass.data[DATA_THEMES_STORE] = hass.helpers.storage.Store(
+        THEMES_STORAGE_VERSION, THEMES_STORAGE_KEY
+    )
+
+    theme_data = await store.async_load() or {}
+    theme_name = theme_data.get(DATA_DEFAULT_THEME, DEFAULT_THEME)
+    dark_theme_name = theme_data.get(DATA_DEFAULT_DARK_THEME)
+
+    if theme_name == DEFAULT_THEME or theme_name in hass.data[DATA_THEMES]:
+        hass.data[DATA_DEFAULT_THEME] = theme_name
+    else:
+        hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
+
+    if dark_theme_name == DEFAULT_THEME or dark_theme_name in hass.data[DATA_THEMES]:
+        hass.data[DATA_DEFAULT_DARK_THEME] = dark_theme_name
 
     @callback
     def update_theme_and_fire_event():
@@ -348,29 +366,39 @@ def _async_setup_themes(hass, themes):
             )
         hass.bus.async_fire(EVENT_THEMES_UPDATED)
 
-    @callback
-    def set_theme(call):
+    async def save_theme_store():
+        """Update store with new theme data."""
+        store = hass.data[DATA_THEMES_STORE]
+        data = {
+            DATA_DEFAULT_THEME: hass.data[DATA_DEFAULT_THEME],
+            DATA_DEFAULT_DARK_THEME: hass.data.get(DATA_DEFAULT_DARK_THEME),
+        }
+        await store.async_save(data)
+
+    async def set_theme(call):
         """Set backend-preferred theme."""
         data = call.data
         name = data[CONF_NAME]
         if name == DEFAULT_THEME or name in hass.data[DATA_THEMES]:
             _LOGGER.info("Theme %s set as default", name)
             hass.data[DATA_DEFAULT_THEME] = name
+            await save_theme_store()
             update_theme_and_fire_event()
         else:
             _LOGGER.warning("Theme %s is not defined", name)
 
-    @callback
-    def set_dark_theme(call):
+    async def set_dark_theme(call):
         """Set backend-preferred dark theme."""
         data = call.data
         name = data[CONF_NAME]
         if name == DEFAULT_THEME or name in hass.data[DATA_THEMES]:
             _LOGGER.info("Theme %s set as default dark", name)
             hass.data[DATA_DEFAULT_DARK_THEME] = name
+            await save_theme_store()
             update_theme_and_fire_event()
         elif name == VALUE_NO_THEME:
             hass.data[DATA_DEFAULT_DARK_THEME] = None
+            await save_theme_store()
             update_theme_and_fire_event()
         else:
             _LOGGER.warning("Theme %s is not defined", name)
