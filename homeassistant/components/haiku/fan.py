@@ -5,9 +5,7 @@ import asyncio
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.fan import (
-    ATTR_SPEED,
     SPEED_OFF,
-    ATTR_SPEED_LIST,
     SUPPORT_SET_SPEED,
     ENTITY_ID_FORMAT,
 )
@@ -25,9 +23,6 @@ SPEED_4 = "Speed 4"
 SPEED_5 = "Speed 5"
 SPEED_6 = "Speed 6"
 SPEED_7 = "Speed 7"
-ATTR_SPEED = "speed"
-ATTR_SPEED_LIST = "speed_list"
-CONF_SET_SPEED_ACTION = "async_set_speed"
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Haiku platform."""
@@ -133,18 +128,20 @@ class HaikuFan(Entity):
             self._speed = SPEED_OFF
             self._state = STATE_OFF
         return self._speed
+    
     async def async_update(self):
         """Update state of device."""
         updatestate = await fan.getspeed(self._cip)
-        if updatestate is none or updatestate is False:
+        if updatestate is None or updatestate is False:
             self._state = STATE_OFF
             self._speed = SPEED_OFF
         elif updatstate == "0":
             self._state = STATE_OFF
             self._speed = SPEED_OFF
         else:
-            self._speed = "Speed "+updatestate
-            self._state = "Speed "+updatestate
+            self._speed = self._speed_list[updatestate]
+            self._state = self._speed_list[updatestate]
+            
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
         if speed in self._speed_list:
