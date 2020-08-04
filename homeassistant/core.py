@@ -448,7 +448,7 @@ class HomeAssistant:
         self.async_track_tasks()
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         try:
-            async with self.timeout.asnyc_timeout(120):
+            async with self.timeout.async_timeout(120):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning("Move hard forward after stage 1 shutodwn")
@@ -457,7 +457,7 @@ class HomeAssistant:
         self.state = CoreState.final_write
         self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
         try:
-            async with self.timeout.asnyc_timeout(60):
+            async with self.timeout.async_timeout(60):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning("Move hard forward after stage 2 shutodwn")
@@ -466,7 +466,7 @@ class HomeAssistant:
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
         try:
-            async with self.timeout.asnyc_timeout(30):
+            async with self.timeout.async_timeout(30):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning("Move hard forward after stage 3 shutodwn")
