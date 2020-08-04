@@ -583,7 +583,7 @@ pyarlo==0.2.3
 pyatag==0.3.3.4
 
 # homeassistant.components.netatmo
-pyatmo==3.3.1
+pyatmo==4.0.0
 
 # homeassistant.components.blackbird
 pyblackbird==0.5
