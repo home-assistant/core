@@ -141,7 +141,6 @@ async def test_full_user_wrong_mdns(hass):
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "invalid_mdns"
-        assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
 async def test_user_device_exists_abort(hass):
