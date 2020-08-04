@@ -299,7 +299,7 @@ class FlowHandler:
         options: Optional[dict] = None,
     ) -> Dict[str, Any]:
         """Finish config flow and create a config entry."""
-        result = {
+        return {
             "version": self.VERSION,
             "type": RESULT_TYPE_CREATE_ENTRY,
             "flow_id": self.flow_id,
@@ -309,9 +309,6 @@ class FlowHandler:
             "description": description,
             "description_placeholders": description_placeholders,
         }
-        if options is not None:
-            result["options"] = options
-        return result
 
     @callback
     def async_abort(

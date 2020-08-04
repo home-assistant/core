@@ -922,6 +922,29 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             if flw["handler"] == self.handler and flw["flow_id"] != self.flow_id
         ]
 
+    @callback
+    def async_create_entry(
+        self,
+        *,
+        title: str,
+        data: Dict,
+        description: Optional[str] = None,
+        description_placeholders: Optional[Dict] = None,
+        options: Optional[dict] = None,
+    ) -> Dict[str, Any]:
+        """Finish config flow and create a config entry."""
+        result = super().async_create_entry(
+            title=title,
+            data=data,
+            description=description,
+            description_placeholders=description_placeholders,
+        )
+
+        if options is not None:
+            result["options"] = options
+
+        return result
+
     async def async_step_ignore(self, user_input: Dict[str, Any]) -> Dict[str, Any]:
         """Ignore this config flow."""
         await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
