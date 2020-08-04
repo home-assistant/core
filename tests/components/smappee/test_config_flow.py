@@ -92,7 +92,6 @@ async def test_connection_error(hass):
     )
     assert result["reason"] == "connection_error"
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
 async def test_zeroconf_wrong_mdns(hass):
