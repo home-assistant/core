@@ -507,7 +507,7 @@ async def _async_set_up_integrations(
     if stage_1_domains:
         _LOGGER.info("Setting up stage 1: %s", stage_1_domains)
         try:
-            async with hass.timeout.asnyc_timeout(120, cool_down=60):
+            async with hass.timeout.async_timeout(120, cool_down=60):
                 await async_setup_multi_components(
                     hass, stage_1_domains, config, setup_started
                 )
@@ -520,7 +520,7 @@ async def _async_set_up_integrations(
     if stage_2_domains:
         _LOGGER.info("Setting up stage 2: %s", stage_2_domains)
         try:
-            async with hass.timeout.asnyc_timeout(300, cool_down=60):
+            async with hass.timeout.async_timeout(300, cool_down=60):
                 await async_setup_multi_components(
                     hass, stage_2_domains, config, setup_started
                 )
@@ -530,7 +530,7 @@ async def _async_set_up_integrations(
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
     try:
-        async with hass.timeout.asnyc_timeout(300, cool_down=60):
+        async with hass.timeout.async_timeout(300, cool_down=60):
             await hass.async_block_till_done()
     except asyncio.TimeoutError:
         _LOGGER.warning("Setup timeout on bootstrap - moving forward")
