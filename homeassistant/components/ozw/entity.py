@@ -192,8 +192,10 @@ class ZWaveDeviceEntity(Entity):
             "name": create_device_name(node),
             "manufacturer": node.node_manufacturer_name,
             "model": node.node_product_name,
-            "sw_version": node_firmware.value,
         }
+        if node_firmware is not None:
+            device_info["sw_version"] = node_firmware.value
+
         # device with multiple instances is split up into virtual devices for each instance
         if node_instance > 1:
             parent_dev_id = create_device_id(node)
