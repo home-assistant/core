@@ -31,6 +31,12 @@ async def init_integration(
         headers={"Content-Type": "application/json"},
     )
 
+    aioclient_mock.get(
+        "http://5.6.7.8:9123/elgato/accessory-info",
+        text=load_fixture("elgato/info.json"),
+        headers={"Content-Type": "application/json"},
+    )
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="CN11A1A00001",

@@ -158,11 +158,14 @@ async def test_zeroconf_device_exists_abort(
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         context={"source": SOURCE_ZEROCONF, CONF_HOST: "1.2.3.4", "port": 9123},
-        data={"host": "1.2.3.4", "port": 9123},
+        data={"host": "5.6.7.8", "port": 9123},
     )
 
     assert result["reason"] == "already_configured"
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+
+    entries = hass.config_entries.async_entries(config_flow.DOMAIN)
+    assert entries[0].data[CONF_HOST] == "5.6.7.8"
 
 
 async def test_full_user_flow_implementation(
