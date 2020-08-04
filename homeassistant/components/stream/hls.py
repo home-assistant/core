@@ -4,7 +4,7 @@ from aiohttp import web
 from homeassistant.core import callback
 from homeassistant.util.dt import utcnow
 
-from .const import FORMAT_CONTENT_TYPE, MIN_SEGMENTS
+from .const import FORMAT_CONTENT_TYPE
 from .core import PROVIDERS, StreamOutput, StreamView
 from .fmp4utils import get_init, get_m4s
 
@@ -31,7 +31,7 @@ class HlsPlaylistView(StreamView):
         track = stream.add_provider("hls")
         stream.start()
         # Wait for a segment to be ready
-        if len(track.segments) < MIN_SEGMENTS:
+        if not track.segments:
             await track.recv()
         headers = {"Content-Type": FORMAT_CONTENT_TYPE["hls"]}
         return web.Response(
