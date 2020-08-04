@@ -80,7 +80,6 @@ async def test_connection_error(hass):
     )
     assert result["step_id"] == "environment"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"environment": ENV_LOCAL}
