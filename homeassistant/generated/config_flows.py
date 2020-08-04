@@ -158,6 +158,7 @@ FLOWS = [
     "songpal",
     "sonos",
     "speedtestdotnet",
+    "spider",
     "spotify",
     "squeezebox",
     "starline",
