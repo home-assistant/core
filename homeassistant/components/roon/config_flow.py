@@ -28,18 +28,13 @@ class RoonHub:
         """Test if we can authenticate with the host."""
         token = None
         secs = 0
-        try:
-            roonapi = RoonApi(ROON_APPINFO, None, self._host, blocking_init=False)
-            while secs < TIMEOUT:
-                token = roonapi.token
-                secs += 5
-                if token:
-                    break
-                await asyncio.sleep(5)
-
-        except Exception as error:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception %s", error)
-            raise CannotConnect
+        roonapi = RoonApi(ROON_APPINFO, None, self._host, blocking_init=False)
+        while secs < TIMEOUT:
+            token = roonapi.token
+            secs += 5
+            if token:
+                break
+            await asyncio.sleep(5)
 
         token = roonapi.token
         roonapi.stop()
@@ -72,16 +67,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         if user_input is not None:
-            try:
-                self._host = user_input["host"]
-                return await self.async_step_link()
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            self._host = user_input["host"]
+            return await self.async_step_link()
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -94,7 +81,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await authenticate(self.hass, self._host)
-                return self.async_create_entry(title=DEFAULT_NAME, data=info)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -102,6 +88,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(title=DEFAULT_NAME, data=info)
 
         return self.async_show_form(step_id="link", errors=errors)
 

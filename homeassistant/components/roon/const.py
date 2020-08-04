@@ -1,6 +1,4 @@
 """Constants for Roon Component."""
-from homeassistant.exceptions import HomeAssistantError
-
 DOMAIN = "roon"
 
 DATA_CONFIGS = "roon_configs"
@@ -15,15 +13,3 @@ ROON_APPINFO = {
     "email": "home_assistant@users.noreply.github.com",
     "website": "https://www.home-assistant.io/",
 }
-
-
-class RoonException(HomeAssistantError):
-    """Base class for Roon exceptions."""
-
-
-class CannotConnect(RoonException):
-    """Unable to connect to the server."""
-
-
-class AuthenticationRequired(RoonException):
-    """Unknown error occurred."""
