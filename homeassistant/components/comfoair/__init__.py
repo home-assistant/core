@@ -107,7 +107,7 @@ class ComfoAirModule:
         self._name = name
         self._ca = ComfoAir(port)
         self._device_info = {
-            "identifiers": {port},
+            "identifiers": {(port,)},
             "name": name,
             "manufacturer": "Zehnder",
             "model": "ComfoAir 350",
