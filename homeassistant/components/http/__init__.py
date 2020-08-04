@@ -30,6 +30,7 @@ from .cors import setup_cors
 from .real_ip import setup_real_ip
 from .static import CACHE_HEADERS, CachingStaticResource
 from .view import HomeAssistantView  # noqa: F401
+from .web_runner import HomeAssistantTCPSite
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -53,7 +54,6 @@ SSL_INTERMEDIATE = "intermediate"
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_SERVER_HOST = "0.0.0.0"
 DEFAULT_DEVELOPMENT = "0"
 # To be able to load custom cards.
 DEFAULT_CORS = "https://cast.home-assistant.io"
@@ -69,7 +69,9 @@ HTTP_SCHEMA = vol.All(
     cv.deprecated(CONF_BASE_URL),
     vol.Schema(
         {
-            vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
+            vol.Optional(CONF_SERVER_HOST): vol.All(
+                cv.ensure_list, vol.Length(min=1), [cv.string]
+            ),
             vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
             vol.Optional(CONF_BASE_URL): cv.string,
             vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
@@ -190,7 +192,7 @@ async def async_setup(hass, config):
     if conf is None:
         conf = HTTP_SCHEMA({})
 
-    server_host = conf[CONF_SERVER_HOST]
+    server_host = conf.get(CONF_SERVER_HOST)
     server_port = conf[CONF_SERVER_PORT]
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
     ssl_peer_certificate = conf.get(CONF_SSL_PEER_CERTIFICATE)
@@ -255,8 +257,9 @@ async def async_setup(hass, config):
 
     if host:
         port = None
-    elif server_host != DEFAULT_SERVER_HOST:
-        host = server_host
+    elif server_host is not None:
+        # Assume the first server host name provided as API host
+        host = server_host[0]
         port = server_port
     else:
         host = local_ip
@@ -412,7 +415,8 @@ class HomeAssistantHTTP:
 
         self.runner = web.AppRunner(self.app)
         await self.runner.setup()
-        self.site = web.TCPSite(
+
+        self.site = HomeAssistantTCPSite(
             self.runner, self.server_host, self.server_port, ssl_context=context
         )
         try:
