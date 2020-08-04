@@ -1,5 +1,15 @@
 """Support for UK Met Office weather service."""
-from homeassistant.components.weather import WeatherEntity
+import logging
+
+from homeassistant.components.weather import (
+    ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TIME,
+    ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_WIND_SPEED,
+    WeatherEntity,
+)
 from homeassistant.const import LENGTH_KILOMETERS, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
@@ -12,6 +22,10 @@ from .const import (
     METOFFICE_COORDINATOR,
     METOFFICE_DATA,
     METOFFICE_NAME,
+    MODE_3HOURLY,
+    MODE_3HOURLY_DISPLAY,
+    MODE_DAILY,
+    MODE_DAILY_DISPLAY,
     VISIBILITY_CLASSES,
     VISIBILITY_DISTANCE_CLASSES,
 )
@@ -25,10 +39,8 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            MetOfficeWeather(
-                entry.data,
-                hass_data,
-            )
+            MetOfficeWeather(entry.data, hass_data, True),
+            MetOfficeWeather(entry.data, hass_data, False),
         ],
         False,
     )
@@ -37,15 +49,17 @@ async def async_setup_entry(
 class MetOfficeWeather(WeatherEntity):
     """Implementation of a Met Office weather condition."""
 
-    def __init__(self, entry_data, hass_data):
+    def __init__(self, entry_data, hass_data, use_3hourly):
         """Initialise the platform with a data instance."""
         self._data = hass_data[METOFFICE_DATA]
         self._coordinator = hass_data[METOFFICE_COORDINATOR]
 
-        self._name = f"{DEFAULT_NAME} {hass_data[METOFFICE_NAME]}"
-        self._unique_id = f"{self._data.latitude}_{self._data.longitude}"
+        self._name = f"{DEFAULT_NAME} {hass_data[METOFFICE_NAME]} {MODE_3HOURLY_DISPLAY if use_3hourly else MODE_DAILY_DISPLAY}"
+        self._unique_id = f"{self._data.latitude}_{self._data.longitude}_{MODE_3HOURLY if use_3hourly else MODE_DAILY}"
 
+        self.use_3hourly = use_3hourly
         self.metoffice_now = None
+        self.metoffice_forecast = None
 
     @property
     def name(self):
@@ -89,7 +103,7 @@ class MetOfficeWeather(WeatherEntity):
         """Return the platform visibility."""
         _visibility = None
         if hasattr(self.metoffice_now, "visibility"):
-            _visibility = f"{VISIBILITY_CLASSES.get(self.metoffice_now.visibility.value)} - {VISIBILITY_DISTANCE_CLASSES.get(self.metoffice_now.visibility.value)}"
+            _visibility = f"{VISIBILITY_CLASSES.get(self.metoffice_now.visibility.value)} ({VISIBILITY_DISTANCE_CLASSES.get(self.metoffice_now.visibility.value)})"
         return _visibility
 
     @property
@@ -134,6 +148,37 @@ class MetOfficeWeather(WeatherEntity):
         )
 
     @property
+    def forecast(self):
+        """Return the forecast array."""
+        data = [
+            {
+                ATTR_FORECAST_CONDITION: [
+                    k
+                    for k, v in CONDITION_CLASSES.items()
+                    if timestep.weather.value in v
+                ][0]
+                if timestep.weather
+                else None,
+                ATTR_FORECAST_PRECIPITATION: timestep.precipitation.value
+                if timestep.precipitation
+                else None,
+                ATTR_FORECAST_TEMP: timestep.temperature.value
+                if timestep.temperature
+                else None,
+                ATTR_FORECAST_TIME: timestep.date,
+                ATTR_FORECAST_WIND_BEARING: timestep.wind_direction.value
+                if timestep.wind_direction
+                else None,
+                ATTR_FORECAST_WIND_SPEED: timestep.wind_speed.value
+                if timestep.wind_speed
+                else None,
+            }
+            for timestep in self.metoffice_forecast
+        ]
+
+        return data
+
+    @property
     def attribution(self):
         """Return the attribution."""
         return ATTRIBUTION
@@ -148,7 +193,14 @@ class MetOfficeWeather(WeatherEntity):
     @callback
     def _update_callback(self) -> None:
         """Load data from integration."""
-        self.metoffice_now = self._data.now
+        self.metoffice_now = (
+            self._data.now_3hourly if self.use_3hourly else self._data.now_daily
+        )
+        self.metoffice_forecast = (
+            self._data.forecast_3hourly
+            if self.use_3hourly
+            else self._data.forecast_daily
+        )
         self.async_write_ha_state()
 
     @property
@@ -159,4 +211,4 @@ class MetOfficeWeather(WeatherEntity):
     @property
     def available(self):
         """Return if state is available."""
-        return self.metoffice_now is not None
+        return self.metoffice_now is not None and self.metoffice_forecast is not None
