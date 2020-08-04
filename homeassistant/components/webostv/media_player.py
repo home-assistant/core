@@ -209,7 +209,6 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
                 self._source_list["Live TV"] = app
         if not self._source_list and source_list:
             self._source_list = source_list
-        source_list = {}
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     async def async_update(self):
