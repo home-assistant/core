@@ -258,7 +258,7 @@ coronavirus==1.1.1
 datadog==0.15.0
 
 # homeassistant.components.metoffice
-datapoint==0.9.5
+datapoint==0.9.8
 
 # homeassistant.components.debugpy
 debugpy==1.3.0
