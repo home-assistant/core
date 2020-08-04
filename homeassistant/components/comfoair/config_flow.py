@@ -52,6 +52,8 @@ class ComfoAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title = f"{port.description}, s/n: {port.serial_number or 'n/a'}"
             title += f" - {port.manufacturer}" if port.manufacturer else ""
 
+            await self.async_set_unique_id(user_input[CONF_SERIAL_PORT])
+
             return self.async_create_entry(title=title, data=user_input)
 
         schema = vol.Schema(
