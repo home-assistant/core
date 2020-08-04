@@ -106,7 +106,7 @@ class _FreezeZone:
     """Internal Freeze Context Manager object for Zone."""
 
     def __init__(self, zone: _Zone, loop: asyncio.AbstractEventLoop) -> None:
-        """Initalize internal timeout context manager."""
+        """Initialize internal timeout context manager."""
         self._loop: asyncio.AbstractEventLoop = loop
         self._zone: _Zone = zone
 
