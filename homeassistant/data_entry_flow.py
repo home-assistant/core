@@ -296,7 +296,6 @@ class FlowHandler:
         data: Dict,
         description: Optional[str] = None,
         description_placeholders: Optional[Dict] = None,
-        options: Optional[dict] = None,
     ) -> Dict[str, Any]:
         """Finish config flow and create a config entry."""
         return {
