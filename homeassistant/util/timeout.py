@@ -255,7 +255,7 @@ class _TaskZone:
     """Internal Timeout Context Manager object for Task."""
 
     def __init__(self, zone: _Zone, task: asyncio.Task[Any]) -> None:
-        """Initalize internal timeout context manager."""
+        """Initialize internal timeout context manager."""
         self._zone: _Zone = zone
         self._task: asyncio.Task[Any] = task
 
