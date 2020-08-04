@@ -147,3 +147,7 @@ class ComfoAirModule:
     def add_cooked_listener(self, attr, callback):
         """Register a callback for a sensor value."""
         return self._ca.add_cooked_listener(attr, callback)
+
+    def remove_cooked_listener(self, attr, callback):
+        """Unregister a callback for a sensor value."""
+        return self._ca.remove_cooked_listener(attr, callback)
