@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_HOST, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.process import kill_subprocess
 
 from .const import PING_TIMEOUT
 
@@ -149,11 +150,10 @@ class PingData:
             match = PING_MATCHER.search(str(out).split("\n")[-1])
             rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
             return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
-        except (
-            subprocess.TimeoutExpired,
-            subprocess.CalledProcessError,
-            AttributeError,
-        ):
+        except subprocess.TimeoutExpired:
+            kill_subprocess(pinger)
+            return False
+        except (subprocess.CalledProcessError, AttributeError):
             return False
 
     def update(self):
