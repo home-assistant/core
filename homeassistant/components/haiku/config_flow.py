@@ -1,8 +1,8 @@
 """Config flow for Haiku."""
-# import my_pypi_dependency
 
 from homeassistant import config_entries
 from homeassistant.helpers import config_entry_flow
+
 from .const import DOMAIN
 
 
