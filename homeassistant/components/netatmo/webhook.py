@@ -18,6 +18,11 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+EVENT_TYPE_MAP = {
+    "outdoor": "",
+    "therm_mode": "",
+}
+
 
 async def handle_webhook(hass, webhook_id, request):
     """Handle webhook callback."""
@@ -31,18 +36,13 @@ async def handle_webhook(hass, webhook_id, request):
 
     event_type = data.get(ATTR_EVENT_TYPE)
 
-    if event_type == "outdoor":
+    if event_type in ["outdoor", "therm_mode"]:
         hass.bus.async_fire(
             event_type=NETATMO_EVENT, event_data={"type": event_type, "data": data}
         )
-        for event_data in data.get("event_list"):
+        for event_data in data.get(EVENT_TYPE_MAP[event_type], []):
             async_evaluate_event(hass, event_data)
-    elif event_type == "therm_mode":
-        hass.bus.async_fire(
-            event_type=NETATMO_EVENT, event_data={"type": event_type, "data": data}
-        )
-        for event_data in data.get("data"):
-            async_evaluate_event(hass, event_data)
+
     else:
         async_evaluate_event(hass, data)
 
@@ -65,19 +65,8 @@ def async_evaluate_event(hass, event_data):
                 event_type=NETATMO_EVENT,
                 event_data={"type": event_type, "data": person_event_data},
             )
-    elif event_type == "therm_mode":
-        _LOGGER.debug("therm_mode: %s", event_data)
-        hass.bus.async_fire(
-            event_type=NETATMO_EVENT,
-            event_data={"type": event_type, "data": event_data},
-        )
-    elif event_type == "set_point":
-        _LOGGER.debug("set_point: %s", event_data)
-        hass.bus.async_fire(
-            event_type=NETATMO_EVENT,
-            event_data={"type": event_type, "data": event_data},
-        )
     else:
+        _LOGGER.debug("%s: %s", event_type, event_data)
         hass.bus.async_fire(
             event_type=NETATMO_EVENT,
             event_data={"type": event_type, "data": event_data},
