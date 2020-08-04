@@ -20,6 +20,21 @@ class _State(str, enum.Enum):
     FREEZE = "FREEZE"
 
 
+class _FreezeNull:
+    """An empty freeze for when no timeout is set for a zone and we request a freeze.
+    
+     This should only happen in tests.
+     """
+    async def __aexit__(
+        self,
+        exc_type: Type[BaseException],
+        exc_val: BaseException,
+        exc_tb: TracebackType,
+    ) -> Optional[bool]:
+        return None
+
+    async def __aenter__(self) -> _FreezeNull:
+        return self
 class _FreezeGlobal:
     """Internal Freeze Context Manager object for Global."""
 
