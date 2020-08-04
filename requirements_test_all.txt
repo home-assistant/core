@@ -70,7 +70,7 @@ aio_geojson_nsw_rfs_incidents==0.3
 aio_georss_gdacs==0.3
 
 # homeassistant.components.ambient_station
-aioambient==1.2.0
+aioambient==1.2.1
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.2.7
