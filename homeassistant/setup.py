@@ -108,6 +108,13 @@ async def _async_process_dependencies(
 async def _async_setup_component(
     hass: core.HomeAssistant, domain: str, config: ConfigType
 ) -> bool:
+    async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, zone_name=domain):
+        return await _async_setup_component_with_timeout(hass, domain, config)
+
+
+async def _async_setup_component_with_timeout(
+    hass: core.HomeAssistant, domain: str, config: ConfigType
+) -> bool:
     """Set up a component for Home Assistant.
 
     This method is a coroutine.
@@ -131,8 +138,7 @@ async def _async_setup_component(
     # Process requirements as soon as possible, so we can import the component
     # without requiring imports to be in functions.
     try:
-        async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, zone_name=domain):
-            await async_process_deps_reqs(hass, config, integration)
+        await async_process_deps_reqs(hass, config, integration)
     except HomeAssistantError as err:
         log_error(str(err), integration.documentation)
         return False
@@ -188,8 +194,7 @@ async def _async_setup_component(
             hass.data[DATA_SETUP_STARTED].pop(domain)
             return False
 
-        async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, zone_name=domain):
-            result = await task
+        result = await task
     except asyncio.TimeoutError:
         _LOGGER.error(
             "Setup of %s is taking longer than %s seconds."
