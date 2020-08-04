@@ -285,7 +285,7 @@ class _Zone:
     """Internal Zone Timeout Manager."""
 
     def __init__(self, manager: ZoneTimeout, zone: str, timeout: float) -> None:
-        """Initalize internal timeout context manager."""
+        """Initialize internal timeout context manager."""
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self._manager: ZoneTimeout = manager
         self._zone: str = zone
