@@ -76,23 +76,24 @@ async def test_show_zeroconf_connection_error_form(hass):
 
 async def test_connection_error(hass):
     """Test we show user form on Smappee connection error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER},
-    )
-    assert result["step_id"] == "environment"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value=None):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER},
+        )
+        assert result["step_id"] == "environment"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"environment": ENV_LOCAL}
-    )
-    assert result["step_id"] == ENV_LOCAL
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"environment": ENV_LOCAL}
+        )
+        assert result["step_id"] == ENV_LOCAL
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": "1.2.3.4"}
-    )
-    assert result["reason"] == "connection_error"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "1.2.3.4"}
+        )
+        assert result["reason"] == "connection_error"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
 async def test_zeroconf_wrong_mdns(hass):
