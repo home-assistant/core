@@ -471,4 +471,6 @@ class ZoneTimeout:
             return _FreezeZone(zone, self._loop)
 
         # Should not happens...
-        return _FreezeGlobal(self, self._loop)
+        # Should only happen in tests.
+        _LOGGER.debug("Cannot freeze zone: %s because no timeout is set.")
+        return _FreezeNull()
