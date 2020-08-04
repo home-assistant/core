@@ -28,15 +28,34 @@ SERVICE_SAVE_VIDEO_SCHEMA = vol.Schema(
 SERVICE_SEND_PIN_SCHEMA = vol.Schema({vol.Optional(CONF_PIN): cv.string})
 
 
-def _blink_startup_wrapper(entry):
+def _blink_startup_wrapper(hass, entry):
     """Startup wrapper for blink."""
     blink = Blink()
-    blink.auth = Auth(deepcopy(dict(entry.data)), no_prompt=True)
+    auth_data = deepcopy(dict(entry.data))
+    blink.auth = Auth(auth_data, no_prompt=True)
     blink.refresh_rate = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     if blink.start():
         blink.setup_post_verify()
+    elif blink.auth.check_key_required():
+        _LOGGER.debug("Attempting a reauth flow.")
+        _reauth_flow_wrapper(hass, auth_data)
+
     return blink
+
+
+def _reauth_flow_wrapper(hass, data):
+    """Reauth flow wrapper."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "reauth"}, data=data
+        )
+    )
+    persistent_notification.async_create(
+        hass,
+        "Blink configuration migrated to a new version. Please go to the integrations page to re-configure (such as sending a new 2FA key).",
+        "Blink Migration",
+    )
 
 
 async def async_setup(hass, config):
@@ -50,16 +69,7 @@ async def async_migrate_entry(hass, entry):
     data = {**entry.data}
     if entry.version == 1:
         data.pop("login_response", None)
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": "reauth"}, data=data
-            )
-        )
-        persistent_notification.async_create(
-            hass,
-            "Blink configuration migrated to a new version. Please go to the integrations page to re-configure (such as sending a new 2FA key).",
-            "Blink Migration",
-        )
+        await hass.async_add_executor_job(_reauth_flow_wrapper, hass, data)
         return False
     return True
 
@@ -69,7 +79,7 @@ async def async_setup_entry(hass, entry):
     _async_import_options_from_data_if_missing(hass, entry)
 
     hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(
-        _blink_startup_wrapper, entry
+        _blink_startup_wrapper, hass, entry
     )
 
     if not hass.data[DOMAIN][entry.entry_id].available:
