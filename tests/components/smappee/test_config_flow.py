@@ -331,7 +331,6 @@ async def test_full_user_local_flow(hass):
         )
         assert result["step_id"] == ENV_LOCAL
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "1.2.3.4"}
