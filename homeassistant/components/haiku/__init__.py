@@ -2,13 +2,9 @@
 import asyncio
 import logging
 
-import voluptuous as vol
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from .const import DOMAIN
-from itertools import chain
-from homeassistant.const import MATCH_ALL
 
 PLATFORMS = ["fan"]
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 def show_setup_message(hass, entry_id):
     """Display persistent notification with setup information."""
-    message = f"To remove your Haiku devices, please go to your entity config and click remove on all the devices."
+    message = "To remove your Haiku devices, please go to your entity config and click remove on all the devices."
     hass.components.persistent_notification.create(message, "Haiku", entry_id)
 
 
