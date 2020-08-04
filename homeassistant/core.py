@@ -459,7 +459,7 @@ class HomeAssistant:
             async with self.timeout.async_timeout(60):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
-            _LOGGER.warning("Move hard forward after stage 2 shutodwn")
+            _LOGGER.warning("Timed out waiting for shutdown stage 2 to complete, the shutdown will continue")
 
         # stage 3
         self.state = CoreState.not_running
