@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Type, Union
 
 ZONE_GLOBAL = "global"
 
+_LOGGER = logging.getLogger(__name__)
 
 class _State(str, enum.Enum):
     """States of a Zone."""
