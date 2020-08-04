@@ -797,7 +797,8 @@ omit =
     homeassistant/components/switchbot/switch.py
     homeassistant/components/switcher_kis/switch.py
     homeassistant/components/switchmate/switch.py
-    homeassistant/components/syncthing/*
+    homeassistant/components/syncthing/__init__.py
+    homeassistant/components/syncthing/sensor.py
     homeassistant/components/syncthru/sensor.py
     homeassistant/components/synology/camera.py
     homeassistant/components/synology_chat/notify.py

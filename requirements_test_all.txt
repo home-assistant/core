@@ -122,6 +122,9 @@ aiopylgtv==0.3.3
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.0
 
+# homeassistant.components.syncthing
+aiosyncthing==0.4.0
+
 # homeassistant.components.unifi
 aiounifi==23
 
