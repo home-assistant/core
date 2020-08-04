@@ -1,6 +1,5 @@
 """Config flow to configure the Elgato Key Light integration."""
 import logging
-import socket
 from typing import Any, Dict, Optional
 
 from elgato import Elgato, ElgatoError, Info
@@ -56,12 +55,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_abort(reason="connection_error")
 
-        ip_address = user_input["host"]
-        try:
-            host = socket.gethostbyaddr(ip_address)
-        except:  # noqa: E722 pylint: disable=bare-except
-            host = ip_address
-
+        host = user_input[CONF_HOST]
         try:
             info = await self._get_elgato_info(host, user_input[CONF_PORT])
         except ElgatoError:
