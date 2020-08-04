@@ -24,8 +24,9 @@ DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
-    if DOMAIN in hass.data and data[CONF_NAME] in hass.data[DOMAIN]:
-        raise AlreadyConfigured
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.data[CONF_NAME] == data[CONF_NAME]:
+            raise AlreadyConfigured
 
     try:
         async with aiosyncthing.Syncthing(
@@ -61,9 +62,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors[CONF_TOKEN] = "invalid_auth"
             except AlreadyConfigured:
                 errors[CONF_NAME] = "already_configured"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
