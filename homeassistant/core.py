@@ -450,7 +450,9 @@ class HomeAssistant:
             async with self.timeout.async_timeout(120):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
-            _LOGGER.warning("Timed out waiting for shutdown stage 1 to complete, the shutdown will continue")
+            _LOGGER.warning(
+                "Timed out waiting for shutdown stage 1 to complete, the shutdown will continue"
+            )
 
         # stage 2
         self.state = CoreState.final_write
@@ -459,7 +461,9 @@ class HomeAssistant:
             async with self.timeout.async_timeout(60):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
-            _LOGGER.warning("Timed out waiting for shutdown stage 2 to complete, the shutdown will continue")
+            _LOGGER.warning(
+                "Timed out waiting for shutdown stage 2 to complete, the shutdown will continue"
+            )
 
         # stage 3
         self.state = CoreState.not_running
@@ -468,7 +472,9 @@ class HomeAssistant:
             async with self.timeout.async_timeout(30):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
-            _LOGGER.warning("Timed out waiting for shutdown stage 3 to complete, the shutdown will continue")
+            _LOGGER.warning(
+                "Timed out waiting for shutdown stage 3 to complete, the shutdown will continue"
+            )
 
         # Python 3.9+ and backported in runner.py
         await self.loop.shutdown_default_executor()  # type: ignore

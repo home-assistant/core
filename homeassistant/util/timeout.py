@@ -3,12 +3,14 @@ from __future__ import annotations
 
 import asyncio
 import enum
+import logging
 from types import TracebackType
 from typing import Any, Dict, List, Optional, Type, Union
 
 ZONE_GLOBAL = "global"
 
 _LOGGER = logging.getLogger(__name__)
+
 
 class _State(str, enum.Enum):
     """States of a Zone."""
@@ -22,9 +24,10 @@ class _State(str, enum.Enum):
 
 class _FreezeNull:
     """An empty freeze for when no timeout is set for a zone and we request a freeze.
-    
-     This should only happen in tests.
-     """
+
+    This should only happen in tests.
+    """
+
     async def __aexit__(
         self,
         exc_type: Type[BaseException],
@@ -35,6 +38,8 @@ class _FreezeNull:
 
     async def __aenter__(self) -> _FreezeNull:
         return self
+
+
 class _FreezeGlobal:
     """Internal Freeze Context Manager object for Global."""
 
@@ -67,6 +72,7 @@ class _FreezeGlobal:
         exc_tb: TracebackType,
     ) -> Optional[bool]:
         self._loop.call_soon_threadsafe(self._exit)
+        return True
 
     def _enter(self) -> None:
         """Run freeze."""
@@ -134,6 +140,7 @@ class _FreezeZone:
         exc_tb: TracebackType,
     ) -> Optional[bool]:
         self._loop.call_soon_threadsafe(self._exit)
+        return True
 
     def _enter(self) -> None:
         """Run freeze."""
@@ -215,6 +222,7 @@ class _TaskGlobal:
         self._timeout_handler.cancel()
         self._timeout_handler = None
         # Calculate new timeout
+        assert self._time
         self._timeout = self._time - self._loop.time()
 
     def _on_timeout(self) -> None:
@@ -359,6 +367,7 @@ class _Zone:
         self._timeout_handler.cancel()
         self._timeout_handler = None
         # Calculate new timeout
+        assert self._time
         self._timeout = self._time - self._loop.time()
 
     def _on_timeout(self) -> None:
@@ -390,7 +399,7 @@ class _Zone:
 class ZoneTimeout:
     """Async zone based timeout handler."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize ZoneTimeout handler."""
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self._zones: Dict[str, _Zone] = {}
@@ -439,7 +448,8 @@ class ZoneTimeout:
 
         For using as Async Context Manager.
         """
-        current_task: asyncio.Task[Any] = asyncio.current_task()
+        current_task: Optional[asyncio.Task[Any]] = asyncio.current_task()
+        assert current_task
 
         # Global Zone
         if zone_name == ZONE_GLOBAL:
@@ -453,10 +463,11 @@ class ZoneTimeout:
             self.zones[zone_name] = zone = _Zone(self, zone_name, timeout)
 
         # Create Task
-        task = _TaskZone(zone, current_task)
-        return task
+        return _TaskZone(zone, current_task)
 
-    def freeze(self, zone_name: str = ZONE_GLOBAL) -> Union[_FreezeZone, _FreezeGlobal]:
+    def freeze(
+        self, zone_name: str = ZONE_GLOBAL
+    ) -> Union[_FreezeZone, _FreezeGlobal, _FreezeNull]:
         """Freeze all timer until job is done.
 
         For using as (Async) Context Manager.

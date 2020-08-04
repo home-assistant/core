@@ -5,9 +5,9 @@ from sqlalchemy import Table, text
 from sqlalchemy.engine import reflection
 from sqlalchemy.exc import InternalError, OperationalError, SQLAlchemyError
 
+from .const import DOMAIN
 from .models import SCHEMA_VERSION, Base, SchemaChanges
 from .util import session_scope
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
