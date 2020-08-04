@@ -4,7 +4,9 @@ import logging
 
 import datapoint
 
-from .const import MODE_3HOURLY
+from homeassistant.util import utcnow
+
+from .const import MODE_3HOURLY, MODE_DAILY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,21 +32,27 @@ class MetOfficeData:
         # Holds the current data from the Met Office
         self.site_id = None
         self.site_name = None
-        self.now = None
+        self.forecast_3hourly = None
+        self.forecast_daily = None
+        self.now_3hourly = None
+        self.now_daily = None
 
     async def async_update_site(self):
         """Async wrapper for getting the DataPoint site."""
         return await self._hass.async_add_executor_job(self._update_site)
 
     def _update_site(self):
-        """Return the nearest DataPoint Site to the held latitude/longitude."""
+        """Determine the nearest DataPoint Site(s) to the held latitude/longitude."""
         try:
             new_site = self._datapoint.get_nearest_forecast_site(
                 latitude=self.latitude, longitude=self.longitude
             )
             if self._site is None or self._site.id != new_site.id:
                 self._site = new_site
-                self.now = None
+                self.forecast_3hourly = None
+                self.forecast_daily = None
+                self.now_3hourly = None
+                self.now_daily = None
 
             self.site_id = self._site.id
             self.site_name = self._site.name
@@ -54,9 +62,12 @@ class MetOfficeData:
             self._site = None
             self.site_id = None
             self.site_name = None
-            self.now = None
+            self.forecast_3hourly = None
+            self.forecast_daily = None
+            self.now_3hourly = None
+            self.now_daily = None
 
-        return self._site
+        return self._site is not None
 
     async def async_update(self):
         """Async wrapper for update method."""
@@ -65,14 +76,36 @@ class MetOfficeData:
     def _update(self):
         """Get the latest data from DataPoint."""
         if self._site is None:
-            _LOGGER.error("No Met Office forecast site held, check logs for problems")
+            _LOGGER.error("No Met Office sites held, check logs for problems")
             return
 
         try:
-            forecast = self._datapoint.get_forecast_for_site(
+            forecast_3hourly = self._datapoint.get_forecast_for_site(
                 self._site.id, MODE_3HOURLY
             )
-            self.now = forecast.now()
+            forecast_daily = self._datapoint.get_forecast_for_site(
+                self._site.id, MODE_DAILY
+            )
         except (ValueError, datapoint.exceptions.APIException) as err:
             _LOGGER.error("Check Met Office connection: %s", err.args)
-            self.now = None
+            self.forecast_3hourly = None
+            self.forecast_daily = None
+            self.now_3hourly = None
+            self.now_daily = None
+        else:
+            self.now_3hourly = forecast_3hourly.now()
+            self.now_daily = forecast_daily.now()
+
+            time_now = utcnow()
+            self.forecast_3hourly = [
+                timestep
+                for day in forecast_3hourly.days
+                for timestep in day.timesteps
+                if timestep.date > time_now
+            ]
+            self.forecast_daily = [
+                timestep
+                for day in forecast_daily.days
+                for timestep in day.timesteps
+                if timestep.date > time_now
+            ]
