@@ -923,7 +923,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         ]
 
     @callback
-    def async_create_entry(
+    def async_create_entry_with_options(
         self,
         *,
         title: str,
@@ -932,7 +932,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         description_placeholders: Optional[Dict] = None,
         options: Optional[dict] = None,
     ) -> Dict[str, Any]:
-        """Finish config flow and create a config entry."""
+        """Finish config flow and create a config entry with options."""
         result = super().async_create_entry(
             title=title,
             data=data,

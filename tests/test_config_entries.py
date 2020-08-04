@@ -1559,7 +1559,7 @@ async def test_async_setup_init_entry_options(hass):
 
         async def async_step_import(self, user_input):
             """Test import step creating entry."""
-            return self.async_create_entry(
+            return self.async_create_entry_with_options(
                 title="title", data={"a": 1}, options={"b": 2, "c": 3}
             )
 
