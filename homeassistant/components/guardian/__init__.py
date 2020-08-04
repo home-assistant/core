@@ -168,7 +168,6 @@ class PairedSensorManager:
 
     async def async_init(self) -> None:
         """Perform post-creation initialization."""
-
         for signal_template, target in [
             (SIGNAL_ADD_PAIRED_SENSOR, self.async_pair_sensor),
             (SIGNAL_NEW_SENSOR_PAIR_DUMP, self.async_process_latest_paired_sensor_uids),
