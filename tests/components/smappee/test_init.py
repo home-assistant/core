@@ -1,13 +1,9 @@
 """Tests for the Smappee component init module."""
-from homeassistant import data_entry_flow
-from homeassistant.components.smappee.const import (
-    CONF_HOSTNAME,
-    CONF_SERIALNUMBER,
-    DOMAIN,
-)
+from homeassistant.components.smappee.const import DOMAIN
 from homeassistant.config_entries import SOURCE_ZEROCONF
 
 from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 
 async def test_unload_config_entry(hass):
@@ -21,28 +17,13 @@ async def test_unload_config_entry(hass):
         "pysmappee.api.SmappeeLocalApi.load_instantaneous",
         return_value=[{"key": "phase0ActivePower", "value": 0}],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data={
-                "host": "1.2.3.4",
-                "port": 22,
-                CONF_HOSTNAME: "Smappee1006000212.local.",
-                "type": "_ssh._tcp.local.",
-                "name": "Smappee1006000212._ssh._tcp.local.",
-                "properties": {"_raw": {}},
-            },
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={"host": "1.2.3.4"},
+            unique_id="Smappee1006000212",
+            source=SOURCE_ZEROCONF,
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "zeroconf_confirm"
-        assert result["description_placeholders"] == {CONF_SERIALNUMBER: "1006000212"}
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "1.2.3.4"}
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "Smappee1006000212"
+        config_entry.add_to_hass(hass)
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
         entry = hass.config_entries.async_entries(DOMAIN)[0]
