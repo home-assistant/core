@@ -7,6 +7,8 @@ import logging
 from types import TracebackType
 from typing import Any, Dict, List, Optional, Type, Union
 
+from homeassistant.exceptions import HomeAssistantError
+
 ZONE_GLOBAL = "global"
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,24 +22,6 @@ class _State(str, enum.Enum):
     TIMEOUT = "TIMEOUT"
     EXIT = "EXIT"
     FREEZE = "FREEZE"
-
-
-class _FreezeNull:
-    """An empty freeze for when no timeout is set for a zone and we request a freeze.
-
-    This should only happen in tests.
-    """
-
-    async def __aexit__(
-        self,
-        exc_type: Type[BaseException],
-        exc_val: BaseException,
-        exc_tb: TracebackType,
-    ) -> Optional[bool]:
-        return None
-
-    async def __aenter__(self) -> _FreezeNull:
-        return self
 
 
 class _FreezeGlobal:
@@ -465,9 +449,7 @@ class ZoneTimeout:
         # Create Task
         return _TaskZone(zone, current_task)
 
-    def freeze(
-        self, zone_name: str = ZONE_GLOBAL
-    ) -> Union[_FreezeZone, _FreezeGlobal, _FreezeNull]:
+    def freeze(self, zone_name: str = ZONE_GLOBAL) -> Union[_FreezeZone, _FreezeGlobal]:
         """Freeze all timer until job is done.
 
         For using as (Async) Context Manager.
@@ -481,11 +463,9 @@ class ZoneTimeout:
             zone: _Zone = self.zones[zone_name]
             return _FreezeZone(zone, self._loop)
 
-        # Should not happens...
-        # Should only happen in tests.
-        _LOGGER.debug(
-            "Cannot freeze zone: %s because no timeout is set.",
-            zone_name,
-            stack_info=True,
-        )
-        return _FreezeNull()
+        # Should not happen, ever...
+        raise FreezeError(f"Cannot freeze zone: {zone_name} because no timeout is set.")
+
+
+class FreezeError(HomeAssistantError):
+    """Exception when we attempt to freeze a timeout for a zone that is not under a timeout."""
