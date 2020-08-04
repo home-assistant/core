@@ -19,4 +19,4 @@ async def test_form(hass):
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "Mullvad VPN"
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
+    assert len(hass.states.async_all()) == 1
