@@ -9,7 +9,7 @@
                 }
             },
             "local": {
-                "description": "Enter the host to add the Smappee local integration",
+                "description": "Enter the host to initiate the Smappee local integration",
                 "data": {
                     "host": "Host"
                 }
