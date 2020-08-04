@@ -12,20 +12,20 @@ from homeassistant.helpers import update_coordinator
 
 from .const import DOMAIN
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = ["binary_sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Mullvad VPN integration."""
-    # Make sure coordinator is initialized.
-    await get_coordinator(hass)
+
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: dict):
     """Set up Mullvad VPN integration."""
-    hass.config_entries.async_update_entry(entry, data={**entry.data})
+    await get_coordinator(hass)
 
+    hass.config_entries.async_update_entry(entry, data={**entry.data})
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
