@@ -483,5 +483,5 @@ class ZoneTimeout:
 
         # Should not happens...
         # Should only happen in tests.
-        _LOGGER.debug("Cannot freeze zone: %s because no timeout is set.")
+        _LOGGER.debug("Cannot freeze zone: %s because no timeout is set.", zone_name)
         return _FreezeNull()
