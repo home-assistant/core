@@ -134,8 +134,7 @@ async def _async_setup_component(
     # Process requirements as soon as possible, so we can import the component
     # without requiring imports to be in functions.
     try:
-        async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, zone_name=domain):
-            await async_process_deps_reqs(hass, config, integration)
+        await async_process_deps_reqs(hass, config, integration)
     except HomeAssistantError as err:
         log_error(str(err), integration.documentation)
         return False
