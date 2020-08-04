@@ -40,6 +40,11 @@ EVENT_OPENSKY_ENTRY = f"{DOMAIN}_entry"
 EVENT_OPENSKY_EXIT = f"{DOMAIN}_exit"
 SCAN_INTERVAL = timedelta(seconds=12)  # opensky public limit is 10 seconds
 
+MIN_LAT = math.radians(-90)
+MAX_LAT = math.radians(90)
+MIN_LON = math.radians(-180)
+MAX_LON = math.radians(180)
+
 OPENSKY_ATTRIBUTION = (
     "Information provided by the OpenSky Network (https://opensky-network.org)"
 )
@@ -135,11 +140,6 @@ class OpenSkySensor(Entity):
         License: https://creativecommons.org/licenses/by/3.0/
         Changes: Adapted for Home Assistant's opensky sensor
         """
-        MIN_LAT = math.radians(-90)
-        MAX_LAT = math.radians(90)
-        MIN_LON = math.radians(-180)
-        MAX_LON = math.radians(180)
-
         rad_lat = math.radians(self._latitude)
         rad_lon = math.radians(self._longitude)
 
