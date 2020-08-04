@@ -556,7 +556,7 @@ pyHS100==0.3.5.1
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
-pyMetno==0.5.1
+pyMetno==0.7.0
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.25

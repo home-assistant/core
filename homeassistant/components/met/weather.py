@@ -36,7 +36,7 @@ ATTRIBUTION = (
 )
 DEFAULT_NAME = "Met.no"
 
-URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/1.9/"
+URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/2.0/classic"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -105,13 +105,11 @@ class MetWeather(WeatherEntity):
             elevation = conf[CONF_ELEVATION]
 
         if not self._is_metric:
-            elevation = int(
-                round(convert_distance(elevation, LENGTH_FEET, LENGTH_METERS))
-            )
+            elevation = convert_distance(elevation, LENGTH_FEET, LENGTH_METERS)
         coordinates = {
-            "lat": str(latitude),
-            "lon": str(longitude),
-            "msl": str(elevation),
+            "lat": latitude,
+            "lon": longitude,
+            "msl": elevation,
         }
         if coordinates == self._coordinates:
             return
