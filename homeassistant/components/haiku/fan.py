@@ -4,26 +4,16 @@ from haiku import discover
 import asyncio
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity import Entity
-from homeassistant.core import callback
 from homeassistant.components.fan import (
     ATTR_SPEED,
     SPEED_OFF,
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
     ATTR_SPEED_LIST,
     SUPPORT_SET_SPEED,
     ENTITY_ID_FORMAT,
-    FanEntity,
 )
 from homeassistant.const import (
-    CONF_ENTITY_ID,
-    CONF_FRIENDLY_NAME,
-    CONF_VALUE_TEMPLATE,
-    EVENT_HOMEASSISTANT_START,
     STATE_OFF,
     STATE_ON,
-    STATE_UNKNOWN,
 )
 import logging
 
