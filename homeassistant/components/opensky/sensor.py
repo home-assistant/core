@@ -1,9 +1,10 @@
 """Sensor for the Open Sky Network."""
+import asyncio
 from datetime import timedelta
 import logging
 import math
 
-import requests
+import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -15,9 +16,11 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_RADIUS,
+    HTTP_BAD_REQUEST,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
 )
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import distance as util_distance, location as util_location
@@ -105,7 +108,6 @@ class OpenSkySensor(Entity):
 
     def __init__(self, hass, name, latitude, longitude, radius, altitude):
         """Initialize the sensor."""
-        self._session = requests.Session()
         self._latitude = latitude
         self._longitude = longitude
         self._radius = util_distance.convert(radius, LENGTH_KILOMETERS, LENGTH_METERS)
@@ -166,22 +168,37 @@ class OpenSkySensor(Entity):
             min_lon = MIN_LON
             max_lon = MAX_LON
 
-        self._params["lamin"] = round(math.degrees(min_lat), 4)
-        self._params["lomin"] = round(math.degrees(min_lon), 4)
-        self._params["lamax"] = round(math.degrees(max_lat), 4)
-        self._params["lomax"] = round(math.degrees(max_lon), 4)
+        self._params["lamin"] = str(round(math.degrees(min_lat), 4))
+        self._params["lomin"] = str(round(math.degrees(min_lon), 4))
+        self._params["lamax"] = str(round(math.degrees(max_lat), 4))
+        self._params["lomax"] = str(round(math.degrees(max_lon), 4))
 
-    def update(self):
+    async def async_update(self):
         """Update device state."""
         currently_tracked = set()
         flight_metadata = {}
-        states = (
-            self._session.get(OPENSKY_API_URL, params=self._params)
-            .json()
-            .get(ATTR_STATES)
-            or []
-        )
-        for state in states:
+
+        session = async_get_clientsession(self._hass)
+        try:
+            async with session.get(OPENSKY_API_URL, params=self._params) as resp:
+                if resp.status >= HTTP_BAD_REQUEST:
+                    _LOGGER.warning("HTTP request failed: %s", resp.status)
+                    return
+                try:
+                    data = await resp.json()
+                except ValueError:
+                    _LOGGER.warning("Could not decode JSON", exc_info=1)
+                    return
+
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.warning("Failed to fetch states", exc_info=1)
+            return
+
+        if ATTR_STATES not in data:
+            _LOGGER.debug("JSON data does not contain states")
+            return
+
+        for state in data[ATTR_STATES] or []:
             if len(state) < len(OPENSKY_API_FIELDS):
                 _LOGGER.warning("Skipping invalid state")
                 continue
