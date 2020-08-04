@@ -43,7 +43,6 @@ async def test_show_user_host_form(hass):
 
     assert result["step_id"] == ENV_LOCAL
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
 async def test_show_zeroconf_connection_error_form(hass):
