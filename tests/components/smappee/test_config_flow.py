@@ -168,7 +168,6 @@ async def test_user_device_exists_abort(hass):
         )
         assert result["step_id"] == "environment"
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"environment": ENV_LOCAL}
