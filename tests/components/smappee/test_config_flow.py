@@ -47,30 +47,31 @@ async def test_show_user_host_form(hass):
 
 async def test_show_zeroconf_connection_error_form(hass):
     """Test that the zeroconf confirmation form is served."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data={
-            "host": "1.2.3.4",
-            "port": 22,
-            CONF_HOSTNAME: "Smappee1006000212.local.",
-            "type": "_ssh._tcp.local.",
-            "name": "Smappee1006000212._ssh._tcp.local.",
-            "properties": {"_raw": {}},
-        },
-    )
+    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value=None):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data={
+                "host": "1.2.3.4",
+                "port": 22,
+                CONF_HOSTNAME: "Smappee1006000212.local.",
+                "type": "_ssh._tcp.local.",
+                "name": "Smappee1006000212._ssh._tcp.local.",
+                "properties": {"_raw": {}},
+            },
+        )
 
-    assert result["description_placeholders"] == {CONF_SERIALNUMBER: "1006000212"}
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "zeroconf_confirm"
+        assert result["description_placeholders"] == {CONF_SERIALNUMBER: "1006000212"}
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "zeroconf_confirm"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": "1.2.3.4"}
-    )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "1.2.3.4"}
+        )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "connection_error"
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "connection_error"
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
 async def test_connection_error(hass):
