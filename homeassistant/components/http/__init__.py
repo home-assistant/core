@@ -354,14 +354,18 @@ class HomeAssistantHTTP:
 
         self.app.router.add_route("GET", url, redirect)
 
-    def register_static_path(self, url_path, path, cache_headers=True):
+    def register_static_path(
+        self, url_path, path, cache_headers=True, follow_dir_symlinks=False
+    ):
         """Register a folder or file to serve as a static path."""
         if os.path.isdir(path):
             if cache_headers:
                 resource = CachingStaticResource
             else:
                 resource = web.StaticResource
-            self.app.router.register_resource(resource(url_path, path))
+            self.app.router.register_resource(
+                resource(url_path, path, follow_symlinks=follow_dir_symlinks)
+            )
             return
 
         if cache_headers:

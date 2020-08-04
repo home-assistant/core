@@ -1,5 +1,6 @@
 """The tests for Home Assistant frontend."""
 from datetime import timedelta
+import os.path
 import re
 
 import pytest
@@ -20,7 +21,11 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
 from tests.async_mock import patch
-from tests.common import async_capture_events, async_fire_time_changed
+from tests.common import (
+    async_capture_events,
+    async_fire_time_changed,
+    get_test_config_dir,
+)
 
 CONFIG_THEMES = {
     DOMAIN: {
@@ -104,6 +109,23 @@ async def test_dont_cache_service_worker(mock_http_client):
     resp = await mock_http_client.get("/service_worker.js")
     assert resp.status == 200
     assert "cache-control" not in resp.headers
+
+
+async def test_local(mock_http_client):
+    """Test that /local/ serves files out of <config>/www."""
+    resp = await mock_http_client.get("/local/test")
+    assert resp.status == 200
+    text = await resp.text()
+    assert text.strip() == "Hello, world!"
+
+
+async def test_local_with_symlink(mock_http_client):
+    """Test that symlinks under <config>/www are followed and served."""
+    symlink_path = get_test_config_dir("www", "symlink")
+    if not os.path.islink(symlink_path):
+        pytest.skip("Symlink not found, cannot test symlink handling.")
+    resp = await mock_http_client.get("/local/symlink")
+    assert resp.status == 200
 
 
 async def test_404(mock_http_client):

@@ -287,7 +287,9 @@ async def async_setup(hass, config):
 
     local = hass.config.path("www")
     if os.path.isdir(local):
-        hass.http.register_static_path("/local", local, not is_dev)
+        hass.http.register_static_path(
+            "/local", local, cache_headers=not is_dev, follow_dir_symlinks=True
+        )
 
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
