@@ -9,10 +9,13 @@ from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
+    CONF_FRIENDLY_NAME,
     CONF_HOST,
     CONF_MAC,
     CONF_NAME,
     CONF_SWITCHES,
+    CONF_TIMEOUT,
+    CONF_TYPE,
     STATE_ON,
 )
 from homeassistant.core import callback
@@ -20,7 +23,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN, SWITCH_DOMAIN
-from .helpers import data_packet, import_device, mac_address
+from .helpers import data_packet, deprecate_platform, import_device, mac_address
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,13 +35,24 @@ SWITCH_SCHEMA = vol.Schema(
     }
 )
 
+OLD_SWITCH_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_COMMAND_OFF): data_packet,
+        vol.Optional(CONF_COMMAND_ON): data_packet,
+        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+    }
+)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_MAC): mac_address,
-        vol.Optional(CONF_SWITCHES, default=[]): vol.All(
-            [SWITCH_SCHEMA], cv.ensure_list
+        vol.Optional(CONF_SWITCHES, default=[]): vol.Any(
+            cv.schema_with_slug_keys(OLD_SWITCH_SCHEMA),
+            vol.All([SWITCH_SCHEMA], cv.ensure_list),
         ),
+        vol.Optional(CONF_TYPE): cv.string,
+        vol.Optional(CONF_TIMEOUT): cv.positive_int,
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -54,12 +68,55 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     mac_addr = config.get(CONF_MAC)
     switches = config.get(CONF_SWITCHES)
 
+    if not isinstance(switches, list):
+        switches = [
+            {
+                CONF_NAME: switch[CONF_FRIENDLY_NAME],
+                CONF_COMMAND_OFF: switch[CONF_COMMAND_OFF],
+                CONF_COMMAND_ON: switch[CONF_COMMAND_ON],
+            }
+            for switch in switches.values()
+        ]
+
+        _LOGGER.warning(
+            "Your configuration for the switch platform is deprecated. "
+            "Please refer to the Broadlink documentation to catch up"
+        )
+
     if mac_addr and switches:
+        for attr in {CONF_TYPE, CONF_TIMEOUT}:
+            if config.get(attr) is not None:
+                _LOGGER.warning(
+                    "The '%s' configuration variable is deprecated. "
+                    "Please remove it from your configuration file",
+                    attr,
+                )
+
         platform_data = hass.data[DOMAIN].platforms.setdefault(SWITCH_DOMAIN, {})
         platform_data.setdefault(mac_addr, []).extend(switches)
 
-    if host:
-        import_device(hass, host)
+        if host:
+            if import_device(hass, host):
+                _LOGGER.error(
+                    "Failed to set up the switch platform. The device "
+                    "at %s is not configured yet. Please click "
+                    "Configuration in the sidebar and click "
+                    "Integrations. If you see the device there, click "
+                    "Configure. Otherwise, click + and enter a valid "
+                    "host. Follow the instructions to complete the "
+                    "setup and update your configuration file to "
+                    "conform to the documentation when you are done",
+                    host,
+                )
+
+            else:
+                _LOGGER.warning(
+                    "The 'host' configuration variable is deprecated. "
+                    "Please remove it from your configuration file"
+                )
+
+    elif host:
+        deprecate_platform(hass, host, "switch")
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

@@ -8,7 +8,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
-from .helpers import import_device
+from .helpers import deprecate_platform
 
 SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_CELSIUS],
@@ -29,7 +29,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     This is for backward compatibility.
     Do not use this method.
     """
-    import_device(hass, config[CONF_HOST])
+    deprecate_platform(hass, config[CONF_HOST], "sensor")
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

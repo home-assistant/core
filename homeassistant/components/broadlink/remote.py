@@ -35,7 +35,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
-from .helpers import data_packet, import_device
+from .helpers import data_packet, deprecate_platform
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     This is for backward compatibility.
     Do not use this method.
     """
-    import_device(hass, config[CONF_HOST])
+    deprecate_platform(hass, config[CONF_HOST], "remote")
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
