@@ -95,7 +95,7 @@ async def test_connection_error(hass):
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
-async def test_zerconf_wrong_mdns(hass):
+async def test_zeroconf_wrong_mdns(hass):
     """Test we abort if unsupported mDNS name is discovered."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
