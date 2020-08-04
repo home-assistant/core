@@ -1,21 +1,18 @@
 """Platform for Haiku integration."""
-from haiku import fan
-from haiku import discover
 import asyncio
-from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.entity import Entity
+import logging
+
+from haiku import discover, fan
+
 from homeassistant.components.fan import (
+    ATTR_SPEED,
+    ATTR_SPEED_LIST,
+    ENTITY_ID_FORMAT,
     SPEED_OFF,
     SUPPORT_SET_SPEED,
-    ENTITY_ID_FORMAT,
-    ATTR_SPEED_LIST,
-    ATTR_SPEED,
 )
-from homeassistant.const import (
-    STATE_OFF,
-    STATE_ON,
-)
-import logging
+from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 
 _LOGGER = logging.getLogger(__name__)
 SPEED_1 = "Speed 1"
@@ -126,8 +123,7 @@ class HaikuFan(Entity):
     def speed(self):
         """Return the current speed."""
         if self._speed in self._speed_list:
-            self._speed = self._speed
-            self._state = self._state
+            return self._speed
         else:
             self._speed = SPEED_OFF
             self._state = STATE_OFF
