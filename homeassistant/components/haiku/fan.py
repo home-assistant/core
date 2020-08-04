@@ -126,7 +126,8 @@ class HaikuFan(Entity):
     def speed(self):
         """Return the current speed."""
         if self._speed in self._speed_list:
-            return self._speed
+            self._speed = self._speed
+            self._state = self._state
         else:
             self._speed = SPEED_OFF
             self._state = STATE_OFF
