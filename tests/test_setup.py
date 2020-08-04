@@ -483,12 +483,14 @@ class TestSetup:
 async def test_component_warn_slow_setup(hass):
     """Warn we log when a component setup takes a long time."""
     mock_integration(hass, MockModule("test_component1"))
-    with patch.object(hass.loop, "call_later") as mock_call:
+    with patch.object(hass.loop, "call_later") as mock_call, patch.object(
+        setup, "SLOW_SETUP_MAX_WAIT", 0
+    ):
         result = await setup.async_setup_component(hass, "test_component1", {})
         assert result
         assert mock_call.called
 
-        assert len(mock_call.mock_calls) == 5
+        assert len(mock_call.mock_calls) == 3
         timeout, logger_method = mock_call.mock_calls[0][1][:2]
 
         assert timeout == setup.SLOW_SETUP_WARNING

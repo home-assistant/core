@@ -191,9 +191,7 @@ async def _async_setup_component(
             return False
 
         async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, zone_name=domain):
-            # TODO: swap this back out when we figure out
-            # why changing it to await is breaking lots of tests
-            result = await asyncio.wait_for(task, SLOW_SETUP_MAX_WAIT)
+            result = await task
     except asyncio.TimeoutError:
         _LOGGER.error(
             "Setup of %s is taking longer than %s seconds."
