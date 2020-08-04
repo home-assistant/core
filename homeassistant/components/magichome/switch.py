@@ -1,14 +1,14 @@
 """Platform for MagicHome switches integration."""
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
 
-from . import DATA_MAGICHOME, MagicHomeDevice
+from . import MAGICHOME_API, MagicHomeDevice
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up MagicHome Switch device."""
     if discovery_info is None:
         return
-    magichome = hass.data[DATA_MAGICHOME]
+    magichome = hass.data[MAGICHOME_API]
     dev_ids = discovery_info.get("dev_ids")
     devices = []
     for dev_id in dev_ids:

@@ -1,75 +1,107 @@
-"""Platform for magichome light integration."""
-import logging
-
-
-from magichome import MagicHomeApi
-from magichome.devices.light.MagicHomeLight import MagicHomeLight
-from magichome.devices.switch.MagicHomeSwitch import MagicHomeSwitch
-import voluptuous as vol
-
-import homeassistant.helpers.config_validation as cv
+"""Support for the MagicHome lights."""
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, PLATFORM_SCHEMA, Light)
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
+    ENTITY_ID_FORMAT,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    Light,
+)
+from homeassistant.util import color as colorutil
 
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-})
+from . import MAGICHOME_API, MagicHomeDevice
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the MagicHome Light platform."""
+    """Set up MagicHome light platform."""
+    if discovery_info is None:
+        return
+    magichome = hass.data[MAGICHOME_API]
+    dev_ids = discovery_info.get("dev_ids")
+    devices = []
+    for dev_id in dev_ids:
+        device = magichome.get_device_by_id(dev_id)
+        if device is None:
+            continue
+        devices.append(MagicHomeLight(device))
+    add_entities(devices)
 
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
 
-    magichome = MagicHomeApi()
+class MagicHomeLight(MagicHomeDevice, Light):
+    """MagicHome light device."""
 
-    hub = magichome.magichom_hub(username, password)
-
-    for light in hub.lights :
-        add_entities(MagicHomeDevice(light))
-
-
-class MagicHomeDevice(MagicHomeLight):
-    """Representation of an MagicHome Light."""
-
-    def __init__(self, light):
-        """Initialize an MagicHome."""
-        self._light = light
-        self._name = light.obj_name
-        self._state = None
-        self._brightness = None
-
-    @property
-    def name(self):
-        """Return the display name of this light."""
-        return self._name
+    def __init__(self, magichome):
+        """Init MagicHome light device."""
+        super().__init__(magichome)
+        self.entity_id = ENTITY_ID_FORMAT.format(magichome.object_id())
 
     @property
     def brightness(self):
         """Return the brightness of the light."""
-        return self._brightness
+        return int(self.magichome.brightness())
+
+    @property
+    def hs_color(self):
+        """Return the hs_color of the light."""
+        return tuple(map(int, self.magichome.hs_color()))
+
+    @property
+    def color_temp(self):
+        """Return the color_temp of the light."""
+        if self.magichome.color_temp() is None:
+            return None
+        color_temp = int(self.magichome.color_temp())
+        return colorutil.color_temperature_kelvin_to_mired(color_temp)
 
     @property
     def is_on(self):
         """Return true if light is on."""
-        return self._state
+        return self.magichome.state()
+
+    @property
+    def min_mireds(self):
+        """Return color temperature min mireds."""
+        return colorutil.color_temperature_kelvin_to_mired(
+            self.magichome.min_color_temp()
+        )
+
+    @property
+    def max_mireds(self):
+        """Return color temperature max mireds."""
+        return colorutil.color_temperature_kelvin_to_mired(
+            self.magichome.max_color_temp()
+        )
 
     def turn_on(self, **kwargs):
-        """Instruct the light to turn on."""
-        self._light.brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
-        self._light.turn_on()
+        """Turn on or control the light."""
+        if (
+            ATTR_BRIGHTNESS not in kwargs
+            and ATTR_HS_COLOR not in kwargs
+            and ATTR_COLOR_TEMP not in kwargs
+        ):
+            self.magichome.turn_on()
+        if ATTR_BRIGHTNESS in kwargs:
+            self.magichome.set_brightness(kwargs[ATTR_BRIGHTNESS])
+        if ATTR_HS_COLOR in kwargs:
+            self.magichome.set_color(kwargs[ATTR_HS_COLOR])
+        if ATTR_COLOR_TEMP in kwargs:
+            color_temp = colorutil.color_temperature_mired_to_kelvin(
+                kwargs[ATTR_COLOR_TEMP]
+            )
+            self.magichome.set_color_temp(color_temp)
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        self._light.turn_off()
+        self.magichome.turn_off()
 
-    def update(self):
-        """Fetch new state data for this light."""
-        self._light.update()
-        self._state = self._light.is_on()
-        self._brightness = self._light.brightness
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        supports = SUPPORT_BRIGHTNESS
+        if self.magichome.support_color():
+            supports = supports | SUPPORT_COLOR
+        if self.magichome.support_color_temp():
+            supports = supports | SUPPORT_COLOR_TEMP
+        return supports
