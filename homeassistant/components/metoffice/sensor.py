@@ -20,6 +20,10 @@ from .const import (
     METOFFICE_COORDINATOR,
     METOFFICE_DATA,
     METOFFICE_NAME,
+    MODE_3HOURLY,
+    MODE_3HOURLY_DISPLAY,
+    MODE_DAILY,
+    MODE_DAILY_DISPLAY,
     VISIBILITY_CLASSES,
     VISIBILITY_DISTANCE_CLASSES,
 )
@@ -85,7 +89,14 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            MetOfficeCurrentSensor(entry.data, hass_data, sensor_type)
+            MetOfficeCurrentSensor(entry.data, hass_data, True, sensor_type)
+            for sensor_type in SENSOR_TYPES
+        ],
+        False,
+    )
+    async_add_entities(
+        [
+            MetOfficeCurrentSensor(entry.data, hass_data, False, sensor_type)
             for sensor_type in SENSOR_TYPES
         ],
         False,
@@ -95,15 +106,16 @@ async def async_setup_entry(
 class MetOfficeCurrentSensor(SensorEntity):
     """Implementation of a Met Office current weather condition sensor."""
 
-    def __init__(self, entry_data, hass_data, sensor_type):
+    def __init__(self, entry_data, hass_data, use_3hourly, sensor_type):
         """Initialize the sensor."""
         self._data = hass_data[METOFFICE_DATA]
         self._coordinator = hass_data[METOFFICE_COORDINATOR]
 
         self._type = sensor_type
-        self._name = f"{hass_data[METOFFICE_NAME]} {SENSOR_TYPES[self._type][0]}"
-        self._unique_id = f"{SENSOR_TYPES[self._type][0]}_{self._data.latitude}_{self._data.longitude}"
+        self._name = f"{hass_data[METOFFICE_NAME]} {SENSOR_TYPES[self._type][0]} {MODE_3HOURLY_DISPLAY if use_3hourly else MODE_DAILY_DISPLAY}"
+        self._unique_id = f"{SENSOR_TYPES[self._type][0]}_{self._data.latitude}_{self._data.longitude}_{MODE_3HOURLY if use_3hourly else MODE_DAILY}"
 
+        self.use_3hourly = use_3hourly
         self.metoffice_site_id = None
         self.metoffice_site_name = None
         self.metoffice_now = None
@@ -199,7 +211,9 @@ class MetOfficeCurrentSensor(SensorEntity):
         """Load data from integration."""
         self.metoffice_site_id = self._data.site_id
         self.metoffice_site_name = self._data.site_name
-        self.metoffice_now = self._data.now
+        self.metoffice_now = (
+            self._data.now_3hourly if self.use_3hourly else self._data.now_daily
+        )
         self.async_write_ha_state()
 
     @property
