@@ -11,6 +11,14 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_SCHEMA_USER = vol.Schema(
+    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+)
+
+RESULT_AUTH_FAILED = "auth_failed"
+RESULT_CONN_ERROR = "conn_error"
+RESULT_SUCCESS = "success"
+
 
 class SpiderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Spider config flow."""
@@ -24,8 +32,22 @@ class SpiderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_USERNAME: "",
             CONF_PASSWORD: "",
             CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
-            "login_response": None,
         }
+
+    def _try_connect(self):
+        """Try to connect and check auth."""
+        try:
+            SpiderApi(
+                self.data[CONF_USERNAME],
+                self.data[CONF_PASSWORD],
+                self.data[CONF_SCAN_INTERVAL],
+            )
+        except SpiderApiException:
+            return RESULT_CONN_ERROR
+        except UnauthorizedException:
+            return RESULT_AUTH_FAILED
+
+        return RESULT_SUCCESS
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
@@ -37,26 +59,19 @@ class SpiderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.data[CONF_USERNAME] = user_input["username"]
             self.data[CONF_PASSWORD] = user_input["password"]
 
-            try:
-                SpiderApi(
-                    self.data[CONF_USERNAME],
-                    self.data[CONF_PASSWORD],
-                    self.data[CONF_SCAN_INTERVAL],
-                )
+            result = await self.hass.async_add_executor_job(self._try_connect)
+
+            if result == RESULT_SUCCESS:
                 return self.async_create_entry(title=DOMAIN, data=self.data,)
-            except UnauthorizedException:
-                errors["base"] = "invalid_auth"
-            except SpiderApiException:
+            if result != RESULT_AUTH_FAILED:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+                return self.async_abort(reason=result)
 
-        data_schema = {
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
-        }
+            errors["base"] = "invalid_auth"
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(data_schema), errors=errors,
+            step_id="user", data_schema=DATA_SCHEMA_USER, errors=errors,
         )
 
     async def async_step_import(self, import_data):
