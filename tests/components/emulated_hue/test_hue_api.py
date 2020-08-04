@@ -1337,7 +1337,6 @@ async def test_put_than_get_when_service_call_fails(hass, hass_hue, hue_client):
     assert ceiling_lights.state == STATE_OFF
 
     with patch.object(hue_api, "STATE_CHANGE_WAIT_TIMEOUT", 0.000001):
-        await asyncio.sleep(0.000001)
         # update light state through api
         await perform_put_light_state(
             hass_hue,
