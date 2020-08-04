@@ -6,7 +6,7 @@
       }
     },
     "abort": {
-      "already_setup": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]"
     },
