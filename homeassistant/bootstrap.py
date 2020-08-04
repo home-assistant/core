@@ -515,7 +515,7 @@ async def _async_set_up_integrations(
                     hass, stage_1_domains, config, setup_started
                 )
         except asyncio.TimeoutError:
-            _LOGGER.warning("Setup timeout on stage 1 - moving forward")
+            _LOGGER.warning("Setup timed out for stage 1 - moving forward")
 
     # Enables after dependencies
     async_set_domains_to_be_loaded(hass, stage_1_domains | stage_2_domains)
@@ -530,7 +530,7 @@ async def _async_set_up_integrations(
                     hass, stage_2_domains, config, setup_started
                 )
         except asyncio.TimeoutError:
-            _LOGGER.warning("Setup timeout on stage 2 - moving forward")
+            _LOGGER.warning("Setup timed out for stage 2 - moving forward")
 
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
@@ -538,4 +538,4 @@ async def _async_set_up_integrations(
         async with hass.timeout.async_timeout(WRAP_UP_TIMEOUT, cool_down=COOLDOWN_TIME):
             await hass.async_block_till_done()
     except asyncio.TimeoutError:
-        _LOGGER.warning("Setup timeout on bootstrap - moving forward")
+        _LOGGER.warning("Setup timed out for bootstrap - moving forward")
