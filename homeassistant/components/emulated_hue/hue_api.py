@@ -2,6 +2,7 @@
 import asyncio
 import hashlib
 import logging
+import time
 
 from homeassistant import core
 from homeassistant.components import (
@@ -66,9 +67,15 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.network import is_local
 
 _LOGGER = logging.getLogger(__name__)
+
+# How long to wait for a state change to happen
+STATE_CHANGE_WAIT_TIMEOUT = 5.0
+# How long an entry state's cache will be valid for in seconds.
+STATE_CACHED_TIMEOUT = 2.0
 
 STATE_BRIGHTNESS = "bri"
 STATE_COLORMODE = "colormode"
@@ -515,13 +522,6 @@ class HueOneLightChangeView(HomeAssistantView):
         if entity.domain in config.off_maps_to_on_domains:
             service = SERVICE_TURN_ON
 
-            # Caching is required because things like scripts and scenes won't
-            # report as "off" to Alexa if an "off" command is received, because
-            # they'll map to "on". Thus, instead of reporting its actual
-            # status, we report what Alexa will want to see, which is the same
-            # as the actual requested command.
-            config.cached_states[entity_id] = parsed
-
         # Separate call to turn on needed
         if turn_on_needed:
             hass.async_create_task(
@@ -534,9 +534,17 @@ class HueOneLightChangeView(HomeAssistantView):
             )
 
         if service is not None:
+            state_will_change = parsed[STATE_ON] != (entity.state != STATE_OFF)
+
             hass.async_create_task(
                 hass.services.async_call(domain, service, data, blocking=True)
             )
+
+            if state_will_change:
+                # Wait for the state to change.
+                await wait_for_state_change_or_timeout(
+                    hass, entity_id, STATE_CACHED_TIMEOUT
+                )
 
         # Create success responses for all received keys
         json_response = [
@@ -556,16 +564,40 @@ class HueOneLightChangeView(HomeAssistantView):
                     create_hue_success_response(entity_number, val, parsed[key])
                 )
 
-        # Echo fetches the state immediately after the PUT method returns.
-        # Waiting for a short time allows the changes to propagate.
-        await asyncio.sleep(0.25)
+        if entity.domain in config.off_maps_to_on_domains:
+            # Caching is required because things like scripts and scenes won't
+            # report as "off" to Alexa if an "off" command is received, because
+            # they'll map to "on". Thus, instead of reporting its actual
+            # status, we report what Alexa will want to see, which is the same
+            # as the actual requested command.
+            config.cached_states[entity_id] = [parsed, None]
+        else:
+            config.cached_states[entity_id] = [parsed, time.time()]
 
         return self.json(json_response)
 
 
 def get_entity_state(config, entity):
     """Retrieve and convert state and brightness values for an entity."""
-    cached_state = config.cached_states.get(entity.entity_id, None)
+    cached_state_entry = config.cached_states.get(entity.entity_id, None)
+    cached_state = None
+
+    # Check if we have a cached entry, and if so if it hasn't expired.
+    if cached_state_entry is not None:
+        entry_state, entry_time = cached_state_entry
+        if entry_time is None:
+            # Handle the case where the entity is listed in config.off_maps_to_on_domains.
+            cached_state = entry_state
+        elif time.time() - entry_time < STATE_CACHED_TIMEOUT and entry_state[
+            STATE_ON
+        ] == (entity.state != STATE_OFF):
+            # We only want to use the cache if the actual state of the entity
+            # is in sync so that it can be detected as an error by Alexa.
+            cached_state = entry_state
+        else:
+            # Remove the now stale cached entry.
+            config.cached_states.pop(entity.entity_id)
+
     data = {
         STATE_ON: False,
         STATE_BRIGHTNESS: None,
@@ -791,3 +823,21 @@ def hue_brightness_to_hass(value):
 def hass_to_hue_brightness(value):
     """Convert hass brightness 0..255 to hue 1..254 scale."""
     return max(1, round((value / 255) * HUE_API_STATE_BRI_MAX))
+
+
+async def wait_for_state_change_or_timeout(hass, entity_id, timeout):
+    """Wait for an entity to change state."""
+    ev = asyncio.Event()
+
+    @core.callback
+    def _async_event_changed(_):
+        ev.set()
+
+    unsub = async_track_state_change_event(hass, [entity_id], _async_event_changed)
+
+    try:
+        await asyncio.wait_for(ev.wait(), timeout=STATE_CHANGE_WAIT_TIMEOUT)
+    except asyncio.TimeoutError:
+        pass
+    finally:
+        unsub()
