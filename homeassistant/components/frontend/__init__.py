@@ -385,26 +385,29 @@ async def _async_setup_themes(hass, themes):
     @callback
     def set_theme(call):
         """Set backend-preferred theme."""
-        data = call.data
-        name = data[CONF_NAME]
-        mode = data.get("mode", "light")
-        if name == DEFAULT_THEME or name in hass.data[DATA_THEMES]:
-            _LOGGER.info("Theme %s set as default %s theme", name, mode)
-            if mode == "light":
-                hass.data[DATA_DEFAULT_THEME] = name
-            else:
-                hass.data[DATA_DEFAULT_DARK_THEME] = name
-            save_theme_store()
-            update_theme_and_fire_event()
-        elif name == VALUE_NO_THEME:
-            if mode == "light":
-                hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
-            else:
-                hass.data[DATA_DEFAULT_DARK_THEME] = None
-            save_theme_store()
-            update_theme_and_fire_event()
+        name = call.data[CONF_NAME]
+        mode = call.data.get("mode", "light")
+
+        if (
+            name not in (DEFAULT_THEME, VALUE_NO_THEME)
+            and name not in hass.data[DATA_THEMES]
+        ):
+            _LOGGER.warning("Theme %s not found", name)
+            return
+
+        light_mode = mode == "light"
+
+        theme_key = DATA_DEFAULT_THEME if light_mode else DATA_DEFAULT_DARK_THEME
+
+        if name == VALUE_NO_THEME:
+            to_set = DEFAULT_THEME if light_mode else None
         else:
-            _LOGGER.warning("Theme %s is not defined", name)
+            _LOGGER.info("Theme %s set as default %s theme", name, mode)
+            to_set = name
+
+        hass.data[theme_key] = to_set
+        save_theme_store()
+        update_theme_and_fire_event()
 
     async def reload_themes(_):
         """Reload themes."""
