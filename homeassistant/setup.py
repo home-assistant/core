@@ -85,7 +85,7 @@ async def _async_process_dependencies(
         return True
 
     _LOGGER.debug("Dependency %s will wait for %s", integration.domain, list(tasks))
-    async with hass.timeout.freeze(integration.domain):
+    async with hass.timeout.async_freeze(integration.domain):
         results = await asyncio.gather(*tasks.values())
 
     failed = [
@@ -318,7 +318,7 @@ async def async_process_deps_reqs(
 
     if not hass.config.skip_pip and integration.requirements:
         if integration.domain in hass.timeout.zones:
-            async with hass.timeout.freeze(integration.domain):
+            async with hass.timeout.async_freeze(integration.domain):
                 await requirements.async_get_integration_with_requirements(
                     hass, integration.domain
                 )

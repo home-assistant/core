@@ -7,7 +7,7 @@ import logging
 from types import TracebackType
 from typing import Any, Dict, List, Optional, Type, Union
 
-from homeassistant.exceptions import HomeAssistantError
+from .async_ import run_callback_threadsafe
 
 ZONE_GLOBAL = "global"
 
@@ -148,9 +148,10 @@ class _TaskGlobal:
         task: asyncio.Task[Any],
         timeout: float,
         cool_down: float,
+        loop: asyncio.AbstractEventLoop,
     ) -> None:
         """Initialize internal timeout context manager."""
-        self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
+        self._loop: asyncio.AbstractEventLoop = loop
         self._manager: ZoneTimeout = manager
         self._task: asyncio.Task[Any] = task
         self._timeout: float = timeout
@@ -248,9 +249,15 @@ class _TaskGlobal:
 class _TaskZone:
     """Internal Timeout Context Manager object for Task."""
 
-    def __init__(self, zone: _Zone, task: asyncio.Task[Any], timeout: float) -> None:
+    def __init__(
+        self,
+        zone: _Zone,
+        task: asyncio.Task[Any],
+        timeout: float,
+        loop: asyncio.AbstractEventLoop,
+    ) -> None:
         """Initialize internal timeout context manager."""
-        self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
+        self._loop: asyncio.AbstractEventLoop = loop
         self._zone: _Zone = zone
         self._task: asyncio.Task[Any] = task
         self._state: _State = _State.INIT
@@ -455,7 +462,7 @@ class ZoneTimeout:
 
         # Global Zone
         if zone_name == ZONE_GLOBAL:
-            task = _TaskGlobal(self, current_task, timeout, cool_down)
+            task = _TaskGlobal(self, current_task, timeout, cool_down, self._loop)
             return task
 
         # Zone Handling
@@ -465,12 +472,14 @@ class ZoneTimeout:
             self.zones[zone_name] = zone = _Zone(self, zone_name, self._loop)
 
         # Create Task
-        return _TaskZone(zone, current_task, timeout)
+        return _TaskZone(zone, current_task, timeout, self._loop)
 
-    def freeze(self, zone_name: str = ZONE_GLOBAL) -> Union[_FreezeZone, _FreezeGlobal]:
+    def async_freeze(
+        self, zone_name: str = ZONE_GLOBAL
+    ) -> Union[_FreezeZone, _FreezeGlobal]:
         """Freeze all timer until job is done.
 
-        For using as (Async) Context Manager.
+        For using as Async Context Manager.
         """
         # Global Freeze
         if zone_name == ZONE_GLOBAL:
@@ -483,3 +492,12 @@ class ZoneTimeout:
             self.zones[zone_name] = zone = _Zone(self, zone_name, self._loop)
 
         return _FreezeZone(zone, self._loop)
+
+    def freeze(self, zone_name: str = ZONE_GLOBAL) -> Union[_FreezeZone, _FreezeGlobal]:
+        """Freeze all timer until job is done.
+
+        For using as Context Manager.
+        """
+        return run_callback_threadsafe(
+            self._loop, self.async_freeze, zone_name
+        ).result()
