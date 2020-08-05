@@ -41,7 +41,7 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_C
 from homeassistant.helpers.typing import HomeAssistantType
 
 # Reuse data and API logic from the sensor implementation
-from .const import CONF_WEATHER, DEFAULT_TIMEFRAME
+from .const import CONF_WEATHER, DEFAULT_TIMEFRAME, DOMAIN
 from .util import BrData
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,12 +91,12 @@ async def async_setup_entry(
     _LOGGER.debug("Initializing buienradar weather: coordinates %s", coordinates)
 
     # create condition helper
-    if DATA_CONDITION not in hass.data:
+    if DATA_CONDITION not in hass.data[DOMAIN]:
         cond_keys = [str(chr(x)) for x in range(97, 123)]
-        hass.data[DATA_CONDITION] = dict.fromkeys(cond_keys)
+        hass.data[DOMAIN][DATA_CONDITION] = dict.fromkeys(cond_keys)
         for cond, condlst in CONDITION_CLASSES.items():
             for condi in condlst:
-                hass.data[DATA_CONDITION][condi] = cond
+                hass.data[DOMAIN][DATA_CONDITION][condi] = cond
 
     async_add_entities([BrWeather(data, config, coordinates)])
 
@@ -185,7 +185,7 @@ class BrWeather(WeatherEntity):
             return None
 
         fcdata_out = []
-        cond = self.hass.data[DATA_CONDITION]
+        cond = self.hass.data[DOMAIN][DATA_CONDITION]
 
         if not self._data.forecast:
             return None
