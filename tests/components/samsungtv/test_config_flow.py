@@ -542,7 +542,7 @@ async def test_autodetect_websocket(
         assert result["data"][CONF_METHOD] == "websocket"
         assert result["data"][CONF_TOKEN] == "123456789"
         assert remotews.call_count == 1
-        assert remotews.call_args_list == [call(**AUTODETECT_WEBSOCKET_PLAIN)]
+        assert remotews.call_args_list == [call(**AUTODETECT_WEBSOCKET_SSL)]
 
 
 async def test_autodetect_websocket_ssl(
@@ -570,8 +570,8 @@ async def test_autodetect_websocket_ssl(
         assert result["data"][CONF_TOKEN] == "123456789"
         assert remotews.call_count == 2
         assert remotews.call_args_list == [
-            call(**AUTODETECT_WEBSOCKET_PLAIN),
             call(**AUTODETECT_WEBSOCKET_SSL),
+            call(**AUTODETECT_WEBSOCKET_PLAIN),
         ]
 
 
@@ -636,8 +636,8 @@ async def test_autodetect_none(hass: HomeAssistantType, remote: Mock, remotews: 
         ]
         assert remotews.call_count == 2
         assert remotews.call_args_list == [
-            call(**AUTODETECT_WEBSOCKET_PLAIN),
             call(**AUTODETECT_WEBSOCKET_SSL),
+            call(**AUTODETECT_WEBSOCKET_PLAIN),
         ]
 
 
