@@ -11,7 +11,7 @@
             "local": {
                 "description": "Enter the host to initiate the Smappee local integration",
                 "data": {
-                    "host": "Host"
+                    "host": "[%key:common::config_flow::data::host%]"
                 }
             },
             "zeroconf_confirm": {
