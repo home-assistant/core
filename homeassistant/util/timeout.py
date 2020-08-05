@@ -45,19 +45,6 @@ class _FreezeGlobal:
         self._exit()
         return None
 
-    def __enter__(self) -> _FreezeGlobal:
-        self._loop.call_soon_threadsafe(self._enter)
-        return self
-
-    def __exit__(
-        self,
-        exc_type: Type[BaseException],
-        exc_val: BaseException,
-        exc_tb: TracebackType,
-    ) -> Optional[bool]:
-        self._loop.call_soon_threadsafe(self._exit)
-        return True
-
     def _enter(self) -> None:
         """Run freeze."""
         if not self._manager.freezes_done:
@@ -112,19 +99,6 @@ class _FreezeZone:
     ) -> Optional[bool]:
         self._exit()
         return None
-
-    def __enter__(self) -> _FreezeZone:
-        self._loop.call_soon_threadsafe(self._enter)
-        return self
-
-    def __exit__(
-        self,
-        exc_type: Type[BaseException],
-        exc_val: BaseException,
-        exc_tb: TracebackType,
-    ) -> Optional[bool]:
-        self._loop.call_soon_threadsafe(self._exit)
-        return True
 
     def _enter(self) -> None:
         """Run freeze."""
