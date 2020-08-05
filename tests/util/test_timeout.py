@@ -101,6 +101,26 @@ async def test_simple_zone_timeout_freeze_reset():
             await asyncio.sleep(0.2, "test")
 
 
+async def test_mix_zone_timeout_freeze_and_global_freeze():
+    """Test a mix zone timeout freeze and global freeze."""
+    timeout = ZoneTimeout()
+
+    async with timeout.async_timeout(0.2, "test"):
+        async with timeout.freeze("test"):
+            async with timeout.freeze():
+                await asyncio.sleep(0.3)
+
+
+async def test_mix_global_and_zone_timeout_freeze_():
+    """Test a mix zone timeout freeze and global freeze."""
+    timeout = ZoneTimeout()
+
+    async with timeout.async_timeout(0.2, "test"):
+        async with timeout.freeze():
+            async with timeout.freeze("test"):
+                await asyncio.sleep(0.3)
+
+
 async def test_mix_zone_timeout_freeze():
     """Test a mix zone timeout global freeze."""
     timeout = ZoneTimeout()
