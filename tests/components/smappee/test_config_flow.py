@@ -223,6 +223,27 @@ async def test_zeroconf_device_exists_abort(hass):
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
+async def test_cloud_device_exists_abort(hass):
+    """Test we abort cloud flow if Smappee Cloud device already configured."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="SmappeeCloud1006000212", source=SOURCE_USER,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"environment": ENV_CLOUD}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
 async def test_full_user_flow(hass, aiohttp_client, aioclient_mock):
     """Check full flow."""
     assert await setup.async_setup_component(
