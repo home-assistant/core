@@ -20,6 +20,7 @@
         "step": {
             "manual_setup": {
                 "data": {
+                    "host": "Vert",
                     "port": "",
                     "ssl": "Bruk SSL",
                     "token": "Token (valgfritt)",

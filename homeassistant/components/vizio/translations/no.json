@@ -1,12 +1,14 @@
 {
     "config": {
         "abort": {
+            "already_configured_device": "Enheten er allerede konfigurert",
             "updated_entry": "Dette innlegget har allerede v\u00e6rt oppsett, men navnet, apps, og/eller alternativer som er definert i konfigurasjon som ikke stemmer med det som tidligere er importert konfigurasjon, s\u00e5 konfigurasjonen innlegget har blitt oppdatert i henhold til dette."
         },
         "error": {
+            "cannot_connect": "Tilkobling mislyktes.",
             "complete_pairing_failed": "Kan ikke fullf\u00f8re sammenkoblingen. Forsikre deg om at PIN-koden du oppga er riktig, og at TV-en fortsatt er p\u00e5 og tilkoblet nettverket f\u00f8r du sender inn p\u00e5 nytt.",
-            "host_exists": "VIZIO-enhet med spesifisert vert allerede konfigurert.",
-            "name_exists": "VIZIO-enhet med spesifisert navn allerede konfigurert."
+            "host_exists": "VIZIO SmartCast-enhet with specified host already configured.",
+            "name_exists": "VIZIO SmartCast-enhet with specified name already configured."
         },
         "step": {
             "pair_tv": {

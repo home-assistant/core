@@ -26,6 +26,9 @@
                 "title": ""
             },
             "manual": {
+                "data": {
+                    "host": "Vert"
+                },
                 "title": "Manuell konfigurere en Hue-bro"
             }
         }

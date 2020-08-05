@@ -1,20 +1,20 @@
 {
-  "config": {
-    "abort": {
-      "already_configured": "Device is already configured"
-    },
-    "error": {
-      "invalid_auth": "Invalid authentication",
-      "unknown": "Unexpected error"
-    },
-    "step": {
-      "user": {
-        "data": {
-          "password": "Password",
-          "username": "Username"
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
-        "title": "Sign-in with your mijn.ithodaalderop.nl account"
-      }
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Sign-in with mijn.ithodaalderop.nl account"
+            }
+        }
     }
-  }
 }
