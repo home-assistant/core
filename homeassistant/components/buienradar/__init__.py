@@ -4,7 +4,6 @@ import asyncio
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_INCLUDE
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_CAMERA, CONF_SENSOR, CONF_WEATHER, DOMAIN
@@ -24,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data.setdefault(DOMAIN, {})
 
     for component in PLATFORMS:
-        if entry.data[component][CONF_INCLUDE]:
+        if entry.data[component]:
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(entry, component)
             )

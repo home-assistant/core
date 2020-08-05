@@ -9,6 +9,9 @@ DEFAULT_DELTA = 600
 
 HOME_LOCATION_NAME = "Home"
 
+CONF_CAMERA = "camera"
+CONF_SENSOR = "sensor"
+CONF_WEATHER = "weather"
 CONF_DIMENSION = "dimension"
 CONF_DELTA = "delta"
 CONF_COUNTRY = "country_code"

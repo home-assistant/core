@@ -11,31 +11,10 @@
                     "latitude": "Latitude",
                     "longitude": "Longitude",
                     "name": "Name",
-                    "weather": "Setup buienradar weather",
-                    "camera": "Setup buienradar camera",
-                    "sensor": "Setup buienradar sensors"
-                },
-                "title": "Buienradar"
-            },
-            "setup_weather": {
-                "title": "Buienradar Weather",
-                "data": {
-                  "forecast": "Include temperature forecast"
-                }
-            },
-            "setup_camera": {
-                "data": {
-                    "dimension": "Image Size [px]",
-                    "delta": "Interval between image updates [s]",
+                    "camera": "Add radar image",
                     "country_code": "Country"
                 },
-                "title": "Buienradar Camera"
-            },
-            "setup_sensor": {
-                "title": "Buienradar Sensors",
-                "data": {
-                  "timeframe": "Minutes to look ahead for precipitation forecast"
-                }
+                "title": "Buienradar"
             }
         }
     }
