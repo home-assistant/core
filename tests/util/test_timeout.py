@@ -4,20 +4,12 @@ import time
 
 import pytest
 
-from homeassistant.util.timeout import FreezeError, ZoneTimeout
-
-
-@pytest.fixture(autouse=True)
-def fix_cool_down():
-    """Patch cool down of the module."""
-    from homeassistant.util import timeout
-
-    timeout.COOL_DOWN = 0
+from homeassistant.util.timeout import TimeoutManager
 
 
 async def test_simple_global_timeout():
     """Test a simple global timeout."""
-    timeout = ZoneTimeout()
+    timeout = TimeoutManager()
 
     with pytest.raises(asyncio.TimeoutError):
         async with timeout.async_timeout(0.1):
@@ -26,7 +18,7 @@ async def test_simple_global_timeout():
 
 async def test_simple_global_timeout_with_executor_job(hass):
     """Test a simple global timeout with executor job."""
-    timeout = ZoneTimeout()
+    timeout = TimeoutManager()
 
     with pytest.raises(asyncio.TimeoutError):
         async with timeout.async_timeout(0.1):
@@ -35,16 +27,16 @@ async def test_simple_global_timeout_with_executor_job(hass):
 
 async def test_simple_global_timeout_freeze():
     """Test a simple global timeout freeze."""
-    timeout = ZoneTimeout()
+    timeout = TimeoutManager()
 
     async with timeout.async_timeout(0.2):
-        async with timeout.freeze():
+        async with timeout.async_freeze():
             await asyncio.sleep(0.3)
 
 
 async def test_simple_zone_timeout_freeze_inside_executor_job(hass):
     """Test a simple zone timeout freeze inside an executor job."""
-    timeout = ZoneTimeout()
+    timeout = TimeoutManager()
 
     def _some_sync_work():
         with timeout.freeze("recorder"):
@@ -57,7 +49,7 @@ async def test_simple_zone_timeout_freeze_inside_executor_job(hass):
 
 async def test_simple_global_timeout_freeze_inside_executor_job(hass):
     """Test a simple global timeout freeze inside an executor job."""
-    timeout = ZoneTimeout()
+    timeout = TimeoutManager()
 
     def _some_sync_work():
         with timeout.freeze():
@@ -69,7 +61,7 @@ async def test_simple_global_timeout_freeze_inside_executor_job(hass):
 
 async def test_mix_global_timeout_freeze_and_zone_freeze_inside_executor_job(hass):
     """Test a simple global timeout freeze inside an executor job."""
-    timeout = ZoneTimeout()
+    timeout = TimeoutManager()
 
     def _some_sync_work():
         with timeout.freeze("recorder"):
@@ -80,11 +72,25 @@ async def test_mix_global_timeout_freeze_and_zone_freeze_inside_executor_job(has
             await hass.async_add_executor_job(_some_sync_work)
 
 
+async def test_mix_global_timeout_freeze_and_zone_freeze_different_order(hass):
+    """Test a simple global timeout freeze inside an executor job before timeout was set."""
+    timeout = TimeoutManager()
+
+    def _some_sync_work():
+        with timeout.freeze("recorder"):
+            time.sleep(0.4)
+
+    async with timeout.async_timeout(0.1):
+        hass.async_add_executor_job(_some_sync_work)
+        async with timeout.async_timeout(0.2, zone_name="recorder"):
+            await asyncio.sleep(0.3)
+
+
 async def test_mix_global_timeout_freeze_and_zone_freeze_other_zone_inside_executor_job(
     hass,
 ):
     """Test a simple global timeout freeze other zone inside an executor job."""
-    timeout = ZoneTimeout()
+    timeout = TimeoutManager()
 
     def _some_sync_work():
         with timeout.freeze("not_recorder"):
@@ -101,7 +107,7 @@ async def test_mix_global_timeout_freeze_and_zone_freeze_inside_executor_job_sec
     hass,
 ):
     """Test a simple global timeout freeze inside an executor job with second job outside of zone context."""
-    timeout = ZoneTimeout()
+    timeout = TimeoutManager()
 
     def _some_sync_work():
         with timeout.freeze("recorder"):
@@ -116,27 +122,27 @@ async def test_mix_global_timeout_freeze_and_zone_freeze_inside_executor_job_sec
 
 async def test_simple_global_timeout_freeze_with_executor_job(hass):
     """Test a simple global timeout freeze with executor job."""
-    timeout = ZoneTimeout()
+    timeout = TimeoutManager()
 
     async with timeout.async_timeout(0.2):
-        async with timeout.freeze():
+        async with timeout.async_freeze():
             await hass.async_add_executor_job(lambda: time.sleep(0.3))
 
 
 async def test_simple_global_timeout_freeze_reset():
     """Test a simple global timeout freeze reset."""
-    timeout = ZoneTimeout()
+    timeout = TimeoutManager()
 
     with pytest.raises(asyncio.TimeoutError):
         async with timeout.async_timeout(0.2):
-            async with timeout.freeze():
+            async with timeout.async_freeze():
                 await asyncio.sleep(0.1)
             await asyncio.sleep(0.2)
 
 
 async def test_simple_zone_timeout():
     """Test a simple zone timeout."""
-    timeout = ZoneTimeout()
+    timeout = TimeoutManager()
 
     with pytest.raises(asyncio.TimeoutError):
         async with timeout.async_timeout(0.1, "test"):
@@ -145,7 +151,7 @@ async def test_simple_zone_timeout():
 
 async def test_multiple_zone_timeout():
     """Test a simple zone timeout."""
-    timeout = ZoneTimeout()
+    timeout = TimeoutManager()
 
     with pytest.raises(asyncio.TimeoutError):
         async with timeout.async_timeout(0.1, "test"):
@@ -155,7 +161,7 @@ async def test_multiple_zone_timeout():
 
 async def test_different_zone_timeout():
     """Test a simple zone timeout."""
-    timeout = ZoneTimeout()
+    timeout = TimeoutManager()
 
     with pytest.raises(asyncio.TimeoutError):
         async with timeout.async_timeout(0.1, "test"):
@@ -165,65 +171,65 @@ async def test_different_zone_timeout():
 
 async def test_simple_zone_timeout_freeze():
     """Test a simple zone timeout freeze."""
-    timeout = ZoneTimeout()
+    timeout = TimeoutManager()
 
     async with timeout.async_timeout(0.2, "test"):
-        async with timeout.freeze("test"):
+        async with timeout.async_freeze("test"):
             await asyncio.sleep(0.3)
 
 
-async def test_simple_zone_timeout_freeze_without_timeout_throws():
+async def test_simple_zone_timeout_freeze_without_timeout():
     """Test a simple zone timeout freeze on a zone that does not have a timeout set."""
-    timeout = ZoneTimeout()
+    timeout = TimeoutManager()
 
-    with pytest.raises(FreezeError):
-        async with timeout.freeze("test"):
-            await asyncio.sleep(0.1)
+    async with timeout.async_timeout(0.1, "test"):
+        async with timeout.async_freeze("test"):
+            await asyncio.sleep(0.3)
 
 
 async def test_simple_zone_timeout_freeze_reset():
     """Test a simple zone timeout freeze reset."""
-    timeout = ZoneTimeout()
+    timeout = TimeoutManager()
 
     with pytest.raises(asyncio.TimeoutError):
         async with timeout.async_timeout(0.2, "test"):
-            async with timeout.freeze("test"):
+            async with timeout.async_freeze("test"):
                 await asyncio.sleep(0.1)
             await asyncio.sleep(0.2, "test")
 
 
 async def test_mix_zone_timeout_freeze_and_global_freeze():
     """Test a mix zone timeout freeze and global freeze."""
-    timeout = ZoneTimeout()
+    timeout = TimeoutManager()
 
     async with timeout.async_timeout(0.2, "test"):
-        async with timeout.freeze("test"):
-            async with timeout.freeze():
+        async with timeout.async_freeze("test"):
+            async with timeout.async_freeze():
                 await asyncio.sleep(0.3)
 
 
 async def test_mix_global_and_zone_timeout_freeze_():
     """Test a mix zone timeout freeze and global freeze."""
-    timeout = ZoneTimeout()
+    timeout = TimeoutManager()
 
     async with timeout.async_timeout(0.2, "test"):
-        async with timeout.freeze():
-            async with timeout.freeze("test"):
+        async with timeout.async_freeze():
+            async with timeout.async_freeze("test"):
                 await asyncio.sleep(0.3)
 
 
 async def test_mix_zone_timeout_freeze():
     """Test a mix zone timeout global freeze."""
-    timeout = ZoneTimeout()
+    timeout = TimeoutManager()
 
     async with timeout.async_timeout(0.2, "test"):
-        async with timeout.freeze():
+        async with timeout.async_freeze():
             await asyncio.sleep(0.3)
 
 
 async def test_mix_zone_timeout():
     """Test a mix zone timeout global."""
-    timeout = ZoneTimeout()
+    timeout = TimeoutManager()
 
     async with timeout.async_timeout(0.1):
         try:
@@ -235,7 +241,7 @@ async def test_mix_zone_timeout():
 
 async def test_mix_zone_timeout_trigger_global():
     """Test a mix zone timeout global with trigger it."""
-    timeout = ZoneTimeout()
+    timeout = TimeoutManager()
 
     with pytest.raises(asyncio.TimeoutError):
         async with timeout.async_timeout(0.1):
@@ -250,7 +256,7 @@ async def test_mix_zone_timeout_trigger_global():
 
 async def test_mix_zone_timeout_trigger_global_cool_down():
     """Test a mix zone timeout global with trigger it with cool_down."""
-    timeout = ZoneTimeout()
+    timeout = TimeoutManager()
 
     async with timeout.async_timeout(0.1, cool_down=0.3):
         try:

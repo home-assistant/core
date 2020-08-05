@@ -85,10 +85,7 @@ async def _async_process_dependencies(
         return True
 
     _LOGGER.debug("Dependency %s will wait for %s", integration.domain, list(tasks))
-    if integration.domain in hass.timeout.zones:
-        async with hass.timeout.freeze(integration.domain):
-            results = await asyncio.gather(*tasks.values())
-    else:
+    async with hass.timeout.async_freeze(integration.domain):
         results = await asyncio.gather(*tasks.values())
 
     failed = [
@@ -190,7 +187,7 @@ async def _async_setup_component(
             hass.data[DATA_SETUP_STARTED].pop(domain)
             return False
 
-        async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, zone_name=domain):
+        async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, domain):
             result = await task
     except asyncio.TimeoutError:
         _LOGGER.error(
@@ -320,12 +317,7 @@ async def async_process_deps_reqs(
         raise HomeAssistantError("Could not set up all dependencies.")
 
     if not hass.config.skip_pip and integration.requirements:
-        if integration.domain in hass.timeout.zones:
-            async with hass.timeout.freeze(integration.domain):
-                await requirements.async_get_integration_with_requirements(
-                    hass, integration.domain
-                )
-        else:
+        async with hass.timeout.async_freeze(integration.domain):
             await requirements.async_get_integration_with_requirements(
                 hass, integration.domain
             )
