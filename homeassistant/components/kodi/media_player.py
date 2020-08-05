@@ -253,9 +253,14 @@ class KodiEntity(MediaPlayerEntity):
         self._name = name
         self._unique_id = uid
         self._version = version
-        self._reset_state(None)
+        self._players = None
+        self._properties = {}
+        self._item = {}
+        self._app_properties = {}
+        self._media_position_updated_at = None
+        self._media_position = None
 
-    def _reset_state(self, players=[]):
+    def _reset_state(self, players=None):
         self._players = players
         self._properties = {}
         self._item = {}
@@ -292,7 +297,7 @@ class KodiEntity(MediaPlayerEntity):
         if self._kodi_is_off:
             return
 
-        self._reset_state()
+        self._reset_state([])
         self.async_write_ha_state()
 
     @callback
@@ -305,7 +310,7 @@ class KodiEntity(MediaPlayerEntity):
     @callback
     def async_on_quit(self, sender, data):
         """Reset the player state on quit action."""
-        self._reset_state(None)
+        self._reset_state()
         self.hass.async_create_task(self._connection.close())
 
     @property
@@ -393,13 +398,13 @@ class KodiEntity(MediaPlayerEntity):
     async def async_update(self):
         """Retrieve latest state."""
         if not self._connection.connected:
-            self._reset_state(None)
+            self._reset_state()
             return
 
         self._players = await self._kodi.get_players()
 
         if self._kodi_is_off:
-            self._reset_state(None)
+            self._reset_state()
             return
 
         if self._players:
@@ -432,7 +437,7 @@ class KodiEntity(MediaPlayerEntity):
                 ],
             )
         else:
-            self._reset_state()
+            self._reset_state([])
 
     @property
     def name(self):
