@@ -4,6 +4,7 @@ import logging
 from typing import Any, Dict, Iterable, Optional
 
 from homeassistant.const import (
+    ATTR_SNAPSHOT_AT,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_SEEK,
@@ -27,6 +28,7 @@ from .const import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
@@ -58,7 +60,18 @@ async def _async_reproduce_states(
             if key in state.attributes:
                 if key == ATTR_MEDIA_POSITION:
                     # for this property only, the state does not match the service data
-                    data[ATTR_MEDIA_SEEK_POSITION] = state.attributes[key]
+                    delta = 0
+                    if (
+                        state.state == STATE_PLAYING
+                        and ATTR_MEDIA_POSITION_UPDATED_AT in state.attributes
+                        and ATTR_SNAPSHOT_AT in state.attributes
+                    ):
+                        delta = int(state.attributes[ATTR_SNAPSHOT_AT]) - int(
+                            state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
+                        )
+                    data[ATTR_MEDIA_SEEK_POSITION] = str(
+                        int(state.attributes[key]) + delta
+                    )
                 else:
                     data[key] = state.attributes[key]
 

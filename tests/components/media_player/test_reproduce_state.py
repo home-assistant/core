@@ -8,6 +8,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
@@ -19,6 +20,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.media_player.reproduce_state import async_reproduce_states
 from homeassistant.const import (
+    ATTR_SNAPSHOT_AT,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_SEEK,
@@ -152,7 +154,6 @@ async def test_attribute_no_state(hass):
     [
         (SERVICE_VOLUME_SET, ATTR_MEDIA_VOLUME_LEVEL),
         (SERVICE_VOLUME_MUTE, ATTR_MEDIA_VOLUME_MUTED),
-        (SERVICE_MEDIA_SEEK, ATTR_MEDIA_POSITION),
         (SERVICE_SELECT_SOURCE, ATTR_INPUT_SOURCE),
         (SERVICE_SELECT_SOUND_MODE, ATTR_SOUND_MODE),
     ],
@@ -168,13 +169,57 @@ async def test_attribute(hass, service, attribute):
     await hass.async_block_till_done()
 
     assert len(calls_1) == 1
-    if attribute == ATTR_MEDIA_POSITION:
-        assert calls_1[0].data == {
-            "entity_id": ENTITY_1,
-            ATTR_MEDIA_SEEK_POSITION: value,
-        }
-    else:
-        assert calls_1[0].data == {"entity_id": ENTITY_1, attribute: value}
+    assert calls_1[0].data == {"entity_id": ENTITY_1, attribute: value}
+
+
+async def test_seek(hass):
+    """Test calculating time for seek."""
+    calls_1 = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_SEEK)
+    calls_2 = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
+    calls_3 = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PLAY)
+
+    await async_reproduce_states(
+        hass,
+        [
+            State(
+                ENTITY_1,
+                None,
+                {
+                    ATTR_MEDIA_POSITION: "10",
+                    ATTR_MEDIA_POSITION_UPDATED_AT: "5",
+                    ATTR_SNAPSHOT_AT: "6",
+                },
+            )
+        ],
+    )
+
+    assert calls_1[0].data == {
+        "entity_id": ENTITY_1,
+        ATTR_MEDIA_SEEK_POSITION: "10",
+    }
+
+    await async_reproduce_states(
+        hass,
+        [
+            State(
+                ENTITY_1,
+                "playing",
+                {
+                    ATTR_MEDIA_POSITION: "10",
+                    ATTR_MEDIA_POSITION_UPDATED_AT: "5",
+                    ATTR_SNAPSHOT_AT: "6",
+                },
+            )
+        ],
+    )
+
+    assert calls_1[1].data == {
+        "entity_id": ENTITY_1,
+        ATTR_MEDIA_SEEK_POSITION: "11",
+    }
+
+    assert len(calls_2) == 1
+    assert len(calls_3) == 1
 
 
 async def test_play_media(hass):

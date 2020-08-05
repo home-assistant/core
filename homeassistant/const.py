@@ -341,6 +341,9 @@ ATTR_GPS_ACCURACY = "gps_accuracy"
 ATTR_ASSUMED_STATE = "assumed_state"
 ATTR_STATE = "state"
 
+# Time of a state snapshot
+ATTR_SNAPSHOT_AT = "snapshot_at"
+
 ATTR_EDITABLE = "editable"
 ATTR_OPTION = "option"
 
