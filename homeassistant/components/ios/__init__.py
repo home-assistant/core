@@ -12,9 +12,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.util.json import load_json, save_json
 
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF, DOMAIN
 
-DOMAIN = "ios"
+_LOGGER = logging.getLogger(__name__)
 
 CONF_PUSH = "push"
 CONF_PUSH_CATEGORIES = "categories"
@@ -240,6 +240,15 @@ async def async_setup(hass, config):
             )
         )
 
+    try:
+        conf = config.get(DOMAIN)
+        hass.data[DOMAIN][CONF] = conf
+        if CONF_PUSH in conf:
+            # Create old endpoint for back compatibility with older apps
+            hass.http.register_view(iOSPushConfigView(conf[CONF_PUSH]))
+    except (TypeError, KeyError):
+        pass
+
     return True
 
 
@@ -250,7 +259,6 @@ async def async_setup_entry(hass, entry):
     )
 
     hass.http.register_view(iOSIdentifyDeviceView(hass.config.path(CONFIGURATION_FILE)))
-    hass.http.register_view(iOSPushConfigView(hass.data[DOMAIN][CONF_PUSH]))
 
     return True
 
