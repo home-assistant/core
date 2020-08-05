@@ -159,7 +159,7 @@ async def test_user_device_exists_abort(hass):
         config_entry = MockConfigEntry(
             domain=DOMAIN,
             data={"host": "1.2.3.4"},
-            unique_id="Smappee1006000212",
+            unique_id="1006000212",
             source=SOURCE_USER,
         )
         config_entry.add_to_hass(hass)
@@ -199,7 +199,7 @@ async def test_zeroconf_device_exists_abort(hass):
         config_entry = MockConfigEntry(
             domain=DOMAIN,
             data={"host": "1.2.3.4"},
-            unique_id="Smappee1006000212",
+            unique_id="1006000212",
             source=SOURCE_USER,
         )
         config_entry.add_to_hass(hass)
@@ -240,7 +240,7 @@ async def test_cloud_device_exists_abort(hass):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_device"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
@@ -325,7 +325,7 @@ async def test_full_zeroconf_flow(hass):
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
         entry = hass.config_entries.async_entries(DOMAIN)[0]
-        assert entry.unique_id == "Smappee1006000212"
+        assert entry.unique_id == "1006000212"
 
 
 async def test_full_user_local_flow(hass):
@@ -362,4 +362,4 @@ async def test_full_user_local_flow(hass):
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
         entry = hass.config_entries.async_entries(DOMAIN)[0]
-        assert entry.unique_id == "Smappee1006000212"
+        assert entry.unique_id == "1006000212"
