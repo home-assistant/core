@@ -18,7 +18,9 @@ from .const import (
     ATTR_API_PM1,
     ATTR_API_PRESSURE,
     ATTR_API_TEMPERATURE,
+    DEFAULT_NAME,
     DOMAIN,
+    MANUFACTURER,
 )
 
 ATTRIBUTION = "Data provided by Airly"
@@ -65,8 +67,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     sensors = []
     for sensor in SENSOR_TYPES:
-        unique_id = f"{config_entry.unique_id}-{sensor.lower()}"
-        sensors.append(AirlySensor(coordinator, name, sensor, unique_id))
+        sensors.append(AirlySensor(coordinator, name, sensor))
 
     async_add_entities(sensors, False)
 
@@ -74,11 +75,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AirlySensor(Entity):
     """Define an Airly sensor."""
 
-    def __init__(self, coordinator, name, kind, unique_id):
+    def __init__(self, coordinator, name, kind):
         """Initialize."""
         self.coordinator = coordinator
         self._name = name
-        self._unique_id = unique_id
         self.kind = kind
         self._device_class = None
         self._state = None
@@ -125,7 +125,19 @@ class AirlySensor(Entity):
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return self._unique_id
+        return f"{self.coordinator.latitude}-{self.coordinator.longitude}-{self.kind.lower()}"
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {
+                (DOMAIN, self.coordinator.latitude, self.coordinator.longitude)
+            },
+            "name": DEFAULT_NAME,
+            "manufacturer": MANUFACTURER,
+            "entry_type": "service",
+        }
 
     @property
     def unit_of_measurement(self):
