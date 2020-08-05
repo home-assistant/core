@@ -402,6 +402,7 @@ async def _async_setup_themes(hass, themes):
             else:
                 hass.data[DATA_DEFAULT_DARK_THEME] = None
             save_theme_store()
+            update_theme_and_fire_event()
         else:
             _LOGGER.warning("Theme %s is not defined", name)
 
