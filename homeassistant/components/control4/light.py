@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import Control4Entity, get_items_of_category
-from .const import CONTROL4_ENTITY_TYPE, DOMAIN
+from .const import CONF_DIRECTOR, CONTROL4_ENTITY_TYPE, DOMAIN
 from .director_utils import director_update_data
 
 _LOGGER = logging.getLogger(__name__)
@@ -138,12 +138,13 @@ class Control4Light(Control4Entity, LightEntity):
             device_id,
         )
         self._is_dimmer = is_dimmer
-        self._c4_light = None
 
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        self._c4_light = C4Light(self.director, self._idx)
+    def create_api_object(self):
+        """Create a pyControl4 device object.
+
+        This exists so the director token used is always the latest one, without needing to re-init the entire entity.
+        """
+        return C4Light(self.entry_data[CONF_DIRECTOR], self._idx)
 
     @property
     def is_on(self):
@@ -167,6 +168,7 @@ class Control4Light(Control4Entity, LightEntity):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
+        c4_light = self.create_api_object()
         if self._is_dimmer:
             if ATTR_TRANSITION in kwargs:
                 transition_length = kwargs[ATTR_TRANSITION] * 1000
@@ -176,10 +178,10 @@ class Control4Light(Control4Entity, LightEntity):
                 brightness = (kwargs[ATTR_BRIGHTNESS] / 255) * 100
             else:
                 brightness = 100
-            await self._c4_light.rampToLevel(brightness, transition_length)
+            await c4_light.rampToLevel(brightness, transition_length)
         else:
             transition_length = 0
-            await self._c4_light.setLevel(100)
+            await c4_light.setLevel(100)
         if transition_length == 0:
             transition_length = 1000
         delay_time = (transition_length / 1000) + 0.7
@@ -189,15 +191,16 @@ class Control4Light(Control4Entity, LightEntity):
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
+        c4_light = self.create_api_object()
         if self._is_dimmer:
             if ATTR_TRANSITION in kwargs:
                 transition_length = kwargs[ATTR_TRANSITION] * 1000
             else:
                 transition_length = 0
-            await self._c4_light.rampToLevel(0, transition_length)
+            await c4_light.rampToLevel(0, transition_length)
         else:
             transition_length = 0
-            await self._c4_light.setLevel(0)
+            await c4_light.setLevel(0)
         if transition_length == 0:
             transition_length = 1500
         delay_time = (transition_length / 1000) + 0.7

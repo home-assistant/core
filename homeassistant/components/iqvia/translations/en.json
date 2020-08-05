@@ -4,6 +4,7 @@
             "already_configured": "This ZIP code has already been configured."
         },
         "error": {
+            "identifier_exists": "ZIP code already registered",
             "invalid_zip_code": "ZIP code is invalid"
         },
         "step": {

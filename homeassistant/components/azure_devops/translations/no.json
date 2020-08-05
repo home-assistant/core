@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Kontoen er allerede konfigurert",
             "reauth_successful": "Tilgangstoken oppdatert"
         },
         "error": {

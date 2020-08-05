@@ -22,6 +22,7 @@
         "step": {
             "advanced": {
                 "data": {
+                    "auto_start": "Autostart (deaktiver hvis du bruker Z-Wave eller annet forsinket startsystem)",
                     "safe_mode": "Sikker modus (aktiver bare hvis sammenkoblingen mislykkes)",
                     "zeroconf_default_interface": "Bruk standard zeroconf-grensesnitt (aktiver hvis broen ikke kan finnes i Hjem-appen)"
                 },

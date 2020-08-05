@@ -1178,7 +1178,7 @@ pyHS100==0.3.5.1
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
-pyMetno==0.5.1
+pyMetno==0.7.0
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.25
@@ -1205,7 +1205,7 @@ py_nextbusnext==0.1.4
 pyads==3.2.1
 
 # homeassistant.components.hisense_aehw4a1
-pyaehw4a1==0.3.5
+pyaehw4a1==0.3.9
 
 # homeassistant.components.aftership
 pyaftership==0.1.2
@@ -1223,7 +1223,7 @@ pyarlo==0.2.3
 pyatag==0.3.3.4
 
 # homeassistant.components.netatmo
-pyatmo==3.3.1
+pyatmo==4.0.0
 
 # homeassistant.components.atome
 pyatome==0.1.1
@@ -1377,7 +1377,7 @@ pyhik==0.2.7
 pyhiveapi==0.2.20.1
 
 # homeassistant.components.homematic
-pyhomematic==0.1.67
+pyhomematic==0.1.68
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6
@@ -2122,7 +2122,7 @@ tmb==0.0.4
 todoist-python==8.0.0
 
 # homeassistant.components.toon
-toonapi==0.1.0
+toonapi==0.2.0
 
 # homeassistant.components.totalconnect
 total_connect_client==0.55

@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyt for denne porten p\u00e5g\u00e5r allerede",
             "not_xiaomi_aqara": "Ikke en Xiaomi Aqara Gateway, oppdaget enhet ikke samsvarer med kjente gatewayer"
         },
