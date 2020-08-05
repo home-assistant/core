@@ -472,6 +472,9 @@ onvif-zeep-async==0.4.0
 # homeassistant.components.openerz
 openerz-api==0.1.0
 
+# homeassistant.components.ovo_energy
+ovoenergy==1.1.6
+
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
 paho-mqtt==1.5.0

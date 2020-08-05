@@ -122,6 +122,7 @@ FLOWS = [
     "onvif",
     "opentherm_gw",
     "openuv",
+    "ovo_energy",
     "owntracks",
     "ozw",
     "panasonic_viera",
