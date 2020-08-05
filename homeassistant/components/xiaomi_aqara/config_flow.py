@@ -7,6 +7,7 @@ from xiaomi_gateway import MULTICAST_PORT, XiaomiGateway, XiaomiGatewayDiscovery
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 
 # pylint: disable=unused-import
