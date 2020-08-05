@@ -1,5 +1,6 @@
 """Class to manage the entities for a single platform."""
 import asyncio
+from contextlib import suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
 from logging import Logger
@@ -23,8 +24,11 @@ if TYPE_CHECKING:
 
 SLOW_SETUP_WARNING = 10
 SLOW_SETUP_MAX_WAIT = 60
+SLOW_ADD_ENTITIES_MAX_WAIT = 60
+
 PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
+PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
 
 class EntityPlatform:
@@ -78,7 +82,8 @@ class EntityPlatform:
 
         If parallel updates is set to 0, we skip the semaphore.
         If parallel updates is set to a number, we initialize the semaphore to that number.
-        Default for entities with `async_update` method is 1. Otherwise it's 0.
+        The default value for parallel requests is decided based on the first entity that is added to Home Assistant.
+        It's 0 if the entity defines the async_update method, else it's 1.
         """
         if self.parallel_updates_created:
             return self.parallel_updates
@@ -175,7 +180,8 @@ class EntityPlatform:
         try:
             task = async_create_setup_task()
 
-            await asyncio.wait_for(asyncio.shield(task), SLOW_SETUP_MAX_WAIT)
+            async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, self.domain):
+                await asyncio.shield(task)
 
             # Block till all entities are done
             if self._tasks:
@@ -189,7 +195,7 @@ class EntityPlatform:
             return True
         except PlatformNotReady:
             tries += 1
-            wait_time = min(tries, 6) * 30
+            wait_time = min(tries, 6) * PLATFORM_NOT_READY_BASE_WAIT_TIME
             logger.warning(
                 "Platform %s not ready yet. Retrying in %d seconds.",
                 self.platform_name,
@@ -279,8 +285,10 @@ class EntityPlatform:
         device_registry = await hass.helpers.device_registry.async_get_registry()
         entity_registry = await hass.helpers.entity_registry.async_get_registry()
         tasks = [
-            self._async_add_entity(  # type: ignore
-                entity, update_before_add, entity_registry, device_registry
+            asyncio.create_task(
+                self._async_add_entity(  # type: ignore
+                    entity, update_before_add, entity_registry, device_registry
+                )
             )
             for entity in new_entities
         ]
@@ -289,7 +297,24 @@ class EntityPlatform:
         if not tasks:
             return
 
-        await asyncio.gather(*tasks)
+        await asyncio.wait(tasks, timeout=SLOW_ADD_ENTITIES_MAX_WAIT)
+
+        for idx, entity in enumerate(new_entities):
+            task = tasks[idx]
+            if task.done():
+                await task
+                continue
+
+            self.logger.warning(
+                "Timed out adding entity %s for domain %s with platform %s after %ds.",
+                entity.entity_id,
+                self.domain,
+                self.platform_name,
+                SLOW_ADD_ENTITIES_MAX_WAIT,
+            )
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
 
         if self._async_unsub_polling is not None or not any(
             entity.should_poll for entity in self.entities.values()
@@ -323,11 +348,13 @@ class EntityPlatform:
                 entity.platform = None
                 return
 
+        requested_entity_id = None
         suggested_object_id = None
 
         # Get entity_id from unique ID registration
         if entity.unique_id is not None:
             if entity.entity_id is not None:
+                requested_entity_id = entity.entity_id
                 suggested_object_id = split_entity_id(entity.entity_id)[1]
             else:
                 suggested_object_id = entity.name
@@ -433,9 +460,14 @@ class EntityPlatform:
                 already_exists = True
 
         if already_exists:
-            msg = f"Entity id already exists - ignoring: {entity.entity_id}"
             if entity.unique_id is not None:
-                msg += f". Platform {self.platform_name} does not generate unique IDs"
+                msg = f"Platform {self.platform_name} does not generate unique IDs. "
+                if requested_entity_id:
+                    msg += f"ID {entity.unique_id} is already used by {entity.entity_id} - ignoring {requested_entity_id}"
+                else:
+                    msg += f"ID {entity.unique_id} already exists - ignoring {entity.entity_id}"
+            else:
+                msg = f"Entity id already exists - ignoring: {entity.entity_id}"
             self.logger.error(msg)
             entity.hass = None
             entity.platform = None
@@ -516,7 +548,11 @@ class EntityPlatform:
             """Handle the service."""
             await service.entity_service_call(
                 self.hass,
-                self.hass.data[DATA_ENTITY_PLATFORM][self.platform_name],
+                [
+                    plf
+                    for plf in self.hass.data[DATA_ENTITY_PLATFORM][self.platform_name]
+                    if plf.domain == self.domain
+                ],
                 func,
                 call,
                 required_features,

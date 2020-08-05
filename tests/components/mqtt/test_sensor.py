@@ -7,7 +7,7 @@ import pytest
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.discovery import async_start
 import homeassistant.components.sensor as sensor
-from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -16,11 +16,14 @@ from .test_common import (
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
+    help_test_default_availability_list_payload,
+    help_test_default_availability_list_single,
     help_test_default_availability_payload,
     help_test_discovery_broken,
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_discovery_update_availability,
     help_test_entity_debug_info,
     help_test_entity_debug_info_max_messages,
     help_test_entity_debug_info_message,
@@ -70,7 +73,41 @@ async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
     assert state.attributes.get("unit_of_measurement") == "fav unit"
 
 
-async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
+async def test_setting_sensor_value_expires_availability_topic(
+    hass, mqtt_mock, legacy_patchable_time, caplog
+):
+    """Test the expiration of the value."""
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+                "expire_after": 4,
+                "force_update": True,
+                "availability_topic": "availability-topic",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state.state == STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, "availability-topic", "online")
+
+    # State should be unavailable since expire_after is defined and > 0
+    state = hass.states.get("sensor.test")
+    assert state.state == STATE_UNAVAILABLE
+
+    await expires_helper(hass, mqtt_mock, caplog)
+
+
+async def test_setting_sensor_value_expires(
+    hass, mqtt_mock, legacy_patchable_time, caplog
+):
     """Test the expiration of the value."""
     assert await async_setup_component(
         hass,
@@ -88,10 +125,17 @@ async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
     )
     await hass.async_block_till_done()
 
+    # State should be unavailable since expire_after is defined and > 0
     state = hass.states.get("sensor.test")
-    assert state.state == "unknown"
+    assert state.state == STATE_UNAVAILABLE
 
-    now = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
+    await expires_helper(hass, mqtt_mock, caplog)
+
+
+async def expires_helper(hass, mqtt_mock, caplog):
+    """Run the basic expiry code."""
+    realnow = dt_util.utcnow()
+    now = datetime(realnow.year + 1, 1, 1, 1, tzinfo=dt_util.UTC)
     with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(hass, "test-topic", "100")
@@ -136,7 +180,7 @@ async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
 
     # Value is expired now
     state = hass.states.get("sensor.test")
-    assert state.state == "unknown"
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_setting_sensor_value_via_mqtt_json_message(hass, mqtt_mock):
@@ -250,9 +294,30 @@ async def test_default_availability_payload(hass, mqtt_mock):
     )
 
 
+async def test_default_availability_list_payload(hass, mqtt_mock):
+    """Test availability by default payload with defined topic."""
+    await help_test_default_availability_list_payload(
+        hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_default_availability_list_single(hass, mqtt_mock, caplog):
+    """Test availability list and availability_topic are mutually exclusive."""
+    await help_test_default_availability_list_single(
+        hass, mqtt_mock, caplog, sensor.DOMAIN, DEFAULT_CONFIG
+    )
+
+
 async def test_custom_availability_payload(hass, mqtt_mock):
     """Test availability by custom payload with defined topic."""
     await help_test_custom_availability_payload(
+        hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_discovery_update_availability(hass, mqtt_mock):
+    """Test availability discovery update."""
+    await help_test_discovery_update_availability(
         hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
     )
 

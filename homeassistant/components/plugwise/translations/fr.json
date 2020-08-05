@@ -8,6 +8,7 @@
             "invalid_auth": "Authentification invalide, v\u00e9rifiez les 8 caract\u00e8res de votre ID Smile",
             "unknown": "Erreur inattendue"
         },
+        "flow_title": "Smile: {name}",
         "step": {
             "user": {
                 "data": {

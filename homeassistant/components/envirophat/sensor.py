@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         envirophat = importlib.import_module("envirophat")
     except OSError:
-        _LOGGER.error("No Enviro pHAT was found.")
+        _LOGGER.error("No Enviro pHAT was found")
         return False
 
     data = EnvirophatData(envirophat, config.get(CONF_USE_LEDS))

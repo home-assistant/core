@@ -108,7 +108,7 @@ def roku_exception_handler(func):
     return handler
 
 
-class RokuDataUpdateCoordinator(DataUpdateCoordinator):
+class RokuDataUpdateCoordinator(DataUpdateCoordinator[Device]):
     """Class to manage fetching Roku data."""
 
     def __init__(

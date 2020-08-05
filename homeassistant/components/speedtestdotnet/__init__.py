@@ -6,7 +6,12 @@ import speedtest
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS,
+    CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_STARTED,
+)
+from homeassistant.core import CoreState
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -70,9 +75,25 @@ async def async_setup_entry(hass, config_entry):
     coordinator = SpeedTestDataCoordinator(hass, config_entry)
     await coordinator.async_setup()
 
-    await coordinator.async_refresh()
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    async def _enable_scheduled_speedtests(*_):
+        """Activate the data update coordinator."""
+        coordinator.update_interval = timedelta(
+            minutes=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        )
+        await coordinator.async_refresh()
+
+    if not config_entry.options[CONF_MANUAL]:
+        if hass.state == CoreState.running:
+            await _enable_scheduled_speedtests()
+            if not coordinator.last_update_success:
+                raise ConfigEntryNotReady
+        else:
+            # Running a speed test during startup can prevent
+            # integrations from being able to setup because it
+            # can saturate the network interface.
+            hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STARTED, _enable_scheduled_speedtests
+            )
 
     hass.data[DOMAIN] = coordinator
 
@@ -104,20 +125,15 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         self.api = None
         self.servers = {}
         super().__init__(
-            self.hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_method=self.async_update,
-            update_interval=timedelta(
-                minutes=self.config_entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                )
-            ),
+            self.hass, _LOGGER, name=DOMAIN, update_method=self.async_update,
         )
 
-    def update_data(self):
-        """Get the latest data from speedtest.net."""
-        server_list = self.api.get_servers()
+    def update_servers(self):
+        """Update list of test servers."""
+        try:
+            server_list = self.api.get_servers()
+        except speedtest.ConfigRetrievalError:
+            return
 
         self.servers[DEFAULT_SERVER] = {}
         for server in sorted(
@@ -125,11 +141,16 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         ):
             self.servers[f"{server[0]['country']} - {server[0]['sponsor']}"] = server[0]
 
+    def update_data(self):
+        """Get the latest data from speedtest.net."""
+        self.update_servers()
+
+        self.api.closest.clear()
         if self.config_entry.options.get(CONF_SERVER_ID):
             server_id = self.config_entry.options.get(CONF_SERVER_ID)
-            self.api.closest.clear()
             self.api.get_servers(servers=[server_id])
-            self.api.get_best_server()
+
+        self.api.get_best_server()
         _LOGGER.debug(
             "Executing speedtest.net speed test with server_id: %s", self.api.best["id"]
         )
@@ -171,6 +192,8 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
 
         await self.async_set_options()
 
+        await self.hass.async_add_executor_job(self.update_servers)
+
         self.hass.services.async_register(DOMAIN, SPEED_TEST_SERVICE, request_update)
 
         self.config_entry.add_update_listener(options_updated_listener)
@@ -178,12 +201,11 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
 
 async def options_updated_listener(hass, entry):
     """Handle options update."""
-    if not entry.options[CONF_MANUAL]:
-        hass.data[DOMAIN].update_interval = timedelta(
-            minutes=entry.options[CONF_SCAN_INTERVAL]
-        )
-        await hass.data[DOMAIN].async_request_refresh()
+    if entry.options[CONF_MANUAL]:
+        hass.data[DOMAIN].update_interval = None
         return
-    # set the update interval to a very long time
-    # if the user wants to disable auto update
-    hass.data[DOMAIN].update_interval = timedelta(days=7)
+
+    hass.data[DOMAIN].update_interval = timedelta(
+        minutes=entry.options[CONF_SCAN_INTERVAL]
+    )
+    await hass.data[DOMAIN].async_request_refresh()

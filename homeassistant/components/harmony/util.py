@@ -49,3 +49,14 @@ def find_matching_config_entries_for_host(hass, host):
         if entry.data[CONF_HOST] == host:
             return entry
     return None
+
+
+def list_names_from_hublist(hub_list):
+    """Extract the name key value from a hub list of names."""
+    if not hub_list:
+        return []
+    return [
+        element["name"]
+        for element in hub_list
+        if element.get("name") and element.get("id") != -1
+    ]

@@ -12,7 +12,9 @@
             "user": {
                 "data": {
                     "host": "H\u00f4te",
+                    "limit": "Limite",
                     "name": "Nom",
+                    "order": "Ordre",
                     "password": "Mot de passe",
                     "port": "Port",
                     "username": "Nom d'utilisateur"
@@ -25,6 +27,8 @@
         "step": {
             "init": {
                 "data": {
+                    "limit": "Limite",
+                    "order": "Ordre",
                     "scan_interval": "Fr\u00e9quence de mise \u00e0 jour"
                 },
                 "title": "Configurer les options pour Transmission"

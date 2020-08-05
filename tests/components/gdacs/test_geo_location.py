@@ -40,7 +40,7 @@ from tests.components.gdacs import _generate_mock_feed_entry
 CONFIG = {gdacs.DOMAIN: {CONF_RADIUS: 200}}
 
 
-async def test_setup(hass):
+async def test_setup(hass, legacy_patchable_time):
     """Test the general setup of the integration."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -191,7 +191,7 @@ async def test_setup(hass):
         assert len(entity_registry.entities) == 1
 
 
-async def test_setup_imperial(hass):
+async def test_setup_imperial(hass, legacy_patchable_time):
     """Test the setup of the integration using imperial unit system."""
     hass.config.units = IMPERIAL_SYSTEM
     # Set up some mock feed entries for this test.

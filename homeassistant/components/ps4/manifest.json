@@ -3,6 +3,6 @@
   "name": "Sony PlayStation 4",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ps4",
-  "requirements": ["pyps4-2ndscreen==1.1.0"],
+  "requirements": ["pyps4-2ndscreen==1.1.1"],
   "codeowners": ["@ktnrg45"]
 }

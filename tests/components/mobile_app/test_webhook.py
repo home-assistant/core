@@ -171,8 +171,8 @@ async def test_webhook_handle_get_config(hass, create_registrations, webhook_cli
     json = await resp.json()
     if "components" in json:
         json["components"] = set(json["components"])
-    if "whitelist_external_dirs" in json:
-        json["whitelist_external_dirs"] = set(json["whitelist_external_dirs"])
+    if "allowlist_external_dirs" in json:
+        json["allowlist_external_dirs"] = set(json["allowlist_external_dirs"])
 
     hass_config = hass.config.as_dict()
 

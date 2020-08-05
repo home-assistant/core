@@ -16,15 +16,19 @@ from homeassistant.components.recorder import (
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import Events, RecorderRuns, States
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.const import MATCH_ALL
-from homeassistant.core import ATTR_NOW, EVENT_TIME_CHANGED, Context, callback
+from homeassistant.const import MATCH_ALL, STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.core import Context, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import wait_recording_done
 
 from tests.async_mock import patch
-from tests.common import get_test_home_assistant, init_recorder_component
+from tests.common import (
+    async_fire_time_changed,
+    get_test_home_assistant,
+    init_recorder_component,
+)
 
 
 class TestRecorder(unittest.TestCase):
@@ -261,6 +265,27 @@ def test_saving_state_include_domain_glob_exclude_entity(hass_recorder):
     assert _state_empty_context(hass, "test.ok").state == "state2"
 
 
+def test_saving_state_and_removing_entity(hass, hass_recorder):
+    """Test saving the state of a removed entity."""
+    hass = hass_recorder()
+    entity_id = "lock.mine"
+    hass.states.set(entity_id, STATE_LOCKED)
+    hass.states.set(entity_id, STATE_UNLOCKED)
+    hass.states.async_remove(entity_id)
+
+    wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        states = list(session.query(States))
+        assert len(states) == 3
+        assert states[0].entity_id == entity_id
+        assert states[0].state == STATE_LOCKED
+        assert states[1].entity_id == entity_id
+        assert states[1].state == STATE_UNLOCKED
+        assert states[2].entity_id == entity_id
+        assert states[2].state is None
+
+
 def test_recorder_setup_failure():
     """Test some exceptions."""
     hass = get_test_home_assistant()
@@ -314,15 +339,15 @@ def test_auto_purge(hass_recorder):
     tz = dt_util.get_time_zone("Europe/Copenhagen")
     dt_util.set_default_time_zone(tz)
 
-    test_time = tz.localize(datetime(2020, 1, 1, 4, 12, 0))
+    now = dt_util.utcnow()
+    test_time = tz.localize(datetime(now.year + 1, 1, 1, 4, 12, 0))
+    async_fire_time_changed(hass, test_time)
 
     with patch(
         "homeassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data:
         for delta in (-1, 0, 1):
-            hass.bus.fire(
-                EVENT_TIME_CHANGED, {ATTR_NOW: test_time + timedelta(seconds=delta)}
-            )
+            async_fire_time_changed(hass, test_time + timedelta(seconds=delta))
             hass.block_till_done()
             hass.data[DATA_INSTANCE].block_till_done()
 

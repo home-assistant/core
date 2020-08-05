@@ -270,7 +270,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     host=self.host,
                     port=self.port,
                     token=self.token,
-                    timeout=5,
+                    timeout=10,
                     name=VALUE_CONF_NAME,
                 )
                 self._remote.open()

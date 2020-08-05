@@ -41,6 +41,7 @@
             },
             "options": {
                 "data": {
+                    "birth_enable": "Povolit zpr\u00e1vu p\u0159i p\u0159ipojen\u00ed",
                     "discovery": "Povolit zji\u0161\u0165ov\u00e1n\u00ed"
                 },
                 "description": "Zvolte mo\u017enosti MQTT."

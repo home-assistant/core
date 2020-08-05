@@ -133,7 +133,7 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # check for any entries with same host, abort if found
             for entry in self._async_current_entries():
-                if entry.data[CONF_HOST] == user_input[CONF_HOST]:
+                if entry.data.get(CONF_HOST) == user_input[CONF_HOST]:
                     return self.async_abort(reason="already_configured")
             validate_result = await self.validate_input(user_input)
             if validate_result[0] == "ok":  # success

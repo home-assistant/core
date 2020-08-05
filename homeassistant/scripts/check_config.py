@@ -1,5 +1,6 @@
 """Script to check the configuration file."""
 import argparse
+import asyncio
 from collections import OrderedDict
 from collections.abc import Mapping, Sequence
 from glob import glob
@@ -199,12 +200,7 @@ def check(config_dir, secrets=False):
         yaml_loader.yaml.SafeLoader.add_constructor("!secret", yaml_loader.secret_yaml)
 
     try:
-        hass = core.HomeAssistant()
-        hass.config.config_dir = config_dir
-
-        res["components"] = hass.loop.run_until_complete(
-            async_check_ha_config_file(hass)
-        )
+        res["components"] = asyncio.run(async_check_config(config_dir))
         res["secret_cache"] = OrderedDict(yaml_loader.__SECRET_CACHE)
         for err in res["components"].errors:
             domain = err.domain or ERROR_STR
@@ -213,7 +209,6 @@ def check(config_dir, secrets=False):
                 res["except"].setdefault(domain, []).append(err.config)
 
     except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.exception("BURB")
         print(color("red", "Fatal error while loading config:"), str(err))
         res["except"].setdefault(ERROR_STR, []).append(str(err))
     finally:
@@ -228,6 +223,15 @@ def check(config_dir, secrets=False):
         bootstrap.clear_secret_cache()
 
     return res
+
+
+async def async_check_config(config_dir):
+    """Check the HA config."""
+    hass = core.HomeAssistant()
+    hass.config.config_dir = config_dir
+    components = await async_check_ha_config_file(hass)
+    await hass.async_stop(force=True)
+    return components
 
 
 def line_info(obj, **kwargs):

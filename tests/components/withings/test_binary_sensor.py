@@ -6,7 +6,7 @@ from homeassistant.components.withings.common import (
     async_get_entity_id,
 )
 from homeassistant.components.withings.const import Measurement
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -37,7 +37,7 @@ async def test_binary_sensor(
     assert entity_id1
 
     assert entity_registry.async_is_registered(entity_id0)
-    assert hass.states.get(entity_id0).state == STATE_OFF
+    assert hass.states.get(entity_id0).state == STATE_UNAVAILABLE
 
     resp = await component_factory.call_webhook(person0.user_id, NotifyAppli.BED_IN)
     assert resp.message_code == 0
@@ -50,7 +50,7 @@ async def test_binary_sensor(
     assert hass.states.get(entity_id0).state == STATE_OFF
 
     # person 1
-    assert hass.states.get(entity_id1).state == STATE_OFF
+    assert hass.states.get(entity_id1).state == STATE_UNAVAILABLE
 
     resp = await component_factory.call_webhook(person1.user_id, NotifyAppli.BED_IN)
     assert resp.message_code == 0

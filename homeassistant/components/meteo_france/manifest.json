@@ -3,6 +3,6 @@
   "name": "Météo-France",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/meteo_france",
-  "requirements": ["meteofrance==0.3.7", "vigilancemeteo==3.0.1"],
-  "codeowners": ["@victorcerutti", "@oncleben31", "@Quentame"]
+  "requirements": ["meteofrance-api==0.1.0"],
+  "codeowners": ["@hacf-fr", "@oncleben31", "@Quentame"]
 }

@@ -1,5 +1,5 @@
 """The tests for the Google Pub/Sub component."""
-from collections import namedtuple
+from dataclasses import dataclass
 from datetime import datetime
 
 import pytest
@@ -13,6 +13,14 @@ from homeassistant.setup import async_setup_component
 import tests.async_mock as mock
 
 GOOGLE_PUBSUB_PATH = "homeassistant.components.google_pubsub"
+
+
+@dataclass
+class FilterTest:
+    """Class for capturing a filter test."""
+
+    id: str
+    should_pass: bool
 
 
 async def test_datetime():
@@ -107,9 +115,6 @@ async def test_full_config(hass, mock_client):
     assert (
         mock_client.PublisherClient.from_service_account_json.call_args[0][0] == "path"
     )
-
-
-FilterTest = namedtuple("FilterTest", "id should_pass")
 
 
 def make_event(entity_id):

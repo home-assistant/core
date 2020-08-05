@@ -107,7 +107,7 @@ def wled_exception_handler(func):
     return handler
 
 
-class WLEDDataUpdateCoordinator(DataUpdateCoordinator):
+class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     """Class to manage fetching WLED data from single endpoint."""
 
     def __init__(

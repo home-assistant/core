@@ -162,7 +162,7 @@ def setup(hass, config):
         if not restart:
             return
         restart = False
-        _LOGGER.warning("AlarmDecoder unexpectedly lost connection.")
+        _LOGGER.warning("AlarmDecoder unexpectedly lost connection")
         hass.add_job(open_connection)
 
     def handle_message(sender, message):

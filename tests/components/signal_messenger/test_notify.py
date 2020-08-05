@@ -91,7 +91,7 @@ class TestSignalMesssenger(unittest.TestCase):
                 data = {"data": {"attachment": tf.name}}
                 self._signalmessenger.send_message(message, **data)
         self.assertIn(
-            "The 'attachment' option is deprecated, please replace it with 'attachments'. This option will become invalid in version 0.108.",
+            "The 'attachment' option is deprecated, please replace it with 'attachments'. This option will become invalid in version 0.108",
             context.output[0],
         )
         self.assertTrue(mock.called)

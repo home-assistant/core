@@ -284,7 +284,7 @@ class ONVIFDevice:
             )
 
             # Configure PTZ options
-            if onvif_profile.PTZConfiguration:
+            if self.capabilities.ptz and onvif_profile.PTZConfiguration:
                 profile.ptz = PTZ(
                     onvif_profile.PTZConfiguration.DefaultContinuousPanTiltVelocitySpace
                     is not None,

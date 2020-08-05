@@ -87,6 +87,11 @@ class ZwaveSensorBase(ZWaveDeviceEntity):
             return False
         return True
 
+    @property
+    def force_update(self) -> bool:
+        """Force updates."""
+        return True
+
 
 class ZWaveNumericSensor(ZwaveSensorBase):
     """Representation of a Z-Wave sensor."""

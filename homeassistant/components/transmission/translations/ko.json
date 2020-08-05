@@ -12,7 +12,9 @@
             "user": {
                 "data": {
                     "host": "\ud638\uc2a4\ud2b8",
+                    "limit": "\uc81c\ud55c",
                     "name": "\uc774\ub984",
+                    "order": "\uc21c\uc11c",
                     "password": "\ube44\ubc00\ubc88\ud638",
                     "port": "\ud3ec\ud2b8",
                     "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
@@ -25,6 +27,8 @@
         "step": {
             "init": {
                 "data": {
+                    "limit": "\uc81c\ud55c",
+                    "order": "\uc21c\uc11c",
                     "scan_interval": "\uc5c5\ub370\uc774\ud2b8 \ube48\ub3c4"
                 },
                 "title": "Transmission \uc635\uc158 \uc124\uc815\ud558\uae30"

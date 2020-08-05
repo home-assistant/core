@@ -35,6 +35,7 @@ from .entity import (
     create_value_id,
 )
 from .services import ZWaveServices
+from .websocket_api import ZWaveWebsocketApi
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,7 +102,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.debug("[INSTANCE EVENT]: %s - data: %s", event, event_data)
         # The actual removal action of a Z-Wave node is reported as instance event
         # Only when this event is detected we cleanup the device and entities from hass
-        if event == "removenode" and "Node" in event_data:
+        # Note: Find a more elegant way of doing this, e.g. a notification of this event from OZW
+        if event in ["removenode", "removefailednode"] and "Node" in event_data:
             removed_nodes.append(event_data["Node"])
 
     @callback
@@ -112,7 +114,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
         # Filter out CommandClasses we're definitely not interested in.
         if value.command_class in [
-            CommandClass.CONFIGURATION,
             CommandClass.VERSION,
             CommandClass.MANUFACTURER_SPECIFIC,
         ]:
@@ -204,6 +205,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Register Services
     services = ZWaveServices(hass, manager)
     services.async_register()
+
+    # Register WebSocket API
+    ws_api = ZWaveWebsocketApi(hass, manager)
+    ws_api.async_register_api()
 
     @callback
     def async_receive_message(msg):

@@ -107,7 +107,7 @@ async def async_setup_entry(
             if not parent_device:
                 _LOGGER.error(
                     "Node %s has a parent node %s, but no device "
-                    "was created for the parent. Skipping.",
+                    "was created for the parent. Skipping",
                     node.address,
                     node.parent_node,
                 )

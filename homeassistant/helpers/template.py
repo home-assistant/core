@@ -9,6 +9,8 @@ import math
 import random
 import re
 from typing import Any, Dict, Iterable, List, Optional, Union
+from urllib.parse import urlencode as urllib_urlencode
+import weakref
 
 import jinja2
 from jinja2 import contextfilter, contextfunction
@@ -945,6 +947,11 @@ def relative_time(value):
     return dt_util.get_age(value)
 
 
+def urlencode(value):
+    """Urlencode dictionary and return as UTF-8 string."""
+    return urllib_urlencode(value).encode("utf-8")
+
+
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
     """The Home Assistant template environment."""
 
@@ -952,6 +959,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         """Initialise template environment."""
         super().__init__()
         self.hass = hass
+        self.template_cache = weakref.WeakValueDictionary()
         self.filters["round"] = forgiving_round
         self.filters["multiply"] = multiply
         self.filters["log"] = logarithm
@@ -1001,6 +1009,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["relative_time"] = relative_time
         self.globals["strptime"] = strptime
+        self.globals["urlencode"] = urlencode
         if hass is None:
             return
 
@@ -1034,6 +1043,26 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
         return isinstance(obj, Namespace) or super().is_safe_attribute(obj, attr, value)
+
+    def compile(self, source, name=None, filename=None, raw=False, defer_init=False):
+        """Compile the template."""
+        if (
+            name is not None
+            or filename is not None
+            or raw is not False
+            or defer_init is not False
+        ):
+            # If there are any non-default keywords args, we do
+            # not cache.  In prodution we currently do not have
+            # any instance of this.
+            return super().compile(source, name, filename, raw, defer_init)
+
+        cached = self.template_cache.get(source)
+
+        if cached is None:
+            cached = self.template_cache[source] = super().compile(source)
+
+        return cached
 
 
 _NO_HASS_ENV = TemplateEnvironment(None)

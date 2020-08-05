@@ -150,7 +150,7 @@ async def async_setup_entry(hass, config_entry):
         "devices": defaultdict(list),
         DATA_LISTENER: [config_entry.add_update_listener(update_listener)],
     }
-    _LOGGER.debug("Connected to the Tesla API.")
+    _LOGGER.debug("Connected to the Tesla API")
     all_devices = entry_data["controller"].get_homeassistant_components()
 
     if not all_devices:
@@ -221,6 +221,9 @@ class TeslaDevice(Entity):
     @property
     def icon(self):
         """Return the icon of the sensor."""
+        if self.device_class:
+            return None
+
         return self._icon
 
     @property

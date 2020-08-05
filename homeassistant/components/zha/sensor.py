@@ -98,10 +98,10 @@ class Sensor(ZhaEntity):
         await super().async_added_to_hass()
         self._device_state_attributes.update(await self.async_state_attr_provider())
 
-        await self.async_accept_signal(
+        self.async_accept_signal(
             self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
-        await self.async_accept_signal(
+        self.async_accept_signal(
             self._channel, SIGNAL_STATE_ATTR, self.async_update_state_attribute
         )
 

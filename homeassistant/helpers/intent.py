@@ -39,7 +39,7 @@ def async_register(hass: HomeAssistantType, handler: "IntentHandler") -> None:
 
     if handler.intent_type in intents:
         _LOGGER.warning(
-            "Intent %s is being overwritten by %s.", handler.intent_type, handler
+            "Intent %s is being overwritten by %s", handler.intent_type, handler
         )
 
     intents[handler.intent_type] = handler

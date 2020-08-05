@@ -19,10 +19,12 @@ from .const import (
 from .coordinator import ToonDataUpdateCoordinator
 from .models import (
     ToonBoilerDeviceEntity,
+    ToonDisplayDeviceEntity,
     ToonElectricityMeterDeviceEntity,
     ToonEntity,
     ToonGasMeterDeviceEntity,
     ToonSolarDeviceEntity,
+    ToonWaterMeterDeviceEntity,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,20 +51,37 @@ async def async_setup_entry(
         )
     ]
 
-    if coordinator.data.gas_usage and coordinator.data.gas_usage.is_smart:
-        sensors.extend(
-            [
-                ToonGasMeterDeviceSensor(coordinator, key=key)
-                for key in (
-                    "gas_average_daily",
-                    "gas_average",
-                    "gas_daily_cost",
-                    "gas_daily_usage",
-                    "gas_meter_reading",
-                    "gas_value",
-                )
-            ]
-        )
+    sensors.extend(
+        [ToonDisplayDeviceSensor(coordinator, key="current_display_temperature")]
+    )
+
+    sensors.extend(
+        [
+            ToonGasMeterDeviceSensor(coordinator, key=key)
+            for key in (
+                "gas_average_daily",
+                "gas_average",
+                "gas_daily_cost",
+                "gas_daily_usage",
+                "gas_meter_reading",
+                "gas_value",
+            )
+        ]
+    )
+
+    sensors.extend(
+        [
+            ToonWaterMeterDeviceSensor(coordinator, key=key)
+            for key in (
+                "water_average_daily",
+                "water_average",
+                "water_daily_cost",
+                "water_daily_usage",
+                "water_meter_reading",
+                "water_value",
+            )
+        ]
+    )
 
     if coordinator.data.agreement.is_toon_solar:
         sensors.extend(
@@ -84,8 +103,9 @@ async def async_setup_entry(
     if coordinator.data.thermostat.have_opentherm_boiler:
         sensors.extend(
             [
-                ToonBoilerDeviceSensor(coordinator, key=key)
-                for key in ["thermostat_info_current_modulation_level"]
+                ToonBoilerDeviceSensor(
+                    coordinator, key="thermostat_info_current_modulation_level"
+                )
             ]
         )
 
@@ -141,9 +161,17 @@ class ToonGasMeterDeviceSensor(ToonSensor, ToonGasMeterDeviceEntity):
     """Defines a Gas Meter sensor."""
 
 
+class ToonWaterMeterDeviceSensor(ToonSensor, ToonWaterMeterDeviceEntity):
+    """Defines a Water Meter sensor."""
+
+
 class ToonSolarDeviceSensor(ToonSensor, ToonSolarDeviceEntity):
     """Defines a Solar sensor."""
 
 
 class ToonBoilerDeviceSensor(ToonSensor, ToonBoilerDeviceEntity):
     """Defines a Boiler sensor."""
+
+
+class ToonDisplayDeviceSensor(ToonSensor, ToonDisplayDeviceEntity):
+    """Defines a Display sensor."""

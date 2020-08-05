@@ -181,7 +181,7 @@ async def async_setup_entry(
 
     def _start_auto_update() -> None:
         """Start isy auto update."""
-        _LOGGER.debug("ISY Starting Event Stream and automatic updates.")
+        _LOGGER.debug("ISY Starting Event Stream and automatic updates")
         isy.auto_update = True
 
     await hass.async_add_executor_job(_start_auto_update)
@@ -257,7 +257,7 @@ async def async_unload_entry(
 
     def _stop_auto_update() -> None:
         """Start isy auto update."""
-        _LOGGER.debug("ISY Stopping Event Stream and automatic updates.")
+        _LOGGER.debug("ISY Stopping Event Stream and automatic updates")
         isy.auto_update = False
 
     await hass.async_add_executor_job(_stop_auto_update)

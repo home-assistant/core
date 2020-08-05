@@ -23,22 +23,22 @@ def validate_integration(config: Config, integration: Integration):
     config_flow_file = integration.path / "config_flow.py"
 
     if not config_flow_file.is_file():
-        if integration.get("config_flow"):
+        if integration.manifest.get("config_flow"):
             integration.add_error(
                 "config_flow",
                 "Config flows need to be defined in the file config_flow.py",
             )
-        if integration.get("homekit"):
+        if integration.manifest.get("homekit"):
             integration.add_error(
                 "config_flow",
                 "HomeKit information in a manifest requires a config flow to exist",
             )
-        if integration.get("ssdp"):
+        if integration.manifest.get("ssdp"):
             integration.add_error(
                 "config_flow",
                 "SSDP information in a manifest requires a config flow to exist",
             )
-        if integration.get("zeroconf"):
+        if integration.manifest.get("zeroconf"):
             integration.add_error(
                 "config_flow",
                 "Zeroconf information in a manifest requires a config flow to exist",

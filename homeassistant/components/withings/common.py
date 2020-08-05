@@ -582,7 +582,9 @@ class DataManager:
             update_interval=timedelta(minutes=120),
             update_method=self.async_subscribe_webhook,
         )
-        self.poll_data_update_coordinator = DataUpdateCoordinator(
+        self.poll_data_update_coordinator = DataUpdateCoordinator[
+            Dict[MeasureType, Any]
+        ](
             hass,
             _LOGGER,
             name="poll_data_update_coordinator",
@@ -652,14 +654,14 @@ class DataManager:
         return await self._do_retry(self._async_subscribe_webhook)
 
     async def _async_subscribe_webhook(self) -> None:
-        _LOGGER.debug("Configuring withings webhook.")
+        _LOGGER.debug("Configuring withings webhook")
 
         # On first startup, perform a fresh re-subscribe. Withings stops pushing data
         # if the webhook fails enough times but they don't remove the old subscription
         # config. This ensures the subscription is setup correctly and they start
         # pushing again.
         if self._subscribe_webhook_run_count == 0:
-            _LOGGER.debug("Refreshing withings webhook configs.")
+            _LOGGER.debug("Refreshing withings webhook configs")
             await self.async_unsubscribe_webhook()
         self._subscribe_webhook_run_count += 1
 
@@ -758,7 +760,7 @@ class DataManager:
             raise exception
 
     async def _async_get_all_data(self) -> Optional[Dict[MeasureType, Any]]:
-        _LOGGER.info("Updating all withings data.")
+        _LOGGER.info("Updating all withings data")
         return {
             **await self.async_get_measures(),
             **await self.async_get_sleep_summary(),
@@ -770,8 +772,13 @@ class DataManager:
 
         response = await self._hass.async_add_executor_job(self._api.measure_get_meas)
 
-        groups = query_measure_groups(
-            response, MeasureTypes.ANY, MeasureGroupAttribs.UNAMBIGUOUS
+        # Sort from oldest to newest.
+        groups = sorted(
+            query_measure_groups(
+                response, MeasureTypes.ANY, MeasureGroupAttribs.UNAMBIGUOUS
+            ),
+            key=lambda group: group.created.datetime,
+            reverse=False,
         )
 
         return {
@@ -918,6 +925,12 @@ class BaseWithingsSensor(Entity):
         """Return True if entity is available."""
         if self._attribute.update_type == UpdateType.POLL:
             return self._data_manager.poll_data_update_coordinator.last_update_success
+
+        if self._attribute.update_type == UpdateType.WEBHOOK:
+            return self._data_manager.webhook_config.enabled and (
+                self._attribute.measurement
+                in self._data_manager.webhook_update_coordinator.data
+            )
 
         return True
 

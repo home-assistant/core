@@ -6,6 +6,9 @@ To update, run python3 -m script.hassfest
 # fmt: off
 
 ZEROCONF = {
+    "_Volumio._tcp.local.": [
+        "volumio"
+    ],
     "_airplay._tcp.local.": [
         "samsungtv"
     ],
@@ -15,6 +18,9 @@ ZEROCONF = {
     "_axis-video._tcp.local.": [
         "axis",
         "doorbird"
+    ],
+    "_bond._tcp.local.": [
+        "bond"
     ],
     "_daap._tcp.local.": [
         "forked_daapd"
@@ -46,6 +52,9 @@ ZEROCONF = {
     ],
     "_nut._tcp.local.": [
         "nut"
+    ],
+    "_plugwise._tcp.local.": [
+        "plugwise"
     ],
     "_printer._tcp.local.": [
         "brother"
