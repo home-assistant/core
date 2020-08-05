@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smart_meter_texas",
   "requirements": [
-    "smart-meter-texas==0.2.11"
+    "smart-meter-texas==0.3.1"
   ],
   "ssdp": [],
   "zeroconf": [],
