@@ -64,8 +64,8 @@ class BuienradarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 }
 
                 return self.async_create_entry(title=name, data=data)
-            else:
-                self._errors[CONF_NAME] = "name_exists"
+
+            self._errors[CONF_NAME] = "name_exists"
 
         data_schema = vol.Schema(
             {
