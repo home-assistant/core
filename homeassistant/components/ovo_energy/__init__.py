@@ -125,14 +125,8 @@ class OVOEnergyEntity(Entity):
 
     async def async_update(self) -> None:
         """Update OVO Energy entity."""
-        if await self._ovo_energy_update():
-            self._available = True
-        else:
-            self._available = False
+        await self.coordinator.async_request_refresh()
 
-    async def _ovo_energy_update(self) -> None:
-        """Update OVO Energy entity."""
-        raise NotImplementedError()
 
 
 class OVOEnergyDeviceEntity(OVOEnergyEntity):
