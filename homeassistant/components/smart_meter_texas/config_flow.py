@@ -3,7 +3,11 @@ import asyncio
 import logging
 
 from aiohttp import ClientError
-from smart_meter_texas.async_api import Auth, SMTError
+from smart_meter_texas import Account, Client
+from smart_meter_texas.exceptions import (
+    SmartMeterTexasAPIError,
+    SmartMeterTexasAuthError,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -15,12 +19,7 @@ from .const import DOMAIN  # pylint:disable=unused-import
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required("meter"): str,
-        vol.Required("esiid"): str,
-    }
+    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
 )
 
 
@@ -31,17 +30,18 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
 
     client_session = aiohttp_client.async_get_clientsession(hass)
+    account = Account(data["username"], data["password"])
+    client = Client(client_session, account)
 
     try:
-        auth = Auth(client_session, data["username"], data["password"])
-        await auth.authenticate()
-    except (asyncio.TimeoutError, ClientError):
+        await client.authenticate()
+    except (asyncio.TimeoutError, ClientError, SmartMeterTexasAPIError):
         raise CannotConnect
-    except SMTError:
-        raise InvalidAuth
+    except SmartMeterTexasAuthError as error:
+        raise InvalidAuth(error)
 
     # Return info that you want to store in the config entry.
-    return {"title": "Electric Meter"}
+    return {"title": account.username}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -50,13 +50,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
+    def _account_already_configured(self, account):
+        existing_accounts = {
+            entry.data[CONF_USERNAME]
+            for entry in self._async_current_entries()
+            if CONF_USERNAME in entry.data
+        }
+        return account in existing_accounts
+
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
+
         errors = {}
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-
+                if self._account_already_configured(user_input[CONF_USERNAME]):
+                    return self.async_abort(reason="already_configured")
                 return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"

@@ -1,80 +1,47 @@
 """The Smart Meter Texas integration."""
 import asyncio
-from datetime import timedelta
 import logging
 
-from smart_meter_texas.async_api import Auth, Meter
-import voluptuous as vol
+from smart_meter_texas import Account, Client
+from smart_meter_texas.exceptions import SmartMeterTexasAuthError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, UPDATE_INTERVAL
+from .const import DOMAIN, SCAN_INTERVAL  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Required("meter"): str,
-                vol.Required("esiid"): str,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 PLATFORMS = ["sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Smart Meter Texas component."""
-
-    hass.data.setdefault(DOMAIN, {})
-    conf = config.get(DOMAIN)
-
-    if not conf:
-        return True
-
-    hass.async_create_task(hass.config_entries.flow.async_init(DOMAIN))
-
+    hass.data[DOMAIN] = {}
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Smart Meter Texas from a config entry."""
 
-    entry_data = entry.data
-    websession = aiohttp_client.async_get_clientsession(hass)
+    username = entry.data[CONF_USERNAME]
+    password = entry.data[CONF_PASSWORD]
 
-    async def async_update_data():
-        auth = Auth(websession, entry_data[CONF_USERNAME], entry_data[CONF_PASSWORD])
-        await auth.authenticate()
-        meter = Meter(auth, entry_data["esiid"], entry_data["meter"])
-        await meter.async_read_meter()
-        return meter
+    account = Account(username, password)
+    smartmetertexas = SmartMeterTexasData(hass, entry, account)
 
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="Smart Meter Texas read meter",
-        update_method=async_update_data,
-        update_interval=timedelta(minutes=UPDATE_INTERVAL),
-    )
+    try:
+        await smartmetertexas.client.authenticate()
+        _LOGGER.debug("Successfully logged in")
+    except SmartMeterTexasAuthError as error:
+        _LOGGER.error("Error authenticating: %s", error)
+        return False
 
-    await coordinator.async_refresh()
+    await smartmetertexas.setup()
 
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
-
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data[DOMAIN][entry.entry_id] = smartmetertexas
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -82,6 +49,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
 
     return True
+
+
+class SmartMeterTexasData:
+    """Manages coordinatation of API data updates."""
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, account: Account):
+        """Initialize the data coordintator."""
+        self._hass = hass
+        self._entry = entry
+        self.account = account
+        websession = aiohttp_client.async_get_clientsession(hass)
+        self.client = Client(websession, account)
+        self.meters = []
+
+    async def setup(self):
+        """Fetch all of the user's meters."""
+        try:
+            self.meters = await self.account.fetch_meters(self.client)
+        except SmartMeterTexasAuthError as error:
+            _LOGGER.error("Error authenticating: %s", error)
+
+        _LOGGER.debug("Discovered %s meter(s)", len(self.meters))
+
+        if not self.meters:
+            return False
+
+        return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):

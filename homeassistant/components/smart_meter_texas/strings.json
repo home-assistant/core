@@ -3,12 +3,10 @@
   "config": {
     "step": {
       "user": {
-        "description": "Login information for Smart Meter Texas. Meter number and ESIID can be found on your Smart Meter Texas dashboard.",
+        "description": "Provide your username and password for Smart Meter Texas.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "meter": "Meter",
-          "esiid": "ESIID"
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
