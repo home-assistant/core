@@ -12,7 +12,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.util.json import load_json, save_json
 
-from .const import CONF, DOMAIN
+from .const import CONF, CONF_ACTIONS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -243,8 +243,9 @@ async def async_setup(hass, config):
     try:
         conf = config.get(DOMAIN)
         hass.data[DOMAIN][CONF] = conf
+        if CONF_ACTIONS in conf:
+            hass.http.register_view(iOSActionsConfigView(conf[CONF_ACTIONS]))
         if CONF_PUSH in conf:
-            # Create old endpoint for back compatibility with older apps
             hass.http.register_view(iOSPushConfigView(conf[CONF_PUSH]))
     except (TypeError, KeyError):
         pass
@@ -278,6 +279,22 @@ class iOSPushConfigView(HomeAssistantView):
     def get(self, request):
         """Handle the GET request for the push configuration."""
         return self.json(self.push_config)
+
+
+class iOSActionsConfigView(HomeAssistantView):
+    """A view that provides the push categories configuration."""
+
+    url = "/api/ios/actions"
+    name = "api:ios:actions"
+
+    def __init__(self, actions_config):
+        """Init the view."""
+        self.actions_config = actions_config
+
+    @callback
+    def get(self, request):
+        """Handle the GET request for the push configuration."""
+        return self.json(self.actions_config)
 
 
 class iOSIdentifyDeviceView(HomeAssistantView):
