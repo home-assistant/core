@@ -25,6 +25,9 @@ from typing import (
     cast,
 )
 
+from homeassistant.generated.ssdp import SSDP
+from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
+
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -144,9 +147,6 @@ async def async_get_config_flows(hass: "HomeAssistant") -> Set[str]:
 
 async def async_get_zeroconf(hass: "HomeAssistant") -> Dict[str, List]:
     """Return cached list of zeroconf types."""
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.generated.zeroconf import ZEROCONF
-
     zeroconf: Dict[str, List] = ZEROCONF.copy()
 
     integrations = await async_get_custom_components(hass)
@@ -163,8 +163,6 @@ async def async_get_zeroconf(hass: "HomeAssistant") -> Dict[str, List]:
 
 async def async_get_homekit(hass: "HomeAssistant") -> Dict[str, str]:
     """Return cached list of homekit models."""
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.generated.zeroconf import HOMEKIT
 
     homekit: Dict[str, str] = HOMEKIT.copy()
 
@@ -184,8 +182,6 @@ async def async_get_homekit(hass: "HomeAssistant") -> Dict[str, str]:
 
 async def async_get_ssdp(hass: "HomeAssistant") -> Dict[str, List]:
     """Return cached list of ssdp mappings."""
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.generated.ssdp import SSDP
 
     ssdp: Dict[str, List] = SSDP.copy()
 
