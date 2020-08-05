@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from ovoenergy import OVODailyElectricity, OVODailyGas, OVODailyUsage
+from ovoenergy import OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
 
 from homeassistant.config_entries import ConfigEntry
@@ -55,21 +55,9 @@ class OVOEnergySensor(OVOEnergyDeviceEntity):
         unit_of_measurement: str = "",
     ) -> None:
         """Initialize OVO Energy sensor."""
-        self._state = None
-        self._attributes = None
         self._unit_of_measurement = unit_of_measurement
 
         super().__init__(coordinator, client, key, name, icon)
-
-    @property
-    def state(self) -> str:
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def device_state_attributes(self) -> object:
-        """Return the attributes of the sensor."""
-        return self._attributes
 
     @property
     def unit_of_measurement(self) -> str:
@@ -92,21 +80,24 @@ class OVOEnergyLastElectricityReading(OVOEnergySensor):
             "kWh",
         )
 
-    async def _ovo_energy_update(self) -> bool:
-        """Update OVO Energy entity."""
+    @property
+    def state(self) -> str:
+        """Return the state of the sensor."""
         usage: OVODailyUsage = self._coordinator.data
-        if usage is None or usage.electricity is None:
-            _LOGGER.warning("No data found for %s", self._name)
-            return False
-        last_reading: OVODailyElectricity = usage.electricity[
-            len(usage.electricity) - 1
-        ]
-        self._state = last_reading.consumption
-        self._attributes = {
-            "start_time": last_reading.interval.start,
-            "end_time": last_reading.interval.end,
+        if usage is None or not usage.electricity:
+            return None
+        return usage.electricity[-1].consumption
+
+    @property
+    def device_state_attributes(self) -> object:
+        """Return the attributes of the sensor."""
+        usage: OVODailyUsage = self._coordinator.data
+        if usage is None or not usage.electricity:
+            return None
+        return {
+            "start_time": usage.electricity[-1].interval.start,
+            "end_time": usage.electricity[-1].interval.end,
         }
-        return True
 
 
 class OVOEnergyLastGasReading(OVOEnergySensor):
@@ -124,19 +115,24 @@ class OVOEnergyLastGasReading(OVOEnergySensor):
             "kWh",
         )
 
-    async def _ovo_energy_update(self) -> bool:
-        """Update OVO Energy entity."""
+    @property
+    def state(self) -> str:
+        """Return the state of the sensor."""
         usage: OVODailyUsage = self._coordinator.data
-        if usage is None or usage.gas is None:
-            _LOGGER.warning("No data found for %s", self._name)
-            return False
-        last_reading: OVODailyGas = usage.gas[len(usage.gas) - 1]
-        self._state = last_reading.consumption
-        self._attributes = {
-            "start_time": last_reading.interval.start,
-            "end_time": last_reading.interval.end,
+        if usage is None or not usage.gas:
+            return None
+        return usage.gas[-1].consumption
+
+    @property
+    def device_state_attributes(self) -> object:
+        """Return the attributes of the sensor."""
+        usage: OVODailyUsage = self._coordinator.data
+        if usage is None or not usage.gas:
+            return None
+        return {
+            "start_time": usage.gas[-1].interval.start,
+            "end_time": usage.gas[-1].interval.end,
         }
-        return True
 
 
 class OVOEnergyLastElectricityCost(OVOEnergySensor):
@@ -155,21 +151,24 @@ class OVOEnergyLastElectricityCost(OVOEnergySensor):
             currency,
         )
 
-    async def _ovo_energy_update(self) -> bool:
-        """Update OVO Energy entity."""
+    @property
+    def state(self) -> str:
+        """Return the state of the sensor."""
         usage: OVODailyUsage = self._coordinator.data
-        if usage is None or usage.electricity is None:
-            _LOGGER.warning("No data found for %s", self._name)
-            return False
-        last_reading: OVODailyElectricity = usage.electricity[
-            len(usage.electricity) - 1
-        ]
-        self._state = last_reading.cost.amount
-        self._attributes = {
-            "start_time": last_reading.interval.start,
-            "end_time": last_reading.interval.end,
+        if usage is None or not usage.electricity:
+            return None
+        return usage.electricity[-1].cost.amount
+
+    @property
+    def device_state_attributes(self) -> object:
+        """Return the attributes of the sensor."""
+        usage: OVODailyUsage = self._coordinator.data
+        if usage is None or not usage.electricity:
+            return None
+        return {
+            "start_time": usage.electricity[-1].interval.start,
+            "end_time": usage.electricity[-1].interval.end,
         }
-        return True
 
 
 class OVOEnergyLastGasCost(OVOEnergySensor):
@@ -188,16 +187,21 @@ class OVOEnergyLastGasCost(OVOEnergySensor):
             currency,
         )
 
-    async def _ovo_energy_update(self) -> bool:
-        """Update OVO Energy entity."""
+    @property
+    def state(self) -> str:
+        """Return the state of the sensor."""
         usage: OVODailyUsage = self._coordinator.data
-        if usage is None or usage.gas is None:
-            _LOGGER.warning("No data found for %s", self._name)
-            return False
-        last_reading: OVODailyElectricity = usage.gas[len(usage.gas) - 1]
-        self._state = last_reading.cost.amount
-        self._attributes = {
-            "start_time": last_reading.interval.start,
-            "end_time": last_reading.interval.end,
+        if usage is None or not usage.gas:
+            return None
+        return usage.gas[-1].cost.amount
+
+    @property
+    def device_state_attributes(self) -> object:
+        """Return the attributes of the sensor."""
+        usage: OVODailyUsage = self._coordinator.data
+        if usage is None or not usage.gas:
+            return None
+        return {
+            "start_time": usage.gas[-1].interval.start,
+            "end_time": usage.gas[-1].interval.end,
         }
-        return True
