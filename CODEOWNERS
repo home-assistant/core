@@ -302,6 +302,7 @@ homeassistant/components/openweathermap/* @fabaff
 homeassistant/components/opnsense/* @mtreinish
 homeassistant/components/orangepi_gpio/* @pascallj
 homeassistant/components/oru/* @bvlaicu
+homeassistant/components/ovo_energy/* @timmo001
 homeassistant/components/ozw/* @cgarwood @marcelveldt @MartinHjelmare
 homeassistant/components/panasonic_viera/* @joogps
 homeassistant/components/panel_custom/* @home-assistant/frontend
