@@ -127,6 +127,11 @@ class OVOEnergyEntity(Entity):
         """Update OVO Energy entity."""
         await self.coordinator.async_request_refresh()
 
+    async def async_added_to_hass(self) -> None:
+        """Connect to dispatcher listening for entity data notifications."""
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
 
 class OVOEnergyDeviceEntity(OVOEnergyEntity):

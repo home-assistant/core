@@ -61,12 +61,6 @@ class OVOEnergySensor(OVOEnergyDeviceEntity):
 
         super().__init__(coordinator, client, key, name, icon)
 
-    async def async_added_to_hass(self) -> None:
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
