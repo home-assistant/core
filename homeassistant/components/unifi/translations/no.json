@@ -52,6 +52,7 @@
             },
             "simple_options": {
                 "data": {
+                    "block_client": "Nettverkskontrollerte klienter",
                     "track_clients": "Spor nettverksklienter",
                     "track_devices": "Spor nettverksenheter (Ubiquiti enheter)"
                 },
