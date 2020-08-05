@@ -1,5 +1,4 @@
 """Constants used by vizio component."""
-from pyvizio import VizioAsync
 from pyvizio.const import (
     DEVICE_CLASS_SPEAKER as VIZIO_DEVICE_CLASS_SPEAKER,
     DEVICE_CLASS_TV as VIZIO_DEVICE_CLASS_TV,
@@ -27,6 +26,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
+SERVICE_FETCH_LATEST_APPS = "fetch_latest_apps"
 SERVICE_UPDATE_SETTING = "update_setting"
 
 ATTR_SETTING_TYPE = "setting_type"
@@ -53,6 +53,7 @@ DEFAULT_DEVICE_CLASS = DEVICE_CLASS_TV
 DEFAULT_NAME = "Vizio SmartCast"
 DEFAULT_TIMEOUT = 8
 DEFAULT_VOLUME_STEP = 1
+DEFAULT_SCAN_INTERVAL = 0
 
 DEVICE_ID = "pyvizio"
 
@@ -101,10 +102,10 @@ VIZIO_SCHEMA = {
     vol.Optional(CONF_APPS): vol.All(
         {
             vol.Exclusive(CONF_INCLUDE, "apps_filter"): vol.All(
-                cv.ensure_list, [vol.All(cv.string, vol.In(VizioAsync.get_apps_list()))]
+                cv.ensure_list, [cv.string]
             ),
             vol.Exclusive(CONF_EXCLUDE, "apps_filter"): vol.All(
-                cv.ensure_list, [vol.All(cv.string, vol.In(VizioAsync.get_apps_list()))]
+                cv.ensure_list, [cv.string]
             ),
             vol.Optional(CONF_ADDITIONAL_CONFIGS): vol.All(
                 cv.ensure_list,

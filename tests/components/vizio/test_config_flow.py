@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PIN,
+    CONF_SCAN_INTERVAL,
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -153,7 +154,7 @@ async def test_tv_options_flow_no_apps(hass: HomeAssistantType) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
-    assert CONF_APPS not in result["data"]
+    assert result["data"][CONF_APPS] == {CONF_SCAN_INTERVAL: 0}
 
 
 async def test_tv_options_flow_with_apps(hass: HomeAssistantType) -> None:
@@ -179,7 +180,10 @@ async def test_tv_options_flow_with_apps(hass: HomeAssistantType) -> None:
     assert result["title"] == ""
     assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
     assert CONF_APPS in result["data"]
-    assert result["data"][CONF_APPS] == {CONF_INCLUDE: [CURRENT_APP]}
+    assert result["data"][CONF_APPS] == {
+        CONF_INCLUDE: [CURRENT_APP],
+        CONF_SCAN_INTERVAL: 0,
+    }
 
 
 async def test_tv_options_flow_start_with_volume(hass: HomeAssistantType) -> None:
@@ -212,7 +216,10 @@ async def test_tv_options_flow_start_with_volume(hass: HomeAssistantType) -> Non
     assert result["title"] == ""
     assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
     assert CONF_APPS in result["data"]
-    assert result["data"][CONF_APPS] == {CONF_INCLUDE: [CURRENT_APP]}
+    assert result["data"][CONF_APPS] == {
+        CONF_INCLUDE: [CURRENT_APP],
+        CONF_SCAN_INTERVAL: 0,
+    }
 
 
 async def test_user_host_already_configured(

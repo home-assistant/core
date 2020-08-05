@@ -1,10 +1,12 @@
 """Configure py.test."""
 import pytest
+from pyvizio.api.apps import AppConfig
 from pyvizio.const import DEVICE_CLASS_SPEAKER, MAX_VOLUME
 
 from .const import (
     ACCESS_TOKEN,
     APP_LIST,
+    APP_NAME_LIST,
     CH_TYPE,
     CURRENT_APP_CONFIG,
     CURRENT_EQ,
@@ -63,6 +65,16 @@ def vizio_no_unique_id_fixture():
     with patch(
         "homeassistant.components.vizio.config_flow.VizioAsync.get_unique_id",
         return_value=None,
+    ):
+        yield
+
+
+@pytest.fixture(name="vizio_bypass_app_check_in_options_schema", autouse=True)
+def vizio_bypass_app_check_in_options_schema():
+    """Mock valid updates to vizio device that supports apps."""
+    with patch(
+        "homeassistant.components.vizio.config_flow.VizioAsync.get_apps_list",
+        return_value=APP_NAME_LIST,
     ):
         yield
 
@@ -191,14 +203,17 @@ def vizio_update_with_apps_fixture(vizio_update: pytest.fixture):
         "homeassistant.components.vizio.media_player.VizioAsync.get_inputs_list",
         return_value=get_mock_inputs(INPUT_LIST_WITH_APPS),
     ), patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_apps_list",
+        "homeassistant.components.vizio.media_player.gen_apps_list_from_url",
         return_value=APP_LIST,
+    ), patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_apps_list",
+        return_value=APP_NAME_LIST,
     ), patch(
         "homeassistant.components.vizio.media_player.VizioAsync.get_current_input",
         return_value="CAST",
     ), patch(
         "homeassistant.components.vizio.media_player.VizioAsync.get_current_app_config",
-        return_value=CURRENT_APP_CONFIG,
+        return_value=AppConfig(**CURRENT_APP_CONFIG),
     ):
         yield
 
