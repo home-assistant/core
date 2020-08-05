@@ -309,7 +309,7 @@ class iOSPushConfigView(HomeAssistantView):
 
 
 class iOSConfigView(HomeAssistantView):
-    """A view that provides the push categories configuration."""
+    """A view that provides the whole user-defined configuration."""
 
     url = "/api/ios/config"
     name = "api:ios:config"
@@ -320,7 +320,7 @@ class iOSConfigView(HomeAssistantView):
 
     @callback
     def get(self, request):
-        """Handle the GET request for the push configuration."""
+        """Handle the GET request for the user-defined configuration."""
         return self.json(self.config)
 
 
