@@ -125,7 +125,7 @@ class OVOEnergyEntity(Entity):
 
     async def async_update(self) -> None:
         """Update OVO Energy entity."""
-        await self.coordinator.async_request_refresh()
+        await self._coordinator.async_request_refresh()
 
     async def async_added_to_hass(self) -> None:
         """Connect to dispatcher listening for entity data notifications."""
