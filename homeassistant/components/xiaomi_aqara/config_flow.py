@@ -69,7 +69,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is None:
-            return await self.async_show_form_step_user(errors)
+            return self.async_show_form_step_user(errors)
 
         self.interface = user_input[CONF_INTERFACE]
 
