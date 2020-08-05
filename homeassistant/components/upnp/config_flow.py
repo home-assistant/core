@@ -20,6 +20,7 @@ from .const import (  # pylint: disable=unused-import
     DISCOVERY_UDN,
     DISCOVERY_USN,
     DOMAIN,
+    DOMAIN_COORDINATORS,
     LOGGER as _LOGGER,
 )
 from .device import Device
@@ -221,7 +222,7 @@ class UpnpOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the options."""
         if user_input is not None:
             udn = self.config_entry.data.get(CONFIG_ENTRY_UDN)
-            coordinator = self.hass.data[DOMAIN]["coordinators"][udn]
+            coordinator = self.hass.data[DOMAIN][DOMAIN_COORDINATORS][udn]
             update_interval_sec = user_input.get(
                 CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
             )
