@@ -28,7 +28,6 @@ async def async_setup_entry(hass, entry):
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={(CONF_HOST, host)},
         identifiers={(DOMAIN, entry.entry_id)},
         manufacturer="Roonlabs",
         name=host,
