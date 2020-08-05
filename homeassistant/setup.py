@@ -190,7 +190,7 @@ async def _async_setup_component(
             hass.data[DATA_SETUP_STARTED].pop(domain)
             return False
 
-        async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, zone_name=domain):
+        async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, domain):
             result = await task
     except asyncio.TimeoutError:
         _LOGGER.error(
