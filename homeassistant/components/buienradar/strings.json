@@ -4,29 +4,11 @@
       "user": {
         "title": "Buienradar",
         "data": {
-          "name": "Name",
           "latitude": "Latitude",
-          "longitude": "Longitude"
-        }
-      },
-      "setup_weather": {
-        "title": "Buienradar Weather",
-        "data": {
-          "forecast": "Include temperature forecast"
-        }
-      },
-      "setup_camera": {
-        "title": "Buienradar Camera",
-        "data": {
-          "dimension": "Image Size",
-          "delta": "Interval between image updates",
+          "longitude": "Longitude",
+          "name": "Name",
+          "camera": "Add radar image",
           "country_code": "Country"
-        }
-      },
-      "setup_sensor": {
-        "title": "Buienradar Sensors",
-        "data": {
-          "timeframe": "Minutes to look ahead for precipitation forecast"
         }
       }
     },
