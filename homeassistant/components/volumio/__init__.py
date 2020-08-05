@@ -11,6 +11,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DATA_INFO, DATA_VOLUMIO, DOMAIN
 
+DATA_REMOVE_LISTENER = "remove_listener"
+
+
 PLATFORMS = ["media_player"]
 
 
@@ -30,9 +33,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except CannotConnectError as error:
         raise ConfigEntryNotReady from error
 
+    undo_listener = entry.add_update_listener(_update_listener)
+
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         DATA_VOLUMIO: volumio,
         DATA_INFO: info,
+        DATA_REMOVE_LISTENER: undo_listener,
     }
 
     for component in PLATFORMS:
@@ -54,6 +60,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
+        hass.data[DOMAIN][entry.entry_id][DATA_REMOVE_LISTENER]()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
