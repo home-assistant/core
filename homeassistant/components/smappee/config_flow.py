@@ -38,7 +38,7 @@ class SmappeeFlowHandler(
         )
 
         # Check if already configured
-        await self.async_set_unique_id(f"Smappee{serial_number}")
+        await self.async_set_unique_id(serial_number)
         self._abort_if_unique_id_configured()
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
@@ -137,9 +137,7 @@ class SmappeeFlowHandler(
         serial_number = serial_number.replace("Smappee", "")
 
         # Check if already configured
-        await self.async_set_unique_id(
-            f"Smappee{serial_number}", raise_on_progress=False
-        )
+        await self.async_set_unique_id(serial_number, raise_on_progress=False)
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
