@@ -75,6 +75,7 @@ class InstantClientEntity(ScannerEntity):
         self._mac = coordinator.data[self._mac].get("mac")
         self._os = coordinator.data[self._mac].get("os")
         self._essid = coordinator.data[self._mac].get("essid")
+        self._ap = coordinator.data[self._mac].get("ap")
         self._channel = coordinator.data[self._mac].get("channel")
         self._phy = coordinator.data[self._mac].get("phy")
         self._role = coordinator.data[self._mac].get("role")
@@ -145,6 +146,7 @@ class InstantClientEntity(ScannerEntity):
             "mac": self._mac,
             "os": self._os,
             "essid": self._essid,
+            "ap": self._ap,
             "channel": self._channel,
             "phy": self._phy,
             "role": self._role,
