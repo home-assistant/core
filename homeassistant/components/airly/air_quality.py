@@ -18,7 +18,9 @@ from .const import (
     ATTR_API_PM25,
     ATTR_API_PM25_LIMIT,
     ATTR_API_PM25_PERCENT,
+    DEFAULT_NAME,
     DOMAIN,
+    MANUFACTURER,
 )
 
 ATTRIBUTION = "Data provided by Airly"
@@ -40,9 +42,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_entities(
-        [AirlyAirQuality(coordinator, name, config_entry.unique_id)], False
-    )
+    async_add_entities([AirlyAirQuality(coordinator, name)], False)
 
 
 def round_state(func):
@@ -60,11 +60,10 @@ def round_state(func):
 class AirlyAirQuality(AirQualityEntity):
     """Define an Airly air quality."""
 
-    def __init__(self, coordinator, name, unique_id):
+    def __init__(self, coordinator, name):
         """Initialize."""
         self.coordinator = coordinator
         self._name = name
-        self._unique_id = unique_id
         self._icon = "mdi:blur"
 
     @property
@@ -108,7 +107,19 @@ class AirlyAirQuality(AirQualityEntity):
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return self._unique_id
+        return f"{self.coordinator.latitude}-{self.coordinator.longitude}"
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {
+                (DOMAIN, self.coordinator.latitude, self.coordinator.longitude)
+            },
+            "name": DEFAULT_NAME,
+            "manufacturer": MANUFACTURER,
+            "entry_type": "service",
+        }
 
     @property
     def available(self):
