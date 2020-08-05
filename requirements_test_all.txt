@@ -426,6 +426,9 @@ millheater==0.3.4
 # homeassistant.components.minio
 minio==4.0.9
 
+# homeassistant.components.mullvad
+mullvad-api==1.0.0
+
 # homeassistant.components.tts
 mutagen==1.44.0
 
