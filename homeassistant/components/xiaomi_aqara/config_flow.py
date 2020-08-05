@@ -111,7 +111,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(xiaomi.discover_gateways)
         except gaierror:
             errors[CONF_INTERFACE] = "invalid_interface"
-            return await self.async_show_form_step_user(errors)
+            return self.async_show_form_step_user(errors)
 
         self.gateways = xiaomi.gateways
 
