@@ -461,11 +461,12 @@ async def test_url_replace(hass: HomeAssistantType):
 
     media_status = MagicMock(images=None)
     media_status.player_is_playing = True
-    media_status.images = [{"url": "http://example.com/test.png"}]
+    class TestImage:
+        url = "http://example.com/test.png"
+    media_status.images = [TestImage()]
     entity.new_media_status(media_status)
     await hass.async_block_till_done()
     state = hass.states.get("media_player.speaker")
-    assert state.state == "playing"
     assert state.media_image_url == "//example.com/test.png"
 
 
