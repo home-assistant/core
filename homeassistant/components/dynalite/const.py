@@ -49,3 +49,7 @@ DEFAULT_TEMPLATES = {
         CONF_TILT_TIME,
     ],
 }
+
+ATTR_PACKET = "packet"
+ATTR_PRESET = "preset"
+ATTR_AREA = "area"
