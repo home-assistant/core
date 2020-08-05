@@ -122,7 +122,7 @@ class Scanner:
             info.update(await info_req)
 
         domains = set()
-        for domain, matchers in self._entries.items():
+        for domain, matchers in self._integration_matchers.items():
             for matcher in matchers:
                 if all(info.get(k) == v for (k, v) in matcher.items()):
                     domains.add(domain)
