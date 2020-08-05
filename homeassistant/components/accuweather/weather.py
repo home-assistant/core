@@ -15,7 +15,15 @@ from homeassistant.components.weather import (
 from homeassistant.const import CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.util.dt import utc_from_timestamp
 
-from .const import ATTR_FORECAST, ATTRIBUTION, CONDITION_CLASSES, COORDINATOR, DOMAIN
+from .const import (
+    ATTR_FORECAST,
+    ATTRIBUTION,
+    CONDITION_CLASSES,
+    COORDINATOR,
+    DOMAIN,
+    MANUFACTURER,
+    NAME,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -53,6 +61,16 @@ class AccuWeatherEntity(WeatherEntity):
     def unique_id(self):
         """Return a unique_id for this entity."""
         return self.coordinator.location_key
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self.coordinator.location_key)},
+            "name": NAME,
+            "manufacturer": MANUFACTURER,
+            "entry_type": "service",
+        }
 
     @property
     def should_poll(self):

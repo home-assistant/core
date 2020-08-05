@@ -25,6 +25,8 @@ CONCENTRATION_PARTS_PER_CUBIC_METER = f"p/{VOLUME_CUBIC_METERS}"
 COORDINATOR = "coordinator"
 DOMAIN = "accuweather"
 LENGTH_MILIMETERS = "mm"
+MANUFACTURER = "AccuWeather, Inc."
+NAME = "AccuWeather"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 CONDITION_CLASSES = {
