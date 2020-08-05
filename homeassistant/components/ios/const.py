@@ -1,7 +1,6 @@
 """Const for iOS."""
 
 DOMAIN = "ios"
-CONF = "config"
 
 CONF_ACTION_NAME = "name"
 CONF_ACTION_BACKGROUND_COLOR = "background_color"

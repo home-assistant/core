@@ -13,7 +13,6 @@ from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.util.json import load_json, save_json
 
 from .const import (
-    CONF,
     CONF_ACTION_BACKGROUND_COLOR,
     CONF_ACTION_ICON,
     CONF_ACTION_ICON_COLOR,
@@ -272,15 +271,10 @@ async def async_setup(hass, config):
             )
         )
 
-    try:
-        conf = config.get(DOMAIN)
-        hass.data[DOMAIN][CONF] = conf
-        if CONF_ACTIONS in conf:
-            hass.http.register_view(iOSActionsConfigView(conf[CONF_ACTIONS]))
-        if CONF_PUSH in conf:
-            hass.http.register_view(iOSPushConfigView(conf[CONF_PUSH]))
-    except (TypeError, KeyError):
-        pass
+    conf = config.get(DOMAIN)
+
+    if conf:
+        hass.http.register_view(iOSConfigView(conf))
 
     return True
 
@@ -292,6 +286,7 @@ async def async_setup_entry(hass, entry):
     )
 
     hass.http.register_view(iOSIdentifyDeviceView(hass.config.path(CONFIGURATION_FILE)))
+    hass.http.register_view(iOSPushConfigView(hass.data[DOMAIN][CONF_PUSH]))
 
     return True
 
@@ -313,20 +308,20 @@ class iOSPushConfigView(HomeAssistantView):
         return self.json(self.push_config)
 
 
-class iOSActionsConfigView(HomeAssistantView):
+class iOSConfigView(HomeAssistantView):
     """A view that provides the push categories configuration."""
 
-    url = "/api/ios/actions"
-    name = "api:ios:actions"
+    url = "/api/ios/config"
+    name = "api:ios:config"
 
-    def __init__(self, actions_config):
+    def __init__(self, config):
         """Init the view."""
-        self.actions_config = actions_config
+        self.config = config
 
     @callback
     def get(self, request):
         """Handle the GET request for the push configuration."""
-        return self.json(self.actions_config)
+        return self.json(self.config)
 
 
 class iOSIdentifyDeviceView(HomeAssistantView):
