@@ -35,7 +35,7 @@ def create_stream_buffer(stream_output, video_stream, audio_frame):
         format=stream_output.format,
         container_options={
             "video_track_timescale": str(int(1 / video_stream.time_base)),
-            **stream_output.container_options,
+            **(stream_output.container_options or {}),
         },
     )
     vstream = output.add_stream(template=video_stream)
