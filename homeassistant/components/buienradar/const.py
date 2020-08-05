@@ -6,7 +6,6 @@ DEFAULT_TIMEFRAME = 60
 
 HOME_LOCATION_NAME = "Home"
 
-CONF_WEATHER = "weather"
 CONF_CAMERA = "camera"
 CONF_SENSOR = "sensor"
 CONF_FORECAST = "forecast"

@@ -41,16 +41,12 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_C
 from homeassistant.helpers.typing import HomeAssistantType
 
 # Reuse data and API logic from the sensor implementation
-from .const import CONF_WEATHER, DEFAULT_TIMEFRAME, DOMAIN
+from .const import DEFAULT_TIMEFRAME, DOMAIN
 from .util import BrData
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_CONDITION = "buienradar_condition"
-
-
-CONF_FORECAST = "forecast"
-
 
 CONDITION_CLASSES = {
     ATTR_CONDITION_CLOUDY: ["c", "p"],
@@ -110,7 +106,6 @@ class BrWeather(WeatherEntity):
     def __init__(self, data, config, coordinates):
         """Initialise the platform with a data instance and station name."""
         self._stationname = config.get(CONF_NAME)
-        self._forecast = config[CONF_WEATHER][CONF_FORECAST]
         self._data = data
 
         self._unique_id = "{:2.6f}{:2.6f}".format(
@@ -181,9 +176,6 @@ class BrWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        if not self._forecast:
-            return None
-
         fcdata_out = []
         cond = self.hass.data[DOMAIN][DATA_CONDITION]
 
