@@ -368,21 +368,6 @@ async def _async_setup_themes(hass, themes):
         hass.bus.async_fire(EVENT_THEMES_UPDATED)
 
     @callback
-    def save_theme_store():
-        """Update store with new theme data."""
-        store = hass.data[DATA_THEMES_STORE]
-
-        @callback
-        def _data_to_save():
-            """Return data to save."""
-            return {
-                DATA_DEFAULT_THEME: hass.data[DATA_DEFAULT_THEME],
-                DATA_DEFAULT_DARK_THEME: hass.data.get(DATA_DEFAULT_DARK_THEME),
-            }
-
-        store.async_delay_save(_data_to_save, THEMES_SAVE_DELAY)
-
-    @callback
     def set_theme(call):
         """Set backend-preferred theme."""
         name = call.data[CONF_NAME]
@@ -406,7 +391,13 @@ async def _async_setup_themes(hass, themes):
             to_set = name
 
         hass.data[theme_key] = to_set
-        save_theme_store()
+        store.async_delay_save(
+            lambda: {
+                DATA_DEFAULT_THEME: hass.data[DATA_DEFAULT_THEME],
+                DATA_DEFAULT_DARK_THEME: hass.data.get(DATA_DEFAULT_DARK_THEME),
+            },
+            THEMES_SAVE_DELAY,
+        )
         update_theme_and_fire_event()
 
     async def reload_themes(_):
