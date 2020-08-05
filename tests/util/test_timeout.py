@@ -52,6 +52,26 @@ async def test_simple_zone_timeout():
             await asyncio.sleep(0.3)
 
 
+async def test_multiple_zone_timeout():
+    """Test a simple zone timeout."""
+    timeout = ZoneTimeout()
+
+    with pytest.raises(asyncio.TimeoutError):
+        async with timeout.async_timeout(0.1, "test"):
+            async with timeout.async_timeout(0.5, "test"):
+                await asyncio.sleep(0.3)
+
+
+async def test_different_zone_timeout():
+    """Test a simple zone timeout."""
+    timeout = ZoneTimeout()
+
+    with pytest.raises(asyncio.TimeoutError):
+        async with timeout.async_timeout(0.1, "test"):
+            async with timeout.async_timeout(0.5, "other"):
+                await asyncio.sleep(0.3)
+
+
 async def test_simple_zone_timeout_freeze():
     """Test a simple zone timeout freeze."""
     timeout = ZoneTimeout()
