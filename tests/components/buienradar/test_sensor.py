@@ -2,11 +2,10 @@
 from homeassistant.components.buienradar.const import (
     CONF_CAMERA,
     CONF_SENSOR,
-    CONF_TIMEFRAME,
     CONF_WEATHER,
     DOMAIN,
 )
-from homeassistant.const import CONF_INCLUDE, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 
 from tests.common import MockConfigEntry
 
@@ -15,9 +14,9 @@ TEST_CFG_DATA = {
     CONF_NAME: "volkel",
     CONF_LATITUDE: 51.65,
     CONF_LONGITUDE: 5.7,
-    CONF_CAMERA: {CONF_INCLUDE: False},
-    CONF_SENSOR: {CONF_INCLUDE: True, CONF_TIMEFRAME: 60},
-    CONF_WEATHER: {CONF_INCLUDE: False},
+    CONF_CAMERA: False,
+    CONF_SENSOR: True,
+    CONF_WEATHER: False,
 }
 
 

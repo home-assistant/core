@@ -14,7 +14,7 @@ from homeassistant.components.buienradar.const import (
     CONF_WEATHER,
     DOMAIN,
 )
-from homeassistant.const import CONF_INCLUDE, CONF_NAME, HTTP_INTERNAL_SERVER_ERROR
+from homeassistant.const import CONF_NAME, HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
@@ -24,14 +24,10 @@ EPSILON_DELTA = 0.0000000001
 
 TEST_CFG_DATA = {
     CONF_NAME: "config_test",
-    CONF_CAMERA: {
-        CONF_INCLUDE: True,
-        CONF_DIMENSION: 512,
-        CONF_DELTA: 600,
-        CONF_COUNTRY: "NL",
-    },
-    CONF_SENSOR: {CONF_INCLUDE: False},
-    CONF_WEATHER: {CONF_INCLUDE: False},
+    CONF_CAMERA: True,
+    CONF_COUNTRY: "NL",
+    CONF_SENSOR: False,
+    CONF_WEATHER: False,
 }
 
 
@@ -74,10 +70,11 @@ async def test_expire_delta(aioclient_mock, hass, hass_client):
     """Test that the cache expires after delta."""
     aioclient_mock.get(radar_map_url(), text="hello world")
 
-    data = copy.deepcopy(TEST_CFG_DATA)
-    data[CONF_CAMERA][CONF_DELTA] = EPSILON_DELTA
+    options = {CONF_DELTA: EPSILON_DELTA}
 
-    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id="TEST_ID", data=data)
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="TEST_ID", data=TEST_CFG_DATA, options=options
+    )
 
     mock_entry.add_to_hass(hass)
 
@@ -133,10 +130,11 @@ async def test_dimension(aioclient_mock, hass, hass_client):
     """Test that it actually adheres to the dimension."""
     aioclient_mock.get(radar_map_url(700), text="hello world")
 
-    data = copy.deepcopy(TEST_CFG_DATA)
-    data[CONF_CAMERA][CONF_DIMENSION] = 700
+    options = {CONF_DIMENSION: 700}
 
-    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id="TEST_ID", data=data)
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="TEST_ID", data=TEST_CFG_DATA, options=options
+    )
 
     mock_entry.add_to_hass(hass)
 
@@ -158,7 +156,7 @@ async def test_belgium_country(aioclient_mock, hass, hass_client):
     aioclient_mock.get(radar_map_url(country_code="BE"), text="hello world")
 
     data = copy.deepcopy(TEST_CFG_DATA)
-    data[CONF_CAMERA][CONF_COUNTRY] = "BE"
+    data[CONF_COUNTRY] = "BE"
 
     mock_entry = MockConfigEntry(domain=DOMAIN, unique_id="TEST_ID", data=data)
 
@@ -212,10 +210,11 @@ async def test_last_modified_updates(aioclient_mock, hass, hass_client):
         headers={"Last-Modified": last_modified},
     )
 
-    data = copy.deepcopy(TEST_CFG_DATA)
-    data[CONF_CAMERA][CONF_DELTA] = EPSILON_DELTA
+    options = {CONF_DELTA: EPSILON_DELTA}
 
-    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id="TEST_ID", data=data)
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="TEST_ID", data=TEST_CFG_DATA, options=options
+    )
 
     mock_entry.add_to_hass(hass)
 
