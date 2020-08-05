@@ -16,6 +16,8 @@ from .const import (
     DOMAIN,
     FORECAST_DAYS,
     FORECAST_SENSOR_TYPES,
+    MANUFACTURER,
+    NAME,
     OPTIONAL_SENSORS,
     SENSOR_TYPES,
 )
@@ -72,6 +74,16 @@ class AccuWeatherSensor(Entity):
         if self.forecast_day is not None:
             return f"{self.coordinator.location_key}-{self.kind}-{self.forecast_day}".lower()
         return f"{self.coordinator.location_key}-{self.kind}".lower()
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self.coordinator.location_key)},
+            "name": NAME,
+            "manufacturer": MANUFACTURER,
+            "entry_type": "service",
+        }
 
     @property
     def should_poll(self):
