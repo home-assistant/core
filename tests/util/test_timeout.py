@@ -3,7 +3,7 @@ import asyncio
 
 import pytest
 
-from homeassistant.util.timeout import ZoneTimeout
+from homeassistant.util.timeout import FreezeError, ZoneTimeout
 
 
 @pytest.fixture(autouse=True)
@@ -59,6 +59,15 @@ async def test_simple_zone_timeout_freeze():
     async with timeout.async_timeout(0.2, "test"):
         async with timeout.freeze("test"):
             await asyncio.sleep(0.3)
+
+
+async def test_simple_zone_timeout_freeze_without_timeout_throws():
+    """Test a simple zone timeout freeze on a zone that does not have a timeout set."""
+    timeout = ZoneTimeout()
+
+    with pytest.raises(FreezeError):
+        async with timeout.freeze("test"):
+            await asyncio.sleep(0.1)
 
 
 async def test_simple_zone_timeout_freeze_reset():
