@@ -14,7 +14,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_CAMERA, CONF_COUNTRY, CONF_DELTA, CONF_DIMENSION
+from .const import (
+    CONF_COUNTRY,
+    CONF_DELTA,
+    CONF_DIMENSION,
+    DEFAULT_DELTA,
+    DEFAULT_DIMENSION,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,11 +30,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up buienradar radar-loop camera component."""
     config = entry.data
+    options = entry.options
 
-    dimension = config[CONF_CAMERA][CONF_DIMENSION]
-    delta = config[CONF_CAMERA][CONF_DELTA]
     name = config[CONF_NAME]
-    country = config[CONF_CAMERA][CONF_COUNTRY]
+    country = config[CONF_COUNTRY]
+
+    dimension = options.get(CONF_DIMENSION, DEFAULT_DIMENSION)
+    delta = options.get(CONF_DELTA, DEFAULT_DELTA)
 
     async_add_entities([BuienradarCam(name, dimension, delta, country)])
 
