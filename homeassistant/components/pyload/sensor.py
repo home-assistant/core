@@ -30,10 +30,12 @@ DEFAULT_PORT = 8000
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 
+UNIT_DOWNLOADS = "Downloads"
+
 SENSOR_TYPES = {
     "speed": ["speed", "Speed", DATA_RATE_MEGABYTES_PER_SECOND],
-    "active": ["active", "Active"],
-    "queue": ["queue", "Queue"],
+    "active": ["active", "Active", UNIT_DOWNLOADS],
+    "queue": ["queue", "Queue", UNIT_DOWNLOADS],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -90,8 +92,7 @@ class PyLoadSensor(Entity):
         self.type = sensor_type[0]
         self.api = api
         self._state = None
-        if len(sensor_type) > 2:
-            self._unit_of_measurement = sensor_type[2]
+        self._unit_of_measurement = sensor_type[2]
 
     @property
     def name(self):
@@ -106,10 +107,7 @@ class PyLoadSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        try:
-            return self._unit_of_measurement
-        except AttributeError:
-            return
+        return self._unit_of_measurement
 
     def update(self):
         """Update state of sensor."""
