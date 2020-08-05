@@ -37,7 +37,7 @@ class OVOEnergyFlowHandler(ConfigFlow):
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         if user_input is None:
-            return await self._show_setup_form(user_input)
+            return await self._show_setup_form()
 
         errors = {}
 
