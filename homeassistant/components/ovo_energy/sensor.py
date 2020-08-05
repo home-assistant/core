@@ -6,16 +6,13 @@ import aiohttp
 from ovoenergy import OVODailyElectricity, OVODailyGas, OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
 
-from homeassistant.components.ovo_energy import OVOEnergyDeviceEntity
-from homeassistant.components.ovo_energy.const import (
-    DATA_CLIENT,
-    DATA_COORDINATOR,
-    DOMAIN,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from . import OVOEnergyDeviceEntity
+from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

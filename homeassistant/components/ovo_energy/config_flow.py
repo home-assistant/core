@@ -6,9 +6,10 @@ from ovoenergy.ovoenergy import OVOEnergy
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.ovo_energy.const import CONF_ACCOUNT_ID, DOMAIN
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+
+from .const import CONF_ACCOUNT_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
