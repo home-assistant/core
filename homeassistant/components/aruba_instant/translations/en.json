@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "This device has already been configured."
+        },
+        "error": {
+            "cannot_connect": "We cannot connect to the given device.",
+            "invalid_auth": "We can't connect with provided credentials.  Please check your username and password",
+            "cannot_verify_ssl_cert": "We cannot verify the SSL certificate from the Aruba Instant device.",
+            "unknown": "An unknown error occured."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "username": "Username",
+                    "port": "Port",
+                    "verify_ssl": "Verify SSL"
+                }
+            }
+        }
+    },
+    "title": "Aruba Instant"
+}

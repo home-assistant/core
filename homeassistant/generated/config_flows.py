@@ -16,6 +16,7 @@ FLOWS = [
     "ambiclimate",
     "ambient_station",
     "arcam_fmj",
+    "aruba_instant",
     "atag",
     "august",
     "avri",
