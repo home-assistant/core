@@ -31,7 +31,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.4.0
 
 # homeassistant.components.xiaomi_aqara
-PyXiaomiGateway==0.12.4
+PyXiaomiGateway==0.13.2
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
