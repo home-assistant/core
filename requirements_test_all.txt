@@ -982,7 +982,7 @@ wakeonlan==1.1.6
 watchdog==0.8.3
 
 # homeassistant.components.wiffi
-wiffi==1.0.0
+wiffi==1.0.1
 
 # homeassistant.components.withings
 withings-api==2.1.6
