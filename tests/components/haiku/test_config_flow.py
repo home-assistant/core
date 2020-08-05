@@ -3,6 +3,6 @@ import asyncio
 
 from haiku import discover
 
-if asyncio.run(discover.discover()) == False:
-    print("[HAIKU] Error: Socket Error")
-    
+result = asyncio.run(discover.discover())
+if result is False:
+    print("Socket Error")
