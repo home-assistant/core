@@ -35,13 +35,11 @@ from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from . import migration, purge
-from .const import DATA_INSTANCE, SQLITE_URL_PREFIX
+from .const import DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX
 from .models import Base, Events, RecorderRuns, States
 from .util import session_scope, validate_or_move_away_sqlite_database
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "recorder"
 
 SERVICE_PURGE = "purge"
 
