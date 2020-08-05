@@ -123,7 +123,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_select()
 
         errors["base"] = "discovery_error"
-        return await self.async_show_form_step_user(errors)
+        return self.async_show_form_step_user(errors)
 
     async def async_step_select(self, user_input=None):
         """Handle multiple aqara gateways found."""
