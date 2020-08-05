@@ -56,7 +56,8 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.gateways = None
         self.selected_gateway = None
 
-    async def async_show_form_step_user(self, errors):
+    @callback
+    def async_show_form_step_user(self, errors):
         """Show the form belonging to the user step."""
         schema = GATEWAY_CONFIG
         if (self.host is None and self.sid is None) or errors:
