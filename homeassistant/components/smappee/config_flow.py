@@ -103,7 +103,7 @@ class SmappeeFlowHandler(
         # Use configuration.yaml CLOUD setup if not setup already
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if entry.unique_id.startswith("SmappeeCloud"):
-                return self.async_abort(reason="already_configured")
+                return self.async_abort(reason="already_configured_device")
 
         return await self.async_step_pick_implementation()
 

@@ -23,7 +23,7 @@
             }
         },
         "abort": {
-            "already_configured": "The Smappee Cloud integration is already configured.",
+            "already_configured_device": "Device is already configured",
             "authorize_url_timeout": "Timeout generating authorize url.",
             "connection_error": "Failed to connect to Smappee device.",
             "missing_configuration": "The component is not configured. Please follow the documentation.",
