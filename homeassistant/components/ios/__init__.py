@@ -12,7 +12,19 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.util.json import load_json, save_json
 
-from .const import CONF, CONF_ACTIONS, DOMAIN
+from .const import (
+    CONF,
+    CONF_ACTION_BACKGROUND_COLOR,
+    CONF_ACTION_ICON,
+    CONF_ACTION_ICON_COLOR,
+    CONF_ACTION_ICON_ICON,
+    CONF_ACTION_LABEL,
+    CONF_ACTION_LABEL_COLOR,
+    CONF_ACTION_LABEL_TEXT,
+    CONF_ACTION_NAME,
+    CONF_ACTIONS,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,7 +99,7 @@ BATTERY_STATES = [
 
 ATTR_DEVICES = "devices"
 
-ACTION_SCHEMA = vol.Schema(
+PUSH_ACTION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PUSH_ACTIONS_IDENTIFIER): vol.Upper,
         vol.Required(CONF_PUSH_ACTIONS_TITLE): cv.string,
@@ -107,25 +119,45 @@ ACTION_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-ACTION_SCHEMA_LIST = vol.All(cv.ensure_list, [ACTION_SCHEMA])
+PUSH_ACTION_LIST_SCHEMA = vol.All(cv.ensure_list, [PUSH_ACTION_SCHEMA])
+
+PUSH_CATEGORY_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PUSH_CATEGORIES_NAME): cv.string,
+        vol.Required(CONF_PUSH_CATEGORIES_IDENTIFIER): vol.Lower,
+        vol.Required(CONF_PUSH_CATEGORIES_ACTIONS): PUSH_ACTION_LIST_SCHEMA,
+    }
+)
+
+PUSH_CATEGORY_LIST_SCHEMA = vol.All(cv.ensure_list, [PUSH_CATEGORY_SCHEMA])
+
+ACTION_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ACTION_NAME): cv.string,
+        vol.Optional(CONF_ACTION_BACKGROUND_COLOR): cv.string,
+        vol.Optional(CONF_ACTION_LABEL): vol.All(
+            {
+                vol.Optional(CONF_ACTION_LABEL_TEXT): cv.string,
+                vol.Optional(CONF_ACTION_LABEL_COLOR): cv.string,
+            }
+        ),
+        vol.Optional(CONF_ACTION_ICON): vol.All(
+            {
+                vol.Optional(CONF_ACTION_ICON_ICON): cv.string,
+                vol.Optional(CONF_ACTION_ICON_COLOR): cv.string,
+            }
+        ),
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+ACTION_LIST_SCHEMA = vol.All(cv.ensure_list, [ACTION_SCHEMA])
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: {
-            CONF_PUSH: {
-                CONF_PUSH_CATEGORIES: vol.All(
-                    cv.ensure_list,
-                    [
-                        {
-                            vol.Required(CONF_PUSH_CATEGORIES_NAME): cv.string,
-                            vol.Required(CONF_PUSH_CATEGORIES_IDENTIFIER): vol.Lower,
-                            vol.Required(
-                                CONF_PUSH_CATEGORIES_ACTIONS
-                            ): ACTION_SCHEMA_LIST,
-                        }
-                    ],
-                )
-            }
+            CONF_PUSH: {CONF_PUSH_CATEGORIES: PUSH_CATEGORY_LIST_SCHEMA},
+            CONF_ACTIONS: ACTION_LIST_SCHEMA,
         }
     },
     extra=vol.ALLOW_EXTRA,
