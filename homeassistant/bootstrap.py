@@ -9,7 +9,6 @@ import sys
 from time import monotonic
 from typing import TYPE_CHECKING, Any, Dict, Optional, Set
 
-from async_timeout import timeout
 import voluptuous as vol
 import yarl
 
@@ -43,6 +42,11 @@ ERROR_LOG_FILENAME = "home-assistant.log"
 DATA_LOGGING = "logging"
 
 LOG_SLOW_STARTUP_INTERVAL = 60
+
+STAGE_1_TIMEOUT = 120
+STAGE_2_TIMEOUT = 300
+WRAP_UP_TIMEOUT = 300
+COOLDOWN_TIME = 60
 
 DEBUGGER_INTEGRATIONS = {"debugpy", "ptvsd"}
 CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
@@ -136,7 +140,7 @@ async def async_setup_hass(
         hass.async_track_tasks()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP, {})
         with contextlib.suppress(asyncio.TimeoutError):
-            async with timeout(10):
+            async with hass.timeout.async_timeout(10):
                 await hass.async_block_till_done()
 
         safe_mode = True
@@ -496,24 +500,42 @@ async def _async_set_up_integrations(
     stage_2_domains = domains_to_setup - logging_domains - debuggers - stage_1_domains
 
     # Kick off loading the registries. They don't need to be awaited.
-    asyncio.gather(
-        hass.helpers.device_registry.async_get_registry(),
-        hass.helpers.entity_registry.async_get_registry(),
-        hass.helpers.area_registry.async_get_registry(),
-    )
+    asyncio.create_task(hass.helpers.device_registry.async_get_registry())
+    asyncio.create_task(hass.helpers.entity_registry.async_get_registry())
+    asyncio.create_task(hass.helpers.area_registry.async_get_registry())
 
     # Start setup
     if stage_1_domains:
         _LOGGER.info("Setting up stage 1: %s", stage_1_domains)
-        await async_setup_multi_components(hass, stage_1_domains, config, setup_started)
+        try:
+            async with hass.timeout.async_timeout(
+                STAGE_1_TIMEOUT, cool_down=COOLDOWN_TIME
+            ):
+                await async_setup_multi_components(
+                    hass, stage_1_domains, config, setup_started
+                )
+        except asyncio.TimeoutError:
+            _LOGGER.warning("Setup timed out for stage 1 - moving forward")
 
     # Enables after dependencies
     async_set_domains_to_be_loaded(hass, stage_1_domains | stage_2_domains)
 
     if stage_2_domains:
         _LOGGER.info("Setting up stage 2: %s", stage_2_domains)
-        await async_setup_multi_components(hass, stage_2_domains, config, setup_started)
+        try:
+            async with hass.timeout.async_timeout(
+                STAGE_2_TIMEOUT, cool_down=COOLDOWN_TIME
+            ):
+                await async_setup_multi_components(
+                    hass, stage_2_domains, config, setup_started
+                )
+        except asyncio.TimeoutError:
+            _LOGGER.warning("Setup timed out for stage 2 - moving forward")
 
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
-    await hass.async_block_till_done()
+    try:
+        async with hass.timeout.async_timeout(WRAP_UP_TIMEOUT, cool_down=COOLDOWN_TIME):
+            await hass.async_block_till_done()
+    except asyncio.TimeoutError:
+        _LOGGER.warning("Setup timed out for bootstrap - moving forward")
