@@ -1,6 +1,5 @@
 """Helpers for mobile_app."""
 import json
-import logging
 from typing import Callable, Dict, Tuple
 
 from aiohttp.web import Response
@@ -13,8 +12,6 @@ from homeassistant.components.mobile_app.const import (
 )
 from homeassistant.const import HTTP_OK
 from homeassistant.helpers.json import JSONEncoder
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_encrypt() -> Tuple[int, Callable]:
