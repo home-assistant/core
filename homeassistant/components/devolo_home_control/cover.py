@@ -90,10 +90,8 @@ class DevoloCoverDeviceEntity(DevoloDeviceEntity, CoverEntity):
 
     def _sync(self, message=None):
         """Update the binary sensor state."""
-        if message[0].startswith("devolo.Blinds"):
-            self._position = self._device_instance.multi_level_switch_property[
-                message[0]
-            ].value
+        if message[0] == self._unique_id:
+            self._position = message[1]
         elif message[0].startswith("hdm"):
             self._available = self._device_instance.is_online()
         else:
