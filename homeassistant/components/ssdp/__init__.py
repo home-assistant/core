@@ -47,11 +47,11 @@ async def async_setup(hass, config):
 class Scanner:
     """Class to manage SSDP scanning."""
 
-    def __init__(self, hass, entries):
+    def __init__(self, hass, integration_matchers):
         """Initialize class."""
         self.hass = hass
         self.seen = set()
-        self._entries = entries
+        self._integration_matchers = integration_matchers
         self._description_cache = {}
 
     async def async_scan(self, _):
