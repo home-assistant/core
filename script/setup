@@ -20,6 +20,16 @@ valid_ver()
     return 1
 }
 
+check_venv()
+{
+    if [[ -e $1/bin/activate ]]; then
+        source "$1/bin/activate"
+        cur_python=$(python3 -V)
+        return 0
+    fi
+    return 1
+}
+
 cur_python=
 # If a venv is active, get its version.
 if [[ -n $VIRTUAL_ENV ]]; then
@@ -27,14 +37,17 @@ if [[ -n $VIRTUAL_ENV ]]; then
 else
     # No venv active.
     # If a venv exists, activate it and get its version.
-    for dir in venv .venv; do
-        if [[ -e $dir/bin/activate ]]; then
-            source "$dir/bin/activate"
-            cur_python=$(python3 -V)
-            break
-        fi
-    done
+    if [[ -n $HA_VENV_DIR ]]; then
+        check_venv "$HA_VENV_DIR"
+    else
+        for dir in venv .venv; do
+            if check_venv "$dir"; then
+                break
+            fi
+        done
+    fi
 fi
+
 # If a venv was active or found, check its version.
 if [[ -n $cur_python ]]; then
     if ! valid_ver "$cur_python"; then
@@ -61,8 +74,9 @@ else
             exit 2
         fi
     fi
-    $cmd -m venv venv
-    source venv/bin/activate
+    venv_dir=${HA_VENV_DIR:-venv}
+    $cmd -m venv "$venv_dir"
+    source "$venv_dir/bin/activate"
 fi
 
 script/bootstrap
