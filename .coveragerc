@@ -152,7 +152,11 @@ omit =
     homeassistant/components/cppm_tracker/device_tracker.py
     homeassistant/components/cpuspeed/sensor.py
     homeassistant/components/crimereports/sensor.py
-    homeassistant/components/crownstone/*
+    homeassistant/components/crownstone/__init__.py
+    homeassistant/components/crownstone/const.py
+    homeassistant/components/crownstone/helpers.py
+    homeassistant/components/crownstone/hub.py
+    homeassistant/components/crownstone/light.py
     homeassistant/components/cups/sensor.py
     homeassistant/components/currencylayer/sensor.py
     homeassistant/components/daikin/*

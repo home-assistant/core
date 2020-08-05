@@ -9,10 +9,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     LightEntity,
 )
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import CROWNSTONE_EXCLUDE, CROWNSTONE_TYPES, DOMAIN
 
@@ -48,9 +45,7 @@ class Crownstone(LightEntity):
     """
     Representation of a crownstone.
 
-    Light platform is used as crownstones behave like light switches (ON/OFF state).
-    Crownstones also support dimming.
-    Crownstones can be used for more electronic devices, it's main use case is for lights however.
+    Light platform is used to support dimming.
     """
 
     def __init__(self, crownstone, uart):
@@ -149,8 +144,7 @@ class Crownstone(LightEntity):
                 self.crownstone.state = hass_to_crownstone_state(
                     kwargs[ATTR_BRIGHTNESS]
                 )
-                # send signal for state update
-                async_dispatcher_send(self.hass, DOMAIN)
+                self.async_write_ha_state()
             else:
                 _LOGGER.warning(
                     "Dimming is not enabled for this crownstone. Go to the crownstone app to enable it"
@@ -159,14 +153,12 @@ class Crownstone(LightEntity):
             self.uart.switch_crownstone(self.unique_id, on=True)
             # set state
             self.crownstone.state = 1
-            # send signal for state update
-            async_dispatcher_send(self.hass, DOMAIN)
+            self.async_write_ha_state()
         else:
             await self.crownstone.async_turn_on()
             # set state
             self.crownstone.state = 1
-            # send signal for state update
-            async_dispatcher_send(self.hass, DOMAIN)
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off this device via dongle or cloud."""
@@ -178,5 +170,4 @@ class Crownstone(LightEntity):
             await self.crownstone.async_turn_off()
 
         self.crownstone.state = 0
-        # send signal for state update
-        async_dispatcher_send(self.hass, DOMAIN)
+        self.async_write_ha_state()

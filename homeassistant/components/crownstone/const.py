@@ -2,6 +2,7 @@
 
 DOMAIN = "crownstone"
 CONF_SPHERE = "sphere"
+LIGHT_PLATFORM = "light"
 
 CROWNSTONE_TYPES = {
     "PLUG": "Crownstone plug",
@@ -12,10 +13,3 @@ CROWNSTONE_TYPES = {
 }
 
 CROWNSTONE_EXCLUDE = ["CROWNSTONE_USB", "GUIDESTONE"]
-
-PRESENCE_SPHERE = {"icon": "mdi:earth", "description": "Sphere presence"}
-
-PRESENCE_LOCATION = {
-    "icon": "mdi:map-marker-radius",
-    "description": "Location presence",
-}
