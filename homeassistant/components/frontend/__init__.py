@@ -77,6 +77,7 @@ DATA_EXTRA_JS_URL_ES5 = "frontend_extra_js_url_es5"
 
 THEMES_STORAGE_KEY = f"{DOMAIN}_theme"
 THEMES_STORAGE_VERSION = 1
+THEMES_SAVE_DELAY = 60
 DATA_THEMES_STORE = "frontend_themes_store"
 DATA_THEMES = "frontend_themes"
 DATA_DEFAULT_THEME = "frontend_default_theme"
@@ -119,8 +120,8 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 SERVICE_SET_THEME = "set_theme"
-SERVICE_SET_DARK_THEME = "set_dark_theme"
 SERVICE_RELOAD_THEMES = "reload_themes"
+CONF_MODE = "mode"
 
 
 class Panel:
@@ -366,40 +367,41 @@ async def _async_setup_themes(hass, themes):
             )
         hass.bus.async_fire(EVENT_THEMES_UPDATED)
 
-    async def save_theme_store():
+    @callback
+    def save_theme_store():
         """Update store with new theme data."""
         store = hass.data[DATA_THEMES_STORE]
-        data = {
-            DATA_DEFAULT_THEME: hass.data[DATA_DEFAULT_THEME],
-            DATA_DEFAULT_DARK_THEME: hass.data.get(DATA_DEFAULT_DARK_THEME),
-        }
-        await store.async_save(data)
 
-    async def set_theme(call):
+        @callback
+        def _data_to_save():
+            """Return data to save."""
+            return {
+                DATA_DEFAULT_THEME: hass.data[DATA_DEFAULT_THEME],
+                DATA_DEFAULT_DARK_THEME: hass.data.get(DATA_DEFAULT_DARK_THEME),
+            }
+
+        store.async_delay_save(_data_to_save, THEMES_SAVE_DELAY)
+
+    @callback
+    def set_theme(call):
         """Set backend-preferred theme."""
         data = call.data
         name = data[CONF_NAME]
+        mode = data.get("mode", "light")
         if name == DEFAULT_THEME or name in hass.data[DATA_THEMES]:
-            _LOGGER.info("Theme %s set as default", name)
-            hass.data[DATA_DEFAULT_THEME] = name
-            await save_theme_store()
-            update_theme_and_fire_event()
-        else:
-            _LOGGER.warning("Theme %s is not defined", name)
-
-    async def set_dark_theme(call):
-        """Set backend-preferred dark theme."""
-        data = call.data
-        name = data[CONF_NAME]
-        if name == DEFAULT_THEME or name in hass.data[DATA_THEMES]:
-            _LOGGER.info("Theme %s set as default dark", name)
-            hass.data[DATA_DEFAULT_DARK_THEME] = name
-            await save_theme_store()
+            _LOGGER.info("Theme %s set as default %s theme", name, mode)
+            if mode == "light":
+                hass.data[DATA_DEFAULT_THEME] = name
+            else:
+                hass.data[DATA_DEFAULT_DARK_THEME] = name
+            save_theme_store()
             update_theme_and_fire_event()
         elif name == VALUE_NO_THEME:
-            hass.data[DATA_DEFAULT_DARK_THEME] = None
-            await save_theme_store()
-            update_theme_and_fire_event()
+            if mode == "light":
+                hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
+            else:
+                hass.data[DATA_DEFAULT_DARK_THEME] = None
+            save_theme_store()
         else:
             _LOGGER.warning("Theme %s is not defined", name)
 
@@ -422,15 +424,12 @@ async def _async_setup_themes(hass, themes):
         DOMAIN,
         SERVICE_SET_THEME,
         set_theme,
-        vol.Schema({vol.Required(CONF_NAME): cv.string}),
-    )
-
-    service.async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_SET_DARK_THEME,
-        set_dark_theme,
-        vol.Schema({vol.Required(CONF_NAME): cv.string}),
+        vol.Schema(
+            {
+                vol.Required(CONF_NAME): cv.string,
+                vol.Optional(CONF_MODE): vol.Any("dark", "light"),
+            }
+        ),
     )
 
     service.async_register_admin_service(

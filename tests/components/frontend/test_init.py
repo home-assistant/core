@@ -172,12 +172,12 @@ async def test_themes_set_theme_wrong_name(hass, hass_ws_client):
 
 
 async def test_themes_set_dark_theme(hass, hass_ws_client):
-    """Test frontend.set_dark_theme service."""
+    """Test frontend.set_theme service called with dark mode."""
     assert await async_setup_component(hass, "frontend", CONFIG_THEMES)
     client = await hass_ws_client(hass)
 
     await hass.services.async_call(
-        DOMAIN, "set_dark_theme", {"name": "happy"}, blocking=True
+        DOMAIN, "set_theme", {"name": "happy", "mode": "dark"}, blocking=True
     )
 
     await client.send_json({"id": 5, "type": "frontend/get_themes"})
@@ -186,7 +186,7 @@ async def test_themes_set_dark_theme(hass, hass_ws_client):
     assert msg["result"]["default_dark_theme"] == "happy"
 
     await hass.services.async_call(
-        DOMAIN, "set_dark_theme", {"name": "default"}, blocking=True
+        DOMAIN, "set_theme", {"name": "default", "mode": "dark"}, blocking=True
     )
 
     await client.send_json({"id": 6, "type": "frontend/get_themes"})
@@ -195,7 +195,7 @@ async def test_themes_set_dark_theme(hass, hass_ws_client):
     assert msg["result"]["default_dark_theme"] == "default"
 
     await hass.services.async_call(
-        DOMAIN, "set_dark_theme", {"name": "none"}, blocking=True
+        DOMAIN, "set_theme", {"name": "none", "mode": "dark"}, blocking=True
     )
 
     await client.send_json({"id": 7, "type": "frontend/get_themes"})
@@ -205,12 +205,12 @@ async def test_themes_set_dark_theme(hass, hass_ws_client):
 
 
 async def test_themes_set_dark_theme_wrong_name(hass, hass_ws_client):
-    """Test frontend.set_dark_theme service called with wrong name."""
+    """Test frontend.set_theme service called with mode dark and wrong name."""
     assert await async_setup_component(hass, "frontend", CONFIG_THEMES)
     client = await hass_ws_client(hass)
 
     await hass.services.async_call(
-        DOMAIN, "set_dark_theme", {"name": "wrong"}, blocking=True
+        DOMAIN, "set_theme", {"name": "wrong", "mode": "dark"}, blocking=True
     )
 
     await client.send_json({"id": 5, "type": "frontend/get_themes"})
