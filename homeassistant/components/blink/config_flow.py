@@ -1,10 +1,16 @@
 """Config flow to configure Blink."""
 import logging
 
-from blinkpy.blinkpy import Blink
+from blinkpy.auth import Auth, LoginError, TokenRefreshFailed
+from blinkpy.blinkpy import Blink, BlinkSetupError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.components.blink.const import (
+    DEFAULT_SCAN_INTERVAL,
+    DEVICE_ID,
+    DOMAIN,
+)
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PIN,
@@ -13,36 +19,36 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-from .const import DEFAULT_OFFSET, DEFAULT_SCAN_INTERVAL, DEVICE_ID, DOMAIN
-
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: core.HomeAssistant, blink):
+def validate_input(hass: core.HomeAssistant, auth):
     """Validate the user input allows us to connect."""
-    response = await hass.async_add_executor_job(blink.get_auth_token)
-    if not response:
+    try:
+        auth.startup()
+    except (LoginError, TokenRefreshFailed):
         raise InvalidAuth
-    if blink.key_required:
+    if auth.check_key_required():
         raise Require2FA
 
-    return blink.login_response
+
+def _send_blink_2fa_pin(auth, pin):
+    """Send 2FA pin to blink servers."""
+    blink = Blink()
+    blink.auth = auth
+    blink.setup_urls()
+    return auth.send_auth_key(blink, pin)
 
 
 class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Blink config flow."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize the blink flow."""
-        self.blink = None
-        self.data = {
-            CONF_USERNAME: "",
-            CONF_PASSWORD: "",
-            "login_response": None,
-        }
+        self.auth = None
 
     @staticmethod
     @callback
@@ -53,28 +59,19 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         errors = {}
+        data = {CONF_USERNAME: "", CONF_PASSWORD: "", "device_id": DEVICE_ID}
         if user_input is not None:
-            self.data[CONF_USERNAME] = user_input["username"]
-            self.data[CONF_PASSWORD] = user_input["password"]
+            data[CONF_USERNAME] = user_input["username"]
+            data[CONF_PASSWORD] = user_input["password"]
 
-            await self.async_set_unique_id(self.data[CONF_USERNAME])
-
-            if CONF_SCAN_INTERVAL in user_input:
-                self.data[CONF_SCAN_INTERVAL] = user_input[CONF_SCAN_INTERVAL]
-
-            self.blink = Blink(
-                username=self.data[CONF_USERNAME],
-                password=self.data[CONF_PASSWORD],
-                motion_interval=DEFAULT_OFFSET,
-                legacy_subdomain=False,
-                no_prompt=True,
-                device_id=DEVICE_ID,
-            )
+            self.auth = Auth(data, no_prompt=True)
+            await self.async_set_unique_id(data[CONF_USERNAME])
 
             try:
-                response = await validate_input(self.hass, self.blink)
-                self.data["login_response"] = response
-                return self.async_create_entry(title=DOMAIN, data=self.data,)
+                await self.hass.async_add_executor_job(
+                    validate_input, self.hass, self.auth
+                )
+                return self._async_finish_flow()
             except Require2FA:
                 return await self.async_step_2fa()
             except InvalidAuth:
@@ -94,23 +91,40 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_2fa(self, user_input=None):
         """Handle 2FA step."""
+        errors = {}
         if user_input is not None:
             pin = user_input.get(CONF_PIN)
-            if await self.hass.async_add_executor_job(
-                self.blink.login_handler.send_auth_key, self.blink, pin
-            ):
-                return await self.async_step_user(user_input=self.data)
+            try:
+                valid_token = await self.hass.async_add_executor_job(
+                    _send_blink_2fa_pin, self.auth, pin
+                )
+            except BlinkSetupError:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+
+            else:
+                if valid_token:
+                    return self._async_finish_flow()
+                errors["base"] = "invalid_access_token"
 
         return self.async_show_form(
             step_id="2fa",
             data_schema=vol.Schema(
                 {vol.Optional("pin"): vol.All(str, vol.Length(min=1))}
             ),
+            errors=errors,
         )
 
-    async def async_step_import(self, import_data):
-        """Import blink config from configuration.yaml."""
-        return await self.async_step_user(import_data)
+    async def async_step_reauth(self, entry_data):
+        """Perform reauth upon migration of old entries."""
+        return await self.async_step_user(entry_data)
+
+    @callback
+    def _async_finish_flow(self):
+        """Finish with setup."""
+        return self.async_create_entry(title=DOMAIN, data=self.auth.login_attributes)
 
 
 class BlinkOptionsFlowHandler(config_entries.OptionsFlow):
