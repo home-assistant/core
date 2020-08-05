@@ -144,4 +144,5 @@ class OVOEnergyDeviceEntity(OVOEnergyEntity):
             "identifiers": {(DOMAIN, self._client.account_id)},
             "manufacturer": "OVO Energy",
             "name": self._client.account_id,
+            "entry_type": "service",
         }
