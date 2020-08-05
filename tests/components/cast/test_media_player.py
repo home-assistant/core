@@ -3,11 +3,13 @@
 from typing import Optional
 from uuid import UUID
 
+import aiodns
 import attr
 import pytest
 
 from homeassistant.components.cast import media_player as cast
 from homeassistant.components.cast.media_player import ChromecastInfo
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
@@ -172,6 +174,14 @@ async def async_setup_media_player_cast(hass: HomeAssistantType, info: Chromecas
         assert cast.CastStatusListener.call_count == 1
         entity = cast.CastStatusListener.call_args[0][0]
         return chromecast, entity
+
+
+class GetHostByNameMock:
+    """Mock for result of aiodns.DNSResolver.gethostbyname."""
+
+    def __init__(self):
+        """Set up gethostbyname result mock."""
+        self.host = "192.168.0.1"
 
 
 async def test_start_discovery_called_once(hass):
@@ -533,9 +543,104 @@ async def test_group_media_control(hass: HomeAssistantType):
     assert not chromecast.media_controller.stop.called
 
     # Verify play_media is not forwarded
-    entity.play_media(None, None)
+    await entity.async_play_media(None, None)
     assert not grp_media.play_media.called
     assert chromecast.media_controller.play_media.called
+
+
+async def test_not_resolve_public_url(hass: HomeAssistantType):
+    """Test internal URL is resolved."""
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
+
+    info = get_fake_chromecast_info()
+    chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    entity._available = True
+    entity.async_write_ha_state()
+
+    # Verify public hostname is not replaced with IP
+    with patch("aiodns.DNSResolver.query"), patch("aiodns.DNSResolver.gethostbyname"):
+        await entity.async_play_media(None, "http://example.com/some.mp3")
+        assert not aiodns.DNSResolver.query.called
+        assert not aiodns.DNSResolver.gethostbyname.called
+    chromecast.media_controller.play_media.assert_called_once_with(
+        "http://example.com/some.mp3", None
+    )
+
+
+async def test_resolve_public_internal_url(hass: HomeAssistantType):
+    """Test public internal URL is unchanged."""
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
+
+    info = get_fake_chromecast_info()
+    chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    entity._available = True
+    entity.async_write_ha_state()
+
+    # Verify non public hostname is replaced with IP
+    with patch("aiodns.DNSResolver.query", AsyncMock()), patch(
+        "aiodns.DNSResolver.gethostbyname"
+    ):
+        await entity.async_play_media(None, "http://example.local:8123/tts.mp3")
+        assert aiodns.DNSResolver.query.called
+        assert not aiodns.DNSResolver.gethostbyname.called
+    chromecast.media_controller.play_media.assert_called_once_with(
+        "http://example.local:8123/tts.mp3", None
+    )
+
+
+async def test_resolve_non_public_internal_url(hass: HomeAssistantType):
+    """Test non-public internal URL is resolved."""
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
+
+    info = get_fake_chromecast_info()
+    chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    entity._available = True
+    entity.async_write_ha_state()
+
+    # Verify non public hostname is replaced with IP
+    with patch("aiodns.DNSResolver.query", side_effect=aiodns.error.DNSError,), patch(
+        "aiodns.DNSResolver.gethostbyname",
+        AsyncMock(return_value=[GetHostByNameMock()]),
+    ):
+        await entity.async_play_media(None, "http://example.local:8123/tts.mp3")
+        assert aiodns.DNSResolver.query.called
+        assert aiodns.DNSResolver.gethostbyname.called
+    chromecast.media_controller.play_media.assert_called_once_with(
+        "http://192.168.0.1:8123/tts.mp3", None
+    )
+
+
+async def test_resolve_non_public_unresolvable_internal_url(hass: HomeAssistantType):
+    """Test non-public non-resolvable internal URL is unchanged."""
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
+
+    info = get_fake_chromecast_info()
+    chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    entity._available = True
+    entity.async_write_ha_state()
+
+    # Verify non public hostname is replaced with IP
+    with patch("aiodns.DNSResolver.query", side_effect=aiodns.error.DNSError,), patch(
+        "aiodns.DNSResolver.gethostbyname", side_effect=aiodns.error.DNSError,
+    ):
+        await entity.async_play_media(None, "http://example.local:8123/tts.mp3")
+        assert aiodns.DNSResolver.query.called
+        assert aiodns.DNSResolver.gethostbyname.called
+    chromecast.media_controller.play_media.assert_called_once_with(
+        "http://example.local:8123/tts.mp3", None
+    )
 
 
 async def test_disconnect_on_stop(hass: HomeAssistantType):

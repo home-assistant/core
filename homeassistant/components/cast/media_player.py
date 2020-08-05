@@ -459,7 +459,7 @@ class CastDevice(MediaPlayerEntity):
         media_controller = self._media_controller()
         media_controller.seek(position)
 
-    def play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(self, media_type, media_id, **kwargs):
         """Play media from a URL."""
         # We do not want this to be forwarded to a group
         if media_type == CAST_DOMAIN:
@@ -488,6 +488,62 @@ class CastDevice(MediaPlayerEntity):
             except NotImplementedError:
                 _LOGGER.error("App %s not supported", app_name)
         else:
+            # ChromeCast will fail to resolve any hostname which is not publicly
+            # resolvable due to it ignoring DHCP supplied DNS server information
+            # and instead using Google's DNS servers.
+            # This is often a problem for HomeAssistant's internal_url, so resolve it
+            # if it's not public and replace with an IP address before passing it to
+            # ChromeCast.
+            # Only resolve if the hostname is not public to avoid breaking vhost
+            # configurations etc.
+            from homeassistant.helpers.network import NoURLAvailableError, get_url
+            from urllib.parse import urlparse, urlunparse
+            import aiodns
+            import socket
+
+            try:
+                internal_url = urlparse(get_url(self.hass, allow_external=False))
+                media_url = urlparse(media_id)
+                if media_url.netloc == internal_url.netloc:
+                    try:
+                        google_dns = ["8.8.8.8", "8.8.4.4"]
+                        response = await aiodns.DNSResolver(google_dns).query(
+                            media_url.hostname, "A"
+                        )
+                    except (aiodns.error.DNSError):
+                        # The hostname is not publicly resolvable, warn and attempt
+                        # local resolution
+                        _LOGGER.info(
+                            "internal_url host %s is not publicly resolvable, attempting to resolve",
+                            internal_url.hostname,
+                        )
+                        try:
+                            response = await aiodns.DNSResolver().gethostbyname(
+                                media_url.hostname, socket.AF_INET
+                            )
+                        except (aiodns.error.DNSError):
+                            _LOGGER.warning(
+                                "internal_url host %s is not publicly resolvable, and could not be resolved",
+                                internal_url.hostname,
+                            )
+                            pass
+                        else:
+                            # Local resolution succeeded, rewrite the URL
+                            # Only replace hostname, take care to keep port, username and password if specced
+                            new_netloc = response[0].host.join(
+                                media_url.netloc.rsplit(media_url.hostname, 1)
+                            )
+                            media_url = media_url._replace(netloc=new_netloc)
+                            media_id = urlunparse(media_url)
+                            _LOGGER.warning(
+                                "internal_url host %s is not publicly resolvable, media URL rewritten to %s",
+                                internal_url.hostname,
+                                media_id,
+                            )
+            except NoURLAvailableError:
+                # internal_url not configured, ignore
+                pass
+
             self._chromecast.media_controller.play_media(media_id, media_type)
 
     # ========== Properties ==========
