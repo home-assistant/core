@@ -1,6 +1,5 @@
 """Support for custom shell commands to turn a switch on/off."""
 import logging
-import subprocess
 
 import voluptuous as vol
 
@@ -19,6 +18,9 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
+from . import call_shell_with_timeout, check_output_or_log
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT
+
 _LOGGER = logging.getLogger(__name__)
 
 SWITCH_SCHEMA = vol.Schema(
@@ -28,6 +30,7 @@ SWITCH_SCHEMA = vol.Schema(
         vol.Optional(CONF_COMMAND_STATE): cv.string,
         vol.Optional(CONF_FRIENDLY_NAME): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
 )
 
@@ -52,10 +55,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 hass,
                 object_id,
                 device_config.get(CONF_FRIENDLY_NAME, object_id),
-                device_config.get(CONF_COMMAND_ON),
-                device_config.get(CONF_COMMAND_OFF),
+                device_config[CONF_COMMAND_ON],
+                device_config[CONF_COMMAND_OFF],
                 device_config.get(CONF_COMMAND_STATE),
                 value_template,
+                device_config[CONF_COMMAND_TIMEOUT],
             )
         )
 
@@ -78,6 +82,7 @@ class CommandSwitch(SwitchEntity):
         command_off,
         command_state,
         value_template,
+        timeout,
     ):
         """Initialize the switch."""
         self._hass = hass
@@ -88,37 +93,28 @@ class CommandSwitch(SwitchEntity):
         self._command_off = command_off
         self._command_state = command_state
         self._value_template = value_template
+        self._timeout = timeout
 
-    @staticmethod
-    def _switch(command):
+    def _switch(self, command):
         """Execute the actual commands."""
         _LOGGER.info("Running command: %s", command)
 
-        success = subprocess.call(command, shell=True) == 0  # nosec # shell by design
+        success = call_shell_with_timeout(command, self._timeout) == 0
 
         if not success:
             _LOGGER.error("Command failed: %s", command)
 
         return success
 
-    @staticmethod
-    def _query_state_value(command):
+    def _query_state_value(self, command):
         """Execute state command for return value."""
-        _LOGGER.info("Running state command: %s", command)
+        _LOGGER.info("Running state value command: %s", command)
+        return check_output_or_log(command, self._timeout)
 
-        try:
-            return_value = subprocess.check_output(
-                command, shell=True  # nosec # shell by design
-            )
-            return return_value.strip().decode("utf-8")
-        except subprocess.CalledProcessError:
-            _LOGGER.error("Command failed: %s", command)
-
-    @staticmethod
-    def _query_state_code(command):
+    def _query_state_code(self, command):
         """Execute state command for return code."""
-        _LOGGER.info("Running state command: %s", command)
-        return subprocess.call(command, shell=True) == 0  # nosec # shell by design
+        _LOGGER.info("Running state code command: %s", command)
+        return call_shell_with_timeout(command, self._timeout) == 0
 
     @property
     def should_poll(self):
@@ -146,8 +142,8 @@ class CommandSwitch(SwitchEntity):
             _LOGGER.error("No state command specified")
             return
         if self._value_template:
-            return CommandSwitch._query_state_value(self._command_state)
-        return CommandSwitch._query_state_code(self._command_state)
+            return self._query_state_value(self._command_state)
+        return self._query_state_code(self._command_state)
 
     def update(self):
         """Update device state."""
@@ -159,12 +155,12 @@ class CommandSwitch(SwitchEntity):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        if CommandSwitch._switch(self._command_on) and not self._command_state:
+        if self._switch(self._command_on) and not self._command_state:
             self._state = True
             self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        if CommandSwitch._switch(self._command_off) and not self._command_state:
+        if self._switch(self._command_off) and not self._command_state:
             self._state = False
             self.schedule_update_ha_state()
