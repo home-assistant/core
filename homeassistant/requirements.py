@@ -122,11 +122,11 @@ async def async_process_requirements(
             if pkg_util.is_installed(req):
                 continue
 
-            def _install(hass: HomeAssistant, req: str, kwargs: Dict) -> bool:
+            def _install(req: str, kwargs: Dict) -> bool:
                 """Install requirement."""
                 return pkg_util.install_package(req, **kwargs)
 
-            ret = await hass.async_add_executor_job(_install, hass, req, kwargs)
+            ret = await hass.async_add_executor_job(_install, req, kwargs)
 
             if not ret:
                 raise RequirementsNotFound(name, [req])
