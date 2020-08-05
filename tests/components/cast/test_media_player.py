@@ -438,7 +438,7 @@ async def test_entity_media_states(hass: HomeAssistantType):
     await hass.async_block_till_done()
     state = hass.states.get("media_player.speaker")
     assert state.state == "unknown"
- 
+
 
 async def test_url_replace(hass: HomeAssistantType):
     """Test functionality of replacing URL for HTTPS."""
