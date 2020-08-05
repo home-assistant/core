@@ -413,14 +413,14 @@ async def test_webhook_camera_stream_stream_available_but_errors(
     assert webhook_json["mjpeg_path"] == "/api/camera_proxy_stream/camera.stream_camera"
 
 
-async def test_webhook_handle_get_yaml_config(
+async def test_webhook_handle_get_mobile_app_config(
     hass, create_registrations, webhook_client
 ):
-    """Test fetching the YAML config (push and actions)."""
+    """Test fetching the mobile app specific config (push and actions)."""
 
     resp = await webhook_client.post(
         "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
-        json={"type": "get_yaml_config"},
+        json={"type": "get_mobile_app_config"},
     )
 
     assert resp.status == 200

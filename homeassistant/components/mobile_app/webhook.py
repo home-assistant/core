@@ -542,9 +542,9 @@ async def webhook_get_config(hass, config_entry, data):
     return webhook_response(resp, registration=config_entry.data)
 
 
-@WEBHOOK_COMMANDS.register("get_yaml_config")
-async def webhook_get_yaml_config(hass, config_entry, data):
-    """Handle a get yaml config webhook for user-defined config options."""
+@WEBHOOK_COMMANDS.register("get_mobile_app_config")
+async def webhook_get_mobile_app_config(hass, config_entry, data):
+    """Handle a get mobile app specific config webhook."""
     resp = hass.data[DOMAIN][CONF]
 
     if resp:
