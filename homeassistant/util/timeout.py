@@ -355,7 +355,7 @@ class _Zone:
     @property
     def active(self) -> bool:
         """Return True if zone is active."""
-        return self._tasks or self._freezes
+        return len(self._tasks) > 0 or len(self._freezes) > 0
 
     @property
     def freezes_done(self) -> bool:
