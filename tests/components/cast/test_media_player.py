@@ -461,6 +461,7 @@ async def test_url_replace(hass: HomeAssistantType):
 
     class FakeImage:
         url = "http://example.com/test.png"
+
     media_status = MagicMock(images=[FakeImage()])
     media_status.player_is_playing = True
     entity.new_media_status(media_status)
