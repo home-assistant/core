@@ -1,13 +1,11 @@
 """Support for OVO Energy sensors."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
-import aiohttp
 from ovoenergy import OVODailyElectricity, OVODailyGas, OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -29,13 +27,9 @@ async def async_setup_entry(
     ]
     client: OVOEnergy = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
 
-    now = datetime.utcnow()
-    try:
-        usage: OVODailyUsage = await client.get_daily_usage(now.strftime("%Y-%m"))
-        currency = usage.electricity[len(usage.electricity) - 1].cost.currency_unit
-    except aiohttp.ClientError as exception:
-        _LOGGER.warning(exception)
-        raise PlatformNotReady from exception
+    currency = coordinator.data.electricity[
+        len(coordinator.data.electricity) - 1
+    ].cost.currency_unit
 
     async_add_entities(
         [
