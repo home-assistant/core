@@ -1,17 +1,8 @@
-"""Config flow for Haiku."""
-# import my_pypi_dependency
+"""Test config flow for Haiku."""
+import asyncio
 
-from homeassistant import config_entries
-from homeassistant.helpers import config_entry_flow
+from haiku import discover
 
-DOMAIN = "haiku"
-
-
-async def _async_has_devices(hass) -> bool:
-    """Return if there are devices that can be discovered."""
-    return True
-
-
-config_entry_flow.register_discovery_flow(
-    DOMAIN, "Haiku", _async_has_devices, config_entries.CONN_CLASS_UNKNOWN
-)
+if asyncio.run(discover.discover()) == False:
+    print("[HAIKU] Error: Socket Error")
+    
