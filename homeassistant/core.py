@@ -75,7 +75,7 @@ from homeassistant.util import location, network
 from homeassistant.util.async_ import fire_coroutine_threadsafe, run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.thread import fix_threading_exception_logging
-from homeassistant.util.timeout import ZoneTimeout
+from homeassistant.util.timeout import TimeoutManager
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
 # Typing imports that create a circular dependency
@@ -189,7 +189,7 @@ class HomeAssistant:
         # If not None, use to signal end-of-loop
         self._stopped: Optional[asyncio.Event] = None
         # Timeout handler for Core/Helper namespace
-        self.timeout: ZoneTimeout = ZoneTimeout()
+        self.timeout: TimeoutManager = TimeoutManager()
 
     @property
     def is_running(self) -> bool:
