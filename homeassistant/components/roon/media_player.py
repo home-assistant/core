@@ -90,7 +90,6 @@ class RoonDevice(MediaPlayerEntity):
         self._state = STATE_IDLE
         self._last_playlist = None
         self._last_media = None
-        self._last_changed = None
         self._unique_id = None
         self._zone_id = None
         self._output_id = None
@@ -103,7 +102,6 @@ class RoonDevice(MediaPlayerEntity):
         self._is_volume_muted = False
         self._volume_step = 0
         self._shuffle = False
-        self._repeat = False
         self._media_image_url = None
         self._volume_level = 0
         self.update_data(player_data)
@@ -187,7 +185,6 @@ class RoonDevice(MediaPlayerEntity):
             else:
                 new_state = STATE_IDLE
         self._state = new_state
-        self._last_changed = self.player_data["last_changed"]
         self._unique_id = self.player_data["dev_id"]
         self._zone_id = self.player_data["zone_id"]
         self._output_id = self.player_data["output_id"]
@@ -195,7 +192,6 @@ class RoonDevice(MediaPlayerEntity):
         self._is_volume_muted = self.player_data["volume"]["is_muted"]
         self._volume_step = convert(self.player_data["volume"]["step"], int, 0)
         self._shuffle = self.player_data["settings"]["shuffle"]
-        self._repeat = self.player_data["settings"]["loop"]
 
         if self.player_data["volume"]["type"] == "db":
             volume = (
@@ -236,11 +232,6 @@ class RoonDevice(MediaPlayerEntity):
         """When was the position of the current playing media valid."""
         # Returns value from homeassistant.util.dt.utcnow().
         return self._last_position_update
-
-    @property
-    def last_changed(self):
-        """When was the object last updated on the server."""
-        return self._last_changed
 
     @property
     def unique_id(self):
@@ -333,19 +324,9 @@ class RoonDevice(MediaPlayerEntity):
         return self._state
 
     @property
-    def is_nowplaying(self):
-        """Return true if an item is currently active."""
-        return self.state == STATE_PLAYING
-
-    @property
     def shuffle(self):
         """Boolean if shuffle is enabled."""
         return self._shuffle
-
-    @property
-    def repeat(self):
-        """Boolean if repeat is enabled."""
-        return self._repeat
 
     def media_play(self):
         """Send play command to device."""
@@ -397,28 +378,26 @@ class RoonDevice(MediaPlayerEntity):
 
     def turn_on(self):
         """Turn on device (if supported)."""
-        if self.supports_standby and "source_controls" in self.player_data:
-            for source in self.player_data["source_controls"]:
-                if source["supports_standby"] and source["status"] != "indeterminate":
-                    self._server.roonapi.convenience_switch(
-                        self.output_id, source["control_key"]
-                    )
-                    break
-        else:
-            return self.media_play()
+        if not (self.supports_standby and "source_controls" in self.player_data):
+            self.media_play()
+            return
+        for source in self.player_data["source_controls"]:
+            if source["supports_standby"] and source["status"] != "indeterminate":
+                self._server.roonapi.convenience_switch(
+                    self.output_id, source["control_key"]
+                )
+                return
 
     def turn_off(self):
         """Turn off device (if supported)."""
-        if self.supports_standby and "source_controls" in self.player_data:
-            for source in self.player_data["source_controls"]:
-                if (
-                    source["supports_standby"]
-                    and not source["status"] == "indeterminate"
-                ):
-                    self._server.roonapi.standby(self.output_id, source["control_key"])
-                    break
-        else:
-            return self.media_stop()
+        if not (self.supports_standby and "source_controls" in self.player_data):
+            self.media_stop()
+            return
+
+        for source in self.player_data["source_controls"]:
+            if source["supports_standby"] and not source["status"] == "indeterminate":
+                self._server.roonapi.standby(self.output_id, source["control_key"])
+                return
 
     def set_shuffle(self, shuffle):
         """Set shuffle state."""
