@@ -1,5 +1,6 @@
 """Test Home Assistant timeout handler."""
 import asyncio
+import time
 
 import pytest
 
@@ -23,6 +24,15 @@ async def test_simple_global_timeout():
             await asyncio.sleep(0.3)
 
 
+async def test_simple_global_timeout_with_executor_job(hass):
+    """Test a simple global timeout with executor job."""
+    timeout = ZoneTimeout()
+
+    with pytest.raises(asyncio.TimeoutError):
+        async with timeout.async_timeout(0.1):
+            await hass.async_add_executor_job(lambda: time.sleep(0.2))
+
+
 async def test_simple_global_timeout_freeze():
     """Test a simple global timeout freeze."""
     timeout = ZoneTimeout()
@@ -30,6 +40,15 @@ async def test_simple_global_timeout_freeze():
     async with timeout.async_timeout(0.2):
         async with timeout.freeze():
             await asyncio.sleep(0.3)
+
+
+async def test_simple_global_timeout_freeze_with_executor_job(hass):
+    """Test a simple global timeout freeze with executor job."""
+    timeout = ZoneTimeout()
+
+    async with timeout.async_timeout(0.2):
+        async with timeout.freeze():
+            await hass.async_add_executor_job(lambda: time.sleep(0.3))
 
 
 async def test_simple_global_timeout_freeze_reset():
