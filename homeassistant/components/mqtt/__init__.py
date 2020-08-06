@@ -44,6 +44,7 @@ from . import config_flow  # noqa: F401 pylint: disable=unused-import
 from . import debug_info, discovery
 from .const import (
     ATTR_DISCOVERY_HASH,
+    ATTR_DISCOVERY_PAYLOAD,
     ATTR_DISCOVERY_TOPIC,
     ATTR_PAYLOAD,
     ATTR_QOS,
@@ -1169,6 +1170,7 @@ class MqttDiscoveryUpdate(Entity):
             _LOGGER.info(
                 "Got update for entity with hash: %s '%s'", discovery_hash, payload,
             )
+            old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
             debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
             if not payload:
                 # Empty payload: Remove component
@@ -1176,9 +1178,13 @@ class MqttDiscoveryUpdate(Entity):
                 self._cleanup_discovery_on_remove()
                 await _async_remove_state_and_registry_entry(self)
             elif self._discovery_update:
-                # Non-empty payload: Notify component
-                _LOGGER.info("Updating component: %s", self.entity_id)
-                await self._discovery_update(payload)
+                if old_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]:
+                    # Non-empty, changed payload: Notify component
+                    _LOGGER.info("Updating component: %s", self.entity_id)
+                    await self._discovery_update(payload)
+                else:
+                    # Non-empty, unchanged payload: Ignore to avoid changing states
+                    _LOGGER.info("Ignoring unchanged update for: %s", self.entity_id)
 
         if discovery_hash:
             debug_info.add_entity_discovery_data(
