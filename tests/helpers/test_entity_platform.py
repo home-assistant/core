@@ -956,14 +956,16 @@ async def test_setup_entry_with_entities_that_block_forever(hass, caplog):
         hass, platform_name=config_entry.domain, platform=platform
     )
 
-    with patch.object(entity_platform, "SLOW_ADD_ENTITIES_MAX_WAIT", 0.01):
+    with patch.object(entity_platform, "SLOW_ADD_ENTITY_MAX_WAIT", 0.01), patch.object(
+        entity_platform, "SLOW_ADD_MIN_TIMEOUT", 0.01
+    ):
         assert await mock_entity_platform.async_setup_entry(config_entry)
         await hass.async_block_till_done()
     full_name = f"{mock_entity_platform.domain}.{config_entry.domain}"
     assert full_name in hass.config.components
     assert len(hass.states.async_entity_ids()) == 0
     assert len(registry.entities) == 1
-    assert "Timed out adding entity" in caplog.text
+    assert "Timed out adding entities" in caplog.text
     assert "test_domain.test1" in caplog.text
     assert "test_domain" in caplog.text
     assert "test" in caplog.text
