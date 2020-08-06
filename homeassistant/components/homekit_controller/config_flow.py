@@ -241,6 +241,33 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         if self.controller is None:
             await self._async_setup_controller()
 
+        if not self.finish_pairing:
+            # Its possible that the first try may have been busy so
+            # we always check to see if self.finish_paring has been
+            # set.
+            discovery = await self.controller.find_ip_by_device_id(self.hkid)
+
+            try:
+                self.finish_pairing = await discovery.start_pairing(self.hkid)
+
+            except aiohomekit.BusyError:
+                # Already performing a pair setup operation with a different
+                # controller
+                errors["pairing_code"] = "busy_error"
+            except aiohomekit.MaxTriesError:
+                # The accessory has received more than 100 unsuccessful auth
+                # attempts.
+                errors["pairing_code"] = "max_tries_error"
+            except aiohomekit.UnavailableError:
+                # The accessory is already paired - cannot try to pair again.
+                return self.async_abort(reason="already_paired")
+            except aiohomekit.AccessoryNotFoundError:
+                # Can no longer find the device on the network
+                return self.async_abort(reason="accessory_not_found_error")
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Pairing attempt failed with an unhandled exception")
+                errors["pairing_code"] = "pairing_failed"
+
         if pair_info:
             code = pair_info["pairing_code"]
             try:
@@ -270,29 +297,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
                 errors["pairing_code"] = "pairing_failed"
-
-        discovery = await self.controller.find_ip_by_device_id(self.hkid)
-
-        try:
-            self.finish_pairing = await discovery.start_pairing(self.hkid)
-
-        except aiohomekit.BusyError:
-            # Already performing a pair setup operation with a different
-            # controller
-            errors["pairing_code"] = "busy_error"
-        except aiohomekit.MaxTriesError:
-            # The accessory has received more than 100 unsuccessful auth
-            # attempts.
-            errors["pairing_code"] = "max_tries_error"
-        except aiohomekit.UnavailableError:
-            # The accessory is already paired - cannot try to pair again.
-            return self.async_abort(reason="already_paired")
-        except aiohomekit.AccessoryNotFoundError:
-            # Can no longer find the device on the network
-            return self.async_abort(reason="accessory_not_found_error")
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Pairing attempt failed with an unhandled exception")
-            errors["pairing_code"] = "pairing_failed"
 
         return self._async_step_pair_show_form(errors)
 

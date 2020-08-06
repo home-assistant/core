@@ -347,6 +347,13 @@ async def test_pair_form_errors_on_start(hass, controller, exception, expected):
         "source": "zeroconf",
     }
 
+    # User re-tries entering pairing code
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"pairing_code": "111-22-333"}
+    )
+    assert result["type"] == "create_entry"
+    assert result["title"] == "Koogeek-LS1-20833F"
+
 
 @pytest.mark.parametrize("exception,expected", PAIRING_FINISH_ABORT_ERRORS)
 async def test_pair_abort_errors_on_finish(hass, controller, exception, expected):
