@@ -1,4 +1,4 @@
-"""Tests for the NightScout integration."""
+"""Tests for the Nightscout integration."""
 import json
 
 from py_nightscout.models import SGV, ServerStatus
@@ -27,10 +27,10 @@ async def init_integration(hass) -> MockConfigEntry:
     """Set up the Dexcom integration in Home Assistant."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "test.host"},)
     with patch(
-        "homeassistant.components.nightscout.NightScoutAPI.get_sgvs",
+        "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
         return_value=GLUCOSE_READINGS,
     ), patch(
-        "homeassistant.components.nightscout.NightScoutAPI.get_server_status",
+        "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
         return_value=SERVER_STATUS,
     ):
         entry.add_to_hass(hass)

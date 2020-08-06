@@ -1,4 +1,4 @@
-"""Test the NightScout config flow."""
+"""Test the Nightscout config flow."""
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.nightscout.const import DOMAIN
 from homeassistant.const import CONF_HOST
@@ -19,10 +19,10 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.nightscout.NightScoutAPI.get_sgvs",
+        "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
         return_value=GLUCOSE_READINGS,
     ), patch(
-        "homeassistant.components.nightscout.NightScoutAPI.get_server_status",
+        "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
         return_value=SERVER_STATUS,
     ), _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(

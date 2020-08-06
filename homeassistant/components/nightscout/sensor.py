@@ -1,4 +1,4 @@
-"""Support for NightScout sensors."""
+"""Support for Nightscout sensors."""
 from asyncio import TimeoutError as AsyncIOTimeoutError
 from datetime import timedelta
 import hashlib
@@ -6,7 +6,7 @@ import logging
 from typing import Callable, List
 
 from aiohttp import ClientError
-from py_nightscout import Api as NightScoutAPI
+from py_nightscout import Api as NightscoutAPI
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -41,14 +41,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Glucose Sensor."""
     api = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([NightScoutSensor(api, "Blood Sugar")], True)
+    async_add_entities([NightscoutSensor(api, "Blood Sugar")], True)
 
 
-class NightScoutSensor(Entity):
-    """Implementation of a NightScout sensor."""
+class NightscoutSensor(Entity):
+    """Implementation of a Nightscout sensor."""
 
-    def __init__(self, api: NightScoutAPI, name):
-        """Initialize the NightScout sensor."""
+    def __init__(self, api: NightscoutAPI, name):
+        """Initialize the Nightscout sensor."""
         self.api = api
         self._unique_id = hashlib.sha256(api._host.encode("utf-8")).hexdigest()
         self._name = name
@@ -93,7 +93,7 @@ class NightScoutSensor(Entity):
         return True
 
     async def async_update(self):
-        """Fetch the latest data from NightScout REST API and update the state."""
+        """Fetch the latest data from Nightscout REST API and update the state."""
         try:
             values = await self.api.get_sgvs()
         except (ClientError, AsyncIOTimeoutError, OSError) as error:

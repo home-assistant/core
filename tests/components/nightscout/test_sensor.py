@@ -1,4 +1,4 @@
-"""The sensor tests for the NightScout platform."""
+"""The sensor tests for the Nightscout platform."""
 
 from homeassistant.components.nightscout.const import (
     ATTR_DATE,

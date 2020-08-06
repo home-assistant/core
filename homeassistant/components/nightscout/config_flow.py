@@ -1,10 +1,10 @@
-"""Config flow for NightScout integration."""
+"""Config flow for Nightscout integration."""
 from asyncio import TimeoutError as AsyncIOTimeoutError
 from datetime import timedelta
 import logging
 
 from aiohttp import ClientError
-from py_nightscout import Api as NightScoutAPI
+from py_nightscout import Api as NightscoutAPI
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -21,7 +21,7 @@ async def _validate_input(data):
     """Validate the user input allows us to connect."""
 
     try:
-        api = NightScoutAPI(data[CONF_HOST])
+        api = NightscoutAPI(data[CONF_HOST])
         status = await api.get_server_status()
     except (ClientError, AsyncIOTimeoutError, OSError):
         raise CannotConnect
@@ -31,7 +31,7 @@ async def _validate_input(data):
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for NightScout."""
+    """Handle a config flow for Nightscout."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL

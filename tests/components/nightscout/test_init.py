@@ -1,4 +1,4 @@
-"""Test the NightScout config flow."""
+"""Test the Nightscout config flow."""
 from homeassistant.components.nightscout.const import DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
 

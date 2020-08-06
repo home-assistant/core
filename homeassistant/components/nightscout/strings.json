@@ -1,6 +1,6 @@
 {
     "config": {
-        "flow_title": "NightScout",
+        "flow_title": "Nightscout",
         "step": {
             "user": {
                 "data": {

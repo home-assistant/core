@@ -1,4 +1,4 @@
-"""Constants for the NightScout integration."""
+"""Constants for the Nightscout integration."""
 
 DOMAIN = "nightscout"
 

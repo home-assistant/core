@@ -1,6 +1,6 @@
 {
   "domain": "nightscout",
-  "name": "NightScout",
+  "name": "Nightscout",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nightscout",
   "requirements": [

@@ -1,10 +1,10 @@
-"""The NightScout integration."""
+"""The Nightscout integration."""
 import asyncio
 from asyncio import TimeoutError as AsyncIOTimeoutError
 import logging
 
 from aiohttp import ClientError, ClientTimeout
-from py_nightscout import Api as NightScoutAPI
+from py_nightscout import Api as NightscoutAPI
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -20,16 +20,16 @@ _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the NightScout component."""
+    """Set up the Nightscout component."""
     hass.data.setdefault(DOMAIN, {})
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up NightScout from a config entry."""
+    """Set up Nightscout from a config entry."""
     host = entry.data[CONF_HOST]
 
-    api = NightScoutAPI(host)
+    api = NightscoutAPI(host)
     status = await api.get_server_status()
 
     hass.data[DOMAIN][entry.entry_id] = api
