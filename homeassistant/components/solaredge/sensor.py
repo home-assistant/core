@@ -6,11 +6,7 @@ from requests.exceptions import ConnectTimeout, HTTPError
 import solaredge
 from stringcase import snakecase
 
-from homeassistant.const import (
-    CONF_API_KEY,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_POWER,
-)
+from homeassistant.const import CONF_API_KEY, DEVICE_CLASS_BATTERY, DEVICE_CLASS_POWER
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
