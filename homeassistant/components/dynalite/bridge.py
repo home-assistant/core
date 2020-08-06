@@ -76,12 +76,12 @@ class DynaliteBridge:
         LOGGER.error("XXX handle_notification %s", notification)  # XXX
         if notification.notification == NOTIFICATION_PACKET:
             self.hass.bus.fire(
-                f"dynalite_{self.host}",
+                f"dynalite_{self.host}_packet",
                 {ATTR_PACKET: notification.data[NOTIFICATION_PACKET]},
             )
         if notification.notification == NOTIFICATION_PRESET:
             self.hass.bus.fire(
-                f"dynalite_{self.host}_packet",
+                f"dynalite_{self.host}_preset",
                 {
                     ATTR_AREA: notification.data[dyn_CONF_AREA],
                     ATTR_PRESET: notification.data[dyn_CONF_PRESET],
