@@ -96,15 +96,15 @@ def get_model_detection_function(model):
     return detect_fn
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the TensorFlow image processing platform."""
-    model_config = config.get(CONF_MODEL)
+    model_config = config[CONF_MODEL]
     model_dir = model_config.get(CONF_MODEL_DIR) or hass.config.path("tensorflow")
     labels = model_config.get(CONF_LABELS) or hass.config.path(
         "tensorflow", "object_detection", "data", "mscoco_label_map.pbtxt"
     )
-    checkpoint = os.path.join(model_config.get(CONF_GRAPH), "checkpoint")
-    pipeline_config = os.path.join(model_config.get(CONF_GRAPH), "pipeline.config")
+    checkpoint = os.path.join(model_config[CONF_GRAPH], "checkpoint")
+    pipeline_config = os.path.join(model_config[CONF_GRAPH], "pipeline.config")
 
     # Make sure locations exist
     if (
@@ -146,45 +146,39 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 
     hass.data[DOMAIN] = {CONF_MODEL: None}
 
-    async def tensorflow_hass_start(_event):
+    def tensorflow_hass_start(_event):
         """Set up TensorFlow model on hass start."""
+        start = time.perf_counter()
 
-        def setup_model():
-            start = time.perf_counter()
+        # Load pipeline config and build a detection model
+        pipeline_configs = config_util.get_configs_from_pipeline_file(pipeline_config)
+        detection_model = model_builder.build(
+            model_config=pipeline_configs["model"], is_training=False
+        )
 
-            # Load pipeline config and build a detection model
-            pipeline_configs = config_util.get_configs_from_pipeline_file(
-                pipeline_config
-            )
-            detection_model = model_builder.build(
-                model_config=pipeline_configs["model"], is_training=False
-            )
+        # Restore checkpoint
+        ckpt = tf.compat.v2.train.Checkpoint(model=detection_model)
+        ckpt.restore(os.path.join(checkpoint, "ckpt-0")).expect_partial()
 
-            # Restore checkpoint
-            ckpt = tf.compat.v2.train.Checkpoint(model=detection_model)
-            ckpt.restore(os.path.join(checkpoint, "ckpt-0")).expect_partial()
+        _LOGGER.debug(
+            "Model checkpoint restore took %d seconds", time.perf_counter() - start
+        )
 
-            _LOGGER.debug(
-                "Model checkpoint restore took %d seconds", time.perf_counter() - start
-            )
+        model = get_model_detection_function(detection_model)
 
-            model = get_model_detection_function(detection_model)
+        # Preload model cache with empty image tensor
+        inp = np.zeros([2160, 3840, 3], dtype=np.uint8)
+        # The input needs to be a tensor, convert it using `tf.convert_to_tensor`.
+        input_tensor = tf.convert_to_tensor(inp, dtype=tf.float32)
+        # The model expects a batch of images, so add an axis with `tf.newaxis`.
+        input_tensor = input_tensor[tf.newaxis, ...]
+        # Run inference
+        model(input_tensor)
 
-            # Preload model cache with empty image tensor
-            inp = np.zeros([2160, 3840, 3], dtype=np.uint8)
-            # The input needs to be a tensor, convert it using `tf.convert_to_tensor`.
-            input_tensor = tf.convert_to_tensor(inp, dtype=tf.float32)
-            # The model expects a batch of images, so add an axis with `tf.newaxis`.
-            input_tensor = input_tensor[tf.newaxis, ...]
-            # Run inference
-            model(input_tensor)
+        _LOGGER.debug("Model load took %d seconds", time.perf_counter() - start)
+        hass.data[DOMAIN][CONF_MODEL] = model
 
-            _LOGGER.debug("Model load took %d seconds", time.perf_counter() - start)
-            return model
-
-        hass.data[DOMAIN][CONF_MODEL] = await hass.async_add_executor_job(setup_model)
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, tensorflow_hass_start)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, tensorflow_hass_start)
 
     category_index = label_map_util.create_category_index_from_labelmap(
         labels, use_display_name=True
