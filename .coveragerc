@@ -460,8 +460,6 @@ omit =
     homeassistant/components/lightwave/*
     homeassistant/components/limitlessled/light.py
     homeassistant/components/linksys_smart/device_tracker.py
-    homeassistant/components/linky/__init__.py
-    homeassistant/components/linky/sensor.py
     homeassistant/components/linode/*
     homeassistant/components/linux_battery/sensor.py
     homeassistant/components/lirc/*
