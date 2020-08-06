@@ -1,4 +1,6 @@
 """Test the Nightscout config flow."""
+from aiohttp import ClientConnectionError
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.nightscout.const import DOMAIN
 from homeassistant.const import CONF_HOST
@@ -35,6 +37,42 @@ async def test_form(hass):
         await hass.async_block_till_done()
         assert len(mock_setup.mock_calls) == 1
         assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_form_cannot_connect(hass):
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
+        side_effect=ClientConnectionError(),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "some host"},
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_user_form_unexpected_exception(hass):
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
+        side_effect=Exception(),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "some host"},
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
 
 
 def _patch_async_setup():

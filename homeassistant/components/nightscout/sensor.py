@@ -105,8 +105,8 @@ class NightscoutSensor(Entity):
         self._available = True
         self._attributes = {}
         self._state = None
-        value = values[0]
-        if value:
+        if values:
+            value = values[0]
             self._attributes = {
                 ATTR_DEVICE: value.device,
                 ATTR_DATE: value.date,
@@ -117,6 +117,7 @@ class NightscoutSensor(Entity):
             self._state = value.sgv
             self._icon = self._parse_icon()
         else:
+            self._available = False
             _LOGGER.warning("Empty reply found when expecting JSON data")
 
     def _parse_icon(self) -> str:

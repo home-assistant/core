@@ -7,9 +7,14 @@ from homeassistant.components.nightscout.const import (
     ATTR_DIRECTION,
     ATTR_SVG,
 )
-from homeassistant.const import ATTR_ICON
+from homeassistant.const import ATTR_ICON, STATE_UNAVAILABLE
 
-from tests.components.nightscout import GLUCOSE_READINGS, init_integration
+from tests.components.nightscout import (
+    GLUCOSE_READINGS,
+    init_integration,
+    init_integration_empty_response,
+    init_integration_unavailable,
+)
 
 
 async def test_sensor_state(hass):
@@ -20,6 +25,22 @@ async def test_sensor_state(hass):
     assert test_glucose_sensor.state == str(
         GLUCOSE_READINGS[0].sgv  # pylint: disable=maybe-no-member
     )
+
+
+async def test_sensor_error(hass):
+    """Test sensor state data."""
+    await init_integration_unavailable(hass)
+
+    test_glucose_sensor = hass.states.get("sensor.blood_sugar")
+    assert test_glucose_sensor.state == STATE_UNAVAILABLE
+
+
+async def test_sensor_empty_response(hass):
+    """Test sensor state data."""
+    await init_integration_empty_response(hass)
+
+    test_glucose_sensor = hass.states.get("sensor.blood_sugar")
+    assert test_glucose_sensor.state == STATE_UNAVAILABLE
 
 
 async def test_sensor_attributes(hass):
