@@ -16,7 +16,14 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import ATTR_AREA, ATTR_PACKET, ATTR_PRESET, ENTITY_PLATFORMS, LOGGER
+from .const import (
+    ATTR_AREA,
+    ATTR_HOST,
+    ATTR_PACKET,
+    ATTR_PRESET,
+    ENTITY_PLATFORMS,
+    LOGGER,
+)
 from .convert_config import convert_config
 
 
@@ -77,7 +84,7 @@ class DynaliteBridge:
             self.hass.bus.async_fire(
                 "dynalite_packet",
                 {
-                    CONF_HOST: self.host,
+                    ATTR_HOST: self.host,
                     ATTR_PACKET: notification.data[NOTIFICATION_PACKET],
                 },
             )
@@ -85,7 +92,7 @@ class DynaliteBridge:
             self.hass.bus.async_fire(
                 "dynalite_preset",
                 {
-                    CONF_HOST: self.host,
+                    ATTR_HOST: self.host,
                     ATTR_AREA: notification.data[dyn_CONF_AREA],
                     ATTR_PRESET: notification.data[dyn_CONF_PRESET],
                 },

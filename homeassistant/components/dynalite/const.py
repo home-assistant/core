@@ -50,6 +50,7 @@ DEFAULT_TEMPLATES = {
     ],
 }
 
+ATTR_AREA = "area"
+ATTR_HOST = "host"
 ATTR_PACKET = "packet"
 ATTR_PRESET = "preset"
-ATTR_AREA = "area"

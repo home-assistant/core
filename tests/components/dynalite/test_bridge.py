@@ -10,8 +10,12 @@ from dynalite_devices_lib.dynalite_devices import (
 )
 
 from homeassistant.components import dynalite
-from homeassistant.components.dynalite.const import ATTR_AREA, ATTR_PACKET, ATTR_PRESET
-from homeassistant.const import CONF_HOST
+from homeassistant.components.dynalite.const import (
+    ATTR_AREA,
+    ATTR_HOST,
+    ATTR_PACKET,
+    ATTR_PRESET,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from tests.async_mock import AsyncMock, Mock, patch
@@ -129,7 +133,7 @@ async def test_notifications(hass):
     await hass.async_block_till_done()
     event_listener1.assert_called_once()
     my_event = event_listener1.mock_calls[0][1][0]
-    assert my_event.data[CONF_HOST] == host
+    assert my_event.data[ATTR_HOST] == host
     assert my_event.data[ATTR_PACKET] == packet
     event_listener2 = Mock()
     hass.bus.async_listen("dynalite_preset", event_listener2)
@@ -141,6 +145,6 @@ async def test_notifications(hass):
     await hass.async_block_till_done()
     event_listener2.assert_called_once()
     my_event = event_listener2.mock_calls[0][1][0]
-    assert my_event.data[CONF_HOST] == host
+    assert my_event.data[ATTR_HOST] == host
     assert my_event.data[ATTR_AREA] == 7
     assert my_event.data[ATTR_PRESET] == 2
