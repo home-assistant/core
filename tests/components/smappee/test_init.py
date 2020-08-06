@@ -20,7 +20,7 @@ async def test_unload_config_entry(hass):
         config_entry = MockConfigEntry(
             domain=DOMAIN,
             data={"host": "1.2.3.4"},
-            unique_id="Smappee1006000212",
+            unique_id="smappee1006000212",
             source=SOURCE_ZEROCONF,
         )
         config_entry.add_to_hass(hass)

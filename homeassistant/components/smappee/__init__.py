@@ -88,16 +88,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         smappee = Smappee(api=smappee_api)
         await hass.async_add_executor_job(smappee.load_service_locations)
 
-        if not entry.unique_id:
-            serialnumbers = "_".join(
-                [s.device_serial_number for s in smappee.service_locations.values()]
-            )
-            hass.config_entries.async_update_entry(
-                entry,
-                unique_id=f"SmappeeCloud{entry.entry_id}",
-                title=f"SmappeeCloud{serialnumbers}",
-            )
-
     hass.data[DOMAIN][entry.entry_id] = SmappeeBase(hass, smappee)
 
     for component in SMAPPEE_PLATFORMS:

@@ -21,6 +21,12 @@ class SmappeeFlowHandler(
     DOMAIN = DOMAIN
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
+    async def async_oauth_create_entry(self, data):
+        """Create an entry for the flow."""
+
+        await self.async_set_unique_id(unique_id=f"{DOMAIN}Cloud")
+        return self.async_create_entry(title=f"{DOMAIN}Cloud", data=data)
+
     @property
     def logger(self) -> logging.Logger:
         """Return logger."""
@@ -72,7 +78,7 @@ class SmappeeFlowHandler(
             return self.async_abort(reason="connection_error")
 
         return self.async_create_entry(
-            title=f"Smappee{serial_number}",
+            title=f"{DOMAIN}{serial_number}",
             data={CONF_IP_ADDRESS: ip_address, CONF_SERIALNUMBER: serial_number},
         )
 
@@ -103,7 +109,7 @@ class SmappeeFlowHandler(
         # Use configuration.yaml CLOUD setup if not setup already
         for entry in self._async_current_entries():
             if entry.unique_id is not None and entry.unique_id.startswith(
-                "SmappeeCloud"
+                f"{DOMAIN}Cloud"
             ):
                 return self.async_abort(reason="already_configured_device")
 
@@ -143,6 +149,6 @@ class SmappeeFlowHandler(
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=f"Smappee{serial_number}",
+            title=f"{DOMAIN}{serial_number}",
             data={CONF_IP_ADDRESS: ip_address, CONF_SERIALNUMBER: serial_number},
         )
