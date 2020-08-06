@@ -1,6 +1,5 @@
 """Class to manage the entities for a single platform."""
 import asyncio
-from contextlib import suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
 from logging import Logger
@@ -24,7 +23,7 @@ if TYPE_CHECKING:
 
 SLOW_SETUP_WARNING = 10
 SLOW_SETUP_MAX_WAIT = 60
-SLOW_ADD_ENTITIES_MAX_WAIT = 60
+SLOW_ADD_ENTITY_MAX_WAIT = 15  # Multiblicator
 
 PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
@@ -285,10 +284,8 @@ class EntityPlatform:
         device_registry = await hass.helpers.device_registry.async_get_registry()
         entity_registry = await hass.helpers.entity_registry.async_get_registry()
         tasks = [
-            asyncio.create_task(
-                self._async_add_entity(  # type: ignore
-                    entity, update_before_add, entity_registry, device_registry
-                )
+            self._async_add_entity(  # type: ignore
+                entity, update_before_add, entity_registry, device_registry
             )
             for entity in new_entities
         ]
@@ -297,24 +294,18 @@ class EntityPlatform:
         if not tasks:
             return
 
-        await asyncio.wait(tasks, timeout=SLOW_ADD_ENTITIES_MAX_WAIT)
-
-        for idx, entity in enumerate(new_entities):
-            task = tasks[idx]
-            if task.done():
-                await task
-                continue
-
+        try:
+            async with self.hass.timeout.async_timeout(
+                SLOW_ADD_ENTITY_MAX_WAIT * len(tasks), self.domain
+            ):
+                await asyncio.gather(*tasks)
+        except asyncio.TimeoutError:
             self.logger.warning(
-                "Timed out adding entity %s for domain %s with platform %s after %ds.",
-                entity.entity_id,
+                "Timed out adding entities for domain %s with platform %s after %ds.",
                 self.domain,
                 self.platform_name,
                 SLOW_ADD_ENTITIES_MAX_WAIT,
             )
-            task.cancel()
-            with suppress(asyncio.CancelledError):
-                await task
 
         if self._async_unsub_polling is not None or not any(
             entity.should_poll for entity in self.entities.values()
