@@ -1,7 +1,6 @@
 """Implement the Google Smart Home traits."""
-import itertools
 import logging
-from typing import Iterable, Optional
+from typing import List, Optional
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -150,7 +149,7 @@ def _google_temp_unit(units):
     return "C"
 
 
-def _next_selected(items: Iterable[str], selected: Optional[str]) -> Optional[str]:
+def _next_selected(items: List[str], selected: Optional[str]) -> Optional[str]:
     """Return the next item in a item list starting at given value.
 
     If selected is missing in items, None is returned
@@ -1421,7 +1420,7 @@ class InputSelectorTrait(_Trait):
         elif command == COMMAND_NEXT_INPUT:
             requested_source = _next_selected(sources, source)
         elif command == COMMAND_PREVIOUS_INPUT:
-            requested_source = _next_selected(reversed(sources), source)
+            requested_source = _next_selected(list(reversed(sources)), source)
         else:
             raise SmartHomeError(ERR_NOT_SUPPORTED, "Unsupported command")
 
