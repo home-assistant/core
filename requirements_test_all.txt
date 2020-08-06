@@ -791,7 +791,7 @@ python-miio==0.5.3
 python-nest==4.1.0
 
 # homeassistant.components.ozw
-python-openzwave-mqtt==1.0.2
+python-openzwave-mqtt==1.0.4
 
 # homeassistant.components.songpal
 python-songpal==0.12

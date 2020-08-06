@@ -7,6 +7,8 @@ from openzwavemqtt.const import (
     EVENT_INSTANCE_STATUS_CHANGED,
     EVENT_VALUE_CHANGED,
     OZW_READY_STATES,
+    CommandClass,
+    ValueIndex,
 )
 from openzwavemqtt.models.node import OZWNode
 from openzwavemqtt.models.value import OZWValue
@@ -182,12 +184,18 @@ class ZWaveDeviceEntity(Entity):
         node = self.values.primary.node
         node_instance = self.values.primary.instance
         dev_id = create_device_id(node, self.values.primary.instance)
+        node_firmware = node.get_value(
+            CommandClass.VERSION, ValueIndex.VERSION_APPLICATION
+        )
         device_info = {
             "identifiers": {(DOMAIN, dev_id)},
             "name": create_device_name(node),
             "manufacturer": node.node_manufacturer_name,
             "model": node.node_product_name,
         }
+        if node_firmware is not None:
+            device_info["sw_version"] = node_firmware.value
+
         # device with multiple instances is split up into virtual devices for each instance
         if node_instance > 1:
             parent_dev_id = create_device_id(node)
