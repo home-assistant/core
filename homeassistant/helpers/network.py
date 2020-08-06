@@ -220,13 +220,9 @@ def _get_current_request_url(
         ):
             return normalize_url(str(ip_url))
 
-    try:
-        cloud_url = _get_cloud_url(hass)
-    except NoURLAvailableError:
-        pass
-    else:
-        if yarl.URL(cloud_url).host == request_host:
-            return normalize_url(cloud_url)
+    cloud_url = _get_cloud_url(hass)
+    if yarl.URL(cloud_url).host == request_host:
+        return normalize_url(cloud_url)
 
     raise NoURLAvailableError
 
