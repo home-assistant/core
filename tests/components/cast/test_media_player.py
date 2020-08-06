@@ -459,15 +459,23 @@ async def test_url_replace(hass: HomeAssistantType):
     assert state.state == "unknown"
     assert entity.unique_id == full_info.uuid
 
-    class FakeImage:
+    class FakeHTTPImage:
         url = "http://example.com/test.png"
+    class FakeHTTPSImage:
+        url = "https://example.com/test.png"
 
-    media_status = MagicMock(images=[FakeImage()])
+    media_status = MagicMock(images=[FakeHTTPImage()])
     media_status.player_is_playing = True
     entity.new_media_status(media_status)
     await hass.async_block_till_done()
     state = hass.states.get("media_player.speaker")
     assert state.attributes.get("entity_picture") == "//example.com/test.png"
+    
+    media_status.images = [FakeHTTPSImage()]
+    entity.new_media_status(media_status)
+    await hass.async_block_till_done()
+    state = hass.states.get("media_player.speaker")
+    assert state.attributes.get("entity_picture") == "https://example.com/test.png"
 
 
 async def test_group_media_states(hass: HomeAssistantType):
