@@ -86,7 +86,7 @@ class DynaliteBridge:
                     ATTR_PRESET: notification.data[dyn_CONF_PRESET],
                 },
             )
-            self.hass.bus.fire(
+            self.hass.bus.async_fire(
                 f"dynalite_{self.host}_selected_area_{notification.data[dyn_CONF_AREA]}_preset_{notification.data[dyn_CONF_PRESET]}"
             )
 
