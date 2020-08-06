@@ -296,7 +296,7 @@ class EntityPlatform:
         # with slow bus system / while we take updates
         if update_before_add:
             for task in tasks:
-                wait task
+                await task
         else:
             await asyncio.gather(*task)
 
