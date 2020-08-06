@@ -73,7 +73,6 @@ class DynaliteBridge:
     @callback
     def handle_notification(self, notification: DynaliteNotification) -> None:
         """Handle a notification from the platform and issue events."""
-        LOGGER.error("XXX handle_notification %s", notification)  # XXX
         if notification.notification == NOTIFICATION_PACKET:
             self.hass.bus.fire(
                 f"dynalite_{self.host}_packet",
