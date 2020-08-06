@@ -170,6 +170,7 @@ omit =
     homeassistant/components/devolo_home_control/__init__.py
     homeassistant/components/devolo_home_control/binary_sensor.py
     homeassistant/components/devolo_home_control/const.py
+    homeassistant/components/devolo_home_control/cover.py
     homeassistant/components/devolo_home_control/devolo_device.py
     homeassistant/components/devolo_home_control/devolo_multi_level_switch.py
     homeassistant/components/devolo_home_control/light.py
