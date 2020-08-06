@@ -475,15 +475,20 @@ async def test_cancel_delay(hass):
         assert len(events) == 0
 
 
-async def test_wait_template_basic(hass):
-    """Test the wait template."""
+@pytest.mark.parametrize("action_type", ["template", "trigger"])
+async def test_wait_basic(hass, action_type):
+    """Test wait actions."""
     wait_alias = "wait step"
-    sequence = cv.SCRIPT_SCHEMA(
-        {
-            "wait_template": "{{ states.switch.test.state == 'off' }}",
-            "alias": wait_alias,
+    action = {"alias": wait_alias}
+    if action_type == "template":
+        action["wait_template"] = "{{ states.switch.test.state == 'off' }}"
+    else:
+        action["wait_for_trigger"] = {
+            "platform": "state",
+            "entity_id": "switch.test",
+            "to": "off",
         }
-    )
+    sequence = cv.SCRIPT_SCHEMA(action)
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, wait_alias)
 
@@ -505,14 +510,25 @@ async def test_wait_template_basic(hass):
         assert script_obj.last_action is None
 
 
-async def test_multiple_runs_wait_template(hass):
-    """Test multiple runs with wait_template in script."""
+@pytest.mark.parametrize("action_type", ["template", "trigger"])
+async def test_multiple_runs_wait(hass, action_type):
+    """Test multiple runs with wait in script."""
     event = "test_event"
     events = async_capture_events(hass, event)
+    if action_type == "template":
+        action = {"wait_template": "{{ states.switch.test.state == 'off' }}"}
+    else:
+        action = {
+            "wait_for_trigger": {
+                "platform": "state",
+                "entity_id": "switch.test",
+                "to": "off",
+            }
+        }
     sequence = cv.SCRIPT_SCHEMA(
         [
             {"event": event, "event_data": {"value": 1}},
-            {"wait_template": "{{ states.switch.test.state == 'off' }}"},
+            action,
             {"event": event, "event_data": {"value": 2}},
         ]
     )
@@ -529,12 +545,15 @@ async def test_multiple_runs_wait_template(hass):
         assert script_obj.is_running
         assert len(events) == 1
         assert events[-1].data["value"] == 1
+
+        # Start second run of script while first run is in wait_template.
+        wait_started_flag.clear()
+        hass.async_create_task(script_obj.async_run())
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
     except (AssertionError, asyncio.TimeoutError):
         await script_obj.async_stop()
         raise
     else:
-        # Start second run of script while first run is in wait_template.
-        hass.async_create_task(script_obj.async_run())
         hass.states.async_set("switch.test", "off")
         await hass.async_block_till_done()
 
@@ -545,16 +564,22 @@ async def test_multiple_runs_wait_template(hass):
         assert events[-1].data["value"] == 2
 
 
-async def test_cancel_wait_template(hass):
-    """Test the cancelling while wait_template is present."""
+@pytest.mark.parametrize("action_type", ["template", "trigger"])
+async def test_cancel_wait(hass, action_type):
+    """Test the cancelling while wait is present."""
     event = "test_event"
     events = async_capture_events(hass, event)
-    sequence = cv.SCRIPT_SCHEMA(
-        [
-            {"wait_template": "{{ states.switch.test.state == 'off' }}"},
-            {"event": event},
-        ]
-    )
+    if action_type == "template":
+        action = {"wait_template": "{{ states.switch.test.state == 'off' }}"}
+    else:
+        action = {
+            "wait_for_trigger": {
+                "platform": "state",
+                "entity_id": "switch.test",
+                "to": "off",
+            }
+        }
+    sequence = cv.SCRIPT_SCHEMA([action, {"event": event}])
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, "wait")
 
@@ -606,20 +631,24 @@ async def test_wait_template_not_schedule(hass):
 @pytest.mark.parametrize(
     "timeout_param", [5, "{{ 5 }}", {"seconds": 5}, {"seconds": "{{ 5 }}"}]
 )
-async def test_wait_template_timeout(hass, caplog, timeout_param):
+@pytest.mark.parametrize("action_type", ["template", "trigger"])
+async def test_wait_timeout(hass, caplog, timeout_param, action_type):
     """Test the wait timeout option."""
     event = "test_event"
     events = async_capture_events(hass, event)
-    sequence = cv.SCRIPT_SCHEMA(
-        [
-            {
-                "wait_template": "{{ states.switch.test.state == 'off' }}",
-                "timeout": timeout_param,
-                "continue_on_timeout": True,
-            },
-            {"event": event},
-        ]
-    )
+    if action_type == "template":
+        action = {"wait_template": "{{ states.switch.test.state == 'off' }}"}
+    else:
+        action = {
+            "wait_for_trigger": {
+                "platform": "state",
+                "entity_id": "switch.test",
+                "to": "off",
+            }
+        }
+    action["timeout"] = timeout_param
+    action["continue_on_timeout"] = True
+    sequence = cv.SCRIPT_SCHEMA([action, {"event": event}])
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, "wait")
 
@@ -651,17 +680,27 @@ async def test_wait_template_timeout(hass, caplog, timeout_param):
 @pytest.mark.parametrize(
     "continue_on_timeout,n_events", [(False, 0), (True, 1), (None, 1)]
 )
-async def test_wait_template_continue_on_timeout(hass, continue_on_timeout, n_events):
-    """Test the wait template continue_on_timeout option."""
+@pytest.mark.parametrize("action_type", ["template", "trigger"])
+async def test_wait_continue_on_timeout(
+    hass, continue_on_timeout, n_events, action_type
+):
+    """Test the wait continue_on_timeout option."""
     event = "test_event"
     events = async_capture_events(hass, event)
-    sequence = [
-        {"wait_template": "{{ states.switch.test.state == 'off' }}", "timeout": 5},
-        {"event": event},
-    ]
+    if action_type == "template":
+        action = {"wait_template": "{{ states.switch.test.state == 'off' }}"}
+    else:
+        action = {
+            "wait_for_trigger": {
+                "platform": "state",
+                "entity_id": "switch.test",
+                "to": "off",
+            }
+        }
+    action["timeout"] = 5
     if continue_on_timeout is not None:
-        sequence[0]["continue_on_timeout"] = continue_on_timeout
-    sequence = cv.SCRIPT_SCHEMA(sequence)
+        action["continue_on_timeout"] = continue_on_timeout
+    sequence = cv.SCRIPT_SCHEMA([action, {"event": event}])
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, "wait")
 
@@ -708,11 +747,23 @@ async def test_wait_template_variables_in(hass):
 
 
 @pytest.mark.parametrize("mode", ["no_timeout", "timeout_finish", "timeout_not_finish"])
-async def test_wait_template_variables_out(hass, mode):
-    """Test the wait template output variable."""
+@pytest.mark.parametrize("action_type", ["template", "trigger"])
+async def test_wait_variables_out(hass, mode, action_type):
+    """Test the wait output variable."""
     event = "test_event"
     events = async_capture_events(hass, event)
-    action = {"wait_template": "{{ states.switch.test.state == 'off' }}"}
+    if action_type == "template":
+        action = {"wait_template": "{{ states.switch.test.state == 'off' }}"}
+        event_key = "completed"
+    else:
+        action = {
+            "wait_for_trigger": {
+                "platform": "state",
+                "entity_id": "switch.test",
+                "to": "off",
+            }
+        }
+        event_key = "trigger"
     if mode != "no_timeout":
         action["timeout"] = 5
         action["continue_on_timeout"] = True
@@ -721,7 +772,7 @@ async def test_wait_template_variables_out(hass, mode):
         {
             "event": event,
             "event_data_template": {
-                "completed": "{{ wait.completed }}",
+                event_key: f"{{{{ wait.{event_key} }}}}",
                 "remaining": "{{ wait.remaining }}",
             },
         },
@@ -749,7 +800,12 @@ async def test_wait_template_variables_out(hass, mode):
 
         assert not script_obj.is_running
         assert len(events) == 1
-        assert events[0].data["completed"] == str(mode != "timeout_not_finish")
+        if action_type == "template":
+            assert events[0].data["completed"] == str(mode != "timeout_not_finish")
+        elif mode != "timeout_not_finish":
+            assert "'to_state': <state switch.test=off" in events[0].data["trigger"]
+        else:
+            assert events[0].data["trigger"] == "None"
         remaining = events[0].data["remaining"]
         if mode == "no_timeout":
             assert remaining == "None"
@@ -757,6 +813,30 @@ async def test_wait_template_variables_out(hass, mode):
             assert 0.0 < float(remaining) < 5
         else:
             assert float(remaining) == 0.0
+
+
+async def test_wait_for_trigger_bad(hass, caplog):
+    """Test bad wait_for_trigger."""
+    script_obj = script.Script(
+        hass,
+        cv.SCRIPT_SCHEMA(
+            {"wait_for_trigger": {"platform": "state", "entity_id": "sensor.abc"}}
+        ),
+        "Test Name",
+        "test_domain",
+    )
+
+    async def async_attach_trigger_mock(*args, **kwargs):
+        return None
+
+    with mock.patch(
+        "homeassistant.components.homeassistant.triggers.state.async_attach_trigger",
+        wraps=async_attach_trigger_mock,
+    ):
+        hass.async_create_task(script_obj.async_run())
+        await hass.async_block_till_done()
+
+    assert "Error setting up trigger" in caplog.text
 
 
 async def test_condition_basic(hass):
