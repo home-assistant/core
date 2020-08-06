@@ -36,6 +36,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import Context, State
+from homeassistant.util.dt import parse_datetime
 
 from tests.common import async_mock_service
 
@@ -178,6 +179,9 @@ async def test_seek(hass):
     calls_2 = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
     calls_3 = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PLAY)
 
+    time_1 = parse_datetime("2020-08-05T21:00:00.0+00:00")
+    time_2 = parse_datetime("2020-08-05T21:00:01.0+00:00")
+
     await async_reproduce_states(
         hass,
         [
@@ -185,9 +189,9 @@ async def test_seek(hass):
                 ENTITY_1,
                 None,
                 {
-                    ATTR_MEDIA_POSITION: "10",
-                    ATTR_MEDIA_POSITION_UPDATED_AT: "5",
-                    ATTR_SNAPSHOT_AT: "6",
+                    ATTR_MEDIA_POSITION: 10,
+                    ATTR_MEDIA_POSITION_UPDATED_AT: time_1,
+                    ATTR_SNAPSHOT_AT: time_2,
                 },
             )
         ],
@@ -195,7 +199,7 @@ async def test_seek(hass):
 
     assert calls_1[0].data == {
         "entity_id": ENTITY_1,
-        ATTR_MEDIA_SEEK_POSITION: "10",
+        ATTR_MEDIA_SEEK_POSITION: 10,
     }
 
     await async_reproduce_states(
@@ -205,9 +209,9 @@ async def test_seek(hass):
                 ENTITY_1,
                 "playing",
                 {
-                    ATTR_MEDIA_POSITION: "10",
-                    ATTR_MEDIA_POSITION_UPDATED_AT: "5",
-                    ATTR_SNAPSHOT_AT: "6",
+                    ATTR_MEDIA_POSITION: 10,
+                    ATTR_MEDIA_POSITION_UPDATED_AT: time_1,
+                    ATTR_SNAPSHOT_AT: time_2,
                 },
             )
         ],
@@ -215,7 +219,7 @@ async def test_seek(hass):
 
     assert calls_1[1].data == {
         "entity_id": ENTITY_1,
-        ATTR_MEDIA_SEEK_POSITION: "11",
+        ATTR_MEDIA_SEEK_POSITION: 11,
     }
 
     assert len(calls_2) == 1

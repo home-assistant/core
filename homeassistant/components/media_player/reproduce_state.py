@@ -60,18 +60,20 @@ async def _async_reproduce_states(
             if key in state.attributes:
                 if key == ATTR_MEDIA_POSITION:
                     # for this property only, the state does not match the service data
-                    delta = 0
                     if (
                         state.state == STATE_PLAYING
                         and ATTR_MEDIA_POSITION_UPDATED_AT in state.attributes
                         and ATTR_SNAPSHOT_AT in state.attributes
                     ):
-                        delta = int(state.attributes[ATTR_SNAPSHOT_AT]) - int(
-                            state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
+                        delta = (
+                            state.attributes[ATTR_SNAPSHOT_AT]
+                            - state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
                         )
-                    data[ATTR_MEDIA_SEEK_POSITION] = str(
-                        int(state.attributes[key]) + delta
-                    )
+                        data[ATTR_MEDIA_SEEK_POSITION] = str(
+                            int(state.attributes[key]) + int(delta.total_seconds())
+                        )
+                    else:
+                        data[ATTR_MEDIA_SEEK_POSITION] = state.attributes[key]
                 else:
                     data[key] = state.attributes[key]
 
