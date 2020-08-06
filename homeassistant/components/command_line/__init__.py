@@ -6,8 +6,12 @@ import subprocess
 _LOGGER = logging.getLogger(__name__)
 
 
-def call_shell_with_timeout(command, timeout):
-    """Run a shell command with a timeout."""
+def call_shell_with_timeout(command, timeout, *, log_return_code=True):
+    """Run a shell command with a timeout.
+
+    If log_return_code is set to False, it will not print an error if a non-zero
+    return code is returned.
+    """
     try:
         _LOGGER.debug("Running command: %s", command)
         subprocess.check_output(
@@ -15,7 +19,8 @@ def call_shell_with_timeout(command, timeout):
         )
         return 0
     except subprocess.CalledProcessError as proc_exception:
-        _LOGGER.error("Command failed: %s", command)
+        if log_return_code:
+            _LOGGER.error("Command failed: %s", command)
         return proc_exception.returncode
     except subprocess.TimeoutExpired:
         _LOGGER.error("Timeout for command: %s", command)
