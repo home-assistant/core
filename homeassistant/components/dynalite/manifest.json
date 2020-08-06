@@ -4,5 +4,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/dynalite",
   "codeowners": ["@ziv1234"],
-  "requirements": ["dynalite_devices==0.1.41"]
+  "requirements": ["dynalite_devices==0.1.44"]
 }
