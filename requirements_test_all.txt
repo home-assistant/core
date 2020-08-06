@@ -141,7 +141,7 @@ airly==0.0.2
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.47
+androidtv[async]==0.0.48
 
 # homeassistant.components.apns
 apns2==0.3.0
@@ -534,7 +534,7 @@ prometheus_client==0.7.1
 ptvsd==4.3.2
 
 # homeassistant.components.androidtv
-pure-python-adb==0.2.2.dev0
+pure-python-adb[async]==0.3.0.dev0
 
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
