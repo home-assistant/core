@@ -467,7 +467,7 @@ async def test_url_replace(hass: HomeAssistantType):
     entity.new_media_status(media_status)
     await hass.async_block_till_done()
     state = hass.states.get("media_player.speaker")
-    assert state.media_image_url == "//example.com/test.png"
+    assert state.attributes.get("entity_picture") == "//example.com/test.png"
 
 
 async def test_group_media_states(hass: HomeAssistantType):
