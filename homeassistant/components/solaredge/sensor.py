@@ -7,7 +7,6 @@ import solaredge
 from stringcase import snakecase
 
 from homeassistant.const import (
-    ATTR_BATTERY_CHARGING,
     CONF_API_KEY,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_POWER,
@@ -280,7 +279,6 @@ class SolarEdgeStorageLevelSensor(SolarEdgeSensor):
         self.data_service.update()
         attr = self.data_service.attributes.get(self._json_key)
         self._state = attr["soc"]
-        self._attributes[ATTR_BATTERY_CHARGING] = attr["flow"] != "discharge"
 
 
 class SolarEdgeDataService:
