@@ -1,6 +1,5 @@
 """Test the roon config flow."""
 from homeassistant import config_entries, setup
-from homeassistant.components.roon.config_flow import CannotConnect
 from homeassistant.components.roon.const import DOMAIN
 from homeassistant.const import CONF_HOST
 
@@ -20,7 +19,7 @@ class RoonApiMock:
         """Return the auth token from the api."""
         return self._token
 
-    def stop(self):
+    def stop(self):  # pylint: disable=no-self-use
         """Close down the api."""
         return
 
@@ -80,27 +79,6 @@ async def test_form_no_token(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "invalid_auth"}
-
-
-async def test_form_cannot_connect(hass):
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.roon.config_flow.RoonApi", side_effect=CannotConnect,
-    ):
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "1.1.1.1"}
-        )
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_unknown_exception(hass):

@@ -93,8 +93,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await authenticate(self.hass, self._host)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
@@ -104,10 +102,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=DEFAULT_NAME, data=info)
 
         return self.async_show_form(step_id="link", errors=errors)
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
 
 
 class InvalidAuth(exceptions.HomeAssistantError):
