@@ -75,19 +75,20 @@ class DynaliteBridge:
         """Handle a notification from the platform and issue events."""
         if notification.notification == NOTIFICATION_PACKET:
             self.hass.bus.fire(
-                f"dynalite_{self.host}_packet",
-                {ATTR_PACKET: notification.data[NOTIFICATION_PACKET]},
+                "dynalite_packet",
+                {
+                    CONF_HOST: self.host,
+                    ATTR_PACKET: notification.data[NOTIFICATION_PACKET],
+                },
             )
         if notification.notification == NOTIFICATION_PRESET:
             self.hass.bus.fire(
-                f"dynalite_{self.host}_preset",
+                "dynalite_preset",
                 {
+                    CONF_HOST: self.host,
                     ATTR_AREA: notification.data[dyn_CONF_AREA],
                     ATTR_PRESET: notification.data[dyn_CONF_PRESET],
                 },
-            )
-            self.hass.bus.fire(
-                f"dynalite_{self.host}_selected_area_{notification.data[dyn_CONF_AREA]}_preset_{notification.data[dyn_CONF_PRESET]}"
             )
 
     @callback
