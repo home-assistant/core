@@ -23,7 +23,8 @@ if TYPE_CHECKING:
 
 SLOW_SETUP_WARNING = 10
 SLOW_SETUP_MAX_WAIT = 60
-SLOW_ADD_ENTITY_MAX_WAIT = 10  # Multiplicator
+SLOW_ADD_ENTITY_MAX_WAIT = 10  # Per Entity
+SLOW_ADD_MIN_TIMEOUT = 60
 
 PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
@@ -295,7 +296,7 @@ class EntityPlatform:
             return
 
         try:
-            timeout = SLOW_ADD_ENTITY_MAX_WAIT * len(tasks)
+            timeout = max(SLOW_ADD_ENTITY_MAX_WAIT * len(tasks), SLOW_ADD_MIN_TIMEOUT)
             async with self.hass.timeout.async_timeout(timeout, self.domain):
                 await asyncio.gather(*tasks)
         except asyncio.TimeoutError:
