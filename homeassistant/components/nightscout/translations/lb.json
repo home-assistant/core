@@ -1,0 +1,12 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "user": {
+                "data": {}
+            }
+        }
+    }
+}
