@@ -3,10 +3,6 @@
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
-        "error": {
-            "cannot_connect": "Verbindung nicht m\u00f6glich",
-            "unknown": "Unerwarteter Fehler"
-        },
         "step": {
             "user": {
                 "data": {

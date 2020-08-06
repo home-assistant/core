@@ -8,7 +8,14 @@
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "unknown": "Error inesperat"
         },
+        "flow_title": "Bond: {bond_id} ({host})",
         "step": {
+            "confirm": {
+                "data": {
+                    "access_token": "Token d'acc\u00e9s"
+                },
+                "description": "Voleu configurar {bond_id}?"
+            },
             "user": {
                 "data": {
                     "access_token": "Token d'acc\u00e9s",
