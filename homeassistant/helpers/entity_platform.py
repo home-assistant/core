@@ -292,7 +292,13 @@ class EntityPlatform:
         if not tasks:
             return
 
-        await asyncio.gather(*tasks)
+        # Do not paralell to avoid issue
+        # with slow bus system / while we take updates
+        if update_before_add:
+            for task in tasks:
+                wait task
+        else:
+            await asyncio.gather(*task)
 
         if self._async_unsub_polling is not None or not any(
             entity.should_poll for entity in self.entities.values()
