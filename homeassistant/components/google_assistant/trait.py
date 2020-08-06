@@ -156,18 +156,12 @@ def _next_selected(items: Iterable[str], selected: Optional[str]) -> Optional[st
     If selected is missing in items, None is returned
     """
     try:
-        cycle = itertools.cycle(items)
-        current = next(cycle)
-        starting = current
-        while True:
-            if current == selected:
-                break
-            current = next(cycle)
-            if current == starting:
-                return None
-        return next(cycle)
-    except StopIteration:
+        index = items.index(selected)
+    except ValueError:
         return None
+
+    next_item = 0 if index == len(items) - 1 else index + 1
+    return items[next_item]
 
 
 class _Trait:
