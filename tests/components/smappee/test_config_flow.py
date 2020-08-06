@@ -251,10 +251,6 @@ async def test_zeroconf_abort_if_cloud_device_exists(hass):
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER},
-    )
-
-    result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data={
