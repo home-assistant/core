@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 
 try:
     # Verify that the OpenCV python package is pre-installed
-    from cv2 import cv2
+    import cv2
 
     CV2_IMPORTED = True
 except ImportError:
