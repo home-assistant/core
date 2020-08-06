@@ -79,7 +79,7 @@ class DynaliteBridge:
                 {ATTR_PACKET: notification.data[NOTIFICATION_PACKET]},
             )
         if notification.notification == NOTIFICATION_PRESET:
-            self.hass.bus.fire(
+            self.hass.bus.async_fire(
                 f"dynalite_{self.host}_preset",
                 {
                     ATTR_AREA: notification.data[dyn_CONF_AREA],
