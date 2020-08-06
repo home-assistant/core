@@ -353,8 +353,8 @@ def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
     _LOGGER.info("Pincode: %s", pin)
 
     buffer = io.BytesIO()
-    url = pyqrcode.create(uri, background=[0xFF, 0xFF, 0xCC])
-    url.svg(buffer, scale=5)
+    url = pyqrcode.create(uri)
+    url.svg(buffer, scale=5, background=[0xFF, 0xFF, 0xCC])
     pairing_secret = secrets.token_hex(32)
 
     hass.data[DOMAIN][entry_id][HOMEKIT_PAIRING_QR] = buffer.getvalue()
