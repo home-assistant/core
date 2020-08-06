@@ -24,6 +24,7 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_attr,
     help_test_discovery_update_availability,
+    help_test_discovery_update_unchanged,
     help_test_entity_debug_info,
     help_test_entity_debug_info_max_messages,
     help_test_entity_debug_info_message,
@@ -425,24 +426,35 @@ async def test_unique_id(hass, mqtt_mock):
 
 async def test_discovery_removal_sensor(hass, mqtt_mock, caplog):
     """Test removal of discovered sensor."""
-    data = '{ "name": "test",' '  "state_topic": "test_topic" }'
+    data = '{ "name": "test", "state_topic": "test_topic" }'
     await help_test_discovery_removal(hass, mqtt_mock, caplog, sensor.DOMAIN, data)
 
 
 async def test_discovery_update_sensor(hass, mqtt_mock, caplog):
     """Test update of discovered sensor."""
-    data1 = '{ "name": "Beer",' '  "state_topic": "test_topic" }'
-    data2 = '{ "name": "Milk",' '  "state_topic": "test_topic" }'
+    data1 = '{ "name": "Beer", "state_topic": "test_topic" }'
+    data2 = '{ "name": "Milk", "state_topic": "test_topic" }'
     await help_test_discovery_update(
         hass, mqtt_mock, caplog, sensor.DOMAIN, data1, data2
     )
 
 
+async def test_discovery_update_unchanged_sensor(hass, mqtt_mock, caplog):
+    """Test update of discovered sensor."""
+    data1 = '{ "name": "Beer", "state_topic": "test_topic" }'
+    with patch(
+        "homeassistant.components.mqtt.sensor.MqttSensor.discovery_update"
+    ) as discovery_update:
+        await help_test_discovery_update_unchanged(
+            hass, mqtt_mock, caplog, sensor.DOMAIN, data1, discovery_update
+        )
+
+
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
-    data1 = '{ "name": "Beer",' '  "state_topic": "test_topic#" }'
-    data2 = '{ "name": "Milk",' '  "state_topic": "test_topic" }'
+    data1 = '{ "name": "Beer", "state_topic": "test_topic#" }'
+    data2 = '{ "name": "Milk", "state_topic": "test_topic" }'
     await help_test_discovery_broken(
         hass, mqtt_mock, caplog, sensor.DOMAIN, data1, data2
     )
