@@ -316,7 +316,7 @@ async def test_abort_cloud_flow_if_local_device_exists(hass):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured_device"
+    assert result["reason"] == "already_configured_local_device"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 

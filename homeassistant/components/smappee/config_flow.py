@@ -124,11 +124,8 @@ class SmappeeFlowHandler(
             return await self.async_step_local()
 
         # Abort cloud option if a LOCAL entry has already been added
-        if (
-            user_input["environment"] == ENV_CLOUD
-            and self._async_current_entries()
-        ):
-            return self.async_abort(reason="already_configured_device")
+        if user_input["environment"] == ENV_CLOUD and self._async_current_entries():
+            return self.async_abort(reason="already_configured_local_device")
 
         return await self.async_step_pick_implementation()
 

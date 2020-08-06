@@ -24,6 +24,7 @@
         },
         "abort": {
             "already_configured_device": "Device is already configured",
+            "already_configured_local_device": "Local device(s) is already configured. Please remove those first before configuring a cloud device.",
             "authorize_url_timeout": "Timeout generating authorize url.",
             "connection_error": "Failed to connect to Smappee device.",
             "missing_configuration": "The component is not configured. Please follow the documentation.",
