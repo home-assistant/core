@@ -24,6 +24,7 @@ from homeassistant.components import (
 )
 from homeassistant.components.climate import const as climate
 from homeassistant.components.google_assistant import const, error, helpers, trait
+from homeassistant.components.google_assistant.error import SmartHomeError
 from homeassistant.components.humidifier import const as humidifier
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
@@ -1426,6 +1427,87 @@ async def test_inputselector(hass):
 
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": "media_player.living_room", "source": "media"}
+
+
+@pytest.mark.parametrize(
+    "sources,source,source_next,source_prev",
+    [
+        (["a"], "a", "a", "a"),
+        (["a", "b"], "a", "b", "b"),
+        (["a", "b", "c"], "a", "b", "c"),
+    ],
+)
+async def test_inputselector_nextprev(hass, sources, source, source_next, source_prev):
+    """Test input selector trait."""
+    trt = trait.InputSelectorTrait(
+        hass,
+        State(
+            "media_player.living_room",
+            media_player.STATE_PLAYING,
+            attributes={
+                media_player.ATTR_INPUT_SOURCE_LIST: sources,
+                media_player.ATTR_INPUT_SOURCE: source,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.can_execute("action.devices.commands.NextInput", params={})
+    assert trt.can_execute("action.devices.commands.PreviousInput", params={})
+
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOURCE
+    )
+    await trt.execute(
+        "action.devices.commands.NextInput", BASIC_DATA, {}, {},
+    )
+    await trt.execute(
+        "action.devices.commands.PreviousInput", BASIC_DATA, {}, {},
+    )
+
+    assert len(calls) == 2
+    assert calls[0].data == {
+        "entity_id": "media_player.living_room",
+        "source": source_next,
+    }
+    assert calls[1].data == {
+        "entity_id": "media_player.living_room",
+        "source": source_prev,
+    }
+
+
+@pytest.mark.parametrize(
+    "sources,source", [(None, "a"), (["a", "b"], None), (["a", "b"], "c")]
+)
+async def test_inputselector_nextprev_invalid(hass, sources, source):
+    """Test input selector trait."""
+    trt = trait.InputSelectorTrait(
+        hass,
+        State(
+            "media_player.living_room",
+            media_player.STATE_PLAYING,
+            attributes={
+                media_player.ATTR_INPUT_SOURCE_LIST: sources,
+                media_player.ATTR_INPUT_SOURCE: source,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    with pytest.raises(SmartHomeError):
+        await trt.execute(
+            "action.devices.commands.NextInput", BASIC_DATA, {}, {},
+        )
+
+    with pytest.raises(SmartHomeError):
+        await trt.execute(
+            "action.devices.commands.PreviousInput", BASIC_DATA, {}, {},
+        )
+
+    with pytest.raises(SmartHomeError):
+        await trt.execute(
+            "action.devices.commands.InvalidCommand", BASIC_DATA, {}, {},
+        )
 
 
 async def test_modes_input_select(hass):
