@@ -30,9 +30,13 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             client = OVOEnergy()
             try:
-                if await client.authenticate(
+                authenticated = await client.authenticate(
                     user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 ):
+            except aiohttp.ClientError:
+                errors["base"] = "connection_error"
+            else:
+                if authenticated:
                     await self.async_set_unique_id(user_input[CONF_USERNAME])
                     self._abort_if_unique_id_configured()
 
@@ -44,9 +48,8 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
                             CONF_ACCOUNT_ID: client.account_id,
                         },
                     )
+                
                 errors["base"] = "authorization_error"
-            except aiohttp.ClientError:
-                errors["base"] = "connection_error"
 
         return self.async_show_form(
             step_id="user", data_schema=USER_SCHEMA, errors=errors
