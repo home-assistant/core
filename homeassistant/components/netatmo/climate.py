@@ -155,7 +155,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         platform.async_register_entity_service(
             SERVICE_SETSCHEDULE,
             {
-                vol.Required(ATTR_ENTITY_ID): cv.entity_domain(CLIMATE_DOMAIN),
                 vol.Required(ATTR_SCHEDULE_NAME): cv.string,
             },
             "_service_set_schedule",
