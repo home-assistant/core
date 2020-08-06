@@ -295,8 +295,8 @@ class EntityPlatform:
         if not tasks:
             return
 
+        timeout = max(SLOW_ADD_ENTITY_MAX_WAIT * len(tasks), SLOW_ADD_MIN_TIMEOUT)
         try:
-            timeout = max(SLOW_ADD_ENTITY_MAX_WAIT * len(tasks), SLOW_ADD_MIN_TIMEOUT)
             async with self.hass.timeout.async_timeout(timeout, self.domain):
                 await asyncio.gather(*tasks)
         except asyncio.TimeoutError:
