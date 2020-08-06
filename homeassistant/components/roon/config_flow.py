@@ -8,7 +8,12 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 
-from .const import DEFAULT_NAME, DOMAIN, ROON_APPINFO  # pylint: disable=unused-import
+from .const import (  # pylint: disable=unused-import
+    AUTHENTICATE_TIMEOUT,
+    DEFAULT_NAME,
+    DOMAIN,
+    ROON_APPINFO,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,10 +36,10 @@ class RoonHub:
         roonapi = RoonApi(ROON_APPINFO, None, self._host, blocking_init=False)
         while secs < TIMEOUT:
             token = roonapi.token
-            secs += 5
+            secs += AUTHENTICATE_TIMEOUT
             if token:
                 break
-            await asyncio.sleep(5)
+            await asyncio.sleep(AUTHENTICATE_TIMEOUT)
 
         token = roonapi.token
         roonapi.stop()

@@ -1,4 +1,7 @@
 """Constants for Roon Component."""
+
+AUTHENTICATE_TIMEOUT = 5
+
 DOMAIN = "roon"
 
 DATA_CONFIGS = "roon_configs"
