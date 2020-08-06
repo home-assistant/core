@@ -301,7 +301,7 @@ class EntityPlatform:
                 await asyncio.gather(*tasks)
         except asyncio.TimeoutError:
             self.logger.warning(
-                "Timed out adding entities for domain %s with platform %s after %ds.",
+                "Timed out adding entities for domain %s with platform %s after %ds",
                 self.domain,
                 self.platform_name,
                 timeout,
