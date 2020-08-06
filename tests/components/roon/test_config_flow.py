@@ -1,9 +1,26 @@
 """Test the roon config flow."""
 from homeassistant import config_entries, setup
-from homeassistant.components.roon.config_flow import CannotConnect, InvalidAuth
+from homeassistant.components.roon.config_flow import CannotConnect
 from homeassistant.components.roon.const import DOMAIN
 
 from tests.async_mock import patch
+
+
+class roonApiMock:
+    """Mock to handle returning tokens for testing the RoonApi."""
+
+    def __init__(self, token):
+        """Initialize."""
+        self._token = token
+
+    @property
+    def token(self):
+        """Return the auth token from the api."""
+        return self._token
+
+    def stop(self):
+        """Close down the api."""
+        return
 
 
 async def test_form_and_auth(hass):
@@ -15,9 +32,11 @@ async def test_form_and_auth(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.roon.config_flow.RoonHub.authenticate",
-        return_value="good_token",
+    with patch("homeassistant.components.roon.config_flow.TIMEOUT", 0,), patch(
+        "homeassistant.components.roon.const.AUTHENTICATE_TIMEOUT", 0,
+    ), patch(
+        "homeassistant.components.roon.config_flow.RoonApi",
+        return_value=roonApiMock("good_token"),
     ), patch(
         "homeassistant.components.roon.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -38,15 +57,16 @@ async def test_form_and_auth(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass):
-    """Test we handle invalid auth."""
+async def test_form_no_token(hass):
+    """Test we handle no token being returned (timeout or not authorized)."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
-    with patch(
-        "homeassistant.components.roon.config_flow.RoonHub.authenticate",
-        side_effect=InvalidAuth,
+    with patch("homeassistant.components.roon.config_flow.TIMEOUT", 0,), patch(
+        "homeassistant.components.roon.const.AUTHENTICATE_TIMEOUT", 0,
+    ), patch(
+        "homeassistant.components.roon.config_flow.RoonApi",
+        return_value=roonApiMock(None),
     ):
         await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "1.1.1.1"}
@@ -67,8 +87,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.roon.config_flow.RoonHub.authenticate",
-        side_effect=CannotConnect,
+        "homeassistant.components.roon.config_flow.RoonApi", side_effect=CannotConnect,
     ):
         await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "1.1.1.1"}
