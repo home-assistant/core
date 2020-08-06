@@ -1,0 +1,40 @@
+"""Tests for the NightScout integration."""
+import json
+
+from py_nightscout.models import SGV, ServerStatus
+
+from homeassistant.components.nightscout.const import DOMAIN
+from homeassistant.const import CONF_HOST
+
+from tests.async_mock import patch
+from tests.common import MockConfigEntry
+
+GLUCOSE_READINGS = [
+    SGV.new_from_json_dict(
+        json.loads(
+            '{"_id":"5f2b01f5c3d0ac7c4090e223","device":"xDrip-LimiTTer","date":1596654066533,"dateString":"2020-08-05T19:01:06.533Z","sgv":169,"delta":-5.257,"direction":"FortyFiveDown","type":"sgv","filtered":182823.5157,"unfiltered":182823.5157,"rssi":100,"noise":1,"sysTime":"2020-08-05T19:01:06.533Z","utcOffset":-180}'
+        )
+    )
+]
+SERVER_STATUS = ServerStatus.new_from_json_dict(
+    json.loads(
+        '{"status":"ok","name":"nightscout","version":"13.0.1","serverTime":"2020-08-05T18:14:02.032Z","serverTimeEpoch":1596651242032,"apiEnabled":true,"careportalEnabled":true,"boluscalcEnabled":true,"settings":{},"extendedSettings":{},"authorized":null}'
+    )
+)
+
+
+async def init_integration(hass) -> MockConfigEntry:
+    """Set up the Dexcom integration in Home Assistant."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "test.host"},)
+    with patch(
+        "homeassistant.components.nightscout.NightScoutAPI.get_sgvs",
+        return_value=GLUCOSE_READINGS,
+    ), patch(
+        "homeassistant.components.nightscout.NightScoutAPI.get_server_status",
+        return_value=SERVER_STATUS,
+    ):
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    return entry
