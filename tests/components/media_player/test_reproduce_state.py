@@ -189,7 +189,7 @@ async def test_seek(hass):
                 ENTITY_1,
                 None,
                 {
-                    ATTR_MEDIA_POSITION: 10,
+                    ATTR_MEDIA_POSITION: "10",
                     ATTR_MEDIA_POSITION_UPDATED_AT: time_1,
                     ATTR_SNAPSHOT_AT: time_2,
                 },
@@ -199,7 +199,7 @@ async def test_seek(hass):
 
     assert calls_1[0].data == {
         "entity_id": ENTITY_1,
-        ATTR_MEDIA_SEEK_POSITION: 10,
+        ATTR_MEDIA_SEEK_POSITION: "10",
     }
 
     await async_reproduce_states(
@@ -209,7 +209,7 @@ async def test_seek(hass):
                 ENTITY_1,
                 "playing",
                 {
-                    ATTR_MEDIA_POSITION: 10,
+                    ATTR_MEDIA_POSITION: "10",
                     ATTR_MEDIA_POSITION_UPDATED_AT: time_1,
                     ATTR_SNAPSHOT_AT: time_2,
                 },
@@ -219,7 +219,7 @@ async def test_seek(hass):
 
     assert calls_1[1].data == {
         "entity_id": ENTITY_1,
-        ATTR_MEDIA_SEEK_POSITION: 11,
+        ATTR_MEDIA_SEEK_POSITION: "11",
     }
 
     assert len(calls_2) == 1
