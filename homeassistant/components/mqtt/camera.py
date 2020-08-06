@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components import camera, mqtt
 from homeassistant.components.camera import Camera
-from homeassistant.const import CONF_DEVICE, CONF_NAME
+from homeassistant.const import CONF_DEVICE, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -14,7 +14,6 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from . import (
     ATTR_DISCOVERY_HASH,
     CONF_QOS,
-    CONF_UNIQUE_ID,
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,

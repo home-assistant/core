@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_FORCE_UPDATE,
     CONF_ICON,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
@@ -28,7 +29,6 @@ from . import (
     ATTR_DISCOVERY_HASH,
     CONF_QOS,
     CONF_STATE_TOPIC,
-    CONF_UNIQUE_ID,
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,
