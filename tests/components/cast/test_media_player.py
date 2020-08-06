@@ -461,6 +461,7 @@ async def test_url_replace(hass: HomeAssistantType):
 
     class FakeHTTPImage:
         url = "http://example.com/test.png"
+
     class FakeHTTPSImage:
         url = "https://example.com/test.png"
 
@@ -470,7 +471,7 @@ async def test_url_replace(hass: HomeAssistantType):
     await hass.async_block_till_done()
     state = hass.states.get("media_player.speaker")
     assert state.attributes.get("entity_picture") == "//example.com/test.png"
-    
+
     media_status.images = [FakeHTTPSImage()]
     entity.new_media_status(media_status)
     await hass.async_block_till_done()
