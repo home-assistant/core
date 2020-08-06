@@ -254,10 +254,12 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
                 # Already performing a pair setup operation with a different
                 # controller
                 errors["pairing_code"] = "busy_error"
+                self.finish_pairing = None
             except aiohomekit.MaxTriesError:
                 # The accessory has received more than 100 unsuccessful auth
                 # attempts.
                 errors["pairing_code"] = "max_tries_error"
+                self.finish_pairing = None
             except aiohomekit.UnavailableError:
                 # The accessory is already paired - cannot try to pair again.
                 return self.async_abort(reason="already_paired")
@@ -267,6 +269,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
                 errors["pairing_code"] = "pairing_failed"
+                self.finish_pairing = None
 
         if pair_info:
             code = pair_info["pairing_code"]
