@@ -141,7 +141,7 @@ airly==0.0.2
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.47
+androidtv[async]==0.0.48
 
 # homeassistant.components.apns
 apns2==0.3.0
@@ -362,7 +362,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200803.0
+home-assistant-frontend==20200805.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -534,7 +534,7 @@ prometheus_client==0.7.1
 ptvsd==4.3.2
 
 # homeassistant.components.androidtv
-pure-python-adb==0.2.2.dev0
+pure-python-adb[async]==0.3.0.dev0
 
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
@@ -675,9 +675,6 @@ pylast==3.2.1
 
 # homeassistant.components.forked_daapd
 pylibrespot-java==0.1.0
-
-# homeassistant.components.linky
-pylinky==0.4.0
 
 # homeassistant.components.litejet
 pylitejet==0.1

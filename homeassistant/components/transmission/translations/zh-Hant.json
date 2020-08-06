@@ -12,9 +12,7 @@
             "user": {
                 "data": {
                     "host": "\u4e3b\u6a5f\u7aef",
-                    "limit": "\u9650\u5236",
                     "name": "\u540d\u7a31",
-                    "order": "\u6392\u5e8f",
                     "password": "\u5bc6\u78bc",
                     "port": "\u901a\u8a0a\u57e0",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
