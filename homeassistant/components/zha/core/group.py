@@ -119,8 +119,6 @@ class ZHAGroup(LogMixin):
         self.hass: HomeAssistantType = hass
         self._zigpy_group: ZigpyGroupType = zigpy_group
         self._zha_gateway: ZhaGatewayType = zha_gateway
-        # Keep track if we're deleting the group so event handlers can act accordingly
-        self.deleting = False
 
     @property
     def name(self) -> str:

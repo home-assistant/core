@@ -230,9 +230,8 @@ class ZhaGroupEntity(BaseZhaEntity):
 
     async def _handle_group_membership_changed(self):
         """Handle group membership changed."""
-        # Make sure we don't call remove twice if we're deleting the group or
-        # 2 members are removed at same time.
-        if self._group.deleting or self._handled_group_membership:
+        # Make sure we don't call remove twice as members are removed
+        if self._handled_group_membership:
             return
 
         self._handled_group_membership = True
