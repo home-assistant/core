@@ -124,8 +124,9 @@ class SmappeeFlowHandler(
             and len(self._async_current_entries()) > 0
         ):
             return self.async_abort(reason="already_configured_device")
-
-        return await self.async_step_pick_implementation()
+        # Add new CLOUD device
+        else:
+            return await self.async_step_pick_implementation()
 
     async def async_step_local(self, user_input=None):
         """Handle local flow."""
