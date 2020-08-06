@@ -150,7 +150,6 @@ def websocket_refresh_node_info(hass, connection, msg):
 
     manager = hass.data[DOMAIN][MANAGER]
     options = hass.data[DOMAIN][OPTIONS]
-    unsubs = []
 
     @callback
     def forward_events(data):
