@@ -258,7 +258,7 @@ doorbirdpy==2.0.8
 dsmr_parser==0.18
 
 # homeassistant.components.dynalite
-dynalite_devices==0.1.41
+dynalite_devices==0.1.44
 
 # homeassistant.components.ee_brightbox
 eebrightbox==0.0.4
@@ -791,7 +791,7 @@ python-miio==0.5.3
 python-nest==4.1.0
 
 # homeassistant.components.ozw
-python-openzwave-mqtt==1.0.2
+python-openzwave-mqtt==1.0.4
 
 # homeassistant.components.songpal
 python-songpal==0.12

@@ -503,7 +503,7 @@ dsmr_parser==0.18
 dweepy==0.3.0
 
 # homeassistant.components.dynalite
-dynalite_devices==0.1.41
+dynalite_devices==0.1.44
 
 # homeassistant.components.rainforest_eagle
 eagle200_reader==0.2.4
@@ -1734,7 +1734,7 @@ python-nest==4.1.0
 python-nmap==0.6.1
 
 # homeassistant.components.ozw
-python-openzwave-mqtt==1.0.2
+python-openzwave-mqtt==1.0.4
 
 # homeassistant.components.qbittorrent
 python-qbittorrent==0.4.1

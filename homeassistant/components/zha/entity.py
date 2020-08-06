@@ -256,7 +256,6 @@ class ZhaGroupEntity(BaseZhaEntity):
             )
 
         self.async_on_remove(send_removed_signal)
-        await self.async_update()
 
     @callback
     def async_state_changed_listener(self, event: Event):
