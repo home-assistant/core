@@ -90,6 +90,7 @@ class NightscoutSensor(Entity):
 
     @property
     def should_poll(self):
+        """Return the polling state."""
         return True
 
     async def async_update(self):

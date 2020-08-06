@@ -1,9 +1,7 @@
 """The Nightscout integration."""
 import asyncio
-from asyncio import TimeoutError as AsyncIOTimeoutError
 import logging
 
-from aiohttp import ClientError, ClientTimeout
 from py_nightscout import Api as NightscoutAPI
 
 from homeassistant.config_entries import ConfigEntry
