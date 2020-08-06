@@ -43,9 +43,13 @@ class SmappeeFlowHandler(
             discovery_info[CONF_HOSTNAME].replace(".local.", "").replace("Smappee", "")
         )
 
-        # Check if already configured
+        # Check if already configured (local)
         await self.async_set_unique_id(serial_number)
         self._abort_if_unique_id_configured()
+
+        # Check if already configured (cloud)
+        if self.is_cloud_device_already_added():
+            return self.async_abort(reason="already_configured_device")
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
@@ -57,6 +61,10 @@ class SmappeeFlowHandler(
     async def async_step_zeroconf_confirm(self, user_input=None):
         """Confirm zeroconf flow."""
         errors = {}
+
+        # Check if already configured (cloud)
+        if self.is_cloud_device_already_added():
+            return self.async_abort(reason="already_configured_device")
 
         if user_input is None:
             # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
@@ -84,6 +92,11 @@ class SmappeeFlowHandler(
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
+
+        # If there is a CLOUD entry already, abort a new LOCAL entry
+        if self.is_cloud_device_already_added():
+            return self.async_abort(reason="already_configured_device")
+
         return await self.async_step_environment()
 
     async def async_step_environment(self, user_input=None):
@@ -105,11 +118,12 @@ class SmappeeFlowHandler(
         # Ask for host detail
         if user_input["environment"] == ENV_LOCAL:
             return await self.async_step_local()
-
-        # Use configuration.yaml CLOUD setup if not setup already
-        for entry in self._async_current_entries():
-            if entry.unique_id is not None and entry.unique_id == f"{DOMAIN}Cloud":
-                return self.async_abort(reason="already_configured_device")
+        # Abort cloud option if a LOCAL entry has already been added
+        elif (
+            user_input["environment"] == ENV_CLOUD
+            and len(self._async_current_entries()) > 0
+        ):
+            return self.async_abort(reason="already_configured_device")
 
         return await self.async_step_pick_implementation()
 
@@ -142,7 +156,7 @@ class SmappeeFlowHandler(
 
         serial_number = serial_number.replace("Smappee", "")
 
-        # Check if already configured
+        # Check if already configured (local)
         await self.async_set_unique_id(serial_number, raise_on_progress=False)
         self._abort_if_unique_id_configured()
 
@@ -150,3 +164,10 @@ class SmappeeFlowHandler(
             title=f"{DOMAIN}{serial_number}",
             data={CONF_IP_ADDRESS: ip_address, CONF_SERIALNUMBER: serial_number},
         )
+
+    def is_cloud_device_already_added(self):
+        """Check if a CLOUD device has already been added."""
+        for entry in self._async_current_entries():
+            if entry.unique_id is not None and entry.unique_id == f"{DOMAIN}Cloud":
+                return True
+        return False

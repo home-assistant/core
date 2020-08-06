@@ -235,6 +235,86 @@ async def test_cloud_device_exists_abort(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER},
     )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured_device"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+async def test_zeroconf_abort_if_cloud_device_exists(hass):
+    """Test we abort zeroconf flow if Smappee Cloud device already configured."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="smappeeCloud", source=SOURCE_USER,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data={
+            "host": "1.2.3.4",
+            "port": 22,
+            CONF_HOSTNAME: "Smappee1006000212.local.",
+            "type": "_ssh._tcp.local.",
+            "name": "Smappee1006000212._ssh._tcp.local.",
+            "properties": {"_raw": {}},
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured_device"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+async def test_zeroconf_confirm_abort_if_cloud_device_exists(hass):
+    """Test we abort zeroconf confirm flow if Smappee Cloud device already configured."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data={
+            "host": "1.2.3.4",
+            "port": 22,
+            CONF_HOSTNAME: "Smappee1006000212.local.",
+            "type": "_ssh._tcp.local.",
+            "name": "Smappee1006000212._ssh._tcp.local.",
+            "properties": {"_raw": {}},
+        },
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="smappeeCloud", source=SOURCE_USER,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured_device"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+async def test_abort_cloud_flow_if_local_device_exists(hass):
+    """Test we abort the cloud flow if a Smappee local device already configured."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"host": "1.2.3.4"},
+        unique_id="1006000212",
+        source=SOURCE_USER,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER},
+    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"environment": ENV_CLOUD}
     )
