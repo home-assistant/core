@@ -118,15 +118,15 @@ class SmappeeFlowHandler(
         # Ask for host detail
         if user_input["environment"] == ENV_LOCAL:
             return await self.async_step_local()
+
         # Abort cloud option if a LOCAL entry has already been added
-        elif (
+        if (
             user_input["environment"] == ENV_CLOUD
             and len(self._async_current_entries()) > 0
         ):
             return self.async_abort(reason="already_configured_device")
-        # Add new CLOUD device
-        else:
-            return await self.async_step_pick_implementation()
+
+        return await self.async_step_pick_implementation()
 
     async def async_step_local(self, user_input=None):
         """Handle local flow."""
