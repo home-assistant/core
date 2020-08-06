@@ -8,7 +8,7 @@ from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
-class roonApiMock:
+class RoonApiMock:
     """Mock to handle returning tokens for testing the RoonApi."""
 
     def __init__(self, token):
@@ -38,7 +38,7 @@ async def test_form_and_auth(hass):
         "homeassistant.components.roon.const.AUTHENTICATE_TIMEOUT", 0,
     ), patch(
         "homeassistant.components.roon.config_flow.RoonApi",
-        return_value=roonApiMock("good_token"),
+        return_value=RoonApiMock("good_token"),
     ), patch(
         "homeassistant.components.roon.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -68,7 +68,7 @@ async def test_form_no_token(hass):
         "homeassistant.components.roon.const.AUTHENTICATE_TIMEOUT", 0,
     ), patch(
         "homeassistant.components.roon.config_flow.RoonApi",
-        return_value=roonApiMock(None),
+        return_value=RoonApiMock(None),
     ):
         await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "1.1.1.1"}
@@ -140,7 +140,7 @@ async def test_form_host_already_exists(hass):
         "homeassistant.components.roon.const.AUTHENTICATE_TIMEOUT", 0,
     ), patch(
         "homeassistant.components.roon.config_flow.RoonApi",
-        return_value=roonApiMock("good_token"),
+        return_value=RoonApiMock("good_token"),
     ), patch(
         "homeassistant.components.roon.async_setup", return_value=True
     ) as mock_setup, patch(
