@@ -19,7 +19,8 @@ async def async_setup_entry(
     entities = []
     for device in devices:
         for binary_switch in device.binary_switch_property:
-            # Exclude the binary switch which have also a multi_level_switches here, because they are implemented as light devices now.
+            # Exclude the binary switch which also has multi_level_switches here,
+            # because those are implemented as light entities now.
             if not hasattr(device, "multi_level_switch_property"):
                 entities.append(
                     DevoloSwitch(
