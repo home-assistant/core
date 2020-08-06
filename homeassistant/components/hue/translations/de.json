@@ -55,7 +55,6 @@
         "step": {
             "init": {
                 "data": {
-                    "allow_how_groups": "Erlaube Hue Gruppen",
                     "allow_hue_groups": "Erlaube Hue Gruppen",
                     "allow_unreachable": "Erlauben Sie unerreichbaren Gl\u00fchbirnen, ihren Zustand korrekt zu melden"
                 }
