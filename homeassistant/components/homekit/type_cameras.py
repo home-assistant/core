@@ -54,6 +54,7 @@ from .const import (
     SERV_DOORBELL,
     SERV_MOTION_SENSOR,
     SERV_SPEAKER,
+    SERV_STATELESS_PROGRAMMABLE_SWITCH,
 )
 from .img_util import scale_jpeg_camera_image
 from .util import pid_is_alive
@@ -211,6 +212,7 @@ class Camera(HomeAccessory, PyhapCamera):
                 self._async_update_motion_state(state)
 
         self._char_doorbell_detected = None
+        self._char_doorbell_detected_switch = None
         self.linked_doorbell_sensor = self.config.get(CONF_LINKED_DOORBELL_SENSOR)
         if self.linked_doorbell_sensor:
             state = self.hass.states.get(self.linked_doorbell_sensor)
@@ -219,6 +221,14 @@ class Camera(HomeAccessory, PyhapCamera):
                 self.set_primary_service(serv_doorbell)
                 self._char_doorbell_detected = serv_doorbell.configure_char(
                     CHAR_PROGRAMMABLE_SWITCH_EVENT, value=0,
+                )
+                serv_stateless_switch = self.add_preload_service(
+                    SERV_STATELESS_PROGRAMMABLE_SWITCH
+                )
+                self._char_doorbell_detected_switch = serv_stateless_switch.configure_char(
+                    CHAR_PROGRAMMABLE_SWITCH_EVENT,
+                    value=0,
+                    valid_values={"SinglePress": DOORBELL_SINGLE_PRESS},
                 )
                 serv_speaker = self.add_preload_service(SERV_SPEAKER)
                 serv_speaker.configure_char(CHAR_MUTE, value=0)
@@ -282,6 +292,7 @@ class Camera(HomeAccessory, PyhapCamera):
 
         if new_state.state == STATE_ON:
             self._char_doorbell_detected.set_value(DOORBELL_SINGLE_PRESS)
+            self._char_doorbell_detected_switch.set_value(DOORBELL_SINGLE_PRESS)
             _LOGGER.debug(
                 "%s: Set linked doorbell %s sensor to %d",
                 self.entity_id,
