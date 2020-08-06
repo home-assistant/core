@@ -420,7 +420,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         if not self._room_status or not self._room_data:
             if self._connected:
                 _LOGGER.info(
-                    "The thermostat in room %s seems to be out of reach.",
+                    "The thermostat in room %s seems to be out of reach",
                     self._device_name,
                 )
 
