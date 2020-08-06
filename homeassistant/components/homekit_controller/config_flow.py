@@ -277,7 +277,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             except aiohomekit.exceptions.MalformedPinError:
                 # Library claimed pin was invalid before even making an API call
                 errors["pairing_code"] = "authentication_error"
-                self.finish_pairing = None
             except aiohomekit.AuthenticationError:
                 # PairSetup M4 - SRP proof failed
                 # PairSetup M6 - Ed25519 signature verification failed
