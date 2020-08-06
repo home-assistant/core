@@ -2,6 +2,7 @@
 from datetime import timedelta
 import json
 
+from homeassistant.components.accuweather.const import ATTRIBUTION
 from homeassistant.components.weather import (
     ATTR_FORECAST,
     ATTR_FORECAST_CONDITION,
@@ -20,7 +21,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -45,6 +46,7 @@ async def test_weather_without_forecast(hass):
     assert state.attributes.get(ATTR_WEATHER_VISIBILITY) == 16.1
     assert state.attributes.get(ATTR_WEATHER_WIND_BEARING) == 180
     assert state.attributes.get(ATTR_WEATHER_WIND_SPEED) == 14.5
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
 
     entry = registry.async_get("weather.home")
     assert entry
@@ -66,6 +68,7 @@ async def test_weather_with_forecast(hass):
     assert state.attributes.get(ATTR_WEATHER_VISIBILITY) == 16.1
     assert state.attributes.get(ATTR_WEATHER_WIND_BEARING) == 180
     assert state.attributes.get(ATTR_WEATHER_WIND_SPEED) == 14.5
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     forecast = state.attributes.get(ATTR_FORECAST)[0]
     assert forecast.get(ATTR_FORECAST_CONDITION) == "lightning-rainy"
     assert forecast.get(ATTR_FORECAST_PRECIPITATION) == 4.8
