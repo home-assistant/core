@@ -142,11 +142,11 @@ async def async_setup_entry(
     xiaomi_gateway = await hass.async_add_executor_job(
         XiaomiGateway,
         entry.data[CONF_HOST],
-        entry.data[CONF_PORT],
         entry.data[CONF_SID],
         entry.data[CONF_KEY],
         DEFAULT_DISCOVERY_RETRY,
         entry.data[CONF_INTERFACE],
+        entry.data[CONF_PORT],
         entry.data[CONF_PROTOCOL],
     )
     hass.data[DOMAIN][GATEWAYS_KEY][entry.entry_id] = xiaomi_gateway
