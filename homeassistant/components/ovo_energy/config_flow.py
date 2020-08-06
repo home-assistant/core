@@ -33,7 +33,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
                 if await client.authenticate(
                     user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 ):
-                    await self.async_set_unique_id(f"{user_input[CONF_USERNAME]}")
+                    await self.async_set_unique_id(user_input[CONF_USERNAME])
                     self._abort_if_unique_id_configured()
 
                     return self.async_create_entry(
