@@ -32,7 +32,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
             try:
                 authenticated = await client.authenticate(
                     user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-                ):
+                )
             except aiohttp.ClientError:
                 errors["base"] = "connection_error"
             else:
@@ -48,7 +48,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
                             CONF_ACCOUNT_ID: client.account_id,
                         },
                     )
-                
+
                 errors["base"] = "authorization_error"
 
         return self.async_show_form(
