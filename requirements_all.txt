@@ -1439,9 +1439,6 @@ pylgnetcast-homeassistant==0.2.0.dev0
 # homeassistant.components.forked_daapd
 pylibrespot-java==0.1.0
 
-# homeassistant.components.linky
-pylinky==0.4.0
-
 # homeassistant.components.litejet
 pylitejet==0.1
 
