@@ -26,6 +26,9 @@
                 "title": ""
             },
             "manual": {
+                "data": {
+                    "host": "Vert"
+                },
                 "title": "Manuell konfigurere en Hue-bro"
             }
         }
@@ -55,7 +58,6 @@
         "step": {
             "init": {
                 "data": {
-                    "allow_how_groups": "Tillat Hue-grupper",
                     "allow_hue_groups": "Tillat Hue-grupper",
                     "allow_unreachable": "Tillat uoppn\u00e5elige p\u00e6rer \u00e5 rapportere sin tilstand riktig"
                 }

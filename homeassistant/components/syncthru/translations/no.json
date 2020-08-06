@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
         "error": {
             "invalid_url": "Ugyldig URL-adresse",
             "syncthru_not_supported": "Enheten st\u00f8tter ikke SyncThru",
@@ -7,6 +10,12 @@
         },
         "flow_title": "Samsung SyncThru-skriver: {name}",
         "step": {
+            "confirm": {
+                "data": {
+                    "name": "Navn",
+                    "url": "URL-adresse for webgrensesnitt"
+                }
+            },
             "user": {
                 "data": {
                     "name": "Navn",

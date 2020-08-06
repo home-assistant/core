@@ -1140,8 +1140,8 @@ async def test_start_taking_too_long(loop, caplog):
     caplog.set_level(logging.WARNING)
 
     try:
-        with patch(
-            "homeassistant.core.timeout", side_effect=asyncio.TimeoutError
+        with patch.object(
+            hass, "async_block_till_done", side_effect=asyncio.TimeoutError
         ), patch("homeassistant.core._async_create_timer") as mock_timer:
             await hass.async_start()
 
@@ -1436,14 +1436,14 @@ async def test_chained_logging_hits_log_timeout(hass, caplog):
     async def _task_chain_1():
         nonlocal created
         created += 1
-        if created > 10:
+        if created > 1000:
             return
         hass.async_create_task(_task_chain_2())
 
     async def _task_chain_2():
         nonlocal created
         created += 1
-        if created > 10:
+        if created > 1000:
             return
         hass.async_create_task(_task_chain_1())
 

@@ -14,7 +14,8 @@
                     "host": "IP Adress",
                     "password": "Passwuert",
                     "username": "Benotzernumm"
-                }
+                },
+                "description": "G\u00ebff deng Control4 Kont Informatiounen an d'IP Adress vun dengem lokale Kontroller an."
             }
         }
     },

@@ -37,6 +37,7 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     assert result["node_basic_string"] == "Routing Slave"
     assert result["node_generic_string"] == "Binary Switch"
     assert result["node_specific_string"] == "Binary Power Switch"
+    assert result["neighbors"] == [1, 33, 36, 37, 39]
 
     # Test node statistics
     await client.send_json({ID: 7, TYPE: "ozw/node_statistics", NODE_ID: 39})

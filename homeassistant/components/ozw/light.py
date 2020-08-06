@@ -30,9 +30,6 @@ COLOR_CHANNEL_COLD_WHITE = 0x02
 COLOR_CHANNEL_RED = 0x04
 COLOR_CHANNEL_GREEN = 0x08
 COLOR_CHANNEL_BLUE = 0x10
-TEMP_COLOR_MAX = 500  # mired equivalent to 2000K
-TEMP_COLOR_MIN = 154  # mired equivalent to 6500K
-TEMP_COLOR_DIFF = TEMP_COLOR_MAX - TEMP_COLOR_MIN
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -71,6 +68,9 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         self._white = None
         self._ct = None
         self._supported_features = SUPPORT_BRIGHTNESS
+        self._min_mireds = 153  # 6500K as a safe default
+        self._max_mireds = 370  # 2700K as a safe default
+
         # make sure that supported features is correctly set
         self.on_value_update()
 
@@ -135,6 +135,16 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
     def color_temp(self):
         """Return the color temperature."""
         return self._ct
+
+    @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        return self._min_mireds
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        return self._max_mireds
 
     @callback
     def async_set_duration(self, **kwargs):
@@ -209,7 +219,11 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
                 0,
                 min(
                     255,
-                    round((TEMP_COLOR_MAX - round(color_temp)) / TEMP_COLOR_DIFF * 255),
+                    round(
+                        (self._max_mireds - color_temp)
+                        / (self._max_mireds - self._min_mireds)
+                        * 255
+                    ),
                 ),
             )
             warm = 255 - cold
@@ -241,15 +255,25 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         # Color Data String
         data = self.values.color.data[ATTR_VALUE]
 
-        # RGB is always present in the openzwave color data string.
+        # RGB is always present in the OpenZWave color data string.
         rgb = [int(data[1:3], 16), int(data[3:5], 16), int(data[5:7], 16)]
         self._hs = color_util.color_RGB_to_hs(*rgb)
 
-        # Parse remaining color channels. Openzwave appends white channels
+        # Parse remaining color channels. OpenZWave appends white channels
         # that are present.
         index = 7
         temp_warm = 0
         temp_cold = 0
+
+        # Update color temp limits.
+        if self.values.min_kelvin:
+            self._max_mireds = color_util.color_temperature_kelvin_to_mired(
+                self.values.min_kelvin.data[ATTR_VALUE]
+            )
+        if self.values.max_kelvin:
+            self._min_mireds = color_util.color_temperature_kelvin_to_mired(
+                self.values.max_kelvin.data[ATTR_VALUE]
+            )
 
         # Warm white
         if self._color_channels & COLOR_CHANNEL_WARM_WHITE:
@@ -264,13 +288,12 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
             temp_cold = self._white
 
         # Calculate color temps based on white LED status
-        if temp_cold > 0:
-            self._ct = round(TEMP_COLOR_MAX - ((temp_cold / 255) * TEMP_COLOR_DIFF))
-        # Only used if CW channel missing
-        elif temp_warm > 0:
-            self._ct = round(TEMP_COLOR_MAX - temp_warm)
+        if temp_cold or temp_warm:
+            self._ct = round(
+                self._max_mireds
+                - ((temp_cold / 255) * (self._max_mireds - self._min_mireds))
+            )
 
-        # If no rgb channels supported, report None.
         if not (
             self._color_channels & COLOR_CHANNEL_RED
             or self._color_channels & COLOR_CHANNEL_GREEN

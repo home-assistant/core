@@ -1,33 +1,7 @@
 {
     "config": {
         "abort": {
-            "client_id": "Die Client-ID aus der Konfiguration ist ung\u00fcltig.",
-            "client_secret": "Das Client-Secret aus der Konfiguration ist ung\u00fcltig.",
-            "no_agreements": "Dieses Konto hat keine Toon-Anzeigen.",
-            "no_app": "Toon muss konfiguriert werden, bevor die Authentifizierung durchgef\u00fchrt werden kann. [Lies bitte die Anleitung](https://www.home-assistant.io/components/toon/).",
-            "unknown_auth_fail": "Beim Authentifizieren ist ein unerwarteter Fehler aufgetreten."
-        },
-        "error": {
-            "credentials": "Die angegebenen Anmeldeinformationen sind ung\u00fcltig.",
-            "display_exists": "Die ausgew\u00e4hlte Anzeige ist bereits konfiguriert."
-        },
-        "step": {
-            "authenticate": {
-                "data": {
-                    "password": "Passwort",
-                    "tenant": "Tenant",
-                    "username": "Benutzername"
-                },
-                "description": "Authentifiziere dich mit deinem Eneco Toon-Konto (nicht dem Entwicklerkonto).",
-                "title": "Verkn\u00fcpfe dein Toon-Konto"
-            },
-            "display": {
-                "data": {
-                    "display": "Anzeige w\u00e4hlen"
-                },
-                "description": "W\u00e4hle die Toon-Anzeige aus, die verbunden werden soll.",
-                "title": "Anzeige ausw\u00e4hlen"
-            }
+            "no_agreements": "Dieses Konto hat keine Toon-Anzeigen."
         }
     }
 }

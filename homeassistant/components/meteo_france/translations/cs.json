@@ -1,0 +1,24 @@
+{
+    "config": {
+        "error": {
+            "empty": "\u017d\u00e1dn\u00fd v\u00fdsledek p\u0159i hled\u00e1n\u00ed m\u011bsta: zkontrolujte pros\u00edm pole m\u011bsta"
+        },
+        "step": {
+            "cities": {
+                "data": {
+                    "city": "M\u011bsto"
+                },
+                "description": "Vyberte m\u011bsto ze seznamu"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "mode": "Re\u017eim p\u0159edpov\u011bdi"
+                }
+            }
+        }
+    }
+}
