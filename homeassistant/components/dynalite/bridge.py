@@ -74,7 +74,7 @@ class DynaliteBridge:
     def handle_notification(self, notification: DynaliteNotification) -> None:
         """Handle a notification from the platform and issue events."""
         if notification.notification == NOTIFICATION_PACKET:
-            self.hass.bus.fire(
+            self.hass.bus.async_fire(
                 f"dynalite_{self.host}_packet",
                 {ATTR_PACKET: notification.data[NOTIFICATION_PACKET]},
             )
