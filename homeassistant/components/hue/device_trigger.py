@@ -14,10 +14,11 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_PLATFORM,
     CONF_TYPE,
+    CONF_UNIQUE_ID,
 )
 
 from . import DOMAIN
-from .hue_event import CONF_HUE_EVENT, CONF_UNIQUE_ID
+from .hue_event import CONF_HUE_EVENT
 
 _LOGGER = logging.getLogger(__file__)
 
