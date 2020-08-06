@@ -11,6 +11,7 @@ from dynalite_devices_lib.dynalite_devices import (
 
 from homeassistant.components import dynalite
 from homeassistant.components.dynalite.const import ATTR_AREA, ATTR_PACKET, ATTR_PRESET
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from tests.async_mock import AsyncMock, Mock, patch
@@ -120,7 +121,7 @@ async def test_notifications(hass):
         await hass.async_block_till_done()
         notification_func = mock_dyn_dev.mock_calls[1][2]["notification_func"]
     event_listener1 = Mock()
-    hass.bus.async_listen(f"dynalite_{host}_packet", event_listener1)
+    hass.bus.async_listen("dynalite_packet", event_listener1)
     packet = [5, 4, 3, 2]
     notification_func(
         DynaliteNotification(NOTIFICATION_PACKET, {NOTIFICATION_PACKET: packet})
@@ -128,11 +129,10 @@ async def test_notifications(hass):
     await hass.async_block_till_done()
     event_listener1.assert_called_once()
     my_event = event_listener1.mock_calls[0][1][0]
+    assert my_event.data[CONF_HOST] == host
     assert my_event.data[ATTR_PACKET] == packet
     event_listener2 = Mock()
-    hass.bus.async_listen(f"dynalite_{host}_preset", event_listener2)
-    event_listener3 = Mock()
-    hass.bus.async_listen(f"dynalite_{host}_selected_area_7_preset_2", event_listener3)
+    hass.bus.async_listen("dynalite_preset", event_listener2)
     notification_func(
         DynaliteNotification(
             NOTIFICATION_PRESET, {dyn_CONF_AREA: 7, dyn_CONF_PRESET: 2}
@@ -141,8 +141,6 @@ async def test_notifications(hass):
     await hass.async_block_till_done()
     event_listener2.assert_called_once()
     my_event = event_listener2.mock_calls[0][1][0]
+    assert my_event.data[CONF_HOST] == host
     assert my_event.data[ATTR_AREA] == 7
     assert my_event.data[ATTR_PRESET] == 2
-    event_listener3.assert_called_once()
-    my_event = event_listener3.mock_calls[0][1][0]
-    assert not my_event.data
