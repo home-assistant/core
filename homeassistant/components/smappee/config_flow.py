@@ -53,7 +53,11 @@ class SmappeeFlowHandler(
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
-            {CONF_IP_ADDRESS: discovery_info["host"], CONF_SERIALNUMBER: serial_number}
+            {
+                CONF_IP_ADDRESS: discovery_info["host"],
+                CONF_SERIALNUMBER: serial_number,
+                "title_placeholders": {"name": serial_number},
+            }
         )
 
         return await self.async_step_zeroconf_confirm()
