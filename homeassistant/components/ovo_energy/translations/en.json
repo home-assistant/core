@@ -1,18 +1,18 @@
 {
-  "config": {
-    "error": {
-      "authorization_error": "Authorization error. Check your credentials.",
-      "connection_error": "Could not connect to OVO Energy."
-    },
-    "step": {
-      "user": {
-        "data": {
-          "username": "Username",
-          "password": "Password"
+    "config": {
+        "error": {
+            "authorization_error": "Authorization error. Check your credentials.",
+            "connection_error": "Could not connect to OVO Energy."
         },
-        "description": "Set up an OVO Energy instance to access your energy usage.",
-        "title": "Add OVO Energy"
-      }
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Set up an OVO Energy instance to access your energy usage.",
+                "title": "Add OVO Energy"
+            }
+        }
     }
-  }
 }
