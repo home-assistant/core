@@ -89,10 +89,7 @@ async def async_setup(hass, config, async_add_entities):
         update_interval=timedelta(minutes=randrange(55, 65)),
     )
 
-    # Fetch initial data so we have data when entities subscribe
     hass.data[DOMAIN][unique_id].init_data()
-    await hass.data[DOMAIN][unique_id].fetch_data()
-
     async_add_entities([MetWeather(coordinator, config, hass.config.units.is_metric)])
 
 
