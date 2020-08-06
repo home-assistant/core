@@ -106,7 +106,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         platform.async_register_entity_service(
             SERVICE_SETPERSONAWAY,
             {
-                vol.Required(ATTR_ENTITY_ID): cv.entity_domain(CAMERA_DOMAIN),
                 vol.Optional(ATTR_PERSON): cv.string,
             },
             "_service_set_person_away",
