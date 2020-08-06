@@ -4,6 +4,7 @@ from typing import cast
 
 import yarl
 
+from homeassistant.components.http import current_request
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
@@ -27,6 +28,7 @@ class NoURLAvailableError(HomeAssistantError):
 def get_url(
     hass: HomeAssistant,
     *,
+    require_current_request: bool = False,
     require_ssl: bool = False,
     require_standard_port: bool = False,
     allow_internal: bool = True,
@@ -37,6 +39,12 @@ def get_url(
     prefer_cloud: bool = False,
 ) -> str:
     """Get a URL to this instance."""
+    # If the request URL is required, used that
+    if require_current_request:
+        return _get_current_request_url(
+            hass, require_ssl=require_ssl, require_standard_port=require_standard_port
+        )
+
     order = [TYPE_URL_INTERNAL, TYPE_URL_EXTERNAL]
     if prefer_external:
         order.reverse()
@@ -164,6 +172,61 @@ def _get_external_url(
             return _get_cloud_url(hass)
         except NoURLAvailableError:
             pass
+
+    raise NoURLAvailableError
+
+
+@bind_hass
+def _get_current_request_url(
+    hass: HomeAssistant,
+    *,
+    require_ssl: bool = False,
+    require_standard_port: bool = False,
+) -> str:
+    """Get current request URL of this instance."""
+    request = current_request.get()
+    if request is None:
+        raise NoURLAvailableError
+
+    request_host = yarl.URL(request.url).host
+
+    if hass.config.external_url:
+        external_url = yarl.URL(hass.config.external_url)
+        if (
+            external_url.host == request_host
+            and (not require_ssl or external_url.scheme == "https")
+            and (not require_standard_port or external_url.is_default_port())
+        ):
+            return normalize_url(hass.config.external_url)
+
+    if hass.config.internal_url:
+        internal_url = yarl.URL(hass.config.internal_url)
+        if (
+            internal_url.host == request_host
+            and (not require_ssl or internal_url.scheme == "https")
+            and (not require_standard_port or internal_url.is_default_port())
+        ):
+            return normalize_url(hass.config.internal_url)
+
+    if hass.config.api and hass.config.api.local_ip == request_host:
+        scheme = "http"
+        if hass.config.api.use_ssl:
+            scheme = "https"
+        ip_url = yarl.URL.build(
+            scheme=scheme, host=hass.config.api.local_ip, port=hass.config.api.port
+        )
+        if (not require_ssl or hass.config.api.use_ssl) and (
+            not require_standard_port or ip_url.is_default_port()
+        ):
+            return normalize_url(str(ip_url))
+
+    try:
+        cloud_url = _get_cloud_url(hass)
+    except NoURLAvailableError:
+        pass
+    else:
+        if yarl.URL(cloud_url).host == request_host:
+            return normalize_url(cloud_url)
 
     raise NoURLAvailableError
 
