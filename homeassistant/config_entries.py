@@ -761,29 +761,26 @@ class ConfigEntries:
         """
         changed = False
 
-        if unique_id is not _UNDEF:
-            if entry.unique_id != unique_id:
-                changed = True
+        if unique_id is not _UNDEF and entry.unique_id != unique_id:
+            changed = True
             entry.unique_id = cast(Optional[str], unique_id)
 
-        if title is not _UNDEF:
-            if entry.title != title:
-                changed = True
+        if title is not _UNDEF and entry.title != title:
+            changed = True
             entry.title = cast(str, title)
 
-        if data is not _UNDEF:
-            if dict(entry.data) != dict(data):
-                changed = True
+        if data is not _UNDEF and dict(entry.data) != dict(data):
+            changed = True
             entry.data = MappingProxyType(data)
 
-        if options is not _UNDEF:
-            if dict(entry.options) != dict(options):
-                changed = True
+        if options is not _UNDEF and dict(entry.options) != dict(options):
+            changed = True
             entry.options = MappingProxyType(options)
 
-        if system_options is not _UNDEF:
-            if entry.system_options.as_dict() != dict(system_options):
-                changed = True
+        if system_options is not _UNDEF and entry.system_options.as_dict() != dict(
+            system_options
+        ):
+            changed = True
             entry.system_options.update(**system_options)
 
         if not changed:
