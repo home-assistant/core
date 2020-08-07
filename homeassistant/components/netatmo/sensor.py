@@ -121,7 +121,6 @@ PUBLIC = "public"
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Netatmo weather and homecoach platform."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
     async def find_entities(data_class_name):
@@ -174,6 +173,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         HOMECOACH_DATA_CLASS_NAME,
     ]:
         async_add_entities(await find_entities(data_class_name), True)
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
 
     @callback
     async def add_public_entities(update=True):
