@@ -26,7 +26,10 @@ async def async_setup_entry(
 
     for device in hass.data[DOMAIN]["homecontrol"].multi_level_switch_devices:
         for multi_level_switch in device.multi_level_switch_property:
-            if device.deviceModelUID == "devolo.model.Thermostat:Valve":
+            if device.deviceModelUID in [
+                "devolo.model.Thermostat:Valve",
+                "devolo.model.Room:Thermostat",
+            ]:
                 entities.append(
                     DevoloClimateDeviceEntity(
                         homecontrol=hass.data[DOMAIN]["homecontrol"],
