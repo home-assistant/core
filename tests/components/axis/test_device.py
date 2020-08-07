@@ -290,19 +290,26 @@ async def test_update_address(hass):
     device = await setup_axis_integration(hass)
     assert device.api.config.host == "1.2.3.4"
 
-    await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN,
-        data={
-            "host": "2.3.4.5",
-            "port": 80,
-            "hostname": "name",
-            "properties": {"macaddress": MAC},
-        },
-        context={"source": "zeroconf"},
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.axis.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.axis.async_setup_entry", return_value=True,
+    ) as mock_setup_entry:
+        await hass.config_entries.flow.async_init(
+            AXIS_DOMAIN,
+            data={
+                "host": "2.3.4.5",
+                "port": 80,
+                "hostname": "name",
+                "properties": {"macaddress": MAC},
+            },
+            context={"source": "zeroconf"},
+        )
+        await hass.async_block_till_done()
 
     assert device.api.config.host == "2.3.4.5"
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_device_unavailable(hass):
