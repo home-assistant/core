@@ -885,7 +885,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                         entry, data={**entry.data, **updates}
                     )
                     if changed and reload_on_update:
-                        asyncio.create_task(
+                        self.hass.async_create_task(
                             self.hass.config_entries.async_reload(entry.entry_id)
                         )
                 raise data_entry_flow.AbortFlow("already_configured")
