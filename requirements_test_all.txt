@@ -598,7 +598,7 @@ pybotvac==0.0.17
 pychromecast==7.2.0
 
 # homeassistant.components.coolmaster
-pycoolmasternet==0.0.4
+pycoolmasternet-async==0.1.0
 
 # homeassistant.components.avri
 pycountry==19.8.18
