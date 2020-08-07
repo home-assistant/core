@@ -28,7 +28,7 @@ PLATFORMS = ["sensor"]
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Smart Meter Texas component."""
-    hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
     return True
 
 
