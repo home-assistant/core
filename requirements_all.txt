@@ -1120,7 +1120,7 @@ proliphix==0.4.1
 prometheus_client==0.7.1
 
 # homeassistant.components.tensorflow
-protobuf==3.6.1
+protobuf==3.12.2
 
 # homeassistant.components.proxmoxve
 proxmoxer==1.1.1
@@ -1260,6 +1260,9 @@ pychromecast==7.2.0
 
 # homeassistant.components.cmus
 pycmus==0.1.1
+
+# homeassistant.components.tensorflow
+pycocotools==2.0.1
 
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.3
@@ -2098,13 +2101,19 @@ temescal==0.1
 temperusb==1.5.3
 
 # homeassistant.components.tensorflow
-# tensorflow==1.13.2
+# tensorflow==2.2.0
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.2.12
 
 # homeassistant.components.tesla
 teslajsonpy==0.10.1
+
+# homeassistant.components.tensorflow
+# tf-models-official==2.2.1
+
+# homeassistant.components.tensorflow
+tf-slim==1.1.0
 
 # homeassistant.components.thermoworks_smoke
 thermoworks_smoke==0.1.8
