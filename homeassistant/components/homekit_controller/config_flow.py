@@ -253,7 +253,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             except aiohomekit.BusyError:
                 # Already performing a pair setup operation with a different
                 # controller
-                errors["pairing_code"] = "busy_error"
+                return self.async_abort(reason="busy_error")
             except aiohomekit.MaxTriesError:
                 # The accessory has received more than 100 unsuccessful auth
                 # attempts.
