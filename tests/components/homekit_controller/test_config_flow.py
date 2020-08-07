@@ -25,6 +25,7 @@ PAIRING_START_ABORT_ERRORS = [
 PAIRING_TRY_LATER_ERRORS = [
     (aiohomekit.BusyError, "busy_error"),
     (aiohomekit.MaxTriesError, "max_tries_error"),
+    (IndexError, "tlv_error"),
 ]
 
 PAIRING_FINISH_FORM_ERRORS = [

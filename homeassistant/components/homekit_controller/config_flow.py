@@ -17,7 +17,7 @@ HOMEKIT_DIR = ".homekit"
 PAIRING_FILE = "pairing.json"
 
 PIN_FORMAT = re.compile(r"^(\d{3})-{0,1}(\d{2})-{0,1}(\d{3})$")
-TRY_PAIR_LATER_ERRORS = {"max_tries_error", "busy_error"}
+TRY_PAIR_LATER_ERRORS = {"max_tries_error", "busy_error", "tlv_error"}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -266,6 +266,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             except aiohomekit.AccessoryNotFoundError:
                 # Can no longer find the device on the network
                 return self.async_abort(reason="accessory_not_found_error")
+            except IndexError:
+                # TLV error, usually not in pairing mode
+                _LOGGER.exception("Pairing communication failed")
+                errors["pairing_code"] = "tlv_error"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
                 errors["pairing_code"] = "pairing_failed"
