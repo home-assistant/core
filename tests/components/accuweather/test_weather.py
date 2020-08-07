@@ -125,16 +125,19 @@ async def test_availability(hass):
 
 async def test_manual_update_entity(hass):
     """Test manual update entity via service homeasasistant/update_entity."""
-    await init_integration(hass)
+    await init_integration(hass, forecast=True)
 
     await async_setup_component(hass, "homeassistant", {})
     with patch(
-        "homeassistant.components.accuweather.AccuWeatherDataUpdateCoordinator._async_update_data"
-    ) as mock_update:
+        "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions"
+    ) as mock_current, patch(
+        "homeassistant.components.accuweather.AccuWeather.async_get_forecast"
+    ) as mock_forecast:
         await hass.services.async_call(
             "homeassistant",
             "update_entity",
             {ATTR_ENTITY_ID: ["weather.home"]},
             blocking=True,
         )
-        assert mock_update.call_count == 1
+        assert mock_current.call_count == 1
+        assert mock_forecast.call_count == 1
