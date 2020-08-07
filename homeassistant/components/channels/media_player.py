@@ -33,15 +33,15 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     DOMAIN,
+    SERVICE_CHANNEL_DOWN,
+    SERVICE_CHANNEL_UP,
+    SERVICE_NAVIGATE
+    SERVICE_PREVIOUS_CHANNEL,
     SERVICE_SEEK_BACKWARD,
     SERVICE_SEEK_BY,
     SERVICE_SEEK_FORWARD,
-    SERVICE_CHANNEL_UP,
-    SERVICE_CHANNEL_DOWN,
-    SERVICE_PREVIOUS_CHANNEL,
     SERVICE_TOGGLE_CC,
     SERVICE_TOGGLE_RECORD,
-    SERVICE_NAVIGATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
