@@ -981,7 +981,7 @@ numato-gpio==0.8.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.19.0
+numpy==1.19.1
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
@@ -1002,7 +1002,7 @@ onvif-zeep-async==0.4.0
 open-garage==0.1.4
 
 # homeassistant.components.opencv
-# opencv-python-headless==4.2.0.32
+# opencv-python-headless==4.3.0.36
 
 # homeassistant.components.openerz
 openerz-api==0.1.0
