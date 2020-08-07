@@ -75,8 +75,9 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.interface = user_input[CONF_INTERFACE]
 
         # allow optional manual setting of host and mac
-        if self.host is None and self.sid is None:
+        if self.host is None:
             self.host = user_input.get(CONF_HOST)
+        if self.sid is None:
             mac_address = user_input.get(CONF_MAC)
 
             # format sid from mac_address
