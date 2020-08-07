@@ -136,8 +136,6 @@ async def test_update_address(hass):
     assert gateway.api.host == "1.2.3.4"
 
     with patch(
-        "homeassistant.components.deconz.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.deconz.async_setup_entry", return_value=True,
     ) as mock_setup_entry:
         await hass.config_entries.flow.async_init(
@@ -153,7 +151,6 @@ async def test_update_address(hass):
         await hass.async_block_till_done()
 
     assert gateway.api.host == "2.3.4.5"
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
