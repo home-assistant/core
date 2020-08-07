@@ -21,6 +21,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_NAME,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
@@ -30,7 +31,18 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, SERVICE_SEEK_BACKWARD, SERVICE_SEEK_BY, SERVICE_SEEK_FORWARD
+from .const import (
+    DOMAIN,
+    SERVICE_SEEK_BACKWARD,
+    SERVICE_SEEK_BY,
+    SERVICE_SEEK_FORWARD,
+    SERVICE_CHANNEL_UP,
+    SERVICE_CHANNEL_DOWN,
+    SERVICE_PREVIOUS_CHANNEL,
+    SERVICE_TOGGLE_CC,
+    SERVICE_TOGGLE_RECORD,
+    SERVICE_NAVIGATE
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +79,10 @@ CHANNELS_SEEK_BY_SCHEMA = CHANNELS_SCHEMA.extend(
     {vol.Required(ATTR_SECONDS): vol.Coerce(int)}
 )
 
+CHANNELS_NAVIGATE_SCHEMA = CHANNELS_SCHEMA.extend(
+    {vol.Required(ATTR_NAME): vol.Coerce(str)}
+)
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Channels platform."""
@@ -99,6 +115,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             device.seek_forward()
         elif service.service == SERVICE_SEEK_BACKWARD:
             device.seek_backward()
+        elif service.service == SERVICE_CHANNEL_UP:
+            device.channel_up()
+        elif service.service == SERVICE_CHANNEL_DOWN:
+            device.channel_down()
+        elif service.service == SERVICE_PREVIOUS_CHANNEL:
+            device.previous_channel()
+        elif service.service == SERVICE_TOGGLE_CC:
+            device.toggle_cc()
+        elif service.service == SERVICE_TOGGLE_RECORD:
+            device.toggle_record()
+        elif service.service == SERVICE_NAVIGATE:
+            name = service.data.get("name")
+            device.navigate(name)
         elif service.service == SERVICE_SEEK_BY:
             seconds = service.data.get("seconds")
             device.seek_by(seconds)
@@ -113,6 +142,30 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     hass.services.register(
         DOMAIN, SERVICE_SEEK_BY, service_handler, schema=CHANNELS_SEEK_BY_SCHEMA
+    )
+
+    hass.services.register(
+        DOMAIN, SERVICE_NAVIGATE, service_handler, schema=CHANNELS_NAVIGATE_SCHEMA
+    )
+
+    hass.services.register(
+        DOMAIN, SERVICE_CHANNEL_UP, service_handler, schema=CHANNELS_SCHEMA
+    )
+
+    hass.services.register(
+        DOMAIN, SERVICE_CHANNEL_DOWN, service_handler, schema=CHANNELS_SCHEMA
+    )
+
+    hass.services.register(
+        DOMAIN, SERVICE_PREVIOUS_CHANNEL, service_handler, schema=CHANNELS_SCHEMA
+    )
+
+    hass.services.register(
+        DOMAIN, SERVICE_TOGGLE_CC, service_handler, schema=CHANNELS_SCHEMA
+    )
+
+    hass.services.register(
+        DOMAIN, SERVICE_TOGGLE_RECORD, service_handler, schema=CHANNELS_SCHEMA
     )
 
 
@@ -310,4 +363,33 @@ class ChannelsPlayer(MediaPlayerEntity):
     def seek_by(self, seconds):
         """Seek backward in the timeline."""
         response = self.client.seek(seconds)
+        self.update_state(response)
+
+    def navigate(self, name):
+        """Change section of app."""
+        response = self.client.navigate(name)
+
+    def channel_up(self):
+        """Change channels up."""
+        response = self.client.channel_up()
+        self.update_state(response)
+
+    def channel_down(self):
+        """Change channels down."""
+        response = self.client.channel_down()
+        self.update_state(response)
+
+    def previous_channel(self):
+        """Jump to previous watched channel."""
+        response = self.client.previous_channel()
+        self.update_state(response)
+
+    def toggle_cc(self):
+        """Toggle captions on and off."""
+        response = self.client.toggle_cc()
+        self.update_state(response)
+
+    def toggle_record(self):
+        """Record the program playing on the curren channel."""
+        response = self.client.toggle_record()
         self.update_state(response)
