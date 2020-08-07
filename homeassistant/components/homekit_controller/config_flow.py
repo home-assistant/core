@@ -253,7 +253,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             except aiohomekit.BusyError:
                 # Already performing a pair setup operation with a different
                 # controller
-                errors["pairing_code"] = "busy_error"
+                return self.async_abort(reason="busy_error")
             except aiohomekit.MaxTriesError:
                 # The accessory has received more than 100 unsuccessful auth
                 # attempts.
@@ -268,7 +268,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
                 errors["pairing_code"] = "pairing_failed"
 
-        if pair_info:
+        if pair_info and self.finish_pairing:
             code = pair_info["pairing_code"]
             try:
                 code = ensure_pin_format(code)
@@ -284,18 +284,22 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
                 # PairVerify M4 - Device not recognised
                 # PairVerify M4 - Ed25519 signature verification failed
                 errors["pairing_code"] = "authentication_error"
+                self.finish_pairing = None
             except aiohomekit.UnknownError:
                 # An error occurred on the device whilst performing this
                 # operation.
                 errors["pairing_code"] = "unknown_error"
+                self.finish_pairing = None
             except aiohomekit.MaxPeersError:
                 # The device can't pair with any more accessories.
                 errors["pairing_code"] = "max_peers_error"
+                self.finish_pairing = None
             except aiohomekit.AccessoryNotFoundError:
                 # Can no longer find the device on the network
                 return self.async_abort(reason="accessory_not_found_error")
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
+                self.finish_pairing = None
                 errors["pairing_code"] = "pairing_failed"
 
         return self._async_step_pair_show_form(errors)

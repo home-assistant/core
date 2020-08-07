@@ -14,7 +14,6 @@ from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 PAIRING_START_FORM_ERRORS = [
-    (aiohomekit.BusyError, "busy_error"),
     (aiohomekit.MaxTriesError, "max_tries_error"),
     (KeyError, "pairing_failed"),
 ]
@@ -546,3 +545,28 @@ async def test_unignore_ignores_missing_devices(hass, controller):
 
     assert result["type"] == "abort"
     assert result["reason"] == "no_devices"
+
+
+async def test_pair_busy_first_attempt(hass, controller):
+    """Test various pairing errors."""
+
+    device = setup_mock_accessory(controller)
+    discovery_info = get_device_discovery_info(device)
+
+    # Device is discovered
+    result = await hass.config_entries.flow.async_init(
+        "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
+    )
+
+    assert get_flow_context(hass, result) == {
+        "hkid": "00:00:00:00:00:00",
+        "title_placeholders": {"name": "TestDevice"},
+        "unique_id": "00:00:00:00:00:00",
+        "source": "zeroconf",
+    }
+
+    # User initiates pairing - device is busy
+    with patch.object(device, "start_pairing", side_effect=aiohomekit.BusyError("1")):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] == "abort"
+    assert result["reason"] == "busy_error"
