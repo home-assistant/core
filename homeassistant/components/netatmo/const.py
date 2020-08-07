@@ -73,9 +73,9 @@ ATTR_SCHEDULE_NAME = "schedule_name"
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 MIN_TIME_BETWEEN_EVENT_UPDATES = timedelta(seconds=5)
 
-SERVICE_SETSCHEDULE = "set_schedule"
-SERVICE_SETPERSONSHOME = "set_persons_home"
-SERVICE_SETPERSONAWAY = "set_person_away"
+SERVICE_SET_SCHEDULE = "set_schedule"
+SERVICE_SET_PERSONS_HOME = "set_persons_home"
+SERVICE_SET_PERSON_AWAY = "set_person_away"
 
 EVENT_TYPE_CANCEL_SET_POINT = "cancel_set_point"
 EVENT_TYPE_LIGHT_MODE = "light_mode"

@@ -5,12 +5,7 @@ import pyatmo
 import requests
 import voluptuous as vol
 
-from homeassistant.components.camera import (
-    DOMAIN as CAMERA_DOMAIN,
-    SUPPORT_STREAM,
-    Camera,
-)
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -26,8 +21,8 @@ from .const import (
     EVENT_TYPE_ON,
     MANUFACTURER,
     MODELS,
-    SERVICE_SETPERSONAWAY,
-    SERVICE_SETPERSONSHOME,
+    SERVICE_SET_PERSON_AWAY,
+    SERVICE_SET_PERSONS_HOME,
     SIGNAL_NAME,
 )
 from .data_handler import CAMERA_DATA_CLASS_NAME
@@ -97,17 +92,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     if data_handler.data[CAMERA_DATA_CLASS_NAME] is not None:
         platform.async_register_entity_service(
-            SERVICE_SETPERSONSHOME,
-            {
-                vol.Required(ATTR_PERSONS): vol.All(cv.ensure_list, [cv.string]),
-            },
+            SERVICE_SET_PERSONS_HOME,
+            {vol.Required(ATTR_PERSONS): vol.All(cv.ensure_list, [cv.string])},
             "_service_set_persons_home",
         )
         platform.async_register_entity_service(
-            SERVICE_SETPERSONAWAY,
-            {
-                vol.Optional(ATTR_PERSON): cv.string,
-            },
+            SERVICE_SET_PERSON_AWAY,
+            {vol.Optional(ATTR_PERSON): cv.string},
             "_service_set_person_away",
         )
 

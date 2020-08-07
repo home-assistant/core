@@ -4,7 +4,7 @@ from typing import List, Optional
 
 import voluptuous as vol
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -19,7 +19,6 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
-    ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
     STATE_OFF,
@@ -40,7 +39,7 @@ from .const import (
     EVENT_TYPE_SET_POINT,
     EVENT_TYPE_THERM_MODE,
     MANUFACTURER,
-    SERVICE_SETSCHEDULE,
+    SERVICE_SET_SCHEDULE,
     SIGNAL_NAME,
 )
 from .data_handler import HOMEDATA_DATA_CLASS_NAME, HOMESTATUS_DATA_CLASS_NAME
@@ -153,10 +152,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     if home_data is not None:
         platform.async_register_entity_service(
-            SERVICE_SETSCHEDULE,
-            {
-                vol.Required(ATTR_SCHEDULE_NAME): cv.string,
-            },
+            SERVICE_SET_SCHEDULE,
+            {vol.Required(ATTR_SCHEDULE_NAME): cv.string},
             "_service_set_schedule",
         )
 
