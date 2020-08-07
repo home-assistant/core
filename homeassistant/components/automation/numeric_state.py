@@ -137,18 +137,9 @@ async def async_attach_trigger(
                 }
 
                 try:
-                    if isinstance(time_delta, template.Template):
-                        period[entity] = cv.positive_time_period(
-                            time_delta.async_render(variables)
-                        )
-                    elif isinstance(time_delta, dict):
-                        time_delta_data = {}
-                        time_delta_data.update(
-                            template.render_complex(time_delta, variables)
-                        )
-                        period[entity] = cv.positive_time_period(time_delta_data)
-                    else:
-                        period[entity] = time_delta
+                    period[entity] = cv.positive_time_period(
+                        template.render_complex(time_delta, variables)
+                    )
                 except (exceptions.TemplateError, vol.Invalid) as ex:
                     _LOGGER.error(
                         "Error rendering '%s' for template: %s",
