@@ -1434,6 +1434,11 @@ async def test_modes_input_select(hass):
     assert trait.ModesTrait.supported(input_select.DOMAIN, None, None)
 
     trt = trait.ModesTrait(
+        hass, State("input_select.bla", "unavailable"), BASIC_CONFIG,
+    )
+    assert trt.sync_attributes() == {"availableModes": []}
+
+    trt = trait.ModesTrait(
         hass,
         State(
             "input_select.bla",
