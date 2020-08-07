@@ -257,7 +257,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             except aiohomekit.MaxTriesError:
                 # The accessory has received more than 100 unsuccessful auth
                 # attempts.
-                errors["pairing_code"] = "max_tries_error"
+                return self.async_abort(reason="max_tries_error")
             except aiohomekit.UnavailableError:
                 # The accessory is already paired - cannot try to pair again.
                 return self.async_abort(reason="already_paired")
