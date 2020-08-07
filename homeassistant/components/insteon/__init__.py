@@ -111,6 +111,7 @@ async def async_import_config(hass, conf):
         hass.config_entries.async_update_entry(
             entry=entry, options=options,
         )
+    return result
 
 
 async def async_setup(hass, config):
