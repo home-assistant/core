@@ -309,6 +309,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
         return self._async_step_pair_show_form(errors)
 
+    async def step_try_pair_later(self, pair_info=None):
+        """Retry pairing after the accessory is busy or unavailable."""
+        return await self.async_step_pair(pair_info)
+
     @callback
     def _async_step_pair_show_form(self, errors=None):
         return self.async_show_form(
