@@ -34,8 +34,6 @@ async def async_validate_input(hass: core.HomeAssistant, data):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
 
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
     instant_validate = InstantVC(data.get('host'), data.get('username'), data.get('password'), port=data.get('port'), ssl_verify=data.get('verify_ssl'))
 
     connection = await hass.async_add_executor_job(
@@ -59,7 +57,6 @@ class InstantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
