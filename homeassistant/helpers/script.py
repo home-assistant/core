@@ -244,7 +244,7 @@ class _ScriptRun:
     async def _async_delay_step(self):
         """Handle delay."""
         try:
-            delay = vol.All(cv.time_period, cv.positive_timedelta)(
+            delay = cv.positive_time_period(
                 template.render_complex(self._action[CONF_DELAY], self._variables)
             )
         except (exceptions.TemplateError, vol.Invalid) as ex:

@@ -49,8 +49,8 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_DELAY_ON): vol.All(cv.time_period, cv.positive_timedelta),
-        vol.Optional(CONF_DELAY_OFF): vol.All(cv.time_period, cv.positive_timedelta),
+        vol.Optional(CONF_DELAY_ON): cv.positive_time_period,
+        vol.Optional(CONF_DELAY_OFF): cv.positive_time_period,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )

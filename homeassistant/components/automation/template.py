@@ -17,11 +17,7 @@ TRIGGER_SCHEMA = IF_ACTION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PLATFORM): "template",
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_FOR): vol.Any(
-            vol.All(cv.time_period, cv.positive_timedelta),
-            cv.template,
-            cv.template_complex,
-        ),
+        vol.Optional(CONF_FOR): cv.positive_time_period_template,
     }
 )
 
@@ -74,13 +70,11 @@ async def async_attach_trigger(
 
         try:
             if isinstance(time_delta, template.Template):
-                period = vol.All(cv.time_period, cv.positive_timedelta)(
-                    time_delta.async_render(variables)
-                )
+                period = cv.positive_time_period(time_delta.async_render(variables))
             elif isinstance(time_delta, dict):
                 time_delta_data = {}
                 time_delta_data.update(template.render_complex(time_delta, variables))
-                period = vol.All(cv.time_period, cv.positive_timedelta)(time_delta_data)
+                period = cv.positive_time_period(time_delta_data)
             else:
                 period = time_delta
         except (exceptions.TemplateError, vol.Invalid) as ex:

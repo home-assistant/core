@@ -33,11 +33,7 @@ TRIGGER_SCHEMA = vol.All(
             # These are str on purpose. Want to catch YAML conversions
             vol.Optional(CONF_FROM): vol.Any(str, [str]),
             vol.Optional(CONF_TO): vol.Any(str, [str]),
-            vol.Optional(CONF_FOR): vol.Any(
-                vol.All(cv.time_period, cv.positive_timedelta),
-                cv.template,
-                cv.template_complex,
-            ),
+            vol.Optional(CONF_FOR): cv.positive_time_period_template,
         }
     ),
     cv.key_dependency(CONF_FOR, CONF_TO),
@@ -116,15 +112,13 @@ async def async_attach_trigger(
 
         try:
             if isinstance(time_delta, template.Template):
-                period[entity] = vol.All(cv.time_period, cv.positive_timedelta)(
+                period[entity] = cv.positive_time_period(
                     time_delta.async_render(variables)
                 )
             elif isinstance(time_delta, dict):
                 time_delta_data = {}
                 time_delta_data.update(template.render_complex(time_delta, variables))
-                period[entity] = vol.All(cv.time_period, cv.positive_timedelta)(
-                    time_delta_data
-                )
+                period[entity] = cv.positive_time_period(time_delta_data)
             else:
                 period[entity] = time_delta
         except (exceptions.TemplateError, vol.Invalid) as ex:
