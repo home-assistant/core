@@ -114,7 +114,11 @@ class ZWaveServices:
             if value.type == ValueType.STRING:
                 payload = selection
 
-            if value.type == ValueType.INT or value.type == ValueType.BYTE:
+            if (
+                value.type == ValueType.INT
+                or value.type == ValueType.BYTE
+                or value.type == ValueType.SHORT
+            ):
                 if selection > value.max or selection < value.min:
                     _LOGGER.error(
                         "Value %s out of range for parameter %s (Min: %s Max: %s)",
