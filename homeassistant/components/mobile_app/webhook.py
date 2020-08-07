@@ -187,7 +187,10 @@ async def handle_webhook(
     device_name = config_entry.data[ATTR_DEVICE_NAME]
 
     _LOGGER.debug(
-        "Received webhook payload from %s for type %s: %s", device_name, webhook_type, webhook_payload
+        "Received webhook payload from %s for type %s: %s",
+        device_name,
+        webhook_type,
+        webhook_payload,
     )
 
     # Shield so we make sure we finish the webhook, even if sender hangs up.
