@@ -624,10 +624,10 @@ async def test_updating_entry_data(manager):
     )
     entry.add_to_manager(manager)
 
-    manager.async_update_entry(entry)
+    assert manager.async_update_entry(entry) is False
     assert entry.data == {"first": True}
 
-    manager.async_update_entry(entry, data={"second": True})
+    assert manager.async_update_entry(entry, data={"second": True}) is True
     assert entry.data == {"second": True}
 
 
@@ -658,7 +658,7 @@ async def test_update_entry_options_and_trigger_listener(hass, manager):
 
     entry.add_update_listener(update_listener)
 
-    manager.async_update_entry(entry, options={"second": True})
+    assert manager.async_update_entry(entry, options={"second": True}) is True
 
     assert entry.options == {"second": True}
 
@@ -1182,8 +1182,8 @@ async def test_unique_id_not_update_existing_entry(hass, manager):
             await self._abort_if_unique_id_configured(updates={"host": "0.0.0.0"})
 
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
-        "homeassistant.config_entries.ConfigEntries.async_update_entry"
-    ) as async_update_entry:
+        "homeassistant.config_entries.ConfigEntries._async_schedule_save"
+    ) as _async_schedule_save:
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
         )
@@ -1192,7 +1192,7 @@ async def test_unique_id_not_update_existing_entry(hass, manager):
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "0.0.0.0"
     assert entry.data["additional"] == "data"
-    assert len(async_update_entry.mock_calls) == 0
+    assert len(_async_schedule_save.mock_calls) == 0
 
 
 async def test_unique_id_in_progress(hass, manager):
@@ -1567,8 +1567,11 @@ async def test_async_setup_update_entry(hass):
 
         async def async_step_import(self, user_input):
             """Test import step updating existing entry."""
-            self.hass.config_entries.async_update_entry(
-                entry, data={"value": "updated"}
+            assert (
+                self.hass.config_entries.async_update_entry(
+                    entry, data={"value": "updated"}
+                )
+                is True
             )
             return self.async_abort(reason="yo")
 
@@ -1758,3 +1761,34 @@ async def test_default_discovery_abort_on_new_unique_flow(hass, manager):
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["context"]["unique_id"] == "mock-unique-id"
+
+
+async def test_updating_entry_with_and_without_changes(manager):
+    """Test that we can update an entry data."""
+    entry = MockConfigEntry(
+        domain="test",
+        data={"first": True},
+        title="thetitle",
+        options={"option": True},
+        unique_id="abc123",
+        state=config_entries.ENTRY_STATE_SETUP_ERROR,
+    )
+    entry.add_to_manager(manager)
+
+    assert manager.async_update_entry(entry) is False
+    assert manager.async_update_entry(entry, data={"second": True}) is True
+    assert manager.async_update_entry(entry, data={"second": True}) is False
+    assert manager.async_update_entry(entry, options={"second": True}) is True
+    assert manager.async_update_entry(entry, options={"second": True}) is False
+    assert (
+        manager.async_update_entry(entry, system_options={"disable_new_entities": True})
+        is True
+    )
+    assert (
+        manager.async_update_entry(entry, system_options={"disable_new_entities": True})
+        is False
+    )
+    assert manager.async_update_entry(entry, title="thetitle") is False
+    assert manager.async_update_entry(entry, title="newtitle") is True
+    assert manager.async_update_entry(entry, unique_id="abc123") is False
+    assert manager.async_update_entry(entry, unique_id="abc1234") is True
