@@ -21,3 +21,48 @@ seek_by:
     seconds:
       description: Number of seconds to seek by. Negative numbers seek backwards.
       example: 120
+
+channel_up:
+  description: Change the channel.
+  fields:
+    entity_id:
+      description: Name of entity for the instance of Channels to control.
+      example: "media_player.family_room_channels"
+
+channel_down:
+  description: Change the channel.
+  fields:
+    entity_id:
+      description: Name of entity for the instance of Channels to control.
+      example: "media_player.family_room_channels"
+
+previous_channel:
+  description: Jump back to the last watched channel.
+  fields:
+    entity_id:
+      description: Name of entity for the instance of Channels to control.
+      example: "media_player.family_room_channels"
+
+toggle_cc:
+  description: Toggle captions on and off.
+  fields:
+    entity_id:
+      description: Name of entity for the instance of Channels to control.
+      example: "media_player.family_room_channels"
+
+toggle_record:
+  description: Record the program playing on the current channel.
+  fields:
+    entity_id:
+      description: Name of entity for the instance of Channels to control.
+      example: "media_player.family_room_channels"
+
+navigate:
+  description: Change to a section of the app by providing its name.
+  fields:
+    entity_id:
+      description: Name of entity for the instance of Channels to control.
+      example: "media_player.family_room_channels"
+    name:
+      description: The name of the section you want to change to.
+      example: Library
