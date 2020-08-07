@@ -174,7 +174,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         unique_id = mac_address
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured({CONF_HOST: self.host, CONF_MAC: self.sid})
+        self._abort_if_unique_id_configured({CONF_HOST: self.host, CONF_MAC: mac_address})
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": {"name": self.host}})
