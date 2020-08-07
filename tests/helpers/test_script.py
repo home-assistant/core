@@ -4,6 +4,7 @@ import asyncio
 from contextlib import contextmanager
 from datetime import timedelta
 import logging
+from types import MappingProxyType
 from unittest import mock
 
 import pytest
@@ -122,7 +123,7 @@ async def test_firing_event_template(hass):
     )
     script_obj = script.Script(hass, sequence)
 
-    await script_obj.async_run({"is_world": "yes"}, context=context)
+    await script_obj.async_run(MappingProxyType({"is_world": "yes"}), context=context)
     await hass.async_block_till_done()
 
     assert len(events) == 1
@@ -175,7 +176,7 @@ async def test_calling_service_template(hass):
     )
     script_obj = script.Script(hass, sequence)
 
-    await script_obj.async_run({"is_world": "yes"}, context=context)
+    await script_obj.async_run(MappingProxyType({"is_world": "yes"}), context=context)
     await hass.async_block_till_done()
 
     assert len(calls) == 1
@@ -235,7 +236,9 @@ async def test_multiple_runs_no_wait(hass):
     logger.debug("starting 1st script")
     hass.async_create_task(
         script_obj.async_run(
-            {"fire1": "1", "listen1": "2", "fire2": "3", "listen2": "4"}
+            MappingProxyType(
+                {"fire1": "1", "listen1": "2", "fire2": "3", "listen2": "4"}
+            )
         )
     )
     await asyncio.wait_for(heard_event.wait(), 1)
@@ -243,7 +246,7 @@ async def test_multiple_runs_no_wait(hass):
 
     logger.debug("starting 2nd script")
     await script_obj.async_run(
-        {"fire1": "2", "listen1": "3", "fire2": "4", "listen2": "4"}
+        MappingProxyType({"fire1": "2", "listen1": "3", "fire2": "4", "listen2": "4"})
     )
     await hass.async_block_till_done()
 
@@ -670,7 +673,9 @@ async def test_wait_template_variables(hass):
 
     try:
         hass.states.async_set("switch.test", "on")
-        hass.async_create_task(script_obj.async_run({"data": "switch.test"}))
+        hass.async_create_task(
+            script_obj.async_run(MappingProxyType({"data": "switch.test"}))
+        )
         await asyncio.wait_for(wait_started_flag.wait(), 1)
 
         assert script_obj.is_running
@@ -854,6 +859,135 @@ async def test_repeat_conditional(hass, condition):
         assert event.data.get("index") == str(index + 1)
 
 
+@pytest.mark.parametrize("condition", ["while", "until"])
+async def test_repeat_var_in_condition(hass, condition):
+    """Test repeat action w/ while option."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+
+    sequence = {"repeat": {"sequence": {"event": event}}}
+    if condition == "while":
+        sequence["repeat"]["while"] = {
+            "condition": "template",
+            "value_template": "{{ repeat.index <= 2 }}",
+        }
+    else:
+        sequence["repeat"]["until"] = {
+            "condition": "template",
+            "value_template": "{{ repeat.index == 2 }}",
+        }
+    script_obj = script.Script(hass, cv.SCRIPT_SCHEMA(sequence))
+
+    with mock.patch(
+        "homeassistant.helpers.condition._LOGGER.error",
+        side_effect=AssertionError("Template Error"),
+    ):
+        await script_obj.async_run()
+
+    assert len(events) == 2
+
+
+@pytest.mark.parametrize(
+    "variables,first_last,inside_x",
+    [
+        (None, {"repeat": "None", "x": "None"}, "None"),
+        (MappingProxyType({"x": 1}), {"repeat": "None", "x": "1"}, "1"),
+    ],
+)
+async def test_repeat_nested(hass, variables, first_last, inside_x):
+    """Test nested repeats."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "event": event,
+                "event_data_template": {
+                    "repeat": "{{ None if repeat is not defined else repeat }}",
+                    "x": "{{ None if x is not defined else x }}",
+                },
+            },
+            {
+                "repeat": {
+                    "count": 2,
+                    "sequence": [
+                        {
+                            "event": event,
+                            "event_data_template": {
+                                "first": "{{ repeat.first }}",
+                                "index": "{{ repeat.index }}",
+                                "last": "{{ repeat.last }}",
+                                "x": "{{ None if x is not defined else x }}",
+                            },
+                        },
+                        {
+                            "repeat": {
+                                "count": 2,
+                                "sequence": {
+                                    "event": event,
+                                    "event_data_template": {
+                                        "first": "{{ repeat.first }}",
+                                        "index": "{{ repeat.index }}",
+                                        "last": "{{ repeat.last }}",
+                                        "x": "{{ None if x is not defined else x }}",
+                                    },
+                                },
+                            }
+                        },
+                        {
+                            "event": event,
+                            "event_data_template": {
+                                "first": "{{ repeat.first }}",
+                                "index": "{{ repeat.index }}",
+                                "last": "{{ repeat.last }}",
+                                "x": "{{ None if x is not defined else x }}",
+                            },
+                        },
+                    ],
+                }
+            },
+            {
+                "event": event,
+                "event_data_template": {
+                    "repeat": "{{ None if repeat is not defined else repeat }}",
+                    "x": "{{ None if x is not defined else x }}",
+                },
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "test script")
+
+    with mock.patch(
+        "homeassistant.helpers.condition._LOGGER.error",
+        side_effect=AssertionError("Template Error"),
+    ):
+        await script_obj.async_run(variables)
+
+    assert len(events) == 10
+    assert events[0].data == first_last
+    assert events[-1].data == first_last
+    for index, result in enumerate(
+        (
+            ("True", "1", "False", inside_x),
+            ("True", "1", "False", inside_x),
+            ("False", "2", "True", inside_x),
+            ("True", "1", "False", inside_x),
+            ("False", "2", "True", inside_x),
+            ("True", "1", "False", inside_x),
+            ("False", "2", "True", inside_x),
+            ("False", "2", "True", inside_x),
+        ),
+        1,
+    ):
+        assert events[index].data == {
+            "first": result[0],
+            "index": result[1],
+            "last": result[2],
+            "x": result[3],
+        }
+
+
 @pytest.mark.parametrize("var,result", [(1, "first"), (2, "second"), (3, "default")])
 async def test_choose(hass, var, result):
     """Test choose action."""
@@ -882,11 +1016,36 @@ async def test_choose(hass, var, result):
     )
     script_obj = script.Script(hass, sequence)
 
-    await script_obj.async_run({"var": var})
+    await script_obj.async_run(MappingProxyType({"var": var}))
     await hass.async_block_till_done()
 
     assert len(events) == 1
     assert events[0].data["choice"] == result
+
+
+@pytest.mark.parametrize(
+    "action",
+    [
+        {"repeat": {"count": 1, "sequence": {"event": "abc"}}},
+        {"choose": {"conditions": [], "sequence": {"event": "abc"}}},
+        {"choose": [], "default": {"event": "abc"}},
+    ],
+)
+async def test_multiple_runs_repeat_choose(hass, caplog, action):
+    """Test parallel runs with repeat & choose actions & max_runs > default."""
+    max_runs = script.DEFAULT_MAX + 1
+    script_obj = script.Script(
+        hass, cv.SCRIPT_SCHEMA(action), script_mode="parallel", max_runs=max_runs
+    )
+
+    events = async_capture_events(hass, "abc")
+    for _ in range(max_runs):
+        hass.async_create_task(script_obj.async_run())
+    await hass.async_block_till_done()
+
+    assert "WARNING" not in caplog.text
+    assert "ERROR" not in caplog.text
+    assert len(events) == max_runs
 
 
 async def test_last_triggered(hass):
@@ -1131,23 +1290,46 @@ async def test_script_mode_queued(hass):
     sequence = cv.SCRIPT_SCHEMA(
         [
             {"event": event, "event_data": {"value": 1}},
-            {"wait_template": "{{ states.switch.test.state == 'off' }}"},
+            {
+                "wait_template": "{{ states.switch.test.state == 'off' }}",
+                "alias": "wait_1",
+            },
             {"event": event, "event_data": {"value": 2}},
-            {"wait_template": "{{ states.switch.test.state == 'on' }}"},
+            {
+                "wait_template": "{{ states.switch.test.state == 'on' }}",
+                "alias": "wait_2",
+            },
         ]
     )
     logger = logging.getLogger("TEST")
     script_obj = script.Script(
         hass, sequence, script_mode="queued", max_runs=2, logger=logger
     )
-    wait_started_flag = async_watch_for_action(script_obj, "wait")
+
+    watch_messages = []
+
+    @callback
+    def check_action():
+        for message, flag in watch_messages:
+            if script_obj.last_action and message in script_obj.last_action:
+                flag.set()
+
+    script_obj.change_listener = check_action
+    wait_started_flag_1 = asyncio.Event()
+    watch_messages.append(("wait_1", wait_started_flag_1))
+    wait_started_flag_2 = asyncio.Event()
+    watch_messages.append(("wait_2", wait_started_flag_2))
 
     try:
+        assert not script_obj.is_running
+        assert script_obj.runs == 0
+
         hass.states.async_set("switch.test", "on")
         hass.async_create_task(script_obj.async_run())
-        await asyncio.wait_for(wait_started_flag.wait(), 1)
+        await asyncio.wait_for(wait_started_flag_1.wait(), 1)
 
         assert script_obj.is_running
+        assert script_obj.runs == 1
         assert len(events) == 1
         assert events[0].data["value"] == 1
 
@@ -1155,25 +1337,26 @@ async def test_script_mode_queued(hass):
         # This second run should not start until the first run has finished.
 
         hass.async_create_task(script_obj.async_run())
-
         await asyncio.sleep(0)
+
         assert script_obj.is_running
+        assert script_obj.runs == 2
         assert len(events) == 1
 
-        wait_started_flag.clear()
         hass.states.async_set("switch.test", "off")
-        await asyncio.wait_for(wait_started_flag.wait(), 1)
+        await asyncio.wait_for(wait_started_flag_2.wait(), 1)
 
         assert script_obj.is_running
+        assert script_obj.runs == 2
         assert len(events) == 2
         assert events[1].data["value"] == 2
 
-        wait_started_flag.clear()
+        wait_started_flag_1.clear()
         hass.states.async_set("switch.test", "on")
-        await asyncio.wait_for(wait_started_flag.wait(), 1)
+        await asyncio.wait_for(wait_started_flag_1.wait(), 1)
 
-        await asyncio.sleep(0)
         assert script_obj.is_running
+        assert script_obj.runs == 1
         assert len(events) == 3
         assert events[2].data["value"] == 1
     except (AssertionError, asyncio.TimeoutError):
@@ -1186,8 +1369,50 @@ async def test_script_mode_queued(hass):
         await hass.async_block_till_done()
 
         assert not script_obj.is_running
+        assert script_obj.runs == 0
         assert len(events) == 4
         assert events[3].data["value"] == 2
+
+
+async def test_script_mode_queued_cancel(hass):
+    """Test canceling with a queued run."""
+    script_obj = script.Script(
+        hass,
+        cv.SCRIPT_SCHEMA({"wait_template": "{{ false }}"}),
+        "test",
+        script_mode="queued",
+        max_runs=2,
+    )
+    wait_started_flag = async_watch_for_action(script_obj, "wait")
+
+    try:
+        assert not script_obj.is_running
+        assert script_obj.runs == 0
+
+        task1 = hass.async_create_task(script_obj.async_run())
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
+        task2 = hass.async_create_task(script_obj.async_run())
+        await asyncio.sleep(0)
+
+        assert script_obj.is_running
+        assert script_obj.runs == 2
+
+        with pytest.raises(asyncio.CancelledError):
+            task2.cancel()
+            await task2
+
+        assert script_obj.is_running
+        assert script_obj.runs == 1
+
+        with pytest.raises(asyncio.CancelledError):
+            task1.cancel()
+            await task1
+
+        assert not script_obj.is_running
+        assert script_obj.runs == 0
+    except (AssertionError, asyncio.TimeoutError):
+        await script_obj.async_stop()
+        raise
 
 
 async def test_script_logging(hass, caplog):
@@ -1255,3 +1480,22 @@ async def test_shutdown_after(hass, caplog):
             "Stopping scripts running too long after shutdown: test script"
             in caplog.text
         )
+
+
+async def test_update_logger(hass, caplog):
+    """Test updating logger."""
+    sequence = cv.SCRIPT_SCHEMA({"event": "test_event"})
+    script_obj = script.Script(hass, sequence)
+
+    await script_obj.async_run()
+    await hass.async_block_till_done()
+
+    assert script.__name__ in caplog.text
+
+    log_name = "testing.123"
+    script_obj.update_logger(logging.getLogger(log_name))
+
+    await script_obj.async_run()
+    await hass.async_block_till_done()
+
+    assert log_name in caplog.text

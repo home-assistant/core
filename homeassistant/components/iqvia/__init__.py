@@ -5,12 +5,10 @@ import logging
 
 from pyiqvia import Client
 from pyiqvia.errors import InvalidZipError, IQVIAError
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -18,13 +16,11 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
-from .config_flow import configured_instances
 from .const import (
     CONF_ZIP_CODE,
     DATA_CLIENT,
     DATA_LISTENER,
     DOMAIN,
-    SENSORS,
     TOPIC_DATA_UPDATE,
     TYPE_ALLERGY_FORECAST,
     TYPE_ALLERGY_INDEX,
@@ -56,23 +52,6 @@ DATA_CONFIG = "config"
 DEFAULT_ATTRIBUTION = "Data provided by IQVIA™"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.deprecated(CONF_MONITORED_CONDITIONS, invalidation_version="0.114.0"),
-            vol.Schema(
-                {
-                    vol.Required(CONF_ZIP_CODE): str,
-                    vol.Optional(
-                        CONF_MONITORED_CONDITIONS, default=list(SENSORS)
-                    ): vol.All(cv.ensure_list, [vol.In(SENSORS)]),
-                }
-            ),
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
 
 @callback
 def async_get_api_category(sensor_type):
@@ -86,26 +65,18 @@ async def async_setup(hass, config):
     hass.data[DOMAIN][DATA_CLIENT] = {}
     hass.data[DOMAIN][DATA_LISTENER] = {}
 
-    if DOMAIN not in config:
-        return True
-
-    conf = config[DOMAIN]
-
-    if conf[CONF_ZIP_CODE] in configured_instances(hass):
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-        )
-    )
-
     return True
 
 
 async def async_setup_entry(hass, config_entry):
     """Set up IQVIA as config entry."""
     websession = aiohttp_client.async_get_clientsession(hass)
+
+    if not config_entry.unique_id:
+        # If the config entry doesn't already have a unique ID, set one:
+        hass.config_entries.async_update_entry(
+            config_entry, **{"unique_id": config_entry.data[CONF_ZIP_CODE]}
+        )
 
     iqvia = IQVIAData(hass, Client(config_entry.data[CONF_ZIP_CODE], websession))
 

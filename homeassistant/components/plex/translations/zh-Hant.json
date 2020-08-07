@@ -4,8 +4,6 @@
             "all_configured": "\u6240\u6709\u7d81\u5b9a\u4f3a\u670d\u5668\u90fd\u5df2\u8a2d\u5b9a\u5b8c\u6210",
             "already_configured": "Plex \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "already_in_progress": "Plex \u5df2\u7d93\u8a2d\u5b9a",
-            "invalid_import": "\u532f\u5165\u4e4b\u8a2d\u5b9a\u7121\u6548",
-            "non-interactive": "\u7121\u4e92\u52d5\u532f\u5165",
             "token_request_timeout": "\u53d6\u5f97\u5bc6\u9470\u903e\u6642",
             "unknown": "\u672a\u77e5\u539f\u56e0\u5931\u6557"
         },

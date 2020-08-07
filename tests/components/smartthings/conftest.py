@@ -249,7 +249,7 @@ def subscription_factory_fixture():
 def device_factory_fixture():
     """Fixture for creating mock devices."""
     api = Mock(Api)
-    api.post_device_command.return_value = {}
+    api.post_device_command.return_value = {"results": [{"status": "ACCEPTED"}]}
 
     def _factory(label, capabilities, status: dict = None):
         device_data = {

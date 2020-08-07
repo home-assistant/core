@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_FRIENDLY_NAME_TEMPLATE,
     CONF_ICON_TEMPLATE,
     CONF_SENSORS,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
     MATCH_ALL,
@@ -49,6 +50,7 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -71,6 +73,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         unit_of_measurement = device_config.get(ATTR_UNIT_OF_MEASUREMENT)
         device_class = device_config.get(CONF_DEVICE_CLASS)
         attribute_templates = device_config[CONF_ATTRIBUTE_TEMPLATES]
+        unique_id = device_config.get(CONF_UNIQUE_ID)
 
         templates = {
             CONF_VALUE_TEMPLATE: state_template,
@@ -103,6 +106,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 entity_ids,
                 device_class,
                 attribute_templates,
+                unique_id,
             )
         )
 
@@ -128,6 +132,7 @@ class SensorTemplate(Entity):
         entity_ids,
         device_class,
         attribute_templates,
+        unique_id,
     ):
         """Initialize the sensor."""
         self.hass = hass
@@ -149,6 +154,7 @@ class SensorTemplate(Entity):
         self._available = True
         self._attribute_templates = attribute_templates
         self._attributes = {}
+        self._unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -177,6 +183,11 @@ class SensorTemplate(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id of this sensor."""
+        return self._unique_id
 
     @property
     def state(self):

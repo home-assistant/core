@@ -24,6 +24,7 @@ from homeassistant.components import (
 )
 from homeassistant.components.climate import const as climate
 from homeassistant.components.google_assistant import const, error, helpers, trait
+from homeassistant.components.google_assistant.error import SmartHomeError
 from homeassistant.components.humidifier import const as humidifier
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
@@ -1313,6 +1314,65 @@ async def test_fan_speed(hass):
     assert calls[0].data == {"entity_id": "fan.living_room_fan", "speed": "medium"}
 
 
+async def test_climate_fan_speed(hass):
+    """Test FanSpeed trait speed control support for climate domain."""
+    assert helpers.get_google_type(climate.DOMAIN, None) is not None
+    assert trait.FanSpeedTrait.supported(climate.DOMAIN, climate.SUPPORT_FAN_MODE, None)
+
+    trt = trait.FanSpeedTrait(
+        hass,
+        State(
+            "climate.living_room_ac",
+            "on",
+            attributes={
+                "fan_modes": ["auto", "low", "medium", "high"],
+                "fan_mode": "low",
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "availableFanSpeeds": {
+            "ordered": True,
+            "speeds": [
+                {
+                    "speed_name": "auto",
+                    "speed_values": [{"speed_synonym": ["auto"], "lang": "en"}],
+                },
+                {
+                    "speed_name": "low",
+                    "speed_values": [{"speed_synonym": ["low"], "lang": "en"}],
+                },
+                {
+                    "speed_name": "medium",
+                    "speed_values": [{"speed_synonym": ["medium"], "lang": "en"}],
+                },
+                {
+                    "speed_name": "high",
+                    "speed_values": [{"speed_synonym": ["high"], "lang": "en"}],
+                },
+            ],
+        },
+        "reversible": False,
+    }
+
+    assert trt.query_attributes() == {
+        "currentFanSpeedSetting": "low",
+    }
+
+    assert trt.can_execute(trait.COMMAND_FANSPEED, params={"fanSpeed": "medium"})
+
+    calls = async_mock_service(hass, climate.DOMAIN, climate.SERVICE_SET_FAN_MODE)
+    await trt.execute(trait.COMMAND_FANSPEED, BASIC_DATA, {"fanSpeed": "medium"}, {})
+
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "entity_id": "climate.living_room_ac",
+        "fan_mode": "medium",
+    }
+
+
 async def test_inputselector(hass):
     """Test input selector trait."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
@@ -1369,10 +1429,96 @@ async def test_inputselector(hass):
     assert calls[0].data == {"entity_id": "media_player.living_room", "source": "media"}
 
 
+@pytest.mark.parametrize(
+    "sources,source,source_next,source_prev",
+    [
+        (["a"], "a", "a", "a"),
+        (["a", "b"], "a", "b", "b"),
+        (["a", "b", "c"], "a", "b", "c"),
+    ],
+)
+async def test_inputselector_nextprev(hass, sources, source, source_next, source_prev):
+    """Test input selector trait."""
+    trt = trait.InputSelectorTrait(
+        hass,
+        State(
+            "media_player.living_room",
+            media_player.STATE_PLAYING,
+            attributes={
+                media_player.ATTR_INPUT_SOURCE_LIST: sources,
+                media_player.ATTR_INPUT_SOURCE: source,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.can_execute("action.devices.commands.NextInput", params={})
+    assert trt.can_execute("action.devices.commands.PreviousInput", params={})
+
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOURCE
+    )
+    await trt.execute(
+        "action.devices.commands.NextInput", BASIC_DATA, {}, {},
+    )
+    await trt.execute(
+        "action.devices.commands.PreviousInput", BASIC_DATA, {}, {},
+    )
+
+    assert len(calls) == 2
+    assert calls[0].data == {
+        "entity_id": "media_player.living_room",
+        "source": source_next,
+    }
+    assert calls[1].data == {
+        "entity_id": "media_player.living_room",
+        "source": source_prev,
+    }
+
+
+@pytest.mark.parametrize(
+    "sources,source", [(None, "a"), (["a", "b"], None), (["a", "b"], "c")]
+)
+async def test_inputselector_nextprev_invalid(hass, sources, source):
+    """Test input selector trait."""
+    trt = trait.InputSelectorTrait(
+        hass,
+        State(
+            "media_player.living_room",
+            media_player.STATE_PLAYING,
+            attributes={
+                media_player.ATTR_INPUT_SOURCE_LIST: sources,
+                media_player.ATTR_INPUT_SOURCE: source,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    with pytest.raises(SmartHomeError):
+        await trt.execute(
+            "action.devices.commands.NextInput", BASIC_DATA, {}, {},
+        )
+
+    with pytest.raises(SmartHomeError):
+        await trt.execute(
+            "action.devices.commands.PreviousInput", BASIC_DATA, {}, {},
+        )
+
+    with pytest.raises(SmartHomeError):
+        await trt.execute(
+            "action.devices.commands.InvalidCommand", BASIC_DATA, {}, {},
+        )
+
+
 async def test_modes_input_select(hass):
     """Test Input Select Mode trait."""
     assert helpers.get_google_type(input_select.DOMAIN, None) is not None
     assert trait.ModesTrait.supported(input_select.DOMAIN, None, None)
+
+    trt = trait.ModesTrait(
+        hass, State("input_select.bla", "unavailable"), BASIC_CONFIG,
+    )
+    assert trt.sync_attributes() == {"availableModes": []}
 
     trt = trait.ModesTrait(
         hass,

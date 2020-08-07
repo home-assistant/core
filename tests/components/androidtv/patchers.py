@@ -141,7 +141,7 @@ PATCH_ANDROIDTV_OPEN = patch(
 )
 PATCH_KEYGEN = patch("homeassistant.components.androidtv.media_player.keygen")
 PATCH_SIGNER = patch(
-    "homeassistant.components.androidtv.media_player.PythonRSASigner",
+    "homeassistant.components.androidtv.media_player.ADBPythonSync.load_adbkey",
     return_value="signer for testing",
 )
 

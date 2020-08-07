@@ -582,7 +582,9 @@ class DataManager:
             update_interval=timedelta(minutes=120),
             update_method=self.async_subscribe_webhook,
         )
-        self.poll_data_update_coordinator = DataUpdateCoordinator(
+        self.poll_data_update_coordinator = DataUpdateCoordinator[
+            Dict[MeasureType, Any]
+        ](
             hass,
             _LOGGER,
             name="poll_data_update_coordinator",
@@ -923,6 +925,12 @@ class BaseWithingsSensor(Entity):
         """Return True if entity is available."""
         if self._attribute.update_type == UpdateType.POLL:
             return self._data_manager.poll_data_update_coordinator.last_update_success
+
+        if self._attribute.update_type == UpdateType.WEBHOOK:
+            return self._data_manager.webhook_config.enabled and (
+                self._attribute.measurement
+                in self._data_manager.webhook_update_coordinator.data
+            )
 
         return True
 

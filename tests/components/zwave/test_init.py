@@ -119,7 +119,7 @@ async def test_erronous_network_key_fails_validation(hass, mock_openzwave):
             zwave.CONFIG_SCHEMA({"zwave": {"network_key": value}})
 
 
-async def test_auto_heal_midnight(hass, mock_openzwave):
+async def test_auto_heal_midnight(hass, mock_openzwave, legacy_patchable_time):
     """Test network auto-heal at midnight."""
     await async_setup_component(hass, "zwave", {"zwave": {"autoheal": True}})
     await hass.async_block_till_done()

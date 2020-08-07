@@ -50,10 +50,21 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
 
     def __init__(self, homecontrol, device_instance, element_uid):
         """Initialize a devolo binary sensor."""
-        if device_instance.binary_sensor_property.get(element_uid).sub_type != "":
-            name = f"{device_instance.itemName} {device_instance.binary_sensor_property.get(element_uid).sub_type}"
-        else:
-            name = f"{device_instance.itemName} {device_instance.binary_sensor_property.get(element_uid).sensor_type}"
+        self._binary_sensor_property = device_instance.binary_sensor_property.get(
+            element_uid
+        )
+
+        self._device_class = DEVICE_CLASS_MAPPING.get(
+            self._binary_sensor_property.sub_type
+            or self._binary_sensor_property.sensor_type
+        )
+        name = device_instance.itemName
+
+        if self._device_class is None:
+            if device_instance.binary_sensor_property.get(element_uid).sub_type != "":
+                name += f" {device_instance.binary_sensor_property.get(element_uid).sub_type}"
+            else:
+                name += f" {device_instance.binary_sensor_property.get(element_uid).sensor_type}"
 
         super().__init__(
             homecontrol=homecontrol,
@@ -61,15 +72,6 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
             element_uid=element_uid,
             name=name,
             sync=self._sync,
-        )
-
-        self._binary_sensor_property = self._device_instance.binary_sensor_property.get(
-            self._unique_id
-        )
-
-        self._device_class = DEVICE_CLASS_MAPPING.get(
-            self._binary_sensor_property.sub_type
-            or self._binary_sensor_property.sensor_type
         )
 
         self._state = self._binary_sensor_property.state
