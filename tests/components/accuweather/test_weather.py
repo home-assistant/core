@@ -141,3 +141,11 @@ async def test_manual_update_entity(hass):
         )
         assert mock_current.call_count == 1
         assert mock_forecast.call_count == 1
+
+
+async def test_unsupported_condition_icon_data(hass):
+    """Test with unsupported condition icon data."""
+    await init_integration(hass, forecast=True, unsupported_icon=True)
+
+    state = hass.states.get("weather.home")
+    assert state.attributes.get(ATTR_FORECAST_CONDITION) is None
