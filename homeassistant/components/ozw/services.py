@@ -92,10 +92,11 @@ class ZWaveServices:
                 payload = int(selection)
 
             # iterate list labels to get value
-            for selected in value.value["List"]:
-                if selected["Label"] != selection:
-                    continue
-                payload = int(selected["Value"])
+            if isinstance(selection, str):
+                for selected in value.value["List"]:
+                    if selected["Label"] != selection:
+                        continue
+                    payload = int(selected["Value"])
 
             if payload is None:
                 _LOGGER.error(
