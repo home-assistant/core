@@ -7,7 +7,7 @@ from homeassistant.const import CONF_ADDRESS, ENERGY_KILO_WATT_HOUR
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DOMAIN, ELECTRIC_METER, ESIID, ICON, LAST_UPDATE, METER_NUMBER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,17 +38,17 @@ class SmartMeterTexasSensor(Entity):
     @property
     def name(self):
         """Device Name."""
-        return f"Electric meter {self.meter.meter}"
+        return f"{ELECTRIC_METER} {self.meter.meter}"
 
     @property
     def icon(self):
         """Device Ice."""
-        return "mdi:counter"
+        return ICON
 
     @property
     def unique_id(self):
         """Device Uniqueid."""
-        return f"electric_meter_{self.meter.meter}"
+        return f"{METER_NUMBER}_{self.meter.meter}"
 
     @property
     def available(self):
@@ -64,10 +64,10 @@ class SmartMeterTexasSensor(Entity):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         attributes = {
-            "meter_number": self.meter.meter,
-            "electric_service_identifier": self.meter.esiid,
+            METER_NUMBER: self.meter.meter,
+            ESIID: self.meter.esiid,
             CONF_ADDRESS: self.meter.address,
-            "last_updated": self.meter.reading_datetime,
+            LAST_UPDATE: self.meter.reading_datetime,
         }
         return attributes
 
