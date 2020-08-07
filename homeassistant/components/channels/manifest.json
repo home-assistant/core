@@ -2,6 +2,8 @@
   "domain": "channels",
   "name": "Channels",
   "documentation": "https://www.home-assistant.io/integrations/channels",
-  "requirements": ["pychannels==1.0.0"],
+  "requirements": [
+    "pychannels==1.2.2"
+  ],
   "codeowners": []
 }
