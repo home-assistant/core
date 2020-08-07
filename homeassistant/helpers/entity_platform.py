@@ -23,6 +23,9 @@ if TYPE_CHECKING:
 
 SLOW_SETUP_WARNING = 10
 SLOW_SETUP_MAX_WAIT = 60
+SLOW_ADD_ENTITY_MAX_WAIT = 10  # Per Entity
+SLOW_ADD_MIN_TIMEOUT = 60
+
 PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
@@ -292,7 +295,17 @@ class EntityPlatform:
         if not tasks:
             return
 
-        await asyncio.gather(*tasks)
+        timeout = max(SLOW_ADD_ENTITY_MAX_WAIT * len(tasks), SLOW_ADD_MIN_TIMEOUT)
+        try:
+            async with self.hass.timeout.async_timeout(timeout, self.domain):
+                await asyncio.gather(*tasks)
+        except asyncio.TimeoutError:
+            self.logger.warning(
+                "Timed out adding entities for domain %s with platform %s after %ds",
+                self.domain,
+                self.platform_name,
+                timeout,
+            )
 
         if self._async_unsub_polling is not None or not any(
             entity.should_poll for entity in self.entities.values()
