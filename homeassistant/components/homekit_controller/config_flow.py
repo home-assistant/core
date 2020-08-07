@@ -17,7 +17,6 @@ HOMEKIT_DIR = ".homekit"
 PAIRING_FILE = "pairing.json"
 
 PIN_FORMAT = re.compile(r"^(\d{3})-{0,1}(\d{2})-{0,1}(\d{3})$")
-TRY_PAIR_LATER_ERRORS = {"max_tries_error", "busy_error", "tlv_error"}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -255,11 +254,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             except aiohomekit.BusyError:
                 # Already performing a pair setup operation with a different
                 # controller
-                errors["pairing_code"] = "busy_error"
+                errors["base"] = "busy_error"
             except aiohomekit.MaxTriesError:
                 # The accessory has received more than 100 unsuccessful auth
                 # attempts.
-                errors["pairing_code"] = "max_tries_error"
+                errors["base"] = "max_tries_error"
             except aiohomekit.UnavailableError:
                 # The accessory is already paired - cannot try to pair again.
                 return self.async_abort(reason="already_paired")
@@ -269,7 +268,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             except IndexError:
                 # TLV error, usually not in pairing mode
                 _LOGGER.exception("Pairing communication failed")
-                errors["pairing_code"] = "tlv_error"
+                errors["base"] = "tlv_error"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
                 errors["pairing_code"] = "pairing_failed"
@@ -308,7 +307,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
                 self.finish_pairing = None
                 errors["pairing_code"] = "pairing_failed"
 
-        if errors and errors["pairing_code"] in TRY_PAIR_LATER_ERRORS:
+        if errors and errors["base"]:
             return self.async_show_form(step_id="try_pair_later", errors=errors)
 
         return self._async_step_pair_show_form(errors)
