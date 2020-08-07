@@ -1812,6 +1812,36 @@ def test_extract_entities_with_variables(hass):
     )
 
 
+def test_extract_entities_domain_states_inner(hass):
+    """Test extract entities function by domain."""
+    hass.states.async_set("light.switch", "on")
+    hass.states.async_set("light.switch2", "on")
+    hass.states.async_set("light.switch3", "off")
+
+    assert set(
+        template.extract_entities(
+            hass,
+            "{{ states['light'] | selectattr('state','eq','on') | list | count > 0 }}",
+            {},
+        )
+    ) == {"light.switch", "light.switch2", "light.switch3"}
+
+
+def test_extract_entities_domain_states_outer(hass):
+    """Test extract entities function by domain."""
+    hass.states.async_set("light.switch", "on")
+    hass.states.async_set("light.switch2", "on")
+    hass.states.async_set("light.switch3", "off")
+
+    assert set(
+        template.extract_entities(
+            hass,
+            "{{ states.light | selectattr('state','eq','off') | list | count > 0 }}",
+            {},
+        )
+    ) == {"light.switch", "light.switch2", "light.switch3"}
+
+
 def test_jinja_namespace(hass):
     """Test Jinja's namespace command can be used."""
     test_template = template.Template(
