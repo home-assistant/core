@@ -336,7 +336,7 @@ async def test_pair_try_later_errors_on_start(hass, controller, exception, expec
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["step_id"] == "try_pair_later"
     assert result["type"] == "form"
-    assert result["errors"]["pairing_code"] == expected
+    assert result["errors"]["base"] == expected
 
 
 @pytest.mark.parametrize("exception,expected", PAIRING_START_FORM_ERRORS)
