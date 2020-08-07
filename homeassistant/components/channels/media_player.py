@@ -367,7 +367,7 @@ class ChannelsPlayer(MediaPlayerEntity):
 
     def navigate(self, name):
         """Change section of app."""
-        response = self.client.navigate(name)
+        self.client.navigate(name)
 
     def channel_up(self):
         """Change channels up."""
