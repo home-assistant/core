@@ -1,7 +1,7 @@
 """Vizio SmartCast Device support."""
 from datetime import timedelta
 import logging
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from pyvizio import VizioAsync
 from pyvizio.api.apps import find_app_name
@@ -24,6 +24,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -41,16 +42,20 @@ from .const import (
     DEVICE_ID,
     DOMAIN,
     ICON,
+    SERVICE_UPDATE_SETTING,
     SUPPORTED_COMMANDS,
+    UPDATE_SETTING_SCHEMA,
     VIZIO_AUDIO_SETTINGS,
     VIZIO_DEVICE_CLASSES,
+    VIZIO_MUTE,
     VIZIO_MUTE_ON,
     VIZIO_SOUND_MODE,
+    VIZIO_VOLUME,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=30)
 PARALLEL_UPDATES = 0
 
 
@@ -113,6 +118,10 @@ async def async_setup_entry(
     entity = VizioDevice(config_entry, device, name, device_class)
 
     async_add_entities([entity], update_before_add=True)
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(
+        SERVICE_UPDATE_SETTING, UPDATE_SETTING_SCHEMA, "async_update_setting"
+    )
 
 
 class VizioDevice(MediaPlayerEntity):
@@ -203,10 +212,13 @@ class VizioDevice(MediaPlayerEntity):
         audio_settings = await self._device.get_all_settings(
             VIZIO_AUDIO_SETTINGS, log_api_exception=False
         )
+
         if audio_settings:
-            self._volume_level = float(audio_settings["volume"]) / self._max_volume
-            if "mute" in audio_settings:
-                self._is_volume_muted = audio_settings["mute"].lower() == VIZIO_MUTE_ON
+            self._volume_level = float(audio_settings[VIZIO_VOLUME]) / self._max_volume
+            if VIZIO_MUTE in audio_settings:
+                self._is_volume_muted = (
+                    audio_settings[VIZIO_MUTE].lower() == VIZIO_MUTE_ON
+                )
             else:
                 self._is_volume_muted = None
 
@@ -273,6 +285,16 @@ class VizioDevice(MediaPlayerEntity):
         """Update options if the update signal comes from this entity."""
         self._volume_step = config_entry.options[CONF_VOLUME_STEP]
         self._conf_apps.update(config_entry.options.get(CONF_APPS, {}))
+
+    async def async_update_setting(
+        self, setting_type: str, setting_name: str, new_value: Union[int, str]
+    ) -> None:
+        """Update a setting when update_setting service is called."""
+        await self._device.set_setting(
+            setting_type.lower().replace(" ", "_"),
+            setting_name.lower().replace(" ", "_"),
+            new_value,
+        )
 
     async def async_added_to_hass(self):
         """Register callbacks when entity is added."""

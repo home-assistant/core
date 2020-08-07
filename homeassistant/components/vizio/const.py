@@ -27,6 +27,18 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
+SERVICE_UPDATE_SETTING = "update_setting"
+
+ATTR_SETTING_TYPE = "setting_type"
+ATTR_SETTING_NAME = "setting_name"
+ATTR_NEW_VALUE = "new_value"
+
+UPDATE_SETTING_SCHEMA = {
+    vol.Required(ATTR_SETTING_TYPE): cv.string,
+    vol.Required(ATTR_SETTING_NAME): cv.string,
+    vol.Required(ATTR_NEW_VALUE): vol.Or(vol.Coerce(int), cv.string),
+}
+
 CONF_ADDITIONAL_CONFIGS = "additional_configs"
 CONF_APP_ID = "APP_ID"
 CONF_APPS = "apps"
@@ -66,6 +78,8 @@ SUPPORTED_COMMANDS = {
 VIZIO_SOUND_MODE = "eq"
 VIZIO_AUDIO_SETTINGS = "audio"
 VIZIO_MUTE_ON = "on"
+VIZIO_VOLUME = "volume"
+VIZIO_MUTE = "mute"
 
 # Since Vizio component relies on device class, this dict will ensure that changes to
 # the values of DEVICE_CLASS_SPEAKER or DEVICE_CLASS_TV don't require changes to pyvizio.
