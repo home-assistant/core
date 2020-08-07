@@ -3,14 +3,23 @@ import asyncio
 import logging
 
 from smart_meter_texas import Account, Client
-from smart_meter_texas.exceptions import SmartMeterTexasAuthError
+from smart_meter_texas.exceptions import (
+    SmartMeterTexasAPIError,
+    SmartMeterTexasAuthError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    Debouncer,
+    UpdateFailed,
+)
 
-from .const import DOMAIN, SCAN_INTERVAL  # noqa: F401
+from .const import DEBOUNCE_COOLDOWN, DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,17 +40,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     account = Account(username, password)
     smartmetertexas = SmartMeterTexasData(hass, entry, account)
-
     try:
         await smartmetertexas.client.authenticate()
-        _LOGGER.debug("Successfully logged in")
-    except SmartMeterTexasAuthError as error:
-        _LOGGER.error("Error authenticating: %s", error)
+    except SmartMeterTexasAuthError:
+        _LOGGER("Username or password was not accepted")
         return False
+    except asyncio.TimeoutError:
+        raise ConfigEntryNotReady
 
     await smartmetertexas.setup()
 
-    hass.data[DOMAIN][entry.entry_id] = smartmetertexas
+    async def async_update_data():
+        await smartmetertexas.read_meters()
+        return smartmetertexas
+
+    # Use a DataUpdateCoordinator to manage the updates. This is due to the
+    # Smart Meter Texas API which takes around 30 seconds to read a meter.
+    # This avoids Home Assistant from complaining about the component taking
+    # too long to update.
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="Smart Meter Texas",
+        update_method=async_update_data,
+        update_interval=SCAN_INTERVAL,
+        request_refresh_debouncer=Debouncer(
+            hass, _LOGGER, cooldown=DEBOUNCE_COOLDOWN, immediate=True
+        ),
+    )
+
+    await coordinator.async_refresh()
+
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -56,7 +86,6 @@ class SmartMeterTexasData:
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, account: Account):
         """Initialize the data coordintator."""
-        self._hass = hass
         self._entry = entry
         self.account = account
         websession = aiohttp_client.async_get_clientsession(hass)
@@ -76,6 +105,15 @@ class SmartMeterTexasData:
             return False
 
         return True
+
+    async def read_meters(self):
+        """Read each meter."""
+        for meter in self.meters:
+            try:
+                await meter.read_meter(self.client)
+            except (SmartMeterTexasAPIError, SmartMeterTexasAuthError) as error:
+                raise UpdateFailed(error)
+        return self.meters
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
