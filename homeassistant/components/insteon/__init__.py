@@ -6,6 +6,7 @@ from pyinsteon import async_close, async_connect, devices
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
+from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
@@ -105,7 +106,7 @@ async def async_import_config(hass, conf):
         DOMAIN, context={"source": SOURCE_IMPORT}, data=data
     )
     # If this is the first time we ran, update the config options
-    if result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY and options:
+    if result["type"] == RESULT_TYPE_CREATE_ENTRY and options:
         entry = result["result"]
         hass.config_entries.async_update_entry(
             entry=entry, options=options,
