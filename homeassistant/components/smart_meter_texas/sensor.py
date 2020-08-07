@@ -7,7 +7,7 @@ from homeassistant.const import CONF_ADDRESS, ENERGY_KILO_WATT_HOUR
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, ELECTRIC_METER, ESIID, ICON, LAST_UPDATE, METER_NUMBER
+from .const import DOMAIN, ELECTRIC_METER, ESIID, ICON, METER_NUMBER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +67,6 @@ class SmartMeterTexasSensor(Entity):
             METER_NUMBER: self.meter.meter,
             ESIID: self.meter.esiid,
             CONF_ADDRESS: self.meter.address,
-            LAST_UPDATE: self.meter.reading_datetime,
         }
         return attributes
 
