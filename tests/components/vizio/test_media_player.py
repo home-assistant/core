@@ -41,6 +41,7 @@ from homeassistant.components.vizio.const import (
     CONF_APPS,
     CONF_VOLUME_STEP,
     DOMAIN,
+    SERVICE_UPDATE_SETTING,
     VIZIO_SCHEMA,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
@@ -174,13 +175,14 @@ async def _test_setup_speaker(
         unique_id=UNIQUE_ID,
     )
 
+    audio_settings = {
+        "volume": int(MAX_VOLUME[VIZIO_DEVICE_CLASS_SPEAKER] / 2),
+        "mute": "Off",
+        "eq": CURRENT_EQ,
+    }
+
     async with _cm_for_test_setup_without_apps(
-        {
-            "volume": int(MAX_VOLUME[VIZIO_DEVICE_CLASS_SPEAKER] / 2),
-            "mute": "Off",
-            "eq": CURRENT_EQ,
-        },
-        vizio_power_state,
+        audio_settings, vizio_power_state,
     ):
         with patch(
             "homeassistant.components.vizio.media_player.VizioAsync.get_current_app_config",
@@ -248,6 +250,7 @@ async def _test_setup_failure(hass: HomeAssistantType, config: str) -> None:
 
 async def _test_service(
     hass: HomeAssistantType,
+    domain: str,
     vizio_func_name: str,
     ha_service_name: str,
     additional_service_data: Optional[Dict[str, Any]],
@@ -263,7 +266,7 @@ async def _test_service(
         f"homeassistant.components.vizio.media_player.VizioAsync.{vizio_func_name}"
     ) as service_call:
         await hass.services.async_call(
-            MP_DOMAIN, ha_service_name, service_data=service_data, blocking=True,
+            domain, ha_service_name, service_data=service_data, blocking=True,
         )
         assert service_call.called
 
@@ -347,29 +350,49 @@ async def test_services(
     """Test all Vizio media player entity services."""
     await _test_setup_tv(hass, True)
 
-    await _test_service(hass, "pow_on", SERVICE_TURN_ON, None)
-    await _test_service(hass, "pow_off", SERVICE_TURN_OFF, None)
+    await _test_service(hass, MP_DOMAIN, "pow_on", SERVICE_TURN_ON, None)
+    await _test_service(hass, MP_DOMAIN, "pow_off", SERVICE_TURN_OFF, None)
     await _test_service(
-        hass, "mute_on", SERVICE_VOLUME_MUTE, {ATTR_MEDIA_VOLUME_MUTED: True}
+        hass, MP_DOMAIN, "mute_on", SERVICE_VOLUME_MUTE, {ATTR_MEDIA_VOLUME_MUTED: True}
     )
     await _test_service(
-        hass, "mute_off", SERVICE_VOLUME_MUTE, {ATTR_MEDIA_VOLUME_MUTED: False}
+        hass,
+        MP_DOMAIN,
+        "mute_off",
+        SERVICE_VOLUME_MUTE,
+        {ATTR_MEDIA_VOLUME_MUTED: False},
     )
     await _test_service(
-        hass, "set_input", SERVICE_SELECT_SOURCE, {ATTR_INPUT_SOURCE: "USB"}, "USB"
+        hass,
+        MP_DOMAIN,
+        "set_input",
+        SERVICE_SELECT_SOURCE,
+        {ATTR_INPUT_SOURCE: "USB"},
+        "USB",
     )
-    await _test_service(hass, "vol_up", SERVICE_VOLUME_UP, None)
-    await _test_service(hass, "vol_down", SERVICE_VOLUME_DOWN, None)
+    await _test_service(hass, MP_DOMAIN, "vol_up", SERVICE_VOLUME_UP, None)
+    await _test_service(hass, MP_DOMAIN, "vol_down", SERVICE_VOLUME_DOWN, None)
     await _test_service(
-        hass, "vol_up", SERVICE_VOLUME_SET, {ATTR_MEDIA_VOLUME_LEVEL: 1}
+        hass, MP_DOMAIN, "vol_up", SERVICE_VOLUME_SET, {ATTR_MEDIA_VOLUME_LEVEL: 1}
     )
     await _test_service(
-        hass, "vol_down", SERVICE_VOLUME_SET, {ATTR_MEDIA_VOLUME_LEVEL: 0}
+        hass, MP_DOMAIN, "vol_down", SERVICE_VOLUME_SET, {ATTR_MEDIA_VOLUME_LEVEL: 0}
     )
-    await _test_service(hass, "ch_up", SERVICE_MEDIA_NEXT_TRACK, None)
-    await _test_service(hass, "ch_down", SERVICE_MEDIA_PREVIOUS_TRACK, None)
+    await _test_service(hass, MP_DOMAIN, "ch_up", SERVICE_MEDIA_NEXT_TRACK, None)
+    await _test_service(hass, MP_DOMAIN, "ch_down", SERVICE_MEDIA_PREVIOUS_TRACK, None)
     await _test_service(
-        hass, "set_setting", SERVICE_SELECT_SOUND_MODE, {ATTR_SOUND_MODE: "Music"}
+        hass,
+        MP_DOMAIN,
+        "set_setting",
+        SERVICE_SELECT_SOUND_MODE,
+        {ATTR_SOUND_MODE: "Music"},
+    )
+    await _test_service(
+        hass,
+        DOMAIN,
+        "set_setting",
+        SERVICE_UPDATE_SETTING,
+        {"setting_type": "Audio", "setting_name": "EQ", "new_value": "Music"},
     )
 
 
@@ -389,7 +412,9 @@ async def test_options_update(
         entry=config_entry, options=new_options,
     )
     assert config_entry.options == updated_options
-    await _test_service(hass, "vol_up", SERVICE_VOLUME_UP, None, num=VOLUME_STEP)
+    await _test_service(
+        hass, MP_DOMAIN, "vol_up", SERVICE_VOLUME_UP, None, num=VOLUME_STEP
+    )
 
 
 async def _test_update_availability_switch(
@@ -474,6 +499,7 @@ async def test_setup_with_apps(
 
     await _test_service(
         hass,
+        MP_DOMAIN,
         "launch_app",
         SERVICE_SELECT_SOURCE,
         {ATTR_INPUT_SOURCE: CURRENT_APP},
@@ -550,6 +576,7 @@ async def test_setup_with_apps_additional_apps_config(
 
     await _test_service(
         hass,
+        MP_DOMAIN,
         "launch_app",
         SERVICE_SELECT_SOURCE,
         {ATTR_INPUT_SOURCE: "Netflix"},
@@ -557,6 +584,7 @@ async def test_setup_with_apps_additional_apps_config(
     )
     await _test_service(
         hass,
+        MP_DOMAIN,
         "launch_app_config",
         SERVICE_SELECT_SOURCE,
         {ATTR_INPUT_SOURCE: CURRENT_APP},
