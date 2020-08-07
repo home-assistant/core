@@ -307,7 +307,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
                 self.finish_pairing = None
                 errors["pairing_code"] = "pairing_failed"
 
-        if errors and errors["base"]:
+        if errors and "base" in errors:
             return self.async_show_form(step_id="try_pair_later", errors=errors)
 
         return self._async_step_pair_show_form(errors)
