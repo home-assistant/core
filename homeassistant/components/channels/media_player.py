@@ -41,7 +41,7 @@ from .const import (
     SERVICE_PREVIOUS_CHANNEL,
     SERVICE_TOGGLE_CC,
     SERVICE_TOGGLE_RECORD,
-    SERVICE_NAVIGATE
+    SERVICE_NAVIGATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
