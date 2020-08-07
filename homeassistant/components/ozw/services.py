@@ -134,7 +134,6 @@ class ZWaveServices:
             node_id,
             payload,
         )
-        return
 
     @callback
     def async_add_node(self, service):
