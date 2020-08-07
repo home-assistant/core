@@ -22,6 +22,7 @@ from .const import (
     ENTRY_FORECAST_COORDINATOR,
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
+    UPDATE_LISTENER,
 )
 from .forecast_update_coordinator import ForecastUpdateCoordinator
 from .weather_update_coordinator import WeatherUpdateCoordinator
@@ -70,8 +71,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
 
-    if not config_entry.update_listeners:
-        config_entry.add_update_listener(async_update_options)
+    update_listener = config_entry.add_update_listener(async_update_options)
+    hass.data[DOMAIN][config_entry.entry_id][UPDATE_LISTENER] = update_listener
 
     return True
 
@@ -92,6 +93,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         )
     )
     if unload_ok:
+        update_listener = hass.data[DOMAIN][config_entry.entry_id][UPDATE_LISTENER]
+        update_listener()
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok

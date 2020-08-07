@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.components.weather import WeatherEntity
+from homeassistant.const import TEMP_CELSIUS
 
 from .const import (
     ATTR_API_CONDITION,
@@ -87,7 +88,7 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return self.hass.config.units.temperature_unit
+        return TEMP_CELSIUS
 
     @property
     def pressure(self):

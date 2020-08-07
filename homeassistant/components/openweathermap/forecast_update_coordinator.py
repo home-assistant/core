@@ -15,7 +15,6 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
 )
-from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -95,54 +94,44 @@ class ForecastUpdateCoordinator(DataUpdateCoordinator):
     def _convert_daily_forecast(self, entry):
         return {
             ATTR_FORECAST_TIME: entry.get_reference_time("unix") * 1000,
-            ATTR_FORECAST_TEMP: _get_temperature_in_current_unit(
-                self.hass, entry.get_temperature("celsius").get("day")
-            ),
-            ATTR_FORECAST_TEMP_LOW: _get_temperature_in_current_unit(
-                self.hass, entry.get_temperature("celsius").get("night")
-            ),
-            ATTR_FORECAST_PRECIPITATION: _calc_daily_precipitation(
+            ATTR_FORECAST_TEMP: entry.get_temperature("celsius").get("day"),
+            ATTR_FORECAST_TEMP_LOW: entry.get_temperature("celsius").get("night"),
+            ATTR_FORECAST_PRECIPITATION: self._calc_daily_precipitation(
                 entry.get_rain().get("all"), entry.get_snow().get("all")
             ),
             ATTR_FORECAST_WIND_SPEED: entry.get_wind().get("speed"),
             ATTR_FORECAST_WIND_BEARING: entry.get_wind().get("deg"),
-            ATTR_FORECAST_CONDITION: _get_condition(entry.get_weather_code()),
+            ATTR_FORECAST_CONDITION: self._get_condition(entry.get_weather_code()),
         }
 
     def _convert_forecast(self, entry):
         return {
             ATTR_FORECAST_TIME: entry.get_reference_time("unix") * 1000,
-            ATTR_FORECAST_TEMP: _get_temperature_in_current_unit(
-                self.hass, entry.get_temperature("celsius").get("temp")
-            ),
-            ATTR_FORECAST_PRECIPITATION: _calc_precipitation(entry),
+            ATTR_FORECAST_TEMP: entry.get_temperature("celsius").get("temp"),
+            ATTR_FORECAST_PRECIPITATION: self._calc_precipitation(entry),
             ATTR_FORECAST_WIND_SPEED: entry.get_wind().get("speed"),
             ATTR_FORECAST_WIND_BEARING: entry.get_wind().get("deg"),
-            ATTR_FORECAST_CONDITION: _get_condition(entry.get_weather_code()),
+            ATTR_FORECAST_CONDITION: self._get_condition(entry.get_weather_code()),
         }
 
+    @staticmethod
+    def _calc_daily_precipitation(rain, snow):
+        """Calculate the precipitation."""
+        rain_value = 0 if rain is None else rain
+        snow_value = 0 if snow is None else snow
+        if round(rain_value + snow_value, 1) == 0:
+            return None
+        return round(rain_value + snow_value, 1)
 
-def _get_temperature_in_current_unit(hass, value):
-    return hass.config.units.temperature(float(value), TEMP_CELSIUS)
+    @staticmethod
+    def _calc_precipitation(entry):
+        return (
+            round(entry.get_rain().get("3h"), 1)
+            if entry.get_rain().get("3h") is not None
+            and (round(entry.get_rain().get("3h"), 1) > 0)
+            else None
+        )
 
-
-def _calc_daily_precipitation(rain, snow):
-    """Calculate the precipitation."""
-    rain_value = 0 if rain is None else rain
-    snow_value = 0 if snow is None else snow
-    if round(rain_value + snow_value, 1) == 0:
-        return None
-    return round(rain_value + snow_value, 1)
-
-
-def _calc_precipitation(entry):
-    return (
-        round(entry.get_rain().get("3h"), 1)
-        if entry.get_rain().get("3h") is not None
-        and (round(entry.get_rain().get("3h"), 1) > 0)
-        else None
-    )
-
-
-def _get_condition(weather_code):
-    return [k for k, v in CONDITION_CLASSES.items() if weather_code in v][0]
+    @staticmethod
+    def _get_condition(weather_code):
+        return [k for k, v in CONDITION_CLASSES.items() if weather_code in v][0]
