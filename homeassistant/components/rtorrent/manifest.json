@@ -2,5 +2,5 @@
   "domain": "rtorrent",
   "name": "rTorrent",
   "documentation": "https://www.home-assistant.io/integrations/rtorrent",
-  "codeowners": []
+  "codeowners": ["@disrupted"]
 }

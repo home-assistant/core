@@ -1,0 +1,15 @@
+# Describes the format for available rTorrent services
+
+set_download_speed:
+  description: Set download speed limit
+  fields:
+    speed:
+      description: Speed limit in kB/s. 0 is unlimited.
+      example: 1000
+
+set_upload_speed:
+  description: Set upload speed limit
+  fields:
+    speed:
+      description: Speed limit in kB/s. 0 is unlimited.
+      example: 1000
