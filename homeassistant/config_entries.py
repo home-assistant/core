@@ -728,6 +728,23 @@ class ConfigEntries:
 
         return await entry.async_unload(self.hass)
 
+    async def async_reload_if_supported(self, entry_id: str) -> bool:
+        """Reload an entry if the integrations supports reload.
+
+        If an entry was not loaded, will just load.
+
+        Returns False if the reload fails or is unsupported.
+        """
+        entry = self.async_get_entry(entry_id)
+
+        if entry is None:
+            raise UnknownEntry
+
+        if not support_entry_unload(self.hass, entry.domain):
+            return False
+
+        return await self.async_reload(entry_id)
+
     async def async_reload(self, entry_id: str) -> bool:
         """Reload an entry.
 
@@ -886,7 +903,9 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                     )
                     if changed and reload_on_update:
                         asyncio.create_task(
-                            self.hass.config_entries.async_reload(entry.entry_id)
+                            self.hass.config_entries.async_reload_if_supported(
+                                entry.entry_id
+                            )
                         )
                 raise data_entry_flow.AbortFlow("already_configured")
 

@@ -805,6 +805,31 @@ async def test_entry_unload_succeed(hass, manager):
     assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
 
 
+async def test_entry_unload_if_supported_succeed(hass, manager):
+    """Test that we can unload an entry."""
+    entry = MockConfigEntry(domain="comp", state=config_entries.ENTRY_STATE_LOADED)
+    entry.add_to_hass(hass)
+
+    async_unload_entry = AsyncMock(return_value=True)
+
+    mock_integration(hass, MockModule("comp", async_unload_entry=async_unload_entry))
+
+    assert await manager.async_unload_if_supported(entry.entry_id) is True
+    assert len(async_unload_entry.mock_calls) == 1
+    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+
+
+async def test_entry_unload_if_supported_not_supproted(hass, manager):
+    """Test that we handle entries that cannot reload."""
+    entry = MockConfigEntry(domain="comp", state=config_entries.ENTRY_STATE_LOADED)
+    entry.add_to_hass(hass)
+
+    mock_integration(hass, MockModule("comp"))
+
+    assert await manager.async_unload_if_supported(entry.entry_id) is False
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+
+
 @pytest.mark.parametrize(
     "state",
     (
