@@ -1267,46 +1267,49 @@ class ModesTrait(_Trait):
 
         return features & media_player.SUPPORT_SELECT_SOUND_MODE
 
+    def _generate(self, name, settings):
+        """Generate a list of modes."""
+        mode = {
+            "name": name,
+            "name_values": [
+                {"name_synonym": self.SYNONYMS.get(name, [name]), "lang": "en"}
+            ],
+            "settings": [],
+            "ordered": False,
+        }
+        for setting in settings:
+            mode["settings"].append(
+                {
+                    "setting_name": setting,
+                    "setting_values": [
+                        {
+                            "setting_synonym": self.SYNONYMS.get(setting, [setting]),
+                            "lang": "en",
+                        }
+                    ],
+                }
+            )
+        return mode
+
     def sync_attributes(self):
         """Return mode attributes for a sync request."""
-
-        def _generate(name, settings):
-            mode = {
-                "name": name,
-                "name_values": [
-                    {"name_synonym": self.SYNONYMS.get(name, [name]), "lang": "en"}
-                ],
-                "settings": [],
-                "ordered": False,
-            }
-            for setting in settings:
-                mode["settings"].append(
-                    {
-                        "setting_name": setting,
-                        "setting_values": [
-                            {
-                                "setting_synonym": self.SYNONYMS.get(
-                                    setting, [setting]
-                                ),
-                                "lang": "en",
-                            }
-                        ],
-                    }
-                )
-            return mode
-
-        attrs = self.state.attributes
         modes = []
-        if self.state.domain == media_player.DOMAIN:
-            if media_player.ATTR_SOUND_MODE_LIST in attrs:
-                modes.append(
-                    _generate("sound mode", attrs[media_player.ATTR_SOUND_MODE_LIST])
-                )
-        elif self.state.domain == input_select.DOMAIN:
-            modes.append(_generate("option", attrs[input_select.ATTR_OPTIONS]))
-        elif self.state.domain == humidifier.DOMAIN:
-            if humidifier.ATTR_AVAILABLE_MODES in attrs:
-                modes.append(_generate("mode", attrs[humidifier.ATTR_AVAILABLE_MODES]))
+
+        for domain, attr, name in (
+            (media_player.DOMAIN, media_player.ATTR_SOUND_MODE_LIST, "sound mode"),
+            (input_select.DOMAIN, input_select.ATTR_OPTIONS, "option"),
+            (humidifier.DOMAIN, humidifier.ATTR_AVAILABLE_MODES, "mode"),
+        ):
+            if self.state.domain != domain:
+                continue
+
+            items = self.state.attributes.get(attr)
+
+            if items is not None:
+                modes.append(self._generate(name, items))
+
+            # Shortcut since all domains are currently unique
+            break
 
         payload = {"availableModes": modes}
 
