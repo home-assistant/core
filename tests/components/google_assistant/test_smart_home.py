@@ -337,8 +337,6 @@ async def test_execute(hass):
         const.SOURCE_CLOUD,
     )
 
-    print(result)
-
     assert result == {
         "requestId": REQ_ID,
         "payload": {

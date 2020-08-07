@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Ji\u017e nakonfigurov\u00e1no. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace.",
             "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el",
             "missing_configuration": "Komponenta nen\u00ed nakonfigurov\u00e1na. Postupujte podle dokumentace."
         },

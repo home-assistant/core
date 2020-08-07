@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_ICON_TEMPLATE,
     CONF_SENSORS,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
     MATCH_ALL,
@@ -50,6 +51,7 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_DELAY_ON): vol.All(cv.time_period, cv.positive_timedelta),
         vol.Optional(CONF_DELAY_OFF): vol.All(cv.time_period, cv.positive_timedelta),
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -73,6 +75,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         device_class = device_config.get(CONF_DEVICE_CLASS)
         delay_on = device_config.get(CONF_DELAY_ON)
         delay_off = device_config.get(CONF_DELAY_OFF)
+        unique_id = device_config.get(CONF_UNIQUE_ID)
 
         templates = {
             CONF_VALUE_TEMPLATE: value_template,
@@ -104,6 +107,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 delay_on,
                 delay_off,
                 attribute_templates,
+                unique_id,
             )
         )
 
@@ -127,6 +131,7 @@ class BinarySensorTemplate(BinarySensorEntity):
         delay_on,
         delay_off,
         attribute_templates,
+        unique_id,
     ):
         """Initialize the Template binary sensor."""
         self.hass = hass
@@ -146,6 +151,7 @@ class BinarySensorTemplate(BinarySensorEntity):
         self._available = True
         self._attribute_templates = attribute_templates
         self._attributes = {}
+        self._unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -174,6 +180,11 @@ class BinarySensorTemplate(BinarySensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id of this binary sensor."""
+        return self._unique_id
 
     @property
     def icon(self):

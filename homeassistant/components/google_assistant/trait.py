@@ -1,5 +1,6 @@
 """Implement the Google Smart Home traits."""
 import logging
+from typing import List, Optional
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -68,6 +69,7 @@ from .const import (
     ERR_CHALLENGE_NOT_SETUP,
     ERR_FUNCTION_NOT_SUPPORTED,
     ERR_NOT_SUPPORTED,
+    ERR_UNSUPPORTED_INPUT,
     ERR_VALUE_OUT_OF_RANGE,
 )
 from .error import ChallengeNeeded, SmartHomeError
@@ -114,6 +116,8 @@ COMMAND_LOCKUNLOCK = f"{PREFIX_COMMANDS}LockUnlock"
 COMMAND_FANSPEED = f"{PREFIX_COMMANDS}SetFanSpeed"
 COMMAND_MODES = f"{PREFIX_COMMANDS}SetModes"
 COMMAND_INPUT = f"{PREFIX_COMMANDS}SetInput"
+COMMAND_NEXT_INPUT = f"{PREFIX_COMMANDS}NextInput"
+COMMAND_PREVIOUS_INPUT = f"{PREFIX_COMMANDS}PreviousInput"
 COMMAND_OPENCLOSE = f"{PREFIX_COMMANDS}OpenClose"
 COMMAND_SET_VOLUME = f"{PREFIX_COMMANDS}setVolume"
 COMMAND_VOLUME_RELATIVE = f"{PREFIX_COMMANDS}volumeRelative"
@@ -143,6 +147,20 @@ def _google_temp_unit(units):
     if units == TEMP_FAHRENHEIT:
         return "F"
     return "C"
+
+
+def _next_selected(items: List[str], selected: Optional[str]) -> Optional[str]:
+    """Return the next item in a item list starting at given value.
+
+    If selected is missing in items, None is returned
+    """
+    try:
+        index = items.index(selected)
+    except ValueError:
+        return None
+
+    next_item = 0 if index == len(items) - 1 else index + 1
+    return items[next_item]
 
 
 class _Trait:
@@ -1153,55 +1171,89 @@ class FanSpeedTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class):
         """Test if state is supported."""
-        if domain != fan.DOMAIN:
-            return False
-
-        return features & fan.SUPPORT_SET_SPEED
+        if domain == fan.DOMAIN:
+            return features & fan.SUPPORT_SET_SPEED
+        if domain == climate.DOMAIN:
+            return features & climate.SUPPORT_FAN_MODE
+        return False
 
     def sync_attributes(self):
         """Return speed point and modes attributes for a sync request."""
-        modes = self.state.attributes.get(fan.ATTR_SPEED_LIST, [])
+        domain = self.state.domain
         speeds = []
-        for mode in modes:
-            if mode not in self.speed_synonyms:
-                continue
-            speed = {
-                "speed_name": mode,
-                "speed_values": [
-                    {"speed_synonym": self.speed_synonyms.get(mode), "lang": "en"}
-                ],
-            }
-            speeds.append(speed)
+        reversible = False
+
+        if domain == fan.DOMAIN:
+            modes = self.state.attributes.get(fan.ATTR_SPEED_LIST, [])
+            for mode in modes:
+                if mode not in self.speed_synonyms:
+                    continue
+                speed = {
+                    "speed_name": mode,
+                    "speed_values": [
+                        {"speed_synonym": self.speed_synonyms.get(mode), "lang": "en"}
+                    ],
+                }
+                speeds.append(speed)
+            reversible = bool(
+                self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                & fan.SUPPORT_DIRECTION
+            )
+        elif domain == climate.DOMAIN:
+            modes = self.state.attributes.get(climate.ATTR_FAN_MODES, [])
+            for mode in modes:
+                speed = {
+                    "speed_name": mode,
+                    "speed_values": [{"speed_synonym": [mode], "lang": "en"}],
+                }
+                speeds.append(speed)
 
         return {
             "availableFanSpeeds": {"speeds": speeds, "ordered": True},
-            "reversible": bool(
-                self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-                & fan.SUPPORT_DIRECTION
-            ),
+            "reversible": reversible,
         }
 
     def query_attributes(self):
         """Return speed point and modes query attributes."""
         attrs = self.state.attributes
+        domain = self.state.domain
         response = {}
-
-        speed = attrs.get(fan.ATTR_SPEED)
-        if speed is not None:
-            response["on"] = speed != fan.SPEED_OFF
-            response["currentFanSpeedSetting"] = speed
-
+        if domain == climate.DOMAIN:
+            speed = attrs.get(climate.ATTR_FAN_MODE)
+            if speed is not None:
+                response["currentFanSpeedSetting"] = speed
+        if domain == fan.DOMAIN:
+            speed = attrs.get(fan.ATTR_SPEED)
+            if speed is not None:
+                response["on"] = speed != fan.SPEED_OFF
+                response["currentFanSpeedSetting"] = speed
         return response
 
     async def execute(self, command, data, params, challenge):
         """Execute an SetFanSpeed command."""
-        await self.hass.services.async_call(
-            fan.DOMAIN,
-            fan.SERVICE_SET_SPEED,
-            {ATTR_ENTITY_ID: self.state.entity_id, fan.ATTR_SPEED: params["fanSpeed"]},
-            blocking=True,
-            context=data.context,
-        )
+        domain = self.state.domain
+        if domain == climate.DOMAIN:
+            await self.hass.services.async_call(
+                climate.DOMAIN,
+                climate.SERVICE_SET_FAN_MODE,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    climate.ATTR_FAN_MODE: params["fanSpeed"],
+                },
+                blocking=True,
+                context=data.context,
+            )
+        if domain == fan.DOMAIN:
+            await self.hass.services.async_call(
+                fan.DOMAIN,
+                fan.SERVICE_SET_SPEED,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    fan.ATTR_SPEED: params["fanSpeed"],
+                },
+                blocking=True,
+                context=data.context,
+            )
 
 
 @register_trait
@@ -1233,46 +1285,49 @@ class ModesTrait(_Trait):
 
         return features & media_player.SUPPORT_SELECT_SOUND_MODE
 
+    def _generate(self, name, settings):
+        """Generate a list of modes."""
+        mode = {
+            "name": name,
+            "name_values": [
+                {"name_synonym": self.SYNONYMS.get(name, [name]), "lang": "en"}
+            ],
+            "settings": [],
+            "ordered": False,
+        }
+        for setting in settings:
+            mode["settings"].append(
+                {
+                    "setting_name": setting,
+                    "setting_values": [
+                        {
+                            "setting_synonym": self.SYNONYMS.get(setting, [setting]),
+                            "lang": "en",
+                        }
+                    ],
+                }
+            )
+        return mode
+
     def sync_attributes(self):
         """Return mode attributes for a sync request."""
-
-        def _generate(name, settings):
-            mode = {
-                "name": name,
-                "name_values": [
-                    {"name_synonym": self.SYNONYMS.get(name, [name]), "lang": "en"}
-                ],
-                "settings": [],
-                "ordered": False,
-            }
-            for setting in settings:
-                mode["settings"].append(
-                    {
-                        "setting_name": setting,
-                        "setting_values": [
-                            {
-                                "setting_synonym": self.SYNONYMS.get(
-                                    setting, [setting]
-                                ),
-                                "lang": "en",
-                            }
-                        ],
-                    }
-                )
-            return mode
-
-        attrs = self.state.attributes
         modes = []
-        if self.state.domain == media_player.DOMAIN:
-            if media_player.ATTR_SOUND_MODE_LIST in attrs:
-                modes.append(
-                    _generate("sound mode", attrs[media_player.ATTR_SOUND_MODE_LIST])
-                )
-        elif self.state.domain == input_select.DOMAIN:
-            modes.append(_generate("option", attrs[input_select.ATTR_OPTIONS]))
-        elif self.state.domain == humidifier.DOMAIN:
-            if humidifier.ATTR_AVAILABLE_MODES in attrs:
-                modes.append(_generate("mode", attrs[humidifier.ATTR_AVAILABLE_MODES]))
+
+        for domain, attr, name in (
+            (media_player.DOMAIN, media_player.ATTR_SOUND_MODE_LIST, "sound mode"),
+            (input_select.DOMAIN, input_select.ATTR_OPTIONS, "option"),
+            (humidifier.DOMAIN, humidifier.ATTR_AVAILABLE_MODES, "mode"),
+        ):
+            if self.state.domain != domain:
+                continue
+
+            items = self.state.attributes.get(attr)
+
+            if items is not None:
+                modes.append(self._generate(name, items))
+
+            # Shortcut since all domains are currently unique
+            break
 
         payload = {"availableModes": modes}
 
@@ -1361,7 +1416,7 @@ class InputSelectorTrait(_Trait):
     """
 
     name = TRAIT_INPUTSELECTOR
-    commands = [COMMAND_INPUT]
+    commands = [COMMAND_INPUT, COMMAND_NEXT_INPUT, COMMAND_PREVIOUS_INPUT]
 
     SYNONYMS = {}
 
@@ -1394,7 +1449,20 @@ class InputSelectorTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute an SetInputSource command."""
-        requested_source = params.get("newInput")
+        sources = self.state.attributes.get(media_player.ATTR_INPUT_SOURCE_LIST) or []
+        source = self.state.attributes.get(media_player.ATTR_INPUT_SOURCE)
+
+        if command == COMMAND_INPUT:
+            requested_source = params.get("newInput")
+        elif command == COMMAND_NEXT_INPUT:
+            requested_source = _next_selected(sources, source)
+        elif command == COMMAND_PREVIOUS_INPUT:
+            requested_source = _next_selected(list(reversed(sources)), source)
+        else:
+            raise SmartHomeError(ERR_NOT_SUPPORTED, "Unsupported command")
+
+        if requested_source not in sources:
+            raise SmartHomeError(ERR_UNSUPPORTED_INPUT, "Unsupported input")
 
         await self.hass.services.async_call(
             media_player.DOMAIN,

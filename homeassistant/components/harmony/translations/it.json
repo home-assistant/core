@@ -27,7 +27,6 @@
             "init": {
                 "data": {
                     "activity": "L'attivit\u00e0 predefinita da eseguire quando nessuna \u00e8 specificata.",
-                    "activity_notify": "Aggiorna l'attivit\u00e0 corrente all'avvio del cambio attivit\u00e0.",
                     "delay_secs": "Il ritardo tra l'invio dei comandi."
                 },
                 "description": "Regolare le opzioni di Harmony Hub"

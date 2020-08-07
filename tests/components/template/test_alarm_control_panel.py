@@ -586,3 +586,32 @@ async def test_disarm_action(hass):
     await hass.async_block_till_done()
 
     assert len(service_calls) == 1
+
+
+async def test_unique_id(hass):
+    """Test unique_id option only creates one alarm control panel per id."""
+    await setup.async_setup_component(
+        hass,
+        "alarm_control_panel",
+        {
+            "alarm_control_panel": {
+                "platform": "template",
+                "panels": {
+                    "test_template_alarm_control_panel_01": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ true }}",
+                    },
+                    "test_template_alarm_control_panel_02": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ false }}",
+                    },
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1

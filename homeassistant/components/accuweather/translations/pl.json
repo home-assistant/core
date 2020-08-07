@@ -16,7 +16,7 @@
                     "longitude": "D\u0142ugo\u015b\u0107 geograficzna",
                     "name": "Nazwa integracji"
                 },
-                "description": "Je\u015bli potrzebujesz pomocy z konfiguracj\u0105, przejd\u017a na stron\u0119: https://www.home-assistant.io/integrations/accuweather/ \n\n Prognoza pogody nie jest domy\u015blnie w\u0142\u0105czona. Mo\u017cesz j\u0105 w\u0142\u0105czy\u0107 w opcjach integracji.",
+                "description": "Je\u015bli potrzebujesz pomocy z konfiguracj\u0105, przejd\u017a na stron\u0119: https://www.home-assistant.io/integrations/accuweather/ \n\nCz\u0119\u015b\u0107 sensor\u00f3w nie jest w\u0142\u0105czona domy\u015blnie. Mo\u017cesz je w\u0142\u0105czy\u0107 w rejestrze encji po konfiguracji integracji.\nPrognoza pogody nie jest domy\u015blnie w\u0142\u0105czona. Mo\u017cesz j\u0105 w\u0142\u0105czy\u0107 w opcjach integracji.",
                 "title": "AccuWeather"
             }
         }

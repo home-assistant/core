@@ -64,6 +64,7 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAss
 
     assert config_entry.entry_id in hass.data[DOMAIN]
     assert config_entry.state == ENTRY_STATE_LOADED
+    assert config_entry.unique_id == "test-bond-id"
 
     # verify hub device is registered correctly
     device_registry = await dr.async_get_registry(hass)

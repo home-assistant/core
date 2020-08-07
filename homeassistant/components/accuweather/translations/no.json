@@ -1,16 +1,22 @@
 {
     "config": {
+        "abort": {
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
+        },
         "error": {
+            "cannot_connect": "Tilkobling mislyktes.",
+            "invalid_api_key": "Ugyldig API-n\u00f8kkel",
             "requests_exceeded": "Det tillatte antallet foresp\u00f8rsler til Accuweather API er overskredet. Du m\u00e5 vente eller endre API-n\u00f8kkel."
         },
         "step": {
             "user": {
                 "data": {
+                    "api_key": "API-n\u00f8kkel",
                     "latitude": "Breddegrad",
                     "longitude": "Lengdegrad",
                     "name": "Navn p\u00e5 integrasjon"
                 },
-                "description": "Hvis du trenger hjelp med konfigurasjonen, kan du se her: https://www.home-assistant.io/integrations/accuweather/ \n\n V\u00e6rmelding er ikke aktivert som standard. Du kan aktivere det i integrasjonsalternativene.",
+                "description": "Hvis du trenger hjelp med konfigurasjonen, kan du se her: https://www.home-assistant.io/integrations/accuweather/ \n\n Noen sensorer er ikke aktivert som standard. Du kan aktivere dem i enhetsregisteret etter integrasjonskonfigurasjonen. \n V\u00e6rmelding er ikke aktivert som standard. Du kan aktivere det i integrasjonsalternativene.",
                 "title": ""
             }
         }
