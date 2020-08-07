@@ -764,6 +764,7 @@ omit =
     homeassistant/components/rpi_gpio_pwm/light.py
     homeassistant/components/rpi_pfio/*
     homeassistant/components/rpi_rf/switch.py
+    homeassistant/components/rtorrent/__init__.py
     homeassistant/components/rtorrent/sensor.py
     homeassistant/components/russound_rio/media_player.py
     homeassistant/components/russound_rnet/media_player.py
