@@ -7,7 +7,7 @@ import time
 
 from PIL import Image, ImageDraw, UnidentifiedImageError
 import numpy as np
-import tensorflow as tf
+import tensorflow as tf  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.image_processing import (
