@@ -1145,15 +1145,61 @@ async def test_unique_id_update_existing_entry(hass, manager):
             await self.async_set_unique_id("mock-unique-id")
             await self._abort_if_unique_id_configured(updates={"host": "1.1.1.1"})
 
-    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as async_reload:
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "1.1.1.1"
     assert entry.data["additional"] == "data"
+    assert len(async_reload.mock_calls) == 0
+
+
+async def test_unique_id_update_existing_entry_with_reload(hass, manager):
+    """Test that we update an entry if there already is an entry with unique ID and we reload on changes."""
+    hass.config.components.add("comp")
+    entry = MockConfigEntry(
+        domain="comp",
+        data={"additional": "data", "host": "0.0.0.0"},
+        unique_id="mock-unique-id",
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(
+        hass, MockModule("comp"),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            await self.async_set_unique_id("mock-unique-id")
+            await self._abort_if_unique_id_configured(
+                updates={"host": "1.1.1.1"}, reload_on_update=True
+            )
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as async_reload:
+        result = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data["host"] == "1.1.1.1"
+    assert entry.data["additional"] == "data"
+    assert len(async_reload.mock_calls) == 1
 
 
 async def test_unique_id_not_update_existing_entry(hass, manager):
@@ -1179,20 +1225,23 @@ async def test_unique_id_not_update_existing_entry(hass, manager):
         async def async_step_user(self, user_input=None):
             """Test user step."""
             await self.async_set_unique_id("mock-unique-id")
-            await self._abort_if_unique_id_configured(updates={"host": "0.0.0.0"})
+            await self._abort_if_unique_id_configured(
+                updates={"host": "0.0.0.0"}, reload_on_update=True
+            )
 
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
-        "homeassistant.config_entries.ConfigEntries._async_schedule_save"
-    ) as _async_schedule_save:
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as async_reload:
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "0.0.0.0"
     assert entry.data["additional"] == "data"
-    assert len(_async_schedule_save.mock_calls) == 0
+    assert len(async_reload.mock_calls) == 0
 
 
 async def test_unique_id_in_progress(hass, manager):
