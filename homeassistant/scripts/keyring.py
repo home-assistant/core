@@ -27,6 +27,7 @@ def run(args):
     parser.add_argument("name", help="Name of the secret", nargs="?", default=None)
 
     import keyring  # pylint: disable=import-outside-toplevel
+
     # pylint: disable=import-outside-toplevel
     from keyring.util import platform_ as platform
 

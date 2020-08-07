@@ -337,6 +337,7 @@ async def async_setup_entry(hass, config_entry):
     """
     from openzwave.group import ZWaveGroup
     from openzwave.network import ZWaveNetwork
+
     # pylint: disable=import-error
     from openzwave.option import ZWaveOption
     from pydispatch import dispatcher
