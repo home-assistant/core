@@ -81,8 +81,8 @@ from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitS
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
     from homeassistant.auth import AuthManager
-    from homeassistant.config_entries import ConfigEntries
     from homeassistant.components.http import HomeAssistantHTTP
+    from homeassistant.config_entries import ConfigEntries
 
 
 block_async_io.enable()

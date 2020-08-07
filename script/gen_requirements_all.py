@@ -8,9 +8,8 @@ import pkgutil
 import re
 import sys
 
-from script.hassfest.model import Integration
-
 from homeassistant.util.yaml.loader import load_yaml
+from script.hassfest.model import Integration
 
 COMMENT_REQUIREMENTS = (
     "Adafruit_BBIO",

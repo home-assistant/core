@@ -5,7 +5,7 @@ black==19.10b0
 codespell==1.16.0
 flake8-docstrings==1.5.0
 flake8==3.8.3
-isort==4.3.21
+isort==5.3.2
 pydocstyle==5.0.2
 pyupgrade==2.3.0
 yamllint==1.23.0
