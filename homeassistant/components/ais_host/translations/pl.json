@@ -9,7 +9,7 @@
                 }
             },
            "confirm": {
-                "description": "![AIS logo](/static/icons/change_host_name.png)\n\nCzy chcesz skonfigurowa\u0107 własną nazwę hosta dla urządzenia?",
+                "description": "###### ![AIS logo](/static/icons/change_host_name.png)\n\nCzy chcesz skonfigurowa\u0107 własną nazwę hosta dla urządzenia?",
                 "title": "AIS host name"
            }
         },

@@ -3,11 +3,11 @@
     "config": {
         "step": {
             "init": {
-                "description": "Aby po\u0142\u0105czy\u0107 konto Spotify wymagana jest autoryzacja **Asystenta domowego** na stronie Spotify \n\n ![AIS logo](/static/icons/favicon-100x100.png) \n\nkliknij **ZATWIERDŹ** by przejść do autoryzacji.",
+                "description": "Aby po\u0142\u0105czy\u0107 konto Spotify wymagana jest autoryzacja **Asystenta domowego** na stronie Spotify \n\n###### ![AIS logo](/static/icons/favicon-100x100.png) \n\nkliknij **ZATWIERDŹ** by przejść do autoryzacji.",
                 "title": "Uwierzytelnienie  na Spotify"
             },
            "confirm": {
-                "description": "![AIS logo](/static/icons/spotify.png)\n\nCzy chcesz skonfigurowa\u0107 dostęp do serwisu Spotify?\n\n Szczegóły w dokumentacji [Komponent Spotify](https://www.ai-speaker.com/docs/ais_app_spotify)",
+                "description": "###### ![AIS logo](/static/icons/spotify.png)\n\nCzy chcesz skonfigurowa\u0107 dostęp do serwisu Spotify?\n\n Szczegóły w dokumentacji [Komponent Spotify](https://www.ai-speaker.com/docs/ais_app_spotify)",
                 "title": "Serwis Spotify"
            }
         },
