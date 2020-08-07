@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     ATTR_EVENT_TYPE,
@@ -36,10 +37,9 @@ async def handle_webhook(hass, webhook_id, request):
 
     event_type = data.get(ATTR_EVENT_TYPE)
 
-    if event_type in ["outdoor", "therm_mode"]:
-        hass.bus.async_fire(
-            event_type=NETATMO_EVENT, event_data={"type": event_type, "data": data}
-        )
+    if event_type in EVENT_TYPE_MAP:
+        async_send_event(hass, event_type, data)
+
         for event_data in data.get(EVENT_TYPE_MAP[event_type], []):
             async_evaluate_event(hass, event_data)
 
@@ -61,13 +61,22 @@ def async_evaluate_event(hass, event_data):
             )
             person_event_data[ATTR_IS_KNOWN] = person.get(ATTR_IS_KNOWN)
             person_event_data[ATTR_FACE_URL] = person.get(ATTR_FACE_URL)
-            hass.bus.async_fire(
-                event_type=NETATMO_EVENT,
-                event_data={"type": event_type, "data": person_event_data},
-            )
+
+            async_send_event(hass, event_type, person_event_data)
+
     else:
         _LOGGER.debug("%s: %s", event_type, event_data)
-        hass.bus.async_fire(
-            event_type=NETATMO_EVENT,
-            event_data={"type": event_type, "data": event_data},
-        )
+        async_send_event(hass, event_type, event_data)
+
+
+@callback
+def async_send_event(hass, event_type, data):
+    """Send events."""
+    hass.bus.async_fire(
+        event_type=NETATMO_EVENT, event_data={"type": event_type, "data": data}
+    )
+    async_dispatcher_send(
+        hass,
+        f"signal-{DOMAIN}-webhook-{event_type}",
+        {"type": event_type, "data": data},
+    )

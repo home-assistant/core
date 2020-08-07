@@ -11,6 +11,7 @@ import pyatmo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import AUTH, DOMAIN, MANUFACTURER
@@ -69,7 +70,9 @@ class NetatmoDataHandler:
         )
 
         self.listeners.append(
-            self.hass.bus.async_listen("netatmo_event", self.handle_event)
+            async_dispatcher_connect(
+                self.hass, f"signal-{DOMAIN}-webhook-None", self.handle_event,
+            )
         )
 
     async def async_update(self, event_time):
@@ -99,11 +102,11 @@ class NetatmoDataHandler:
 
     async def handle_event(self, event):
         """Handle webhook events."""
-        if event.data["data"]["push_type"] == "webhook_activation":
+        if event["data"]["push_type"] == "webhook_activation":
             _LOGGER.info("%s webhook successfully registered", MANUFACTURER)
             self._webhook = True
 
-        elif event.data["data"]["push_type"] == "NACamera-connection":
+        elif event["data"]["push_type"] == "NACamera-connection":
             _LOGGER.debug("%s camera reconnected", MANUFACTURER)
             self._data_classes[CAMERA_DATA_CLASS_NAME][NEXT_SCAN] = time()
 
@@ -126,27 +129,27 @@ class NetatmoDataHandler:
         self, data_class_name, data_class_entry, update_callback, **kwargs
     ):
         """Register data class."""
-        if data_class_entry not in self._data_classes:
-            self._data_classes[data_class_entry] = {
-                "class": DATA_CLASSES[data_class_name],
-                "name": data_class_entry,
-                "interval": DEFAULT_INTERVALS[data_class_name],
-                NEXT_SCAN: time() + DEFAULT_INTERVALS[data_class_name],
-                "kwargs": kwargs,
-                "subscriptions": [update_callback],
-            }
-
-            await self.async_fetch_data(
-                DATA_CLASSES[data_class_name], data_class_entry, **kwargs
-            )
-
-            self._queue.append(self._data_classes[data_class_entry])
-            _LOGGER.debug("Data class %s added", data_class_entry)
-
-        else:
+        if data_class_entry in self._data_classes:
             self._data_classes[data_class_entry]["subscriptions"].append(
                 update_callback
             )
+            return
+
+        self._data_classes[data_class_entry] = {
+            "class": DATA_CLASSES[data_class_name],
+            "name": data_class_entry,
+            "interval": DEFAULT_INTERVALS[data_class_name],
+            NEXT_SCAN: time() + DEFAULT_INTERVALS[data_class_name],
+            "kwargs": kwargs,
+            "subscriptions": [update_callback],
+        }
+
+        await self.async_fetch_data(
+            DATA_CLASSES[data_class_name], data_class_entry, **kwargs
+        )
+
+        self._queue.append(self._data_classes[data_class_entry])
+        _LOGGER.debug("Data class %s added", data_class_entry)
 
     async def unregister_data_class(self, data_class_entry, update_callback):
         """Unregister data class."""
