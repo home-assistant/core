@@ -142,7 +142,6 @@ class RTorrentData:
 
     def update(self):
         """Get the latest data from rTorrent instance."""
-
         multicall = xmlrpc.client.MultiCall(self._api)
         multicall.throttle.global_up.rate()
         multicall.throttle.global_down.rate()
