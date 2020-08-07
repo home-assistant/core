@@ -805,31 +805,6 @@ async def test_entry_unload_succeed(hass, manager):
     assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
 
 
-async def test_entry_unload_if_supported_succeed(hass, manager):
-    """Test that we can unload an entry."""
-    entry = MockConfigEntry(domain="comp", state=config_entries.ENTRY_STATE_LOADED)
-    entry.add_to_hass(hass)
-
-    async_unload_entry = AsyncMock(return_value=True)
-
-    mock_integration(hass, MockModule("comp", async_unload_entry=async_unload_entry))
-
-    assert await manager.async_unload_if_supported(entry.entry_id) is True
-    assert len(async_unload_entry.mock_calls) == 1
-    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
-
-
-async def test_entry_unload_if_supported_not_supproted(hass, manager):
-    """Test that we handle entries that cannot reload."""
-    entry = MockConfigEntry(domain="comp", state=config_entries.ENTRY_STATE_LOADED)
-    entry.add_to_hass(hass)
-
-    mock_integration(hass, MockModule("comp"))
-
-    assert await manager.async_unload_if_supported(entry.entry_id) is False
-    assert entry.state == config_entries.ENTRY_STATE_LOADED
-
-
 @pytest.mark.parametrize(
     "state",
     (
@@ -1145,7 +1120,7 @@ async def test_unique_id_existing_entry(hass, manager):
     assert len(async_remove_entry.mock_calls) == 1
 
 
-async def test_unique_id_update_existing_entry(hass, manager):
+async def test_unique_id_update_existing_entry_without_reload(hass, manager):
     """Test that we update an entry if there already is an entry with unique ID."""
     hass.config.components.add("comp")
     entry = MockConfigEntry(
@@ -1168,7 +1143,9 @@ async def test_unique_id_update_existing_entry(hass, manager):
         async def async_step_user(self, user_input=None):
             """Test user step."""
             await self.async_set_unique_id("mock-unique-id")
-            await self._abort_if_unique_id_configured(updates={"host": "1.1.1.1"})
+            await self._abort_if_unique_id_configured(
+                updates={"host": "1.1.1.1"}, reload_on_update=False
+            )
 
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
         "homeassistant.config_entries.ConfigEntries.async_reload"
