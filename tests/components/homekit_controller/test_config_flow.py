@@ -25,6 +25,7 @@ PAIRING_START_ABORT_ERRORS = [
 PAIRING_TRY_LATER_ERRORS = [
     (aiohomekit.BusyError, "busy_error"),
     (aiohomekit.MaxTriesError, "max_tries_error"),
+    (IndexError, "tlv_error"),
 ]
 
 PAIRING_FINISH_FORM_ERRORS = [
@@ -332,10 +333,22 @@ async def test_pair_try_later_errors_on_start(hass, controller, exception, expec
     # User initiates pairing - device refuses to enter pairing mode but may be successful after entering pairing mode or rebooting
     test_exc = exception("error")
     with patch.object(device, "start_pairing", side_effect=test_exc):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["step_id"] == "try_pair_later"
-    assert result["type"] == "form"
-    assert result["errors"]["pairing_code"] == expected
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result2["step_id"] == "try_pair_later"
+    assert result2["type"] == "form"
+    assert result2["errors"]["base"] == expected
+
+    # Device is rebooted or placed into pairing mode as they have been instructed
+
+    # We start pairing again
+    result3 = await hass.config_entries.flow.async_configure(result2["flow_id"])
+
+    # .. and successfully complete pair
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"], user_input={"pairing_code": "111-22-333"}
+    )
+    assert result4["type"] == "create_entry"
+    assert result4["title"] == "Koogeek-LS1-20833F"
 
 
 @pytest.mark.parametrize("exception,expected", PAIRING_START_FORM_ERRORS)
