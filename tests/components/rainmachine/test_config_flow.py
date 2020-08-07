@@ -50,8 +50,7 @@ async def test_invalid_password(hass):
     flow.context = {"source": SOURCE_USER}
 
     with patch(
-        "homeassistant.components.rainmachine.config_flow.login",
-        side_effect=RainMachineError,
+        "regenmaschine.client.Client.load_local", side_effect=RainMachineError,
     ):
         result = await flow.async_step_user(user_input=conf)
         assert result["errors"] == {CONF_PASSWORD: "invalid_credentials"}
@@ -84,7 +83,7 @@ async def test_step_import(hass):
     flow.context = {"source": SOURCE_USER}
 
     with patch(
-        "homeassistant.components.rainmachine.config_flow.login", return_value=True,
+        "regenmaschine.client.Client.load_local", return_value=True,
     ):
         result = await flow.async_step_import(import_config=conf)
 
@@ -115,7 +114,7 @@ async def test_step_user(hass):
     flow.context = {"source": SOURCE_USER}
 
     with patch(
-        "homeassistant.components.rainmachine.config_flow.login", return_value=True,
+        "regenmaschine.client.Client.load_local", return_value=True,
     ):
         result = await flow.async_step_user(user_input=conf)
 
