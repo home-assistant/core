@@ -41,6 +41,7 @@ COMMENT_REQUIREMENTS = (
     "RPi.GPIO",
     "smbus-cffi",
     "tensorflow",
+    "tf-models-official",
     "VL53L1X2",
 )
 
