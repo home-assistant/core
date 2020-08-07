@@ -105,7 +105,7 @@ async def async_import_config(hass, conf):
         DOMAIN, context={"source": SOURCE_IMPORT}, data=data
     )
     # If this is the first time we ran, update the config options
-    if result.get("result") and options:
+    if result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY and options:
         entry = result["result"]
         hass.config_entries.async_update_entry(
             entry=entry, options=options,
