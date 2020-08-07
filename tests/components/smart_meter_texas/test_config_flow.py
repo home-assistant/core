@@ -9,6 +9,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.async_mock import patch
 
+TEST_LOGIN = {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"}
+
 
 async def test_form(hass):
     """Test we get the form."""
@@ -19,32 +21,19 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "smart_meter_texas.async_api.Auth.authenticate", return_value=True
-    ), patch(
+    with patch("smart_meter_texas.Client.authenticate", return_value=True), patch(
         "homeassistant.components.smart_meter_texas.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.smart_meter_texas.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-                "meter": "123456789",
-                "esiid": "12345678901234567",
-            },
+            result["flow_id"], TEST_LOGIN
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Electric Meter"
-    assert result2["data"] == {
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-        "meter": "123456789",
-        "esiid": "12345678901234567",
-    }
+    assert result2["title"] == TEST_LOGIN[CONF_USERNAME]
+    assert result2["data"] == TEST_LOGIN
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -57,16 +46,10 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "smart_meter_texas.async_api.Auth.authenticate", side_effect=InvalidAuth,
+        "smart_meter_texas.Client.authenticate", side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-                "meter": "123456789",
-                "esiid": "12345678901234567",
-            },
+            result["flow_id"], TEST_LOGIN,
         )
 
     assert result2["type"] == "form"
@@ -80,16 +63,10 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "smart_meter_texas.async_api.Auth.authenticate", side_effect=CannotConnect,
+        "smart_meter_texas.Client.authenticate", side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-                "meter": "123456789",
-                "esiid": "12345678901234567",
-            },
+            result["flow_id"], TEST_LOGIN
         )
 
     assert result2["type"] == "form"
