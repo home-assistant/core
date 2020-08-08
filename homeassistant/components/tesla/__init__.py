@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -158,7 +159,12 @@ async def async_setup_entry(hass, config_entry):
         DATA_LISTENER: [config_entry.add_update_listener(update_listener)],
     }
     _LOGGER.debug("Connected to the Tesla API")
+
     await coordinator.async_refresh()
+    
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady
+
     all_devices = entry_data["controller"].get_homeassistant_components()
 
     if not all_devices:
