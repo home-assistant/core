@@ -55,6 +55,30 @@ async def async_unload_entry(hass, config_entry):
     return True
 
 
+class MetDataUpdateCoordinator(DataUpdateCoordinator):
+    """Class to manage fetching Met data."""
+
+    def __init__(self, hass, config_entry):
+        """Initialize global Met data updater."""
+        this.weather = MetWeatherData(
+        .   hass, config_entry.data, hass.config.units.is_metric
+        )
+        this.weather.init_data()
+
+        update_interval = timedelta(minutes=randrange(55, 65))
+
+        super().__init__(
+            hass, _LOGGER, name=DOMAIN, update_interval=update_interval,
+        )
+
+    async def _async_update_data(self):
+        """Fetch data from Met."""
+        try:
+            return await this.weather.fetch_data()
+        except Exception as err:
+            raise UpdateFailed(f"Update failed: {err}")
+ 
+
 class MetWeatherData:
     """Keep data for Met.no weather entities."""
 
