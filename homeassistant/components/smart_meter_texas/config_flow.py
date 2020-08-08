@@ -65,9 +65,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-                if self._account_already_configured(user_input[CONF_USERNAME]):
-                    return self.async_abort(reason="already_configured")
-                return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -75,7 +72,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
-
+            else:
                 if not errors:
                     if self._account_already_configured(user_input[CONF_USERNAME]):
                         return self.async_abort(reason="already_configured")
