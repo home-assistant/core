@@ -96,7 +96,7 @@ async def test_availability(hass):
     future = utcnow() + timedelta(minutes=60)
     with patch(
         "homeassistant.components.accuweather.AccuWeather._async_get_data",
-        side_effect=ConnectionError()
+        side_effect=ConnectionError(),
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()

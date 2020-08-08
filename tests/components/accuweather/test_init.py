@@ -38,7 +38,7 @@ async def test_config_not_ready(hass):
 
     with patch(
         "homeassistant.components.accuweather.AccuWeather._async_get_data",
-        side_effect=ConnectionError()
+        side_effect=ConnectionError(),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)

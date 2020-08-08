@@ -39,7 +39,7 @@ async def init_integration(
         return_value=current,
     ), patch(
         "homeassistant.components.accuweather.AccuWeather.async_get_forecast",
-        return_value=forecast
+        return_value=forecast,
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
