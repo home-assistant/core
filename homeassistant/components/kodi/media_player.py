@@ -782,7 +782,7 @@ class KodiDevice(MediaPlayerEntity):
             await self.server.Player.Open({"item": {"playlistid": int(media_id)}})
         elif media_type_lower == "directory":
             await self.server.Player.Open({"item": {"directory": str(media_id)}})
-        elif media_type == "PLUGIN":
+        elif media_type_lower == "plugin":
             await self.server.Player.Open({"item": {"file": str(media_id)}})
         else:
             await self.server.Player.Open({"item": {"file": str(media_id)}})
