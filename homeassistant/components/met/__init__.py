@@ -64,7 +64,7 @@ async def async_unload_entry(hass, config_entry):
         unique_id = (
             f"{config_entry.data[CONF_LATITUDE]}-{config_entry.data[CONF_LONGITUDE]}"
         )
-    del hass.data[DOMAIN][unique_id]
+    hass.data[DOMAIN].pop(config_entry.entry_id)
     await hass.config_entries.async_forward_entry_unload(config_entry, "weather")
     return True
 
