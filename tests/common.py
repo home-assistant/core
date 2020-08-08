@@ -1063,37 +1063,37 @@ class hashdict(dict):
     def __key(self):
         return tuple(sorted(self.items()))
 
-    def __repr__(self):  # noqa: D105 no docstring
+    def __repr__(self):
         return ", ".join(f"{i[0]!s}={i[1]!r}" for i in self.__key())
 
-    def __hash__(self):  # noqa: D105 no docstring
+    def __hash__(self):
         return hash(self.__key())
 
-    def __setitem__(self, key, value):  # noqa: D105 no docstring
+    def __setitem__(self, key, value):
         raise TypeError(f"{self.__class__.__name__} does not support item assignment")
 
-    def __delitem__(self, key):  # noqa: D105 no docstring
+    def __delitem__(self, key):
         raise TypeError(f"{self.__class__.__name__} does not support item assignment")
 
-    def clear(self):  # noqa: D102 no docstring
+    def clear(self):
         raise TypeError(f"{self.__class__.__name__} does not support item assignment")
 
-    def pop(self, *args, **kwargs):  # noqa: D102 no docstring
+    def pop(self, *args, **kwargs):
         raise TypeError(f"{self.__class__.__name__} does not support item assignment")
 
-    def popitem(self, *args, **kwargs):  # noqa: D102 no docstring
+    def popitem(self, *args, **kwargs):
         raise TypeError(f"{self.__class__.__name__} does not support item assignment")
 
-    def setdefault(self, *args, **kwargs):  # noqa: D102 no docstring
+    def setdefault(self, *args, **kwargs):
         raise TypeError(f"{self.__class__.__name__} does not support item assignment")
 
-    def update(self, *args, **kwargs):  # noqa: D102 no docstring
+    def update(self, *args, **kwargs):
         raise TypeError(f"{self.__class__.__name__} does not support item assignment")
 
     # update is not ok because it mutates the object
     # __add__ is ok because it creates a new object
     # while the new object is under construction, it's ok to mutate it
-    def __add__(self, right):  # noqa: D105 no docstring
+    def __add__(self, right):
         result = hashdict(self)
         dict.update(result, right)
         return result

@@ -4,7 +4,7 @@ from datetime import timedelta
 import pytest
 
 from homeassistant.components.google_assistant import helpers
-from homeassistant.components.google_assistant.const import (  # noqa: F401
+from homeassistant.components.google_assistant.const import (
     EVENT_COMMAND_RECEIVED,
     NOT_EXPOSE_LOCAL,
 )

@@ -41,7 +41,7 @@ from .singleton import singleton
 from .typing import HomeAssistantType
 
 if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntry  # noqa: F401
+    from homeassistant.config_entries import ConfigEntry
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
