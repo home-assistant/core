@@ -778,7 +778,7 @@ class KodiDevice(MediaPlayerEntity):
 
         if media_type_lower == MEDIA_TYPE_CHANNEL:
             await self.server.Player.Open({"item": {"channelid": int(media_id)}})
-        elif media_type == MEDIA_TYPE_PLAYLIST:
+        elif media_type_lower == MEDIA_TYPE_PLAYLIST:
             await self.server.Player.Open({"item": {"playlistid": int(media_id)}})
         elif media_type == "DIRECTORY":
             await self.server.Player.Open({"item": {"directory": str(media_id)}})
