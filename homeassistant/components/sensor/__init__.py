@@ -45,7 +45,7 @@ DEVICE_CLASSES = [
     DEVICE_CLASS_TIMESTAMP,  # timestamp (ISO8601)
     DEVICE_CLASS_PRESSURE,  # pressure (hPa/mbar)
     DEVICE_CLASS_POWER,  # power (W/kW)
-    DEVICE_CLASS_POWER_FACTOR,  # power factor (no unit, min: -1.0, max: 1.0)
+    DEVICE_CLASS_POWER_FACTOR,  # power factor (%)
     DEVICE_CLASS_VOLTAGE,  # voltage (V)
 ]
 
