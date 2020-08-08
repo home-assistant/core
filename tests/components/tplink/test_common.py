@@ -17,7 +17,7 @@ async def test_async_add_entities_retry(hass: HomeAssistantType):
     objects = ["Object 1", "Object 2", "Object 3", "Object 4"]
 
     # For each call to async_add_entities_callback, the following side effects
-    # will be triggered in order. This set of side effects accuratley simulates
+    # will be triggered in order. This set of side effects accurateley simulates
     # 3 attempts to add all entities while also handling several return types.
     # To help understand what's going on, a comment exists describing what the
     # object list looks like throughout the iterations.
