@@ -73,7 +73,7 @@ jobs:
     needs: prepare-base
     steps:
       - name: ACTION_2
-        uses: ./.github/actions/action_1
+        uses: ./.github/actions/action_2
       - name: Run bandit
         run: |
           . venv/bin/activate
@@ -85,7 +85,7 @@ jobs:
     needs: prepare-base
     steps:
       - name: ACTION_2
-        uses: ./.github/actions/action_1
+        uses: ./.github/actions/action_2
       - name: Run black
         run: |
           . venv/bin/activate
@@ -97,7 +97,7 @@ jobs:
     needs: prepare-base
     steps:
       - name: ACTION_2
-        uses: ./.github/actions/action_1
+        uses: ./.github/actions/action_2
       - name: Register codespell problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/codespell.json"
@@ -131,7 +131,7 @@ jobs:
     needs: prepare-base
     steps:
       - name: ACTION_2
-        uses: ./.github/actions/action_1
+        uses: ./.github/actions/action_2
       - name: Register check executables problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/check-executables-have-shebangs.json"
@@ -146,7 +146,7 @@ jobs:
     needs: prepare-base
     steps:
       - name: ACTION_2
-        uses: ./.github/actions/action_1
+        uses: ./.github/actions/action_2
       - name: Register flake8 problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/flake8.json"
@@ -161,7 +161,7 @@ jobs:
     needs: prepare-base
     steps:
       - name: ACTION_2
-        uses: ./.github/actions/action_1
+        uses: ./.github/actions/action_2
       - name: Run isort
         run: |
           . venv/bin/activate
@@ -173,7 +173,7 @@ jobs:
     needs: prepare-base
     steps:
       - name: ACTION_2
-        uses: ./.github/actions/action_1
+        uses: ./.github/actions/action_2
       - name: Register check-json problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/check-json.json"
@@ -188,7 +188,7 @@ jobs:
     needs: prepare-base
     steps:
       - name: ACTION_2
-        uses: ./.github/actions/action_1
+        uses: ./.github/actions/action_2
       - name: Run pyupgrade
         run: |
           . venv/bin/activate
@@ -211,7 +211,7 @@ jobs:
     needs: prepare-base
     steps:
       - name: ACTION_2
-        uses: ./.github/actions/action_1
+        uses: ./.github/actions/action_2
       - name: Register yamllint problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/yamllint.json"
@@ -294,7 +294,7 @@ jobs:
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: ACTION_3
-        uses: ./.github/actions/action_1
+        uses: ./.github/actions/action_3
       - name: Register pylint problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pylint.json"
@@ -313,7 +313,7 @@ jobs:
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: ACTION_3
-        uses: ./.github/actions/action_1
+        uses: ./.github/actions/action_3
       - name: Register mypy problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/mypy.json"
@@ -334,7 +334,7 @@ jobs:
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: ACTION_3
-        uses: ./.github/actions/action_1
+        uses: ./.github/actions/action_3
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
@@ -379,7 +379,7 @@ jobs:
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: ACTION_3
-        uses: ./.github/actions/action_1
+        uses: ./.github/actions/action_3
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v2
       - name: Combine coverage results
