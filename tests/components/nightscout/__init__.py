@@ -5,7 +5,7 @@ from aiohttp import ClientConnectionError
 from py_nightscout.models import SGV, ServerStatus
 
 from homeassistant.components.nightscout.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_URL
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -26,7 +26,7 @@ SERVER_STATUS = ServerStatus.new_from_json_dict(
 
 async def init_integration(hass) -> MockConfigEntry:
     """Set up the Nightscout integration in Home Assistant."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "test.host"},)
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_URL: "https://some.url:1234"},)
     with patch(
         "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
         return_value=GLUCOSE_READINGS,
@@ -43,7 +43,7 @@ async def init_integration(hass) -> MockConfigEntry:
 
 async def init_integration_unavailable(hass) -> MockConfigEntry:
     """Set up the Nightscout integration in Home Assistant."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "test.host"},)
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_URL: "https://some.url:1234"},)
     with patch(
         "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
         side_effect=ClientConnectionError(),
@@ -60,7 +60,7 @@ async def init_integration_unavailable(hass) -> MockConfigEntry:
 
 async def init_integration_empty_response(hass) -> MockConfigEntry:
     """Set up the Nightscout integration in Home Assistant."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "test.host"},)
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_URL: "https://some.url:1234"},)
     with patch(
         "homeassistant.components.nightscout.NightscoutAPI.get_sgvs", return_value=[]
     ), patch(

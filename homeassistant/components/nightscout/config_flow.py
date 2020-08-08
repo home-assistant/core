@@ -8,20 +8,20 @@ from py_nightscout import Api as NightscoutAPI
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_URL
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+DATA_SCHEMA = vol.Schema({vol.Required(CONF_URL): str})
 
 
 async def _validate_input(data):
     """Validate the user input allows us to connect."""
 
     try:
-        api = NightscoutAPI(data[CONF_HOST])
+        api = NightscoutAPI(data[CONF_URL])
         status = await api.get_server_status()
     except (ClientError, AsyncIOTimeoutError, OSError):
         raise CannotConnect

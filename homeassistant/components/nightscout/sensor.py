@@ -50,7 +50,7 @@ class NightscoutSensor(Entity):
     def __init__(self, api: NightscoutAPI, name):
         """Initialize the Nightscout sensor."""
         self.api = api
-        self._unique_id = hashlib.sha256(api._host.encode("utf-8")).hexdigest()
+        self._unique_id = hashlib.sha256(api.server_url.encode("utf-8")).hexdigest()
         self._name = name
         self._state = None
         self._attributes = None

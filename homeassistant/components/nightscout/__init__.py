@@ -5,7 +5,7 @@ import logging
 from py_nightscout import Api as NightscoutAPI
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
@@ -25,9 +25,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Nightscout from a config entry."""
-    host = entry.data[CONF_HOST]
+    server_url = entry.data[CONF_URL]
 
-    api = NightscoutAPI(host)
+    api = NightscoutAPI(server_url)
     status = await api.get_server_status()
 
     hass.data[DOMAIN][entry.entry_id] = api
@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, host)},
+        identifiers={(DOMAIN, server_url)},
         manufacturer="Nightscout Foundation",
         name=status.name,
         sw_version=status.version,

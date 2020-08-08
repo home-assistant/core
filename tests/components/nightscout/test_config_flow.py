@@ -3,12 +3,12 @@ from aiohttp import ClientConnectionError
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.nightscout.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_URL
 
 from tests.async_mock import patch
 from tests.components.nightscout import GLUCOSE_READINGS, SERVER_STATUS
 
-CONFIG = {CONF_HOST: "some host"}
+CONFIG = {CONF_URL: "https://some.url:1234"}
 
 
 async def test_form(hass):
@@ -50,7 +50,7 @@ async def test_user_form_cannot_connect(hass):
         side_effect=ClientConnectionError(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: "some host"},
+            result["flow_id"], {CONF_URL: "https://some.url:1234"},
         )
 
     assert result2["type"] == "form"
@@ -68,7 +68,7 @@ async def test_user_form_unexpected_exception(hass):
         side_effect=Exception(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: "some host"},
+            result["flow_id"], {CONF_URL: "https://some.url:1234"},
         )
 
     assert result2["type"] == "form"

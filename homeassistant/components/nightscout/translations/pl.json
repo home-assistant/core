@@ -7,7 +7,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Nazwa hosta lub adres IP"
+                    "url": "URL"
                 }
             }
         }

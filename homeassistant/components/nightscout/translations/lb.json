@@ -5,7 +5,9 @@
         },
         "step": {
             "user": {
-                "data": {}
+                "data": {
+                    "url": "URL"
+                }
             }
         }
     }
