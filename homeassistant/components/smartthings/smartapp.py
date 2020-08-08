@@ -409,7 +409,7 @@ async def _continue_flow(
         (
             flow
             for flow in hass.config_entries.flow.async_progress()
-            if flow["handler"] == DOMAIN and flow["context"]["unique_id"] == unique_id
+            if (flow["handler"] == DOMAIN) and ("unique_id" in flow) and (flow["context"]["unique_id"] == unique_id)
         ),
         None,
     )
