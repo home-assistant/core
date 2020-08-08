@@ -11,13 +11,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Tesla binary_sensors by config_entry."""
-    controller = hass.data[TESLA_DOMAIN][config_entry.entry_id]["controller"]
     coordinator = hass.data[TESLA_DOMAIN][config_entry.entry_id]["coordinator"]
     entities = []
     for device in hass.data[TESLA_DOMAIN][config_entry.entry_id]["devices"]["switch"]:
         if device.type == "charger switch":
             entities.append(ChargerSwitch(device, coordinator))
-            entities.append(UpdateSwitch(device, coordinator, controller))
+            entities.append(UpdateSwitch(device, coordinator))
         elif device.type == "maxrange switch":
             entities.append(RangeSwitch(device, coordinator))
         elif device.type == "sentry mode switch":
@@ -80,10 +79,10 @@ class RangeSwitch(TeslaDevice, SwitchEntity):
 class UpdateSwitch(TeslaDevice, SwitchEntity):
     """Representation of a Tesla update switch."""
 
-    def __init__(self, tesla_device, coordinator, controller):
+    def __init__(self, tesla_device, coordinator):
         """Initialise the switch."""
         super().__init__(tesla_device, coordinator)
-        self.controller = controller
+        self.controller = coordinator.controller
 
     @property
     def name(self):

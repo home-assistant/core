@@ -167,7 +167,7 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.error("Unable to communicate with Tesla API: %s", ex.message)
         return False
     _async_save_tokens(hass, config_entry, access_token, refresh_token)
-    coordinator = DataUpdateCoordinator(
+    coordinator = TeslaDataUpdateCoordinator(hass, config_entry, controller)
         hass,
         _LOGGER,
         # Name of the data. For logging purposes.
@@ -233,6 +233,36 @@ async def update_listener(hass, config_entry):
             controller.update_interval,
         )
 
+
+class TeslaDataUpdateCoordinator(DataUpdateCoordinator):
+    """Class to manage fetching Tesla data."""
+
+    def __init__(self, hass, *, config_entry, controller):
+        """Initialize global Tesla data updater."""
+        self.controller = controller
+        self.config_entry = config_entry
+
+        update_interval = timedelta(seconds=MIN_SCAN_INTERVAL)
+
+        super().__init__(
+            hass, _LOGGER, name=DOMAIN, update_interval=update_interval,
+        )
+
+    async def _async_update_data(self):
+        """Fetch data from API endpoint."""
+        if self.controller.is_token_refreshed():
+            (refresh_token, access_token) = self.controller.get_tokens()
+            _async_save_tokens(self.hass, self.config_entry, access_token, refresh_token)
+            _LOGGER.debug("Saving new tokens in config_entry")
+
+        try:
+            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
+            # handled by the data update coordinator.
+            async with async_timeout.timeout(30):
+                return await self.controller.update()
+        except TeslaException as err:
+            raise UpdateFailed(f"Error communicating with API: {err}")
+ 
 
 class TeslaDevice(Entity):
     """Representation of a Tesla device."""
