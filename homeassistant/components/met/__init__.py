@@ -1,9 +1,9 @@
 """The met component."""
-import logging
-import metno
-
 from datetime import timedelta
+import logging
 from random import randrange
+
+import metno
 
 from homeassistant.const import (
     CONF_ELEVATION,
@@ -44,7 +44,7 @@ async def async_setup_entry(hass, config_entry):
         hass.data[DOMAIN] = dict()
     coordinator = MetDataUpdateCoordinator(hass, config_entry)
     await coordinator.async_refresh()
-    
+
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
@@ -58,12 +58,6 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    if config_entry.data.get(CONF_TRACK_HOME, False):
-        unique_id = "home"
-    else:
-        unique_id = (
-            f"{config_entry.data[CONF_LATITUDE]}-{config_entry.data[CONF_LONGITUDE]}"
-        )
     hass.data[DOMAIN].pop(config_entry.entry_id)
     await hass.config_entries.async_forward_entry_unload(config_entry, "weather")
     return True
@@ -74,24 +68,22 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass, config_entry):
         """Initialize global Met data updater."""
-        this.weather = MetWeatherData(
-        .   hass, config_entry.data, hass.config.units.is_metric
+        self.weather = MetWeatherData(
+            hass, config_entry.data, hass.config.units.is_metric
         )
-        this.weather.init_data()
+        self.weather.init_data()
 
         update_interval = timedelta(minutes=randrange(55, 65))
 
-        super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=update_interval,
-        )
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
     async def _async_update_data(self):
         """Fetch data from Met."""
         try:
-            return await this.weather.fetch_data()
+            return await self.weather.fetch_data()
         except Exception as err:
             raise UpdateFailed(f"Update failed: {err}")
- 
+
 
 class MetWeatherData:
     """Keep data for Met.no weather entities."""

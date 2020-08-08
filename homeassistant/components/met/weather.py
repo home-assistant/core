@@ -1,10 +1,12 @@
 """Support for Met.no weather service."""
+from datetime import timedelta
 import logging
 from random import randrange
 
 import voluptuous as vol
 
 from homeassistant.components.weather import PLATFORM_SCHEMA, WeatherEntity
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LATITUDE,
@@ -17,8 +19,8 @@ from homeassistant.const import (
     PRESSURE_INHG,
     TEMP_CELSIUS,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 
@@ -66,8 +68,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([MetWeather(coordinator, config_entry.data, hass.config.units.is_metric)])
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    async_add_entities(
+        [MetWeather(coordinator, config_entry.data, hass.config.units.is_metric)]
+    )
 
 
 async def async_setup(hass, config, async_add_entities):
