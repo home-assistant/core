@@ -218,6 +218,10 @@ DEVICE_CLASS_TEMPERATURE = "temperature"
 DEVICE_CLASS_TIMESTAMP = "timestamp"
 DEVICE_CLASS_PRESSURE = "pressure"
 DEVICE_CLASS_POWER = "power"
+DEVICE_CLASS_CURRENT = "current"
+DEVICE_CLASS_ENERGY = "energy"
+DEVICE_CLASS_POWER_FACTOR = "power_factor"
+DEVICE_CLASS_VOLTAGE = "voltage"
 
 # #### STATES ####
 STATE_ON = "on"
