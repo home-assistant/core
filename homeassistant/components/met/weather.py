@@ -94,7 +94,7 @@ class MetWeather(WeatherEntity):
     async def _core_config_updated(self, _event):
         """Handle core config updated."""
         if self._config.get(CONF_TRACK_HOME, False):
-            self.hass.data[DOMAIN]["home"].init_data()
+            self._coordinator.weather.init_data()
             await self.async_update()
 
     async def will_remove_from_hass(self):
@@ -106,7 +106,6 @@ class MetWeather(WeatherEntity):
     async def async_update(self):
         """Only used by the generic entity update service."""
         await self._coordinator.async_request_refresh()
-        self.async_write_ha_state()
 
     @property
     def track_home(self):
