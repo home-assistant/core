@@ -72,6 +72,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-base
     steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2
       - uses: ./.github/actions/action_1
       - uses: ./.github/actions/action_2
       - name: Run bandit
@@ -84,6 +86,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-base
     steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2
       - uses: ./.github/actions/action_1
       - uses: ./.github/actions/action_2
       - name: Run black
@@ -96,6 +100,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-base
     steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2
       - uses: ./.github/actions/action_1
       - uses: ./.github/actions/action_2
       - name: Register codespell problem matcher
@@ -130,6 +136,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-base
     steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2
       - uses: ./.github/actions/action_1
       - uses: ./.github/actions/action_2
       - name: Register check executables problem matcher
@@ -145,6 +153,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-base
     steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2
       - uses: ./.github/actions/action_1
       - uses: ./.github/actions/action_2
       - name: Register flake8 problem matcher
@@ -160,6 +170,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-base
     steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2
       - uses: ./.github/actions/action_1
       - uses: ./.github/actions/action_2
       - name: Run isort
@@ -172,6 +184,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-base
     steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2
       - uses: ./.github/actions/action_1
       - uses: ./.github/actions/action_2
       - name: Register check-json problem matcher
@@ -187,6 +201,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-base
     steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2
       - uses: ./.github/actions/action_1
       - uses: ./.github/actions/action_2
       - name: Run pyupgrade
@@ -210,6 +226,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-base
     steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2
       - uses: ./.github/actions/action_1
       - uses: ./.github/actions/action_2
       - name: Register yamllint problem matcher
@@ -225,6 +243,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-base
     steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2
       - uses: ./.github/actions/action_1
       - name: Run hassfest
         run: |
@@ -236,6 +256,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-base
     steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2
       - uses: ./.github/actions/action_1
       - name: Run gen_requirements_all.py
         run: |
@@ -291,6 +313,8 @@ jobs:
         python-version: [3.7]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2
       - uses: ./.github/actions/action_3
       - name: Register pylint problem matcher
         run: |
@@ -309,6 +333,8 @@ jobs:
         python-version: [3.7]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2
       - uses: ./.github/actions/action_3
       - name: Register mypy problem matcher
         run: |
@@ -329,6 +355,8 @@ jobs:
       Run tests Python ${{ matrix.python-version }} (group ${{ matrix.group }})
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2
       - uses: ./.github/actions/action_3
       - name: Register Python problem matcher
         run: |
@@ -373,6 +401,8 @@ jobs:
         python-version: [3.7]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2
       - uses: ./.github/actions/action_3
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v2

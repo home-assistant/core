@@ -1,8 +1,6 @@
 name: 'setup_and_restore_python'
 description: 'Setup and restore Python environment'
 runs:
-  - name: Check out code from GitHub
-    uses: actions/checkout@v2
   - name: Set up Python ${{ env.DEFAULT_PYTHON }}
     uses: actions/setup-python@v2.1.1
     id: python

@@ -1,8 +1,6 @@
 name: 'setup_and_restore_python_2'
 description: 'Setup and restore Python environment (2)'
 runs:
-  - name: Check out code from GitHub
-    uses: actions/checkout@v2
   - name:
       Restore full Python ${{ matrix.python-version }} virtual environment
     id: cache-venv
