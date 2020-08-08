@@ -774,7 +774,9 @@ class KodiDevice(MediaPlayerEntity):
     @cmd
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
-        if media_type == MEDIA_TYPE_CHANNEL:
+        media_type_lower = media_type.lower()
+
+        if media_type_lower == MEDIA_TYPE_CHANNEL:
             await self.server.Player.Open({"item": {"channelid": int(media_id)}})
         elif media_type == MEDIA_TYPE_PLAYLIST:
             await self.server.Player.Open({"item": {"playlistid": int(media_id)}})
