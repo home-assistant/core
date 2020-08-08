@@ -8,7 +8,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DATA_API, DATA_COORDINATOR, DATA_INFO, DOMAIN
+from .const import DATA_COORDINATOR, DATA_INFO, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +33,6 @@ async def async_setup_entry(hass, entry):
     coordinator = CoolmasterDataUpdateCoordinator(hass, coolmaster)
     await coordinator.async_refresh()
     hass.data[DOMAIN][entry.entry_id] = {
-        DATA_API: coolmaster,
         DATA_INFO: info,
         DATA_COORDINATOR: coordinator,
     }
@@ -59,16 +58,15 @@ class CoolmasterDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass, coolmaster):
         """Initialize global Coolmaster data updater."""
-        self.coolmaster = coolmaster
-        update_interval = SCAN_INTERVAL
+        self._coolmaster = coolmaster
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=update_interval,
+            hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL,
         )
 
     async def _async_update_data(self):
         """Fetch data from Coolmaster."""
         try:
-            return await self.coolmaster.status()
+            return await self._coolmaster.status()
         except (OSError, ConnectionRefusedError, TimeoutError) as error:
-            raise UpdateFailed(f"Update failed: {error}")
+            raise UpdateFailed() from error

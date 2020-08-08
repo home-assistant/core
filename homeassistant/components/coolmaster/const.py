@@ -9,7 +9,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
 )
 
-DATA_API = "api"
 DATA_INFO = "info"
 DATA_COORDINATOR = "coordinator"
 
