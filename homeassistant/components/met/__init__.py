@@ -1,5 +1,9 @@
 """The met component."""
+import logging
 import metno
+
+from datetime import timedelta
+from random import randrange
 
 from homeassistant.const import (
     CONF_ELEVATION,
