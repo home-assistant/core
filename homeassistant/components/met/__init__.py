@@ -43,7 +43,6 @@ async def async_setup_entry(hass, config_entry):
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = dict()
         hass, config_entry.data, hass.config.units.is_metric
-    )
     coordinator = MetDataUpdateCoordinator(hass, config_entry)
     await coordinator.async_refresh()
     
