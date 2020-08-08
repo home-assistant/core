@@ -9,6 +9,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import (
     ATTR_AUX_HEAT,
     ATTR_HUMIDITY,
+    ATTR_OUTSIDE_TEMPERATURE,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
@@ -22,6 +23,7 @@ from .const import (
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    SERVICE_SET_OUTSIDE_TEMPERATURE,
 )
 
 
@@ -70,6 +72,9 @@ async def _async_reproduce_states(
 
     if ATTR_HUMIDITY in state.attributes:
         await call_service(SERVICE_SET_HUMIDITY, [ATTR_HUMIDITY])
+
+    if ATTR_OUTSIDE_TEMPERATURE in state.attributes:
+        await call_service(SERVICE_SET_OUTSIDE_TEMPERATURE, [ATTR_OUTSIDE_TEMPERATURE])
 
 
 async def async_reproduce_states(
