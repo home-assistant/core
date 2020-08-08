@@ -72,6 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-base
     steps:
+      - uses: ./.github/actions/action_1
       - uses: ./.github/actions/action_2
       - name: Run bandit
         run: |
@@ -83,6 +84,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-base
     steps:
+      - uses: ./.github/actions/action_1
       - uses: ./.github/actions/action_2
       - name: Run black
         run: |
@@ -94,6 +96,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-base
     steps:
+      - uses: ./.github/actions/action_1
       - uses: ./.github/actions/action_2
       - name: Register codespell problem matcher
         run: |
@@ -127,6 +130,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-base
     steps:
+      - uses: ./.github/actions/action_1
       - uses: ./.github/actions/action_2
       - name: Register check executables problem matcher
         run: |
@@ -141,6 +145,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-base
     steps:
+      - uses: ./.github/actions/action_1
       - uses: ./.github/actions/action_2
       - name: Register flake8 problem matcher
         run: |
@@ -155,6 +160,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-base
     steps:
+      - uses: ./.github/actions/action_1
       - uses: ./.github/actions/action_2
       - name: Run isort
         run: |
@@ -166,6 +172,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-base
     steps:
+      - uses: ./.github/actions/action_1
       - uses: ./.github/actions/action_2
       - name: Register check-json problem matcher
         run: |
@@ -180,6 +187,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-base
     steps:
+      - uses: ./.github/actions/action_1
       - uses: ./.github/actions/action_2
       - name: Run pyupgrade
         run: |
@@ -202,6 +210,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-base
     steps:
+      - uses: ./.github/actions/action_1
       - uses: ./.github/actions/action_2
       - name: Register yamllint problem matcher
         run: |

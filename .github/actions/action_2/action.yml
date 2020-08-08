@@ -1,7 +1,6 @@
 name: 'setup_restore_python_and_pre_commit'
 description: 'Setup and restore Python environment with pre-commit cache'
 runs:
-  - name: ACTION_1
   - name: Restore pre-commit environment from cache
     id: cache-precommit
     uses: actions/cache@v2
