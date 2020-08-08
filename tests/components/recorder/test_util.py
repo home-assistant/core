@@ -50,7 +50,7 @@ def test_recorder_bad_execute(hass_recorder):
     hass_recorder()
 
     def to_native(validate_entity_id=True):
-        """Rasie exception."""
+        """Raise exception."""
         raise SQLAlchemyError()
 
     mck1 = MagicMock()
