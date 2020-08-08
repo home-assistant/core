@@ -80,7 +80,7 @@ class ZWaveServices:
         if value.type == ValueType.LIST:
             # accept either string from the list value OR the int value
             for selected in value.value["List"]:
-                if selected["Label"] != selection and selected["Value"] != selection:
+                if selection not in (selected["Label"], selected["Value"]):
                     continue
                 payload = int(selected["Value"])
 
