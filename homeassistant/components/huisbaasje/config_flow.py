@@ -3,13 +3,14 @@ import logging
 
 from huisbaasje import (
     Huisbaasje,
-    HuisbaasjeException,
     HuisbaasjeConnectionException,
+    HuisbaasjeException,
     HuisbaasjeUnauthenticatedException,
 )
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.const import CONF_ID
 
 from ...helpers.aiohttp_client import async_get_clientsession
 from .const import CONF_PASSWORD, CONF_USERNAME, DOMAIN
@@ -35,23 +36,29 @@ class HuisbaasjeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            valid = await self._validate_input(user_input)
+            user_id = await self._validate_input(user_input)
 
             _LOGGER.info("Input for Huisbaasje is valid!")
 
+            if await self._entry_exists(user_id):
+                return self.async_abort(reason="already_configured")
+
             return self.async_create_entry(
-                title="Huisbaasje",
+                title=user_id,
                 data={
+                    CONF_ID: user_id,
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
                 },
             )
-        except HuisbaasjeUnauthenticatedException:
+        except HuisbaasjeUnauthenticatedException as exception:
+            _LOGGER.warning(exception)
             errors["base"] = "unauthenticated_exception"
-        except HuisbaasjeConnectionException:
+        except HuisbaasjeConnectionException as exception:
+            _LOGGER.warning(exception)
             errors["base"] = "connection_exception"
-        except HuisbaasjeException as e:
-            _LOGGER.warning(e)
+        except HuisbaasjeException as exception:
+            _LOGGER.warning(exception)
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
@@ -75,4 +82,15 @@ class HuisbaasjeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         huisbaasje = Huisbaasje(username, password)
 
-        return await huisbaasje.authenticate()
+        # Attempt authentication. If this fails, an HuisbaasjeException will be thrown
+        await huisbaasje.authenticate()
+
+        return huisbaasje.get_user_id()
+
+    async def _entry_exists(self, user_id):
+        entries = await self._async_current_entries()
+        for entry in entries:
+            if entry.data[CONF_ID] == user_id:
+                return True
+
+        return False
