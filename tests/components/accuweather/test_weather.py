@@ -136,8 +136,8 @@ async def test_manual_update_entity(hass):
             {ATTR_ENTITY_ID: ["weather.home"]},
             blocking=True,
         )
-        assert mock_current.call_count == 1
-        assert mock_forecast.call_count == 1
+    assert mock_current.call_count == 1
+    assert mock_forecast.call_count == 1
 
 
 async def test_unsupported_condition_icon_data(hass):
