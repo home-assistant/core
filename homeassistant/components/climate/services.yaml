@@ -38,6 +38,16 @@ set_temperature:
     hvac_mode:
       description: HVAC operation mode to set temperature to.
       example: "heat"
+      
+set_outside_temperature:
+  description: Set outside temperature of climate device.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: "climate.kitchen"
+    outside_temperature:
+      description: New outside temperature to display for climate device.
+      example: 25
 
 set_humidity:
   description: Set target humidity of climate device.
