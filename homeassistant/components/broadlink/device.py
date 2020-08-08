@@ -80,7 +80,7 @@ class BroadlinkDevice:
             await self.hass.async_add_executor_job(api.auth)
 
         except AuthenticationError:
-            self.hass.async_create_task(self._async_handle_auth_error())
+            await self._async_handle_auth_error()
             return False
 
         except (DeviceOfflineError, OSError):
@@ -140,7 +140,7 @@ class BroadlinkDevice:
                 "Failed to authenticate to the device at %s: %s", self.api.host[0], err
             )
             if isinstance(err, AuthenticationError):
-                self.hass.async_create_task(self._async_handle_auth_error())
+                await self._async_handle_auth_error()
             return False
         return True
 

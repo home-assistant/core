@@ -58,8 +58,7 @@ PLATFORM_SCHEMA = vol.All(
                 cv.schema_with_slug_keys(OLD_SWITCH_SCHEMA),
                 vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
             ),
-        },
-        extra=vol.ALLOW_EXTRA,
+        }
     ),
 )
 

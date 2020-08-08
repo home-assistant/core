@@ -31,7 +31,10 @@ class BroadlinkDevice:
     def get_mock_entry(self):
         """Return a mock config entry."""
         return MockConfigEntry(
-            domain=DOMAIN, unique_id=self.mac, data=self.get_entry_data()
+            domain=DOMAIN,
+            unique_id=self.mac,
+            title=self.name,
+            data=self.get_entry_data(),
         )
 
     def get_entry_data(self):
