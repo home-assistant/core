@@ -128,6 +128,7 @@ DEMO_DEVICES = [
             "action.devices.traits.OnOff",
             "action.devices.traits.Brightness",
             "action.devices.traits.ColorSetting",
+            "action.devices.traits.Modes",
         ],
         "type": "action.devices.types.LIGHT",
         "willReportState": False,
