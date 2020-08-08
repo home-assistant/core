@@ -2,9 +2,6 @@
 
 DOMAIN = "gree"
 
-CONF_STATIC = "hosts"
-CONF_DISCOVERY = "discovery"
-
 CONNECTION_NETWORK_MAC = "mac"
 
 DEFAULT_DISCOVERY = True

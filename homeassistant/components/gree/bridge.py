@@ -1,6 +1,5 @@
 """Helper and wrapper classes for Gree module."""
 import logging
-import socket
 from typing import List
 
 from greeclimate.device import Device
@@ -35,13 +34,6 @@ class DeviceHelper:
         """Gather a list of device infos from the local network."""
         gree = GreeClimate()
         return await gree.search_devices()
-
-    @staticmethod
-    def get_ip(host: str) -> str:
-        """Get ip from hostname."""
-        if host is None:
-            return None
-        return socket.gethostbyname(host)
 
 
 class CannotConnect(exceptions.HomeAssistantError):
