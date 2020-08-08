@@ -39,7 +39,11 @@ async def _validate_input(data: Dict[str, Any]) -> str:
         raise InputValidationError("unknown")
 
     # Return unique ID from the hub to be stored in the config entry.
-    return version["bondid"]
+    bond_id = version.get("bondid")
+    if not bond_id:
+        raise InputValidationError("old_firmware")
+
+    return bond_id
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
