@@ -68,7 +68,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
-    await async_setup(hass, config_entry.data, async_add_entities)
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([MetWeather(coordinator, config_entry.data, hass.config.units.is_metric)])
 
 
 async def async_setup(hass, config, async_add_entities):
