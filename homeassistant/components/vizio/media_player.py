@@ -291,9 +291,7 @@ class VizioDevice(MediaPlayerEntity):
     ) -> None:
         """Update a setting when update_setting service is called."""
         await self._device.set_setting(
-            setting_type.lower().replace(" ", "_"),
-            setting_name.lower().replace(" ", "_"),
-            new_value,
+            setting_type, setting_name, new_value,
         )
 
     async def async_added_to_hass(self):

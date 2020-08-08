@@ -387,12 +387,26 @@ async def test_services(
         SERVICE_SELECT_SOUND_MODE,
         {ATTR_SOUND_MODE: "Music"},
     )
+    # Test that the update_setting service does config validation/transformation correctly
+    await _test_service(
+        hass,
+        DOMAIN,
+        "set_setting",
+        SERVICE_UPDATE_SETTING,
+        {"setting_type": "Audio", "setting_name": "AV Delay", "new_value": "0"},
+        "audio",
+        "av_delay",
+        0,
+    )
     await _test_service(
         hass,
         DOMAIN,
         "set_setting",
         SERVICE_UPDATE_SETTING,
         {"setting_type": "Audio", "setting_name": "EQ", "new_value": "Music"},
+        "audio",
+        "eq",
+        "Music",
     )
 
 
