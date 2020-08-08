@@ -1876,7 +1876,7 @@ raspyrfm-client==1.2.8
 recollect-waste==1.0.1
 
 # homeassistant.components.rainmachine
-regenmaschine==1.5.1
+regenmaschine==2.1.0
 
 # homeassistant.components.python_script
 restrictedpython==5.0
