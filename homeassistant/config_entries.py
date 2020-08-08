@@ -750,22 +750,42 @@ class ConfigEntries:
         data: dict = _UNDEF,
         options: dict = _UNDEF,
         system_options: dict = _UNDEF,
-    ) -> None:
-        """Update a config entry."""
-        if unique_id is not _UNDEF:
+    ) -> bool:
+        """Update a config entry.
+
+        If the entry was changed, the update_listeners are
+        fired and this function returns True
+
+        If the entry was not changed, the update_listeners are
+        not fired and this function returns False
+        """
+        changed = False
+
+        if unique_id is not _UNDEF and entry.unique_id != unique_id:
+            changed = True
             entry.unique_id = cast(Optional[str], unique_id)
 
-        if title is not _UNDEF:
+        if title is not _UNDEF and entry.title != title:
+            changed = True
             entry.title = cast(str, title)
 
-        if data is not _UNDEF:
+        if data is not _UNDEF and entry.data != data:  # type: ignore
+            changed = True
             entry.data = MappingProxyType(data)
 
-        if options is not _UNDEF:
+        if options is not _UNDEF and entry.options != options:  # type: ignore
+            changed = True
             entry.options = MappingProxyType(options)
 
-        if system_options is not _UNDEF:
+        if (
+            system_options is not _UNDEF
+            and entry.system_options.as_dict() != system_options
+        ):
+            changed = True
             entry.system_options.update(**system_options)
+
+        if not changed:
+            return False
 
         for listener_ref in entry.update_listeners:
             listener = listener_ref()
@@ -773,6 +793,8 @@ class ConfigEntries:
                 self.hass.async_create_task(listener(self.hass, entry))
 
         self._async_schedule_save()
+
+        return True
 
     async def async_forward_entry_setup(self, entry: ConfigEntry, domain: str) -> bool:
         """Forward the setup of an entry to a different component.
@@ -850,7 +872,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
     @callback
     def _abort_if_unique_id_configured(
-        self, updates: Optional[Dict[Any, Any]] = None
+        self, updates: Optional[Dict[Any, Any]] = None, reload_on_update: bool = True,
     ) -> None:
         """Abort if the unique ID is already configured."""
         assert self.hass
@@ -859,10 +881,14 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
         for entry in self._async_current_entries():
             if entry.unique_id == self.unique_id:
-                if updates is not None and not updates.items() <= entry.data.items():
-                    self.hass.config_entries.async_update_entry(
+                if updates is not None:
+                    changed = self.hass.config_entries.async_update_entry(
                         entry, data={**entry.data, **updates}
                     )
+                    if changed and reload_on_update:
+                        self.hass.async_create_task(
+                            self.hass.config_entries.async_reload(entry.entry_id)
+                        )
                 raise data_entry_flow.AbortFlow("already_configured")
 
     async def async_set_unique_id(
