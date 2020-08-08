@@ -5,7 +5,6 @@ SCAN_INTERVAL = timedelta(hours=1)
 DEBOUNCE_COOLDOWN = 1800  # Seconds
 
 DOMAIN = "smart_meter_texas"
-ICON = "mdi:counter"
 
 METER_NUMBER = "meter_number"
 ESIID = "electric_service_identifier"

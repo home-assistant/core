@@ -7,7 +7,7 @@ from homeassistant.const import CONF_ADDRESS, ENERGY_KILO_WATT_HOUR
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, ELECTRIC_METER, ESIID, ICON, METER_NUMBER
+from .const import DOMAIN, ELECTRIC_METER, ESIID, METER_NUMBER
 
 _LOGGER = logging.getLogger(__name__)
 
