@@ -48,16 +48,9 @@ async def test_flow_works(hass, mock_panel):
         "port": 1234,
     }
 
-    with patch(
-        "homeassistant.components.konnected.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.konnected.async_setup_entry", return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-        await hass.async_block_till_done()
-
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
     assert result["type"] == "create_entry"
     assert result["data"]["host"] == "1.2.3.4"
     assert result["data"]["port"] == 1234
@@ -66,8 +59,6 @@ async def test_flow_works(hass, mock_panel):
     assert result["data"]["default_options"] == config_flow.OPTIONS_SCHEMA(
         {config_flow.CONF_IO: {}}
     )
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_pro_flow_works(hass, mock_panel):
@@ -96,15 +87,9 @@ async def test_pro_flow_works(hass, mock_panel):
         "port": 1234,
     }
 
-    with patch(
-        "homeassistant.components.konnected.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.konnected.async_setup_entry", return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
     assert result["type"] == "create_entry"
     assert result["data"]["host"] == "1.2.3.4"
     assert result["data"]["port"] == 1234
@@ -113,8 +98,6 @@ async def test_pro_flow_works(hass, mock_panel):
     assert result["data"]["default_options"] == config_flow.OPTIONS_SCHEMA(
         {config_flow.CONF_IO: {}}
     )
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_ssdp(hass, mock_panel):
@@ -204,18 +187,10 @@ async def test_import_no_host_user_finish(hass, mock_panel):
     }
 
     # final confirmation
-    with patch(
-        "homeassistant.components.konnected.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.konnected.async_setup_entry", return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
     assert result["type"] == "create_entry"
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_import_ssdp_host_user_finish(hass, mock_panel):
@@ -285,18 +260,10 @@ async def test_import_ssdp_host_user_finish(hass, mock_panel):
     }
 
     # final confirmation
-    with patch(
-        "homeassistant.components.konnected.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.konnected.async_setup_entry", return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
     assert result["type"] == "create_entry"
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_ssdp_already_configured(hass, mock_panel):
@@ -387,21 +354,15 @@ async def test_ssdp_host_update(hass, mock_panel):
         "model": "Konnected Pro",
     }
 
-    with patch(
-        "homeassistant.components.konnected.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.konnected.async_setup_entry", return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": "ssdp"},
-            data={
-                "ssdp_location": "http://1.1.1.1:1234/Device.xml",
-                "manufacturer": config_flow.KONN_MANUFACTURER,
-                "modelName": config_flow.KONN_MODEL_PRO,
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": "ssdp"},
+        data={
+            "ssdp_location": "http://1.1.1.1:1234/Device.xml",
+            "manufacturer": config_flow.KONN_MANUFACTURER,
+            "modelName": config_flow.KONN_MODEL_PRO,
+        },
+    )
     assert result["type"] == "abort"
 
     # confirm the host value was updated, access_token was not
@@ -409,8 +370,6 @@ async def test_ssdp_host_update(hass, mock_panel):
     assert entry.data["host"] == "1.1.1.1"
     assert entry.data["port"] == 1234
     assert entry.data["access_token"] == "11223344556677889900"
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_import_existing_config(hass, mock_panel):
@@ -465,15 +424,9 @@ async def test_import_existing_config(hass, mock_panel):
     assert result["type"] == "form"
     assert result["step_id"] == "confirm"
 
-    with patch(
-        "homeassistant.components.konnected.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.konnected.async_setup_entry", return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
     assert result["type"] == "create_entry"
     assert result["data"] == {
         "host": "1.2.3.4",
@@ -536,8 +489,6 @@ async def test_import_existing_config(hass, mock_panel):
             ],
         },
     }
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_import_existing_config_entry(hass, mock_panel):
@@ -561,54 +512,42 @@ async def test_import_existing_config_entry(hass, mock_panel):
 
     # utilize a global access token this time
     hass.data[config_flow.DOMAIN] = {"access_token": "SUPERSECRETTOKEN"}
-
-    with patch(
-        "homeassistant.components.konnected.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.konnected.async_setup_entry", return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": "import"},
-            data={
-                "host": "1.2.3.4",
-                "port": 1234,
-                "id": "112233445566",
-                "default_options": {
-                    "blink": True,
-                    "discovery": True,
-                    "io": {
-                        "1": "Disabled",
-                        "10": "Binary Sensor",
-                        "11": "Disabled",
-                        "12": "Disabled",
-                        "2": "Binary Sensor",
-                        "3": "Disabled",
-                        "4": "Disabled",
-                        "5": "Disabled",
-                        "6": "Binary Sensor",
-                        "7": "Disabled",
-                        "8": "Disabled",
-                        "9": "Disabled",
-                        "alarm1": "Disabled",
-                        "alarm2_out2": "Disabled",
-                        "out": "Disabled",
-                        "out1": "Disabled",
-                    },
-                    "binary_sensors": [
-                        {"inverse": False, "type": "door", "zone": "2"},
-                        {
-                            "inverse": True,
-                            "type": "Window",
-                            "name": "winder",
-                            "zone": "6",
-                        },
-                        {"inverse": False, "type": "door", "zone": "10"},
-                    ],
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": "import"},
+        data={
+            "host": "1.2.3.4",
+            "port": 1234,
+            "id": "112233445566",
+            "default_options": {
+                "blink": True,
+                "discovery": True,
+                "io": {
+                    "1": "Disabled",
+                    "10": "Binary Sensor",
+                    "11": "Disabled",
+                    "12": "Disabled",
+                    "2": "Binary Sensor",
+                    "3": "Disabled",
+                    "4": "Disabled",
+                    "5": "Disabled",
+                    "6": "Binary Sensor",
+                    "7": "Disabled",
+                    "8": "Disabled",
+                    "9": "Disabled",
+                    "alarm1": "Disabled",
+                    "alarm2_out2": "Disabled",
+                    "out": "Disabled",
+                    "out1": "Disabled",
                 },
+                "binary_sensors": [
+                    {"inverse": False, "type": "door", "zone": "2"},
+                    {"inverse": True, "type": "Window", "name": "winder", "zone": "6"},
+                    {"inverse": False, "type": "door", "zone": "10"},
+                ],
             },
-        )
-        await hass.async_block_till_done()
+        },
+    )
 
     assert result["type"] == "abort"
 
@@ -622,8 +561,6 @@ async def test_import_existing_config_entry(hass, mock_panel):
         "model": "Konnected Pro",
         "extra": "something",
     }
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_import_pin_config(hass, mock_panel):
@@ -667,15 +604,9 @@ async def test_import_pin_config(hass, mock_panel):
     assert result["type"] == "form"
     assert result["step_id"] == "confirm"
 
-    with patch(
-        "homeassistant.components.konnected.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.konnected.async_setup_entry", return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
     assert result["type"] == "create_entry"
     assert result["data"] == {
         "host": "1.2.3.4",
@@ -727,8 +658,6 @@ async def test_import_pin_config(hass, mock_panel):
             ],
         },
     }
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_option_flow(hass, mock_panel):
