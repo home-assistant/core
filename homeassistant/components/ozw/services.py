@@ -79,30 +79,16 @@ class ZWaveServices:
 
         if value.type == ValueType.LIST:
             # accept either string from the list value OR the int value
-            if isinstance(selection, int):
-                if selection > value.max or selection < value.min:
-                    _LOGGER.error(
-                        "Value %s out of range for parameter %s (Min: %s Max: %s)",
-                        selection,
-                        param,
-                        value.min,
-                        value.max,
-                    )
-                    return
-                payload = int(selection)
+            for selected in value.value["List"]:
+                if selected["Label"] != selection and selected["Value"] != selection:
+                    continue
+                payload = int(selected["Value"])
 
-            # iterate list labels to get value
-            else:
-                for selected in value.value["List"]:
-                    if selected["Label"] != selection:
-                        continue
-                    payload = int(selected["Value"])
-
-                if payload is None:
-                    _LOGGER.error(
-                        "Invalid value %s for parameter %s", selection, param,
-                    )
-                    return
+            if payload is None:
+                _LOGGER.error(
+                    "Invalid value %s for parameter %s", selection, param,
+                )
+                return
 
         if value.type == ValueType.BUTTON:
             # Unsupported at this time

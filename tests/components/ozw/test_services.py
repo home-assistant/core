@@ -50,7 +50,7 @@ async def test_services(hass, light_data, sent_messages, light_msg, caplog):
         blocking=True,
     )
     assert len(sent_messages) == 3
-    assert "Value 12 out of range for parameter 1" in caplog.text
+    assert "Invalid value 12 for parameter 1" in caplog.text
 
     # Test set_config_parameter invalid list string
     await hass.services.async_call(
@@ -70,7 +70,7 @@ async def test_services(hass, light_data, sent_messages, light_msg, caplog):
         blocking=True,
     )
     assert len(sent_messages) == 3
-    assert "Value 12 out of range for parameter 1" in caplog.text
+    assert "Value 2147483657 out of range for parameter 3" in caplog.text
 
     # Test set_config_parameter short
     await hass.services.async_call(
