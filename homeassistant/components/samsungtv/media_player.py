@@ -104,7 +104,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._bridge.register_reauth_callback(self.access_denied)
 
     def access_denied(self):
-        """Access denied callbck."""
+        """Access denied callback."""
         LOGGER.debug("Access denied in getting remote object")
         self.hass.add_job(
             self.hass.config_entries.flow.async_init(
