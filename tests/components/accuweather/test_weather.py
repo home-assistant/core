@@ -126,9 +126,9 @@ async def test_manual_update_entity(hass):
 
     await async_setup_component(hass, "homeassistant", {})
     with patch(
-        "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions"
+        "accuweather.AccuWeather.async_get_current_conditions"
     ) as mock_current, patch(
-        "homeassistant.components.accuweather.AccuWeather.async_get_forecast"
+        "accuweather.AccuWeather.async_get_forecast"
     ) as mock_forecast:
         await hass.services.async_call(
             "homeassistant",
