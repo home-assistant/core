@@ -268,7 +268,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             except IndexError:
                 # TLV error, usually not in pairing mode
                 _LOGGER.exception("Pairing communication failed")
-                errors["base"] = "tlv_error"
+                errors["base"] = "protocol_error"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
                 errors["pairing_code"] = "pairing_failed"
