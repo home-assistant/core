@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.components.climate import SCAN_INTERVAL, ClimateEntity
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
@@ -14,9 +14,8 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_SUPPORTED_MODES, DATA_API, DATA_INFO, DOMAIN
+from .const import CONF_SUPPORTED_MODES, DATA_COORDINATOR, DATA_INFO, DOMAIN
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
@@ -43,20 +42,9 @@ def _build_entity(coordinator, unit_id, unit, supported_modes, info):
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the CoolMasterNet climate platform."""
     supported_modes = config_entry.data.get(CONF_SUPPORTED_MODES)
-    cool = hass.data[DOMAIN][config_entry.entry_id][DATA_API]
     info = hass.data[DOMAIN][config_entry.entry_id][DATA_INFO]
-    # async def _async_update_data():
-    #     return await cool.status()
 
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="CoolMasterNet",
-        update_method=cool.status,
-        update_interval=SCAN_INTERVAL,
-    )
-
-    await coordinator.async_refresh()
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
 
     all_devices = [
         _build_entity(coordinator, unit_id, unit, supported_modes, info)

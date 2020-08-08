@@ -11,6 +11,7 @@ from homeassistant.components.climate.const import (
 
 DATA_API = "api"
 DATA_INFO = "info"
+DATA_COORDINATOR = "coordinator"
 
 DOMAIN = "coolmaster"
 
