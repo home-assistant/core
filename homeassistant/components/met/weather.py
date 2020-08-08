@@ -1,5 +1,4 @@
 """Support for Met.no weather service."""
-from datetime import timedelta
 import logging
 from random import randrange
 
