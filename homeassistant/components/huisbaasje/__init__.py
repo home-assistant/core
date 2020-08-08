@@ -1,13 +1,12 @@
 """The Huisbaasje integration."""
 import asyncio
 
+from huisbaasje import Huisbaasje
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_ID
-
-from huisbaasje import Huisbaasje
+from homeassistant.core import HomeAssistant
 
 from .const import CONF_PASSWORD, CONF_USERNAME, DOMAIN
 
