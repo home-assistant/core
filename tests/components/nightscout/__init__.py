@@ -25,7 +25,7 @@ SERVER_STATUS = ServerStatus.new_from_json_dict(
 
 
 async def init_integration(hass) -> MockConfigEntry:
-    """Set up the Dexcom integration in Home Assistant."""
+    """Set up the Nightscout integration in Home Assistant."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "test.host"},)
     with patch(
         "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
@@ -42,7 +42,7 @@ async def init_integration(hass) -> MockConfigEntry:
 
 
 async def init_integration_unavailable(hass) -> MockConfigEntry:
-    """Set up the Dexcom integration in Home Assistant."""
+    """Set up the Nightscout integration in Home Assistant."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "test.host"},)
     with patch(
         "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
@@ -59,7 +59,7 @@ async def init_integration_unavailable(hass) -> MockConfigEntry:
 
 
 async def init_integration_empty_response(hass) -> MockConfigEntry:
-    """Set up the Dexcom integration in Home Assistant."""
+    """Set up the Nightscout integration in Home Assistant."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "test.host"},)
     with patch(
         "homeassistant.components.nightscout.NightscoutAPI.get_sgvs", return_value=[]
