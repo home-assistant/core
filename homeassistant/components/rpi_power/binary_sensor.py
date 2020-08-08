@@ -32,7 +32,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     elif os.path.isfile(SYSFILE_LEGACY):  # support older kernel
         under_voltage = UnderVoltage(legacy=True)
     else:
-        _LOGGER.critical(
+        _LOGGER.error(
             "Can't find the system class needed for this component, make sure that your kernel is recent and the hardware is supported."
         )
         return
