@@ -1,7 +1,7 @@
 """Support for the Dynalite networks."""
 
 import asyncio
-from typing import Any, Dict, Union
+from typing import Any, Dict, List, Union
 
 import voluptuous as vol
 
@@ -9,7 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components.cover import DEVICE_CLASSES_SCHEMA
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
@@ -197,6 +197,34 @@ async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
                 data=bridge_conf,
             )
         )
+
+    def get_bridges(host: str) -> List[DynaliteBridge]:
+        result = []
+        for entry_id in hass.data[DOMAIN]:
+            cur_bridge = hass.data[DOMAIN][entry_id]
+            if not host or cur_bridge.host == host:
+                result.append(cur_bridge)
+        return result
+
+    async def request_area_preset_service(service_call: ServiceCall):
+        LOGGER.error(
+            "XXX SERVICE %s %s %s",
+            service_call,
+            service_call.service,
+            service_call.data,
+        )
+        host = service_call.data.get(CONF_HOST, "")
+        bridges = get_bridges(host)
+        LOGGER.error("XXX SERVICE selected bridges = %s", bridges)
+        for bridge in bridges:
+            bridge.dynalite_devices.request_area_preset(service_call.data[CONF_AREA])
+
+    hass.services.async_register(
+        DOMAIN,
+        "request_area_preset",
+        request_area_preset_service,
+        vol.Schema({vol.Optional(CONF_HOST): cv.string, vol.Required(CONF_AREA): int}),
+    )
 
     return True
 
