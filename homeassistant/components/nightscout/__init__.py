@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, status.name)},
-        manufacturer="NighScout",
+        manufacturer="Nightscout Foundation",
         name=status.name,
         sw_version=status.version,
     )
