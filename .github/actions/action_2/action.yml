@@ -1,15 +1,17 @@
 name: 'setup_restore_python_and_pre_commit'
 description: 'Setup and restore Python environment with pre-commit cache'
 runs:
-  - name: Restore pre-commit environment from cache
-    id: cache-precommit
-    uses: actions/cache@v2
-    with:
-      path: ${{ env.PRE_COMMIT_HOME }}
-      key: |
-        ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
-  - name: Fail job if cache restore failed
-    if: steps.cache-venv.outputs.cache-hit != 'true'
-    run: |
-      echo "Failed to restore Python virtual environment from cache"
-      exit 1
+  using: "composite"
+  steps:
+    - name: Restore pre-commit environment from cache
+      id: cache-precommit
+      uses: actions/cache@v2
+      with:
+        path: ${{ env.PRE_COMMIT_HOME }}
+        key: |
+          ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+    - name: Fail job if cache restore failed
+      if: steps.cache-venv.outputs.cache-hit != 'true'
+      run: |
+        echo "Failed to restore Python virtual environment from cache"
+        exit 1

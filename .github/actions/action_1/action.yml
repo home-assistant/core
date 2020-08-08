@@ -1,23 +1,25 @@
 name: 'setup_and_restore_python'
 description: 'Setup and restore Python environment'
 runs:
-  - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-    uses: actions/setup-python@v2.1.1
-    id: python
-    with:
-      python-version: ${{ env.DEFAULT_PYTHON }}
-  - name: Restore base Python virtual environment
-    id: cache-venv
-    uses: actions/cache@v2
-    with:
-      path: venv
-      key: >-
-        ${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version
-        }}-${{ hashFiles('requirements.txt') }}-${{
-        hashFiles('requirements_test.txt') }}-${{
-        hashFiles('homeassistant/package_constraints.txt') }}
-  - name: Fail job if Python cache restore failed
-    if: steps.cache-venv.outputs.cache-hit != 'true'
-    run: |
-      echo "Failed to restore Python virtual environment from cache"
-      exit 1
+  using: "composite"
+  steps:
+    - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+      uses: actions/setup-python@v2.1.1
+      id: python
+      with:
+        python-version: ${{ env.DEFAULT_PYTHON }}
+    - name: Restore base Python virtual environment
+      id: cache-venv
+      uses: actions/cache@v2
+      with:
+        path: venv
+        key: >-
+          ${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version
+          }}-${{ hashFiles('requirements.txt') }}-${{
+          hashFiles('requirements_test.txt') }}-${{
+          hashFiles('homeassistant/package_constraints.txt') }}
+    - name: Fail job if Python cache restore failed
+      if: steps.cache-venv.outputs.cache-hit != 'true'
+      run: |
+        echo "Failed to restore Python virtual environment from cache"
+        exit 1
