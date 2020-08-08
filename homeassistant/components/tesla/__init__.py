@@ -153,7 +153,6 @@ async def async_setup_entry(hass, config_entry):
     )
     # Fetch initial data so we have data when entities subscribe
     entry_data = hass.data[DOMAIN][config_entry.entry_id] = {
-        "controller": controller,
         "coordinator": coordinator,
         "devices": defaultdict(list),
         DATA_LISTENER: [config_entry.add_update_listener(update_listener)],
@@ -164,7 +163,7 @@ async def async_setup_entry(hass, config_entry):
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
-    all_devices = entry_data["controller"].get_homeassistant_components()
+    all_devices = controller.get_homeassistant_components()
 
     if not all_devices:
         return False
@@ -202,7 +201,7 @@ async def async_unload_entry(hass, config_entry) -> bool:
 
 async def update_listener(hass, config_entry):
     """Update when config_entry options update."""
-    controller = hass.data[DOMAIN][config_entry.entry_id]["controller"]
+    controller = hass.data[DOMAIN][config_entry.entry_id]["coordinator"].controller
     old_update_interval = controller.update_interval
     controller.update_interval = config_entry.options.get(CONF_SCAN_INTERVAL)
     if old_update_interval != controller.update_interval:
