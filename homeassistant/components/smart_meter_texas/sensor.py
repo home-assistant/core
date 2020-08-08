@@ -41,11 +41,6 @@ class SmartMeterTexasSensor(Entity):
         return f"{ELECTRIC_METER} {self.meter.meter}"
 
     @property
-    def icon(self):
-        """Device Ice."""
-        return ICON
-
-    @property
     def unique_id(self):
         """Device Uniqueid."""
         return f"{METER_NUMBER}_{self.meter.meter}"
