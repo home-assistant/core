@@ -34,9 +34,9 @@ ATTR_SETTING_NAME = "setting_name"
 ATTR_NEW_VALUE = "new_value"
 
 UPDATE_SETTING_SCHEMA = {
-    vol.Required(ATTR_SETTING_TYPE): cv.string,
-    vol.Required(ATTR_SETTING_NAME): cv.string,
-    vol.Required(ATTR_NEW_VALUE): vol.Or(vol.Coerce(int), cv.string),
+    vol.Required(ATTR_SETTING_TYPE): vol.All(cv.string, vol.Lower, cv.slugify),
+    vol.Required(ATTR_SETTING_NAME): vol.All(cv.string, vol.Lower, cv.slugify),
+    vol.Required(ATTR_NEW_VALUE): vol.Any(vol.Coerce(int), cv.string),
 }
 
 CONF_ADDITIONAL_CONFIGS = "additional_configs"
