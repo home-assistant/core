@@ -773,7 +773,7 @@ class ConfigEntries:
             changed = True
             entry.data = MappingProxyType(data)
 
-        if options is not _UNDEF and dict(entry.options) != dict(options):
+        if options is not _UNDEF and entry.options != options:
             changed = True
             entry.options = MappingProxyType(options)
 
