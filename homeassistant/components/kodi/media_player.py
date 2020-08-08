@@ -639,7 +639,36 @@ class KodiEntity(MediaPlayerEntity):
         media_type_lower = media_type.lower()
 
         if media_type_lower == MEDIA_TYPE_CHANNEL:
-            await self._kodi.play_channel(int(media_id))
+            _LOGGER.debug("Searching channel...")
+            partial_match_channel_id = None
+            perfect_match_channel_id = None
+
+            channels = await self.async_get_channels()
+
+            for channel in channels.get("channels", []):
+                if media_id == channel["channelid"]:
+                    perfect_match_channel_id = channel["channelid"]
+                    continue
+
+                if media_type_lower == channel["label"].lower():
+                    perfect_match_channel_id = channel["channelid"]
+                    continue
+
+                if media_type_lower in channel["label"].lower():
+                    partial_match_channel_id = channel["channelid"]
+
+            if perfect_match_channel_id is not None:
+                _LOGGER.info(
+                    "Switching to channel <%s> with perfect match",
+                    perfect_match_channel_id,
+                )
+                await self._kodi.play_channel(perfect_match_channel_id)
+            elif partial_match_channel_id is not None:
+                _LOGGER.info(
+                    "Switching to channel <%s> with partial match",
+                    partial_match_channel_id,
+                )
+                await self._kodi.play_channel(partial_match_channel_id)
         elif media_type_lower == MEDIA_TYPE_PLAYLIST:
             await self._kodi.play_playlist(int(media_id))
         elif media_type_lower == "directory":
@@ -781,6 +810,12 @@ class KodiEntity(MediaPlayerEntity):
                 album_name,
             )
             return None
+
+    async def async_get_channels(self, channel_group_id="alltv"):
+        """Get channels list."""
+        return await self._connection.server.PVR.GetChannels(
+            {"channelgroupid": channel_group_id}
+        )
 
     @staticmethod
     def _find(key_word, words):
