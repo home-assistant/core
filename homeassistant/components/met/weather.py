@@ -86,14 +86,14 @@ class MetWeather(WeatherEntity):
         self.async_on_remove(
             self._coordinator.async_add_listener(self.async_write_ha_state)
         )
-        if self._config.get(CONF_TRACK_HOME):
+        if self._config.get(CONF_TRACK_HOME, False):
             self._unsub_track_home = self.hass.bus.async_listen(
                 EVENT_CORE_CONFIG_UPDATE, self._core_config_updated
             )
 
     async def _core_config_updated(self, _event):
         """Handle core config updated."""
-        if self._config.get(CONF_TRACK_HOME):
+        if self._config.get(CONF_TRACK_HOME, False):
             self.hass.data[DOMAIN]["home"].init_data()
             await self.async_update()
 
