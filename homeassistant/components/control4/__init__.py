@@ -23,6 +23,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     CONF_ACCOUNT,
+    CONF_ALARM_AWAY_MODE,
+    CONF_ALARM_CUSTOM_BYPASS_MODE,
+    CONF_ALARM_HOME_MODE,
+    CONF_ALARM_NIGHT_MODE,
     CONF_CONFIG_LISTENER,
     CONF_CONTROLLER_UNIQUE_ID,
     CONF_DIRECTOR,
@@ -30,6 +34,10 @@ from .const import (
     CONF_DIRECTOR_MODEL,
     CONF_DIRECTOR_SW_VERSION,
     CONF_DIRECTOR_TOKEN_EXPIRATION,
+    DEFAULT_ALARM_AWAY_MODE,
+    DEFAULT_ALARM_CUSTOM_BYPASS_MODE,
+    DEFAULT_ALARM_HOME_MODE,
+    DEFAULT_ALARM_NIGHT_MODE,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
@@ -108,6 +116,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Load options from config entry
     entry_data[CONF_SCAN_INTERVAL] = entry.options.get(
         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+    )
+    entry_data[CONF_ALARM_AWAY_MODE] = entry.options.get(
+        CONF_ALARM_AWAY_MODE, DEFAULT_ALARM_AWAY_MODE
+    )
+    entry_data[CONF_ALARM_HOME_MODE] = entry.options.get(
+        CONF_ALARM_HOME_MODE, DEFAULT_ALARM_HOME_MODE
+    )
+    entry_data[CONF_ALARM_NIGHT_MODE] = entry.options.get(
+        CONF_ALARM_NIGHT_MODE, DEFAULT_ALARM_NIGHT_MODE
+    )
+    entry_data[CONF_ALARM_CUSTOM_BYPASS_MODE] = entry.options.get(
+        CONF_ALARM_CUSTOM_BYPASS_MODE, DEFAULT_ALARM_CUSTOM_BYPASS_MODE
     )
 
     entry_data[CONF_CONFIG_LISTENER] = entry.add_update_listener(update_listener)

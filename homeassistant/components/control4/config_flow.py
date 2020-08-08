@@ -7,6 +7,7 @@ from pyControl4.account import C4Account
 from pyControl4.director import C4Director
 from pyControl4.error_handling import NotFound, Unauthorized
 import voluptuous as vol
+from voluptuous.validators import Any
 
 from homeassistant import config_entries, exceptions
 from homeassistant.const import (
@@ -19,7 +20,19 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import CONF_CONTROLLER_UNIQUE_ID, DEFAULT_SCAN_INTERVAL, MIN_SCAN_INTERVAL
+from .const import (
+    CONF_ALARM_AWAY_MODE,
+    CONF_ALARM_CUSTOM_BYPASS_MODE,
+    CONF_ALARM_HOME_MODE,
+    CONF_ALARM_NIGHT_MODE,
+    CONF_CONTROLLER_UNIQUE_ID,
+    DEFAULT_ALARM_AWAY_MODE,
+    DEFAULT_ALARM_CUSTOM_BYPASS_MODE,
+    DEFAULT_ALARM_HOME_MODE,
+    DEFAULT_ALARM_NIGHT_MODE,
+    DEFAULT_SCAN_INTERVAL,
+    MIN_SCAN_INTERVAL,
+)
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -150,6 +163,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
+        # TODO: figure out how to accept empty strings to disable modes
         data_schema = vol.Schema(
             {
                 vol.Optional(
@@ -158,6 +172,30 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                     ),
                 ): vol.All(cv.positive_int, vol.Clamp(min=MIN_SCAN_INTERVAL)),
+                vol.Optional(
+                    CONF_ALARM_AWAY_MODE,
+                    default=self.config_entry.options.get(
+                        CONF_ALARM_AWAY_MODE, DEFAULT_ALARM_AWAY_MODE
+                    ),
+                ): str,
+                vol.Optional(
+                    CONF_ALARM_HOME_MODE,
+                    default=self.config_entry.options.get(
+                        CONF_ALARM_HOME_MODE, DEFAULT_ALARM_HOME_MODE
+                    ),
+                ): str,
+                vol.Optional(
+                    CONF_ALARM_NIGHT_MODE,
+                    default=self.config_entry.options.get(
+                        CONF_ALARM_NIGHT_MODE, DEFAULT_ALARM_NIGHT_MODE
+                    ),
+                ): str,
+                vol.Optional(
+                    CONF_ALARM_CUSTOM_BYPASS_MODE,
+                    default=self.config_entry.options.get(
+                        CONF_ALARM_CUSTOM_BYPASS_MODE, DEFAULT_ALARM_CUSTOM_BYPASS_MODE
+                    ),
+                ): str,
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

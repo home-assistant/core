@@ -1,16 +1,22 @@
 """Platform for Control4 Alarm Control Panel."""
+import asyncio
 from datetime import timedelta
 import json
 import logging
 
 from pyControl4.alarm import C4SecurityPanel
 from pyControl4.error_handling import C4Exception
+import voluptuous
 
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
     AlarmControlPanelEntity,
+)
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
+    SUPPORT_ALARM_ARM_NIGHT,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -23,10 +29,19 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import Control4Entity, get_items_of_category
-from .const import CONF_DIRECTOR, CONTROL4_ENTITY_TYPE, DOMAIN
+from .const import (
+    CONF_ALARM_AWAY_MODE,
+    CONF_ALARM_CUSTOM_BYPASS_MODE,
+    CONF_ALARM_HOME_MODE,
+    CONF_ALARM_NIGHT_MODE,
+    CONF_DIRECTOR,
+    CONTROL4_ENTITY_TYPE,
+    DOMAIN,
+)
 from .director_utils import director_update_data_multi_variable
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,6 +74,15 @@ async def async_setup_entry(
     scan_interval = entry_data[CONF_SCAN_INTERVAL]
     _LOGGER.debug(
         "Scan interval = %s", scan_interval,
+    )
+
+    platform = entity_platform.current_platform.get()
+
+    # This will call Entity.set_sleep_timer(sleep_time=VALUE)
+    platform.async_register_entity_service(
+        "send_alarm_keystrokes",
+        {voluptuous.Required("keystrokes"): cv.string,},
+        "send_alarm_keystrokes",
     )
 
     async def async_update_data():
@@ -192,7 +216,15 @@ class Control4AlarmControlPanel(Control4Entity, AlarmControlPanelEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        flags = SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME
+        flags = 0
+        if self.entry_data[CONF_ALARM_AWAY_MODE] is not None:
+            flags |= SUPPORT_ALARM_ARM_AWAY
+        if self.entry_data[CONF_ALARM_HOME_MODE] is not None:
+            flags |= SUPPORT_ALARM_ARM_HOME
+        if self.entry_data[CONF_ALARM_NIGHT_MODE] is not None:
+            flags |= SUPPORT_ALARM_ARM_NIGHT
+        if self.entry_data[CONF_ALARM_CUSTOM_BYPASS_MODE] is not None:
+            flags |= SUPPORT_ALARM_ARM_CUSTOM_BYPASS
         return flags
 
     @property
@@ -246,14 +278,31 @@ class Control4AlarmControlPanel(Control4Entity, AlarmControlPanelEntity):
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
         c4_alarm = self.create_api_object()
-        await c4_alarm.setArmAway(code)
+        await c4_alarm.setArm(code, self.entry_data[CONF_ALARM_AWAY_MODE])
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
         c4_alarm = self.create_api_object()
-        await c4_alarm.setArmHome(code)
+        await c4_alarm.setArm(code, self.entry_data[CONF_ALARM_HOME_MODE])
+
+    async def async_alarm_arm_night(self, code=None):
+        """Send arm home command."""
+        c4_alarm = self.create_api_object()
+        await c4_alarm.setArm(code, self.entry_data[CONF_ALARM_NIGHT_MODE])
+
+    async def async_alarm_arm_custom_bypass(self, code=None):
+        """Send arm home command."""
+        c4_alarm = self.create_api_object()
+        await c4_alarm.setArm(code, self.entry_data[CONF_ALARM_CUSTOM_BYPASS_MODE])
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
         c4_alarm = self.create_api_object()
         await c4_alarm.setDisarm(code)
+
+    async def send_alarm_keystrokes(self, keystrokes):
+        """Send custom keystrokes."""
+        c4_alarm = self.create_api_object()
+        for key in keystrokes:
+            await c4_alarm.sendKeyPress(key)
+            await asyncio.sleep(5)
