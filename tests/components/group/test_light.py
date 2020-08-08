@@ -545,13 +545,11 @@ async def test_service_calls(hass):
     state = hass.states.get("light.ceiling_lights")
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 128
-    assert state.attributes[ATTR_EFFECT] == "Random"
     assert state.attributes[ATTR_RGB_COLOR] == (42, 255, 255)
 
     state = hass.states.get("light.kitchen_lights")
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 128
-    assert state.attributes[ATTR_EFFECT] == "Random"
     assert state.attributes[ATTR_RGB_COLOR] == (42, 255, 255)
 
 
