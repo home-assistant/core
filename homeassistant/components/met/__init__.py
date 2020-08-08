@@ -13,7 +13,9 @@ from homeassistant.const import (
     LENGTH_METERS,
 )
 from homeassistant.core import Config, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.distance import convert as convert_distance
 import homeassistant.util.dt as dt_util
 
