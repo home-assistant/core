@@ -3,14 +3,10 @@
   "name": "Smart Meter Texas",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smart_meter_texas",
-  "requirements": [
-    "smart-meter-texas==0.3.1"
-  ],
+  "requirements": ["smart-meter-texas==0.4.0"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
   "dependencies": [],
-  "codeowners": [
-    "@grahamwetzler"
-  ]
+  "codeowners": ["@grahamwetzler"]
 }
