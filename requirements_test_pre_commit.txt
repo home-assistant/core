@@ -9,3 +9,4 @@ isort==4.3.21
 pydocstyle==5.0.2
 pyupgrade==2.7.2
 yamllint==1.24.2
+yesqa==1.2.1
