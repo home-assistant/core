@@ -119,6 +119,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         except AuthenticationError:
             errors["base"] = "invalid_auth"
+            await self.async_set_unique_id(device.mac.hex())
             return await self.async_step_reset(errors=errors)
 
         except DeviceOfflineError as err:
@@ -138,10 +139,22 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 err_msg = str(err)
 
         else:
+            await self.async_set_unique_id(device.mac.hex())
+            if self.source == config_entries.SOURCE_IMPORT:
+                LOGGER.warning(
+                    "The %s at %s is ready to be configured. Please "
+                    "click Configuration in the sidebar and click "
+                    "Integrations. Then find the device there and click "
+                    "Configure to finish the setup",
+                    device.model,
+                    device.host[0],
+                )
+
             if device.is_locked:
                 return await self.async_step_unlock()
             return await self.async_step_finish()
 
+        await self.async_set_unique_id(device.mac.hex())
         LOGGER.error(
             "Failed to authenticate to the device at %s: %s", device.host[0], err_msg
         )
@@ -212,9 +225,6 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Choose a name for the device and create config entry."""
         device = self.device
         errors = {}
-
-        # Abort import already in progress.
-        await self.async_set_unique_id(device.mac.hex())
 
         # Abort reauthentication flow.
         self._abort_if_unique_id_configured(

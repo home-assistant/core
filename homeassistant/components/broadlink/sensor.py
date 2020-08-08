@@ -1,4 +1,6 @@
 """Support for Broadlink sensors."""
+import logging
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -8,7 +10,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
-from .helpers import deprecate_platform
+from .helpers import import_device
+
+_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_CELSIUS],
@@ -24,12 +28,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import the device.
+    """Import the device and deprecate platform.
 
     This is for backward compatibility.
     Do not use this method.
     """
-    deprecate_platform(hass, config[CONF_HOST], "sensor")
+    import_device(hass, config[CONF_HOST])
+    _LOGGER.warning(
+        "The sensor platform is deprecated, please remove it from your configuration"
+    )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

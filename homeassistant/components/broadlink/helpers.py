@@ -5,7 +5,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 
-from . import LOGGER
 from .const import DOMAIN
 
 
@@ -47,28 +46,3 @@ def import_device(hass, host):
             data={CONF_HOST: host},
         )
         hass.async_create_task(task)
-        return True
-    return False
-
-
-def deprecate_platform(hass, host, platform):
-    """Deprecate a platform."""
-    if import_device(hass, host):
-        LOGGER.error(
-            "The %s platform is deprecated. To set up the entities, "
-            "click Configuration in the sidebar and click Integrations. "
-            "If you see your device there, click Configure. Otherwise, "
-            "click + and enter a valid host. Follow the instructions to "
-            "complete the setup and remove this platform from your "
-            "configuration file when you are done",
-            platform,
-        )
-
-    else:
-        LOGGER.warning(
-            "The %s platform is deprecated. The device at %s is already "
-            "configured and the entities will be set up automatically. "
-            "Please remove this platform from your configuration file",
-            platform,
-            host,
-        )

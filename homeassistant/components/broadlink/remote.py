@@ -35,7 +35,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
-from .helpers import data_packet, deprecate_platform
+from .helpers import data_packet, import_device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,12 +74,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import the device.
+    """Import the device and deprecate platform.
 
     This is for backward compatibility.
     Do not use this method.
     """
-    deprecate_platform(hass, config[CONF_HOST], "remote")
+    import_device(hass, config[CONF_HOST])
+    _LOGGER.warning(
+        "The remote platform is deprecated, please remove it from your configuration"
+    )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
