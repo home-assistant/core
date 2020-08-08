@@ -43,10 +43,9 @@ repos:
     hooks:
       - id: isort
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.4.0
+    rev: v3.2.0
     hooks:
       - id: check-executables-have-shebangs
-        stages: [manual]
       - id: check-json
       - id: no-commit-to-branch
         args:
