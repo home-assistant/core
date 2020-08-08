@@ -13,10 +13,14 @@ class FloEntity(Entity):
     """A base class for Flo entities."""
 
     def __init__(
-        self, type: str, name: str, device: FloDeviceDataUpdateCoordinator, **kwargs
+        self,
+        entity_type: str,
+        name: str,
+        device: FloDeviceDataUpdateCoordinator,
+        **kwargs,
     ):
         """Init Flo entity."""
-        self._unique_id: str = f"{device.mac_address}_{type}"
+        self._unique_id: str = f"{device.mac_address}_{entity_type}"
         self._name: str = name
         self._device: FloDeviceDataUpdateCoordinator = device
         self._state: Any = None
