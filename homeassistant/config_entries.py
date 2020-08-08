@@ -769,16 +769,17 @@ class ConfigEntries:
             changed = True
             entry.title = cast(str, title)
 
-        if data is not _UNDEF and dict(entry.data) != dict(data):
+        if data is not _UNDEF and entry.data != data:  # type: ignore
             changed = True
             entry.data = MappingProxyType(data)
 
-        if options is not _UNDEF and entry.options != options:
+        if options is not _UNDEF and entry.options != options:  # type: ignore
             changed = True
             entry.options = MappingProxyType(options)
 
-        if system_options is not _UNDEF and entry.system_options.as_dict() != dict(
-            system_options
+        if (
+            system_options is not _UNDEF
+            and entry.system_options.as_dict() != system_options
         ):
             changed = True
             entry.system_options.update(**system_options)

@@ -1829,14 +1829,40 @@ async def test_updating_entry_with_and_without_changes(manager):
     assert manager.async_update_entry(entry) is False
     assert manager.async_update_entry(entry, data={"second": True}) is True
     assert manager.async_update_entry(entry, data={"second": True}) is False
+    assert (
+        manager.async_update_entry(entry, data={"second": True, "third": 456}) is True
+    )
+    assert (
+        manager.async_update_entry(entry, data={"second": True, "third": 456}) is False
+    )
     assert manager.async_update_entry(entry, options={"second": True}) is True
     assert manager.async_update_entry(entry, options={"second": True}) is False
+    assert (
+        manager.async_update_entry(entry, options={"second": True, "third": "123"})
+        is True
+    )
+    assert (
+        manager.async_update_entry(entry, options={"second": True, "third": "123"})
+        is False
+    )
     assert (
         manager.async_update_entry(entry, system_options={"disable_new_entities": True})
         is True
     )
     assert (
         manager.async_update_entry(entry, system_options={"disable_new_entities": True})
+        is False
+    )
+    assert (
+        manager.async_update_entry(
+            entry, system_options={"disable_new_entities": False}
+        )
+        is True
+    )
+    assert (
+        manager.async_update_entry(
+            entry, system_options={"disable_new_entities": False}
+        )
         is False
     )
     assert manager.async_update_entry(entry, title="thetitle") is False
