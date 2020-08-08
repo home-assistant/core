@@ -944,14 +944,14 @@ class TestConfig(unittest.TestCase):
 
             self.config.allowlist_external_dirs = {"/home", "/var"}
 
-            unvalid = [
+            invalid = [
                 "/hass/config/secure",
                 "/etc/passwd",
                 "/root/secure_file",
                 "/var/../etc/passwd",
                 test_file,
             ]
-            for path in unvalid:
+            for path in invalid:
                 assert not self.config.is_allowed_path(path)
 
             with pytest.raises(AssertionError):
