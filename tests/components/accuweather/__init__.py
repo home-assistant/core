@@ -28,14 +28,13 @@ async def init_integration(
         options=options,
     )
 
-    location = json.loads(load_fixture("accuweather/location_data.json"))
     current = json.loads(load_fixture("accuweather/current_conditions_data.json"))
     forecast = json.loads(load_fixture("accuweather/forecast_data.json"))
 
     if unsupported_icon:
         current["WeatherIcon"] = 999
 
-    with patch("accuweather.AccuWeather._async_get_data", return_value=location), patch(
+    with patch(
         "accuweather.AccuWeather.async_get_current_conditions", return_value=current,
     ), patch("accuweather.AccuWeather.async_get_forecast", return_value=forecast):
         entry.add_to_hass(hass)

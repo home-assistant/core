@@ -106,9 +106,6 @@ async def test_availability(hass):
 
     future = utcnow() + timedelta(minutes=120)
     with patch(
-        "accuweather.AccuWeather._async_get_data",
-        return_value=json.loads(load_fixture("accuweather/location_data.json")),
-    ), patch(
         "accuweather.AccuWeather.async_get_current_conditions",
         return_value=json.loads(
             load_fixture("accuweather/current_conditions_data.json")
