@@ -33,7 +33,7 @@ async def test_device(hass, config_entry, aioclient_mock_fixture, aioclient_mock
     assert device.device_type == "flo_device_v2"
     assert device.id == "98765"
     assert device.last_heard_from_time == "2020-07-24T12:45:00Z"
-    assert device.location_id == "12345abcde"
+    assert device.location_id == "mmnnoopp"
     assert device.hass is not None
     assert device.temperature == 70
     assert device.mac_address == "111111111111"

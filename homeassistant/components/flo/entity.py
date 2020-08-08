@@ -64,7 +64,6 @@ class FloEntity(Entity):
 
     async def async_update(self):
         """Update Flo entity."""
-        await self._device.async_request_refresh()
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""

@@ -29,6 +29,8 @@ async def validate_input(hass: core.HomeAssistant, data):
         )
     except RequestError:
         raise CannotConnect
+    except Exception:  # pylint: disable=broad-except
+        raise CannotConnect
 
     user_info = await api.user.get_info()
     a_location_id = user_info["locations"][0]["id"]

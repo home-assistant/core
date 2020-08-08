@@ -48,7 +48,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=f"{FLO_DOMAIN}-{device_id}",
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(seconds=60),
         )
 
     async def _async_update_data(self):
