@@ -3,10 +3,7 @@ from typing import Any, Dict, List
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    state as state_automation,
-)
+from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation.const import (
     CONF_IS_OFF,
     CONF_IS_ON,
@@ -27,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.entity_registry import async_entries_for_device
+from homeassistant.helpers.triggers import state as state_trigger
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import TRIGGER_BASE_SCHEMA
@@ -157,16 +155,16 @@ async def async_attach_trigger(
         from_state = "on"
         to_state = "off"
     state_config = {
-        state_automation.CONF_PLATFORM: "state",
-        state_automation.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        state_automation.CONF_FROM: from_state,
-        state_automation.CONF_TO: to_state,
+        state_trigger.CONF_PLATFORM: "state",
+        state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        state_trigger.CONF_FROM: from_state,
+        state_trigger.CONF_TO: to_state,
     }
     if CONF_FOR in config:
         state_config[CONF_FOR] = config[CONF_FOR]
 
-    state_config = state_automation.TRIGGER_SCHEMA(state_config)
-    return await state_automation.async_attach_trigger(
+    state_config = state_trigger.TRIGGER_SCHEMA(state_config)
+    return await state_trigger.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"
     )
 

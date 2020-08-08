@@ -6,6 +6,7 @@ import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.core import Context, callback
+from homeassistant.helpers.triggers import template as template_trigger
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -782,7 +783,7 @@ async def test_invalid_for_template_1(hass, calls):
         },
     )
 
-    with mock.patch.object(automation.template, "_LOGGER") as mock_logger:
+    with mock.patch.object(template_trigger, "_LOGGER") as mock_logger:
         hass.states.async_set("test.entity", "world")
         await hass.async_block_till_done()
         assert mock_logger.error.called

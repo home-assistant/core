@@ -1,7 +1,6 @@
 """Provides device triggers for sensors."""
 import voluptuous as vol
 
-import homeassistant.components.automation.numeric_state as numeric_state_automation
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
@@ -29,6 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_registry import async_entries_for_device
+from homeassistant.helpers.triggers import numeric_state as numeric_state_trigger
 
 from . import DOMAIN
 
@@ -100,18 +100,18 @@ TRIGGER_SCHEMA = vol.All(
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     numeric_state_config = {
-        numeric_state_automation.CONF_PLATFORM: "numeric_state",
-        numeric_state_automation.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        numeric_state_trigger.CONF_PLATFORM: "numeric_state",
+        numeric_state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
     }
     if CONF_ABOVE in config:
-        numeric_state_config[numeric_state_automation.CONF_ABOVE] = config[CONF_ABOVE]
+        numeric_state_config[numeric_state_trigger.CONF_ABOVE] = config[CONF_ABOVE]
     if CONF_BELOW in config:
-        numeric_state_config[numeric_state_automation.CONF_BELOW] = config[CONF_BELOW]
+        numeric_state_config[numeric_state_trigger.CONF_BELOW] = config[CONF_BELOW]
     if CONF_FOR in config:
         numeric_state_config[CONF_FOR] = config[CONF_FOR]
 
-    numeric_state_config = numeric_state_automation.TRIGGER_SCHEMA(numeric_state_config)
-    return await numeric_state_automation.async_attach_trigger(
+    numeric_state_config = numeric_state_trigger.TRIGGER_SCHEMA(numeric_state_config)
+    return await numeric_state_trigger.async_attach_trigger(
         hass, numeric_state_config, action, automation_info, platform_type="device"
     )
 

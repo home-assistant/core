@@ -3,11 +3,7 @@ from typing import List
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    numeric_state as numeric_state_automation,
-    state as state_automation,
-)
+from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
@@ -25,6 +21,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers.triggers import (
+    numeric_state as numeric_state_trigger,
+    state as state_trigger,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from . import (
@@ -182,12 +182,12 @@ async def async_attach_trigger(
             to_state = STATE_CLOSING
 
         state_config = {
-            state_automation.CONF_PLATFORM: "state",
+            state_trigger.CONF_PLATFORM: "state",
             CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-            state_automation.CONF_TO: to_state,
+            state_trigger.CONF_TO: to_state,
         }
-        state_config = state_automation.TRIGGER_SCHEMA(state_config)
-        return await state_automation.async_attach_trigger(
+        state_config = state_trigger.TRIGGER_SCHEMA(state_config)
+        return await state_trigger.async_attach_trigger(
             hass, state_config, action, automation_info, platform_type="device"
         )
 
@@ -200,13 +200,13 @@ async def async_attach_trigger(
     value_template = f"{{{{ state.attributes.{position} }}}}"
 
     numeric_state_config = {
-        numeric_state_automation.CONF_PLATFORM: "numeric_state",
-        numeric_state_automation.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        numeric_state_automation.CONF_BELOW: max_pos,
-        numeric_state_automation.CONF_ABOVE: min_pos,
-        numeric_state_automation.CONF_VALUE_TEMPLATE: value_template,
+        numeric_state_trigger.CONF_PLATFORM: "numeric_state",
+        numeric_state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        numeric_state_trigger.CONF_BELOW: max_pos,
+        numeric_state_trigger.CONF_ABOVE: min_pos,
+        numeric_state_trigger.CONF_VALUE_TEMPLATE: value_template,
     }
-    numeric_state_config = numeric_state_automation.TRIGGER_SCHEMA(numeric_state_config)
-    return await numeric_state_automation.async_attach_trigger(
+    numeric_state_config = numeric_state_trigger.TRIGGER_SCHEMA(numeric_state_config)
+    return await numeric_state_trigger.async_attach_trigger(
         hass, numeric_state_config, action, automation_info, platform_type="device"
     )

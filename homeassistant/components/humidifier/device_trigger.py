@@ -3,10 +3,7 @@ from typing import List
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    numeric_state as numeric_state_automation,
-)
+from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import (
     TRIGGER_BASE_SCHEMA,
     toggle_entity,
@@ -24,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers.triggers import numeric_state as numeric_state_trigger
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
@@ -81,9 +79,9 @@ async def async_attach_trigger(
 
     if trigger_type == "target_humidity_changed":
         numeric_state_config = {
-            numeric_state_automation.CONF_PLATFORM: "numeric_state",
-            numeric_state_automation.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-            numeric_state_automation.CONF_VALUE_TEMPLATE: "{{ state.attributes.humidity }}",
+            numeric_state_trigger.CONF_PLATFORM: "numeric_state",
+            numeric_state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+            numeric_state_trigger.CONF_VALUE_TEMPLATE: "{{ state.attributes.humidity }}",
         }
 
         if CONF_ABOVE in config:
@@ -93,10 +91,10 @@ async def async_attach_trigger(
         if CONF_FOR in config:
             numeric_state_config[CONF_FOR] = config[CONF_FOR]
 
-        numeric_state_config = numeric_state_automation.TRIGGER_SCHEMA(
+        numeric_state_config = numeric_state_trigger.TRIGGER_SCHEMA(
             numeric_state_config
         )
-        return await numeric_state_automation.async_attach_trigger(
+        return await numeric_state_trigger.async_attach_trigger(
             hass, numeric_state_config, action, automation_info, platform_type="device"
         )
 
