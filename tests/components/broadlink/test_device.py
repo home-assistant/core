@@ -9,7 +9,7 @@ from homeassistant.setup import async_setup_component
 
 from . import pick_device
 
-from tests.async_mock import patch
+from tests.async_mock import AsyncMock, MagicMock, patch
 
 
 async def test_device_setup(hass):
@@ -85,4 +85,23 @@ async def test_device_setup_os_error(hass):
     with patch("broadlink.gendevice", return_value=mock_api), pytest.raises(
         ConfigEntryNotReady
     ):
+        await device_entry.async_setup()
+
+
+async def test_device_setup_update_failed(hass):
+    """Test we handle an update failure at startup."""
+    device = pick_device(1)
+    mock_api = device.get_mock_api()
+    mock_entry = device.get_mock_entry()
+    device_entry = BroadlinkDevice(hass, mock_entry)
+    await async_setup_component(hass, DOMAIN, {})
+
+    mock_update_manager = MagicMock()
+    mock_update_manager.coordinator.last_update_success = False
+    mock_update_manager.coordinator.async_refresh = AsyncMock()
+
+    with patch("broadlink.gendevice", return_value=mock_api), patch(
+        "homeassistant.components.broadlink.device.get_update_manager",
+        return_value=mock_update_manager,
+    ), pytest.raises(ConfigEntryNotReady):
         await device_entry.async_setup()
