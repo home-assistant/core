@@ -95,7 +95,7 @@ async def test_availability(hass):
 
     future = utcnow() + timedelta(minutes=60)
     with patch(
-        "accuweather.AccuWeather._async_get_data", side_effect=ConnectionError()
+        "homeassistant.components.accuweather.AccuWeather._async_get_data", side_effect=ConnectionError()
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -106,7 +106,7 @@ async def test_availability(hass):
 
     future = utcnow() + timedelta(minutes=120)
     with patch(
-        "accuweather.AccuWeather.async_get_current_conditions",
+        "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
         return_value=json.loads(
             load_fixture("accuweather/current_conditions_data.json")
         ),
@@ -126,9 +126,9 @@ async def test_manual_update_entity(hass):
 
     await async_setup_component(hass, "homeassistant", {})
     with patch(
-        "accuweather.AccuWeather.async_get_current_conditions"
+        "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions"
     ) as mock_current, patch(
-        "accuweather.AccuWeather.async_get_forecast"
+        "homeassistant.components.accuweather.AccuWeather.async_get_forecast"
     ) as mock_forecast:
         await hass.services.async_call(
             "homeassistant",

@@ -546,7 +546,7 @@ async def test_availability(hass):
 
     future = utcnow() + timedelta(minutes=60)
     with patch(
-        "accuweather.AccuWeather.async_get_current_conditions",
+        "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
         side_effect=ConnectionError(),
     ):
         async_fire_time_changed(hass, future)
@@ -558,7 +558,7 @@ async def test_availability(hass):
 
     future = utcnow() + timedelta(minutes=120)
     with patch(
-        "accuweather.AccuWeather.async_get_current_conditions",
+        "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
         return_value=json.loads(
             load_fixture("accuweather/current_conditions_data.json")
         ),
