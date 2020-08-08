@@ -205,10 +205,20 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Get the MAC address to use as the unique ID for the config flow
             if not self.device_id:
-                network_interfaces = await device_mgmt.GetNetworkInterfaces()
-                for interface in network_interfaces:
-                    if interface.Enabled:
-                        self.device_id = interface.Info.HwAddress
+                try:
+                    network_interfaces = await device_mgmt.GetNetworkInterfaces()
+                    for interface in network_interfaces:
+                        if interface.Enabled:
+                            self.device_id = interface.Info.HwAddress
+                except Fault as fault:
+                    if "not implemented" not in fault.message:
+                        raise fault
+
+                    LOGGER.debug(
+                        "Couldn't get network interfaces from ONVIF deivice '%s'. Error: %s",
+                        self.onvif_config[CONF_NAME],
+                        fault,
+                    )
 
             # If no network interfaces are exposed, fallback to serial number
             if not self.device_id:

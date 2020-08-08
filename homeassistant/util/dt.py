@@ -1,7 +1,7 @@
 """Helper methods to handle the time in Home Assistant."""
 import datetime as dt
 import re
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Union, cast
 
 import ciso8601
 import pytz
@@ -176,7 +176,6 @@ def parse_time(time_str: str) -> Optional[dt.time]:
         return None
 
 
-# Found in this gist: https://gist.github.com/zhangsen/1199964
 def get_age(date: dt.datetime) -> str:
     """
     Take a datetime and return its "age" as a string.
@@ -193,33 +192,21 @@ def get_age(date: dt.datetime) -> str:
             return f"1 {unit}"
         return f"{number:d} {unit}s"
 
-    def q_n_r(first: int, second: int) -> Tuple[int, int]:
-        """Return quotient and remaining."""
-        return first // second, first % second
+    delta = (now() - date).total_seconds()
+    rounded_delta = round(delta)
 
-    delta = now() - date
-    day = delta.days
-    second = delta.seconds
+    units = ["second", "minute", "hour", "day", "month"]
+    factors = [60, 60, 24, 30, 12]
+    selected_unit = "year"
 
-    year, day = q_n_r(day, 365)
-    if year > 0:
-        return formatn(year, "year")
+    for i, next_factor in enumerate(factors):
+        if rounded_delta < next_factor:
+            selected_unit = units[i]
+            break
+        delta /= next_factor
+        rounded_delta = round(delta)
 
-    month, day = q_n_r(day, 30)
-    if month > 0:
-        return formatn(month, "month")
-    if day > 0:
-        return formatn(day, "day")
-
-    hour, second = q_n_r(second, 3600)
-    if hour > 0:
-        return formatn(hour, "hour")
-
-    minute, second = q_n_r(second, 60)
-    if minute > 0:
-        return formatn(minute, "minute")
-
-    return formatn(second, "second")
+    return formatn(rounded_delta, selected_unit)
 
 
 def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> List[int]:

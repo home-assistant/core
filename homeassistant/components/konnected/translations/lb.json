@@ -20,8 +20,8 @@
             },
             "user": {
                 "data": {
-                    "host": "Konnected Apparat IP Adress",
-                    "port": "Konnected Apparat Port"
+                    "host": "IP Adress",
+                    "port": "Port"
                 },
                 "description": "Informatioune vum Konnected Panel aginn."
             }

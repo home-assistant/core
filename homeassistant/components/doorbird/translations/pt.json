@@ -3,7 +3,9 @@
         "step": {
             "user": {
                 "data": {
-                    "name": "Nome do dispositivo"
+                    "host": "Servidor",
+                    "name": "Nome do dispositivo",
+                    "password": "Palavra-passe"
                 }
             }
         }

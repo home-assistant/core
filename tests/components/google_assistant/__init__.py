@@ -167,6 +167,8 @@ DEMO_DEVICES = [
             "action.devices.traits.OnOff",
             "action.devices.traits.Volume",
             "action.devices.traits.Modes",
+            "action.devices.traits.TransportControl",
+            "action.devices.traits.MediaState",
         ],
         "type": "action.devices.types.SETTOP",
         "willReportState": False,
@@ -178,6 +180,8 @@ DEMO_DEVICES = [
             "action.devices.traits.OnOff",
             "action.devices.traits.Volume",
             "action.devices.traits.Modes",
+            "action.devices.traits.TransportControl",
+            "action.devices.traits.MediaState",
         ],
         "type": "action.devices.types.SETTOP",
         "willReportState": False,
@@ -185,7 +189,13 @@ DEMO_DEVICES = [
     {
         "id": "media_player.lounge_room",
         "name": {"name": "Lounge room"},
-        "traits": ["action.devices.traits.OnOff", "action.devices.traits.Modes"],
+        "traits": [
+            "action.devices.traits.InputSelector",
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Modes",
+            "action.devices.traits.TransportControl",
+            "action.devices.traits.MediaState",
+        ],
         "type": "action.devices.types.SETTOP",
         "willReportState": False,
     },
@@ -196,6 +206,8 @@ DEMO_DEVICES = [
             "action.devices.traits.OnOff",
             "action.devices.traits.Volume",
             "action.devices.traits.Modes",
+            "action.devices.traits.TransportControl",
+            "action.devices.traits.MediaState",
         ],
         "type": "action.devices.types.SETTOP",
         "willReportState": False,
@@ -217,7 +229,10 @@ DEMO_DEVICES = [
     {
         "id": "climate.hvac",
         "name": {"name": "Hvac"},
-        "traits": ["action.devices.traits.TemperatureSetting"],
+        "traits": [
+            "action.devices.traits.TemperatureSetting",
+            "action.devices.traits.FanSpeed",
+        ],
         "type": "action.devices.types.THERMOSTAT",
         "willReportState": False,
         "attributes": {
@@ -235,9 +250,46 @@ DEMO_DEVICES = [
     {
         "id": "climate.ecobee",
         "name": {"name": "Ecobee"},
-        "traits": ["action.devices.traits.TemperatureSetting"],
+        "traits": [
+            "action.devices.traits.TemperatureSetting",
+            "action.devices.traits.FanSpeed",
+        ],
         "type": "action.devices.types.THERMOSTAT",
         "willReportState": False,
+    },
+    {
+        "id": "humidifier.humidifier",
+        "name": {"name": "Humidifier"},
+        "traits": [
+            "action.devices.traits.HumiditySetting",
+            "action.devices.traits.OnOff",
+        ],
+        "type": "action.devices.types.HUMIDIFIER",
+        "willReportState": False,
+        "attributes": {"humiditySetpointRange": {"minPercent": 0, "maxPercent": 100}},
+    },
+    {
+        "id": "humidifier.dehumidifier",
+        "name": {"name": "Dehumidifier"},
+        "traits": [
+            "action.devices.traits.HumiditySetting",
+            "action.devices.traits.OnOff",
+        ],
+        "type": "action.devices.types.DEHUMIDIFIER",
+        "willReportState": False,
+        "attributes": {"humiditySetpointRange": {"minPercent": 0, "maxPercent": 100}},
+    },
+    {
+        "id": "humidifier.hygrostat",
+        "name": {"name": "Hygrostat"},
+        "traits": [
+            "action.devices.traits.HumiditySetting",
+            "action.devices.traits.Modes",
+            "action.devices.traits.OnOff",
+        ],
+        "type": "action.devices.types.HUMIDIFIER",
+        "willReportState": False,
+        "attributes": {"humiditySetpointRange": {"minPercent": 0, "maxPercent": 100}},
     },
     {
         "id": "lock.front_door",

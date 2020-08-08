@@ -60,10 +60,7 @@ class TestBOMWeatherSensor(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.config = VALID_CONFIG
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     @patch("requests.get", side_effect=mocked_requests)
     def test_setup(self, mock_get):

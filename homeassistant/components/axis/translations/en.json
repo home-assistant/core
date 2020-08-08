@@ -24,5 +24,15 @@
                 "title": "Set up Axis device"
             }
         }
+    },
+    "options": {
+        "step": {
+            "configure_stream": {
+                "data": {
+                    "stream_profile": "Select stream profile to use"
+                },
+                "title": "Axis device video stream options"
+            }
+        }
     }
 }

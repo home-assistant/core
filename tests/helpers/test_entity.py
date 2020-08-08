@@ -6,11 +6,9 @@ import threading
 
 import pytest
 
-from homeassistant.config import DATA_CUSTOMIZE
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_HIDDEN, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE
 from homeassistant.core import Context
 from homeassistant.helpers import entity, entity_registry
-from homeassistant.helpers.entity_values import EntityValues
 
 from tests.async_mock import MagicMock, PropertyMock, patch
 from tests.common import get_test_home_assistant, mock_registry
@@ -88,21 +86,6 @@ class TestHelpersEntity:
     def teardown_method(self, method):
         """Stop everything that was started."""
         self.hass.stop()
-
-    def test_default_hidden_not_in_attributes(self):
-        """Test that the default hidden property is set to False."""
-        assert ATTR_HIDDEN not in self.hass.states.get(self.entity.entity_id).attributes
-
-    def test_overwriting_hidden_property_to_true(self):
-        """Test we can overwrite hidden property to True."""
-        self.hass.data[DATA_CUSTOMIZE] = EntityValues(
-            {self.entity.entity_id: {ATTR_HIDDEN: True}}
-        )
-        self.entity.schedule_update_ha_state()
-        self.hass.block_till_done()
-
-        state = self.hass.states.get(self.entity.entity_id)
-        assert state.attributes.get(ATTR_HIDDEN)
 
     def test_generate_entity_id_given_hass(self):
         """Test generating an entity id given hass object."""

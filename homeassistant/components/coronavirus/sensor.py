@@ -51,9 +51,14 @@ class CoronavirusSensor(Entity):
     def state(self):
         """State of the sensor."""
         if self.country == OPTION_WORLDWIDE:
-            return sum(
-                getattr(case, self.info_type) for case in self.coordinator.data.values()
-            )
+            sum_cases = 0
+            for case in self.coordinator.data.values():
+                value = getattr(case, self.info_type)
+                if value is None:
+                    continue
+                sum_cases += value
+
+            return sum_cases
 
         return getattr(self.coordinator.data[self.country], self.info_type)
 

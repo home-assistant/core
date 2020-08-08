@@ -30,7 +30,10 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change, track_point_in_time
+from homeassistant.helpers.event import (
+    async_track_state_change_event,
+    track_point_in_time,
+)
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -422,8 +425,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
-        async_track_state_change(
-            self.hass, self.entity_id, self._async_state_changed_listener
+        async_track_state_change_event(
+            self.hass, [self.entity_id], self._async_state_changed_listener
         )
 
         async def message_received(msg):
@@ -444,8 +447,11 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
             self.hass, self._command_topic, message_received, self._qos
         )
 
-    async def _async_state_changed_listener(self, entity_id, old_state, new_state):
+    async def _async_state_changed_listener(self, event):
         """Publish state change to MQTT."""
+        new_state = event.data.get("new_state")
+        if new_state is None:
+            return
         mqtt.async_publish(
             self.hass, self._state_topic, new_state.state, self._qos, True
         )

@@ -23,5 +23,16 @@
                 "title": "Accedi con l'account Blink"
             }
         }
+    },
+    "options": {
+        "step": {
+            "simple_options": {
+                "data": {
+                    "scan_interval": "Intervallo di scansione (secondi)"
+                },
+                "description": "Configurare l'integrazione di Blink",
+                "title": "Opzioni di Blink"
+            }
+        }
     }
 }

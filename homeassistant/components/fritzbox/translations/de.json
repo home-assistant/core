@@ -20,7 +20,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host oder IP-Adresse",
+                    "host": "Host",
                     "password": "Passwort",
                     "username": "Benutzername"
                 },

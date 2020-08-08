@@ -11,7 +11,7 @@
                     "app_id": "App ID",
                     "app_secret": "Schl\u00ebssel"
                 },
-                "description": "Applikatioun's ID an Schl\u00ebssel vum <a href=\"https://my.starline.ru/developer\" target=\"_blank\">StarLine Developpeur's Kont</a>",
+                "description": "Applikatioun's ID an Schl\u00ebssel vum [StarLine Developpeur's Kont](https://my.starline.ru/developer)",
                 "title": "Login Informatioune vun der Applikatioun"
             },
             "auth_captcha": {

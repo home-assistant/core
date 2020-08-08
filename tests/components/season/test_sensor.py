@@ -45,10 +45,7 @@ class TestSeason(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_season_should_be_summer_northern_astronomical(self):
         """Test that season should be summer."""

@@ -155,7 +155,7 @@ class IslamicPrayerClient:
             self.available = True
         except (exceptions.InvalidResponseError, ConnError):
             self.available = False
-            _LOGGER.debug("Error retrieving prayer times.")
+            _LOGGER.debug("Error retrieving prayer times")
             async_call_later(self.hass, 60, self.async_update)
             return
 
@@ -165,7 +165,7 @@ class IslamicPrayerClient:
             )
         await self.async_schedule_future_update()
 
-        _LOGGER.debug("New prayer times retrieved. Updating sensors.")
+        _LOGGER.debug("New prayer times retrieved. Updating sensors")
         async_dispatcher_send(self.hass, DATA_UPDATED)
 
     async def async_setup(self):

@@ -24,5 +24,15 @@
       "link_local_address": "Link local addresses are not supported",
       "not_axis_device": "Discovered device not an Axis device"
     }
+  },
+  "options": {
+    "step": {
+      "configure_stream": {
+        "data": {
+          "stream_profile": "Select stream profile to use"
+        },
+        "title": "Axis device video stream options"
+      }
+    }
   }
 }

@@ -20,7 +20,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -128,7 +128,7 @@ class HistoryStatsSensor(Entity):
                 self.async_schedule_update_ha_state(True)
 
             force_refresh()
-            async_track_state_change(self.hass, self._entity_id, force_refresh)
+            async_track_state_change_event(self.hass, [self._entity_id], force_refresh)
 
         # Delay first refresh to keep startup fast
         hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_refresh)

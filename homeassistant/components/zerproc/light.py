@@ -10,7 +10,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
-    Light,
+    LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -95,7 +95,7 @@ async def async_setup_entry(
     async_track_time_interval(hass, discover, DISCOVERY_INTERVAL)
 
 
-class ZerprocLight(Light):
+class ZerprocLight(LightEntity):
     """Representation of an Zerproc Light."""
 
     def __init__(self, light):

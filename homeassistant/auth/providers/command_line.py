@@ -75,7 +75,7 @@ class CommandLineAuthProvider(AuthProvider):
 
         if process.returncode != 0:
             _LOGGER.error(
-                "User %r failed to authenticate, command exited with code %d.",
+                "User %r failed to authenticate, command exited with code %d",
                 username,
                 process.returncode,
             )

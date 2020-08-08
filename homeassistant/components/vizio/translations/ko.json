@@ -7,8 +7,8 @@
         "error": {
             "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
             "complete_pairing_failed": "\ud398\uc5b4\ub9c1\uc744 \uc644\ub8cc\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4. \ub2e4\uc2dc \uc81c\ucd9c\ud558\uae30 \uc804\uc5d0 \uc785\ub825\ud55c PIN \uc774 \uc62c\ubc14\ub978\uc9c0, TV \uc758 \uc804\uc6d0\uc774 \ucf1c\uc838 \uc788\uace0 \ub124\ud2b8\uc6cc\ud06c\uc5d0 \uc5f0\uacb0\ub418\uc5b4 \uc788\ub294\uc9c0 \ud655\uc778\ud574\uc8fc\uc138\uc694.",
-            "host_exists": "\uc124\uc815\ub41c \ud638\uc2a4\ud2b8\uc758 VIZIO \uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
-            "name_exists": "\uc124\uc815\ub41c \uc774\ub984\uc758 VIZIO \uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+            "host_exists": "\uc124\uc815\ub41c \ud638\uc2a4\ud2b8\uc758 VIZIO SmartCast \uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "name_exists": "\uc124\uc815\ub41c \uc774\ub984\uc758 VIZIO SmartCast \uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
         },
         "step": {
             "pair_tv": {
@@ -23,7 +23,7 @@
                 "title": "\ud398\uc5b4\ub9c1 \uc644\ub8cc"
             },
             "pairing_complete_import": {
-                "description": "VIZIO SmartCast TV \uac00 Home Assistant \uc5d0 \uc5f0\uacb0\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \n\n\uc561\uc138\uc2a4 \ud1a0\ud070\uc740 '**{access_token}**' \uc785\ub2c8\ub2e4.",
+                "description": "VIZIO SmartCast \uae30\uae30\uac00 Home Assistant \uc5d0 \uc5f0\uacb0\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \n\n\uc561\uc138\uc2a4 \ud1a0\ud070\uc740 '**{access_token}**' \uc785\ub2c8\ub2e4.",
                 "title": "\ud398\uc5b4\ub9c1 \uc644\ub8cc"
             },
             "user": {
@@ -34,7 +34,7 @@
                     "name": "\uc774\ub984"
                 },
                 "description": "\uc561\uc138\uc2a4 \ud1a0\ud070\uc740 TV \uc5d0\ub9cc \ud544\uc694\ud569\ub2c8\ub2e4. TV \ub97c \uad6c\uc131\ud558\uace0 \uc788\uace0 \uc544\uc9c1 \uc561\uc138\uc2a4 \ud1a0\ud070\uc774 \uc5c6\ub294 \uacbd\uc6b0 \ud398\uc5b4\ub9c1 \uacfc\uc815\uc744 \uc9c4\ud589\ud558\ub824\uba74 \ube44\uc6cc\ub450\uc138\uc694.",
-                "title": "VIZIO SmartCast \uae30\uae30 \uc124\uc815\ud558\uae30"
+                "title": "VIZIO SmartCast \uae30\uae30"
             }
         }
     },
@@ -47,7 +47,7 @@
                     "volume_step": "\ubcfc\ub968 \ub2e8\uacc4 \ud06c\uae30"
                 },
                 "description": "\uc2a4\ub9c8\ud2b8 TV \uac00 \uc788\ub294 \uacbd\uc6b0 \uc120\ud0dd\uc0ac\ud56d\uc73c\ub85c \uc18c\uc2a4 \ubaa9\ub85d\uc5d0 \ud3ec\ud568 \ub610\ub294 \uc81c\uc678\ud560 \uc571\uc744 \uc120\ud0dd\ud558\uc5ec \uc18c\uc2a4 \ubaa9\ub85d\uc744 \ud544\ud130\ub9c1\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4.",
-                "title": "VIZIO SmartCast \uc635\uc158 \uc5c5\ub370\uc774\ud2b8\ud558\uae30"
+                "title": "VIZIO SmartCast \uae30\uae30 \uc635\uc158 \uc5c5\ub370\uc774\ud2b8\ud558\uae30"
             }
         }
     }

@@ -472,6 +472,16 @@ class Thermostat(ClimateEntity):
         """Return true if aux heater."""
         return "auxHeat" in self.thermostat["equipmentStatus"]
 
+    async def async_turn_aux_heat_on(self) -> None:
+        """Turn auxiliary heater on."""
+        if not self.is_aux_heat:
+            _LOGGER.warning("# Changing aux heat is not supported")
+
+    async def async_turn_aux_heat_off(self) -> None:
+        """Turn auxiliary heater off."""
+        if self.is_aux_heat:
+            _LOGGER.warning("# Changing aux heat is not supported")
+
     def set_preset_mode(self, preset_mode):
         """Activate a preset."""
         if preset_mode == self.preset_mode:

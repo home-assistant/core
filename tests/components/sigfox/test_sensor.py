@@ -39,10 +39,7 @@ class TestSigfoxSensor(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_invalid_credentials(self):
         """Test for invalid credentials."""

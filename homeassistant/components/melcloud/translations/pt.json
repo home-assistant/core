@@ -1,9 +1,13 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Integra\u00e7\u00e3o com o MELCloud j\u00e1 configurada para este email. O token de acesso foi atualizado."
+        },
         "step": {
             "user": {
                 "data": {
-                    "password": "Palavra-passe MELCloud"
+                    "password": "Palavra-passe MELCloud",
+                    "username": "Email"
                 }
             }
         }

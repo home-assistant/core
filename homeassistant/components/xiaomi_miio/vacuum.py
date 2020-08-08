@@ -1,5 +1,4 @@
 """Support for the Xiaomi vacuum cleaner robot."""
-import asyncio
 from functools import partial
 import logging
 
@@ -27,19 +26,14 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_TOKEN,
-    STATE_OFF,
-    STATE_ON,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON
+from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.util.dt import as_utc
 
 from .const import (
-    DOMAIN,
+    SERVICE_CLEAN_SEGMENT,
     SERVICE_CLEAN_ZONE,
+    SERVICE_GOTO,
     SERVICE_MOVE_REMOTE_CONTROL,
     SERVICE_MOVE_REMOTE_CONTROL_STEP,
     SERVICE_START_REMOTE_CONTROL,
@@ -80,69 +74,7 @@ ATTR_RC_VELOCITY = "velocity"
 ATTR_STATUS = "status"
 ATTR_ZONE_ARRAY = "zone"
 ATTR_ZONE_REPEATER = "repeats"
-
-VACUUM_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids})
-
-SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend(
-    {
-        vol.Optional(ATTR_RC_VELOCITY): vol.All(
-            vol.Coerce(float), vol.Clamp(min=-0.29, max=0.29)
-        ),
-        vol.Optional(ATTR_RC_ROTATION): vol.All(
-            vol.Coerce(int), vol.Clamp(min=-179, max=179)
-        ),
-        vol.Optional(ATTR_RC_DURATION): cv.positive_int,
-    }
-)
-
-SERVICE_SCHEMA_CLEAN_ZONE = VACUUM_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_ZONE_ARRAY): vol.All(
-            list,
-            [
-                vol.ExactSequence(
-                    [vol.Coerce(int), vol.Coerce(int), vol.Coerce(int), vol.Coerce(int)]
-                )
-            ],
-        ),
-        vol.Required(ATTR_ZONE_REPEATER): vol.All(
-            vol.Coerce(int), vol.Clamp(min=1, max=3)
-        ),
-    }
-)
-
-SERVICE_SCHEMA_CLEAN_ZONE = VACUUM_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_ZONE_ARRAY): vol.All(
-            list,
-            [
-                vol.ExactSequence(
-                    [vol.Coerce(int), vol.Coerce(int), vol.Coerce(int), vol.Coerce(int)]
-                )
-            ],
-        ),
-        vol.Required(ATTR_ZONE_REPEATER): vol.All(
-            vol.Coerce(int), vol.Clamp(min=1, max=3)
-        ),
-    }
-)
-
-SERVICE_TO_METHOD = {
-    SERVICE_START_REMOTE_CONTROL: {"method": "async_remote_control_start"},
-    SERVICE_STOP_REMOTE_CONTROL: {"method": "async_remote_control_stop"},
-    SERVICE_MOVE_REMOTE_CONTROL: {
-        "method": "async_remote_control_move",
-        "schema": SERVICE_SCHEMA_REMOTE_CONTROL,
-    },
-    SERVICE_MOVE_REMOTE_CONTROL_STEP: {
-        "method": "async_remote_control_move_step",
-        "schema": SERVICE_SCHEMA_REMOTE_CONTROL,
-    },
-    SERVICE_CLEAN_ZONE: {
-        "method": "async_clean_zone",
-        "schema": SERVICE_SCHEMA_CLEAN_ZONE,
-    },
-}
+ATTR_TIMERS = "timers"
 
 SUPPORT_XIAOMI = (
     SUPPORT_STATE
@@ -194,39 +126,84 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async_add_entities([mirobo], update_before_add=True)
 
-    async def async_service_handler(service):
-        """Map services to methods on MiroboVacuum."""
-        method = SERVICE_TO_METHOD.get(service.service)
-        params = {
-            key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
-        }
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
+    platform = entity_platform.current_platform.get()
 
-        if entity_ids:
-            target_vacuums = [
-                vac
-                for vac in hass.data[DATA_KEY].values()
-                if vac.entity_id in entity_ids
-            ]
-        else:
-            target_vacuums = hass.data[DATA_KEY].values()
+    platform.async_register_entity_service(
+        SERVICE_START_REMOTE_CONTROL,
+        {},
+        MiroboVacuum.async_remote_control_start.__name__,
+    )
 
-        update_tasks = []
-        for vacuum in target_vacuums:
-            await getattr(vacuum, method["method"])(**params)
+    platform.async_register_entity_service(
+        SERVICE_STOP_REMOTE_CONTROL,
+        {},
+        MiroboVacuum.async_remote_control_stop.__name__,
+    )
 
-        for vacuum in target_vacuums:
-            update_coro = vacuum.async_update_ha_state(True)
-            update_tasks.append(update_coro)
+    platform.async_register_entity_service(
+        SERVICE_MOVE_REMOTE_CONTROL,
+        {
+            vol.Optional(ATTR_RC_VELOCITY): vol.All(
+                vol.Coerce(float), vol.Clamp(min=-0.29, max=0.29)
+            ),
+            vol.Optional(ATTR_RC_ROTATION): vol.All(
+                vol.Coerce(int), vol.Clamp(min=-179, max=179)
+            ),
+            vol.Optional(ATTR_RC_DURATION): cv.positive_int,
+        },
+        MiroboVacuum.async_remote_control_move.__name__,
+    )
 
-        if update_tasks:
-            await asyncio.wait(update_tasks)
+    platform.async_register_entity_service(
+        SERVICE_MOVE_REMOTE_CONTROL_STEP,
+        {
+            vol.Optional(ATTR_RC_VELOCITY): vol.All(
+                vol.Coerce(float), vol.Clamp(min=-0.29, max=0.29)
+            ),
+            vol.Optional(ATTR_RC_ROTATION): vol.All(
+                vol.Coerce(int), vol.Clamp(min=-179, max=179)
+            ),
+            vol.Optional(ATTR_RC_DURATION): cv.positive_int,
+        },
+        MiroboVacuum.async_remote_control_move_step.__name__,
+    )
 
-    for vacuum_service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[vacuum_service].get("schema", VACUUM_SERVICE_SCHEMA)
-        hass.services.async_register(
-            DOMAIN, vacuum_service, async_service_handler, schema=schema
-        )
+    platform.async_register_entity_service(
+        SERVICE_CLEAN_ZONE,
+        {
+            vol.Required(ATTR_ZONE_ARRAY): vol.All(
+                list,
+                [
+                    vol.ExactSequence(
+                        [
+                            vol.Coerce(int),
+                            vol.Coerce(int),
+                            vol.Coerce(int),
+                            vol.Coerce(int),
+                        ]
+                    )
+                ],
+            ),
+            vol.Required(ATTR_ZONE_REPEATER): vol.All(
+                vol.Coerce(int), vol.Clamp(min=1, max=3)
+            ),
+        },
+        MiroboVacuum.async_clean_zone.__name__,
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_GOTO,
+        {
+            vol.Required("x_coord"): vol.Coerce(int),
+            vol.Required("y_coord"): vol.Coerce(int),
+        },
+        MiroboVacuum.async_goto.__name__,
+    )
+    platform.async_register_entity_service(
+        SERVICE_CLEAN_SEGMENT,
+        {vol.Required("segments"): vol.Any(vol.Coerce(int), [vol.Coerce(int)])},
+        MiroboVacuum.async_clean_segment.__name__,
+    )
 
 
 class MiroboVacuum(StateVacuumEntity):
@@ -246,6 +223,8 @@ class MiroboVacuum(StateVacuumEntity):
         self.last_clean = None
         self._fan_speeds = None
         self._fan_speeds_reverse = None
+
+        self._timers = None
 
     @property
     def name(self):
@@ -294,6 +273,18 @@ class MiroboVacuum(StateVacuumEntity):
         return list(self._fan_speeds) if self._fan_speeds else []
 
     @property
+    def timers(self):
+        """Get the list of added timers of the vacuum cleaner."""
+        return [
+            {
+                "enabled": timer.enabled,
+                "cron": timer.cron,
+                "next_schedule": as_utc(timer.next_schedule),
+            }
+            for timer in self._timers
+        ]
+
+    @property
     def device_state_attributes(self):
         """Return the specific state attributes of this vacuum cleaner."""
         attrs = {}
@@ -338,6 +329,9 @@ class MiroboVacuum(StateVacuumEntity):
 
             if self.vacuum_state.got_error:
                 attrs[ATTR_ERROR] = self.vacuum_state.error
+
+            if self.timers:
+                attrs[ATTR_TIMERS] = self.timers
         return attrs
 
     @property
@@ -450,6 +444,26 @@ class MiroboVacuum(StateVacuumEntity):
             duration=duration,
         )
 
+    async def async_goto(self, x_coord: int, y_coord: int):
+        """Goto the specified coordinates."""
+        await self._try_command(
+            "Unable to send the vacuum cleaner to the specified coordinates: %s",
+            self._vacuum.goto,
+            x_coord=x_coord,
+            y_coord=y_coord,
+        )
+
+    async def async_clean_segment(self, segments):
+        """Clean the specified segments(s)."""
+        if isinstance(segments, int):
+            segments = [segments]
+
+        await self._try_command(
+            "Unable to start cleaning of the specified segments: %s",
+            self._vacuum.segment_clean,
+            segments=segments,
+        )
+
     def update(self):
         """Fetch state from the device."""
         try:
@@ -463,6 +477,8 @@ class MiroboVacuum(StateVacuumEntity):
             self.clean_history = self._vacuum.clean_history()
             self.last_clean = self._vacuum.last_clean_details()
             self.dnd_state = self._vacuum.dnd_status()
+
+            self._timers = self._vacuum.timer()
 
             self._available = True
         except OSError as exc:

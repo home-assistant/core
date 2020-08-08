@@ -21,6 +21,7 @@ TEST_GATEWAY_ID = TEST_MAC
 TEST_HARDWARE_VERSION = "AB123"
 TEST_FIRMWARE_VERSION = "1.2.3_456"
 TEST_ZEROCONF_NAME = "lumi-gateway-v3_miio12345678._miio._udp.local."
+TEST_SUB_DEVICE_LIST = []
 
 
 def get_mock_info(
@@ -112,6 +113,9 @@ async def test_config_flow_gateway_success(hass):
         "homeassistant.components.xiaomi_miio.gateway.gateway.Gateway.info",
         return_value=mock_info,
     ), patch(
+        "homeassistant.components.xiaomi_miio.gateway.gateway.Gateway.discover_devices",
+        return_value=TEST_SUB_DEVICE_LIST,
+    ), patch(
         "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -151,6 +155,9 @@ async def test_zeroconf_gateway_success(hass):
     with patch(
         "homeassistant.components.xiaomi_miio.gateway.gateway.Gateway.info",
         return_value=mock_info,
+    ), patch(
+        "homeassistant.components.xiaomi_miio.gateway.gateway.Gateway.discover_devices",
+        return_value=TEST_SUB_DEVICE_LIST,
     ), patch(
         "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
     ):

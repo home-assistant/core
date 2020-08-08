@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "N\u00ebmmen 1 Atag Apparat kann am Home Assistant dob\u00e4igesat ginn"
+            "already_configured": "D\u00ebsen Apparat ass schonn am Home Assistant dob\u00e4igesat ginn"
         },
         "error": {
             "connection_error": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
@@ -12,7 +12,7 @@
                 "data": {
                     "email": "E-Mail (Optionell)",
                     "host": "Apparat",
-                    "port": "Port (10000)"
+                    "port": "Port"
                 },
                 "title": "Mam Apparat verbannen"
             }

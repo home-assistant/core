@@ -13,9 +13,15 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
+from homeassistant.core import callback
 from homeassistant.util.network import is_link_local
 
-from .const import CONF_MODEL, DOMAIN
+from .const import (
+    CONF_MODEL,
+    CONF_STREAM_PROFILE,
+    DEFAULT_STREAM_PROFILE,
+    DOMAIN as AXIS_DOMAIN,
+)
 from .device import get_device
 from .errors import AuthenticationRequired, CannotConnect
 
@@ -32,11 +38,17 @@ AXIS_INCLUDE = EVENT_TYPES + PLATFORMS
 DEFAULT_PORT = 80
 
 
-class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
     """Handle a Axis config flow."""
 
     VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return AxisOptionsFlowHandler(config_entry)
 
     def __init__(self):
         """Initialize the Axis config flow."""
@@ -109,7 +121,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         model = self.device_config[CONF_MODEL]
         same_model = [
             entry.data[CONF_NAME]
-            for entry in self.hass.config_entries.async_entries(DOMAIN)
+            for entry in self.hass.config_entries.async_entries(AXIS_DOMAIN)
             if entry.data[CONF_MODEL] == model
         ]
 
@@ -157,3 +169,39 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         return await self.async_step_user()
+
+
+class AxisOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle Axis device options."""
+
+    def __init__(self, config_entry):
+        """Initialize Axis device options flow."""
+        self.config_entry = config_entry
+        self.options = dict(config_entry.options)
+        self.device = None
+
+    async def async_step_init(self, user_input=None):
+        """Manage the Axis device options."""
+        self.device = self.hass.data[AXIS_DOMAIN][self.config_entry.unique_id]
+        return await self.async_step_configure_stream()
+
+    async def async_step_configure_stream(self, user_input=None):
+        """Manage the Axis device options."""
+        if user_input is not None:
+            self.options.update(user_input)
+            return self.async_create_entry(title="", data=self.options)
+
+        profiles = [DEFAULT_STREAM_PROFILE]
+        for profile in self.device.api.vapix.streaming_profiles:
+            profiles.append(profile.name)
+
+        return self.async_show_form(
+            step_id="configure_stream",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_STREAM_PROFILE, default=self.device.option_stream_profile
+                    ): vol.In(profiles)
+                }
+            ),
+        )

@@ -82,12 +82,12 @@ class FlowHandler(config_entries.ConfigFlow):
             step_id="auth", data_schema=vol.Schema(fields), errors=errors
         )
 
-    async def async_step_homekit(self, user_input):
+    async def async_step_homekit(self, discovery_info):
         """Handle homekit discovery."""
-        await self.async_set_unique_id(user_input["properties"]["id"])
-        self._abort_if_unique_id_configured({CONF_HOST: user_input["host"]})
+        await self.async_set_unique_id(discovery_info["properties"]["id"])
+        self._abort_if_unique_id_configured({CONF_HOST: discovery_info["host"]})
 
-        host = user_input["host"]
+        host = discovery_info["host"]
 
         for entry in self._async_current_entries():
             if entry.data[CONF_HOST] != host:
@@ -96,7 +96,7 @@ class FlowHandler(config_entries.ConfigFlow):
             # Backwards compat, we update old entries
             if not entry.unique_id:
                 self.hass.config_entries.async_update_entry(
-                    entry, unique_id=user_input["properties"]["id"]
+                    entry, unique_id=discovery_info["properties"]["id"]
                 )
 
             return self.async_abort(reason="already_configured")

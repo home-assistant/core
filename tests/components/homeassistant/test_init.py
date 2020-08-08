@@ -120,11 +120,7 @@ class TestComponentsCore(unittest.TestCase):
 
         self.hass.states.set("light.Bowl", STATE_ON)
         self.hass.states.set("light.Ceiling", STATE_OFF)
-
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_is_on(self):
         """Test is_on method."""

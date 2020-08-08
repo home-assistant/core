@@ -36,10 +36,12 @@ from .const import (
     EVENT_GROUP_ON,
     EVENT_GROUP_ON_FAST,
     ON_OFF_EVENTS,
+    SIGNAL_ADD_DEFAULT_LINKS,
     SIGNAL_LOAD_ALDB,
     SIGNAL_PRINT_ALDB,
     SIGNAL_SAVE_DEVICES,
     SRV_ADD_ALL_LINK,
+    SRV_ADD_DEFAULT_LINKS,
     SRV_ALL_LINK_GROUP,
     SRV_ALL_LINK_MODE,
     SRV_CONTROLLER,
@@ -58,6 +60,7 @@ from .const import (
 from .ipdb import get_device_platforms, get_platform_groups
 from .schemas import (
     ADD_ALL_LINK_SCHEMA,
+    ADD_DEFAULT_LINKS_SCHEMA,
     DEL_ALL_LINK_SCHEMA,
     LOAD_ALDB_SCHEMA,
     PRINT_ALDB_SCHEMA,
@@ -231,6 +234,13 @@ def async_register_services(hass):
         group = service.data.get(SRV_ALL_LINK_GROUP)
         await async_trigger_scene_off(group)
 
+    @callback
+    def async_add_default_links(service):
+        """Add the default All-Link entries to a device."""
+        entity_id = service.data[CONF_ENTITY_ID]
+        signal = f"{entity_id}_{SIGNAL_ADD_DEFAULT_LINKS}"
+        async_dispatcher_send(hass, signal)
+
     hass.services.async_register(
         DOMAIN, SRV_ADD_ALL_LINK, async_srv_add_all_link, schema=ADD_ALL_LINK_SCHEMA
     )
@@ -268,24 +278,26 @@ def async_register_services(hass):
     hass.services.async_register(
         DOMAIN, SRV_SCENE_OFF, async_srv_scene_off, schema=TRIGGER_SCENE_SCHEMA
     )
+
+    hass.services.async_register(
+        DOMAIN,
+        SRV_ADD_DEFAULT_LINKS,
+        async_add_default_links,
+        schema=ADD_DEFAULT_LINKS_SCHEMA,
+    )
     async_dispatcher_connect(hass, SIGNAL_SAVE_DEVICES, async_srv_save_devices)
     _LOGGER.debug("Insteon Services registered")
 
 
 def print_aldb_to_log(aldb):
     """Print the All-Link Database to the log file."""
-    # This service is useless if the log level is not INFO for the
-    # insteon component. Setting the log level to INFO and resetting it
-    # back when we are done
-    orig_log_level = _LOGGER.level
-    if orig_log_level > logging.INFO:
-        _LOGGER.setLevel(logging.INFO)
-    _LOGGER.info("%s ALDB load status is %s", aldb.address, aldb.status.name)
+    logger = logging.getLogger(f"{__name__}.links")
+    logger.info("%s ALDB load status is %s", aldb.address, aldb.status.name)
     if aldb.status not in [ALDBStatus.LOADED, ALDBStatus.PARTIAL]:
         _LOGGER.warning("All-Link database not loaded")
 
-    _LOGGER.info("RecID In Use Mode HWM Group Address  Data 1 Data 2 Data 3")
-    _LOGGER.info("----- ------ ---- --- ----- -------- ------ ------ ------")
+    logger.info("RecID In Use Mode HWM Group Address  Data 1 Data 2 Data 3")
+    logger.info("----- ------ ---- --- ----- -------- ------ ------ ------")
     for mem_addr in aldb:
         rec = aldb[mem_addr]
         # For now we write this to the log
@@ -298,8 +310,7 @@ def print_aldb_to_log(aldb):
             f"{rec.group:3d} {str(rec.target):s}   {rec.data1:3d}   "
             f"{rec.data2:3d}   {rec.data3:3d}"
         )
-        _LOGGER.info(log_msg)
-    _LOGGER.setLevel(orig_log_level)
+        logger.info(log_msg)
 
 
 @callback

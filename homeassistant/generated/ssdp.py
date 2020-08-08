@@ -6,9 +6,70 @@ To update, run python3 -m script.hassfest
 # fmt: off
 
 SSDP = {
+    "arcam_fmj": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "ARCAM"
+        }
+    ],
+    "control4": [
+        {
+            "st": "c4:director"
+        }
+    ],
     "deconz": [
         {
             "manufacturer": "Royal Philips Electronics"
+        }
+    ],
+    "denonavr": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "Denon"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "DENON"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "DENON PROFESSIONAL"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "Marantz"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
+            "manufacturer": "Denon"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
+            "manufacturer": "DENON"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
+            "manufacturer": "DENON PROFESSIONAL"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
+            "manufacturer": "Marantz"
+        },
+        {
+            "deviceType": "urn:schemas-denon-com:device:AiosDevice:1",
+            "manufacturer": "Denon"
+        },
+        {
+            "deviceType": "urn:schemas-denon-com:device:AiosDevice:1",
+            "manufacturer": "DENON"
+        },
+        {
+            "deviceType": "urn:schemas-denon-com:device:AiosDevice:1",
+            "manufacturer": "DENON PROFESSIONAL"
+        },
+        {
+            "deviceType": "urn:schemas-denon-com:device:AiosDevice:1",
+            "manufacturer": "Marantz"
         }
     ],
     "directv": [
@@ -85,6 +146,12 @@ SSDP = {
     "sonos": [
         {
             "st": "urn:schemas-upnp-org:device:ZonePlayer:1"
+        }
+    ],
+    "syncthru": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:Printer:1",
+            "manufacturer": "Samsung Electronics"
         }
     ],
     "synology_dsm": [

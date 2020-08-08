@@ -25,11 +25,9 @@ from homeassistant.util.temperature import fahrenheit_to_celsius
 
 from .core import discovery
 from .core.const import (
-    CHANNEL_ANALOG_INPUT,
     CHANNEL_ELECTRICAL_MEASUREMENT,
     CHANNEL_HUMIDITY,
     CHANNEL_ILLUMINANCE,
-    CHANNEL_MULTISTATE_INPUT,
     CHANNEL_POWER_CONFIGURATION,
     CHANNEL_PRESSURE,
     CHANNEL_SMARTENERGY_METERING,
@@ -100,10 +98,10 @@ class Sensor(ZhaEntity):
         await super().async_added_to_hass()
         self._device_state_attributes.update(await self.async_state_attr_provider())
 
-        await self.async_accept_signal(
+        self.async_accept_signal(
             self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
-        await self.async_accept_signal(
+        self.async_accept_signal(
             self._channel, SIGNAL_STATE_ATTR, self.async_update_state_attribute
         )
 
@@ -151,13 +149,6 @@ class Sensor(ZhaEntity):
                 float(value * self._multiplier) / self._divisor, self._decimals
             )
         return round(float(value * self._multiplier) / self._divisor)
-
-
-@STRICT_MATCH(channel_names=CHANNEL_ANALOG_INPUT)
-class AnalogInput(Sensor):
-    """Sensor that displays analog input values."""
-
-    SENSOR_ATTR = "present_value"
 
 
 @STRICT_MATCH(channel_names=CHANNEL_POWER_CONFIGURATION)
@@ -218,18 +209,6 @@ class ElectricalMeasurement(Sensor):
         if value < 100 and self._channel.divisor > 1:
             return round(value, self._decimals)
         return round(value)
-
-
-@STRICT_MATCH(channel_names=CHANNEL_MULTISTATE_INPUT)
-class Text(Sensor):
-    """Sensor that displays string values."""
-
-    _device_class = None
-    _unit = None
-
-    def formatter(self, value) -> str:
-        """Return string value."""
-        return value
 
 
 @STRICT_MATCH(generic_ids=CHANNEL_ST_HUMIDITY_CLUSTER)

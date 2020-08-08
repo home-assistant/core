@@ -20,8 +20,8 @@
             },
             "user": {
                 "data": {
-                    "host": "Konnected Ger\u00e4t IP-Adresse",
-                    "port": "Konnected Device Port"
+                    "host": "IP-Adresse",
+                    "port": "Port"
                 },
                 "description": "Bitte geben Sie die Hostinformationen f\u00fcr Ihr Konnected Panel ein."
             }

@@ -1,25 +1,39 @@
 {
     "device_automation": {
         "action_type": {
-            "arm_away": "Aktivovat {entity_name} v re\u017eimu mimo domov",
-            "arm_home": "Aktivovat {entity_name} v re\u017eimu doma",
-            "arm_night": "Aktivovat {entity_name} v re\u017eimu noc",
-            "disarm": "Deaktivovat {entity_name}",
+            "arm_away": "Aktivovat {entity_name} v re\u017eimu nep\u0159\u00edtomnost",
+            "arm_home": "Aktivovat {entity_name} v re\u017eimu domov",
+            "arm_night": "Aktivovat {entity_name} v no\u010dn\u00edm re\u017eimu",
+            "disarm": "Odbezpe\u010dit {entity_name}",
             "trigger": "Spustit {entity_name}"
+        },
+        "condition_type": {
+            "is_armed_away": "{entity_name} je v re\u017eimu nep\u0159\u00edtomnost",
+            "is_armed_home": "{entity_name} je v re\u017eimu domov",
+            "is_armed_night": "{entity_name} je v no\u010dn\u00edm re\u017eimu",
+            "is_disarmed": "{entity_name} nen\u00ed zabezpe\u010den",
+            "is_triggered": "{entity_name} je spu\u0161t\u011bn"
+        },
+        "trigger_type": {
+            "armed_away": "{entity_name} v re\u017eimu nep\u0159\u00edtomnost",
+            "armed_home": "{entity_name} v re\u017eimu domov",
+            "armed_night": "{entity_name} v no\u010dn\u00edm re\u017eimu",
+            "disarmed": "{entity_name} nezabezpe\u010den",
+            "triggered": "{entity_name} spu\u0161t\u011bn"
         }
     },
     "state": {
         "_": {
-            "armed": "Aktivn\u00ed",
-            "armed_away": "Aktivn\u00ed re\u017eim mimo domov",
-            "armed_custom_bypass": "Aktivn\u00ed u\u017eivatelsk\u00fdm obejit\u00edm",
-            "armed_home": "Aktivn\u00ed re\u017eim doma",
-            "armed_night": "Aktivn\u00ed no\u010dn\u00ed re\u017eim",
-            "arming": "Aktivov\u00e1n\u00ed",
-            "disarmed": "Neaktivn\u00ed",
-            "disarming": "Deaktivov\u00e1n\u00ed",
-            "pending": "Nadch\u00e1zej\u00edc\u00ed",
-            "triggered": "Spu\u0161t\u011bno"
+            "armed": "Zabezpe\u010deno",
+            "armed_away": "Re\u017eim nep\u0159\u00edtomnost",
+            "armed_custom_bypass": "Zabezpe\u010deno u\u017eivatelsk\u00fdm obejit\u00edm",
+            "armed_home": "Re\u017eim domov",
+            "armed_night": "No\u010dn\u00ed re\u017eim",
+            "arming": "Zabezpe\u010dov\u00e1n\u00ed",
+            "disarmed": "Nezabezpe\u010deno",
+            "disarming": "Odbezpe\u010dov\u00e1n\u00ed",
+            "pending": "\u010cekaj\u00edc\u00ed",
+            "triggered": "Spu\u0161t\u011bn"
         }
     },
     "title": "Ovl\u00e1dac\u00ed panel alarmu"

@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Das Roku-Ger\u00e4t ist bereits konfiguriert",
+            "already_configured": "Das Ger\u00e4t ist bereits konfiguriert",
             "unknown": "Unerwarteter Fehler"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut"
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "flow_title": "Roku: {name}",
         "step": {
@@ -19,7 +19,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host oder IP-Adresse"
+                    "host": "Host"
                 },
                 "description": "Geben Sie Ihre Roku-Informationen ein."
             }

@@ -486,7 +486,7 @@ async def _handle_entity_call(hass, entity, func, data, context):
 
     if asyncio.iscoroutine(result):
         _LOGGER.error(
-            "Service %s for %s incorrectly returns a coroutine object. Await result instead in service handler. Report bug to integration author.",
+            "Service %s for %s incorrectly returns a coroutine object. Await result instead in service handler. Report bug to integration author",
             func,
             entity.entity_id,
         )
@@ -505,7 +505,7 @@ def async_register_admin_service(
     """Register a service that requires admin access."""
 
     @wraps(service_func)
-    async def admin_handler(call):
+    async def admin_handler(call: ha.ServiceCall) -> None:
         if call.context.user_id:
             user = await hass.auth.async_get_user(call.context.user_id)
             if user is None:

@@ -2,9 +2,11 @@
 # ==============================================================================
 # Start Home Assistant service
 # ==============================================================================
+
 cd /config || bashio::exit.nok "Can't find config folder!"
 
-# Enable Jemalloc for Home Assistant Core
-export LD_PRELOAD="/usr/local/lib/libjemalloc.so.2"
-
+# Enable Jemalloc for Home Assistant Core, unless disabled
+if [[ -z "${DISABLE_JEMALLOC+x}" ]]; then
+  export LD_PRELOAD="/usr/local/lib/libjemalloc.so.2"
+fi
 exec python3 -m homeassistant --config /config

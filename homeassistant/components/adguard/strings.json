@@ -19,8 +19,6 @@
     },
     "error": { "connection_error": "Failed to connect." },
     "abort": {
-      "adguard_home_outdated": "This integration requires AdGuard Home {minimal_version} or higher, you have {current_version}.",
-      "adguard_home_addon_outdated": "This integration requires AdGuard Home {minimal_version} or higher, you have {current_version}. Please update your Hass.io AdGuard Home add-on.",
       "existing_instance_updated": "Updated existing configuration.",
       "single_instance_allowed": "Only a single configuration of AdGuard Home is allowed."
     }

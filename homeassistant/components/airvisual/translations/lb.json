@@ -21,7 +21,7 @@
             "node_pro": {
                 "data": {
                     "ip_address": "IP Adresse / Numm vun der Unit\u00e9it",
-                    "password": "Passwuert vun der Unit\u00e9it"
+                    "password": "Passwuert"
                 },
                 "description": "Pers\u00e9inlech Airvisual Unit\u00e9it iwwerwaachen. Passwuert kann vum UI vum Apparat ausgelies ginn.",
                 "title": "Airvisual Node/Pro ariichten"
@@ -32,7 +32,7 @@
                     "node_pro": "Airvisual Node Pro",
                     "type": "Typ vun der Integratioun"
                 },
-                "description": "Loft Qualit\u00e9it an enger geografescher Lag iwwerwaachen.",
+                "description": "Typ vun Airvisual Donn\u00e9\u00eb fir d'Iwwerwachung auswielen.",
                 "title": "AirVisual konfigur\u00e9ieren"
             }
         }

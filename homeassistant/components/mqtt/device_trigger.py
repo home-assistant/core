@@ -1,6 +1,6 @@
 """Provides device automations for MQTT."""
 import logging
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 import attr
 import voluptuous as vol
@@ -75,10 +75,10 @@ DEVICE_TRIGGERS = "mqtt_device_triggers"
 class TriggerInstance:
     """Attached trigger settings."""
 
-    action = attr.ib(type=AutomationActionType)
-    automation_info = attr.ib(type=dict)
-    trigger = attr.ib(type="Trigger")
-    remove = attr.ib(type=CALLBACK_TYPE, default=None)
+    action: AutomationActionType = attr.ib()
+    automation_info: dict = attr.ib()
+    trigger: "Trigger" = attr.ib()
+    remove: Optional[CALLBACK_TYPE] = attr.ib(default=None)
 
     async def async_attach_trigger(self):
         """Attach MQTT trigger."""
@@ -101,16 +101,16 @@ class TriggerInstance:
 class Trigger:
     """Device trigger settings."""
 
-    device_id = attr.ib(type=str)
-    discovery_data = attr.ib(type=dict)
-    hass = attr.ib(type=HomeAssistantType)
-    payload = attr.ib(type=str)
-    qos = attr.ib(type=int)
-    remove_signal = attr.ib(type=Callable[[], None])
-    subtype = attr.ib(type=str)
-    topic = attr.ib(type=str)
-    type = attr.ib(type=str)
-    trigger_instances = attr.ib(type=[TriggerInstance], default=attr.Factory(list))
+    device_id: str = attr.ib()
+    discovery_data: dict = attr.ib()
+    hass: HomeAssistantType = attr.ib()
+    payload: str = attr.ib()
+    qos: int = attr.ib()
+    remove_signal: Callable[[], None] = attr.ib()
+    subtype: str = attr.ib()
+    topic: str = attr.ib()
+    type: str = attr.ib()
+    trigger_instances: List[TriggerInstance] = attr.ib(factory=list)
 
     async def add_trigger(self, action, automation_info):
         """Add MQTT trigger."""

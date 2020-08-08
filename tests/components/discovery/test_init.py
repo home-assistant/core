@@ -6,6 +6,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import discovery
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.util.dt import utcnow
 
 from tests.async_mock import patch
@@ -36,10 +37,12 @@ def netdisco_mock():
 
 async def mock_discovery(hass, discoveries, config=BASE_CONFIG):
     """Mock discoveries."""
-    result = await async_setup_component(hass, "discovery", config)
-    assert result
-
-    await hass.async_start()
+    with patch("homeassistant.components.zeroconf.async_get_instance"):
+        assert await async_setup_component(hass, "discovery", config)
+        await hass.async_block_till_done()
+        await hass.async_start()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
 
     with patch.object(discovery, "_discover", discoveries), patch(
         "homeassistant.components.discovery.async_discover", return_value=mock_coro()
@@ -58,7 +61,7 @@ async def mock_discovery(hass, discoveries, config=BASE_CONFIG):
 async def test_unknown_service(hass):
     """Test that unknown service is ignored."""
 
-    def discover(netdisco):
+    def discover(netdisco, zeroconf_instance):
         """Fake discovery."""
         return [("this_service_will_never_be_supported", {"info": "some"})]
 
@@ -71,7 +74,7 @@ async def test_unknown_service(hass):
 async def test_load_platform(hass):
     """Test load a platform."""
 
-    def discover(netdisco):
+    def discover(netdisco, zeroconf_instance):
         """Fake discovery."""
         return [(SERVICE, SERVICE_INFO)]
 
@@ -87,7 +90,7 @@ async def test_load_platform(hass):
 async def test_load_component(hass):
     """Test load a component."""
 
-    def discover(netdisco):
+    def discover(netdisco, zeroconf_instance):
         """Fake discovery."""
         return [(SERVICE_NO_PLATFORM, SERVICE_INFO)]
 
@@ -107,7 +110,7 @@ async def test_load_component(hass):
 async def test_ignore_service(hass):
     """Test ignore service."""
 
-    def discover(netdisco):
+    def discover(netdisco, zeroconf_instance):
         """Fake discovery."""
         return [(SERVICE_NO_PLATFORM, SERVICE_INFO)]
 
@@ -120,7 +123,7 @@ async def test_ignore_service(hass):
 async def test_discover_duplicates(hass):
     """Test load a component."""
 
-    def discover(netdisco):
+    def discover(netdisco, zeroconf_instance):
         """Fake discovery."""
         return [
             (SERVICE_NO_PLATFORM, SERVICE_INFO),
@@ -145,7 +148,7 @@ async def test_discover_config_flow(hass):
     """Test discovery triggering a config flow."""
     discovery_info = {"hello": "world"}
 
-    def discover(netdisco):
+    def discover(netdisco, zeroconf_instance):
         """Fake discovery."""
         return [("mock-service", discovery_info)]
 

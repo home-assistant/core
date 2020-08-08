@@ -23,11 +23,9 @@ from .const import (
     CONF_FILTER,
     CONF_SAFE_MODE,
     CONF_VIDEO_CODEC,
-    CONF_ZEROCONF_DEFAULT_INTERFACE,
     DEFAULT_AUTO_START,
     DEFAULT_CONFIG_FLOW_PORT,
     DEFAULT_SAFE_MODE,
-    DEFAULT_ZEROCONF_DEFAULT_INTERFACE,
     SHORT_BRIDGE_NAME,
     VIDEO_CODEC_COPY,
 )
@@ -49,6 +47,7 @@ SUPPORTED_DOMAINS = [
     "demo",
     "device_tracker",
     "fan",
+    "humidifier",
     "input_boolean",
     "light",
     "lock",
@@ -67,6 +66,7 @@ DEFAULT_DOMAINS = [
     "alarm_control_panel",
     "climate",
     "cover",
+    "humidifier",
     "light",
     "lock",
     "media_player",
@@ -227,14 +227,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_SAFE_MODE,
                     default=self.homekit_options.get(CONF_SAFE_MODE, DEFAULT_SAFE_MODE),
-                ): bool,
-                vol.Optional(
-                    CONF_ZEROCONF_DEFAULT_INTERFACE,
-                    default=self.homekit_options.get(
-                        CONF_ZEROCONF_DEFAULT_INTERFACE,
-                        DEFAULT_ZEROCONF_DEFAULT_INTERFACE,
-                    ),
-                ): bool,
+                ): bool
             }
         )
 

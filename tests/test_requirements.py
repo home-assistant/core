@@ -1,15 +1,12 @@
 """Test requirements module."""
 import os
-from pathlib import Path
 
 import pytest
 
 from homeassistant import loader, setup
 from homeassistant.requirements import (
     CONSTRAINT_FILE,
-    PROGRESS_FILE,
     RequirementsNotFound,
-    _install,
     async_get_integration_with_requirements,
     async_process_requirements,
 )
@@ -190,24 +187,6 @@ async def test_install_on_docker(hass):
         )
 
 
-async def test_progress_lock(hass):
-    """Test an install attempt on an existing package."""
-    progress_path = Path(hass.config.path(PROGRESS_FILE))
-    kwargs = {"hello": "world"}
-
-    def assert_env(req, **passed_kwargs):
-        """Assert the env."""
-        assert progress_path.exists()
-        assert req == "hello"
-        assert passed_kwargs == kwargs
-        return True
-
-    with patch("homeassistant.util.package.install_package", side_effect=assert_env):
-        _install(hass, "hello", kwargs)
-
-    assert not progress_path.exists()
-
-
 async def test_discovery_requirements_ssdp(hass):
     """Test that we load discovery requirements."""
     hass.config.skip_pip = False
@@ -221,8 +200,10 @@ async def test_discovery_requirements_ssdp(hass):
     ) as mock_process:
         await async_get_integration_with_requirements(hass, "ssdp_comp")
 
-    assert len(mock_process.mock_calls) == 1
+    assert len(mock_process.mock_calls) == 3
     assert mock_process.mock_calls[0][1][2] == ssdp.requirements
+    # Ensure zeroconf is a dep for ssdp
+    assert mock_process.mock_calls[1][1][1] == "zeroconf"
 
 
 @pytest.mark.parametrize(

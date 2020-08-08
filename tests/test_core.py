@@ -22,12 +22,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
     EVENT_TIMER_OUT_OF_SYNC,
+    MATCH_ALL,
     __version__,
 )
 import homeassistant.core as ha
@@ -35,7 +37,7 @@ from homeassistant.exceptions import InvalidEntityFormatError, InvalidStateError
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.async_mock import MagicMock, Mock, patch
+from tests.async_mock import MagicMock, Mock, PropertyMock, patch
 from tests.common import async_mock_service, get_test_home_assistant
 
 PST = pytz.timezone("America/Los_Angeles")
@@ -901,6 +903,8 @@ class TestConfig(unittest.TestCase):
     def test_as_dict(self):
         """Test as dict."""
         self.config.config_dir = "/test/ha-config"
+        self.config.hass = MagicMock()
+        type(self.config.hass.state).value = PropertyMock(return_value="RUNNING")
         expected = {
             "latitude": 0,
             "longitude": 0,
@@ -911,9 +915,12 @@ class TestConfig(unittest.TestCase):
             "components": set(),
             "config_dir": "/test/ha-config",
             "whitelist_external_dirs": set(),
+            "allowlist_external_dirs": set(),
+            "allowlist_external_urls": set(),
             "version": __version__,
             "config_source": "default",
             "safe_mode": False,
+            "state": "RUNNING",
             "external_url": None,
             "internal_url": None,
         }
@@ -925,7 +932,7 @@ class TestConfig(unittest.TestCase):
         with TemporaryDirectory() as tmp_dir:
             # The created dir is in /tmp. This is a symlink on OS X
             # causing this test to fail unless we resolve path first.
-            self.config.whitelist_external_dirs = {os.path.realpath(tmp_dir)}
+            self.config.allowlist_external_dirs = {os.path.realpath(tmp_dir)}
 
             test_file = os.path.join(tmp_dir, "test.jpg")
             with open(test_file, "w") as tmp_file:
@@ -935,7 +942,7 @@ class TestConfig(unittest.TestCase):
             for path in valid:
                 assert self.config.is_allowed_path(path)
 
-            self.config.whitelist_external_dirs = {"/home", "/var"}
+            self.config.allowlist_external_dirs = {"/home", "/var"}
 
             unvalid = [
                 "/hass/config/secure",
@@ -949,6 +956,33 @@ class TestConfig(unittest.TestCase):
 
             with pytest.raises(AssertionError):
                 self.config.is_allowed_path(None)
+
+    def test_is_allowed_external_url(self):
+        """Test is_allowed_external_url method."""
+        self.config.allowlist_external_urls = [
+            "http://x.com/",
+            "https://y.com/bla/",
+            "https://z.com/images/1.jpg/",
+        ]
+
+        valid = [
+            "http://x.com/1.jpg",
+            "http://x.com",
+            "https://y.com/bla/",
+            "https://y.com/bla/2.png",
+            "https://z.com/images/1.jpg",
+        ]
+        for url in valid:
+            assert self.config.is_allowed_external_url(url)
+
+        invalid = [
+            "https://a.co",
+            "https://y.com/bla_wrong",
+            "https://y.com/bla/../image.jpg",
+            "https://z.com/images",
+        ]
+        for url in invalid:
+            assert not self.config.is_allowed_external_url(url)
 
 
 async def test_event_on_update(hass):
@@ -1056,9 +1090,20 @@ def test_timer_out_of_sync(mock_monotonic, loop):
     ):
         callback(target)
 
-        event_type, event_data = hass.bus.async_fire.mock_calls[1][1]
-        assert event_type == EVENT_TIMER_OUT_OF_SYNC
-        assert abs(event_data[ATTR_SECONDS] - 2.433333) < 0.001
+        _, event_0_args, event_0_kwargs = hass.bus.async_fire.mock_calls[0]
+        event_context_0 = event_0_kwargs["context"]
+
+        event_type_0, _ = event_0_args
+        assert event_type_0 == EVENT_TIME_CHANGED
+
+        _, event_1_args, event_1_kwargs = hass.bus.async_fire.mock_calls[1]
+        event_type_1, event_data_1 = event_1_args
+        event_context_1 = event_1_kwargs["context"]
+
+        assert event_type_1 == EVENT_TIMER_OUT_OF_SYNC
+        assert abs(event_data_1[ATTR_SECONDS] - 2.433333) < 0.001
+
+        assert event_context_0 == event_context_1
 
         assert len(funcs) == 2
         fire_time_event, _ = funcs
@@ -1071,14 +1116,13 @@ def test_timer_out_of_sync(mock_monotonic, loop):
     assert abs(target - 14.2) < 0.001
 
 
-@asyncio.coroutine
-def test_hass_start_starts_the_timer(loop):
+async def test_hass_start_starts_the_timer(loop):
     """Test when hass starts, it starts the timer."""
-    hass = ha.HomeAssistant(loop=loop)
+    hass = ha.HomeAssistant()
 
     try:
         with patch("homeassistant.core._async_create_timer") as mock_timer:
-            yield from hass.async_start()
+            await hass.async_start()
 
         assert hass.state == ha.CoreState.running
         assert not hass._track_task
@@ -1086,21 +1130,20 @@ def test_hass_start_starts_the_timer(loop):
         assert mock_timer.mock_calls[0][1][0] is hass
 
     finally:
-        yield from hass.async_stop()
-        assert hass.state == ha.CoreState.not_running
+        await hass.async_stop()
+        assert hass.state == ha.CoreState.stopped
 
 
-@asyncio.coroutine
-def test_start_taking_too_long(loop, caplog):
+async def test_start_taking_too_long(loop, caplog):
     """Test when async_start takes too long."""
-    hass = ha.HomeAssistant(loop=loop)
+    hass = ha.HomeAssistant()
     caplog.set_level(logging.WARNING)
 
     try:
-        with patch(
-            "homeassistant.core.timeout", side_effect=asyncio.TimeoutError
+        with patch.object(
+            hass, "async_block_till_done", side_effect=asyncio.TimeoutError
         ), patch("homeassistant.core._async_create_timer") as mock_timer:
-            yield from hass.async_start()
+            await hass.async_start()
 
         assert hass.state == ha.CoreState.running
         assert len(mock_timer.mock_calls) == 1
@@ -1108,14 +1151,13 @@ def test_start_taking_too_long(loop, caplog):
         assert "Something is blocking Home Assistant" in caplog.text
 
     finally:
-        yield from hass.async_stop()
-        assert hass.state == ha.CoreState.not_running
+        await hass.async_stop()
+        assert hass.state == ha.CoreState.stopped
 
 
-@asyncio.coroutine
-def test_track_task_functions(loop):
+async def test_track_task_functions(loop):
     """Test function to start/stop track task and initial state."""
-    hass = ha.HomeAssistant(loop=loop)
+    hass = ha.HomeAssistant()
     try:
         assert hass._track_task
 
@@ -1125,7 +1167,7 @@ def test_track_task_functions(loop):
         hass.async_track_tasks()
         assert hass._track_task
     finally:
-        yield from hass.async_stop()
+        await hass.async_stop()
 
 
 async def test_service_executed_with_subservices(hass):
@@ -1330,3 +1372,109 @@ async def test_additional_data_in_core_config(hass, hass_storage):
     }
     await config.async_load()
     assert config.location_name == "Test Name"
+
+
+async def test_start_events(hass):
+    """Test events fired when starting Home Assistant."""
+    hass.state = ha.CoreState.not_running
+
+    all_events = []
+
+    @ha.callback
+    def capture_events(ev):
+        all_events.append(ev.event_type)
+
+    hass.bus.async_listen(MATCH_ALL, capture_events)
+
+    core_states = []
+
+    @ha.callback
+    def capture_core_state(_):
+        core_states.append(hass.state)
+
+    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, capture_core_state)
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert all_events == [
+        EVENT_CORE_CONFIG_UPDATE,
+        EVENT_HOMEASSISTANT_START,
+        EVENT_CORE_CONFIG_UPDATE,
+        EVENT_HOMEASSISTANT_STARTED,
+    ]
+    assert core_states == [ha.CoreState.starting, ha.CoreState.running]
+
+
+async def test_log_blocking_events(hass, caplog):
+    """Ensure we log which task is blocking startup when debug logging is on."""
+    caplog.set_level(logging.DEBUG)
+
+    async def _wait_a_bit_1():
+        await asyncio.sleep(0.1)
+
+    async def _wait_a_bit_2():
+        await asyncio.sleep(0.1)
+
+    hass.async_create_task(_wait_a_bit_1())
+    await hass.async_block_till_done()
+
+    with patch.object(ha, "BLOCK_LOG_TIMEOUT", 0.0001):
+        hass.async_create_task(_wait_a_bit_2())
+        await hass.async_block_till_done()
+
+    assert "_wait_a_bit_2" in caplog.text
+    assert "_wait_a_bit_1" not in caplog.text
+
+
+async def test_chained_logging_hits_log_timeout(hass, caplog):
+    """Ensure we log which task is blocking startup when there is a task chain and debug logging is on."""
+    caplog.set_level(logging.DEBUG)
+
+    created = 0
+
+    async def _task_chain_1():
+        nonlocal created
+        created += 1
+        if created > 1000:
+            return
+        hass.async_create_task(_task_chain_2())
+
+    async def _task_chain_2():
+        nonlocal created
+        created += 1
+        if created > 1000:
+            return
+        hass.async_create_task(_task_chain_1())
+
+    with patch.object(ha, "BLOCK_LOG_TIMEOUT", 0.0001):
+        hass.async_create_task(_task_chain_1())
+        await hass.async_block_till_done()
+
+    assert "_task_chain_" in caplog.text
+
+
+async def test_chained_logging_misses_log_timeout(hass, caplog):
+    """Ensure we do not log which task is blocking startup if we do not hit the timeout."""
+    caplog.set_level(logging.DEBUG)
+
+    created = 0
+
+    async def _task_chain_1():
+        nonlocal created
+        created += 1
+        if created > 10:
+            return
+        hass.async_create_task(_task_chain_2())
+
+    async def _task_chain_2():
+        nonlocal created
+        created += 1
+        if created > 10:
+            return
+        hass.async_create_task(_task_chain_1())
+
+    hass.async_create_task(_task_chain_1())
+    await hass.async_block_till_done()
+
+    assert "_task_chain_" not in caplog.text

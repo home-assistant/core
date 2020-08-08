@@ -30,11 +30,11 @@
                 "data": {
                     "access_token": "Acc\u00e8ss Jeton",
                     "device_class": "Typ vun Apparat",
-                    "host": "<Host/IP>:<Port>",
+                    "host": "Host",
                     "name": "Numm"
                 },
                 "description": "Een Access Jeton g\u00ebtt nn\u00ebmme fir Fernseher gebraucht. Wann Dir e Fernseh konfigur\u00e9iert a keen Access Jeton hutt, da loosst et eidel fir duerch dee Pairing Prozess ze goen.",
-                "title": "VIZIO Smartcast Apparat ariichten"
+                "title": "VIZIO Smartcast Apparat"
             }
         }
     },

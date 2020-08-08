@@ -19,9 +19,10 @@ from homeassistant.helpers.storage import STORAGE_DIR
 
 _LOGGER = logging.getLogger(__name__)
 
-VICARE_PLATFORMS = ["climate", "water_heater"]
+VICARE_PLATFORMS = ["climate", "sensor", "binary_sensor", "water_heater"]
 
 DOMAIN = "vicare"
+PYVICARE_ERROR = "error"
 VICARE_API = "api"
 VICARE_NAME = "name"
 VICARE_HEATING_TYPE = "heating_type"
@@ -80,7 +81,7 @@ def setup(hass, config):
             vicare_api = Device(conf[CONF_USERNAME], conf[CONF_PASSWORD], **params)
     except AttributeError:
         _LOGGER.error(
-            "Failed to create PyViCare API client. Please check your credentials."
+            "Failed to create PyViCare API client. Please check your credentials"
         )
         return False
 

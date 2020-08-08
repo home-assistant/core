@@ -122,8 +122,7 @@ class PwThermostat(SmileGateway, ClimateEntity):
         """Return the device specific state attributes."""
         attributes = {}
         if self._schema_names:
-            if len(self._schema_names) > 1:
-                attributes["available_schemas"] = self._schema_names
+            attributes["available_schemas"] = self._schema_names
         if self._selected_schema:
             attributes["selected_schema"] = self._selected_schema
         return attributes
@@ -238,10 +237,9 @@ class PwThermostat(SmileGateway, ClimateEntity):
             self._schema_names = climate_data["available_schedules"]
         if "selected_schedule" in climate_data:
             self._selected_schema = climate_data["selected_schedule"]
+            self._schema_status = False
             if self._selected_schema is not None:
                 self._schema_status = True
-            else:
-                self._schema_status = False
         if "last_used" in climate_data:
             self._last_active_schema = climate_data["last_used"]
         if "presets" in climate_data:

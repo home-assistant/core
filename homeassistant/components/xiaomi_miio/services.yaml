@@ -330,3 +330,26 @@ vacuum_clean_zone:
     repeats:
       description: Number of cleaning repeats for each zone between 1 and 3.
       example: "1"
+
+vacuum_goto:
+  description: Go to the specified coordinates.
+  fields:
+    entity_id:
+      description: Name of the vacuum entity.
+      example: "vacuum.xiaomi_vacuum_cleaner"
+    x_coord:
+      description: x-coordinate.
+      example: 27500
+    y_coord:
+      description: y-coordinate.
+      example: 32000
+
+vacuum_clean_segment:
+  description: Start cleaning of the specified segment(s).
+  fields:
+    entity_id:
+      description: Name of the vacuum entity.
+      example: "vacuum.xiaomi_vacuum_cleaner"
+    segments:
+      description: Segments.
+      example: "[1,2]"

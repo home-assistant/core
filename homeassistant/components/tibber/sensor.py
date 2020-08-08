@@ -113,7 +113,7 @@ class TibberSensorElPrice(TibberSensor):
             or (self._tibber_home.last_data_timestamp - now).total_seconds() / 3600 < 12
             or not self._is_available
         ):
-            _LOGGER.debug("Asking for new data.")
+            _LOGGER.debug("Asking for new data")
             await self._fetch_data()
 
         res = self._tibber_home.current_price_data()

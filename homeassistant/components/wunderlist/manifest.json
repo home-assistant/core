@@ -1,7 +1,0 @@
-{
-  "domain": "wunderlist",
-  "name": "Wunderlist",
-  "documentation": "https://www.home-assistant.io/integrations/wunderlist",
-  "requirements": ["wunderpy2==0.1.6"],
-  "codeowners": []
-}

@@ -21,8 +21,10 @@ from homeassistant.const import (
     CONF_FRIENDLY_NAME,
     CONF_ICON_TEMPLATE,
     CONF_LIGHTS,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
+    MATCH_ALL,
     STATE_OFF,
     STATE_ON,
 )
@@ -31,7 +33,7 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import Script
 
 from . import extract_entities, initialise_templates
@@ -69,6 +71,7 @@ LIGHT_SCHEMA = vol.Schema(
         vol.Optional(CONF_COLOR_ACTION, default=False): cv.boolean,
         vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_WHITE_VALUE_ACTION, default=False): cv.boolean,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -88,6 +91,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(CONF_ENTITY_PICTURE_TEMPLATE)
         availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
+        unique_id = device_config.get(CONF_UNIQUE_ID)
 
         on_action = device_config[CONF_ON_ACTION]
         off_action = device_config[CONF_OFF_ACTION]
@@ -140,6 +144,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 color_template,
                 white_value_action,
                 white_value_template,
+                unique_id,
             )
         )
 
@@ -169,6 +174,7 @@ class LightTemplate(LightEntity):
         color_template,
         white_value_action,
         white_value_template,
+        unique_id,
     ):
         """Initialize the light."""
         self.hass = hass
@@ -200,6 +206,7 @@ class LightTemplate(LightEntity):
         self._white_value = None
         self._entities = entity_ids
         self._available = True
+        self._unique_id = unique_id
 
     @property
     def brightness(self):
@@ -225,6 +232,11 @@ class LightTemplate(LightEntity):
     def name(self):
         """Return the display name of this light."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id of this light."""
+        return self._unique_id
 
     @property
     def supported_features(self):
@@ -269,7 +281,7 @@ class LightTemplate(LightEntity):
         """Register callbacks."""
 
         @callback
-        def template_light_state_listener(entity, old_state, new_state):
+        def template_light_state_listener(event):
             """Handle target device state changes."""
             self.async_schedule_update_ha_state(True)
 
@@ -284,9 +296,11 @@ class LightTemplate(LightEntity):
                 or self._white_value_template is not None
                 or self._availability_template is not None
             ):
-                async_track_state_change(
-                    self.hass, self._entities, template_light_state_listener
-                )
+                if self._entities != MATCH_ALL:
+                    # Track state change only for valid templates
+                    async_track_state_change_event(
+                        self.hass, self._entities, template_light_state_listener
+                    )
 
             self.async_schedule_update_ha_state(True)
 
@@ -394,7 +408,7 @@ class LightTemplate(LightEntity):
                 ):
                     # Common during HA startup - so just a warning
                     _LOGGER.warning(
-                        "Could not render %s template %s, the state is unknown.",
+                        "Could not render %s template %s, the state is unknown",
                         friendly_property_name,
                         self._name,
                     )

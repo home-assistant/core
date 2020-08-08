@@ -2,7 +2,7 @@
 from asyncio import Event
 from collections import OrderedDict
 import logging
-from typing import Iterable, MutableMapping, Optional, cast
+from typing import Dict, Iterable, List, MutableMapping, Optional, cast
 import uuid
 
 import attr
@@ -25,8 +25,8 @@ SAVE_DELAY = 10
 class AreaEntry:
     """Area Registry Entry."""
 
-    name = attr.ib(type=str, default=None)
-    id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
+    name: Optional[str] = attr.ib(default=None)
+    id: str = attr.ib(factory=lambda: uuid.uuid4().hex)
 
 
 class AreaRegistry:
@@ -132,7 +132,7 @@ class AreaRegistry:
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
-    def _data_to_save(self) -> dict:
+    def _data_to_save(self) -> Dict[str, List[Dict[str, Optional[str]]]]:
         """Return data of area registry to store in a file."""
         data = {}
 

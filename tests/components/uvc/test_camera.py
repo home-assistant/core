@@ -21,10 +21,7 @@ class TestUVCSetup(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     @mock.patch("uvcclient.nvr.UVCRemote")
     @mock.patch.object(uvc, "UnifiVideoCamera")

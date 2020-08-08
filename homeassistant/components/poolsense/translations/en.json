@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "description": "[%key:common::config_flow::description%]",
+                "title": "PoolSense"
+            }
+        }
+    }
+}

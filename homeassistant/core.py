@@ -5,7 +5,6 @@ Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
 """
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 import datetime
 import enum
 import functools
@@ -13,6 +12,7 @@ from ipaddress import ip_address
 import logging
 import os
 import pathlib
+import random
 import re
 import threading
 from time import monotonic
@@ -24,6 +24,7 @@ from typing import (
     Callable,
     Coroutine,
     Dict,
+    Iterable,
     List,
     Mapping,
     Optional,
@@ -34,7 +35,6 @@ from typing import (
 )
 import uuid
 
-from async_timeout import timeout
 import attr
 import voluptuous as vol
 import yarl
@@ -75,10 +75,12 @@ from homeassistant.util import location, network
 from homeassistant.util.async_ import fire_coroutine_threadsafe, run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.thread import fix_threading_exception_logging
+from homeassistant.util.timeout import TimeoutManager
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
+    from homeassistant.auth import AuthManager
     from homeassistant.config_entries import ConfigEntries
     from homeassistant.components.http import HomeAssistantHTTP
 
@@ -97,6 +99,9 @@ CORE_STORAGE_KEY = "core.config"
 CORE_STORAGE_VERSION = 1
 
 DOMAIN = "homeassistant"
+
+# How long to wait to log tasks that are blocking
+BLOCK_LOG_TIMEOUT = 60
 
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds
@@ -144,19 +149,6 @@ def is_callback(func: Callable[..., Any]) -> bool:
     return getattr(func, "_hass_callback", False) is True
 
 
-@callback
-def async_loop_exception_handler(_: Any, context: Dict) -> None:
-    """Handle all exception inside the core loop."""
-    kwargs = {}
-    exception = context.get("exception")
-    if exception:
-        kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
-
-    _LOGGER.error(
-        "Error doing job: %s", context["message"], **kwargs  # type: ignore
-    )
-
-
 class CoreState(enum.Enum):
     """Represent the current state of Home Assistant."""
 
@@ -165,6 +157,7 @@ class CoreState(enum.Enum):
     running = "RUNNING"
     stopping = "STOPPING"
     final_write = "FINAL_WRITE"
+    stopped = "STOPPED"
 
     def __str__(self) -> str:
         """Return the event."""
@@ -174,21 +167,13 @@ class CoreState(enum.Enum):
 class HomeAssistant:
     """Root object of the Home Assistant home automation."""
 
+    auth: "AuthManager"
     http: "HomeAssistantHTTP" = None  # type: ignore
     config_entries: "ConfigEntries" = None  # type: ignore
 
-    def __init__(self, loop: Optional[asyncio.events.AbstractEventLoop] = None) -> None:
+    def __init__(self) -> None:
         """Initialize new Home Assistant object."""
-        self.loop: asyncio.events.AbstractEventLoop = (loop or asyncio.get_event_loop())
-
-        executor_opts: Dict[str, Any] = {
-            "max_workers": None,
-            "thread_name_prefix": "SyncWorker",
-        }
-
-        self.executor = ThreadPoolExecutor(**executor_opts)
-        self.loop.set_default_executor(self.executor)
-        self.loop.set_exception_handler(async_loop_exception_handler)
+        self.loop = asyncio.get_running_loop()
         self._pending_tasks: list = []
         self._track_task = True
         self.bus = EventBus(self)
@@ -199,15 +184,22 @@ class HomeAssistant:
         self.helpers = loader.Helpers(self)
         # This is a dictionary that any component can store any data on.
         self.data: dict = {}
-        self.state = CoreState.not_running
-        self.exit_code = 0
+        self.state: CoreState = CoreState.not_running
+        self.exit_code: int = 0
         # If not None, use to signal end-of-loop
         self._stopped: Optional[asyncio.Event] = None
+        # Timeout handler for Core/Helper namespace
+        self.timeout: TimeoutManager = TimeoutManager()
 
     @property
     def is_running(self) -> bool:
         """Return if Home Assistant is running."""
         return self.state in (CoreState.starting, CoreState.running)
+
+    @property
+    def is_stopping(self) -> bool:
+        """Return if Home Assistant is stopping."""
+        return self.state in (CoreState.stopping, CoreState.final_write)
 
     def start(self) -> int:
         """Start Home Assistant.
@@ -256,15 +248,16 @@ class HomeAssistant:
         This method is a coroutine.
         """
         _LOGGER.info("Starting Home Assistant")
-        self.state = CoreState.starting
-
         setattr(self.loop, "_thread_ident", threading.get_ident())
+
+        self.state = CoreState.starting
+        self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
         try:
             # Only block for EVENT_HOMEASSISTANT_START listener
             self.async_stop_track_tasks()
-            async with timeout(TIMEOUT_EVENT_START):
+            async with self.timeout.async_timeout(TIMEOUT_EVENT_START):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
@@ -280,13 +273,14 @@ class HomeAssistant:
         if self.state != CoreState.starting:
             _LOGGER.warning(
                 "Home Assistant startup has been interrupted. "
-                "Its state may be inconsistent."
+                "Its state may be inconsistent"
             )
             return
 
         self.state = CoreState.running
-        _async_create_timer(self)
+        self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
         self.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        _async_create_timer(self)
 
     def add_job(self, target: Callable[..., Any], *args: Any) -> None:
         """Add job to the executor pool.
@@ -401,14 +395,41 @@ class HomeAssistant:
         """Block until all pending work is done."""
         # To flush out any call_soon_threadsafe
         await asyncio.sleep(0)
+        start_time: Optional[float] = None
 
         while self._pending_tasks:
             pending = [task for task in self._pending_tasks if not task.done()]
             self._pending_tasks.clear()
             if pending:
-                await asyncio.wait(pending)
+                await self._await_and_log_pending(pending)
+
+                if start_time is None:
+                    # Avoid calling monotonic() until we know
+                    # we may need to start logging blocked tasks.
+                    start_time = 0
+                elif start_time == 0:
+                    # If we have waited twice then we set the start
+                    # time
+                    start_time = monotonic()
+                elif monotonic() - start_time > BLOCK_LOG_TIMEOUT:
+                    # We have waited at least three loops and new tasks
+                    # continue to block. At this point we start
+                    # logging all waiting tasks.
+                    for task in pending:
+                        _LOGGER.debug("Waiting for task: %s", task)
             else:
                 await asyncio.sleep(0)
+
+    async def _await_and_log_pending(self, pending: Iterable[Awaitable[Any]]) -> None:
+        """Await and log tasks that take a long time."""
+        wait_time = 0
+        while pending:
+            _, pending = await asyncio.wait(pending, timeout=BLOCK_LOG_TIMEOUT)
+            if not pending:
+                return
+            wait_time += BLOCK_LOG_TIMEOUT
+            for task in pending:
+                _LOGGER.debug("Waited %s seconds for task: %s", wait_time, task)
 
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
@@ -441,20 +462,41 @@ class HomeAssistant:
         self.state = CoreState.stopping
         self.async_track_tasks()
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        await self.async_block_till_done()
+        try:
+            async with self.timeout.async_timeout(120):
+                await self.async_block_till_done()
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                "Timed out waiting for shutdown stage 1 to complete, the shutdown will continue"
+            )
 
         # stage 2
         self.state = CoreState.final_write
         self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
-        await self.async_block_till_done()
+        try:
+            async with self.timeout.async_timeout(60):
+                await self.async_block_till_done()
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                "Timed out waiting for shutdown stage 2 to complete, the shutdown will continue"
+            )
 
         # stage 3
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
-        await self.async_block_till_done()
-        self.executor.shutdown()
+        try:
+            async with self.timeout.async_timeout(30):
+                await self.async_block_till_done()
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                "Timed out waiting for shutdown stage 3 to complete, the shutdown will continue"
+            )
+
+        # Python 3.9+ and backported in runner.py
+        await self.loop.shutdown_default_executor()  # type: ignore
 
         self.exit_code = exit_code
+        self.state = CoreState.stopped
 
         if self._stopped is not None:
             self._stopped.set()
@@ -466,9 +508,15 @@ class HomeAssistant:
 class Context:
     """The context that triggered something."""
 
-    user_id = attr.ib(type=str, default=None)
-    parent_id = attr.ib(type=Optional[str], default=None)
-    id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
+    user_id: str = attr.ib(default=None)
+    parent_id: Optional[str] = attr.ib(default=None)
+    # The uuid1 uses a random multicast MAC address instead of the real MAC address
+    # of the machine without the overhead of calling the getrandom() system call.
+    #
+    # This is effectively equivalent to PostgreSQL's uuid_generate_v1mc() function
+    id: str = attr.ib(
+        factory=lambda: uuid.uuid1(node=random.getrandbits(48) | (1 << 40)).hex
+    )
 
     def as_dict(self) -> dict:
         """Return a dictionary representation of the context."""
@@ -730,14 +778,12 @@ class State:
         last_changed: Optional[datetime.datetime] = None,
         last_updated: Optional[datetime.datetime] = None,
         context: Optional[Context] = None,
-        # Temp, because database can still store invalid entity IDs
-        # Remove with 1.0 or in 2020.
-        temp_invalid_id_bypass: Optional[bool] = False,
+        validate_entity_id: Optional[bool] = True,
     ) -> None:
         """Initialize a new state."""
         state = str(state)
 
-        if not valid_entity_id(entity_id) and not temp_invalid_id_bypass:
+        if validate_entity_id and not valid_entity_id(entity_id):
             raise InvalidEntityFormatError(
                 f"Invalid entity id encountered: {entity_id}. "
                 "Format should be <domain>.<object_id>"
@@ -1145,7 +1191,7 @@ class ServiceRegistry:
         service = service.lower()
 
         if service not in self._services.get(domain, {}):
-            _LOGGER.warning("Unable to remove unknown service %s/%s.", domain, service)
+            _LOGGER.warning("Unable to remove unknown service %s/%s", domain, service)
             return
 
         self._services[domain].pop(service)
@@ -1212,7 +1258,16 @@ class ServiceRegistry:
             raise ServiceNotFound(domain, service) from None
 
         if handler.schema:
-            processed_data = handler.schema(service_data)
+            try:
+                processed_data = handler.schema(service_data)
+            except vol.Invalid:
+                _LOGGER.debug(
+                    "Invalid data for service call %s.%s: %s",
+                    domain,
+                    service,
+                    service_data,
+                )
+                raise
         else:
             processed_data = service_data
 
@@ -1323,7 +1378,10 @@ class Config:
         self.config_dir: Optional[str] = None
 
         # List of allowed external dirs to access
-        self.whitelist_external_dirs: Set[str] = set()
+        self.allowlist_external_dirs: Set[str] = set()
+
+        # List of allowed external URLs that integrations may use
+        self.allowlist_external_urls: Set[str] = set()
 
         # If Home Assistant is running in safe mode
         self.safe_mode: bool = False
@@ -1346,6 +1404,16 @@ class Config:
             raise HomeAssistantError("config_dir is not set")
         return os.path.join(self.config_dir, *path)
 
+    def is_allowed_external_url(self, url: str) -> bool:
+        """Check if an external URL is allowed."""
+        parsed_url = f"{str(yarl.URL(url))}/"
+
+        return any(
+            allowed
+            for allowed in self.allowlist_external_urls
+            if parsed_url.startswith(allowed)
+        )
+
     def is_allowed_path(self, path: str) -> bool:
         """Check if the path is valid for access from outside."""
         assert path is not None
@@ -1360,9 +1428,9 @@ class Config:
         except (FileNotFoundError, RuntimeError, PermissionError):
             return False
 
-        for whitelisted_path in self.whitelist_external_dirs:
+        for allowed_path in self.allowlist_external_dirs:
             try:
-                thepath.relative_to(whitelisted_path)
+                thepath.relative_to(allowed_path)
                 return True
             except ValueError:
                 pass
@@ -1387,10 +1455,14 @@ class Config:
             "time_zone": time_zone,
             "components": self.components,
             "config_dir": self.config_dir,
-            "whitelist_external_dirs": self.whitelist_external_dirs,
+            # legacy, backwards compat
+            "whitelist_external_dirs": self.allowlist_external_dirs,
+            "allowlist_external_dirs": self.allowlist_external_dirs,
+            "allowlist_external_urls": self.allowlist_external_urls,
             "version": __version__,
             "config_source": self.config_source,
             "safe_mode": self.safe_mode,
+            "state": self.hass.state.value,
             "external_url": self.external_url,
             "internal_url": self.internal_url,
         }
@@ -1525,6 +1597,7 @@ class Config:
 def _async_create_timer(hass: HomeAssistant) -> None:
     """Create a timer that will start on HOMEASSISTANT_START."""
     handle = None
+    timer_context = Context()
 
     def schedule_tick(now: datetime.datetime) -> None:
         """Schedule a timer tick when the next second rolls around."""
@@ -1539,12 +1612,14 @@ def _async_create_timer(hass: HomeAssistant) -> None:
         """Fire next time event."""
         now = dt_util.utcnow()
 
-        hass.bus.async_fire(EVENT_TIME_CHANGED, {ATTR_NOW: now})
+        hass.bus.async_fire(EVENT_TIME_CHANGED, {ATTR_NOW: now}, context=timer_context)
 
         # If we are more than a second late, a tick was missed
         late = monotonic() - target
         if late > 1:
-            hass.bus.async_fire(EVENT_TIMER_OUT_OF_SYNC, {ATTR_SECONDS: late})
+            hass.bus.async_fire(
+                EVENT_TIMER_OUT_OF_SYNC, {ATTR_SECONDS: late}, context=timer_context
+            )
 
         schedule_tick(now)
 

@@ -32,8 +32,9 @@ class TestSensorMoldIndicator(unittest.TestCase):
         self.hass.states.set(
             "test.indoorhumidity", "50", {ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE}
         )
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Stop down everything that was started."""
         self.hass.stop()
 

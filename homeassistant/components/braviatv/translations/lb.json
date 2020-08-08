@@ -19,7 +19,7 @@
             },
             "user": {
                 "data": {
-                    "host": "TV Host Numm oder IP Adresse"
+                    "host": "Host"
                 },
                 "description": "Sony Bravia TV Integratioun ariichten. Falls et Problemer mat der Konfiguratioun g\u00ebtt g\u00e9i op:\nhttps://www.home-assistant.io/integrations/braviatv\nStell s\u00e9cher dass d\u00e4in Fernseh un ass.",
                 "title": "Sony Bravia TV"
