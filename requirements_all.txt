@@ -539,7 +539,7 @@ enocean==0.50
 enturclient==0.2.1
 
 # homeassistant.components.environment_canada
-env_canada==0.1.0
+env_canada==0.2.0
 
 # homeassistant.components.envirophat
 # envirophat==0.0.6
@@ -733,7 +733,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200805.0
+home-assistant-frontend==20200807.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
