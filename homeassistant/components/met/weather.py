@@ -18,6 +18,7 @@ from homeassistant.const import (
     PRESSURE_INHG,
     TEMP_CELSIUS,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.distance import convert as convert_distance
