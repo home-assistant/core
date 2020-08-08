@@ -92,17 +92,17 @@ class ZWaveServices:
                 payload = int(selection)
 
             # iterate list labels to get value
-            if isinstance(selection, str):
+            else:
                 for selected in value.value["List"]:
                     if selected["Label"] != selection:
                         continue
                     payload = int(selected["Value"])
 
-            if payload is None:
-                _LOGGER.error(
-                    "Invalid value %s for parameter %s", selection, param,
-                )
-                return
+                if payload is None:
+                    _LOGGER.error(
+                        "Invalid value %s for parameter %s", selection, param,
+                    )
+                    return
 
         if value.type == ValueType.BUTTON:
             # Unsupported at this time
