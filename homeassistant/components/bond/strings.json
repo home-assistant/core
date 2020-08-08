@@ -18,6 +18,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "old_firmware": "Unsupported old firmware on the Bond device - please upgrade before continuing",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
