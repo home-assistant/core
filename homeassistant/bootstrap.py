@@ -196,11 +196,6 @@ async def async_from_config_dict(
     Dynamically loads required components and its dependencies.
     This method is a coroutine.
     """
-    import cProfile
-
-    pr = cProfile.Profile()
-    pr.enable()
-
     start = monotonic()
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
@@ -254,10 +249,6 @@ async def async_from_config_dict(
         hass.components.persistent_notification.async_create(
             msg, "Python version", "python_version"
         )
-
-    pr.disable()
-    pr.create_stats()
-    pr.dump_stats("bootstrap.cprof")
 
     return hass
 
