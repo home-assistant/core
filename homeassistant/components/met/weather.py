@@ -58,7 +58,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if config.get(CONF_LATITUDE) is None:
         config[CONF_TRACK_HOME] = True
 
-    await async_setup(hass, config, async_add_entities)
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
