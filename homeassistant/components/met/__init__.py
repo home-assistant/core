@@ -34,12 +34,6 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
 
 async def async_setup_entry(hass, config_entry):
     """Set up Met as config entry."""
-    if config_entry.data.get(CONF_TRACK_HOME, False):
-        unique_id = "home"
-    else:
-        unique_id = (
-            f"{config_entry.data[CONF_LATITUDE]}-{config_entry.data[CONF_LONGITUDE]}"
-        )
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = dict()
     coordinator = MetDataUpdateCoordinator(hass, config_entry)

@@ -1,7 +1,5 @@
 """Support for Met.no weather service."""
-from datetime import timedelta
 import logging
-from random import randrange
 
 import voluptuous as vol
 
@@ -20,7 +18,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 
@@ -72,33 +69,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(
         [MetWeather(coordinator, config_entry.data, hass.config.units.is_metric)]
     )
-
-
-async def async_setup(hass, config, async_add_entities):
-    """Create DataUpdateCoordinator and add entities."""
-    if config.get(CONF_TRACK_HOME, False):
-        unique_id = "home"
-    else:
-        unique_id = f"{config[CONF_LATITUDE]}-{config[CONF_LONGITUDE]}"
-
-    async def async_update_data():
-        """Fetch data from API endpoint."""
-        try:
-            return await hass.data[DOMAIN][unique_id].fetch_data()
-        except Exception as err:
-            raise UpdateFailed(f"Update failed: {err}")
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=unique_id,
-        update_method=async_update_data,
-        # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(minutes=randrange(55, 65)),
-    )
-
-    hass.data[DOMAIN][unique_id].init_data()
-    async_add_entities([MetWeather(coordinator, config, hass.config.units.is_metric)])
 
 
 class MetWeather(WeatherEntity):
