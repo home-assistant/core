@@ -43,6 +43,14 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DOMAIN][unique_id] = MetWeatherData(
         hass, config_entry.data, hass.config.units.is_metric
     )
+    coordinator = MetDataUpdateCoordinator(hass, config_entry)
+    await coordinator.async_refresh()
+    
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady
+
+    hass.data[DOMAIN][config_entry.entry_id] = coordinator
+
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(config_entry, "weather")
     )
