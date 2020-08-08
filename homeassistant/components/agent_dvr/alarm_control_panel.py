@@ -40,7 +40,7 @@ class AgentBaseStation(AlarmControlPanelEntity):
         """Initialize the alarm control panel."""
         self._state = None
         self._client = client
-        self._uniqueid = f"{client.unique}_CP"
+        self._unique_id = f"{client.unique}_CP"
         name = CONST_ALARM_CONTROL_PANEL_NAME
         self._name = name = f"{client.name} {name}"
 
@@ -73,18 +73,18 @@ class AgentBaseStation(AlarmControlPanelEntity):
         """Update the state of the device."""
         await self._client.update()
         armed = self._client.is_armed
-        if armed is not None:
-            if armed:
-                prof = (await self._client.get_active_profile()).lower()
-                self._state = STATE_ALARM_ARMED_AWAY
-                if prof == CONF_HOME_MODE_NAME:
-                    self._state = STATE_ALARM_ARMED_HOME
-                if prof == CONF_NIGHT_MODE_NAME:
-                    self._state = STATE_ALARM_ARMED_NIGHT
-            else:
-                self._state = STATE_ALARM_DISARMED
-        else:
+        if armed is None:
             self._state = None
+            return
+        if armed:
+            prof = (await self._client.get_active_profile()).lower()
+            self._state = STATE_ALARM_ARMED_AWAY
+            if prof == CONF_HOME_MODE_NAME:
+                self._state = STATE_ALARM_ARMED_HOME
+            elif prof == CONF_NIGHT_MODE_NAME:
+                self._state = STATE_ALARM_ARMED_NIGHT
+        else:
+            self._state = STATE_ALARM_DISARMED
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
@@ -115,11 +115,6 @@ class AgentBaseStation(AlarmControlPanelEntity):
         return self._name
 
     @property
-    def should_poll(self) -> bool:
-        """Update the state periodically."""
-        return True
-
-    @property
     def available(self) -> bool:
         """Device available."""
         return self._client.is_available
@@ -127,4 +122,4 @@ class AgentBaseStation(AlarmControlPanelEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return self._uniqueid
+        return self._unique_id
