@@ -30,7 +30,6 @@ async def async_setup_entry(
     async_add_entities(
         [AgentBaseStation(hass.data[AGENT_DOMAIN][config_entry.entry_id][CONNECTION])]
     )
-    return True
 
 
 class AgentBaseStation(AlarmControlPanelEntity):
