@@ -4,7 +4,7 @@ import math
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DOMAIN,
+    DOMAIN as COVER_DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
@@ -27,10 +27,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def add_entities(discovery_info=None):
         """Add the Insteon entities for the platform."""
         async_add_insteon_entities(
-            hass, DOMAIN, InsteonCoverEntity, async_add_entities, discovery_info
+            hass, COVER_DOMAIN, InsteonCoverEntity, async_add_entities, discovery_info
         )
 
-    signal = f"{SIGNAL_ADD_ENTITIES}_{DOMAIN}"
+    signal = f"{SIGNAL_ADD_ENTITIES}_{COVER_DOMAIN}"
     async_dispatcher_connect(hass, signal, add_entities)
     add_entities()
 

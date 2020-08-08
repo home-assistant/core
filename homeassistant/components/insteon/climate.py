@@ -13,7 +13,7 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_FAN,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
-    DOMAIN,
+    DOMAIN as CLIMATE_DOMAIN,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_FAN_ONLY,
@@ -70,10 +70,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def add_entities(discovery_info=None):
         """Add the Insteon entities for the platform."""
         async_add_insteon_entities(
-            hass, DOMAIN, InsteonClimateEntity, async_add_entities, discovery_info
+            hass,
+            CLIMATE_DOMAIN,
+            InsteonClimateEntity,
+            async_add_entities,
+            discovery_info,
         )
 
-    signal = f"{SIGNAL_ADD_ENTITIES}_{DOMAIN}"
+    signal = f"{SIGNAL_ADD_ENTITIES}_{CLIMATE_DOMAIN}"
     async_dispatcher_connect(hass, signal, add_entities)
     add_entities()
 

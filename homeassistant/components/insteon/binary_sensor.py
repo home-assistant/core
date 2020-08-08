@@ -26,7 +26,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PROBLEM,
     DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SMOKE,
-    DOMAIN,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorEntity,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -58,10 +58,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def add_entities(discovery_info=None):
         """Add the Insteon entities for the platform."""
         async_add_insteon_entities(
-            hass, DOMAIN, InsteonBinarySensorEntity, async_add_entities, discovery_info
+            hass,
+            BINARY_SENSOR_DOMAIN,
+            InsteonBinarySensorEntity,
+            async_add_entities,
+            discovery_info,
         )
 
-    signal = f"{SIGNAL_ADD_ENTITIES}_{DOMAIN}"
+    signal = f"{SIGNAL_ADD_ENTITIES}_{BINARY_SENSOR_DOMAIN}"
     async_dispatcher_connect(hass, signal, add_entities)
     add_entities()
 
