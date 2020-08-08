@@ -2,7 +2,7 @@
 from datetime import timedelta
 
 from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
-from homeassistant.components.flo.device import FloDevice
+from homeassistant.components.flo.device import FloDeviceDataUpdateCoordinator
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
@@ -21,7 +21,7 @@ async def test_device(hass, config_entry, aioclient_mock_fixture, aioclient_mock
     await hass.async_block_till_done()
     assert len(hass.data[FLO_DOMAIN]["devices"]) == 1
 
-    device: FloDevice = hass.data[FLO_DOMAIN]["devices"][0]
+    device: FloDeviceDataUpdateCoordinator = hass.data[FLO_DOMAIN]["devices"][0]
     assert device.api_client is not None
     assert device.available
     assert device.consumption_today == 3.674
@@ -39,7 +39,7 @@ async def test_device(hass, config_entry, aioclient_mock_fixture, aioclient_mock
     assert device.mac_address == "111111111111"
     assert device.model == "flo_device_075_v2"
     assert device.manufacturer == "Flo by Moen"
-    assert device.name == "Flo by Moen flo_device_075_v2"
+    assert device.device_name == "Flo by Moen flo_device_075_v2"
     assert device.rssi == -47
 
     call_count = aioclient_mock.call_count

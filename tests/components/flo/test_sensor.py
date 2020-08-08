@@ -16,10 +16,9 @@ async def test_sensors(hass, config_entry, aioclient_mock_fixture):
 
     assert len(hass.data[FLO_DOMAIN]["devices"]) == 1
 
-    # we should have 6 entities for the device
+    # we should have 5 entities for the device
     assert hass.states.get("sensor.current_system_mode").state == "home"
     assert hass.states.get("sensor.today_s_water_usage").state == "3.7"
     assert hass.states.get("sensor.water_flow_rate").state == "0"
     assert hass.states.get("sensor.water_pressure").state == "54.2"
     assert hass.states.get("sensor.water_temperature").state == "21.1"
-    assert hass.states.get("sensor.wifi_signal_strength").state == "-47"

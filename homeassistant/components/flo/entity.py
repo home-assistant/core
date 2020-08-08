@@ -2,21 +2,23 @@
 
 from typing import Any, Dict
 
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN as FLO_DOMAIN, SIGNAL_DEVICE_UPDATED
-from .device import FloDevice
+from .const import DOMAIN as FLO_DOMAIN
+from .device import FloDeviceDataUpdateCoordinator
 
 
 class FloEntity(Entity):
     """A base class for Flo entities."""
 
-    def __init__(self, unique_id: str, name: str, device: FloDevice, **kwargs):
+    def __init__(
+        self, type: str, name: str, device: FloDeviceDataUpdateCoordinator, **kwargs
+    ):
         """Init Flo entity."""
-        self._unique_id: str = unique_id
+        self._unique_id: str = f"{device.mac_address}_{type}"
         self._name: str = name
-        self._device: FloDevice = device
+        self._device: FloDeviceDataUpdateCoordinator = device
         self._state: Any = None
 
     @property
@@ -34,9 +36,10 @@ class FloEntity(Entity):
         """Return a device description for device registry."""
         return {
             "identifiers": {(FLO_DOMAIN, self._device.id)},
+            "connections": {(CONNECTION_NETWORK_MAC, self._device.mac_address)},
             "manufacturer": self._device.manufacturer,
             "model": self._device.model,
-            "name": self._device.name,
+            "name": self._device.device_name,
             "sw_version": self._device.firmware_version,
         }
 
@@ -53,17 +56,12 @@ class FloEntity(Entity):
     @property
     def should_poll(self) -> bool:
         """Poll state from device."""
-        return False
+        return True
 
-    async def async_update(self) -> None:
-        """Retrieve the latest daily usage."""
+    async def async_update(self):
+        """Update Flo entity."""
+        await self._device.async_request_refresh()
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._device.mac_address}-{SIGNAL_DEVICE_UPDATED}",
-                self.async_write_ha_state,
-            )
-        )
+        self.async_on_remove(self._device.async_add_listener(self.async_write_ha_state))

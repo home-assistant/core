@@ -2,6 +2,7 @@
 import logging
 
 from aioflo import async_get_api
+from aioflo.errors import RequestError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -26,7 +27,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         api = await async_get_api(
             data[CONF_USERNAME], data[CONF_PASSWORD], session=session
         )
-    except Exception:  # pylint: disable=broad-except
+    except RequestError:
         raise CannotConnect
 
     user_info = await api.user.get_info()

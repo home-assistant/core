@@ -1,63 +1,65 @@
 """Flo device object."""
+import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Callable, Dict, List
 
 from aioflo.api import API
+from aioflo.errors import RequestError
+from async_timeout import timeout
 
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+import homeassistant.util.dt as dt_util
 
-from .const import SIGNAL_DEVICE_UPDATED, SIGNAL_WATER_CONSUMPTION_UPDATED
+from .const import DOMAIN as FLO_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class FloDevice:
+class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     """Flo device object."""
 
     def __init__(
-        self,
-        hass: HomeAssistantType,
-        device_information: Dict[str, Any],
-        api_client: API,
+        self, hass: HomeAssistantType, api_client: API, location_id: str, device_id: str
     ):
         """Initialize the device."""
         self.hass: HomeAssistantType = hass
         self.api_client: API = api_client
-        self.unsubs: List[Callable] = []
-        self._flo_device_id: str = device_information["id"]
-        self._flo_location_id: str = device_information["location"]["id"]
-        self._mac_address: str = device_information["macAddress"]
+        self._flo_location_id: str = location_id
+        self._flo_device_id: str = device_id
         self._manufacturer: str = "Flo by Moen"
-        self._model: str = device_information["deviceModel"]
-        self._device_type: str = device_information["deviceType"]
-        self._serial_number: str = device_information["serialNumber"]
 
-        self._available: bool = device_information["isConnected"]
-        self._firmware_version: str = device_information["fwVersion"]
-        self._rssi: int = device_information["connectivity"]["rssi"]
-        self._last_heard_from_time: str = device_information["lastHeardFromTime"]
-        self._current_system_mode: str = device_information["systemMode"]["lastKnown"]
-        self._target_system_mode: str = device_information["systemMode"]["target"]
-        self._current_flow_rate: float = device_information["telemetry"]["current"][
-            "gpm"
-        ]
-        self._current_psi: float = device_information["telemetry"]["current"]["psi"]
-        self._temperature: float = device_information["telemetry"]["current"]["tempF"]
-
+        self._mac_address: str = None
+        self._model: str = None
+        self._device_type: str = None
+        self._serial_number: str = None
+        self._available: bool = None
+        self._firmware_version: str = None
+        self._rssi: int = None
+        self._last_heard_from_time: str = None
+        self._current_system_mode: str = None
+        self._target_system_mode: str = None
+        self._current_flow_rate: float = None
+        self._current_psi: float = None
+        self._temperature: float = None
         self._consumption_today: float = None
 
-        self.unsubs.append(
-            async_track_time_interval(
-                self.hass, self._update_device, timedelta(seconds=60)
-            )
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{FLO_DOMAIN}-{device_id}",
+            update_interval=timedelta(seconds=30),
         )
-        self.unsubs.append(
-            async_track_time_interval(
-                self.hass, self.update_consumption_data, timedelta(seconds=60)
-            )
-        )
+
+    async def _async_update_data(self):
+        """Update data via library."""
+        try:
+            async with timeout(10):
+                await asyncio.gather(
+                    *[self._update_device(), self._update_consumption_data()]
+                )
+        except (RequestError) as error:
+            raise UpdateFailed(error)
 
     @property
     def location_id(self) -> str:
@@ -70,7 +72,7 @@ class FloDevice:
         return self._flo_device_id
 
     @property
-    def name(self) -> str:
+    def device_name(self) -> str:
         """Return device name."""
         return f"{self.manufacturer} {self.model}"
 
@@ -148,6 +150,10 @@ class FloDevice:
         """Update the device information from the API."""
         device_information = await self.api_client.device.get_info(self._flo_device_id)
         _LOGGER.debug("Flo device data: %s", device_information)
+        self._mac_address: str = device_information["macAddress"]
+        self._model: str = device_information["deviceModel"]
+        self._device_type: str = device_information["deviceType"]
+        self._serial_number: str = device_information["serialNumber"]
         self._available = device_information["isConnected"]
         self._firmware_version = device_information["fwVersion"]
         self._rssi = device_information["connectivity"]["rssi"]
@@ -157,11 +163,10 @@ class FloDevice:
         self._current_flow_rate = device_information["telemetry"]["current"]["gpm"]
         self._current_psi = device_information["telemetry"]["current"]["psi"]
         self._temperature = device_information["telemetry"]["current"]["tempF"]
-        self.hass.bus.async_fire(f"{self.mac_address}-{SIGNAL_DEVICE_UPDATED}")
 
-    async def update_consumption_data(self, *_) -> None:
+    async def _update_consumption_data(self, *_) -> None:
         """Update water consumption data from the API."""
-        today = datetime.today()
+        today = dt_util.now().date()
         start_date = datetime(today.year, today.month, today.day, 0, 0)
         end_date = datetime(today.year, today.month, today.day, 23, 59, 59, 999000)
         water_usage = await self.api_client.water.get_consumption_info(
@@ -169,6 +174,3 @@ class FloDevice:
         )
         _LOGGER.debug("Updated Flo consumption data: %s", water_usage)
         self._consumption_today = water_usage["aggregations"]["sumTotalGallonsConsumed"]
-        self.hass.bus.async_fire(
-            f"{self.mac_address}-{SIGNAL_WATER_CONSUMPTION_UPDATED}"
-        )
