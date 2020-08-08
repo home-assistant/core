@@ -75,8 +75,9 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.interface = user_input[CONF_INTERFACE]
 
         # allow optional manual setting of host and mac
-        if self.host is None and self.sid is None:
+        if self.host is None:
             self.host = user_input.get(CONF_HOST)
+        if self.sid is None:
             mac_address = user_input.get(CONF_MAC)
 
             # format sid from mac_address
@@ -173,7 +174,9 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         unique_id = mac_address
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured({CONF_HOST: self.host})
+        self._abort_if_unique_id_configured(
+            {CONF_HOST: self.host, CONF_MAC: mac_address}
+        )
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": {"name": self.host}})
