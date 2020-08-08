@@ -112,8 +112,3 @@ class TeslaSensor(TeslaDevice, Entity):
                 }
             )
         return attr
-
-    async def async_update(self):
-        """Update the state from the sensor."""
-        _LOGGER.debug("Updating sensor: %s", self.name)
-        await super().async_update()

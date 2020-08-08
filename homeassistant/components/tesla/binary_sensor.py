@@ -39,8 +39,3 @@ class TeslaBinarySensor(TeslaDevice, BinarySensorEntity):
     def is_on(self):
         """Return the state of the binary sensor."""
         return self.tesla_device.get_value()
-
-    async def async_update(self):
-        """Update the state of the device."""
-        _LOGGER.debug("Updating sensor: %s", self.name)
-        await super().async_update()

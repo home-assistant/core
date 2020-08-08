@@ -119,26 +119,6 @@ async def async_setup(hass, base_config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up Tesla as config entry."""
-
-    async def async_update_data():
-        """Fetch data from API endpoint.
-
-        This is the place to pre-process the data to lookup tables
-        so entities can quickly look up their data.
-        """
-        controller = hass.data[DOMAIN][config_entry.entry_id]["controller"]
-        if controller.is_token_refreshed():
-            (refresh_token, access_token) = controller.get_tokens()
-            _async_save_tokens(hass, config_entry, access_token, refresh_token)
-            _LOGGER.debug("Saving new tokens in config_entry")
-        try:
-            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
-            # handled by the data update coordinator.
-            async with async_timeout.timeout(30):
-                return await controller.update()
-        except TeslaException as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
-
     hass.data.setdefault(DOMAIN, {})
     config = config_entry.data
     websession = aiohttp_client.async_get_clientsession(hass)
@@ -167,14 +147,8 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.error("Unable to communicate with Tesla API: %s", ex.message)
         return False
     _async_save_tokens(hass, config_entry, access_token, refresh_token)
-    coordinator = TeslaDataUpdateCoordinator(hass, config_entry, controller)
-        hass,
-        _LOGGER,
-        # Name of the data. For logging purposes.
-        name="tesla",
-        update_method=async_update_data,
-        # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=MIN_SCAN_INTERVAL),
+    coordinator = TeslaDataUpdateCoordinator(
+        hass, config_entry=config_entry, controller=controller
     )
     # Fetch initial data so we have data when entities subscribe
     entry_data = hass.data[DOMAIN][config_entry.entry_id] = {
@@ -183,7 +157,7 @@ async def async_setup_entry(hass, config_entry):
         "devices": defaultdict(list),
         DATA_LISTENER: [config_entry.add_update_listener(update_listener)],
     }
-    _LOGGER.debug("Connected to the Tesla API.")
+    _LOGGER.debug("Connected to the Tesla API")
     await coordinator.async_refresh()
     all_devices = entry_data["controller"].get_homeassistant_components()
 
@@ -252,7 +226,9 @@ class TeslaDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from API endpoint."""
         if self.controller.is_token_refreshed():
             (refresh_token, access_token) = self.controller.get_tokens()
-            _async_save_tokens(self.hass, self.config_entry, access_token, refresh_token)
+            _async_save_tokens(
+                self.hass, self.config_entry, access_token, refresh_token
+            )
             _LOGGER.debug("Saving new tokens in config_entry")
 
         try:
@@ -262,7 +238,7 @@ class TeslaDataUpdateCoordinator(DataUpdateCoordinator):
                 return await self.controller.update()
         except TeslaException as err:
             raise UpdateFailed(f"Error communicating with API: {err}")
- 
+
 
 class TeslaDevice(Entity):
     """Representation of a Tesla device."""
@@ -330,6 +306,7 @@ class TeslaDevice(Entity):
 
     async def async_update(self):
         """Update the state of the device."""
+        _LOGGER.debug("Updating state for: %s", self.name)
         await self.coordinator.async_request_refresh()
         self.refresh()
 

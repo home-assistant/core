@@ -38,8 +38,3 @@ class TeslaLock(TeslaDevice, LockEntity):
         if self.tesla_device.is_locked() is None:
             return None
         return self.tesla_device.is_locked()
-
-    async def async_update(self):
-        """Update state of the lock."""
-        _LOGGER.debug("Updating state for: %s", self.name)
-        await super().async_update()

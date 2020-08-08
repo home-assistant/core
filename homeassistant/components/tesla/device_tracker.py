@@ -31,11 +31,6 @@ class TeslaDeviceEntity(TeslaDevice, TrackerEntity):
         super().__init__(tesla_device, coordinator)
         self._attributes = {"trackr_id": self.unique_id}
 
-    async def async_update(self):
-        """Update the device info."""
-        _LOGGER.debug("Updating device position: %s", self.name)
-        await super().async_update()
-
     @property
     def latitude(self) -> Optional[float]:
         """Return latitude value of the device."""

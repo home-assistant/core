@@ -44,11 +44,6 @@ class ChargerSwitch(TeslaDevice, SwitchEntity):
             return None
         return self.tesla_device.is_charging() == STATE_ON
 
-    async def async_update(self):
-        """Update the state of the switch."""
-        _LOGGER.debug("Updating state for: %s", self.name)
-        await super().async_update()
-
 
 class RangeSwitch(TeslaDevice, SwitchEntity):
     """Representation of a Tesla max range charging switch."""
@@ -69,11 +64,6 @@ class RangeSwitch(TeslaDevice, SwitchEntity):
         if self.tesla_device.is_maxrange() is None:
             return None
         return bool(self.tesla_device.is_maxrange())
-
-    async def async_update(self):
-        """Update the state of the switch."""
-        _LOGGER.debug("Updating state for: %s", self.name)
-        await super().async_update()
 
 
 class UpdateSwitch(TeslaDevice, SwitchEntity):
@@ -111,12 +101,6 @@ class UpdateSwitch(TeslaDevice, SwitchEntity):
             return None
         return bool(self.controller.get_updates(self.tesla_device.id()))
 
-    async def async_update(self):
-        """Update the state of the switch."""
-        car_id = self.tesla_device.id()
-        _LOGGER.debug("Updating state for: %s %s", self.name, car_id)
-        await super().async_update()
-
 
 class SentryModeSwitch(TeslaDevice, SwitchEntity):
     """Representation of a Tesla sentry mode switch."""
@@ -137,8 +121,3 @@ class SentryModeSwitch(TeslaDevice, SwitchEntity):
         if self.tesla_device.is_on() is None:
             return None
         return self.tesla_device.is_on()
-
-    async def async_update(self):
-        """Update the state of the switch."""
-        _LOGGER.debug("Updating state for: %s", self.name)
-        await super().async_update()

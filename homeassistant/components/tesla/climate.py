@@ -61,11 +61,6 @@ class TeslaThermostat(TeslaDevice, ClimateEntity):
         """
         return SUPPORT_HVAC
 
-    async def async_update(self):
-        """Call by the Tesla device callback to update state."""
-        _LOGGER.debug("Updating: %s", self.name)
-        await super().async_update()
-
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
