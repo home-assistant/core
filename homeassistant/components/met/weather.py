@@ -90,7 +90,6 @@ class MetWeather(WeatherEntity):
             self._unsub_track_home = self.hass.bus.async_listen(
                 EVENT_CORE_CONFIG_UPDATE, self._core_config_updated
             )
-        await self.async_update()
 
     async def _core_config_updated(self, _event):
         """Handle core config updated."""
