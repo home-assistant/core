@@ -16,7 +16,6 @@ async def test_device_setup(hass):
     """Test a successful setup."""
     device = pick_device(1)
     mock_api = device.get_mock_api()
-    mock_api.type = "RM4"
     mock_entry = device.get_mock_entry()
     device_entry = BroadlinkDevice(hass, mock_entry)
     await async_setup_component(hass, DOMAIN, {})
@@ -39,7 +38,6 @@ async def test_device_setup_authentication_error(hass):
     device = pick_device(1)
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.AuthenticationError()
-    mock_api.type = "RM4"
     mock_entry = device.get_mock_entry()
     device_entry = BroadlinkDevice(hass, mock_entry)
     await async_setup_component(hass, DOMAIN, {})
@@ -65,7 +63,6 @@ async def test_device_setup_device_offline(hass):
     device = pick_device(1)
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.DeviceOfflineError()
-    mock_api.type = "RM4"
     mock_entry = device.get_mock_entry()
     device_entry = BroadlinkDevice(hass, mock_entry)
     await async_setup_component(hass, DOMAIN, {})
@@ -81,7 +78,6 @@ async def test_device_setup_os_error(hass):
     device = pick_device(1)
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = OSError()
-    mock_api.type = "RM4"
     mock_entry = device.get_mock_entry()
     device_entry = BroadlinkDevice(hass, mock_entry)
     await async_setup_component(hass, DOMAIN, {})

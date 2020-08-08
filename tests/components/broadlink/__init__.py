@@ -8,11 +8,12 @@ from tests.common import MockConfigEntry
 class BroadlinkDevice:
     """Representation of a Broadlink device."""
 
-    def __init__(self, name, host, mac, devtype, timeout):
+    def __init__(self, name, host, mac, type_, devtype, timeout):
         """Initialize the device."""
         self.name: str = name
         self.host: str = host
         self.mac: str = mac
+        self.type: str = type_
         self.devtype: int = devtype
         self.timeout: int = timeout
 
@@ -22,6 +23,7 @@ class BroadlinkDevice:
         mock_api.name = self.name
         mock_api.host = (self.host, 80)
         mock_api.mac = bytes.fromhex(self.mac)
+        mock_api.type = self.type
         mock_api.devtype = self.devtype
         mock_api.timeout = self.timeout
         mock_api.is_locked = False
@@ -50,7 +52,7 @@ class BroadlinkDevice:
 def pick_device(index):
     """Pick a device."""
     devices = (
-        ("Living Room", "192.168.0.32", "34ea34b45d2c", 0x2714, 5),
-        ("Office", "192.168.0.64", "34ea34b43b5a", 0x5F36, 10),
+        ("Living Room", "192.168.0.32", "34ea34b45d2c", "RM2", 0x2714, 5),
+        ("Office", "192.168.0.64", "34ea34b43b5a", "RM4", 0x5F36, 10),
     )
     return BroadlinkDevice(*devices[index])
