@@ -35,8 +35,12 @@ async def init_integration(
         current["WeatherIcon"] = 999
 
     with patch(
-        "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions", return_value=current,
-    ), patch("homeassistant.components.accuweather.AccuWeather.async_get_forecast", return_value=forecast):
+        "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
+        return_value=current,
+    ), patch(
+        "homeassistant.components.accuweather.AccuWeather.async_get_forecast",
+        return_value=forecast
+    ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
