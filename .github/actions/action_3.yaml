@@ -1,0 +1,75 @@
+name: 'setup_and_restore_python_2'
+description: 'Setup and restore Python environment (2)'
+runs:
+  - name: Check out code from GitHub
+    uses: actions/checkout@v2
+  - name:
+      Restore full Python ${{ matrix.python-version }} virtual environment
+    id: cache-venv
+    uses: actions/cache@v2
+    with:
+      path: venv
+      key: >-
+        ${{ runner.os }}-venv-${{ matrix.python-version }}-${{
+        hashFiles('requirements_test.txt') }}-${{
+        hashFiles('requirements_all.txt') }}-${{
+        hashFiles('homeassistant/package_constraints.txt') }}
+  - name: Fail job if Python cache restore failed
+    if: steps.cache-venv.outputs.cache-hit != 'true'
+    run: |
+      echo "Failed to restore Python virtual environment from cache"
+      exit 1
+  - name: Check out code from GitHub
+    uses: actions/checkout@v2
+  - name:
+      Restore full Python ${{ matrix.python-version }} virtual environment
+    id: cache-venv
+    uses: actions/cache@v2
+    with:
+      path: venv
+      key: >-
+        ${{ runner.os }}-venv-${{ matrix.python-version }}-${{
+        hashFiles('requirements_test.txt') }}-${{
+        hashFiles('requirements_all.txt') }}-${{
+        hashFiles('homeassistant/package_constraints.txt') }}
+  - name: Fail job if Python cache restore failed
+    if: steps.cache-venv.outputs.cache-hit != 'true'
+    run: |
+      echo "Failed to restore Python virtual environment from cache"
+      exit 1
+  - name: Check out code from GitHub
+    uses: actions/checkout@v2
+  - name:
+      Restore full Python ${{ matrix.python-version }} virtual environment
+    id: cache-venv
+    uses: actions/cache@v2
+    with:
+      path: venv
+      key: >-
+        ${{ runner.os }}-venv-${{ matrix.python-version }}-${{
+        hashFiles('requirements_test.txt') }}-${{
+        hashFiles('requirements_all.txt') }}-${{
+        hashFiles('homeassistant/package_constraints.txt') }}
+  - name: Fail job if Python cache restore failed
+    if: steps.cache-venv.outputs.cache-hit != 'true'
+    run: |
+      echo "Failed to restore Python virtual environment from cache"
+      exit 1
+  - name: Check out code from GitHub
+    uses: actions/checkout@v2
+  - name:
+      Restore full Python ${{ matrix.python-version }} virtual environment
+    id: cache-venv
+    uses: actions/cache@v2
+    with:
+      path: venv
+      key: >-
+        ${{ runner.os }}-venv-${{ matrix.python-version }}-${{
+        hashFiles('requirements_test.txt') }}-${{
+        hashFiles('requirements_all.txt') }}-${{
+        hashFiles('homeassistant/package_constraints.txt') }}
+  - name: Fail job if Python cache restore failed
+    if: steps.cache-venv.outputs.cache-hit != 'true'
+    run: |
+      echo "Failed to restore Python virtual environment from cache"
+      exit 1
