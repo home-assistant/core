@@ -33,6 +33,7 @@ from .const import (
     ATTR_AUX_HEAT,
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_OUTSIDE_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
     ATTR_HUMIDITY,
@@ -63,6 +64,7 @@ from .const import (
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    SERVICE_SET_OUTSIDE_TEMPERATURE,
     SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
@@ -70,6 +72,7 @@ from .const import (
     SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
+    SUPPORT_OUTSIDE_TEMPERATURE,
 )
 
 DEFAULT_MIN_TEMP = 7
@@ -95,6 +98,18 @@ SET_TEMPERATURE_SCHEMA = vol.All(
             vol.Inclusive(ATTR_TARGET_TEMP_HIGH, "temperature"): vol.Coerce(float),
             vol.Inclusive(ATTR_TARGET_TEMP_LOW, "temperature"): vol.Coerce(float),
             vol.Optional(ATTR_HVAC_MODE): vol.In(HVAC_MODES),
+        }
+    ),
+)
+
+
+SET_OUTSIDE_TEMPERATURE_SCHEMA = vol.All(
+    cv.has_at_least_one_key(
+        ATTR_TEMPERATURE
+    ),
+    make_entity_service_schema(
+        {
+            vol.Exclusive(ATTR_TEMPERATURE, "temperature"): vol.Coerce(float),
         }
     ),
 )
@@ -131,6 +146,12 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         SET_TEMPERATURE_SCHEMA,
         async_service_temperature_set,
         [SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE_RANGE],
+    )
+    component.async_register_entity_service(
+        SERVICE_SET_OUTSIDE_TEMPERATURE,
+        SET_OUTSIDE_TEMPERATURE_SCHEMA,
+        async_service_outside_temperature_set,
+        [SUPPORT_OUTSIDE_TEMPERATURE],
     )
     component.async_register_entity_service(
         SERVICE_SET_HUMIDITY,
@@ -208,6 +229,9 @@ class ClimateEntity(Entity):
 
         if supported_features & SUPPORT_SWING_MODE:
             data[ATTR_SWING_MODES] = self.swing_modes
+            
+        if supported_features & SUPPORT_OUTSIDE_TEMPERATURE:
+            data[ATTR_OUTSIDE_TEMPERATURE] = self.outside_temperature
 
         return data
 
@@ -266,6 +290,9 @@ class ClimateEntity(Entity):
 
         if supported_features & SUPPORT_AUX_HEAT:
             data[ATTR_AUX_HEAT] = STATE_ON if self.is_aux_heat else STATE_OFF
+            
+        if supported_features & SUPPORT_OUTSIDE_TEMPERATURE:
+            data[ATTR_OUTSIDE_TEMPERATURE] = self.outside_temperature
 
         return data
 
@@ -340,6 +367,13 @@ class ClimateEntity(Entity):
         raise NotImplementedError
 
     @property
+    def outside_temperature(self) -> Optional[float]:
+        """Return the outside temperature we try to display.
+        Requires SUPPORT_OUTSIDE_TEMPERATURE.
+        """
+        raise NotImplementedError
+    
+    @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp.
 
@@ -404,6 +438,15 @@ class ClimateEntity(Entity):
         await self.hass.async_add_executor_job(
             ft.partial(self.set_temperature, **kwargs)
         )
+
+    def set_outside_temperature(self, outside_temperature: float) -> None:
+        """Set new outside temperature."""
+        raise NotImplementedError()
+
+    async def async_set_outside_temperature(self, outside_temperature: float) -> None:
+        """Set new outside temperature."""
+        await self.hass.async_add_executor_job(self.set_outside_temperature, outside_temperature)
+
 
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
