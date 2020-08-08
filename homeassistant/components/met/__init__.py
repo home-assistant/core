@@ -18,6 +18,9 @@ from .const import CONF_TRACK_HOME, DOMAIN
 URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/1.9/"
 
 
+_LOGGER = logging.getLogger(__name__)
+
+
 async def async_setup(hass: HomeAssistant, config: Config) -> bool:
     """Set up configured Met."""
     return True
