@@ -19,28 +19,31 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Set up Huisbaasje from a config entry."""
     huisbaasje = Huisbaasje(
-        username=entry.data[CONF_USERNAME], password=entry.data[CONF_PASSWORD]
+        username=config_entry.data[CONF_USERNAME],
+        password=config_entry.data[CONF_PASSWORD],
     )
-    user_id = entry.data[CONF_ID]
+    user_id = config_entry.data[CONF_ID]
 
     hass.data.setdefault(DOMAIN, {})[user_id] = huisbaasje
 
     for component in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+    unload_ok = await hass.config_entries.async_forward_entry_unload(
+        config_entry, "sensor"
+    )
 
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.data[CONF_ID])
+        hass.data[DOMAIN].pop(config_entry.data[CONF_ID])
 
     return unload_ok
