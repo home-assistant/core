@@ -43,7 +43,7 @@ class SmartMeterTexasSensor(Entity):
     @property
     def unique_id(self):
         """Device Uniqueid."""
-        return f"{METER_NUMBER}_{self.meter.meter}"
+        return f"{self.meter.esiid}_{self.meter.meter}"
 
     @property
     def available(self):
