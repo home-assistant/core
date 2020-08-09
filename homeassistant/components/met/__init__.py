@@ -30,13 +30,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: Config) -> bool:
     """Set up configured Met."""
+    hass.data.setdefault(DOMAIN, {})
     return True
 
 
 async def async_setup_entry(hass, config_entry):
     """Set up Met as config entry."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = dict()
     coordinator = MetDataUpdateCoordinator(hass, config_entry)
     await coordinator.async_refresh()
 
@@ -51,14 +50,17 @@ async def async_setup_entry(hass, config_entry):
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(config_entry, "weather")
     )
+
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
     await hass.config_entries.async_forward_entry_unload(config_entry, "weather")
+    
     hass.data[DOMAIN][config_entry.entry_id].untrack_home()
     hass.data[DOMAIN].pop(config_entry.entry_id)
+
     return True
 
 
@@ -86,7 +88,6 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator):
 
     def track_home(self):
         """Start tracking changes to HA home setting."""
-
         if self._unsub_track_home:
             return
 
