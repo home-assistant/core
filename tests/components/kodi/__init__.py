@@ -1,6 +1,6 @@
 """Tests for the Kodi integration."""
 from homeassistant.components.kodi.const import DOMAIN
-from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_HOST
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -9,10 +9,7 @@ from tests.common import MockConfigEntry
 async def init_integration(hass) -> MockConfigEntry:
     """Set up the Kodi integration in Home Assistant."""
     entry_data = {
-        CONF_NAME: "test",
-        CONF_LATITUDE: 0,
-        CONF_LONGITUDE: 0,
-        CONF_ELEVATION: 0,
+        CONF_HOST: "test",
     }
     entry = MockConfigEntry(domain=DOMAIN, data=entry_data)
     with patch(
