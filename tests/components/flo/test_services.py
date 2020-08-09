@@ -1,7 +1,7 @@
 """Test the services for the Flo by Moen integration."""
 
 from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
-from homeassistant.components.flo.device import FloDevice
+from homeassistant.components.flo.device import FloDeviceDataUpdateCoordinator
 from homeassistant.components.flo.services import (
     ATTR_DEVICE_ID,
     ATTR_LOCATION_ID,
@@ -29,7 +29,7 @@ async def test_sensors(hass, config_entry, aioclient_mock_fixture, aioclient_moc
 
     assert len(hass.data[FLO_DOMAIN]["devices"]) == 1
 
-    device: FloDevice = hass.data[FLO_DOMAIN]["devices"][0]
+    device: FloDeviceDataUpdateCoordinator = hass.data[FLO_DOMAIN]["devices"][0]
 
     assert aioclient_mock.call_count == 4
 
