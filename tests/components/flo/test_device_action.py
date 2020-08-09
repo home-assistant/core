@@ -6,7 +6,7 @@ from homeassistant.components.device_automation import (
     _async_get_device_automations as async_get_device_automations,
 )
 from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
-from homeassistant.components.flo.device import FloDevice
+from homeassistant.components.flo.device import FloDeviceDataUpdateCoordinator
 from homeassistant.components.flo.services import (
     ATTR_DEVICE_ID,
     ATTR_LOCATION_ID,
@@ -36,7 +36,7 @@ async def test_get_actions(hass, config_entry, aioclient_mock_fixture):
     await hass.async_block_till_done()
     assert len(hass.data[FLO_DOMAIN]["devices"]) == 1
 
-    device: FloDevice = hass.data[FLO_DOMAIN]["devices"][0]
+    device: FloDeviceDataUpdateCoordinator = hass.data[FLO_DOMAIN]["devices"][0]
 
     ha_device_registry = await async_get_registry(hass)
     reg_device = ha_device_registry.async_get_device({(FLO_DOMAIN, device.id)}, set())
@@ -78,7 +78,7 @@ async def test_action(hass, config_entry, aioclient_mock_fixture):
     await hass.async_block_till_done()
     assert len(hass.data[FLO_DOMAIN]["devices"]) == 1
 
-    device: FloDevice = hass.data[FLO_DOMAIN]["devices"][0]
+    device: FloDeviceDataUpdateCoordinator = hass.data[FLO_DOMAIN]["devices"][0]
 
     ha_device_registry = await async_get_registry(hass)
     reg_device = ha_device_registry.async_get_device({(FLO_DOMAIN, device.id)}, set())
