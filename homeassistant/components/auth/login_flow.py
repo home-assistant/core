@@ -71,7 +71,6 @@ import voluptuous as vol
 import voluptuous_serialize
 
 from homeassistant import data_entry_flow
-from homeassistant.components.http import KEY_REAL_IP
 from homeassistant.components.http.ban import (
     log_invalid_auth,
     process_success_login,
@@ -183,7 +182,7 @@ class LoginFlowIndexView(HomeAssistantView):
             result = await self._flow_mgr.async_init(
                 handler,
                 context={
-                    "ip_address": request[KEY_REAL_IP],
+                    "ip_address": request.remote,
                     "credential_only": data.get("type") == "link_user",
                 },
             )
@@ -229,9 +228,10 @@ class LoginFlowResourceView(HomeAssistantView):
         try:
             # do not allow change ip during login flow
             for flow in self._flow_mgr.async_progress():
-                if flow["flow_id"] == flow_id and flow["context"][
-                    "ip_address"
-                ] != request.get(KEY_REAL_IP):
+                if (
+                    flow["flow_id"] == flow_id
+                    and flow["context"]["ip_address"] != request.remote
+                ):
                     return self.json_message("IP address changed", HTTP_BAD_REQUEST)
 
             result = await self._flow_mgr.async_configure(flow_id, data)
