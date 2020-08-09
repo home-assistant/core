@@ -19,7 +19,7 @@ from homeassistant.setup import async_setup_component
 from .common import TEST_PASSWORD, TEST_USER_ID
 
 
-async def test_sensors(hass, config_entry, aioclient_mock_fixture, aioclient_mock):
+async def test_services(hass, config_entry, aioclient_mock_fixture, aioclient_mock):
     """Test Flo by Moen sensors."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(

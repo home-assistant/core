@@ -103,7 +103,7 @@ def aioclient_mock_fixture(aioclient_mock):
     )
     # Mocks the health test call for flo.
     aioclient_mock.post(
-        "https://api-gw.meetflo.com/api/v2/locations/12345abcde/systemMode",
+        "https://api-gw.meetflo.com/api/v2/locations/mmnnoopp/systemMode",
         text=load_fixture("flo/user_info_expand_locations_response.json"),
         status=200,
         headers={"Content-Type": "application/json"},
@@ -111,7 +111,7 @@ def aioclient_mock_fixture(aioclient_mock):
     )
     # Mocks the health test call for flo.
     aioclient_mock.post(
-        "https://api-gw.meetflo.com/api/v2/locations/12345abcde/systemMode",
+        "https://api-gw.meetflo.com/api/v2/locations/mmnnoopp/systemMode",
         text=load_fixture("flo/user_info_expand_locations_response.json"),
         status=200,
         headers={"Content-Type": "application/json"},
@@ -119,7 +119,7 @@ def aioclient_mock_fixture(aioclient_mock):
     )
     # Mocks the health test call for flo.
     aioclient_mock.post(
-        "https://api-gw.meetflo.com/api/v2/locations/12345abcde/systemMode",
+        "https://api-gw.meetflo.com/api/v2/locations/mmnnoopp/systemMode",
         text=load_fixture("flo/user_info_expand_locations_response.json"),
         status=200,
         headers={"Content-Type": "application/json"},
