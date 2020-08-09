@@ -25,10 +25,7 @@ async def init_integration(hass) -> MockConfigEntry:
         CONF_SSL: False,
     }
     entry = MockConfigEntry(domain=DOMAIN, data=entry_data)
-    with patch("homeassistant.components.kodi.Kodi.ping", return_value=True,), patch(
-        "homeassistant.components.kodi.Kodi.get_application_properties",
-        return_value={"version": {"major": 18, "minor": 18}},
-    ), patch(
+    with patch("homeassistant.components.kodi.Kodi.ping", return_value=True), patch(
         "homeassistant.components.kodi.Kodi.get_application_properties",
         return_value={"version": {"major": 1, "minor": 1}},
     ), patch(
