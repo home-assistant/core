@@ -134,7 +134,7 @@ async def get_newest_version(hass, huuid, include_components):
 
     session = async_get_clientsession(hass)
 
-    with async_timeout.timeout(15):
+    with async_timeout.timeout(30):
         req = await session.post(UPDATER_URL, json=info_object)
 
     _LOGGER.info(
