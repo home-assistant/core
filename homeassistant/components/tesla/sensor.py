@@ -37,22 +37,9 @@ class TeslaSensor(TeslaDevice, Entity):
         """Initialize of the sensor."""
         super().__init__(tesla_device, coordinator)
         self.type = sensor_type
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return (
-            self.tesla_device.name
-            if not self.type
-            else f"{self.tesla_device.name} ({self.type})"
-        )
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return (
-            super().unique_id if not self.type else f"{super().unique_id}_{self.type}"
-        )
+        if self.type:
+            self._name = f"{super().name} ({self.type})"
+            self._unique_id = f"{super().unique_id}_{self.type}"
 
     @property
     def state(self) -> Optional[float]:
