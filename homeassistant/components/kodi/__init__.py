@@ -56,18 +56,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def _close(event):
         await conn.close()
 
-    remove_update_listener = entry.add_update_listener(_update_listener)
     remove_stop_listener = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
-
-    def _remove_listeners():
-        remove_update_listener()
-        remove_stop_listener()
 
     version = f"{raw_version['major']}.{raw_version['minor']}"
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         DATA_CONNECTION: conn,
         DATA_KODI: kodi,
-        DATA_REMOVE_LISTENER: _remove_listeners,
+        DATA_REMOVE_LISTENER: remove_stop_listener,
         DATA_VERSION: version,
     }
 
@@ -95,8 +90,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         data[DATA_REMOVE_LISTENER]()
 
     return unload_ok
-
-
-async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
-    """Handle config entry update."""
-    await hass.config_entries.async_reload(entry.entry_id)
