@@ -18,7 +18,6 @@ from huisbaasje.const import (
     SOURCE_TYPE_GAS,
 )
 
-from homeassistant.components.huisbaasje.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ID,

@@ -9,10 +9,9 @@ from huisbaasje import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries
 from homeassistant.const import CONF_ID
 
-from ...helpers.aiohttp_client import async_get_clientsession
 from .const import CONF_PASSWORD, CONF_USERNAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
