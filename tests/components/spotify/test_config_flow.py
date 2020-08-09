@@ -1,4 +1,5 @@
 """Tests for the Spotify config flow."""
+import pytest
 from spotipy import SpotifyException
 
 from homeassistant import data_entry_flow, setup
@@ -7,8 +8,18 @@ from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from tests.async_mock import patch
+from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def mock_current_request(hass):
+    """Mock current request."""
+    with patch("homeassistant.helpers.network.current_request") as mock_request_context:
+        mock_request = Mock()
+        mock_request.url = "https://example.com/some/request"
+        mock_request_context.get = Mock(return_value=mock_request)
+        yield mock_request_context
 
 
 async def test_abort_if_no_configuration(hass):
@@ -40,7 +51,7 @@ async def test_zeroconf_abort_if_existing_entry(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_full_flow(hass, aiohttp_client, aioclient_mock):
+async def test_full_flow(hass, aiohttp_client, aioclient_mock, mock_current_request):
     """Check a full flow."""
     assert await setup.async_setup_component(
         hass,
@@ -96,7 +107,9 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
     }
 
 
-async def test_abort_if_spotify_error(hass, aiohttp_client, aioclient_mock):
+async def test_abort_if_spotify_error(
+    hass, aiohttp_client, aioclient_mock, mock_current_request
+):
     """Check Spotify errors causes flow to abort."""
     await setup.async_setup_component(
         hass,
