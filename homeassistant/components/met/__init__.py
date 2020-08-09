@@ -9,6 +9,7 @@ from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    EVENT_CORE_CONFIG_UPDATE,
     LENGTH_FEET,
     LENGTH_METERS,
 )
@@ -42,6 +43,9 @@ async def async_setup_entry(hass, config_entry):
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
+    if config_entry.data.get(CONF_TRACK_HOME, False):
+            coordinator.track_home()
+
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
     hass.async_create_task(
@@ -53,6 +57,7 @@ async def async_setup_entry(hass, config_entry):
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
     await hass.config_entries.async_forward_entry_unload(config_entry, "weather")
+    hass.data[DOMAIN][config_entry.entry_id].untrack_home()
     hass.data[DOMAIN].pop(config_entry.entry_id)
     return True
 
@@ -62,6 +67,7 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass, config_entry):
         """Initialize global Met data updater."""
+        self._unsub_track_home = None
         self.weather = MetWeatherData(
             hass, config_entry.data, hass.config.units.is_metric
         )
@@ -77,6 +83,23 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator):
             return await self.weather.fetch_data()
         except Exception as err:
             raise UpdateFailed(f"Update failed: {err}")
+
+    async def async_update_weather_data(self):
+        """Updates weather data."""
+        self.weather.init_data()
+        await self.async_refresh()
+        
+    def track_home(self):
+        """Starts tracking changes to HA home setting."""
+        self._unsub_track_home = self.hass.bus.async_listen(
+            EVENT_CORE_CONFIG_UPDATE, self.async_update_weather_data
+        )
+
+    def untrack_home(self):
+        """Stops tracking changes to HA home setting."""
+        if self._unsub_track_home:
+            self._unsub_track_home()
+            self._unsub_track_home = None
 
 
 class MetWeatherData:

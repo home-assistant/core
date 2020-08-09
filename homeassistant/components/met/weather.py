@@ -10,7 +10,6 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
-    EVENT_CORE_CONFIG_UPDATE,
     LENGTH_METERS,
     LENGTH_MILES,
     PRESSURE_HPA,
@@ -79,23 +78,13 @@ class MetWeather(WeatherEntity):
         self._config = config
         self._coordinator = coordinator
         self._is_metric = is_metric
-        self._unsub_track_home = None
 
     async def async_added_to_hass(self):
         """Start fetching data."""
         self.async_on_remove(
             self._coordinator.async_add_listener(self.async_write_ha_state)
         )
-        if self._config.get(CONF_TRACK_HOME, False):
-            self._unsub_track_home = self.hass.bus.async_listen(
-                EVENT_CORE_CONFIG_UPDATE, self._core_config_updated
-            )
 
-    async def _core_config_updated(self, _event):
-        """Handle core config updated."""
-        if self._config.get(CONF_TRACK_HOME, False):
-            self._coordinator.weather.init_data()
-            await self.async_update()
 
     async def will_remove_from_hass(self):
         """Handle entity will be removed from hass."""
