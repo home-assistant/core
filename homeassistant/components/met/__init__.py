@@ -44,7 +44,7 @@ async def async_setup_entry(hass, config_entry):
         raise ConfigEntryNotReady
 
     if config_entry.data.get(CONF_TRACK_HOME, False):
-            coordinator.track_home()
+        coordinator.track_home()
 
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
