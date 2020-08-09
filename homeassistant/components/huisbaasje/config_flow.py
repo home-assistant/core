@@ -40,9 +40,15 @@ class HuisbaasjeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             _LOGGER.info("Input for Huisbaasje is valid!")
 
+            # Set user id as unique id
+            await self.async_set_unique_id(user_id)
+
+            # Abort if entry already exists
+            self._abort_if_unique_id_configured()
             if await self._entry_exists(user_id):
                 return self.async_abort(reason="already_configured")
 
+            # Create entry
             return self.async_create_entry(
                 title=user_id,
                 data={
@@ -88,7 +94,7 @@ class HuisbaasjeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return huisbaasje.get_user_id()
 
     async def _entry_exists(self, user_id):
-        entries = await self._async_current_entries()
+        entries = self._async_current_entries()
         for entry in entries:
             if entry.data[CONF_ID] == user_id:
                 return True
