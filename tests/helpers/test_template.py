@@ -1812,6 +1812,53 @@ def test_extract_entities_with_variables(hass):
     )
 
 
+def test_extract_entities_domain_states_inner(hass):
+    """Test extract entities function by domain."""
+    hass.states.async_set("light.switch", "on")
+    hass.states.async_set("light.switch2", "on")
+    hass.states.async_set("light.switch3", "off")
+
+    assert set(
+        template.extract_entities(
+            hass,
+            "{{ states['light'] | selectattr('state','eq','on') | list | count > 0 }}",
+            {},
+        )
+    ) == {"light.switch", "light.switch2", "light.switch3"}
+
+
+def test_extract_entities_domain_states_outer(hass):
+    """Test extract entities function by domain."""
+    hass.states.async_set("light.switch", "on")
+    hass.states.async_set("light.switch2", "on")
+    hass.states.async_set("light.switch3", "off")
+
+    assert set(
+        template.extract_entities(
+            hass,
+            "{{ states.light | selectattr('state','eq','off') | list | count > 0 }}",
+            {},
+        )
+    ) == {"light.switch", "light.switch2", "light.switch3"}
+
+
+def test_extract_entities_domain_states_outer_with_group(hass):
+    """Test extract entities function by domain."""
+    hass.states.async_set("light.switch", "on")
+    hass.states.async_set("light.switch2", "on")
+    hass.states.async_set("light.switch3", "off")
+    hass.states.async_set("switch.pool_light", "off")
+    hass.states.async_set("group.lights", "off", {"entity_id": ["switch.pool_light"]})
+
+    assert set(
+        template.extract_entities(
+            hass,
+            "{{ states.light | selectattr('entity_id', 'in', state_attr('group.lights', 'entity_id')) }}",
+            {},
+        )
+    ) == {"light.switch", "light.switch2", "light.switch3", "group.lights"}
+
+
 def test_jinja_namespace(hass):
     """Test Jinja's namespace command can be used."""
     test_template = template.Template(
