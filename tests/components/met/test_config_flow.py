@@ -103,3 +103,16 @@ async def test_onboarding_step(hass):
     assert result["type"] == "create_entry"
     assert result["title"] == HOME_LOCATION_NAME
     assert result["data"] == {"track_home": True}
+
+
+async def test_import_step(hass):
+    """Test initializing via import step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "import"},
+        data={"name": "Weather", "track_home": True}
+    )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "Weather"
+    assert result["data"] == {"track_home": True}
