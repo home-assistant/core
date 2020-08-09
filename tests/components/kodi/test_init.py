@@ -4,10 +4,15 @@ from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOA
 
 from . import init_integration
 
+from tests.async_mock import patch
+
 
 async def test_unload_entry(hass):
     """Test successful unload of entry."""
-    entry = await init_integration(hass)
+    with patch(
+        "homeassistant.components.kodi.media_player.async_setup_entry", return_value=True,
+    ) as mock_setup_entry:
+        entry = await init_integration(hass)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state == ENTRY_STATE_LOADED
