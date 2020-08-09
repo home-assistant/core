@@ -577,10 +577,16 @@ async def test_manual_update_entity(hass):
     await init_integration(hass, forecast=True)
 
     await async_setup_component(hass, "homeassistant", {})
+
+    current = json.loads(load_fixture("accuweather/current_conditions_data.json"))
+    forecast = json.loads(load_fixture("accuweather/forecast_data.json"))
+
     with patch(
-        "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions"
+        "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
+        return_value=current,
     ) as mock_current, patch(
-        "homeassistant.components.accuweather.AccuWeather.async_get_forecast"
+        "homeassistant.components.accuweather.AccuWeather.async_get_forecast",
+        return_value=forecast,
     ) as mock_forecast:
         await hass.services.async_call(
             "homeassistant",
