@@ -40,7 +40,14 @@ class UKFloodsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.stations = {}
         for station in stations:
-            self.stations[station["label"]] = station["stationReference"]
+            label = station["label"]
+
+            # API annoyingly sometimes returns a list and some times returns a string
+            # E.g. L3121 has a label of ['Scurf Dyke', 'Scurf Dyke Dyke Level']
+            if isinstance(label, list):
+                label = label[-1]
+
+            self.stations[label] = station["stationReference"]
 
         if not self.stations:
             return self.async_abort(reason="no_stations")
