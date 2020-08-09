@@ -127,8 +127,6 @@ class HaZeroconf(Zeroconf):
 
 def setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
-    install_multiple_zeroconf_warning()
-
     zc_config = config.get(DOMAIN, {})
     zeroconf = hass.data[DOMAIN] = _get_instance(
         hass,
@@ -137,6 +135,8 @@ def setup(hass, config):
         ),
         ipv6=zc_config.get(CONF_IPV6, DEFAULT_IPV6),
     )
+
+    install_multiple_zeroconf_warning()
 
     # Get instance UUID
     uuid = asyncio.run_coroutine_threadsafe(
