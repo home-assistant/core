@@ -154,11 +154,7 @@ class AccuWeatherSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         if self.forecast_day is not None:
-            if self.kind == "WindGustDay":
-                self._attrs["direction"] = self.coordinator.data[ATTR_FORECAST][
-                    self.forecast_day
-                ][self.kind]["Direction"]["English"]
-            elif self.kind == "WindGustNight":
+            if self.kind in ["WindGustDay", "WindGustNight"]:
                 self._attrs["direction"] = self.coordinator.data[ATTR_FORECAST][
                     self.forecast_day
                 ][self.kind]["Direction"]["English"]
