@@ -1280,6 +1280,9 @@ class ModesTrait(_Trait):
         if domain == humidifier.DOMAIN and features & humidifier.SUPPORT_MODES:
             return True
 
+        if domain == light.DOMAIN and features & light.SUPPORT_EFFECT:
+            return True
+
         if domain != media_player.DOMAIN:
             return False
 
@@ -1317,6 +1320,7 @@ class ModesTrait(_Trait):
             (media_player.DOMAIN, media_player.ATTR_SOUND_MODE_LIST, "sound mode"),
             (input_select.DOMAIN, input_select.ATTR_OPTIONS, "option"),
             (humidifier.DOMAIN, humidifier.ATTR_AVAILABLE_MODES, "mode"),
+            (light.DOMAIN, light.ATTR_EFFECT_LIST, "effect"),
         ):
             if self.state.domain != domain:
                 continue
@@ -1347,6 +1351,9 @@ class ModesTrait(_Trait):
         elif self.state.domain == humidifier.DOMAIN:
             if humidifier.ATTR_MODE in attrs:
                 mode_settings["mode"] = attrs.get(humidifier.ATTR_MODE)
+        elif self.state.domain == light.DOMAIN:
+            if light.ATTR_EFFECT in attrs:
+                mode_settings["effect"] = attrs.get(light.ATTR_EFFECT)
 
         if mode_settings:
             response["on"] = self.state.state not in (STATE_OFF, STATE_UNKNOWN)
@@ -1380,6 +1387,20 @@ class ModesTrait(_Trait):
                 {
                     humidifier.ATTR_MODE: requested_mode,
                     ATTR_ENTITY_ID: self.state.entity_id,
+                },
+                blocking=True,
+                context=data.context,
+            )
+            return
+
+        if self.state.domain == light.DOMAIN:
+            requested_effect = settings["effect"]
+            await self.hass.services.async_call(
+                light.DOMAIN,
+                SERVICE_TURN_ON,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    light.ATTR_EFFECT: requested_effect,
                 },
                 blocking=True,
                 context=data.context,
