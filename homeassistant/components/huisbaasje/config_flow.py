@@ -50,7 +50,7 @@ class HuisbaasjeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Create entry
             return self.async_create_entry(
-                title=user_id,
+                title=user_input[CONF_USERNAME],
                 data={
                     CONF_ID: user_id,
                     CONF_USERNAME: user_input[CONF_USERNAME],
