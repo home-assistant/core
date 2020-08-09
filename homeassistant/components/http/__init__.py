@@ -297,8 +297,8 @@ class HomeAssistantHTTP:
         app[KEY_HASS] = hass
 
         # This order matters
-        setup_real_ip(app, use_x_forwarded_for, trusted_proxies)
         setup_request_context(app, current_request)
+        setup_real_ip(app, use_x_forwarded_for, trusted_proxies)
 
         if is_ban_enabled:
             setup_bans(hass, app, login_threshold)
