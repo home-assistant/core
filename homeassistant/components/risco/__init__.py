@@ -5,10 +5,11 @@ from pyrisco import CannotConnectError, RiscoAPI, UnauthorizedError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_USERNAME
-from homeassistant.core import EVENT_HOMEASSISTANT_STOP, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DATA_REMOVE_LISTENER, DATA_RISCO, DOMAIN
+from .const import DATA_RISCO, DOMAIN
 
 PLATFORMS = ["alarm_control_panel"]
 
@@ -23,18 +24,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     data = entry.data
     risco = RiscoAPI(data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_PIN])
     try:
-        await risco.login()
+        await risco.login(async_get_clientsession(hass))
     except (CannotConnectError, UnauthorizedError) as error:
         raise ConfigEntryNotReady() from error
 
-    async def _close(event):
-        await risco.close()
-
-    remove_listener = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
-
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         DATA_RISCO: risco,
-        DATA_REMOVE_LISTENER: remove_listener,
     }
 
     for component in PLATFORMS:
@@ -57,8 +52,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     if unload_ok:
-        data = hass.data[DOMAIN].pop(entry.entry_id)
-        await data[DATA_RISCO].close()
-        data[DATA_REMOVE_LISTENER]()
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

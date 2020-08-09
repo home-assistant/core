@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_USERNAME
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
@@ -23,7 +24,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     risco = RiscoAPI(data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_PIN])
 
     try:
-        await risco.login()
+        await risco.login(async_get_clientsession(hass))
         return {"title": risco.site_id}
     except UnauthorizedError as error:
         _LOGGER.error("Unauthorized connection to Risco Cloud")
