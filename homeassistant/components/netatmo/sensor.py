@@ -315,8 +315,8 @@ class NetatmoSensor(NetatmoBase):
         if data is None:
             if self._state:
                 _LOGGER.debug(
-                    "No data (%s) found for %s (%s)",
-                    self._data,
+                    "No data found for %s - %s (%s)",
+                    self.name,
                     self._device_name,
                     self._id,
                 )
