@@ -8,7 +8,7 @@ from homeassistant.components.binary_sensor import (
 )
 
 from .const import DOMAIN as FLO_DOMAIN
-from .device import FloDevice
+from .device import FloDeviceDataUpdateCoordinator
 from .entity import FloEntity
 
 DEPENDENCIES = ["flo"]
@@ -16,7 +16,7 @@ DEPENDENCIES = ["flo"]
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Flo sensors from config entry."""
-    devices: List[FloDevice] = hass.data[FLO_DOMAIN]["devices"]
+    devices: List[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN]["devices"]
     entities = [FloPendingAlertsBinarySensor(device) for device in devices]
     async_add_entities(entities, True)
 
