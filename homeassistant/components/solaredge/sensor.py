@@ -258,12 +258,6 @@ class SolarEdgeStorageLevelSensor(SolarEdgeSensor):
 
         self._json_key = SENSOR_TYPES[self.sensor_key][0]
 
-        self._attributes = {}
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
 
     @property
     def device_class(self):
