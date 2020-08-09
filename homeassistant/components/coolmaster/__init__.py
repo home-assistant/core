@@ -27,7 +27,7 @@ async def async_setup_entry(hass, entry):
     try:
         info = await coolmaster.info()
         if not info:
-            raise ConfigEntryNotReady()
+            raise ConfigEntryNotReady
     except (OSError, ConnectionRefusedError, TimeoutError) as error:
         raise ConfigEntryNotReady() from error
     coordinator = CoolmasterDataUpdateCoordinator(hass, coolmaster)
