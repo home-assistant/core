@@ -127,6 +127,14 @@ class GreeClimateDevice(ClimateEntity):
         """Update the state of the device."""
         try:
             await self._device.update_state()
+
+            if not self._available and self._error_count > 0:
+                _LOGGER.warning(
+                    "Device is available: %s (%s)",
+                    self._name,
+                    str(self._device.device_info),
+                )
+
             self._available = True
             self._error_count = 0
         except DeviceTimeoutError:
