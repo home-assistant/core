@@ -1,4 +1,5 @@
 """Support to serve the Home Assistant API as WSGI application."""
+from contextvars import ContextVar
 from ipaddress import ip_network
 import logging
 import os
@@ -28,6 +29,7 @@ from .ban import setup_bans
 from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER, KEY_REAL_IP  # noqa: F401
 from .cors import setup_cors
 from .real_ip import setup_real_ip
+from .request_context import setup_request_context
 from .static import CACHE_HEADERS, CachingStaticResource
 from .view import HomeAssistantView  # noqa: F401
 from .web_runner import HomeAssistantTCPSite
@@ -295,6 +297,7 @@ class HomeAssistantHTTP:
         app[KEY_HASS] = hass
 
         # This order matters
+        setup_request_context(app, current_request)
         setup_real_ip(app, use_x_forwarded_for, trusted_proxies)
 
         if is_ban_enabled:
@@ -447,3 +450,8 @@ async def start_http_server_and_save_config(
         ]
 
     await store.async_save(conf)
+
+
+current_request: ContextVar[Optional[web.Request]] = ContextVar(
+    "current_request", default=None
+)
