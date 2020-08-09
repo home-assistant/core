@@ -1,6 +1,6 @@
 """Config flow to configure Coolmaster."""
 
-from pycoolmasternet import CoolMasterNet
+from pycoolmasternet_async import CoolMasterNet
 import voluptuous as vol
 
 from homeassistant import config_entries, core
@@ -15,9 +15,9 @@ DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, **MODES_SCHEMA})
 
 
 async def _validate_connection(hass: core.HomeAssistant, host):
-    cool = CoolMasterNet(host, port=DEFAULT_PORT)
-    devices = await hass.async_add_executor_job(cool.devices)
-    return bool(devices)
+    cool = CoolMasterNet(host, DEFAULT_PORT)
+    units = await cool.status()
+    return bool(units)
 
 
 class CoolmasterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -53,7 +53,7 @@ class CoolmasterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             result = await _validate_connection(self.hass, host)
             if not result:
                 errors["base"] = "no_units"
-        except (ConnectionRefusedError, TimeoutError):
+        except (OSError, ConnectionRefusedError, TimeoutError):
             errors["base"] = "connection_error"
 
         if errors:
