@@ -85,12 +85,8 @@ class MetWeather(WeatherEntity):
             self._coordinator.async_add_listener(self.async_write_ha_state)
         )
 
-
     async def will_remove_from_hass(self):
         """Handle entity will be removed from hass."""
-        if self._unsub_track_home:
-            self._unsub_track_home()
-            self._unsub_track_home = None
 
     async def async_update(self):
         """Only used by the generic entity update service."""

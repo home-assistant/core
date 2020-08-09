@@ -85,18 +85,17 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Update failed: {err}")
 
     async def async_update_weather_data(self):
-        """Updates weather data."""
+        """Update weather data."""
         self.weather.init_data()
         await self.async_refresh()
-        
     def track_home(self):
-        """Starts tracking changes to HA home setting."""
+        """Start tracking changes to HA home setting."""
         self._unsub_track_home = self.hass.bus.async_listen(
             EVENT_CORE_CONFIG_UPDATE, self.async_update_weather_data
         )
 
     def untrack_home(self):
-        """Stops tracking changes to HA home setting."""
+        """Stop tracking changes to HA home setting."""
         if self._unsub_track_home:
             self._unsub_track_home()
             self._unsub_track_home = None
