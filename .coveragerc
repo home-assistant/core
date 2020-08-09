@@ -8,10 +8,6 @@ omit =
     homeassistant/scripts/*.py
 
     # omit pieces of code that rely on external devices being present
-    homeassistant/components/accuweather/__init__.py
-    homeassistant/components/accuweather/const.py
-    homeassistant/components/accuweather/sensor.py
-    homeassistant/components/accuweather/weather.py
     homeassistant/components/acer_projector/switch.py
     homeassistant/components/actiontec/device_tracker.py
     homeassistant/components/acmeda/__init__.py
