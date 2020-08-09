@@ -24,6 +24,7 @@ from .const import (
     CONF_OPEN_PRESET,
     CONF_POLL_TIMER,
     CONF_PRESET,
+    CONF_QUERY_CHANNEL,
     CONF_ROOM_OFF,
     CONF_ROOM_ON,
     CONF_STOP_PRESET,
@@ -79,6 +80,7 @@ def convert_area(config: Dict[str, Any]) -> Dict[str, Any]:
     my_map = {
         CONF_NAME: dyn_const.CONF_NAME,
         CONF_FADE: dyn_const.CONF_FADE,
+        CONF_QUERY_CHANNEL: dyn_const.CONF_QUERY_CHANNEL,
         CONF_NO_DEFAULT: dyn_const.CONF_NO_DEFAULT,
         CONF_ROOM_ON: dyn_const.CONF_ROOM_ON,
         CONF_ROOM_OFF: dyn_const.CONF_ROOM_OFF,
@@ -108,7 +110,13 @@ def convert_area(config: Dict[str, Any]) -> Dict[str, Any]:
 
 def convert_default(config: Dict[str, Any]) -> Dict[str, Any]:
     """Convert the config for the platform defaults."""
-    return convert_with_map(config, {CONF_FADE: dyn_const.CONF_FADE})
+    return convert_with_map(
+        config,
+        {
+            CONF_FADE: dyn_const.CONF_FADE,
+            CONF_QUERY_CHANNEL: dyn_const.CONF_QUERY_CHANNEL,
+        },
+    )
 
 
 def convert_template(config: Dict[str, Any]) -> Dict[str, Any]:

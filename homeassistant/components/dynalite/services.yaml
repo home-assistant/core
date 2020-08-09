@@ -7,4 +7,7 @@ request_area_preset:
     area:
       description: "Area to request the preset reported"
       example: 2
+    channel:
+      description: "Channel to request the preset to be reported from. Default is channel 1"
+      example: 1
 
