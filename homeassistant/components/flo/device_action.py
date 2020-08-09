@@ -9,6 +9,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .const import DOMAIN as FLO_DOMAIN
+from .device import FloDeviceDataUpdateCoordinator
 from .services import (
     ATTR_DEVICE_ID,
     ATTR_LOCATION_ID,
@@ -90,11 +91,11 @@ async def _execute_service_based_action(
     )
 
 
-async def async_get_flo_device(hass, device_id):
+async def async_get_flo_device(hass, device_id) -> FloDeviceDataUpdateCoordinator:
     """Get a Flo device for the given device registry id."""
     device_registry = await hass.helpers.device_registry.async_get_registry()
     registry_device = device_registry.async_get(device_id)
-    devices = hass.data[FLO_DOMAIN]["devices"]
+    devices: List[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN]["devices"]
     flo_device_id = list(list(registry_device.identifiers)[0])[1]
     for device in devices:
         if device.id == flo_device_id:
