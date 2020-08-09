@@ -16,6 +16,7 @@ PLATFORMS = ["alarm_control_panel"]
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Risco component."""
+    hass.data.setdefault(DOMAIN, {})
     return True
 
 
@@ -28,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except (CannotConnectError, UnauthorizedError) as error:
         raise ConfigEntryNotReady() from error
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+    hass.data[DOMAIN][entry.entry_id] = {
         DATA_RISCO: risco,
     }
 
