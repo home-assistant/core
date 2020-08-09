@@ -121,16 +121,14 @@ class MetWeatherData:
 
     def init_data(self):
         """Weather data inialization - get the coordinates."""
-        conf = self._config
-
-        if conf.get(CONF_TRACK_HOME, False):
+        if self._config.get(CONF_TRACK_HOME, False):
             latitude = self.hass.config.latitude
             longitude = self.hass.config.longitude
             elevation = self.hass.config.elevation
         else:
-            latitude = conf[CONF_LATITUDE]
-            longitude = conf[CONF_LONGITUDE]
-            elevation = conf[CONF_ELEVATION]
+            latitude = self._config[CONF_LATITUDE]
+            longitude = self._config[CONF_LONGITUDE]
+            elevation = self._config[CONF_ELEVATION]
 
         if not self._is_metric:
             elevation = int(
@@ -142,6 +140,7 @@ class MetWeatherData:
             "lon": str(longitude),
             "msl": str(elevation),
         }
+
         self._weather_data = metno.MetWeatherData(
             coordinates, async_get_clientsession(self.hass), URL
         )
