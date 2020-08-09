@@ -1,4 +1,6 @@
 """Test the Home Connect config flow."""
+import pytest
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.home_connect.const import (
     DOMAIN,
@@ -8,13 +10,23 @@ from homeassistant.components.home_connect.const import (
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from tests.async_mock import patch
+from tests.async_mock import Mock, patch
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
 
-async def test_full_flow(hass, aiohttp_client, aioclient_mock):
+@pytest.fixture
+def mock_current_request(hass):
+    """Mock current request."""
+    with patch("homeassistant.helpers.network.current_request") as mock_request_context:
+        mock_request = Mock()
+        mock_request.url = "https://example.com/some/request"
+        mock_request_context.get = Mock(return_value=mock_request)
+        yield mock_request_context
+
+
+async def test_full_flow(hass, aiohttp_client, aioclient_mock, mock_current_request):
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,
