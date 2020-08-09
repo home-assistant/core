@@ -88,6 +88,7 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator):
         """Update weather data."""
         self.weather.init_data()
         await self.async_refresh()
+
     def track_home(self):
         """Start tracking changes to HA home setting."""
         self._unsub_track_home = self.hass.bus.async_listen(
