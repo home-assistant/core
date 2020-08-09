@@ -16,6 +16,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import websocket_api
+from homeassistant.const import CONF_UNIQUE_ID  # noqa: F401
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_DEVICE,
@@ -24,7 +25,6 @@ from homeassistant.const import (
     CONF_PAYLOAD,
     CONF_PORT,
     CONF_PROTOCOL,
-    CONF_UNIQUE_ID,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_STOP,
