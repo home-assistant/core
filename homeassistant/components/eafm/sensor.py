@@ -52,11 +52,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 # Don't create a sensor entity for a gauge that isn't available
                 continue
 
-            if measure["@id"] not in measurements:
-                entities.append(
-                    Measurement(hass.data[DOMAIN][station_key], measure["@id"])
-                )
-                measurements.add(measure["@id"])
+            entities.append(Measurement(hass.data[DOMAIN][station_key], measure["@id"]))
+            measurements.add(measure["@id"])
 
         async_add_entities(entities)
 
