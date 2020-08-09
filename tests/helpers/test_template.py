@@ -39,25 +39,22 @@ def render_to_info(hass, template_str, variables=None):
 def extract_entities(hass, template_str, variables=None):
     """Extract entities from a template."""
     info = render_to_info(hass, template_str, variables)
-    # pylint: disable=protected-access
-    assert not hasattr(info, "_domains")
-    return info._entities
+    return info.entities
 
 
 def assert_result_info(info, result, entities=None, domains=None, all_states=False):
     """Check result info."""
     assert info.result == result
-    # pylint: disable=protected-access
-    assert info._all_states == all_states
+    assert info.all_states == all_states
     assert info.filter_lifecycle("invalid_entity_name.somewhere") == all_states
     if entities is not None:
-        assert info._entities == frozenset(entities)
+        assert info.entities == frozenset(entities)
         assert all([info.filter(entity) for entity in entities])
         assert not info.filter("invalid_entity_name.somewhere")
     else:
-        assert not info._entities
+        assert not info.entities
     if domains is not None:
-        assert info._domains == frozenset(domains)
+        assert info.domains == frozenset(domains)
         assert all([info.filter_lifecycle(domain + ".entity") for domain in domains])
     else:
         assert not hasattr(info, "_domains")
@@ -1255,9 +1252,7 @@ async def test_closest_function_home_vs_group_entity_id(hass):
     await group.Group.async_create_group(hass, "location group", ["test_domain.object"])
 
     info = render_to_info(hass, '{{ closest("group.location_group").entity_id }}')
-    assert_result_info(
-        info, "test_domain.object", ["test_domain.object", "group.location_group"]
-    )
+    assert_result_info(info, "test_domain.object", ["test_domain.object"])
 
 
 async def test_closest_function_home_vs_group_state(hass):
@@ -1280,14 +1275,10 @@ async def test_closest_function_home_vs_group_state(hass):
     await group.Group.async_create_group(hass, "location group", ["test_domain.object"])
 
     info = render_to_info(hass, '{{ closest("group.location_group").entity_id }}')
-    assert_result_info(
-        info, "test_domain.object", ["test_domain.object", "group.location_group"]
-    )
+    assert_result_info(info, "test_domain.object", ["test_domain.object"])
 
     info = render_to_info(hass, "{{ closest(states.group.location_group).entity_id }}")
-    assert_result_info(
-        info, "test_domain.object", ["test_domain.object", "group.location_group"]
-    )
+    assert_result_info(info, "test_domain.object", ["test_domain.object"])
 
 
 async def test_expand(hass):
@@ -1303,7 +1294,7 @@ async def test_expand(hass):
     info = render_to_info(
         hass, "{{ expand('test.object') | map(attribute='entity_id') | join(', ') }}"
     )
-    assert_result_info(info, "test.object", [])
+    assert_result_info(info, "test.object", ["test.object"])
 
     info = render_to_info(
         hass,
@@ -1322,26 +1313,26 @@ async def test_expand(hass):
         hass,
         "{{ expand('group.new_group') | map(attribute='entity_id') | join(', ') }}",
     )
-    assert_result_info(info, "test.object", ["group.new_group"])
+    assert_result_info(info, "test.object", ["test.object"])
 
     info = render_to_info(
         hass, "{{ expand(states.group) | map(attribute='entity_id') | join(', ') }}"
     )
-    assert_result_info(info, "test.object", ["group.new_group"], ["group"])
+    assert_result_info(info, "test.object", ["test.object"], ["group"])
 
     info = render_to_info(
         hass,
         "{{ expand('group.new_group', 'test.object')"
         " | map(attribute='entity_id') | join(', ') }}",
     )
-    assert_result_info(info, "test.object", ["group.new_group"])
+    assert_result_info(info, "test.object", ["test.object"])
 
     info = render_to_info(
         hass,
         "{{ ['group.new_group', 'test.object'] | expand"
         " | map(attribute='entity_id') | join(', ') }}",
     )
-    assert_result_info(info, "test.object", ["group.new_group"])
+    assert_result_info(info, "test.object", ["test.object"])
 
 
 def test_closest_function_to_coord(hass):
@@ -1556,17 +1547,16 @@ def test_extract_entities_none_exclude_stuff(hass):
 
     assert template.extract_entities(hass, "mdi:water") == []
 
-    assert (
+    assert set(
         template.extract_entities(
-            hass, "{{ closest(states.zone.far_away, states.test_domain).entity_id }}"
+            hass,
+            "{{ closest(states.zone.far_away, states.test_domain.xxx).entity_id }}",
         )
-        == MATCH_ALL
-    )
+    ) == {"test_domain.xxx", "zone.far_away"}
 
-    assert (
-        template.extract_entities(hass, '{{ distance("123", states.test_object_2) }}')
-        == MATCH_ALL
-    )
+    assert template.extract_entities(
+        hass, '{{ distance("123", states.test_object_2.user) }}'
+    ) == ["test_object_2.user"]
 
 
 def test_extract_entities_no_match_entities(hass):
@@ -1575,7 +1565,7 @@ def test_extract_entities_no_match_entities(hass):
         template.extract_entities(
             hass, "{{ value_json.tst | timestamp_custom('%Y' True) }}"
         )
-        == MATCH_ALL
+        == []
     )
 
     info = render_to_info(
@@ -1739,8 +1729,8 @@ Hercules you power goes done!.
             hass,
             """
 {{
-states.sensor.pick_temperature.state ~ „°C (“ ~
-states.sensor.pick_humidity.state ~ „ %“
+states.sensor.pick_temperature.state ~ "°C (" ~
+states.sensor.pick_humidity.state ~ " %"
 }}
         """,
         )
@@ -1759,22 +1749,27 @@ states.sensor.pick_humidity.state ~ „ %“
 
     await group.Group.async_create_group(hass, "empty group", [])
 
-    assert ["group.empty_group"] == template.extract_entities(
+    assert [] == template.extract_entities(
         hass, "{{ expand('group.empty_group') | list | length }}"
     )
 
     hass.states.async_set("test_domain.object", "exists")
     await group.Group.async_create_group(hass, "expand group", ["test_domain.object"])
 
-    assert sorted(["group.expand_group", "test_domain.object"]) == sorted(
+    # expand, extract finds the underlying entities
+    assert sorted(["test_domain.object"]) == sorted(
         template.extract_entities(
             hass, "{{ expand('group.expand_group') | list | length }}"
         )
     )
-
     assert ["test_domain.entity"] == template.Template(
         '{{ is_state("test_domain.entity", "on") }}', hass
     ).extract_entities()
+
+    # No expand, extract finds the group
+    assert template.extract_entities(hass, "{{ states('group.empty_group') }}") == [
+        "group.empty_group"
+    ]
 
 
 def test_extract_entities_with_variables(hass):
@@ -1784,14 +1779,14 @@ def test_extract_entities_with_variables(hass):
         hass, "{{ is_state('input_boolean.switch', 'off') }}", {}
     )
 
+    assert MATCH_ALL == template.extract_entities(
+        hass, "{{ states | list | count > data }}", {"data": 1}
+    )
+
     assert ["input_boolean.switch"] == template.extract_entities(
         hass,
         "{{ is_state(trigger.entity_id, 'off') }}",
         {"trigger": {"entity_id": "input_boolean.switch"}},
-    )
-
-    assert MATCH_ALL == template.extract_entities(
-        hass, "{{ is_state(data, 'off') }}", {"data": "no_state"}
     )
 
     assert ["input_boolean.switch"] == template.extract_entities(
@@ -1853,7 +1848,7 @@ def test_extract_entities_domain_states_outer_with_group(hass):
     assert set(
         template.extract_entities(
             hass,
-            "{{ states.light | selectattr('entity_id', 'in', state_attr('group.lights', 'entity_id')) }}",
+            "{{ states.light | selectattr('entity_id', 'in', state_attr('group.lights', 'entity_id')) | list | count > 0 }}",
             {},
         )
     ) == {"light.switch", "light.switch2", "light.switch3", "group.lights"}
