@@ -1,12 +1,15 @@
 """The Nightscout integration."""
 import asyncio
+from asyncio import TimeoutError as AsyncIOTimeoutError
 import logging
 
+from aiohttp import ClientError
 from py_nightscout import Api as NightscoutAPI
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
 
@@ -28,7 +31,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     server_url = entry.data[CONF_URL]
 
     api = NightscoutAPI(server_url)
-    status = await api.get_server_status()
+    try:
+        status = await api.get_server_status()
+    except (ClientError, AsyncIOTimeoutError, OSError) as error:
+        raise ConfigEntryNotReady from error
 
     hass.data[DOMAIN][entry.entry_id] = api
 
