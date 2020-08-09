@@ -258,7 +258,6 @@ class SolarEdgeStorageLevelSensor(SolarEdgeSensor):
 
         self._json_key = SENSOR_TYPES[self.sensor_key][0]
 
-
     @property
     def device_class(self):
         """Return the device_class of the device."""
