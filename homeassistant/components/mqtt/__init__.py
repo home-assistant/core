@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_PAYLOAD,
     CONF_PORT,
     CONF_PROTOCOL,
+    CONF_UNIQUE_ID,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_STOP,
