@@ -9,7 +9,7 @@ from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from tests.async_mock import patch
+from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry, mock_platform
 
 TEST_DOMAIN = "oauth2_test"
@@ -54,6 +54,16 @@ def flow_handler(hass):
 
     with patch.dict(config_entries.HANDLERS, {TEST_DOMAIN: TestFlowHandler}):
         yield TestFlowHandler
+
+
+@pytest.fixture
+def mock_current_request(hass):
+    """Mock current request."""
+    with patch("homeassistant.helpers.network.current_request") as mock_request_context:
+        mock_request = Mock()
+        mock_request.url = "https://example.com/some/request"
+        mock_request_context.get = Mock(return_value=mock_request)
+        yield mock_request_context
 
 
 class MockOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implementation):
@@ -194,7 +204,7 @@ async def test_abort_discovered_existing_entries(hass, flow_handler, local_impl)
 
 
 async def test_full_flow(
-    hass, flow_handler, local_impl, aiohttp_client, aioclient_mock
+    hass, flow_handler, local_impl, aiohttp_client, aioclient_mock, mock_current_request
 ):
     """Check full flow."""
     await async_process_ha_core_config(
