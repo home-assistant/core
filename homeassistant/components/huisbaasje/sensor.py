@@ -1,5 +1,10 @@
 """Platform for sensor integration."""
-from homeassistant.const import DEVICE_CLASS_POWER, POWER_WATT
+from homeassistant.const import (
+    DEVICE_CLASS_POWER,
+    POWER_WATT,
+    ENERGY_KILO_WATT_HOUR,
+    VOLUME_CUBIC_METERS,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -11,7 +16,14 @@ from datetime import timedelta
 
 from homeassistant.const import CONF_ID
 from homeassistant.components.huisbaasje.const import DOMAIN
-from .const import DOMAIN, SOURCE_TYPES, FLOW_CUBIC_METERS_PER_HOUR, POLLING_INTERVAL
+from .const import (
+    DOMAIN,
+    SOURCE_TYPES,
+    FLOW_CUBIC_METERS_PER_HOUR,
+    POLLING_INTERVAL,
+    SENSOR_TYPE_RATE,
+    SENSOR_TYPE_THIS_DAY,
+)
 from huisbaasje import (
     Huisbaasje,
     HuisbaasjeConnectionException,
@@ -58,56 +70,63 @@ async def async_setup_entry(
             HuisbaasjeSensor(
                 coordinator,
                 user_id=user_id,
-                name="Electricity",
+                name="Electricity Rate",
                 device_class=DEVICE_CLASS_POWER,
-                unit_of_measurement=POWER_WATT,
                 source_type=SOURCE_TYPE_ELECTRICITY,
-                icon="mdi:lightning-bolt",
             ),
             HuisbaasjeSensor(
                 coordinator,
                 user_id=user_id,
-                name="Electricity In",
+                name="Electricity In Rate",
                 device_class=DEVICE_CLASS_POWER,
-                unit_of_measurement=POWER_WATT,
                 source_type=SOURCE_TYPE_ELECTRICITY_IN,
-                icon="mdi:lightning-bolt",
             ),
             HuisbaasjeSensor(
                 coordinator,
                 user_id=user_id,
-                name="Electricity In Low",
+                name="Electricity In Low Rate",
                 device_class=DEVICE_CLASS_POWER,
-                unit_of_measurement=POWER_WATT,
                 source_type=SOURCE_TYPE_ELECTRICITY_IN_LOW,
-                icon="mdi:lightning-bolt",
             ),
             HuisbaasjeSensor(
                 coordinator,
                 user_id=user_id,
-                name="Electricity Out",
+                name="Electricity Out Rate",
                 device_class=DEVICE_CLASS_POWER,
-                unit_of_measurement=POWER_WATT,
                 source_type=SOURCE_TYPE_ELECTRICITY_OUT,
-                icon="mdi:lightning-bolt",
             ),
             HuisbaasjeSensor(
                 coordinator,
                 user_id=user_id,
-                name="Electricity Out Low",
+                name="Electricity Out Low Rate",
                 device_class=DEVICE_CLASS_POWER,
-                unit_of_measurement=POWER_WATT,
                 source_type=SOURCE_TYPE_ELECTRICITY_OUT_LOW,
-                icon="mdi:lightning-bolt",
             ),
             HuisbaasjeSensor(
                 coordinator,
                 user_id=user_id,
-                name="Gas",
-                device_class=None,
+                name="Electricity Today",
+                unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+                source_type=SOURCE_TYPE_ELECTRICITY,
+                sensor_type=SENSOR_TYPE_THIS_DAY,
+                icon="mdi:counter",
+            ),
+            HuisbaasjeSensor(
+                coordinator,
+                user_id=user_id,
+                name="Gas Rate",
                 unit_of_measurement=FLOW_CUBIC_METERS_PER_HOUR,
                 source_type=SOURCE_TYPE_GAS,
                 icon="mdi:fire",
+            ),
+            HuisbaasjeSensor(
+                coordinator,
+                user_id=user_id,
+                name="Gas Today",
+                unit_of_measurement=VOLUME_CUBIC_METERS,
+                source_type=SOURCE_TYPE_GAS,
+                sensor_type=SENSOR_TYPE_THIS_DAY,
+                icon="mdi:counter",
             ),
         ]
     )
@@ -124,6 +143,17 @@ def _get_measurement_rate(current_measurements: dict, source_type: str):
     return None
 
 
+def _get_this_day_value(current_measurements: dict, source_type: str):
+    if source_type in current_measurements.keys():
+        if current_measurements[source_type]["thisDay"]:
+            return current_measurements[source_type]["thisDay"]["value"]
+    else:
+        _LOGGER.warn(
+            f"Source type '{source_type}' not present in {current_measurements}"
+        )
+    return None
+
+
 async def async_update_huisbaasje(huisbaasje):
     """Update the data by performing a request to Huisbaasje"""
     try:
@@ -133,7 +163,14 @@ async def async_update_huisbaasje(huisbaasje):
             current_measurements = await huisbaasje.current_measurements()
 
             return {
-                source_type: _get_measurement_rate(current_measurements, source_type)
+                source_type: {
+                    SENSOR_TYPE_RATE: _get_measurement_rate(
+                        current_measurements, source_type
+                    ),
+                    SENSOR_TYPE_THIS_DAY: _get_this_day_value(
+                        current_measurements, source_type
+                    ),
+                }
                 for source_type in SOURCE_TYPES
             }
     except HuisbaasjeException as exception:
@@ -148,10 +185,11 @@ class HuisbaasjeSensor(Entity):
         coordinator: DataUpdateCoordinator,
         user_id: str,
         name: str,
-        device_class: str,
         source_type: str,
-        unit_of_measurement: str,
-        icon: str,
+        device_class: str = None,
+        sensor_type: str = SENSOR_TYPE_RATE,
+        unit_of_measurement: str = POWER_WATT,
+        icon: str = "mdi:lightning-bolt",
     ):
         """Initialize the sensor."""
         self._user_id = user_id
@@ -160,12 +198,13 @@ class HuisbaasjeSensor(Entity):
         self._coordinator = coordinator
         self._unit_of_measurement = unit_of_measurement
         self._source_type = source_type
+        self._sensor_type = sensor_type
         self._icon = icon
 
     @property
     def unique_id(self) -> str:
         """Return an unique id for the sensor."""
-        return f"{DOMAIN}_{self._user_id}_{self._source_type}"
+        return f"{DOMAIN}_{self._user_id}_{self._source_type}_{self._sensor_type}"
 
     @property
     def name(self) -> str:
@@ -185,10 +224,7 @@ class HuisbaasjeSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._coordinator.data and self._source_type in self._coordinator.data:
-            return self._coordinator.data[self._source_type]
-
-        return None
+        return self._coordinator.data[self._source_type][self._sensor_type]
 
     @property
     def unit_of_measurement(self) -> str:

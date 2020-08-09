@@ -29,6 +29,9 @@ SOURCE_TYPES = [
     SOURCE_TYPE_GAS,
 ]
 
+SENSOR_TYPE_RATE = "rate"
+SENSOR_TYPE_THIS_DAY = "thisDay"
+
 
 POLLING_INTERVAL = 10
 """Interval in seconds between polls to huisbaasje"""
