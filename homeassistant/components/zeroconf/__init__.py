@@ -124,18 +124,6 @@ class HaZeroconf(Zeroconf):
     ha_close = Zeroconf.close
 
 
-class UnsharedZeroconf(Zeroconf):
-    """Wrapper to warn when creating an unshared Zeroconf."""
-
-    def __init__(*args, **kwargs):
-        """Init Zeroconf."""
-        _LOGGER.debug(
-            "Unshared Zeroconf was created. Please use the shared Zeroconf via zeroconf.async_get_instance()",
-            stack_info=True,
-        )
-        return super().__init__(*args, **kwargs)
-
-
 def setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
     zc_config = config.get(DOMAIN, {})
@@ -147,7 +135,14 @@ def setup(hass, config):
         ipv6=zc_config.get(CONF_IPV6, DEFAULT_IPV6),
     )
 
-    zeroconf.Zeroconf = UnsharedZeroconf
+    old_init = zeroconf.Zeroconf.__init__
+
+    def new_init(self, *k, **kw):
+        _LOGGER.warning(
+            "Multiple Zeroconf instances detected. Please use the shared Zeroconf via homeassistant.components.zeroconf.async_get_instance()",
+            stack_info=True,
+        )
+        old_init(self, *k, **kw)
 
     # Get instance UUID
     uuid = asyncio.run_coroutine_threadsafe(
