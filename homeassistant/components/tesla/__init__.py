@@ -251,17 +251,19 @@ class TeslaDevice(Entity):
         """Initialise the Tesla device."""
         self.tesla_device = tesla_device
         self.coordinator = coordinator
+        self._name = self.tesla_device.name
+        self._unique_id = slugify(self.tesla_device.uniq_name)
         self._attributes = self.tesla_device.attrs.copy()
 
     @property
     def name(self):
         """Return the name of the device."""
-        return self.tesla_device.name
+        return self._name
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return slugify(self.tesla_device.uniq_name)
+        return self._unique_id
 
     @property
     def icon(self):
@@ -312,12 +314,12 @@ class TeslaDevice(Entity):
         """Update the state of the device."""
         _LOGGER.debug("Updating state for: %s", self.name)
         await self.coordinator.async_request_refresh()
-        self.refresh()
 
+    @callback
     def refresh(self) -> None:
         """Refresh the state of the device.
 
         This assumes the coordinator has updated the controller.
         """
         self.tesla_device.refresh()
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
