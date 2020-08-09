@@ -26,9 +26,7 @@ class FloPendingAlertsBinarySensor(FloEntity, BinarySensorEntity):
 
     def __init__(self, device):
         """Initialize the pending alerts binary sensor."""
-        super().__init__(
-            f"{device.mac_address}_daily_consumption", "Pending System Alerts", device
-        )
+        super().__init__("daily_consumption", "Pending System Alerts", device)
 
     @property
     def is_on(self):
