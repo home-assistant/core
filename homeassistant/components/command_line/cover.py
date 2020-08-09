@@ -1,6 +1,5 @@
 """Support for command line covers."""
 import logging
-import subprocess
 
 import voluptuous as vol
 
@@ -16,6 +15,9 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
+from . import call_shell_with_timeout, check_output_or_log
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT
+
 _LOGGER = logging.getLogger(__name__)
 
 COVER_SCHEMA = vol.Schema(
@@ -26,6 +28,7 @@ COVER_SCHEMA = vol.Schema(
         vol.Optional(CONF_COMMAND_STOP, default="true"): cv.string,
         vol.Optional(CONF_FRIENDLY_NAME): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
 )
 
@@ -48,11 +51,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             CommandCover(
                 hass,
                 device_config.get(CONF_FRIENDLY_NAME, device_name),
-                device_config.get(CONF_COMMAND_OPEN),
-                device_config.get(CONF_COMMAND_CLOSE),
-                device_config.get(CONF_COMMAND_STOP),
+                device_config[CONF_COMMAND_OPEN],
+                device_config[CONF_COMMAND_CLOSE],
+                device_config[CONF_COMMAND_STOP],
                 device_config.get(CONF_COMMAND_STATE),
                 value_template,
+                device_config[CONF_COMMAND_TIMEOUT],
             )
         )
 
@@ -75,6 +79,7 @@ class CommandCover(CoverEntity):
         command_stop,
         command_state,
         value_template,
+        timeout,
     ):
         """Initialize the cover."""
         self._hass = hass
@@ -85,31 +90,23 @@ class CommandCover(CoverEntity):
         self._command_stop = command_stop
         self._command_state = command_state
         self._value_template = value_template
+        self._timeout = timeout
 
-    @staticmethod
-    def _move_cover(command):
+    def _move_cover(self, command):
         """Execute the actual commands."""
         _LOGGER.info("Running command: %s", command)
 
-        success = subprocess.call(command, shell=True) == 0  # nosec # shell by design
+        success = call_shell_with_timeout(command, self._timeout) == 0
 
         if not success:
             _LOGGER.error("Command failed: %s", command)
 
         return success
 
-    @staticmethod
-    def _query_state_value(command):
+    def _query_state_value(self, command):
         """Execute state command for return value."""
-        _LOGGER.info("Running state command: %s", command)
-
-        try:
-            return_value = subprocess.check_output(
-                command, shell=True  # nosec # shell by design
-            )
-            return return_value.strip().decode("utf-8")
-        except subprocess.CalledProcessError:
-            _LOGGER.error("Command failed: %s", command)
+        _LOGGER.info("Running state value command: %s", command)
+        return check_output_or_log(command, self._timeout)
 
     @property
     def should_poll(self):

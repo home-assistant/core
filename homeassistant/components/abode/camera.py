@@ -82,8 +82,21 @@ class AbodeCamera(AbodeDevice, Camera):
 
         return None
 
+    def turn_on(self):
+        """Turn on camera."""
+        self._device.privacy_mode(False)
+
+    def turn_off(self):
+        """Turn off camera."""
+        self._device.privacy_mode(True)
+
     def _capture_callback(self, capture):
         """Update the image with the device then refresh device."""
         self._device.update_image_location(capture)
         self.get_image()
         self.schedule_update_ha_state()
+
+    @property
+    def is_on(self):
+        """Return true if on."""
+        return self._device.is_on

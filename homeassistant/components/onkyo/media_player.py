@@ -120,7 +120,7 @@ def determine_zones(receiver):
     out = {"zone2": False, "zone3": False}
     try:
         _LOGGER.debug("Checking for zone 2 capability")
-        receiver.raw("ZPW")
+        receiver.raw("ZPWQSTN")
         out["zone2"] = True
     except ValueError as error:
         if str(error) != TIMEOUT_MESSAGE:
@@ -128,12 +128,14 @@ def determine_zones(receiver):
         _LOGGER.debug("Zone 2 timed out, assuming no functionality")
     try:
         _LOGGER.debug("Checking for zone 3 capability")
-        receiver.raw("PW3")
+        receiver.raw("PW3QSTN")
         out["zone3"] = True
     except ValueError as error:
         if str(error) != TIMEOUT_MESSAGE:
             raise error
         _LOGGER.debug("Zone 3 timed out, assuming no functionality")
+    except AssertionError:
+        _LOGGER.error("Zone 3 detection failed")
 
     return out
 

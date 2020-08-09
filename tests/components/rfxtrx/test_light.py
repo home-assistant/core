@@ -123,6 +123,7 @@ async def test_several_lights(hass, rfxtrx):
         },
     )
     await hass.async_block_till_done()
+    await hass.async_start()
 
     state = hass.states.get("light.ac_213c7f2_48")
     assert state
@@ -138,6 +139,22 @@ async def test_several_lights(hass, rfxtrx):
     assert state
     assert state.state == "off"
     assert state.attributes.get("friendly_name") == "AC 1118cdea:2"
+
+    await rfxtrx.signal("0b1100cd0213c7f230010f71")
+    state = hass.states.get("light.ac_213c7f2_48")
+    assert state
+    assert state.state == "on"
+
+    await rfxtrx.signal("0b1100cd0213c7f230000f71")
+    state = hass.states.get("light.ac_213c7f2_48")
+    assert state
+    assert state.state == "off"
+
+    await rfxtrx.signal("0b1100cd0213c7f230020f71")
+    state = hass.states.get("light.ac_213c7f2_48")
+    assert state
+    assert state.state == "on"
+    assert state.attributes.get("brightness") == 255
 
 
 @pytest.mark.parametrize("repetitions", [1, 3])
@@ -165,13 +182,9 @@ async def test_repetitions(hass, rfxtrx, repetitions):
     assert rfxtrx.transport.send.call_count == repetitions
 
 
-async def test_discover_light(hass, rfxtrx):
+async def test_discover_light(hass, rfxtrx_automatic):
     """Test with discovery of lights."""
-    assert await async_setup_component(
-        hass, "rfxtrx", {"rfxtrx": {"device": "abcd", "automatic_add": True}},
-    )
-    await hass.async_block_till_done()
-    await hass.async_start()
+    rfxtrx = rfxtrx_automatic
 
     await rfxtrx.signal("0b11009e00e6116202020070")
     state = hass.states.get("light.ac_0e61162_2")

@@ -5,7 +5,7 @@ ignore=tests
 jobs=2
 load-plugins=pylint_strict_informational
 persistent=no
-extension-pkg-whitelist=ciso8601
+extension-pkg-whitelist=ciso8601,cv2
 
 [BASIC]
 good-names=id,i,j,k,ex,Run,_,fp,T,ev

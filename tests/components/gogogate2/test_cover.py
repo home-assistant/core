@@ -1,7 +1,4 @@
 """Tests for the GogoGate2 component."""
-from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
-
 from gogogate2_api import GogoGate2Api
 from gogogate2_api.common import (
     ActivateResponse,
@@ -24,14 +21,14 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_USERNAME,
     STATE_CLOSED,
-    STATE_CLOSING,
     STATE_OPEN,
-    STATE_OPENING,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 
 from .common import ComponentFactory
+
+from tests.async_mock import MagicMock
 
 
 async def test_import_fail(
@@ -405,11 +402,6 @@ async def test_open_close(
     )
     await hass.async_block_till_done()
     component_data.api.close_door.assert_called_with(1)
-    await hass.services.async_call(
-        HA_DOMAIN, "update_entity", service_data={"entity_id": "cover.door1"},
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get("cover.door1").state == STATE_CLOSING
 
     component_data.data_update_coordinator.api.info.return_value = closed_door_response
     await component_data.data_update_coordinator.async_refresh()
@@ -422,35 +414,19 @@ async def test_open_close(
     )
     await hass.async_block_till_done()
     component_data.api.open_door.assert_called_with(1)
-    await hass.services.async_call(
-        HA_DOMAIN, "update_entity", service_data={"entity_id": "cover.door1"},
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get("cover.door1").state == STATE_OPENING
 
     # Assert the mid state does not change when the same status is returned.
     component_data.data_update_coordinator.api.info.return_value = closed_door_response
     await component_data.data_update_coordinator.async_refresh()
     component_data.data_update_coordinator.api.info.return_value = closed_door_response
     await component_data.data_update_coordinator.async_refresh()
+
+    await component_data.data_update_coordinator.async_refresh()
     await hass.services.async_call(
         HA_DOMAIN, "update_entity", service_data={"entity_id": "cover.door1"},
     )
     await hass.async_block_till_done()
-    assert hass.states.get("cover.door1").state == STATE_OPENING
-
-    # Assert the mid state times out.
-    with patch("homeassistant.components.gogogate2.cover.datetime") as datetime_mock:
-        datetime_mock.now.return_value = datetime.now() + timedelta(seconds=60.1)
-        component_data.data_update_coordinator.api.info.return_value = (
-            closed_door_response
-        )
-        await component_data.data_update_coordinator.async_refresh()
-        await hass.services.async_call(
-            HA_DOMAIN, "update_entity", service_data={"entity_id": "cover.door1"},
-        )
-        await hass.async_block_till_done()
-        assert hass.states.get("cover.door1").state == STATE_CLOSED
+    assert hass.states.get("cover.door1").state == STATE_CLOSED
 
 
 async def test_availability(

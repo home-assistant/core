@@ -6,12 +6,18 @@ To update, run python3 -m script.hassfest
 # fmt: off
 
 ZEROCONF = {
+    "_Volumio._tcp.local.": [
+        "volumio"
+    ],
     "_api._udp.local.": [
         "guardian"
     ],
     "_axis-video._tcp.local.": [
         "axis",
         "doorbird"
+    ],
+    "_bond._tcp.local.": [
+        "bond"
     ],
     "_daap._tcp.local.": [
         "forked_daapd"

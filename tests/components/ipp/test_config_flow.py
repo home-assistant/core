@@ -218,7 +218,7 @@ async def test_user_device_exists_abort(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort user flow if printer already configured."""
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, aioclient_mock, skip_setup=True)
 
     user_input = MOCK_USER_INPUT.copy()
     result = await hass.config_entries.flow.async_init(
@@ -233,7 +233,7 @@ async def test_zeroconf_device_exists_abort(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort zeroconf flow if printer already configured."""
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, aioclient_mock, skip_setup=True)
 
     discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
     result = await hass.config_entries.flow.async_init(
@@ -248,7 +248,7 @@ async def test_zeroconf_with_uuid_device_exists_abort(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort zeroconf flow if printer already configured."""
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, aioclient_mock, skip_setup=True)
 
     discovery_info = {
         **MOCK_ZEROCONF_IPP_SERVICE_INFO,

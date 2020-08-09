@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Za\u0159\u00edzen\u00ed ji\u017e je nakonfigurov\u00e1no"
+        },
+        "error": {
+            "cannot_connect": "Nelze se p\u0159ipojit"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Heslo",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
+                }
+            }
+        }
+    }
+}

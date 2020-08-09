@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione.",
             "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione.",
             "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione."
         },

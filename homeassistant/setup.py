@@ -22,11 +22,7 @@ DATA_SETUP = "setup_tasks"
 DATA_DEPS_REQS = "deps_reqs_processed"
 
 SLOW_SETUP_WARNING = 10
-
-# Since its possible for databases to be
-# upwards of 36GiB (or larger) in the wild
-# we wait up to 3 hours for startup
-SLOW_SETUP_MAX_WAIT = 10800
+SLOW_SETUP_MAX_WAIT = 300
 
 
 @core.callback
@@ -89,7 +85,8 @@ async def _async_process_dependencies(
         return True
 
     _LOGGER.debug("Dependency %s will wait for %s", integration.domain, list(tasks))
-    results = await asyncio.gather(*tasks.values())
+    async with hass.timeout.async_freeze(integration.domain):
+        results = await asyncio.gather(*tasks.values())
 
     failed = [
         domain
@@ -190,7 +187,8 @@ async def _async_setup_component(
             hass.data[DATA_SETUP_STARTED].pop(domain)
             return False
 
-        result = await asyncio.wait_for(task, SLOW_SETUP_MAX_WAIT)
+        async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, domain):
+            result = await task
     except asyncio.TimeoutError:
         _LOGGER.error(
             "Setup of %s is taking longer than %s seconds."
@@ -319,9 +317,10 @@ async def async_process_deps_reqs(
         raise HomeAssistantError("Could not set up all dependencies.")
 
     if not hass.config.skip_pip and integration.requirements:
-        await requirements.async_get_integration_with_requirements(
-            hass, integration.domain
-        )
+        async with hass.timeout.async_freeze(integration.domain):
+            await requirements.async_get_integration_with_requirements(
+                hass, integration.domain
+            )
 
     processed.add(integration.domain)
 

@@ -7,6 +7,7 @@ from homeassistant.core import callback
 
 from . import (
     CONF_AUTOMATIC_ADD,
+    CONF_DATA_BITS,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
     SIGNAL_EVENT,
@@ -38,7 +39,9 @@ async def async_setup_entry(
         if not supported(event):
             continue
 
-        device_id = get_device_id(event.device)
+        device_id = get_device_id(
+            event.device, data_bits=entity_info.get(CONF_DATA_BITS)
+        )
         if device_id in device_ids:
             continue
         device_ids.add(device_id)
@@ -95,17 +98,23 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
         """Return if the cover is closed."""
         return not self._state
 
-    def open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs):
         """Move the cover up."""
-        self._send_command("roll_up")
+        await self._async_send(self._device.send_open)
+        self._state = True
+        self.async_write_ha_state()
 
-    def close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs):
         """Move the cover down."""
-        self._send_command("roll_down")
+        await self._async_send(self._device.send_close)
+        self._state = False
+        self.async_write_ha_state()
 
-    def stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
-        self._send_command("stop_roll")
+        await self._async_send(self._device.send_stop)
+        self._state = True
+        self.async_write_ha_state()
 
     def _apply_event(self, event):
         """Apply command from rfxtrx."""

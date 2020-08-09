@@ -64,7 +64,7 @@ async def async_setup(hass, config):
 
     include_components = conf.get(CONF_COMPONENT_REPORTING)
 
-    async def check_new_version():
+    async def check_new_version() -> Updater:
         """Check if a new version is available and report if one is."""
         newest, release_notes = await get_newest_version(
             hass, huuid, include_components
@@ -98,7 +98,7 @@ async def async_setup(hass, config):
 
         return Updater(update_available, newest, release_notes)
 
-    coordinator = hass.data[DOMAIN] = update_coordinator.DataUpdateCoordinator(
+    coordinator = hass.data[DOMAIN] = update_coordinator.DataUpdateCoordinator[Updater](
         hass,
         _LOGGER,
         name="Home Assistant update",
@@ -134,7 +134,7 @@ async def get_newest_version(hass, huuid, include_components):
 
     session = async_get_clientsession(hass)
 
-    with async_timeout.timeout(15):
+    with async_timeout.timeout(30):
         req = await session.post(UPDATER_URL, json=info_object)
 
     _LOGGER.info(

@@ -46,7 +46,7 @@ jobs:
         run: |
           python -m venv venv
           . venv/bin/activate
-          pip install -U pip setuptools
+          pip install -U pip==20.1.1 setuptools
           pip install -r requirements.txt -r requirements_test.txt
           # Uninstalling typing as a workaround. Eventually we should make sure
           # all our dependencies drop typing.
@@ -603,7 +603,7 @@ jobs:
         run: |
           python -m venv venv
           . venv/bin/activate
-          pip install -U pip setuptools wheel
+          pip install -U pip==20.1.1 setuptools wheel
           pip install -r requirements_all.txt
           pip install -r requirements_test.txt
           # Uninstalling typing as a workaround. Eventually we should make sure
@@ -737,7 +737,7 @@ jobs:
             -p no:sugar \
             tests
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@2.1.0
+        uses: actions/upload-artifact@v2.1.3
         with:
           name: coverage-${{ matrix.python-version }}-group${{ matrix.group }}
           path: .coverage
@@ -781,4 +781,4 @@ jobs:
           coverage report --fail-under=94
           coverage xml
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1.0.11
+        uses: codecov/codecov-action@v1.0.12

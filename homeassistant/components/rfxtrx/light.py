@@ -13,6 +13,7 @@ from homeassistant.core import callback
 
 from . import (
     CONF_AUTOMATIC_ADD,
+    CONF_DATA_BITS,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
     SIGNAL_EVENT,
@@ -50,7 +51,9 @@ async def async_setup_entry(
         if not supported(event):
             continue
 
-        device_id = get_device_id(event.device)
+        device_id = get_device_id(
+            event.device, data_bits=entity_info.get(CONF_DATA_BITS)
+        )
         if device_id in device_ids:
             continue
         device_ids.add(device_id)
@@ -122,21 +125,25 @@ class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
         """Return true if device is on."""
         return self._state
 
-    def turn_on(self, **kwargs):
-        """Turn the light on."""
+    async def async_turn_on(self, **kwargs):
+        """Turn the device on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
+        self._state = True
         if brightness is None:
+            await self._async_send(self._device.send_on)
             self._brightness = 255
-            self._send_command("turn_on")
         else:
+            await self._async_send(self._device.send_dim, brightness * 100 // 255)
             self._brightness = brightness
-            _brightness = brightness * 100 // 255
-            self._send_command("dim", _brightness)
 
-    def turn_off(self, **kwargs):
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs):
         """Turn the device off."""
+        await self._async_send(self._device.send_off)
+        self._state = False
         self._brightness = 0
-        self._send_command("turn_off")
+        self.async_write_ha_state()
 
     def _apply_event(self, event):
         """Apply command from rfxtrx."""

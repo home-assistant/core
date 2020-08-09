@@ -6,7 +6,7 @@ from aiohttp.client_exceptions import ServerDisconnectedError
 from onvif import ONVIFCamera, ONVIFService
 from zeep.exceptions import Fault
 
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
@@ -114,30 +114,31 @@ class EventManager:
 
     async def async_pull_messages(self, _now: dt = None) -> None:
         """Pull messages from device."""
-        try:
-            pullpoint = self.device.create_pullpoint_service()
-            req = pullpoint.create_type("PullMessages")
-            req.MessageLimit = 100
-            req.Timeout = dt.timedelta(seconds=60)
-            response = await pullpoint.PullMessages(req)
+        if self.hass.state == CoreState.running:
+            try:
+                pullpoint = self.device.create_pullpoint_service()
+                req = pullpoint.create_type("PullMessages")
+                req.MessageLimit = 100
+                req.Timeout = dt.timedelta(seconds=60)
+                response = await pullpoint.PullMessages(req)
 
-            # Renew subscription if less than two hours is left
-            if (
-                dt_util.as_utc(response.TerminationTime) - dt_util.utcnow()
-            ).total_seconds() < 7200:
-                await self.async_renew()
+                # Renew subscription if less than two hours is left
+                if (
+                    dt_util.as_utc(response.TerminationTime) - dt_util.utcnow()
+                ).total_seconds() < 7200:
+                    await self.async_renew()
 
-            # Parse response
-            await self.async_parse_messages(response.NotificationMessage)
+                # Parse response
+                await self.async_parse_messages(response.NotificationMessage)
 
-        except ServerDisconnectedError:
-            pass
-        except Fault:
-            pass
+            except ServerDisconnectedError:
+                pass
+            except Fault:
+                pass
 
-        # Update entities
-        for update_callback in self._listeners:
-            update_callback()
+            # Update entities
+            for update_callback in self._listeners:
+                update_callback()
 
         # Reschedule another pull
         if self._listeners:

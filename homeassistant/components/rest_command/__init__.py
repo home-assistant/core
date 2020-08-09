@@ -134,7 +134,7 @@ async def async_setup(hass, config):
                         )
 
             except asyncio.TimeoutError:
-                _LOGGER.warning("Timeout call %s", response.url, exc_info=1)
+                _LOGGER.warning("Timeout call %s", request_url, exc_info=1)
 
             except aiohttp.ClientError:
                 _LOGGER.error("Client error %s", request_url, exc_info=1)

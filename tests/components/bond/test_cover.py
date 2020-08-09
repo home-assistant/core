@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from bond import DeviceTypes
+from bond_api import Action, DeviceType
 
 from homeassistant import core
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
@@ -16,10 +16,9 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
 from .common import (
-    patch_bond_close,
+    help_test_entity_available,
+    patch_bond_action,
     patch_bond_device_state,
-    patch_bond_hold,
-    patch_bond_open,
     setup_platform,
 )
 
@@ -30,22 +29,31 @@ _LOGGER = logging.getLogger(__name__)
 
 def shades(name: str):
     """Create motorized shades with given name."""
-    return {"name": name, "type": DeviceTypes.MOTORIZED_SHADES}
+    return {"name": name, "type": DeviceType.MOTORIZED_SHADES}
 
 
 async def test_entity_registry(hass: core.HomeAssistant):
     """Tests that the devices are registered in the entity registry."""
-    await setup_platform(hass, COVER_DOMAIN, shades("name-1"))
+    await setup_platform(
+        hass,
+        COVER_DOMAIN,
+        shades("name-1"),
+        bond_version={"bondid": "test-hub-id"},
+        bond_device_id="test-device-id",
+    )
 
     registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
-    assert [key for key in registry.entities] == ["cover.name_1"]
+    entity = registry.entities["cover.name_1"]
+    assert entity.unique_id == "test-hub-id_test-device-id"
 
 
 async def test_open_cover(hass: core.HomeAssistant):
     """Tests that open cover command delegates to API."""
-    await setup_platform(hass, COVER_DOMAIN, shades("name-1"))
+    await setup_platform(
+        hass, COVER_DOMAIN, shades("name-1"), bond_device_id="test-device-id"
+    )
 
-    with patch_bond_open() as mock_open, patch_bond_device_state():
+    with patch_bond_action() as mock_open, patch_bond_device_state():
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
@@ -53,14 +61,17 @@ async def test_open_cover(hass: core.HomeAssistant):
             blocking=True,
         )
         await hass.async_block_till_done()
-        mock_open.assert_called_once()
+
+    mock_open.assert_called_once_with("test-device-id", Action.open())
 
 
 async def test_close_cover(hass: core.HomeAssistant):
     """Tests that close cover command delegates to API."""
-    await setup_platform(hass, COVER_DOMAIN, shades("name-1"))
+    await setup_platform(
+        hass, COVER_DOMAIN, shades("name-1"), bond_device_id="test-device-id"
+    )
 
-    with patch_bond_close() as mock_close, patch_bond_device_state():
+    with patch_bond_action() as mock_close, patch_bond_device_state():
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
@@ -68,14 +79,17 @@ async def test_close_cover(hass: core.HomeAssistant):
             blocking=True,
         )
         await hass.async_block_till_done()
-        mock_close.assert_called_once()
+
+    mock_close.assert_called_once_with("test-device-id", Action.close())
 
 
 async def test_stop_cover(hass: core.HomeAssistant):
     """Tests that stop cover command delegates to API."""
-    await setup_platform(hass, COVER_DOMAIN, shades("name-1"))
+    await setup_platform(
+        hass, COVER_DOMAIN, shades("name-1"), bond_device_id="test-device-id"
+    )
 
-    with patch_bond_hold() as mock_hold, patch_bond_device_state():
+    with patch_bond_action() as mock_hold, patch_bond_device_state():
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_STOP_COVER,
@@ -83,7 +97,8 @@ async def test_stop_cover(hass: core.HomeAssistant):
             blocking=True,
         )
         await hass.async_block_till_done()
-        mock_hold.assert_called_once()
+
+    mock_hold.assert_called_once_with("test-device-id", Action.hold())
 
 
 async def test_update_reports_open_cover(hass: core.HomeAssistant):
@@ -106,3 +121,10 @@ async def test_update_reports_closed_cover(hass: core.HomeAssistant):
         await hass.async_block_till_done()
 
     assert hass.states.get("cover.name_1").state == "closed"
+
+
+async def test_cover_available(hass: core.HomeAssistant):
+    """Tests that available state is updated based on API errors."""
+    await help_test_entity_available(
+        hass, COVER_DOMAIN, shades("name-1"), "cover.name_1"
+    )

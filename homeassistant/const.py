@@ -1,6 +1,6 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 114
+MINOR_VERSION = 115
 PATCH_VERSION = "0.dev0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
@@ -171,6 +171,7 @@ CONF_TOKEN = "token"
 CONF_TRIGGER_TIME = "trigger_time"
 CONF_TTL = "ttl"
 CONF_TYPE = "type"
+CONF_UNIQUE_ID = "unique_id"
 CONF_UNIT_OF_MEASUREMENT = "unit_of_measurement"
 CONF_UNIT_SYSTEM = "unit_system"
 CONF_UNTIL = "until"
@@ -217,6 +218,10 @@ DEVICE_CLASS_TEMPERATURE = "temperature"
 DEVICE_CLASS_TIMESTAMP = "timestamp"
 DEVICE_CLASS_PRESSURE = "pressure"
 DEVICE_CLASS_POWER = "power"
+DEVICE_CLASS_CURRENT = "current"
+DEVICE_CLASS_ENERGY = "energy"
+DEVICE_CLASS_POWER_FACTOR = "power_factor"
+DEVICE_CLASS_VOLTAGE = "voltage"
 
 # #### STATES ####
 STATE_ON = "on"
