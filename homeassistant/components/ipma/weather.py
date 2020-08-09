@@ -257,8 +257,8 @@ class IPMAWeather(WeatherEntity):
                     ),
                     ATTR_FORECAST_TEMP: float(data_in.feels_like_temperature),
                     ATTR_FORECAST_PRECIPITATION_PROBABILITY: (
-                        data_in.precipitation_probability
-                        if float(data_in.precipitation_probability) >= 0
+                        int(float(data_in.precipitation_probability))
+                        if int(float(data_in.precipitation_probability)) >= 0
                         else None
                     ),
                     ATTR_FORECAST_WIND_SPEED: data_in.wind_strength,
