@@ -29,6 +29,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.singleton import singleton
 from homeassistant.loader import async_get_homekit, async_get_zeroconf
+from homeassistant.util.zc import install_multiple_zeroconf_warning
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +78,7 @@ def _get_instance(hass, default_interface=False, ipv6=True):
     """Create an instance."""
     logging.getLogger("zeroconf").setLevel(logging.NOTSET)
 
-    zc_args = {}
+    zc_args = {"from_hass": True}
     if default_interface:
         zc_args["interfaces"] = InterfaceChoice.Default
     if not ipv6:
@@ -126,6 +127,8 @@ class HaZeroconf(Zeroconf):
 
 def setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
+    install_multiple_zeroconf_warning()
+
     zc_config = config.get(DOMAIN, {})
     zeroconf = hass.data[DOMAIN] = _get_instance(
         hass,
@@ -134,15 +137,6 @@ def setup(hass, config):
         ),
         ipv6=zc_config.get(CONF_IPV6, DEFAULT_IPV6),
     )
-
-    old_init = zeroconf.Zeroconf.__init__
-
-    def new_init(self, *k, **kw):
-        _LOGGER.warning(
-            "Multiple Zeroconf instances detected. Please use the shared Zeroconf via homeassistant.components.zeroconf.async_get_instance()",
-            stack_info=True,
-        )
-        old_init(self, *k, **kw)
 
     # Get instance UUID
     uuid = asyncio.run_coroutine_threadsafe(
