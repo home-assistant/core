@@ -118,7 +118,7 @@ async def test_service_request_area_preset(hass):
         mock_req_area_pres.assert_called_once_with(2, 1)
         mock_req_area_pres.reset_mock()
         await hass.services.async_call(
-            dynalite.DOMAIN, "request_area_preset", {"host": "", "area": 3},
+            dynalite.DOMAIN, "request_area_preset", {"area": 3},
         )
         await hass.async_block_till_done()
         assert mock_req_area_pres.mock_calls == [call(3, 1), call(3, 4)]
