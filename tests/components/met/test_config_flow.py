@@ -109,8 +109,8 @@ async def test_import_step(hass):
     """Test initializing via import step."""
     test_data = {
         "name": "home",
-        CONF_LONGITUDE: 0,
-        CONF_LATITUDE: 0,
+        CONF_LONGITUDE: None,
+        CONF_LATITUDE: None,
         CONF_ELEVATION: 0,
         "track_home": True,
     }
