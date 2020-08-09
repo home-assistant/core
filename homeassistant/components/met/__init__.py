@@ -84,15 +84,15 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator):
         except Exception as err:
             raise UpdateFailed(f"Update failed: {err}")
 
-    async def async_update_weather_data(self):
-        """Update weather data."""
-        self.weather.init_data()
-        await self.async_refresh()
-
     def track_home(self):
         """Start tracking changes to HA home setting."""
+        async def _async_update_weather_data(self):
+            """Update weather data."""
+            self.weather.init_data()
+            await self.async_refresh()
+
         self._unsub_track_home = self.hass.bus.async_listen(
-            EVENT_CORE_CONFIG_UPDATE, self.async_update_weather_data
+            EVENT_CORE_CONFIG_UPDATE, _async_update_weather_data
         )
 
     def untrack_home(self):
