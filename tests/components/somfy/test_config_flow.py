@@ -8,7 +8,7 @@ from homeassistant.components.somfy import DOMAIN, config_flow
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from tests.async_mock import patch
+from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 CLIENT_ID_VALUE = "1234"
@@ -32,6 +32,16 @@ async def mock_impl(hass):
     return impl
 
 
+@pytest.fixture
+def mock_current_request(hass):
+    """Mock current request."""
+    with patch("homeassistant.helpers.network.current_request") as mock_request_context:
+        mock_request = Mock()
+        mock_request.url = "https://example.com/some/request"
+        mock_request_context.get = Mock(return_value=mock_request)
+        yield mock_request_context
+
+
 async def test_abort_if_no_configuration(hass):
     """Check flow abort when no configuration."""
     flow = config_flow.SomfyFlowHandler()
@@ -52,7 +62,7 @@ async def test_abort_if_existing_entry(hass):
     assert result["reason"] == "already_setup"
 
 
-async def test_full_flow(hass, aiohttp_client, aioclient_mock):
+async def test_full_flow(hass, aiohttp_client, aioclient_mock, mock_current_request):
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,
