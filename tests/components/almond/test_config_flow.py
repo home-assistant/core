@@ -1,17 +1,29 @@
 """Test the Almond config flow."""
 import asyncio
 
+import pytest
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.almond import config_flow
 from homeassistant.components.almond.const import DOMAIN
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from tests.async_mock import patch
+from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 CLIENT_ID_VALUE = "1234"
 CLIENT_SECRET_VALUE = "5678"
+
+
+@pytest.fixture
+def mock_current_request(hass):
+    """Mock current request."""
+    with patch("homeassistant.helpers.network.current_request") as mock_request_context:
+        mock_request = Mock()
+        mock_request.url = "https://example.com/some/request"
+        mock_request_context.get = Mock(return_value=mock_request)
+        yield mock_request_context
 
 
 async def test_import(hass):
@@ -87,7 +99,7 @@ async def test_abort_if_existing_entry(hass):
     assert result["reason"] == "already_setup"
 
 
-async def test_full_flow(hass, aiohttp_client, aioclient_mock):
+async def test_full_flow(hass, aiohttp_client, aioclient_mock, mock_current_request):
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,
