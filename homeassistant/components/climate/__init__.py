@@ -149,8 +149,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_SET_OUTSIDE_TEMPERATURE,
-        SET_OUTSIDE_TEMPERATURE_SCHEMA,
-        async_service_outside_temperature_set,
+        {vol.Required(ATTR_OUTSIDE_TEMPERATURE): vol.Coerce(float)},
+        "async_set_outside_temperature",
         [SUPPORT_OUTSIDE_TEMPERATURE],
     )
     component.async_register_entity_service(
