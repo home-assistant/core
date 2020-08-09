@@ -218,6 +218,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     name = config_entry.data[CONF_NAME]
     uid = config_entry.data.get(CONF_ID)
 
+if uid is None:
+    uid = config_entry.entry_id
+
     entity = KodiEntity(connection, kodi, name, uid, version)
     async_add_entities([entity])
 

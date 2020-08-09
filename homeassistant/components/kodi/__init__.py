@@ -31,6 +31,7 @@ PLATFORMS = ["media_player"]
 
 async def async_setup(hass, config):
     """Set up the Kodi integration."""
+    hass.data.setdefault(DOMAIN, {})
     return True
 
 
@@ -59,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     remove_stop_listener = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
 
     version = f"{raw_version['major']}.{raw_version['minor']}"
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+    hass.data[DOMAIN][entry.entry_id] = {
         DATA_CONNECTION: conn,
         DATA_KODI: kodi,
         DATA_REMOVE_LISTENER: remove_stop_listener,
