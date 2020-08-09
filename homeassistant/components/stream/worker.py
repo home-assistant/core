@@ -2,6 +2,7 @@
 from collections import deque
 import io
 import logging
+import time
 
 import av
 
@@ -35,6 +36,25 @@ def create_stream_buffer(stream_output, video_stream, audio_stream, sequence):
 
 
 def stream_worker(hass, stream, quit_event):
+    """Handle consuming streams and restart keepalive streams."""
+
+    wait_timeout = 0
+    while not quit_event.wait(timeout=wait_timeout):
+        start_time = time.time()
+        try:
+            _stream_worker_internal(hass, stream, quit_event)
+        except av.error.FFmpegError:  # pylint: disable=c-extension-no-member
+            _LOGGER.exception("Stream connection failed: %s", stream.source)
+        if not stream.keepalive or quit_event.is_set():
+            break
+        # To avoid excessive restarts, don't restart faster than once every 40 seconds.
+        wait_timeout = max(40 - (time.time() - start_time), 0)
+        _LOGGER.debug(
+            "Restarting stream worker in %d seconds: %s", wait_timeout, stream.source,
+        )
+
+
+def _stream_worker_internal(hass, stream, quit_event):
     """Handle consuming streams."""
 
     container = av.open(stream.source, options=stream.options)
@@ -112,13 +132,15 @@ def stream_worker(hass, stream, quit_event):
                 audio_stream = None
 
         except (av.AVError, StopIteration) as ex:
-            # End of stream, clear listeners and stop thread
-            for fmt, _ in outputs.items():
-                hass.loop.call_soon_threadsafe(stream.outputs[fmt].put, None)
+            if not stream.keepalive:
+                # End of stream, clear listeners and stop thread
+                for fmt, _ in outputs.items():
+                    hass.loop.call_soon_threadsafe(stream.outputs[fmt].put, None)
             _LOGGER.error(
                 "Error demuxing stream while finding first packet: %s", str(ex)
             )
-            quit_event.set()
+            return False
+        return True
 
     def initialize_segment(video_pts):
         """Reset some variables and initialize outputs for each segment."""
@@ -159,7 +181,9 @@ def stream_worker(hass, stream, quit_event):
                 packet.stream = output_streams[audio_stream]
                 buffer.output.mux(packet)
 
-    peek_first_pts()
+    if not peek_first_pts():
+        container.close()
+        return
     last_dts = {k: v - 1 for k, v in first_pts.items()}
     initialize_segment(first_pts[video_stream])
 
@@ -179,9 +203,10 @@ def stream_worker(hass, stream, quit_event):
                 continue
             last_packet_was_without_dts = False
         except (av.AVError, StopIteration) as ex:
-            # End of stream, clear listeners and stop thread
-            for fmt, _ in outputs.items():
-                hass.loop.call_soon_threadsafe(stream.outputs[fmt].put, None)
+            if not stream.keepalive:
+                # End of stream, clear listeners and stop thread
+                for fmt, _ in outputs.items():
+                    hass.loop.call_soon_threadsafe(stream.outputs[fmt].put, None)
             _LOGGER.error("Error demuxing stream: %s", str(ex))
             break
 
