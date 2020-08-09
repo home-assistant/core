@@ -173,7 +173,7 @@ aioguardian==1.0.1
 aioharmony==0.2.6
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.45
+aiohomekit[IP]==0.2.46
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -210,7 +210,7 @@ aiopulse==0.4.0
 aiopvapi==1.6.14
 
 # homeassistant.components.pvpc_hourly_pricing
-aiopvpc==1.0.2
+aiopvpc==2.0.2
 
 # homeassistant.components.webostv
 aiopylgtv==0.3.3
@@ -1161,6 +1161,9 @@ py-cpuinfo==5.0.0
 # homeassistant.components.melissa
 py-melissa-climate==2.0.0
 
+# homeassistant.components.nightscout
+py-nightscout==1.2.1
+
 # homeassistant.components.schluter
 py-schluter==0.1.7
 
@@ -1268,7 +1271,7 @@ pycocotools==2.0.1
 pycomfoconnect==0.3
 
 # homeassistant.components.coolmaster
-pycoolmasternet==0.0.4
+pycoolmasternet-async==0.1.0
 
 # homeassistant.components.avri
 pycountry==19.8.18
@@ -1831,7 +1834,7 @@ pyvizio==0.1.49
 pyvlx==0.2.16
 
 # homeassistant.components.volumio
-pyvolumio==0.1
+pyvolumio==0.1.1
 
 # homeassistant.components.html5
 pywebpush==1.9.2

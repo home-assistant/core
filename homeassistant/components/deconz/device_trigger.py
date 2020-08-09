@@ -12,10 +12,11 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_PLATFORM,
     CONF_TYPE,
+    CONF_UNIQUE_ID,
 )
 
 from . import DOMAIN
-from .deconz_event import CONF_DECONZ_EVENT, CONF_GESTURE, CONF_UNIQUE_ID
+from .deconz_event import CONF_DECONZ_EVENT, CONF_GESTURE
 
 CONF_SUBTYPE = "subtype"
 
