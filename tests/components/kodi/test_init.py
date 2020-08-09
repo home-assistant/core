@@ -10,8 +10,9 @@ from tests.async_mock import patch
 async def test_unload_entry(hass):
     """Test successful unload of entry."""
     with patch(
-        "homeassistant.components.kodi.media_player.async_setup_entry", return_value=True,
-    ) as mock_setup_entry:
+        "homeassistant.components.kodi.media_player.async_setup_entry",
+        return_value=True,
+    ):
         entry = await init_integration(hass)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1

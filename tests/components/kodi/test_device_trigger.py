@@ -5,9 +5,8 @@ import homeassistant.components.automation as automation
 from homeassistant.components.kodi import DOMAIN
 from homeassistant.setup import async_setup_component
 
-from .util import TEST_IMPORT, MockConnection
+from . import init_integration
 
-from tests.async_mock import patch
 from tests.common import (
     MockConfigEntry,
     assert_lists_same,
@@ -39,19 +38,8 @@ def calls(hass):
 @pytest.fixture
 async def kodi_media_player(hass):
     """Get a kodi media player."""
-    config_entry = MockConfigEntry(domain="kodi", data=TEST_IMPORT, title="name")
-    config_entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.kodi.Kodi.ping", return_value=True,), patch(
-        "homeassistant.components.kodi.Kodi.get_application_properties",
-        return_value={"version": {"major": 1, "minor": 1}},
-    ), patch(
-        "homeassistant.components.kodi.get_kodi_connection",
-        return_value=MockConnection(),
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        return "media_player.name"
+    await init_integration(hass)
+    return "media_player.name"
 
 
 async def test_get_triggers(hass, device_reg, entity_reg):
