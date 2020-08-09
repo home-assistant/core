@@ -10,6 +10,7 @@ from homeassistant.helpers.network import (
     _get_deprecated_base_url,
     _get_external_url,
     _get_internal_url,
+    _get_request_host,
     get_url,
 )
 
@@ -371,6 +372,19 @@ async def test_get_url(hass: HomeAssistant):
 
     with pytest.raises(NoURLAvailableError):
         get_url(hass, allow_external=False, allow_internal=False)
+
+
+async def test_get_request_host(hass: HomeAssistant):
+    """Test getting the host of the current web request from the request context."""
+    with pytest.raises(NoURLAvailableError):
+        _get_request_host()
+
+    with patch("homeassistant.helpers.network.current_request") as mock_request_context:
+        mock_request = Mock()
+        mock_request.url = "http://example.com:8123/test/request"
+        mock_request_context.get = Mock(return_value=mock_request)
+
+        assert _get_request_host() == "example.com"
 
 
 async def test_get_deprecated_base_url_internal(hass: HomeAssistant):
