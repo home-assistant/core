@@ -28,3 +28,6 @@ async def test_request_context_middleware(aiohttp_client):
 
     text = await resp.text()
     assert text == "hi!"
+
+    # We are outside of the context here, should be None
+    assert context.get() is None
