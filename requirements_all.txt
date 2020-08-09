@@ -2090,6 +2090,9 @@ solaredge-local==0.2.0
 # homeassistant.components.solaredge
 solaredge==0.0.2
 
+# homeassistant.components.solaredge
+solaredgeha==0.1.0
+
 # homeassistant.components.solax
 solax==0.2.5
 

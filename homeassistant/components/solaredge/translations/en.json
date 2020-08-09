@@ -16,7 +16,8 @@
                 "data": {
                     "api_key": "API Key",
                     "name": "The name of this installation",
-                    "site_id": "The SolarEdge site-id"
+                    "site_id": "The SolarEdge site-id",
+                    "access_token": "Access token for HA"
                 },
                 "title": "Define the API parameters for this installation"
             }

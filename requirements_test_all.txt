@@ -1071,6 +1071,9 @@ smhi-pkg==1.0.13
 # homeassistant.components.solaredge
 solaredge==0.0.2
 
+# homeassistant.components.solaredge
+solaredgeha==0.1.0
+
 # homeassistant.components.honeywell
 somecomfort==0.5.2
 
