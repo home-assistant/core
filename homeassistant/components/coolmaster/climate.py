@@ -75,14 +75,14 @@ class CoolmasterClimate(ClimateEntity):
         """Return if entity is available."""
         return self._coordinator.last_update_success
 
-    def _refersh_from_coordinator(self):
+    def _refresh_from_coordinator(self):
         self._unit = self._coordinator.data[self._unit_id]
         self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
         self.async_on_remove(
-            self._coordinator.async_add_listener(self._refersh_from_coordinator)
+            self._coordinator.async_add_listener(self._refresh_from_coordinator)
         )
 
     async def async_update(self):
@@ -90,8 +90,7 @@ class CoolmasterClimate(ClimateEntity):
 
         Only used by the generic entity update service.
         """
-        self._unit = await self._unit.refresh()
-        self.async_write_ha_state()
+        await self._coordinator.async_request_refresh()
 
     @property
     def device_info(self):

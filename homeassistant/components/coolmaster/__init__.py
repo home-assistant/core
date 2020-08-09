@@ -69,4 +69,4 @@ class CoolmasterDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             return await self._coolmaster.status()
         except (OSError, ConnectionRefusedError, TimeoutError) as error:
-            raise UpdateFailed() from error
+            raise UpdateFailed from error
