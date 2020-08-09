@@ -7,13 +7,9 @@ from typing import Callable, List
 
 from aiohttp import ClientError
 from py_nightscout import Api as NightscoutAPI
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_RESOURCE
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from .const import ATTR_DATE, ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, ATTR_SVG, DOMAIN
@@ -23,15 +19,6 @@ SCAN_INTERVAL = timedelta(minutes=1)
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Blood Glucose"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Exclusive(CONF_RESOURCE, CONF_RESOURCE): cv.url,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
-
-PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA)
 
 
 async def async_setup_entry(
