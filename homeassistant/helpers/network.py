@@ -54,6 +54,7 @@ def get_url(
                 return _get_internal_url(
                     hass,
                     allow_ip=allow_ip,
+                    require_current_request=require_current_request,
                     require_ssl=require_ssl,
                     require_standard_port=require_standard_port,
                 )
@@ -67,6 +68,7 @@ def get_url(
                     allow_cloud=allow_cloud,
                     allow_ip=allow_ip,
                     prefer_cloud=prefer_cloud,
+                    require_current_request=require_current_request,
                     require_ssl=require_ssl,
                     require_standard_port=require_standard_port,
                 )
