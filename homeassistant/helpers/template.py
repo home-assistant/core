@@ -46,8 +46,7 @@ _ENVIRONMENT = "template.environment"
 
 _RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
 _RE_GET_ENTITIES = re.compile(
-    r"(?:(?:states\.|(?P<func>is_state|is_state_attr|state_attr|states|expand)"
-    r"\((?:[\ \'\"]?))(?P<entity_id>[\w]+\.[\w]+)|(?P<variable>[\w]+))",
+    r"(?:(?:(?:states\.|(?P<func>is_state|is_state_attr|state_attr|states|expand)\((?:[\ \'\"]?))(?P<entity_id>[\w]+\.[\w]+)|states\.(?P<domain_outer>[a-z]+)|states\[(?:[\'\"]?)(?P<domain_inner>[\w]+))|(?P<variable>[\w]+))",
     re.I | re.M,
 )
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{")
@@ -105,6 +104,12 @@ def extract_entities(
                     extraction_final.append(entity.entity_id)
 
             extraction_final.append(result.group("entity_id"))
+        elif result.group("domain_inner") or result.group("domain_outer"):
+            extraction_final.extend(
+                hass.states.async_entity_ids(
+                    result.group("domain_inner") or result.group("domain_outer")
+                )
+            )
 
         if (
             variables
