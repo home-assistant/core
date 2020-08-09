@@ -103,18 +103,6 @@ SET_TEMPERATURE_SCHEMA = vol.All(
 )
 
 
-SET_OUTSIDE_TEMPERATURE_SCHEMA = vol.All(
-    cv.has_at_least_one_key(
-        ATTR_TEMPERATURE
-    ),
-    make_entity_service_schema(
-        {
-            vol.Exclusive(ATTR_TEMPERATURE, "temperature"): vol.Coerce(float),
-        }
-    ),
-)
-
-
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up climate entities."""
     component = hass.data[DOMAIN] = EntityComponent(
