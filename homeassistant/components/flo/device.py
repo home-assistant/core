@@ -2,6 +2,7 @@
 import asyncio
 from datetime import datetime, timedelta
 import logging
+from typing import Any, Dict, Optional
 
 from aioflo.api import API
 from aioflo.errors import RequestError
@@ -28,22 +29,8 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         self._flo_location_id: str = location_id
         self._flo_device_id: str = device_id
         self._manufacturer: str = "Flo by Moen"
-
-        self._mac_address: str = None
-        self._model: str = None
-        self._device_type: str = None
-        self._serial_number: str = None
-        self._available: bool = None
-        self._firmware_version: str = None
-        self._rssi: int = None
-        self._last_heard_from_time: str = None
-        self._current_system_mode: str = None
-        self._target_system_mode: str = None
-        self._current_flow_rate: float = None
-        self._current_psi: float = None
-        self._temperature: float = None
-        self._consumption_today: float = None
-
+        self._device_information: Optional[Dict[str, Any]] = None
+        self._water_usage: Optional[Dict[str, Any]] = None
         super().__init__(
             hass,
             _LOGGER,
@@ -77,100 +64,93 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         return f"{self.manufacturer} {self.model}"
 
     @property
-    def mac_address(self) -> str:
-        """Return ieee address for device."""
-        return self._mac_address
-
-    @property
     def manufacturer(self) -> str:
         """Return manufacturer for device."""
         return self._manufacturer
 
     @property
+    def mac_address(self) -> str:
+        """Return ieee address for device."""
+        return self._device_information["macAddress"]
+
+    @property
     def model(self) -> str:
         """Return model for device."""
-        return self._model
+        return self._device_information["deviceModel"]
 
     @property
     def rssi(self) -> float:
         """Return rssi for device."""
-        return self._rssi
+        return self._device_information["connectivity"]["rssi"]
 
     @property
     def last_heard_from_time(self) -> str:
         """Return lastHeardFromTime for device."""
-        return self._last_heard_from_time
+        return self._device_information["lastHeardFromTime"]
 
     @property
     def device_type(self) -> str:
         """Return the device type for the device."""
-        return self._device_type
+        return self._device_information["deviceType"]
 
     @property
     def available(self) -> bool:
         """Return True if device is available."""
-        return self._available
+        return self._device_information["isConnected"]
 
     @property
     def current_system_mode(self) -> str:
         """Return the current system mode."""
-        return self._current_system_mode
+        return self._device_information["systemMode"]["lastKnown"]
 
     @property
     def target_system_mode(self) -> str:
         """Return the target system mode."""
-        return self._target_system_mode
+        return self._device_information["systemMode"]["target"]
 
     @property
     def current_flow_rate(self) -> float:
         """Return current flow rate in gpm."""
-        return self._current_flow_rate
+        return self._device_information["telemetry"]["current"]["gpm"]
 
     @property
     def current_psi(self) -> float:
         """Return the current pressure in psi."""
-        return self._current_psi
+        return self._device_information["telemetry"]["current"]["psi"]
 
     @property
     def temperature(self) -> float:
         """Return the current temperature in degrees F."""
-        return self._temperature
+        return self._device_information["telemetry"]["current"]["tempF"]
 
     @property
     def consumption_today(self) -> float:
         """Return the current consumption for today in gallons."""
-        return self._consumption_today
+        return self._water_usage["aggregations"]["sumTotalGallonsConsumed"]
 
     @property
     def firmware_version(self) -> str:
         """Return the firmware version for the device."""
-        return self._firmware_version
+        return self._device_information["fwVersion"]
+
+    @property
+    def serial_number(self) -> str:
+        """Return the serial number for the device."""
+        return self._device_information["serialNumber"]
 
     async def _update_device(self, *_) -> None:
         """Update the device information from the API."""
-        device_information = await self.api_client.device.get_info(self._flo_device_id)
-        _LOGGER.debug("Flo device data: %s", device_information)
-        self._mac_address: str = device_information["macAddress"]
-        self._model: str = device_information["deviceModel"]
-        self._device_type: str = device_information["deviceType"]
-        self._serial_number: str = device_information["serialNumber"]
-        self._available = device_information["isConnected"]
-        self._firmware_version = device_information["fwVersion"]
-        self._rssi = device_information["connectivity"]["rssi"]
-        self._last_heard_from_time = device_information["lastHeardFromTime"]
-        self._current_system_mode = device_information["systemMode"]["lastKnown"]
-        self._target_system_mode = device_information["systemMode"]["target"]
-        self._current_flow_rate = device_information["telemetry"]["current"]["gpm"]
-        self._current_psi = device_information["telemetry"]["current"]["psi"]
-        self._temperature = device_information["telemetry"]["current"]["tempF"]
+        self._device_information = await self.api_client.device.get_info(
+            self._flo_device_id
+        )
+        _LOGGER.debug("Flo device data: %s", self._device_information)
 
     async def _update_consumption_data(self, *_) -> None:
         """Update water consumption data from the API."""
         today = dt_util.now().date()
         start_date = datetime(today.year, today.month, today.day, 0, 0)
         end_date = datetime(today.year, today.month, today.day, 23, 59, 59, 999000)
-        water_usage = await self.api_client.water.get_consumption_info(
+        self._water_usage = await self.api_client.water.get_consumption_info(
             self._flo_location_id, start_date, end_date
         )
-        _LOGGER.debug("Updated Flo consumption data: %s", water_usage)
-        self._consumption_today = water_usage["aggregations"]["sumTotalGallonsConsumed"]
+        _LOGGER.debug("Updated Flo consumption data: %s", self._water_usage)
