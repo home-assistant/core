@@ -1532,6 +1532,22 @@ def test_extract_entities_with_branching(hass):
         == {"light.a", "light.b", "light.c"}
     )
 
+    assert (
+        set(
+            template.extract_entities(
+                hass,
+                """
+            {% if states.light.a.state == "A" %}
+            {% set domain = "light" %}
+            {{ states[domain].b.state }}
+            {% endif %}
+""",
+                {},
+            )
+        )
+        == {"light.a", "light.b"}
+    )
+
 
 def test_closest_function_invalid_coordinates(hass):
     """Test closest function invalid coordinates."""
