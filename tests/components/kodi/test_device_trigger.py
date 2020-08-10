@@ -3,6 +3,7 @@ import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.components.kodi import DOMAIN
+from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
 from homeassistant.setup import async_setup_component
 
 from . import init_integration
@@ -39,7 +40,7 @@ def calls(hass):
 async def kodi_media_player(hass):
     """Get a kodi media player."""
     await init_integration(hass)
-    return "media_player.name"
+    return f"{MP_DOMAIN}.name"
 
 
 async def test_get_triggers(hass, device_reg, entity_reg):
@@ -50,7 +51,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "host", 1234)},
     )
     entity_reg.async_get_or_create(
-        "media_player", DOMAIN, "5678", device_id=device_entry.id
+        MP_DOMAIN, DOMAIN, "5678", device_id=device_entry.id
     )
     expected_triggers = [
         {
@@ -58,14 +59,14 @@ async def test_get_triggers(hass, device_reg, entity_reg):
             "domain": DOMAIN,
             "type": "turn_off",
             "device_id": device_entry.id,
-            "entity_id": "media_player.kodi_5678",
+            "entity_id": f"{MP_DOMAIN}.kodi_5678",
         },
         {
             "platform": "device",
             "domain": DOMAIN,
             "type": "turn_on",
             "device_id": device_entry.id,
-            "entity_id": "media_player.kodi_5678",
+            "entity_id": f"{MP_DOMAIN}.kodi_5678",
         },
     ]
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
@@ -114,7 +115,7 @@ async def test_if_fires_on_state_change(hass, calls, kodi_media_player):
     )
 
     await hass.services.async_call(
-        "media_player", "turn_on", {"entity_id": kodi_media_player}, blocking=True,
+        MP_DOMAIN, "turn_on", {"entity_id": kodi_media_player}, blocking=True,
     )
 
     await hass.async_block_till_done()
@@ -122,7 +123,7 @@ async def test_if_fires_on_state_change(hass, calls, kodi_media_player):
     assert calls[0].data["some"] == f"turn_on - {kodi_media_player}"
 
     await hass.services.async_call(
-        "media_player", "turn_off", {"entity_id": kodi_media_player}, blocking=True,
+        MP_DOMAIN, "turn_off", {"entity_id": kodi_media_player}, blocking=True,
     )
 
     await hass.async_block_till_done()
