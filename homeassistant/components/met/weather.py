@@ -66,10 +66,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
-        [MetWeather(coordinator, config_entry.data, hass.config.units.is_metric, False)]
-    )
-    async_add_entities(
-        [MetWeather(coordinator, config_entry.data, hass.config.units.is_metric, True)]
+        [
+            MetWeather(coordinator, config_entry.data, hass.config.units.is_metric, False),
+            MetWeather(coordinator, config_entry.data, hass.config.units.is_metric, True)
+        ]
     )
 
 
