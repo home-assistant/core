@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import Store
@@ -37,6 +38,26 @@ UPDATE_FIELDS = {
 }
 
 
+class TagIDExistsError(HomeAssistantError):
+    """Raised when an item is not found."""
+
+    def __init__(self, item_id: str):
+        """Initialize tag id exists error."""
+        super().__init__(f"Tag with id: {item_id} already exists.")
+        self.item_id = item_id
+
+
+class TagIDManager(collection.IDManager):
+    """ID manager for tags."""
+
+    def generate_id(self, suggestion: str) -> str:
+        """Generate an ID."""
+        if self.has_id(suggestion):
+            raise TagIDExistsError(suggestion)
+
+        return suggestion
+
+
 class TagStorageCollection(collection.StorageCollection):
     """Tag collection stored in storage."""
 
@@ -61,7 +82,7 @@ class TagStorageCollection(collection.StorageCollection):
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Tag component."""
     hass.data[DOMAIN] = {}
-    id_manager = collection.IDManager()
+    id_manager = TagIDManager()
     hass.data[DOMAIN][TAGS] = storage_collection = TagStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
         logging.getLogger(f"{__name__}_storage_collection"),
