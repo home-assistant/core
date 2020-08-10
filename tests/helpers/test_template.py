@@ -1789,7 +1789,9 @@ def test_extract_entities_with_variables(hass):
         {"trigger": {"entity_id": "input_boolean.switch"}},
     )
 
-    assert MATCH_ALL == template.extract_entities(
+    # If we ever add entity validation here
+    # it is likely ok for this test to change
+    assert ["no_state"] == template.extract_entities(
         hass, "{{ is_state(data, 'off') }}", {"data": "no_state"}
     )
 
