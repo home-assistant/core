@@ -144,6 +144,8 @@ class Template:
         self.template: str = template
         self._compiled_code = None
         self._compiled = None
+        self._compiled_code_without_conditionals = None
+        self._compiled_without_conditionals = None
         self.hass = hass
 
     @property
@@ -165,6 +167,25 @@ class Template:
         except jinja2.exceptions.TemplateSyntaxError as err:
             raise TemplateError(err)
 
+    def ensure_valid_without_conditionals(self):
+        """Return if template is valid."""
+        if self._compiled_code_without_conditionals is not None:
+            return
+
+        template_without_conditionals = re.sub(
+            r"{%[ \t]+(?:if|elif)", "{% print", self.template
+        )
+        template_without_conditionals = re.sub(
+            r"{%[ \t]+(?:else|endif)", '{% print ""', template_without_conditionals
+        )
+
+        try:
+            self._compiled_code_without_conditionals = self._env.compile(
+                template_without_conditionals
+            )
+        except jinja2.exceptions.TemplateSyntaxError as err:
+            raise TemplateError(err)
+
     def extract_entities(
         self, variables: Optional[Dict[str, Any]] = None
     ) -> Union[str, List[str]]:
@@ -176,25 +197,7 @@ class Template:
         if _RE_NONE_ENTITIES.search(self.template):
             return MATCH_ALL
 
-        old_compiled = self._compiled
-        old_compiled_code = self._compiled_code
-        old_template = self.template
-
-        self._compiled = None
-        self._compiled_code = None
-
-        self.template = re.sub(r"{%[ \t]+(?:if|elif)", "{% print", self.template)
-        self.template = re.sub(r"{%[ \t]+(?:else|endif)", '{% print ""', self.template)
-
-        import pprint
-
-        pprint.pprint(self.template)
-
         info = self.async_render_to_info(variables)
-
-        self._compiled_code = old_compiled_code
-        self._compiled = old_compiled
-        self.template = old_template
 
         if info.all_states:
             return MATCH_ALL
@@ -235,6 +238,27 @@ class Template:
             raise TemplateError(err)
 
     @callback
+    def async_render_without_conditionals(
+        self, variables: TemplateVarsType = None, **kwargs: Any
+    ) -> str:
+        """Render given template.
+
+        This method must be run in the event loop.
+        """
+        compiled = (
+            self._compiled_without_conditionals
+            or self._ensure_compiled_without_conditionals()
+        )
+
+        if variables is not None:
+            kwargs.update(variables)
+
+        try:
+            return compiled.render(kwargs).strip()
+        except jinja2.TemplateError as err:
+            raise TemplateError(err)
+
+    @callback
     def async_render_to_info(
         self, variables: TemplateVarsType = None, **kwargs: Any
     ) -> RenderInfo:
@@ -243,7 +267,9 @@ class Template:
         render_info = self.hass.data[_RENDER_INFO] = RenderInfo(self)
         # pylint: disable=protected-access
         try:
-            render_info._result = self.async_render(variables, **kwargs)
+            render_info._result = self.async_render_without_conditionals(
+                variables, **kwargs
+            )
         except TemplateError as ex:
             render_info._exception = ex
         finally:
@@ -309,6 +335,20 @@ class Template:
         )
 
         return self._compiled
+
+    def _ensure_compiled_without_conditionals(self):
+        """Bind a template to a specific hass instance."""
+        self.ensure_valid_without_conditionals()
+
+        assert self.hass is not None, "hass variable not set on template"
+
+        env = self._env
+
+        self._compiled_without_conditionals = jinja2.Template.from_code(
+            env, self._compiled_code_without_conditionals, env.globals, None
+        )
+
+        return self._compiled_without_conditionals
 
     def __eq__(self, other):
         """Compare template with another."""
