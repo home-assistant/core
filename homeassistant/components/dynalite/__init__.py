@@ -1,7 +1,7 @@
 """Support for the Dynalite networks."""
 
 import asyncio
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, Union
 
 import voluptuous as vol
 
@@ -203,19 +203,15 @@ async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
             )
         )
 
-    def get_bridges(host: str) -> List[DynaliteBridge]:
-        result = []
+    async def dynalite_service(service_call: ServiceCall):
+        data = service_call.data
+        host = data.get(ATTR_HOST, "")
+        bridges = []
         for entry_id in hass.data[DOMAIN]:
             cur_bridge = hass.data[DOMAIN][entry_id]
             if not host or cur_bridge.host == host:
-                result.append(cur_bridge)
-        return result
-
-    async def dynalite_service(service_call: ServiceCall):
-        host = service_call.data.get(ATTR_HOST, "")
-        bridges = get_bridges(host)
+                bridges.append(cur_bridge)
         LOGGER.debug("Selected bridged for service call: %s", bridges)
-        data = service_call.data
         if service_call.service == SERVICE_REQUEST_AREA_PRESET:
             for bridge in bridges:
                 bridge.dynalite_devices.request_area_preset(
