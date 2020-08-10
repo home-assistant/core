@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -19,6 +20,7 @@ from homeassistant.helpers import config_per_platform
 
 from .const import (
     CONF_RTSP_TRANSPORT,
+    CONF_SNAPSHOT_AUTH,
     DEFAULT_ARGUMENTS,
     DEFAULT_NAME,
     DEFAULT_PASSWORD,
@@ -118,6 +120,7 @@ async def async_populate_options(hass, entry):
     options = {
         CONF_EXTRA_ARGUMENTS: DEFAULT_ARGUMENTS,
         CONF_RTSP_TRANSPORT: RTSP_TRANS_PROTOCOLS[0],
+        CONF_SNAPSHOT_AUTH: HTTP_DIGEST_AUTHENTICATION,
     }
 
     hass.config_entries.async_update_entry(entry, options=options)

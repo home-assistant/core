@@ -4,6 +4,7 @@ from zeep.exceptions import Fault
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.onvif import config_flow
+from homeassistant.const import HTTP_BASIC_AUTHENTICATION
 
 from tests.async_mock import AsyncMock, MagicMock, patch
 from tests.common import MockConfigEntry
@@ -542,6 +543,7 @@ async def test_option_flow(hass):
         user_input={
             config_flow.CONF_EXTRA_ARGUMENTS: "",
             config_flow.CONF_RTSP_TRANSPORT: config_flow.RTSP_TRANS_PROTOCOLS[1],
+            config_flow.CONF_SNAPSHOT_AUTH: HTTP_BASIC_AUTHENTICATION,
         },
     )
 
@@ -549,4 +551,5 @@ async def test_option_flow(hass):
     assert result["data"] == {
         config_flow.CONF_EXTRA_ARGUMENTS: "",
         config_flow.CONF_RTSP_TRANSPORT: config_flow.RTSP_TRANS_PROTOCOLS[1],
+        config_flow.CONF_SNAPSHOT_AUTH: HTTP_BASIC_AUTHENTICATION,
     }
