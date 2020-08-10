@@ -1,6 +1,9 @@
 """The Tag integration."""
+import copy
+import datetime as dt
 import logging
 import typing
+from typing import Optional, cast
 
 import voluptuous as vol
 
@@ -78,6 +81,23 @@ class TagStorageCollection(collection.StorageCollection):
         update_data = self.UPDATE_SCHEMA(update_data)
         return {**data, **update_data}
 
+    async def _async_load_data(self) -> Optional[dict]:
+        """Load the data."""
+        items = cast(Optional[dict], await self.store.async_load())
+        for item in items.values():
+            if "last_scanned" in item:
+                item["last_scanned"] = dt.datetime.fromisoformat(item["last_scanned"])
+        return items
+
+    @callback
+    def _data_to_save(self) -> dict:
+        """Return data of tags to store in a file."""
+        items = copy.deepcopy(list(self.data.values()))
+        for item in items:
+            if "last_scanned" in item:
+                item["last_scanned"] = item["last_scanned"].isoformat()
+        return {"items": items}
+
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Tag component."""
@@ -102,7 +122,7 @@ async def async_scan_tag(hass, tag_id, device_id, context=None):
         EVENT_TAG_SCANNED, {TAG_ID: tag_id, DEVICE_ID: device_id}, context=context
     )
     helper = hass.data[DOMAIN][TAGS]
-    if tag_id in helper.store.data:
+    if tag_id in helper.data:
         await helper.async_update_item(tag_id, {LAST_SCANNED: dt_util.utcnow()})
     else:
         await helper.async_create_item(
