@@ -52,7 +52,7 @@ class BroadlinkDevice:
 def pick_device(index):
     """Pick a device."""
     devices = (
-        ("Living Room", "192.168.0.32", "34ea34b45d2c", "RM2", 0x2714, 5),
+        ("Living Room", "192.168.0.32", "34ea34b45d2c", "A1", 0x2714, 5),
         ("Office", "192.168.0.64", "34ea34b43b5a", "RM4", 0x5F36, 10),
     )
     return BroadlinkDevice(*devices[index])
