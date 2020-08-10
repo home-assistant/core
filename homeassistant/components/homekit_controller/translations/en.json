@@ -19,7 +19,7 @@
       },
       "try_pair_later": {
         "title": "Pairing Unavailable",
-        "description": "Ensure the device is in pairing mode or try restarting the device"
+        "description": "Ensure the device is in pairing mode or try restarting the device, then continue to re-start pairing."
       }      
     },
     "error": {
