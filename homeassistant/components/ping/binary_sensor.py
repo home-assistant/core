@@ -5,6 +5,7 @@ import logging
 import re
 import subprocess
 import sys
+from typing import Any, Dict
 
 import voluptuous as vol
 
@@ -54,7 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
     """Set up the Ping Binary sensor."""
     host = config[CONF_HOST]
     count = config[CONF_PING_COUNT]
@@ -66,46 +67,46 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class PingBinarySensor(BinarySensorEntity):
     """Representation of a Ping Binary sensor."""
 
-    def __init__(self, name, ping):
+    def __init__(self, name: str, ping) -> None:
         """Initialize the Ping Binary sensor."""
         self._name = name
-        self.ping = ping
+        self._ping = ping
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return self._name
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the class of this sensor."""
         return DEFAULT_DEVICE_CLASS
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self.ping.available
+        return self._ping.available
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the ICMP checo request."""
-        if self.ping.data is not False:
+        if self._ping.data is not False:
             return {
-                ATTR_ROUND_TRIP_TIME_AVG: self.ping.data["avg"],
-                ATTR_ROUND_TRIP_TIME_MAX: self.ping.data["max"],
-                ATTR_ROUND_TRIP_TIME_MDEV: self.ping.data["mdev"],
-                ATTR_ROUND_TRIP_TIME_MIN: self.ping.data["min"],
+                ATTR_ROUND_TRIP_TIME_AVG: self._ping.data["avg"],
+                ATTR_ROUND_TRIP_TIME_MAX: self._ping.data["max"],
+                ATTR_ROUND_TRIP_TIME_MDEV: self._ping.data["mdev"],
+                ATTR_ROUND_TRIP_TIME_MIN: self._ping.data["min"],
             }
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data."""
-        await self.ping.async_update()
+        await self._ping.async_update()
 
 
 class PingData:
     """The Class for handling the data retrieval."""
 
-    def __init__(self, host, count):
+    def __init__(self, host, count) -> None:
         """Initialize the data object."""
         self._ip_address = host
         self._count = count
@@ -184,7 +185,7 @@ class PingData:
         except (subprocess.CalledProcessError, AttributeError):
             return False
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Retrieve the latest details from the host."""
         self.data = await self.async_ping()
         self.available = bool(self.data)
