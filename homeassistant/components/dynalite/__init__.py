@@ -221,9 +221,9 @@ async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
         request_area_preset_service,
         vol.Schema(
             {
-                vol.Optional(CONF_HOST): cv.string,
-                vol.Required(CONF_AREA): int,
-                vol.Optional(CONF_CHANNEL): int,
+                vol.Optional(ATTR_HOST): cv.string,
+                vol.Required(ATTR_AREA): int,
+                vol.Optional(ATTR_CHANNEL): int,
             }
         ),
     )
