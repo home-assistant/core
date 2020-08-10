@@ -168,13 +168,13 @@ class Template:
             raise TemplateError(err)
 
     def ensure_valid_without_conditionals(self):
-        """Return if template is valid."""
+        """Return if template is valid with the conditionals removed."""
         if self._compiled_code_without_conditionals is not None:
             return
 
-        # Here we convert the conditions to print statements
-        # so we collecte entities that appear in code branches
-        # that would normally to be transversed.
+        # Here we convert the conditionals to print statements
+        # so we collect entities/domains that appear in code branches
+        # that would not normally be transversed.
         template_without_conditionals = re.sub(
             r"{%[ \t]+(?:if|elif)", "{% print", self.template
         )
@@ -244,7 +244,7 @@ class Template:
     def async_render_without_conditionals(
         self, variables: TemplateVarsType = None, **kwargs: Any
     ) -> str:
-        """Render given template.
+        """Render given template with the conditionals removed.
 
         This method must be run in the event loop.
         """
@@ -340,7 +340,7 @@ class Template:
         return self._compiled
 
     def _ensure_compiled_without_conditionals(self):
-        """Bind a template to a specific hass instance."""
+        """Bind a template with the conditionals removed to a specific hass instance."""
         self.ensure_valid_without_conditionals()
 
         assert self.hass is not None, "hass variable not set on template"
