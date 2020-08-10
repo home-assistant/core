@@ -1,9 +1,6 @@
 """The Tag integration."""
-import copy
-import datetime as dt
 import logging
 import typing
-from typing import Optional, cast
 
 import voluptuous as vol
 
@@ -72,7 +69,11 @@ class TagStorageCollection(collection.StorageCollection):
         """Validate the config is valid."""
         if TAG_ID in data:
             data[CONF_ID] = data.pop(TAG_ID)
-        return self.CREATE_SCHEMA(data)
+        data = self.CREATE_SCHEMA(data)
+        # make last_scanned JSON serializeable
+        if LAST_SCANNED in data:
+            data[LAST_SCANNED] = str(data[LAST_SCANNED])
+        return data
 
     @callback
     def _get_suggested_id(self, info: typing.Dict) -> str:
@@ -81,28 +82,10 @@ class TagStorageCollection(collection.StorageCollection):
 
     async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
         """Return a new updated data object."""
-        update_data = self.UPDATE_SCHEMA(update_data)
-        return {**data, **update_data}
-
-    async def _async_load_data(self) -> Optional[dict]:
-        """Load the data."""
-        items = cast(Optional[dict], await self.store.async_load())
-        if items:
-            for item in items.values():
-                if "last_scanned" in item:
-                    item["last_scanned"] = dt.datetime.fromisoformat(
-                        item["last_scanned"]
-                    )
-        return items
-
-    @callback
-    def _data_to_save(self) -> dict:
-        """Return data of tags to store in a file."""
-        items = copy.deepcopy(list(self.data.values()))
-        for item in items:
-            if "last_scanned" in item:
-                item["last_scanned"] = item["last_scanned"].isoformat()
-        return {"items": items}
+        data = {**data, **self.UPDATE_SCHEMA(update_data)}
+        # make last_scanned JSON serializeable
+        data[LAST_SCANNED] = str(data[LAST_SCANNED])
+        return data
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
