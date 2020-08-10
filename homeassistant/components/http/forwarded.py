@@ -18,33 +18,36 @@ def setup_forwarded(app, trusted_proxies):
 
     Process IP addresses, proto and host information in the forwarded for headers.
 
-    `X-Forwarded-For: client, proxy1, proxy2`
+    `X-Forwarded-For: <client>, <proxy1>, <proxy2>`
+    e.g., `X-Forwarded-For: 203.0.113.195, 70.41.3.18, 150.172.238.178`
 
-    We go trough the list from the right side, and skip all entries that are in our
+    We go through the list from the right side, and skip all entries that are in our
     trusted proxies list. The first non-trusted IP is used as the client IP. If all
     items in the X-Forwarded-For are trusted, including the most left item (client),
-    the most left item is used.
+    the most left item is used. In the latter case, the client connection originated
+    from an IP that is also listed as a trusted proxy IP or network.
 
-    `X-Forwarded-Proto: client, proxy1, proxy2`
-    e.g, `X-Forwarded-Proto: https, http, http`
+    `X-Forwarded-Proto: <client>, <proxy1>, <proxy2>`
+    e.g., `X-Forwarded-Proto: https, http, http`
     OR `X-Forwarded-Proto: https` (one entry, even with multiple proxies)
 
     The X-Forwarded-Proto is determined based on the corresponding entry of the
-    X-Forwarded-For header that is used / chosen as the client IP. However,
+    X-Forwarded-For header that is used/chosen as the client IP. However,
     some proxies, for example, Kubernetes NGINX ingress, only retain one element
     in the X-Forwarded-Proto header. In that case, we'll just use what we have.
 
-    `X-Forwarded-Host: example.com`
+    `X-Forwarded-Host: <host>`
+    e.g., `X-Forwarded-Host: example.com`
 
     If the previous headers are processed successfully, and the X-Forwarded-Host is
     present, it will be used.
 
     Additionally:
-      - If no X-Forwarded-For header is found, processing of all headers is skipped.
-      - If multiple instances of a X-Forwarded-For, X-Forwarded-Proto or
-        X-Forwarded-Host are found, a HTTP 400 status code is thrown.
+      - If no X-Forwarded-For header is found, the processing of all headers is skipped.
+      - If multiple instances of X-Forwarded-For, X-Forwarded-Proto or
+        X-Forwarded-Host are found, an HTTP 400 status code is thrown.
       - If malformed or invalid (IP) data in X-Forwarded-For header is found,
-        a HTTP 400 status code is thrown.
+        an HTTP 400 status code is thrown.
       - The connected client peer on the socket of the incoming connection,
         must be trusted for any processing to take place.
     """
