@@ -175,26 +175,24 @@ def _build_item_response(plex_server, payload):
     if media is None:
         return None
 
-    media_info = {
-        "title": media.title,
-        "media_content_id": media.ratingKey,
-        "media_content_type": "plex",
-        "type": media.type,
-        "can_play": True,
-    }
-    if media.type in EXPANDABLES:
-        media_info["can_expand"] = True
+    def item_payload(item):
+        payload = {
+            "title": item.title,
+            "thumbnail": item.thumbUrl,
+            "media_content_id": item.ratingKey,
+            "media_content_type": "plex",
+            "type": item.type,
+            "can_play": True,
+        }
+        if item.type in EXPANDABLES:
+            payload["can_expand"] = True
+        return payload
+
+    media_info = item_payload(media)
+    if media_info["can_expand"]:
         child_items = []
         for item in media:
-            child_info = {
-                "title": item.title,
-                "media_content_id": item.ratingKey,
-                "media_content_type": "plex",
-                "type": item.type,
-                "can_play": True,
-            }
-            if item.type in EXPANDABLES:
-                child_info["can_expand"] = True
+            child_info = item_payload(item)
             child_items.append(child_info)
         media_info["contains"] = child_items
     return media_info
