@@ -16,11 +16,16 @@
         "data": {
           "pairing_code": "Pairing Code"
         }
-      }
+      },
+      "try_pair_later": {
+        "title": "Pairing Unavailable",
+        "description": "Ensure the device is in pairing mode or try restarting the device, then continue to re-start pairing."
+      }      
     },
     "error": {
       "unable_to_pair": "Unable to pair, please try again.",
       "unknown_error": "Device reported an unknown error. Pairing failed.",
+      "protocol_error": "Error communicating with the accessory. Device may not be in pairing mode and may require a physical or virtual button press.",
       "authentication_error": "Incorrect HomeKit code. Please check it and try again.",
       "max_peers_error": "Device refused to add pairing as it has no free pairing storage.",
       "busy_error": "Device refused to add pairing as it is already pairing with another controller.",
