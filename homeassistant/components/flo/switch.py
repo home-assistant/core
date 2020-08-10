@@ -3,6 +3,7 @@
 from typing import List
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.core import callback
 
 from .const import DOMAIN as FLO_DOMAIN
 from .device import FloDeviceDataUpdateCoordinator
@@ -47,7 +48,12 @@ class FloSwitch(FloEntity, SwitchEntity):
         self._state = False
         self.async_write_ha_state()
 
-    async def async_update(self) -> None:
+    @callback
+    def async_update_state(self) -> None:
         """Retrieve the latest valve state and update the state machine."""
         self._state = self._device.last_known_valve_state == "open"
         self.async_write_ha_state()
+
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.async_on_remove(self._device.async_add_listener(self.async_update_state))
