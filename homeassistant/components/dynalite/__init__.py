@@ -38,6 +38,7 @@ from .const import (
     CONF_OPEN_PRESET,
     CONF_POLL_TIMER,
     CONF_PRESET,
+    CONF_QUERY_CHANNEL,
     CONF_ROOM_OFF,
     CONF_ROOM_ON,
     CONF_STOP_PRESET,
@@ -132,6 +133,7 @@ AREA_DATA_SCHEMA = vol.Schema(
             vol.Optional(CONF_NO_DEFAULT): cv.boolean,
             vol.Optional(CONF_CHANNEL): CHANNEL_SCHEMA,
             vol.Optional(CONF_PRESET): PRESET_SCHEMA,
+            vol.Optional(CONF_QUERY_CHANNEL): num_string,
             # the next ones can be part of the templates
             vol.Optional(CONF_ROOM_ON): num_string,
             vol.Optional(CONF_ROOM_OFF): num_string,
@@ -149,7 +151,12 @@ AREA_DATA_SCHEMA = vol.Schema(
 
 AREA_SCHEMA = vol.Schema({num_string: vol.Any(AREA_DATA_SCHEMA, None)})
 
-PLATFORM_DEFAULTS_SCHEMA = vol.Schema({vol.Optional(CONF_FADE): vol.Coerce(float)})
+PLATFORM_DEFAULTS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_FADE): vol.Coerce(float),
+        vol.Optional(CONF_QUERY_CHANNEL): num_string,
+    }
+)
 
 
 BRIDGE_SCHEMA = vol.Schema(
