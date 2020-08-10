@@ -1,9 +1,13 @@
 {
     "config": {
-        "error": {
-            "cannot_connect": "Failed to connect",
-            "unknown": "Unexpected error"
+        "abort": {
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
         },
+        "error": {
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
+        },
+        "flow_title": "Nightscout",
         "step": {
             "user": {
                 "data": {
