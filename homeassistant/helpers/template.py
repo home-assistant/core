@@ -172,6 +172,9 @@ class Template:
         if self._compiled_code_without_conditionals is not None:
             return
 
+        # Here we convert the conditions to print statements
+        # so we collecte entities that appear in code branches
+        # that would normally to be transversed.
         template_without_conditionals = re.sub(
             r"{%[ \t]+(?:if|elif)", "{% print", self.template
         )
