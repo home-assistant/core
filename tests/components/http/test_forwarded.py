@@ -116,6 +116,16 @@ async def test_x_forwarded_for_with_nonsense_header(aiohttp_client):
     )
     assert resp.status == 400
 
+    resp = await mock_api_client.get(
+        "/", headers={X_FORWARDED_FOR: "1.1.1.1, , 1.2.3.4"}
+    )
+    assert resp.status == 400
+
+    resp = await mock_api_client.get(
+        "/", headers={X_FORWARDED_FOR: "1.1.1.1, batman, 1.2.3.4"}
+    )
+    assert resp.status == 400
+
 
 async def test_x_forwarded_for_with_multiple_headers(aiohttp_client):
     """Test that we get a HTTP 400 bad request with multiple headers."""
