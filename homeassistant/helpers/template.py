@@ -176,10 +176,12 @@ class Template:
         # so we collect entities/domains that appear in code branches
         # that would not normally be transversed.
         template_without_conditionals = re.sub(
-            r"{%[ \t]+(?:if|elif)", "{% print", self.template
+            r"{[ \t]*%[ \t]+(?:if|elif)", "{% print", self.template
         )
         template_without_conditionals = re.sub(
-            r"{%[ \t]+(?:else|endif)", '{% print ""', template_without_conditionals
+            r"{[ \t]*%[ \t]+(?:else|endif)",
+            '{% print ""',
+            template_without_conditionals,
         )
 
         try:
