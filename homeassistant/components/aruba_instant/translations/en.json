@@ -16,7 +16,8 @@
                     "password": "Password",
                     "username": "Username",
                     "port": "Port",
-                    "verify_ssl": "Verify SSL"
+                    "verify_ssl": "Verify SSL",
+                    "scan_interval": "Scan Interval in Seconds (minimum 10)"
                 }
             }
         }

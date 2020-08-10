@@ -11,9 +11,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_PORT,
     CONF_VERIFY_SSL,
+    CONF_SCAN_INTERVAL
 )  # pylint:disable=unused-import
 
-from .const import DOMAIN, DEFAULT_PORT, DEFAULT_VERIFY_SSL
+from .const import DOMAIN, DEFAULT_PORT, DEFAULT_VERIFY_SSL, DEFAULT_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,6 +23,7 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): int,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
     }
@@ -39,7 +41,6 @@ async def async_validate_input(hass: core.HomeAssistant, data):
     connection = await hass.async_add_executor_job(
         instant_validate.login
     )
-
     if connection is True:
         if instant_validate.logged_in is False:
             raise InvalidAuth
@@ -69,8 +70,9 @@ class InstantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
                     CONF_PORT: user_input.get(CONF_PORT),
                     CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL),
+                    CONF_SCAN_INTERVAL: user_input.get(CONF_SCAN_INTERVAL)
                 }
-                await self.async_set_unique_id(user_input[CONF_USERNAME])
+                await self.async_set_unique_id(user_input[CONF_HOST])
                 info = await async_validate_input(self.hass, user_input)
                 return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:

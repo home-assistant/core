@@ -34,7 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}")
 
-    coordinator = InstantCoordinator(hass, config_entry.entry_id)
+    coordinator = InstantCoordinator(hass, config_entry)
     await coordinator.async_refresh()
     # hass.data[DOMAIN]['unsub_device_tracker'][config_entry.entry_id].add(tuple(coordinator.data.keys()))
     async_add_entities(
@@ -66,12 +66,12 @@ class InstantCoordinator(DataUpdateCoordinator):
 
     _LOGGER.debug(f"Initializing InstantCoordinator.")
 
-    def __init__(self, hass: HomeAssistant, entry_id):
+    def __init__(self, hass: HomeAssistant, config_entry):
         """Initialize Instant Coordinator."""
-        self.virtual_controller = hass.data[DOMAIN][entry_id]
+        self.virtual_controller = hass.data[DOMAIN][config_entry.entry_id]
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(seconds=30)
+            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(seconds=config_entry.data.get('scan_interval'))
         )
 
     def update_listeners(self) -> None:
@@ -94,7 +94,6 @@ class InstantClientEntity(ScannerEntity):
         self.hass = self.coordinator.hass
         self.idx = idx
         self._mac = ent
-        # self.entity_id = f"instant_{self._mac}"
         self._name = coordinator.data[self._mac].get("name")
         self._ip = coordinator.data[self._mac].get("ip")
         self._mac = coordinator.data[self._mac].get("mac")
@@ -109,6 +108,8 @@ class InstantClientEntity(ScannerEntity):
         self._signal_text = coordinator.data[self._mac].get("signal_text")
         self._speed = coordinator.data[self._mac].get("speed")
         self._speed_text = coordinator.data[self._mac].get("speed_text")
+        self._lat = self.coordinator.hass.config.latitude
+        self._lon = self.coordinator.hass.config.longitude
         self._is_connected = True
 
     def update_entity(self):
@@ -129,10 +130,30 @@ class InstantClientEntity(ScannerEntity):
             self._signal_text = self.coordinator.data[self._mac].get("signal_text")
             self._speed = self.coordinator.data[self._mac].get("speed")
             self._speed_text = self.coordinator.data[self._mac].get("speed_text")
+            self._lat = self.coordinator.hass.config.latitude
+            self._lon = self.coordinator.hass.config.longitude
+            if self._is_connected is False:
+                _LOGGER.debug(f"{self._mac} - {self._name} is now connected.")
             self._is_connected = True
-        except KeyError as error:
-            _LOGGER.debug(f"{self._mac} - {self._name} is no longer connected.")
+        except KeyError:
+            if self._is_connected is True:
+                _LOGGER.debug(f"{self._mac} - {self._name} is no longer connected.")
             self._is_connected = False
+            self._ip = None
+            self._os = None
+            self._essid = None
+            self._ap = None
+            self._channel = None
+            self._phy = None
+            self._role = None
+            self._ipv6 = None
+            self._signal = None
+            self._signal_text = None
+            self._speed = None
+            self._speed_text = None
+            self._lat = None
+            self._lon = None
+
 
     @property
     def should_poll(self):
@@ -197,4 +218,6 @@ class InstantClientEntity(ScannerEntity):
             "signal_text": self._signal_text,
             "speed": self._speed,
             "speed_text": self._speed_text,
+            "latitude": self._lat,
+            "longitude": self._lon
         }
