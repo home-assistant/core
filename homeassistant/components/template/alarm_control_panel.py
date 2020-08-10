@@ -93,6 +93,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         template_entity_ids = set()
 
         if state_template is not None:
+            state_template.hass = hass
             temp_ids = state_template.extract_entities()
             if str(temp_ids) != MATCH_ALL:
                 template_entity_ids |= set(temp_ids)

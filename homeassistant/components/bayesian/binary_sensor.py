@@ -127,7 +127,7 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         self.current_observations = OrderedDict({})
 
-        self.observations_by_entity = self._build_observations_by_entity()
+        self.observations_by_entity = None
 
         self.observation_handlers = {
             "numeric_state": self._process_numeric_state,
@@ -149,6 +149,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         In addition, this method must register the state listener defined within, which
         will be called any time a relevant entity changes its state.
         """
+        self.observations_by_entity = self._build_observations_by_entity()
 
         @callback
         def async_threshold_sensor_state_listener(event):
@@ -235,8 +236,9 @@ class BayesianBinarySensor(BinarySensorEntity):
 
             if "entity_id" in obs:
                 entity_ids = [obs["entity_id"]]
-            elif "value_template" in obs:
-                entity_ids = obs.get(CONF_VALUE_TEMPLATE).extract_entities()
+            elif CONF_VALUE_TEMPLATE in obs:
+                obs[CONF_VALUE_TEMPLATE].hass = self.hass
+                entity_ids = obs[CONF_VALUE_TEMPLATE].extract_entities()
 
             for e_id in entity_ids:
                 obs_list = observations_by_entity.get(e_id, [])
