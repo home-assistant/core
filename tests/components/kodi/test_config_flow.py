@@ -18,7 +18,7 @@ from .util import (
     MockConnection,
 )
 
-from tests.async_mock import AsyncMock, PropertyMock, patch
+from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 
@@ -168,11 +168,9 @@ async def test_form_cannot_connect_ws(hass, user_flow):
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
 
-    with patch.object(
-        MockConnection, "connected", new_callable=PropertyMock(return_value=False)
-    ), patch(
+    with patch(
         "homeassistant.components.kodi.config_flow.get_kodi_connection",
-        return_value=MockConnection(),
+        return_value=MockConnection(connected=False),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"], TEST_WS_PORT

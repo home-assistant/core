@@ -39,6 +39,11 @@ TEST_IMPORT = {
 class MockConnection:
     """A mock kodi connection."""
 
+
+    def __init__(self, connected=True):
+        """Mock the Kodi connection."""
+        self._connected = connected
+
     async def connect(self):
         """Mock connect."""
         pass
@@ -46,7 +51,7 @@ class MockConnection:
     @property
     def connected(self):
         """Mock connected."""
-        return True
+        return self._connected
 
     @property
     def can_subscribe(self):
