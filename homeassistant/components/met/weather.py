@@ -180,5 +180,4 @@ class MetWeather(WeatherEntity):
         """Return the forecast array."""
         if self._hourly:
             return self._coordinator.data.hourly_forecast
-        else:
-            return self._coordinator.data.daily_forecast
+        return self._coordinator.data.daily_forecast
