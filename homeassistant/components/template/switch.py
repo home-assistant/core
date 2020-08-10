@@ -80,7 +80,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         initialise_templates(hass, templates)
         entity_ids = extract_entities(
-            device, "switch", device_config.get(ATTR_ENTITY_ID), templates
+            hass, device, "switch", device_config.get(ATTR_ENTITY_ID), templates
         )
 
         switches.append(

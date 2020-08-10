@@ -56,7 +56,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
     }
 
     initialise_templates(hass, templates)
-    entity_ids = extract_entities(device, "lock", None, templates)
+    entity_ids = extract_entities(hass, device, "lock", None, templates)
 
     async_add_devices(
         [

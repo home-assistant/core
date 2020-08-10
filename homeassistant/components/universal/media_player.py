@@ -148,6 +148,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         for entity in self._attrs.values():
             depend.append(entity[0])
         if self._state_template is not None:
+            self._state_template.hass = self.hass
             for entity in self._state_template.extract_entities():
                 depend.append(entity)
 

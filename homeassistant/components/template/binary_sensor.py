@@ -86,6 +86,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         initialise_templates(hass, templates, attribute_templates)
         entity_ids = extract_entities(
+            hass,
             device,
             "binary sensor",
             device_config.get(ATTR_ENTITY_ID),
