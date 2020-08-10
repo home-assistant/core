@@ -472,9 +472,6 @@ class TemplateState(State):
         """Initialize template state."""
         self._hass = hass
         self._state = state
-        import pprint
-
-        pprint.pprint(["TemplateState", state])
 
     def _access_state(self):
         state = object.__getattribute__(self, "_state")
