@@ -188,11 +188,11 @@ def _build_item_response(plex_server, payload):
             payload["can_expand"] = True
         return payload
 
-    media_info = item_payload(media)
-    if media_info["can_expand"]:
-        child_items = []
+    if media.type in EXPANDABLES:
+        media_info = []
         for item in media:
             child_info = item_payload(item)
-            child_items.append(child_info)
-        media_info["contains"] = child_items
+            media_info.append(child_info)
+    else:
+        media_info = [item_payload(media)]
     return media_info
