@@ -96,7 +96,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     @property
     def available(self) -> bool:
         """Return True if device is available."""
-        return self._device_information["isConnected"]
+        return self._device_information["isConnected"] and self.last_update_success
 
     @property
     def current_system_mode(self) -> str:
