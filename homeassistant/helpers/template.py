@@ -186,7 +186,10 @@ class Template:
             for entity_id in self.hass.states.async_entity_ids(info.domains):
                 entities.add(entity_id)
 
-        return list(entities)
+        # For backwards compatibility
+        # we return MATCH_ALL if there
+        # are no entities
+        return list(entities) or MATCH_ALL
 
     def render(self, variables: TemplateVarsType = None, **kwargs: Any) -> str:
         """Render given template."""
