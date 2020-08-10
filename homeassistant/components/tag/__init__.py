@@ -50,7 +50,7 @@ class TagStorageCollection(collection.StorageCollection):
     @callback
     def _get_suggested_id(self, info: typing.Dict) -> str:
         """Suggest an ID based on the config."""
-        return info[CONF_NAME]
+        return info[TAG_ID]
 
     async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
         """Return a new updated data object."""
@@ -75,9 +75,11 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 
 @bind_hass
-async def async_scan_tag(hass, tag_id, device_id):
+async def async_scan_tag(hass, tag_id, device_id, context=None):
     """Handle when a tag is scanned."""
-    hass.bus.async_fire(EVENT_TAG_SCANNED, {TAG_ID: tag_id, DEVICE_ID: device_id})
+    hass.bus.async_fire(
+        EVENT_TAG_SCANNED, {TAG_ID: tag_id, DEVICE_ID: device_id}, context=context
+    )
     helper = hass.data[DOMAIN][TAGS]
     if tag_id in helper.store.data:
         await helper.async_update_item(tag_id, {LAST_SCANNED: dt_util.utcnow()})
