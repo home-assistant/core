@@ -11,6 +11,80 @@ EXPANDABLES = ["album", "artist", "playlist", "season", "show"]
 @websocket_api.async_response
 @websocket_api.websocket_command(
     {
+        vol.Required("type"): "plex/browse_media",
+        vol.Optional("server_id"): int,
+        vol.Optional("library_id"): int,
+        vol.Optional("media_content_id"): int,
+    }
+)
+async def websocket_browse_media(hass, connection, msg):
+    """Browse available media on the Plex server(s)."""
+    payload = dict(msg)
+    payload.pop("id")
+    payload.pop("type")
+
+    library_id = str(payload.get("library_id", ""))
+    media_content_id = payload.get("media_content_id")
+
+    plex_server = _lookup_plex_server(hass, connection, payload)
+
+    if media_content_id:
+        payload = {
+            "media_type": "plex",
+            "plex_key": media_content_id,
+        }
+        response = await hass.async_add_executor_job(
+            _build_item_response, plex_server, payload
+        )
+        connection.send_result(msg["id"], response)
+        return
+
+    def libraries_info():
+        """Wrap Plex library queries. Some attributes perform I/O."""
+        response = []
+        for library in plex_server.library.sections():
+            response.append(
+                {
+                    "title": library.title,
+                    "id": library.key,
+                    "type": "library",
+                    "items": library.totalSize,
+                    "can_play": False,
+                    "can_expand": True,
+                }
+            )
+        return response
+
+    def library_contents_info():
+        """Wrap Plex library queries. Some attributes perform I/O."""
+        response = []
+        for item in library.all():
+            response.append(
+                {
+                    "title": item.title,
+                    "media_content_id": item.ratingKey,
+                    "media_content_type": "plex",
+                    "type": item.type,
+                    "can_play": True,
+                    "can_expand": True,
+                }
+            )
+        return response
+
+    if library_id:
+        library = plex_server.library.sectionByID(library_id)
+    else:
+        libraries_info = await hass.async_add_executor_job(libraries_info)
+        connection.send_result(msg["id"], libraries_info)
+        return
+
+    library_contents_info = await hass.async_add_executor_job(library_contents_info)
+    connection.send_result(msg["id"], library_contents_info)
+
+
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
         vol.Required("type"): "plex/lookup_media",
         vol.Required("media_type"): str,
         # Media ID lookup
