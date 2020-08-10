@@ -50,9 +50,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
     device_entry = device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "host", 1234)},
     )
-    entity_reg.async_get_or_create(
-        MP_DOMAIN, DOMAIN, "5678", device_id=device_entry.id
-    )
+    entity_reg.async_get_or_create(MP_DOMAIN, DOMAIN, "5678", device_id=device_entry.id)
     expected_triggers = [
         {
             "platform": "device",
