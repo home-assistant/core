@@ -134,9 +134,11 @@ def _lookup_plex_server(hass, connection, msg):
     server_id = msg.get("server_id")
 
     plex_servers = list(hass.data[PLEX_DOMAIN][SERVERS].values())
+
     if len(plex_servers) == 1:
         return plex_servers[0]
-    elif server_id is None:
+
+    if server_id is None:
         response = []
         for server in plex_servers:
             response.append(
@@ -149,7 +151,6 @@ def _lookup_plex_server(hass, connection, msg):
                 }
             )
         connection.send_result(msg["id"], response)
-        return None
     else:
         try:
             plex_server = next(
@@ -161,9 +162,10 @@ def _lookup_plex_server(hass, connection, msg):
                 websocket_api.const.ERR_NOT_FOUND,
                 f"Plex server with ID {server_id} not found",
             )
-            return None
         else:
             return plex_server
+
+    return None
 
 
 def _build_item_response(plex_server, payload):
