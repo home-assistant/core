@@ -75,11 +75,6 @@ class NightscoutSensor(Entity):
         """Return the icon to use in the frontend, if any."""
         return self._icon
 
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
     async def async_update(self):
         """Fetch the latest data from Nightscout REST API and update the state."""
         try:
