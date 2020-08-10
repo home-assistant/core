@@ -157,6 +157,9 @@ aiobotocore==0.11.1
 # homeassistant.components.minecraft_server
 aiodns==2.0.0
 
+# homeassistant.components.eafm
+aioeafm==0.1.2
+
 # homeassistant.components.esphome
 aioesphomeapi==2.6.1
 
