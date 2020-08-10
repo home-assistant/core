@@ -14,8 +14,18 @@ _LOGGER = logging.getLogger(__name__)
 
 @callback
 def setup_forwarded(app, trusted_proxies):
-    """Create forwarded middleware for the app."""
+    """Create forwarded middleware for the app.
 
+    Process IP addresses in the forwarded for headers
+
+    `X-Forwarded-For: client, proxy1, proxy2`
+
+    We go trough the list from the right side, and skip all entries that are in our
+    trusted proxies list. The first non-trusted IP is used as the client IP. If all
+    items in the X-Forwarded-For are trusted, including the most left item (client),
+    the most left item is used.
+    """
+    #
     @middleware
     async def forwarded_middleware(request, handler):
         """Process forwarded data by a reverse proxy."""
@@ -38,7 +48,7 @@ def setup_forwarded(app, trusted_proxies):
             _LOGGER.error("Too many headers for X-Forwarded-For", extra=request.headers)
             raise HTTPBadRequest
 
-        # Process IP addresses in the forwarded for header
+        # Process X-Forwarded-For from the right side (by reversing the list)
         forwarded_for = list(reversed(forwarded_for[0].split(",")))
         try:
             forwarded_for = [
