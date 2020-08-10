@@ -214,7 +214,7 @@ async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
         bridges = get_bridges(host)
         LOGGER.debug("Selected bridged for service call: %s", bridges)
         area = service_call.data[CONF_AREA]
-        channel = service_call.data.get(CONF_CHANNEL)
+        channel = service_call.data.get(ATTR_CHANNEL)
         for bridge in bridges:
             bridge.dynalite_devices.request_area_preset(area, channel)
 
