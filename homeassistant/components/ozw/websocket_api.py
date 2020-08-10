@@ -2,11 +2,7 @@
 
 import logging
 
-from openzwavemqtt.const import (
-    EVENT_INSTANCE_EVENT,
-    EVENT_NODE_ADDED,
-    EVENT_NODE_CHANGED,
-)
+from openzwavemqtt.const import EVENT_NODE_ADDED, EVENT_NODE_CHANGED
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -152,12 +148,6 @@ def websocket_refresh_node_info(hass, connection, msg):
     options = hass.data[DOMAIN][OPTIONS]
 
     @callback
-    def forward_events(data):
-        """Forward events to websocket."""
-        data["type"] = "event"
-        connection.send_message(websocket_api.event_message(msg["id"], data))
-
-    @callback
     def forward_node(node):
         """Forward node events to websocket."""
         if node.node_id != msg[NODE_ID]:
@@ -165,7 +155,6 @@ def websocket_refresh_node_info(hass, connection, msg):
 
         forward_data = {
             "type": "node_updated",
-            "event": node.event,
             "node_query_stage": node.node_query_stage,
         }
         connection.send_message(websocket_api.event_message(msg["id"], forward_data))
@@ -178,7 +167,6 @@ def websocket_refresh_node_info(hass, connection, msg):
 
     connection.subscriptions[msg["id"]] = async_cleanup
     unsubs = [
-        options.listen(EVENT_INSTANCE_EVENT, forward_events),
         options.listen(EVENT_NODE_CHANGED, forward_node),
         options.listen(EVENT_NODE_ADDED, forward_node),
     ]
