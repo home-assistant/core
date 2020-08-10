@@ -163,6 +163,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         # TODO: figure out how to accept empty strings to disable modes
+        # TODO: figure out how to only show alarm options if a alarm_control_panel entity exists
         data_schema = vol.Schema(
             {
                 vol.Optional(
