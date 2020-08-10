@@ -1,4 +1,4 @@
-"""Config flow for NFC integration."""
+"""Config flow for Tag integration."""
 import logging
 
 import voluptuous as vol
@@ -12,7 +12,7 @@ DATA_SCHEMA = vol.Schema({})
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for NFC."""
+    """Handle a config flow for Tag."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_ASSUMED
@@ -22,7 +22,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                return self.async_create_entry(title="NFC Tags for HA", data=user_input)
+                return self.async_create_entry(title="Tags for HA", data=user_input)
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"

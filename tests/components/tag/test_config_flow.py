@@ -1,7 +1,7 @@
-"""Test the NFC config flow."""
+"""Test the Tag config flow."""
 from homeassistant import config_entries, setup
-from homeassistant.components.nfc.config_flow import CannotConnect, InvalidAuth
-from homeassistant.components.nfc.const import DOMAIN
+from homeassistant.components.tag.config_flow import CannotConnect, InvalidAuth
+from homeassistant.components.tag.const import DOMAIN
 
 from tests.async_mock import patch
 
@@ -16,12 +16,12 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.nfc.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.tag.config_flow.PlaceholderHub.authenticate",
         return_value=True,
     ), patch(
-        "homeassistant.components.nfc.async_setup", return_value=True
+        "homeassistant.components.tag.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.nfc.async_setup_entry", return_value=True,
+        "homeassistant.components.tag.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -51,7 +51,7 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.nfc.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.tag.config_flow.PlaceholderHub.authenticate",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -74,7 +74,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.nfc.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.tag.config_flow.PlaceholderHub.authenticate",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(

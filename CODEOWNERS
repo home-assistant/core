@@ -274,7 +274,6 @@ homeassistant/components/nexia/* @ryannazaretian @bdraco
 homeassistant/components/nextbus/* @vividboarder
 homeassistant/components/nextcloud/* @meichthys
 homeassistant/components/nightscout/* @marciogranzotto
-homeassistant/components/nfc/* @dmulcahey
 homeassistant/components/nilu/* @hfurubotten
 homeassistant/components/nissan_leaf/* @filcole
 homeassistant/components/nmbs/* @thibmaek
@@ -412,6 +411,7 @@ homeassistant/components/synology_dsm/* @ProtoThis @Quentame
 homeassistant/components/synology_srm/* @aerialls
 homeassistant/components/syslog/* @fabaff
 homeassistant/components/tado/* @michaelarnauts @bdraco
+homeassistant/components/tag/* @dmulcahey
 homeassistant/components/tahoma/* @philklei
 homeassistant/components/tankerkoenig/* @guillempages
 homeassistant/components/tautulli/* @ludeeus

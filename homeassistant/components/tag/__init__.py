@@ -1,4 +1,4 @@
-"""The NFC integration."""
+"""The Tag integration."""
 import asyncio
 
 import voluptuous as vol
@@ -14,13 +14,13 @@ PLATFORMS = []
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the NFC component."""
+    """Set up the Tag component."""
     hass.data[DOMAIN] = {}
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up NFC from a config entry."""
+    """Set up Tag from a config entry."""
     hass.data[DOMAIN]["config_entry"] = entry
     async_load_services(hass)
     return True

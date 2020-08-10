@@ -1,0 +1,26 @@
+# Describes the format for available tag services
+
+register_tag:
+  description: Register a tag as a HA device.
+  fields:
+    tag_id:
+      description: The id of the tag to register.
+      example: "123456789"
+    manufacturer:
+      description: The manufacturer of the tag..
+      example: "NXP"
+    model:
+      description: The model of the tag.
+      example: "Mifare Ultralight"
+    name:
+      description: A custom name for the device that will represent the tag.
+      example: "Test Tag"
+    tag_format:
+      description: The format of the tag.
+      example: "ISO 14443-3A NTAG215"
+tag_scanned:
+  description: Fire an event when an tag is scanned.
+  fields:
+    tag_id:
+      description: The id of the tag that was scanned.
+      example: "123456789"

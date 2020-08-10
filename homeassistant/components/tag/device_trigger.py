@@ -1,12 +1,12 @@
-"""Provides device automations for nfc devices that emit events."""
+"""Provides device automations for Tag devices that emit events."""
 import homeassistant.components.automation.event as event
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM
 
 from .const import DOMAIN
 
 DEVICE = "device"
-NFC_TAG_DEVICE_ID = "nfc_tag_device_id"
-EVENT = "nfc-tag-scanned"
+TAG_DEVICE_ID = "tag_device_id"
+EVENT = "tag-scanned"
 
 
 async def async_validate_trigger_config(hass, config):
@@ -19,7 +19,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
     event_config = {
         event.CONF_PLATFORM: "event",
         event.CONF_EVENT_TYPE: EVENT,
-        event.CONF_EVENT_DATA: {NFC_TAG_DEVICE_ID: config[CONF_DEVICE_ID]},
+        event.CONF_EVENT_DATA: {TAG_DEVICE_ID: config[CONF_DEVICE_ID]},
     }
 
     event_config = event.TRIGGER_SCHEMA(event_config)
