@@ -71,7 +71,7 @@ def setup_forwarded(app, trusted_proxies):
 
         # Multiple X-Forwarded-For headers
         if len(forwarded_for) > 1:
-            _LOGGER.error("Too many headers for X-Forwarded-For", extra=request.headers)
+            _LOGGER.error("Too many headers for X-Forwarded-For: %s", forwarded_for)
             raise HTTPBadRequest
 
         # Process X-Forwarded-For from the right side (by reversing the list)
@@ -79,9 +79,7 @@ def setup_forwarded(app, trusted_proxies):
         try:
             forwarded_for = [ip_address(addr.strip()) for addr in forwarded_for]
         except ValueError:
-            _LOGGER.error(
-                "Invalid IP address in X-Forwarded-For header", extra=request.headers
-            )
+            _LOGGER.error("Invalid IP address in X-Forwarded-For: %s", forwarded_for)
             raise HTTPBadRequest
 
         # Find the last trusted index in the X-Forwarded-For list
@@ -102,10 +100,7 @@ def setup_forwarded(app, trusted_proxies):
         forwarded_proto = list(reversed(request.headers.getall(X_FORWARDED_PROTO, [])))
         if forwarded_proto:
             if len(forwarded_proto) > 1:
-                _LOGGER.error(
-                    "Too many headers for X_FORWARDED_PROTO header",
-                    extra=request.headers,
-                )
+                _LOGGER.error("Too many headers for X-Forward-For: %s", forwarded_proto)
                 raise HTTPBadRequest
             forwarded_proto = forwarded_proto[0].split(",")
             forwarded_proto = [p.strip() for p in forwarded_proto]
@@ -124,7 +119,7 @@ def setup_forwarded(app, trusted_proxies):
             # Multiple X-Forwarded-Host headers
             if len(forwarded_host) > 1:
                 _LOGGER.error(
-                    "Too many headers for X-Forwarded-Host", extra=request.headers
+                    "Too many headers for X-Forwarded-Host: %s", forwarded_host
                 )
                 raise HTTPBadRequest
 
