@@ -1509,6 +1509,30 @@ def test_closest_function_state_with_invalid_location(hass):
     )
 
 
+def test_extract_entities_with_branching(hass):
+    """Test extract entities function by domain."""
+    hass.states.async_set("light.a", "off")
+    hass.states.async_set("light.b", "on")
+    hass.states.async_set("light.c", "off")
+
+    assert (
+        set(
+            template.extract_entities(
+                hass,
+                """
+{% if states.light.a == "on" %}
+  {{ states.light.b.state }}
+{% else %}
+  {{ states.light.c.state }}
+{% endif %}
+""",
+                {},
+            )
+        )
+        == {"light.a", "light.b", "light.c"}
+    )
+
+
 def test_closest_function_invalid_coordinates(hass):
     """Test closest function invalid coordinates."""
     hass.states.async_set(

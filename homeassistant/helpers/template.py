@@ -176,7 +176,27 @@ class Template:
         if _RE_NONE_ENTITIES.search(self.template):
             return MATCH_ALL
 
+        old_compiled = self._compiled
+        old_compiled_code = self._compiled_code
+        old_template = self.template
+
+        self._compiled = None
+        self._compiled_code = None
+
+        self.template = re.sub("{% if", "{% print", self.template)
+        self.template = re.sub("{% elif", "{% print", self.template)
+        self.template = re.sub("{% else", '{% print ""', self.template)
+        self.template = re.sub("{% endif", '{% print ""', self.template)
+
+        import pprint
+
+        pprint.pprint(self.template)
+
         info = self.async_render_to_info(variables)
+
+        self._compiled_code = old_compiled_code
+        self._compiled = old_compiled
+        self.template = old_template
 
         if info.all_states:
             return MATCH_ALL
@@ -414,6 +434,9 @@ class TemplateState(State):
         """Initialize template state."""
         self._hass = hass
         self._state = state
+        import pprint
+
+        pprint.pprint(["TemplateState", state])
 
     def _access_state(self):
         state = object.__getattribute__(self, "_state")
@@ -429,6 +452,13 @@ class TemplateState(State):
         if unit is None:
             return state.state
         return f"{state.state} {unit}"
+
+    def __eq__(self, other: Any) -> bool:
+        """Ensure we collect on equality check."""
+        state = object.__getattribute__(self, "_state")
+        hass = object.__getattribute__(self, "_hass")
+        _collect_state(hass, state.entity_id)
+        return super().__eq__(other)
 
     def __getattribute__(self, name):
         """Return an attribute of the state."""
