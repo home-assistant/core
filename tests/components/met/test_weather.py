@@ -6,7 +6,7 @@ async def test_tracking_home(hass, mock_weather):
     await hass.config_entries.flow.async_init("met", context={"source": "onboarding"})
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids("weather")) == 2
-    assert len(mock_weather.mock_calls) == 3
+    assert len(mock_weather.mock_calls) == 4
 
     # Test we track config
     await hass.config.async_update(latitude=10, longitude=20)
