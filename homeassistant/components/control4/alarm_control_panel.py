@@ -80,7 +80,7 @@ async def async_setup_entry(
     platform = entity_platform.current_platform.get()
     platform.async_register_entity_service(
         "send_alarm_keystrokes",
-        {voluptuous.Required("keystrokes"): cv.string,},
+        {voluptuous.Required("keystrokes"): cv.string},
         "send_alarm_keystrokes",
     )
 
