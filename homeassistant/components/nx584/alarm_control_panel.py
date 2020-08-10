@@ -28,9 +28,12 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
+CONF_PARTITION = "partition"
+
 DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "NX584"
 DEFAULT_PORT = 5007
+DEFAULT_PARTITION = 1
 SERVICE_BYPASS_ZONE = "bypass_zone"
 SERVICE_UNBYPASS_ZONE = "unbypass_zone"
 ATTR_ZONE = "zone"
@@ -40,6 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_PARTITION, default=DEFAULT_PARTITION): cv.positive_int,
     }
 )
 
@@ -49,6 +53,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
+    partition = config.get(CONF_PARTITION)
 
     url = f"http://{host}:{port}"
 
@@ -61,7 +66,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
         raise PlatformNotReady
 
-    entity = NX584Alarm(name, alarm_client, url)
+    entity = NX584Alarm(name, alarm_client, url, partition)
     async_add_entities([entity])
 
     platform = entity_platform.current_platform.get()
@@ -75,17 +80,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         {vol.Required(ATTR_ZONE): cv.positive_int},
         "alarm_unbypass",
     )
-
+    
 
 class NX584Alarm(alarm.AlarmControlPanelEntity):
     """Representation of a NX584-based alarm panel."""
 
-    def __init__(self, name, alarm_client, url):
+    def __init__(self, name, alarm_client, url, partition):
         """Init the nx584 alarm panel."""
         self._name = name
         self._state = None
         self._alarm = alarm_client
         self._url = url
+        self._part = partition
 
     @property
     def name(self):
@@ -110,52 +116,38 @@ class NX584Alarm(alarm.AlarmControlPanelEntity):
     def update(self):
         """Process new events from panel."""
         try:
-            part = self._alarm.list_partitions()[0]
-            zones = self._alarm.list_zones()
+            part = self._alarm.list_partitions()[self._part - 1]
         except requests.exceptions.ConnectionError as ex:
             _LOGGER.error(
                 "Unable to connect to %(host)s: %(reason)s",
                 dict(host=self._url, reason=ex),
             )
             self._state = None
-            zones = []
         except IndexError:
             _LOGGER.error("NX584 reports no partitions")
             self._state = None
-            zones = []
-
-        bypassed = False
-        for zone in zones:
-            if zone["bypassed"]:
-                _LOGGER.debug(
-                    "Zone %(zone)s is bypassed, assuming HOME",
-                    dict(zone=zone["number"]),
-                )
-                bypassed = True
-                break
 
         if not part["armed"]:
             self._state = STATE_ALARM_DISARMED
-        elif bypassed:
-            self._state = STATE_ALARM_ARMED_HOME
         else:
-            self._state = STATE_ALARM_ARMED_AWAY
-
-        for flag in part["condition_flags"]:
-            if flag == "Siren on":
+            if (len(list(filter (lambda x : x == "Siren on", part["condition_flags"]))) > 0): 
                 self._state = STATE_ALARM_TRIGGERED
+            elif (len(list(filter (lambda x : x == "Entryguard (stay mode)", part["condition_flags"]))) > 0):
+                self._state = STATE_ALARM_ARMED_HOME
+            else:
+                self._state = STATE_ALARM_ARMED_AWAY
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code=None, partition = 1):
         """Send disarm command."""
-        self._alarm.disarm(code)
+        self._alarm.disarm(code, self._part)
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code=None, partition = 1):
         """Send arm home command."""
-        self._alarm.arm("stay")
+        self._alarm.arm("stay", self._part)
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code=None, partition = 1):
         """Send arm away command."""
-        self._alarm.arm("exit")
+        self._alarm.arm("exit", self._part)
 
     def alarm_bypass(self, zone):
         """Send bypass command."""
