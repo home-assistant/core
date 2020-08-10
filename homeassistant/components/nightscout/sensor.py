@@ -1,7 +1,6 @@
 """Support for Nightscout sensors."""
 from asyncio import TimeoutError as AsyncIOTimeoutError
 from datetime import timedelta
-import hashlib
 import logging
 from typing import Callable, List
 
@@ -13,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
 from .const import ATTR_DATE, ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, ATTR_SVG, DOMAIN
+from .utils import hash_from_url
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -37,7 +37,7 @@ class NightscoutSensor(Entity):
     def __init__(self, api: NightscoutAPI, name):
         """Initialize the Nightscout sensor."""
         self.api = api
-        self._unique_id = hashlib.sha256(api.server_url.encode("utf-8")).hexdigest()
+        self._unique_id = hash_from_url(api.server_url)
         self._name = name
         self._state = None
         self._attributes = None
