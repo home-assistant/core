@@ -426,24 +426,24 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
         self.unit = energy_details["unit"]
         meters = energy_details["meters"]
 
-        try:
-            for entity in meters:
-                for key, data in entity.items():
-                    if key == "type" and data in [
-                        "Production",
-                        "SelfConsumption",
-                        "FeedIn",
-                        "Purchased",
-                        "Consumption",
-                    ]:
-                        energy_type = data
-                    if key == "values":
-                        for row in data:
+        for entity in meters:
+            for key, data in entity.items():
+                if key == "type" and data in [
+                    "Production",
+                    "SelfConsumption",
+                    "FeedIn",
+                    "Purchased",
+                    "Consumption",
+                ]:
+                    energy_type = data
+                if key == "values":
+                    for row in data:
+                        try:
                             self.data[energy_type] = row["value"]
                             self.attributes[energy_type] = {"date": row["date"]}
-        except KeyError:
-            _LOGGER.error("Missing energy details value, skipping update")
-            return
+                        except KeyError:
+                            _LOGGER.error("Missing energy details value, skipping update")
+                            return
 
         _LOGGER.debug(
             "Updated SolarEdge energy details: %s, %s", self.data, self.attributes
