@@ -12,7 +12,7 @@ async def test_tracking_home(hass, mock_weather):
     await hass.config.async_update(latitude=10, longitude=20)
     await hass.async_block_till_done()
 
-    assert len(mock_weather.mock_calls) == 6
+    assert len(mock_weather.mock_calls) == 8
 
     entry = hass.config_entries.async_entries()[0]
     await hass.config_entries.async_remove(entry.entry_id)
