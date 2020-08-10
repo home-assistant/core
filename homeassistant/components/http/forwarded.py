@@ -123,8 +123,14 @@ def setup_forwarded(app, trusted_proxies):
                 )
                 raise HTTPBadRequest
 
-            overrides["host"] = forwarded_host[0]
+            forwarded_host = forwarded_host[0].strip()
+            if not forwarded_host:
+                _LOGGER.error("Empty value received in X-Forward-Host header")
+                raise HTTPBadRequest
 
+            overrides["host"] = forwarded_host
+
+        # Done, create a new request based on gathered data.
         request = request.clone(**overrides)
         return await handler(request)
 
