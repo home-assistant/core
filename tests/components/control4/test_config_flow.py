@@ -6,7 +6,18 @@ from pyControl4.director import C4Director
 from pyControl4.error_handling import Unauthorized
 
 from homeassistant import config_entries, setup
-from homeassistant.components.control4.const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from homeassistant.components.control4.const import (
+    CONF_ALARM_AWAY_MODE,
+    CONF_ALARM_CUSTOM_BYPASS_MODE,
+    CONF_ALARM_HOME_MODE,
+    CONF_ALARM_NIGHT_MODE,
+    DEFAULT_ALARM_AWAY_MODE,
+    DEFAULT_ALARM_CUSTOM_BYPASS_MODE,
+    DEFAULT_ALARM_HOME_MODE,
+    DEFAULT_ALARM_NIGHT_MODE,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -171,11 +182,22 @@ async def test_option_flow(hass):
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_SCAN_INTERVAL: 4},
+        result["flow_id"],
+        user_input={
+            CONF_SCAN_INTERVAL: 4,
+            CONF_ALARM_AWAY_MODE: "Away",
+            CONF_ALARM_HOME_MODE: "Stay",
+            CONF_ALARM_NIGHT_MODE: "Night",
+            CONF_ALARM_CUSTOM_BYPASS_MODE: "Bypass",
+        },
     )
     assert result["type"] == "create_entry"
     assert result["data"] == {
         CONF_SCAN_INTERVAL: 4,
+        CONF_ALARM_AWAY_MODE: "Away",
+        CONF_ALARM_HOME_MODE: "Stay",
+        CONF_ALARM_NIGHT_MODE: "Night",
+        CONF_ALARM_CUSTOM_BYPASS_MODE: "Bypass",
     }
 
 
@@ -195,4 +217,8 @@ async def test_option_flow_defaults(hass):
     assert result["type"] == "create_entry"
     assert result["data"] == {
         CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+        CONF_ALARM_AWAY_MODE: DEFAULT_ALARM_AWAY_MODE,
+        CONF_ALARM_HOME_MODE: DEFAULT_ALARM_HOME_MODE,
+        CONF_ALARM_NIGHT_MODE: DEFAULT_ALARM_NIGHT_MODE,
+        CONF_ALARM_CUSTOM_BYPASS_MODE: DEFAULT_ALARM_CUSTOM_BYPASS_MODE,
     }
