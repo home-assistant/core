@@ -51,6 +51,12 @@ def setup_forwarded(app, trusted_proxies):
         an HTTP 400 status code is thrown.
       - The connected client peer on the socket of the incoming connection,
         must be trusted for any processing to take place.
+      - If the number of elements in X-Forwarded-Proto does not equal 1 or
+        is equal to the number of elements in X-Forwarded-For, an HTTP 400
+        status code is thrown.
+      - If an empty X-Forwarded-Host is provided, a HTTP 400 status code is thrown.
+      - If an empty X-Forwarded-Proto is provided, or an empty element in the list,
+        a HTTP 400 status code is thrown.
     """
     #
     @middleware
