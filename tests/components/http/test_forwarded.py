@@ -296,9 +296,28 @@ async def test_x_forwarded_proto_with_multiple_headers(aiohttp_client, caplog):
 
 
 @pytest.mark.parametrize(
+    "x_forwarded_proto", ["", ",", "https, , https", "https, https, "],
+)
+async def test_x_forwarded_proto_empty_element(
+    x_forwarded_proto, aiohttp_client, caplog
+):
+    """Test that we get a HTTP 400 bad request with multiple headers."""
+    app = web.Application()
+    app.router.add_get("/", mock_handler)
+    setup_forwarded(app, [ip_network("127.0.0.1")])
+
+    mock_api_client = await aiohttp_client(app)
+    resp = await mock_api_client.get(
+        "/", headers={X_FORWARDED_FOR: "1.1.1.1", X_FORWARDED_PROTO: x_forwarded_proto},
+    )
+
+    assert resp.status == 400
+    assert "Empty item received in X-Forward-Proto header" in caplog.text
+
+
+@pytest.mark.parametrize(
     "x_forwarded_for,x_forwarded_proto,expected,got",
     [
-        ("1.1.1.1", "", 1, 0),
         ("1.1.1.1, 2.2.2.2", "https, https, https", 2, 3),
         ("1.1.1.1, 2.2.2.2, 3.3.3.3, 4.4.4.4", "https, https, https", 4, 3),
     ],

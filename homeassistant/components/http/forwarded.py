@@ -122,11 +122,16 @@ def setup_forwarded(app, trusted_proxies):
                 )
                 raise HTTPBadRequest
 
-            forwarded_proto = [
-                proto
-                for proto in (p.strip() for p in forwarded_proto_headers[0].split(","))
-                if proto
-            ]
+            forwarded_proto_split = forwarded_proto_headers[0].split(",")
+            forwarded_proto = [proto.strip() for proto in forwarded_proto_split]
+
+            # Catch empty values
+            if "" in forwarded_proto:
+                _LOGGER.error(
+                    "Empty item received in X-Forward-Proto header: %s",
+                    forwarded_proto_headers[0],
+                )
+                raise HTTPBadRequest
 
             # The X-Forwarded-Proto contains either one element, or the equals number
             # of elements as X-Forwarded-For
