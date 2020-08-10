@@ -13,7 +13,7 @@ async def mock_handler(request):
     return web.Response(text=request.remote)
 
 
-async def test_x_forwarded_for_without_trusted_proxy(aiohttp_client):
+async def test_x_forwarded_for_without_trusted_proxy(aiohttp_client, caplog):
     """Test that we get the IP from the transport."""
 
     async def handler(request):
@@ -34,6 +34,10 @@ async def test_x_forwarded_for_without_trusted_proxy(aiohttp_client):
     resp = await mock_api_client.get("/", headers={X_FORWARDED_FOR: "255.255.255.255"})
 
     assert resp.status == 200
+    assert (
+        "Received X-Forwarded-For header from untrusted proxy 127.0.0.1, headers not processed"
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize(

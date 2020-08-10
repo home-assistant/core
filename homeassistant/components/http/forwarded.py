@@ -44,6 +44,7 @@ def setup_forwarded(app, trusted_proxies):
 
     Additionally:
       - If no X-Forwarded-For header is found, the processing of all headers is skipped.
+      - Log a warning when untrusted connected peer provices X-Forwarded-For headers.
       - If multiple instances of X-Forwarded-For, X-Forwarded-Proto or
         X-Forwarded-Host are found, an HTTP 400 status code is thrown.
       - If malformed or invalid (IP) data in X-Forwarded-For header is found,
@@ -66,6 +67,10 @@ def setup_forwarded(app, trusted_proxies):
         # Ensure the IP of the connected peer is trusted
         connected_ip = ip_address(request.transport.get_extra_info("peername")[0])
         if not any(connected_ip in trusted_proxy for trusted_proxy in trusted_proxies):
+            _LOGGER.warning(
+                "Received X-Forwarded-For header from untrusted proxy %s, headers not processed",
+                str(connected_ip),
+            )
             # Not trusted, continue as normal
             return await handler(request)
 
