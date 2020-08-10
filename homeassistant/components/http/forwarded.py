@@ -13,11 +13,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def setup_forwarded(app, use_x_forwarded_for, trusted_proxies):
-    """Create IP Ban middleware for the app."""
+def setup_forwarded(app, trusted_proxies):
+    """Create forwarded middleware for the app."""
 
     @middleware
     async def forwarded_middleware(request, handler):
+        """Process forwarded data by a reverse proxy."""
         overrides = {}
 
         # Handle X-Forwarded-For
@@ -93,6 +94,4 @@ def setup_forwarded(app, use_x_forwarded_for, trusted_proxies):
         request = request.clone(**overrides)
         return await handler(request)
 
-    # Only register middleware if `use_x_forwarded_for` is enabled
-    if use_x_forwarded_for:
-        app.middlewares.append(forwarded_middleware)
+    app.middlewares.append(forwarded_middleware)

@@ -296,9 +296,13 @@ class HomeAssistantHTTP:
         )
         app[KEY_HASS] = hass
 
-        # This order matters
+        # Order matters, forwarded middleware needs to go first.
+        # Only register middleware if `use_x_forwarded_for` is enabled
+        # and trusted proxies are provided
+        if use_x_forwarded_for and trusted_proxies:
+            setup_forwarded(app, trusted_proxies)
+
         setup_request_context(app, current_request)
-        setup_forwarded(app, use_x_forwarded_for, trusted_proxies)
 
         if is_ban_enabled:
             setup_bans(hass, app, login_threshold)
