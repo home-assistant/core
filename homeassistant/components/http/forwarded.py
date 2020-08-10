@@ -105,9 +105,8 @@ def setup_forwarded(app, trusted_proxies):
                 continue
             overrides["remote"] = str(forwarded_ip)
             break
-
-        # If all the IP addresses are from trusted networks, take the left-most.
-        if "remote" not in overrides:
+        else:
+            # If all the IP addresses are from trusted networks, take the left-most.
             forwarded_for_index = -1
             overrides["remote"] = str(forwarded_for[-1])
 
