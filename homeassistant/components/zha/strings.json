@@ -51,7 +51,8 @@
       "device_tilted": "Device tilted",
       "device_knocked": "Device knocked \"{subtype}\"",
       "device_dropped": "Device dropped",
-      "device_flipped": "Device flipped \"{subtype}\""
+      "device_flipped": "Device flipped \"{subtype}\"",
+      "device_offline": "Device offline"
     },
     "trigger_subtype": {
       "turn_on": "Turn on",
