@@ -456,12 +456,6 @@ def _collect_state(hass: HomeAssistantType, entity_id: str) -> None:
         entity_collect.entities.add(entity_id)
 
 
-def _collect_domain(hass: HomeAssistantType, domain: str) -> None:
-    entity_collect = hass.data.get(_RENDER_INFO)
-    if entity_collect is not None:
-        entity_collect.domains.add(domain)
-
-
 def _wrap_state(
     hass: HomeAssistantType, state: Optional[State]
 ) -> Optional[TemplateState]:
