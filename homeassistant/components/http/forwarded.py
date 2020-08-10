@@ -77,9 +77,7 @@ def setup_forwarded(app, trusted_proxies):
         # Process X-Forwarded-For from the right side (by reversing the list)
         forwarded_for = list(reversed(forwarded_for[0].split(",")))
         try:
-            forwarded_for = [
-                ip_address(addr) for addr in (a.strip() for a in forwarded_for) if addr
-            ]
+            forwarded_for = [ip_address(addr.strip()) for addr in forwarded_for]
         except ValueError:
             _LOGGER.error(
                 "Invalid IP address in X-Forwarded-For header", extra=request.headers
