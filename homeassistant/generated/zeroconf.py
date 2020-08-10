@@ -59,6 +59,9 @@ ZEROCONF = {
     "_spotify-connect._tcp.local.": [
         "spotify"
     ],
+    "_ssh._tcp.local.": [
+        "smappee"
+    ],
     "_viziocast._tcp.local.": [
         "vizio"
     ],
