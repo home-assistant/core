@@ -1,6 +1,4 @@
 """Tests for the HTTP component."""
-from ipaddress import ip_address
-
 from aiohttp import web
 
 # Relic from the past. Kept here so we can run negative tests.
@@ -23,7 +21,7 @@ def mock_real_ip(app):
         """Mock Real IP middleware."""
         nonlocal ip_to_mock
 
-        request["remote"] = ip_address(ip_to_mock)
+        request = request.clone(remote=ip_to_mock)
 
         return await handler(request)
 
