@@ -11,10 +11,9 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_HOST, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-
 from homeassistant.util.process import kill_subprocess
+
 from .const import PING_TIMEOUT
-import asyncio
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,7 +141,9 @@ class PingData:
             stderr=asyncio.subprocess.PIPE,
         )
         try:
-            out_data, out_error = await pinger.communicate(timeout=self._count + PING_TIMEOUT)
+            out_data, out_error = await pinger.communicate(
+                timeout=self._count + PING_TIMEOUT
+            )
 
             if out_data:
                 _LOGGER.debug(
