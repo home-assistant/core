@@ -1783,14 +1783,14 @@ def test_extract_entities_with_variables(hass):
         hass, "{{ is_state('input_boolean.switch', 'off') }}", {}
     )
 
-    assert MATCH_ALL == template.extract_entities(
-        hass, "{{ states | list | count > data }}", {"data": 1}
-    )
-
     assert ["input_boolean.switch"] == template.extract_entities(
         hass,
         "{{ is_state(trigger.entity_id, 'off') }}",
         {"trigger": {"entity_id": "input_boolean.switch"}},
+    )
+
+    assert MATCH_ALL == template.extract_entities(
+        hass, "{{ is_state(data, 'off') }}", {"data": "no_state"}
     )
 
     assert ["input_boolean.switch"] == template.extract_entities(
@@ -1808,6 +1808,17 @@ def test_extract_entities_with_variables(hass):
         hass,
         "{{ is_state('media_player.' ~ where , 'playing') }}",
         {"where": "livingroom"},
+    )
+
+
+def test_extract_entities_all_states(hass):
+    """Test extraction with all states."""
+
+    assert (
+        template.extract_entities(
+            hass, "{{ states | list | count > data }}", {"data": 1}
+        )
+        == MATCH_ALL
     )
 
 
