@@ -183,10 +183,8 @@ class Template:
         self._compiled = None
         self._compiled_code = None
 
-        self.template = re.sub(r"{%[ \t]+if", "{% print", self.template)
-        self.template = re.sub(r"{%[ \t]+elif", "{% print", self.template)
-        self.template = re.sub(r"{%[ \t]+else", '{% print ""', self.template)
-        self.template = re.sub(r"{%[ \t]+endif", '{% print ""', self.template)
+        self.template = re.sub(r"{%[ \t]+(?:if|elif)", "{% print", self.template)
+        self.template = re.sub(r"{%[ \t]+(?:else|endif)", '{% print ""', self.template)
 
         import pprint
 
