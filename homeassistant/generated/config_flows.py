@@ -44,6 +44,7 @@ FLOWS = [
     "doorbird",
     "dunehd",
     "dynalite",
+    "eafm",
     "ecobee",
     "elgato",
     "elkm1",
