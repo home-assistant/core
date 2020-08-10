@@ -210,7 +210,7 @@ async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
         return result
 
     async def request_area_preset_service(service_call: ServiceCall):
-        host = service_call.data.get(CONF_HOST, "")
+        host = service_call.data.get(ATTR_HOST, "")
         bridges = get_bridges(host)
         LOGGER.debug("Selected bridged for service call: %s", bridges)
         area = service_call.data[CONF_AREA]
