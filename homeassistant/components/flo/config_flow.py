@@ -47,10 +47,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_USERNAME])
+            self._abort_if_unique_id_configured()
             try:
                 info = await validate_input(self.hass, user_input)
-                await self.async_set_unique_id(user_input[CONF_USERNAME])
-                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
