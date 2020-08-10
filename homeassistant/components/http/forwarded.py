@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_forwarded(app, trusted_proxies):
     """Create forwarded middleware for the app.
 
-    Process IP addresses in the forwarded for headers
+    Process IP addresses, proto and host information in the forwarded for headers.
 
     `X-Forwarded-For: client, proxy1, proxy2`
 
@@ -24,6 +24,29 @@ def setup_forwarded(app, trusted_proxies):
     trusted proxies list. The first non-trusted IP is used as the client IP. If all
     items in the X-Forwarded-For are trusted, including the most left item (client),
     the most left item is used.
+
+    `X-Forwarded-Proto: client, proxy1, proxy2`
+    e.g, `X-Forwarded-Proto: https, http, http`
+    OR `X-Forwarded-Proto: https` (one entry, even with multiple proxies)
+
+    The X-Forwarded-Proto is determined based on the corresponding entry of the
+    X-Forwarded-For header that is used / chosen as the client IP. However,
+    some proxies, for example, Kubernetes NGINX ingress, only retain one element
+    in the X-Forwarded-Proto header. In that case, we'll just use what we have.
+
+    `X-Forwarded-Host: example.com`
+
+    If the previous headers are processed successfully, and the X-Forwarded-Host is
+    present, it will be used.
+
+    Additionally:
+      - If no X-Forwarded-For header is found, processing of all headers is skipped.
+      - If multiple instances of a X-Forwarded-For, X-Forwarded-Proto or
+        X-Forwarded-Host are found, a HTTP 400 status code is thrown.
+      - If malformed or invalid (IP) data in X-Forwarded-For header is found,
+        a HTTP 400 status code is thrown.
+      - The connected client peer on the socket of the incoming connection,
+        must be trusted for any processing to take place.
     """
     #
     @middleware
@@ -87,9 +110,8 @@ def setup_forwarded(app, trusted_proxies):
             forwarded_proto = [p.strip() for p in forwarded_proto]
 
             # Ideally this should take the scheme corresponding to the entry
-            # in X-Forwarded-For that was chosen, but some proxies (the
-            # Kubernetes NGINX ingress, for example) only retain one element
-            # in X-Forwarded-Proto. In that case, use what we have.
+            # in X-Forwarded-For that was chosen, but some proxies only retain
+            # one element. In that case, use what we have.
             if index >= len(forwarded_proto):
                 index = -1
 
