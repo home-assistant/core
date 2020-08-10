@@ -69,6 +69,8 @@ class TagStorageCollection(collection.StorageCollection):
 
     async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
         """Validate the config is valid."""
+        if TAG_ID in data:
+            data[CONF_ID] = data.pop(TAG_ID)
         return self.CREATE_SCHEMA(data)
 
     @callback
