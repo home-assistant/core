@@ -1586,6 +1586,19 @@ def test_extract_entities_with_complex_branching(hass):
     )
 
 
+def test_nested_case(hass):
+    """Test a deeply nested state."""
+
+    hass.states.async_set("input_select.picker", "vacuum.a")
+    hass.states.async_set("vacuum.a", "off")
+
+    assert set(
+        template.extract_entities(
+            hass, "{{ states[states['input_select.picker'].state].state }}", {}
+        )
+    ) == {"input_select.picker", "vacuum.a"}
+
+
 def test_closest_function_invalid_coordinates(hass):
     """Test closest function invalid coordinates."""
     hass.states.async_set(

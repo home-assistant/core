@@ -157,8 +157,14 @@ aiobotocore==0.11.1
 # homeassistant.components.minecraft_server
 aiodns==2.0.0
 
+# homeassistant.components.eafm
+aioeafm==0.1.2
+
 # homeassistant.components.esphome
 aioesphomeapi==2.6.1
+
+# homeassistant.components.flo
+aioflo==0.4.0
 
 # homeassistant.components.freebox
 aiofreepybox==0.0.8
@@ -473,7 +479,7 @@ deluge-client==1.7.1
 denonavr==0.9.4
 
 # homeassistant.components.devolo_home_control
-devolo-home-control-api==0.11.0
+devolo-home-control-api==0.13.0
 
 # homeassistant.components.directv
 directv==0.3.0
@@ -503,7 +509,7 @@ dsmr_parser==0.18
 dweepy==0.3.0
 
 # homeassistant.components.dynalite
-dynalite_devices==0.1.44
+dynalite_devices==0.1.45
 
 # homeassistant.components.rainforest_eagle
 eagle200_reader==0.2.4
@@ -539,7 +545,7 @@ enocean==0.50
 enturclient==0.2.1
 
 # homeassistant.components.environment_canada
-env_canada==0.2.0
+# env_canada==0.2.0
 
 # homeassistant.components.envirophat
 # envirophat==0.0.6
@@ -1623,7 +1629,7 @@ pyskyqhub==0.1.1
 pysma==0.3.5
 
 # homeassistant.components.smappee
-pysmappee==0.1.5
+pysmappee==0.2.9
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.2

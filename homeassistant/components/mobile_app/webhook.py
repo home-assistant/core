@@ -538,3 +538,15 @@ async def webhook_get_config(hass, config_entry, data):
         pass
 
     return webhook_response(resp, registration=config_entry.data)
+
+
+@WEBHOOK_COMMANDS.register("scan_tag")
+@validate_schema({vol.Required("tag_id"): cv.string})
+async def webhook_scan_tag(hass, config_entry, data):
+    """Handle a fire event webhook."""
+    hass.bus.async_fire(
+        "tag_scanned",
+        {"tag_id": data["tag_id"], "device_id": config_entry.data[ATTR_DEVICE_ID]},
+        context=registration_context(config_entry.data),
+    )
+    return empty_okay_response()

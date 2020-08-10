@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 from typing import Any, Callable, Dict, List, Optional, Union
 
+from homeassistant.components.sensor import DEVICE_CLASS_CURRENT
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DATA_BYTES,
@@ -104,6 +105,11 @@ class WLEDEstimatedCurrentSensor(WLEDSensor):
     def state(self) -> Union[None, str, int, float]:
         """Return the state of the sensor."""
         return self.coordinator.data.info.leds.power
+
+    @property
+    def device_class(self) -> Optional[str]:
+        """Return the class of this sensor."""
+        return DEVICE_CLASS_CURRENT
 
 
 class WLEDUptimeSensor(WLEDSensor):
