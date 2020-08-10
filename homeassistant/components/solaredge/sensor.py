@@ -442,7 +442,9 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
                             self.data[energy_type] = row["value"]
                             self.attributes[energy_type] = {"date": row["date"]}
                         except KeyError:
-                            _LOGGER.error("Missing energy details value, skipping update")
+                            _LOGGER.error(
+                                "Missing energy details value, skipping update"
+                            )
                             return
 
         _LOGGER.debug(
