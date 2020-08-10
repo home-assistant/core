@@ -27,6 +27,12 @@ def setup_forwarded(app, trusted_proxies):
             # No forwarding headers, continue as normal
             return await handler(request)
 
+        # Ensure the IP of the connected peer is trusted
+        connected_ip = ip_address(request.transport.get_extra_info("peername")[0])
+        if not any(connected_ip in trusted_proxy for trusted_proxy in trusted_proxies):
+            # Not trusted, continue as normal
+            return await handler(request)
+
         # Multiple X-Forwarded-For headers
         if len(forwarded_for) > 1:
             _LOGGER.error("Too many headers for X-Forwarded-For", extra=request.headers)
