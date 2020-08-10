@@ -96,15 +96,9 @@ async def test_service_request_area_preset(hass):
                         {
                             CONF_HOST: "1.2.3.4",
                             CONF_PORT: 1234,
-                            dynalite.CONF_AREA: {
-                                "7": {CONF_NAME: "test", dynalite.CONF_QUERY_CHANNEL: 8}
-                            },
+                            dynalite.CONF_AREA: {"7": {CONF_NAME: "test"}},
                         },
-                        {
-                            CONF_HOST: "5.6.7.8",
-                            CONF_PORT: 5678,
-                            dynalite.CONF_DEFAULT: {dynalite.CONF_QUERY_CHANNEL: 4},
-                        },
+                        {CONF_HOST: "5.6.7.8", CONF_PORT: 5678},
                     ]
                 }
             },
@@ -121,13 +115,13 @@ async def test_service_request_area_preset(hass):
             dynalite.DOMAIN, "request_area_preset", {"area": 3},
         )
         await hass.async_block_till_done()
-        assert mock_req_area_pres.mock_calls == [call(3, 1), call(3, 4)]
+        assert mock_req_area_pres.mock_calls == [call(3, 1), call(3, 1)]
         mock_req_area_pres.reset_mock()
         await hass.services.async_call(
             dynalite.DOMAIN, "request_area_preset", {"host": "5.6.7.8", "area": 4},
         )
         await hass.async_block_till_done()
-        mock_req_area_pres.assert_called_once_with(4, 4)
+        mock_req_area_pres.assert_called_once_with(4, 1)
         mock_req_area_pres.reset_mock()
         await hass.services.async_call(
             dynalite.DOMAIN, "request_area_preset", {"host": "6.5.4.3", "area": 5},
@@ -147,7 +141,7 @@ async def test_service_request_area_preset(hass):
             dynalite.DOMAIN, "request_area_preset", {"host": "1.2.3.4", "area": 7},
         )
         await hass.async_block_till_done()
-        mock_req_area_pres.assert_called_once_with(7, 8)
+        mock_req_area_pres.assert_called_once_with(7, 1)
 
 
 async def test_async_setup_bad_config1(hass):
