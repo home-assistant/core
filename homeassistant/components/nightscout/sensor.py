@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
-from .const import ATTR_DATE, ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, ATTR_SVG, DOMAIN
+from .const import ATTR_DATE, ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN
 from .utils import hash_from_url
 
 SCAN_INTERVAL = timedelta(minutes=1)
@@ -92,7 +92,6 @@ class NightscoutSensor(Entity):
             self._attributes = {
                 ATTR_DEVICE: value.device,
                 ATTR_DATE: value.date,
-                ATTR_SVG: value.sgv,
                 ATTR_DELTA: value.delta,
                 ATTR_DIRECTION: value.direction,
             }
