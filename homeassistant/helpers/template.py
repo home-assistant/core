@@ -144,6 +144,8 @@ class Template:
         self.template: str = template
         self._compiled_code = None
         self._compiled = None
+        self._compiled_code_without_conditionals = None
+        self._compiled_without_conditionals = None
         self.hass = hass
 
     @property
@@ -162,6 +164,30 @@ class Template:
 
         try:
             self._compiled_code = self._env.compile(self.template)
+        except jinja2.exceptions.TemplateSyntaxError as err:
+            raise TemplateError(err)
+
+    def ensure_valid_without_conditionals(self):
+        """Return if template is valid with the conditionals removed."""
+        if self._compiled_code_without_conditionals is not None:
+            return
+
+        # Here we convert the conditionals to print statements
+        # so we collect entities/domains that appear in code branches
+        # that would not normally be transversed.
+        template_without_conditionals = re.sub(
+            r"{[ \t]*%[ \t]+(?:if|elif)", "{% print", self.template
+        )
+        template_without_conditionals = re.sub(
+            r"{[ \t]*%[ \t]+(?:else|endif)",
+            '{% print ""',
+            template_without_conditionals,
+        )
+
+        try:
+            self._compiled_code_without_conditionals = self._env.compile(
+                template_without_conditionals
+            )
         except jinja2.exceptions.TemplateSyntaxError as err:
             raise TemplateError(err)
 
@@ -217,6 +243,27 @@ class Template:
             raise TemplateError(err)
 
     @callback
+    def async_render_without_conditionals(
+        self, variables: TemplateVarsType = None, **kwargs: Any
+    ) -> str:
+        """Render given template with the conditionals removed.
+
+        This method must be run in the event loop.
+        """
+        compiled = (
+            self._compiled_without_conditionals
+            or self._ensure_compiled_without_conditionals()
+        )
+
+        if variables is not None:
+            kwargs.update(variables)
+
+        try:
+            return compiled.render(kwargs).strip()
+        except jinja2.TemplateError as err:
+            raise TemplateError(err)
+
+    @callback
     def async_render_to_info(
         self, variables: TemplateVarsType = None, **kwargs: Any
     ) -> RenderInfo:
@@ -225,7 +272,9 @@ class Template:
         render_info = self.hass.data[_RENDER_INFO] = RenderInfo(self)
         # pylint: disable=protected-access
         try:
-            render_info._result = self.async_render(variables, **kwargs)
+            render_info._result = self.async_render_without_conditionals(
+                variables, **kwargs
+            )
         except TemplateError as ex:
             render_info._exception = ex
         finally:
@@ -291,6 +340,20 @@ class Template:
         )
 
         return self._compiled
+
+    def _ensure_compiled_without_conditionals(self):
+        """Bind a template with the conditionals removed to a specific hass instance."""
+        self.ensure_valid_without_conditionals()
+
+        assert self.hass is not None, "hass variable not set on template"
+
+        env = self._env
+
+        self._compiled_without_conditionals = jinja2.Template.from_code(
+            env, self._compiled_code_without_conditionals, env.globals, None
+        )
+
+        return self._compiled_without_conditionals
 
     def __eq__(self, other):
         """Compare template with another."""
@@ -430,6 +493,13 @@ class TemplateState(State):
             return state.state
         return f"{state.state} {unit}"
 
+    def __eq__(self, other: Any) -> bool:
+        """Ensure we collect on equality check."""
+        state = object.__getattribute__(self, "_state")
+        hass = object.__getattribute__(self, "_hass")
+        _collect_state(hass, state.entity_id)
+        return super().__eq__(other)
+
     def __getattribute__(self, name):
         """Return an attribute of the state."""
         # This one doesn't count as an access of the state
@@ -454,12 +524,6 @@ def _collect_state(hass: HomeAssistantType, entity_id: str) -> None:
     entity_collect = hass.data.get(_RENDER_INFO)
     if entity_collect is not None:
         entity_collect.entities.add(entity_id)
-
-
-def _collect_domain(hass: HomeAssistantType, domain: str) -> None:
-    entity_collect = hass.data.get(_RENDER_INFO)
-    if entity_collect is not None:
-        entity_collect.domains.add(domain)
 
 
 def _wrap_state(

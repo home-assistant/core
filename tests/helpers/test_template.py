@@ -1509,6 +1509,83 @@ def test_closest_function_state_with_invalid_location(hass):
     )
 
 
+def test_extract_entities_with_branching(hass):
+    """Test extract entities function by domain."""
+    hass.states.async_set("light.a", "off")
+    hass.states.async_set("light.b", "on")
+    hass.states.async_set("light.c", "off")
+
+    assert (
+        set(
+            template.extract_entities(
+                hass,
+                """
+{% if states.light.a == "on" %}
+  {{ states.light.b.state }}
+{% else %}
+  {{ states.light.c.state }}
+{% endif %}
+""",
+                {},
+            )
+        )
+        == {"light.a", "light.b", "light.c"}
+    )
+
+    assert (
+        set(
+            template.extract_entities(
+                hass,
+                """
+            {% if states.light.a.state == "A" %}
+            {% set domain = "light" %}
+            {{ states[domain].b.state }}
+            {% endif %}
+""",
+                {},
+            )
+        )
+        == {"light.a", "light.b"}
+    )
+
+
+def test_extract_entities_with_complex_branching(hass):
+    """Test extract entities function by domain."""
+    hass.states.async_set("light.a", "off")
+    hass.states.async_set("light.b", "on")
+    hass.states.async_set("light.c", "off")
+    hass.states.async_set("vacuum.a", "off")
+    hass.states.async_set("device_tracker.a", "off")
+    hass.states.async_set("device_tracker.b", "off")
+    hass.states.async_set("lock.a", "off")
+    hass.states.async_set("sensor.a", "off")
+    hass.states.async_set("binary_sensor.a", "off")
+
+    assert (
+        set(
+            template.extract_entities(
+                hass,
+                """
+{% set domain = "vacuum" %}
+{%      if                 states.light.a == "on" %}
+  {{ states.light.b.state }}
+{% elif  states.light.a == "on" %}
+  {{ states.device_tracker }}
+{%     elif     states.light.a == "on" %}
+  {{ states[domain] | list }}
+{%         elif     states.light.a == "on" %}
+  {{ states[otherdomain] | list }}
+{% elif states.light.a == "on" %}
+  {{ states["nonexist"] | list }}
+{% endif %}
+""",
+                {"otherdomain": "sensor"},
+            )
+        )
+        == {"light.a", "light.b", "sensor.a", "vacuum.a"}
+    )
+
+
 def test_closest_function_invalid_coordinates(hass):
     """Test closest function invalid coordinates."""
     hass.states.async_set(
