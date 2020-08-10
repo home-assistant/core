@@ -201,25 +201,56 @@ async def test_x_forwarded_proto_without_trusted_proxy(aiohttp_client):
     assert resp.status == 200
 
 
-async def test_x_forwarded_proto_with_trusted_proxy(aiohttp_client):
+@pytest.mark.parametrize(
+    "x_forwarded_for,remote,x_forwarded_proto,secure",
+    [
+        ("10.10.10.10, 127.0.0.1, 127.0.0.2", "10.10.10.10", "https, http, http", True),
+        ("10.10.10.10, 127.0.0.1, 127.0.0.2", "10.10.10.10", "http", False),
+        (
+            "10.10.10.10, 127.0.0.1, 127.0.0.2",
+            "10.10.10.10",
+            "http, https, https",
+            False,
+        ),
+        ("10.10.10.10, 127.0.0.1, 127.0.0.2", "10.10.10.10", "https", True),
+        (
+            "255.255.255.255, 10.10.10.10, 127.0.0.1",
+            "10.10.10.10",
+            "http, https, http",
+            True,
+        ),
+        (
+            "255.255.255.255, 10.10.10.10, 127.0.0.1",
+            "10.10.10.10",
+            "https, http, https",
+            False,
+        ),
+        ("255.255.255.255, 10.10.10.10, 127.0.0.1", "10.10.10.10", "https", True),
+    ],
+)
+async def test_x_forwarded_proto_with_trusted_proxy(
+    x_forwarded_for, remote, x_forwarded_proto, secure, aiohttp_client
+):
     """Test that we get the proto header if proxy is trusted."""
 
     async def handler(request):
-        url = mock_api_client.make_url("/")
-        assert request.host == f"{url.host}:{url.port}"
-        assert request.scheme == "https"
-        assert request.secure
-        assert request.remote == "255.255.255.255"
+        assert request.remote == remote
+        assert request.scheme == ("https" if secure else "http")
+        assert request.secure == secure
 
         return web.Response()
 
     app = web.Application()
     app.router.add_get("/", handler)
-    setup_forwarded(app, [ip_network("127.0.0.1")])
+    setup_forwarded(app, [ip_network("127.0.0.0/24")])
 
     mock_api_client = await aiohttp_client(app)
     resp = await mock_api_client.get(
-        "/", headers={X_FORWARDED_FOR: "255.255.255.255", X_FORWARDED_PROTO: "https"}
+        "/",
+        headers={
+            X_FORWARDED_FOR: x_forwarded_for,
+            X_FORWARDED_PROTO: x_forwarded_proto,
+        },
     )
 
     assert resp.status == 200

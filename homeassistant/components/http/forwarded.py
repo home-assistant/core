@@ -112,9 +112,7 @@ def setup_forwarded(app, trusted_proxies):
             overrides["remote"] = str(forwarded_for[-1])
 
         # Handle X-Forwarded-Proto
-        forwarded_proto_headers = list(
-            reversed(request.headers.getall(X_FORWARDED_PROTO, []))
-        )
+        forwarded_proto_headers = request.headers.getall(X_FORWARDED_PROTO, [])
         if forwarded_proto_headers:
             if len(forwarded_proto_headers) > 1:
                 _LOGGER.error(
@@ -122,7 +120,9 @@ def setup_forwarded(app, trusted_proxies):
                 )
                 raise HTTPBadRequest
 
-            forwarded_proto_split = forwarded_proto_headers[0].split(",")
+            forwarded_proto_split = list(
+                reversed(forwarded_proto_headers[0].split(","))
+            )
             forwarded_proto = [proto.strip() for proto in forwarded_proto_split]
 
             # Catch empty values
@@ -147,12 +147,10 @@ def setup_forwarded(app, trusted_proxies):
             # Ideally this should take the scheme corresponding to the entry
             # in X-Forwarded-For that was chosen, but some proxies only retain
             # one element. In that case, use what we have.
-            if forwarded_for_index != -1 and forwarded_for_index >= len(
-                forwarded_proto
-            ):
-                forwarded_for_index = -1
-
-            overrides["scheme"] = forwarded_proto[forwarded_for_index]
+            if forwarded_for_index > 1 or len(forwarded_proto) == 1:
+                overrides["scheme"] = forwarded_proto[-1]
+            else:
+                overrides["scheme"] = forwarded_proto[forwarded_for_index]
 
         # Handle X-Forwarded-Host
         forwarded_host_headers = request.headers.getall(X_FORWARDED_HOST, [])
