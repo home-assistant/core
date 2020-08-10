@@ -4,7 +4,7 @@ import typing
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
@@ -23,18 +23,18 @@ STORAGE_VERSION = 1
 TAG_ID = "tag_id"
 TAGS = "tags"
 
-CREATE_FIELDS = {vol.Required(TAG_ID): cv.string}
-
-UPDATE_FIELDS = {
-    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
+CREATE_FIELDS = {
+    vol.Required(CONF_ID): cv.string,
+    vol.Optional(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional("description"): cv.string,
     vol.Optional(LAST_SCANNED): cv.datetime,
 }
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: cv.schema_with_slug_keys(vol.Any(UPDATE_FIELDS, None))},
-    extra=vol.ALLOW_EXTRA,
-)
+UPDATE_FIELDS = {
+    vol.Optional(CONF_NAME): vol.All(str, vol.Length(min=1)),
+    vol.Optional("description"): cv.string,
+    vol.Optional(LAST_SCANNED): cv.datetime,
+}
 
 
 class TagStorageCollection(collection.StorageCollection):
@@ -50,7 +50,7 @@ class TagStorageCollection(collection.StorageCollection):
     @callback
     def _get_suggested_id(self, info: typing.Dict) -> str:
         """Suggest an ID based on the config."""
-        return info[TAG_ID]
+        return info[CONF_ID]
 
     async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
         """Return a new updated data object."""
@@ -84,5 +84,7 @@ async def async_scan_tag(hass, tag_id, device_id, context=None):
     if tag_id in helper.store.data:
         await helper.async_update_item(tag_id, {LAST_SCANNED: dt_util.utcnow()})
     else:
-        await helper.async_create_item({TAG_ID: tag_id})
+        await helper.async_create_item(
+            {CONF_ID: tag_id, LAST_SCANNED: dt_util.utcnow()}
+        )
     _LOGGER.debug("Tag: %s scanned by device: %s", tag_id, device_id)

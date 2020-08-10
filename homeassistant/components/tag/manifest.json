@@ -8,5 +8,5 @@
   "zeroconf": [],
   "homekit": {},
   "dependencies": [],
-  "codeowners": ["@dmulcahey"]
+  "codeowners": ["@balloob", "@dmulcahey"]
 }
