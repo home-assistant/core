@@ -66,6 +66,8 @@ associate with an credential if "type" set to "link_user" in
     "version": 1
 }
 """
+from ipaddress import ip_address
+
 from aiohttp import web
 import voluptuous as vol
 import voluptuous_serialize
@@ -182,7 +184,7 @@ class LoginFlowIndexView(HomeAssistantView):
             result = await self._flow_mgr.async_init(
                 handler,
                 context={
-                    "ip_address": request.remote,
+                    "ip_address": ip_address(request.remote),
                     "credential_only": data.get("type") == "link_user",
                 },
             )
@@ -228,10 +230,9 @@ class LoginFlowResourceView(HomeAssistantView):
         try:
             # do not allow change ip during login flow
             for flow in self._flow_mgr.async_progress():
-                if (
-                    flow["flow_id"] == flow_id
-                    and flow["context"]["ip_address"] != request.remote
-                ):
+                if flow["flow_id"] == flow_id and flow["context"][
+                    "ip_address"
+                ] != ip_address(request.remote):
                     return self.json_message("IP address changed", HTTP_BAD_REQUEST)
 
             result = await self._flow_mgr.async_configure(flow_id, data)
