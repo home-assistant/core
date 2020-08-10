@@ -78,7 +78,7 @@ def _get_instance(hass, default_interface=False, ipv6=True):
     """Create an instance."""
     logging.getLogger("zeroconf").setLevel(logging.NOTSET)
 
-    zc_args = {"from_hass": True}
+    zc_args = {}
     if default_interface:
         zc_args["interfaces"] = InterfaceChoice.Default
     if not ipv6:
