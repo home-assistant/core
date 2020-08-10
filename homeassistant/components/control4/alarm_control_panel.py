@@ -76,9 +76,8 @@ async def async_setup_entry(
         "Scan interval = %s", scan_interval,
     )
 
+    # Register alarm_control_panel specific service
     platform = entity_platform.current_platform.get()
-
-    # This will call Entity.set_sleep_timer(sleep_time=VALUE)
     platform.async_register_entity_service(
         "send_alarm_keystrokes",
         {voluptuous.Required("keystrokes"): cv.string,},
