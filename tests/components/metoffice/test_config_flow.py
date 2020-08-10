@@ -68,10 +68,13 @@ async def test_form_already_configured(hass, requests_mock):
         "/public/data/val/wxfcs/all/json/354107?res=3hourly",
         text="",
     )
+    requests_mock.get(
+        "/public/data/val/wxfcs/all/json/354107?res=daily", text="",
+    )
 
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id=f"{TEST_LATITUDE_WAVERTREE}_{TEST_LONGITUDE_WAVERTREE}",
+        unique_id=f"{TEST_LATITUDE_WAVERTREE}_{TEST_LONGITUDE_WAVERTREE}_3_hourly",
         data=METOFFICE_CONFIG_WAVERTREE,
     ).add_to_hass(hass)
 

@@ -21,9 +21,9 @@ from .const import (
     METOFFICE_DATA,
     METOFFICE_NAME,
     MODE_3HOURLY,
-    MODE_3HOURLY_DISPLAY,
+    MODE_3HOURLY_LABEL,
     MODE_DAILY,
-    MODE_DAILY_DISPLAY,
+    MODE_DAILY_LABEL,
     VISIBILITY_CLASSES,
     VISIBILITY_DISTANCE_CLASSES,
 )
@@ -112,7 +112,7 @@ class MetOfficeCurrentSensor(SensorEntity):
         self._coordinator = hass_data[METOFFICE_COORDINATOR]
 
         self._type = sensor_type
-        self._name = f"{hass_data[METOFFICE_NAME]} {SENSOR_TYPES[self._type][0]} {MODE_3HOURLY_DISPLAY if use_3hourly else MODE_DAILY_DISPLAY}"
+        self._name = f"{hass_data[METOFFICE_NAME]} {SENSOR_TYPES[self._type][0]} {MODE_3HOURLY_LABEL if use_3hourly else MODE_DAILY_LABEL}"
         self._unique_id = f"{SENSOR_TYPES[self._type][0]}_{self._data.latitude}_{self._data.longitude}_{MODE_3HOURLY if use_3hourly else MODE_DAILY}"
 
         self.use_3hourly = use_3hourly
@@ -224,7 +224,7 @@ class MetOfficeCurrentSensor(SensorEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return SENSOR_TYPES[self._type][4]
+        return SENSOR_TYPES[self._type][4] and self.use_3hourly
 
     @property
     def available(self):
