@@ -86,9 +86,12 @@ class TagStorageCollection(collection.StorageCollection):
     async def _async_load_data(self) -> Optional[dict]:
         """Load the data."""
         items = cast(Optional[dict], await self.store.async_load())
-        for item in items.values():
-            if "last_scanned" in item:
-                item["last_scanned"] = dt.datetime.fromisoformat(item["last_scanned"])
+        if items:
+            for item in items.values():
+                if "last_scanned" in item:
+                    item["last_scanned"] = dt.datetime.fromisoformat(
+                        item["last_scanned"]
+                    )
         return items
 
     @callback
