@@ -39,7 +39,6 @@ TEST_IMPORT = {
 class MockConnection:
     """A mock kodi connection."""
 
-
     def __init__(self, connected=True):
         """Mock the Kodi connection."""
         self._connected = connected
