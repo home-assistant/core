@@ -246,9 +246,9 @@ class Control4AlarmControlPanel(Control4Entity, AlarmControlPanelEntity):
         armed_away = self._coordinator.data[self._idx][CONTROL4_ARMED_AWAY_VAR]
         if disarmed == 1:
             return STATE_ALARM_DISARMED
-        elif armed_home == 1:
+        if armed_home == 1:
             return STATE_ALARM_ARMED_HOME
-        elif armed_away == 1:
+        if armed_away == 1:
             return STATE_ALARM_ARMED_AWAY
 
     @property
