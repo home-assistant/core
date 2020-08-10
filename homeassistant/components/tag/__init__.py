@@ -124,6 +124,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
 @bind_hass
 async def async_scan_tag(hass, tag_id, device_id, context=None):
     """Handle when a tag is scanned."""
+    if DOMAIN not in hass.config.components:
+        raise HomeAssistantError("tag component has not been set up.")
+
     hass.bus.async_fire(
         EVENT_TAG_SCANNED, {TAG_ID: tag_id, DEVICE_ID: device_id}, context=context
     )
