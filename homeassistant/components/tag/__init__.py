@@ -14,7 +14,6 @@ import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 
-PLATFORMS = []
 _LOGGER = logging.getLogger(__name__)
 DEVICE_ID = "device_id"
 EVENT_TAG_SCANNED = "tag_scanned"
