@@ -51,6 +51,7 @@ DEFAULT_TEMPLATES = {
 }
 
 ATTR_AREA = "area"
+ATTR_CHANNEL = "channel"
 ATTR_HOST = "host"
 ATTR_PACKET = "packet"
 ATTR_PRESET = "preset"
