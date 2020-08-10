@@ -218,6 +218,7 @@
                                     "U": "0",
                                     "$": "180"
                                 },
+
                                 {
                                     "D": "NW",
                                     "F": "10",
@@ -1488,6 +1489,259 @@
                                     "W": "7",
                                     "U": "0",
                                     "$": "1260"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "kingslynn_daily": {
+        "SiteRep": {
+            "Wx": {
+                "Param": [
+                    {
+                        "name": "FDm",
+                        "units": "C",
+                        "$": "Feels Like Day Maximum Temperature"
+                    },
+                    {
+                        "name": "FNm",
+                        "units": "C",
+                        "$": "Feels Like Night Minimum Temperature"
+                    },
+                    {
+                        "name": "Dm",
+                        "units": "C",
+                        "$": "Day Maximum Temperature"
+                    },
+                    {
+                        "name": "Nm",
+                        "units": "C",
+                        "$": "Night Minimum Temperature"
+                    },
+                    {
+                        "name": "Gn",
+                        "units": "mph",
+                        "$": "Wind Gust Noon"
+                    },
+                    {
+                        "name": "Gm",
+                        "units": "mph",
+                        "$": "Wind Gust Midnight"
+                    },
+                    {
+                        "name": "Hn",
+                        "units": "%",
+                        "$": "Screen Relative Humidity Noon"
+                    },
+                    {
+                        "name": "Hm",
+                        "units": "%",
+                        "$": "Screen Relative Humidity Midnight"
+                    },
+                    {
+                        "name": "V",
+                        "units": "",
+                        "$": "Visibility"
+                    },
+                    {
+                        "name": "D",
+                        "units": "compass",
+                        "$": "Wind Direction"
+                    },
+                    {
+                        "name": "S",
+                        "units": "mph",
+                        "$": "Wind Speed"
+                    },
+                    {
+                        "name": "U",
+                        "units": "",
+                        "$": "Max UV Index"
+                    },
+                    {
+                        "name": "W",
+                        "units": "",
+                        "$": "Weather Type"
+                    },
+                    {
+                        "name": "PPd",
+                        "units": "%",
+                        "$": "Precipitation Probability Day"
+                    },
+                    {
+                        "name": "PPn",
+                        "units": "%",
+                        "$": "Precipitation Probability Night"
+                    }
+                ]
+            },
+            "DV": {
+                "dataDate": "2020-04-25T08:00:00Z",
+                "type": "Forecast",
+                "Location": {
+                    "i": "322380",
+                    "lat": "52.7561",
+                    "lon": "0.4019",
+                    "name": "KING'S LYNN",
+                    "country": "ENGLAND",
+                    "continent": "EUROPE",
+                    "elevation": "5.0",
+                    "Period": [
+                        {
+                            "type": "Day",
+                            "value": "2020-04-25Z",
+                            "Rep": [
+                                {
+                                    "D": "ESE",
+                                    "Gn": "4",
+                                    "Hn": "75",
+                                    "PPd": "9",
+                                    "S": "4",
+                                    "V": "VG",
+                                    "Dm": "9",
+                                    "FDm": "8",
+                                    "W": "8",
+                                    "U": "3",
+                                    "$": "Day"
+                                },
+                                {
+                                    "D": "SSE",
+                                    "Gm": "16",
+                                    "Hm": "84",
+                                    "PPn": "0",
+                                    "S": "7",
+                                    "V": "VG",
+                                    "Nm": "7",
+                                    "FNm": "5",
+                                    "W": "0",
+                                    "$": "Night"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Day",
+                            "value": "2020-04-26Z",
+                            "Rep": [
+                                {
+                                    "D": "SSW",
+                                    "Gn": "13",
+                                    "Hn": "69",
+                                    "PPd": "0",
+                                    "S": "9",
+                                    "V": "VG",
+                                    "Dm": "13",
+                                    "FDm": "11",
+                                    "W": "1",
+                                    "U": "4",
+                                    "$": "Day"
+                                },
+                                {
+                                    "D": "SSW",
+                                    "Gm": "13",
+                                    "Hm": "75",
+                                    "PPn": "5",
+                                    "S": "7",
+                                    "V": "GO",
+                                    "Nm": "11",
+                                    "FNm": "10",
+                                    "W": "7",
+                                    "$": "Night"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Day",
+                            "value": "2020-04-27Z",
+                            "Rep": [
+                                {
+                                    "D": "NW",
+                                    "Gn": "11",
+                                    "Hn": "78",
+                                    "PPd": "36",
+                                    "S": "4",
+                                    "V": "VG",
+                                    "Dm": "10",
+                                    "FDm": "9",
+                                    "W": "7",
+                                    "U": "3",
+                                    "$": "Day"
+                                },
+                                {
+                                    "D": "SE",
+                                    "Gm": "13",
+                                    "Hm": "85",
+                                    "PPn": "9",
+                                    "S": "7",
+                                    "V": "VG",
+                                    "Nm": "9",
+                                    "FNm": "7",
+                                    "W": "7",
+                                    "$": "Night"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Day",
+                            "value": "2020-04-28Z",
+                            "Rep": [
+                                {
+                                    "D": "ESE",
+                                    "Gn": "13",
+                                    "Hn": "77",
+                                    "PPd": "14",
+                                    "S": "7",
+                                    "V": "GO",
+                                    "Dm": "11",
+                                    "FDm": "9",
+                                    "W": "7",
+                                    "U": "3",
+                                    "$": "Day"
+                                },
+                                {
+                                    "D": "SSE",
+                                    "Gm": "13",
+                                    "Hm": "87",
+                                    "PPn": "11",
+                                    "S": "7",
+                                    "V": "GO",
+                                    "Nm": "9",
+                                    "FNm": "7",
+                                    "W": "7",
+                                    "$": "Night"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Day",
+                            "value": "2020-04-29Z",
+                            "Rep": [
+                                {
+                                    "D": "SSE",
+                                    "Gn": "20",
+                                    "Hn": "75",
+                                    "PPd": "8",
+                                    "S": "11",
+                                    "V": "VG",
+                                    "Dm": "12",
+                                    "FDm": "10",
+                                    "W": "7",
+                                    "U": "3",
+                                    "$": "Day"
+                                },
+                                {
+                                    "D": "SSE",
+                                    "Gm": "20",
+                                    "Hm": "86",
+                                    "PPn": "20",
+                                    "S": "11",
+                                    "V": "VG",
+                                    "Nm": "9",
+                                    "FNm": "7",
+                                    "W": "7",
+                                    "$": "Night"
                                 }
                             ]
                         }
