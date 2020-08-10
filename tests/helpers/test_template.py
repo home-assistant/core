@@ -1569,7 +1569,7 @@ def test_extract_entities_no_match_entities(hass):
         template.extract_entities(
             hass, "{{ value_json.tst | timestamp_custom('%Y' True) }}"
         )
-        == []
+        == MATCH_ALL
     )
 
     info = render_to_info(
@@ -1753,7 +1753,7 @@ states.sensor.pick_humidity.state ~ " %"
 
     await group.Group.async_create_group(hass, "empty group", [])
 
-    assert [] == template.extract_entities(
+    assert MATCH_ALL == template.extract_entities(
         hass, "{{ expand('group.empty_group') | list | length }}"
     )
 
