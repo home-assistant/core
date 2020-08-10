@@ -20,7 +20,6 @@ from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, CON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,14 +78,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config.get(CONF_NAME)
     region_name = config.get(CONF_REGION_NAME)
 
-    api = DwdWeatherWarningsAPI(region_name)
+    api = WrappedDwDWWAPI(DwdWeatherWarningsAPI(region_name))
 
     # Build sensor list and activate update only for the first one
     sensors = []
-    call_update = True
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
-        sensors.append(DwdWeatherWarningsSensor(api, name, sensor_type, call_update))
-        call_update = False
+        sensors.append(DwdWeatherWarningsSensor(api, name, sensor_type))
 
     add_entities(sensors, True)
 
@@ -94,12 +91,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class DwdWeatherWarningsSensor(Entity):
     """Representation of a DWD-Weather-Warnings sensor."""
 
-    def __init__(self, api, name, sensor_type, call_update):
+    def __init__(self, api, name, sensor_type):
         """Initialize a DWD-Weather-Warnings sensor."""
         self._api = api
         self._name = name
         self._sensor_type = sensor_type
-        self._call_update = call_update
 
     @property
     def name(self):
@@ -120,27 +116,23 @@ class DwdWeatherWarningsSensor(Entity):
     def state(self):
         """Return the state of the device."""
         if self._sensor_type == CURRENT_WARNING_SENSOR:
-            return self._api.current_warning_level
-        return self._api.expected_warning_level
+            return self._api.api.current_warning_level
+        return self._api.api.expected_warning_level
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the DWD-Weather-Warnings."""
         data = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_REGION_NAME: self._api.warncell_name,
-            ATTR_REGION_ID: self._api.warncell_id,
+            ATTR_REGION_NAME: self._api.api.warncell_name,
+            ATTR_REGION_ID: self._api.api.warncell_id,
+            ATTR_LAST_UPDATE: self._api.api.last_update,
         }
 
-        if self._api.last_update is not None:
-            data[ATTR_LAST_UPDATE] = dt_util.as_local(self._api.last_update)
-        else:
-            data[ATTR_LAST_UPDATE] = None
-
         if self._sensor_type == CURRENT_WARNING_SENSOR:
-            searched_warnings = self._api.current_warnings
+            searched_warnings = self._api.api.current_warnings
         else:
-            searched_warnings = self._api.expected_warnings
+            searched_warnings = self._api.api.expected_warnings
 
         data[ATTR_WARNING_COUNT] = len(searched_warnings)
 
@@ -151,18 +143,8 @@ class DwdWeatherWarningsSensor(Entity):
             data[f"warning_{i}_headline"] = warning[API_ATTR_WARNING_HEADLINE]
             data[f"warning_{i}_description"] = warning[API_ATTR_WARNING_DESCRIPTION]
             data[f"warning_{i}_instruction"] = warning[API_ATTR_WARNING_INSTRUCTION]
-            if warning[API_ATTR_WARNING_START] is not None:
-                data[f"warning_{i}_start"] = dt_util.as_local(
-                    warning[API_ATTR_WARNING_START]
-                )
-            else:
-                data[f"warning_{i}_start"] = None
-            if warning[API_ATTR_WARNING_END] is not None:
-                data[f"warning_{i}_end"] = dt_util.as_local(
-                    warning[API_ATTR_WARNING_END]
-                )
-            else:
-                data[f"warning_{i}_end"] = None
+            data[f"warning_{i}_start"] = warning[API_ATTR_WARNING_START]
+            data[f"warning_{i}_end"] = warning[API_ATTR_WARNING_END]
             data[f"warning_{i}_parameters"] = warning[API_ATTR_WARNING_PARAMETERS]
             data[f"warning_{i}_color"] = warning[API_ATTR_WARNING_COLOR]
 
@@ -177,16 +159,28 @@ class DwdWeatherWarningsSensor(Entity):
     @property
     def available(self):
         """Could the device be accessed during the last update call."""
-        return self._api.data_valid
+        return self._api.api.data_valid
+
+    def update(self):
+        """Get the latest data from the DWD-Weather-Warnings API."""
+        _LOGGER.debug(
+            "Update requested for %s (%s) by %s",
+            self._api.api.warncell_name,
+            self._api.api.warncell_id,
+            self._sensor_type,
+        )
+        self._api.update()
+
+
+class WrappedDwDWWAPI:
+    """Wrapper for the DWD-Weather-Warnings api."""
+
+    def __init__(self, api):
+        """Initialize a DWD-Weather-Warnings wrapper."""
+        self.api = api
 
     @Throttle(SCAN_INTERVAL)
     def update(self):
         """Get the latest data from the DWD-Weather-Warnings API."""
-        if self._call_update:
-            self._api.update()
-            _LOGGER.debug(
-                "Update for %s (%s) by %s",
-                self._api.warncell_name,
-                self._api.warncell_id,
-                self._sensor_type,
-            )
+        self.api.update()
+        _LOGGER.debug("Update performed")
