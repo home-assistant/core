@@ -19,7 +19,12 @@ def initialise_templates(hass, templates, attribute_templates=None):
 
 
 def extract_entities(
-    device_name, device_type, manual_entity_ids, templates, attribute_templates=None
+    hass,
+    device_name,
+    device_type,
+    manual_entity_ids,
+    templates,
+    attribute_templates=None,
 ):
     """Extract entity ids from templates and attribute templates."""
     if attribute_templates is None:
@@ -33,6 +38,7 @@ def extract_entities(
             if template is None:
                 continue
 
+            template.hass = hass
             template_entity_ids = template.extract_entities()
 
             if template_entity_ids != MATCH_ALL:
