@@ -375,7 +375,6 @@ class StorageCollectionWebsocket:
                 {
                     **self.create_schema,
                     vol.Required("type"): f"{self.api_prefix}/create",
-                    vol.Optional(self.item_id_key): str,
                 }
             ),
         )

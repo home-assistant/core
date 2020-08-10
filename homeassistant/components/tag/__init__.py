@@ -29,6 +29,7 @@ TAGS = "tags"
 
 CREATE_FIELDS = {
     vol.Required(CONF_ID): cv.string,
+    vol.Optional(TAG_ID): cv.string,
     vol.Optional(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional("description"): cv.string,
     vol.Optional(LAST_SCANNED): cv.datetime,
