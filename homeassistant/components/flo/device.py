@@ -157,9 +157,9 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     def has_alerts(self) -> bool:
         """Return True if any alert counts are greater than zero."""
         return bool(
-            self._pending_info_alerts_count
-            or self._pending_warning_alerts_count
-            or self._pending_warning_alerts_count
+            self.pending_info_alerts_count
+            or self.pending_warning_alerts_count
+            or self.pending_warning_alerts_count
         )
 
     async def _update_device(self, *_) -> None:
