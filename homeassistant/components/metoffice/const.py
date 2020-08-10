@@ -31,9 +31,9 @@ METOFFICE_MONITORED_CONDITIONS = "metoffice_monitored_conditions"
 METOFFICE_NAME = "metoffice_name"
 
 MODE_3HOURLY = "3hourly"
-MODE_3HOURLY_DISPLAY = "3-Hourly"
+MODE_3HOURLY_LABEL = "3-Hourly"
 MODE_DAILY = "daily"
-MODE_DAILY_DISPLAY = "Daily"
+MODE_DAILY_LABEL = "Daily"
 
 CONDITION_CLASSES = {
     ATTR_CONDITION_CLOUDY: ["7", "8"],
