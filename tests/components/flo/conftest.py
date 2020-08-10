@@ -25,9 +25,7 @@ def config_entry(hass):
 @pytest.fixture
 def aioclient_mock_fixture(aioclient_mock):
     """Fixture to provide a aioclient mocker."""
-
     now = round(time.time())
-
     # Mocks the login response for flo.
     aioclient_mock.post(
         "https://api.meetflo.com/api/v1/users/auth",
