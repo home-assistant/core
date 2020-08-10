@@ -100,15 +100,32 @@ def setup_forwarded(app, trusted_proxies):
         forwarded_proto = list(reversed(request.headers.getall(X_FORWARDED_PROTO, [])))
         if forwarded_proto:
             if len(forwarded_proto) > 1:
-                _LOGGER.error("Too many headers for X-Forward-For: %s", forwarded_proto)
+                _LOGGER.error(
+                    "Too many headers for X-Forward-Proto: %s", forwarded_proto
+                )
                 raise HTTPBadRequest
-            forwarded_proto = forwarded_proto[0].split(",")
-            forwarded_proto = [p.strip() for p in forwarded_proto]
+
+            forwarded_proto = [
+                proto
+                for proto in (p.strip() for p in forwarded_proto[0].split(","))
+                if proto
+            ]
+
+            # The X-Forwarded-Proto contains either one element, or the equals number
+            # of elements as X-Forwarded-For
+            if len(forwarded_proto) != 1 and len(forwarded_proto) != len(forwarded_for):
+                _LOGGER.error(
+                    "Incorrect number of elements in X-Forward-Proto. Expected 1 or %d, got %d: %s",
+                    len(forwarded_for),
+                    len(forwarded_proto),
+                    forwarded_proto,
+                )
+                raise HTTPBadRequest
 
             # Ideally this should take the scheme corresponding to the entry
             # in X-Forwarded-For that was chosen, but some proxies only retain
             # one element. In that case, use what we have.
-            if index >= len(forwarded_proto):
+            if index != -1 and index >= len(forwarded_proto):
                 index = -1
 
             overrides["scheme"] = forwarded_proto[index]
