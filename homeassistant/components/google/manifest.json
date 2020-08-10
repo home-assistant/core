@@ -1,11 +1,13 @@
 {
   "domain": "google",
-  "name": "Google Calendars",
+  "name": "Google",
   "documentation": "https://www.home-assistant.io/integrations/google",
   "requirements": [
-    "google-api-python-client==1.6.4",
     "httplib2==0.10.3",
-    "oauth2client==4.0.0"
+    "oauth2client==4.0.0",
+    "google-api-python-client==1.9.3",
+    "google-auth-httplib2==0.0.3",
+    "google-auth-oauthlib==0.4.1"
   ],
-  "codeowners": []
+  "codeowners": ["@MartinHjelmare", "@wernerhp"]
 }
