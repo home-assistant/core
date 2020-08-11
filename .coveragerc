@@ -394,7 +394,18 @@ omit =
     homeassistant/components/ihc/*
     homeassistant/components/imap/sensor.py
     homeassistant/components/imap_email_content/sensor.py
-    homeassistant/components/insteon/*
+    homeassistant/components/insteon/__init__.py
+    homeassistant/components/insteon/binary_sensor.py
+    homeassistant/components/insteon/climate.py
+    homeassistant/components/insteon/const.py
+    homeassistant/components/insteon/cover.py
+    homeassistant/components/insteon/fan.py
+    homeassistant/components/insteon/insteon_entity.py
+    homeassistant/components/insteon/ipdb.py
+    homeassistant/components/insteon/light.py
+    homeassistant/components/insteon/schemas.py
+    homeassistant/components/insteon/switch.py
+    homeassistant/components/insteon/utils.py
     homeassistant/components/incomfort/*
     homeassistant/components/intesishome/*
     homeassistant/components/ios/*
