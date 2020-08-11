@@ -29,7 +29,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.singleton import singleton
 from homeassistant.loader import async_get_homekit, async_get_zeroconf
-from homeassistant.util.zc import install_multiple_zeroconf_warning
 
 from .usage import install_multiple_zeroconf_warning
 
