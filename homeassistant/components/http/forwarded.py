@@ -44,7 +44,7 @@ def setup_forwarded(app, trusted_proxies):
 
     Additionally:
       - If no X-Forwarded-For header is found, the processing of all headers is skipped.
-      - Log a warning when untrusted connected peer provices X-Forwarded-For headers.
+      - Log a warning when untrusted connected peer provides X-Forwarded-For headers.
       - If multiple instances of X-Forwarded-For, X-Forwarded-Proto or
         X-Forwarded-Host are found, an HTTP 400 status code is thrown.
       - If malformed or invalid (IP) data in X-Forwarded-For header is found,
@@ -134,7 +134,7 @@ def setup_forwarded(app, trusted_proxies):
 
             # The X-Forwarded-Proto contains either one element, or the equals number
             # of elements as X-Forwarded-For
-            if len(forwarded_proto) != 1 and len(forwarded_proto) != len(forwarded_for):
+            if len(forwarded_proto) not in (1, len(forwarded_for)):
                 _LOGGER.error(
                     "Incorrect number of elements in X-Forward-Proto. Expected 1 or %d, got %d: %s",
                     len(forwarded_for),
