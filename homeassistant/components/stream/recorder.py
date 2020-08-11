@@ -17,14 +17,14 @@ def async_setup_recorder(hass):
 
 def recorder_save_worker(file_out: str, segments: List[Segment]):
     """Handle saving stream."""
-    first_pts = None
+    first_pts = segments[0].start_pts[0]
     output = av.open(file_out, "w")
     output_v = None
 
     for segment in segments:
         # Seek to beginning and open segment
         segment.segment.seek(0)
-        source = av.open(segment.segment, "r", format="mpegts")
+        source = av.open(segment.segment, "r", format="mp4")
         source_v = source.streams.video[0]
 
         # Add output streams
@@ -36,9 +36,9 @@ def recorder_save_worker(file_out: str, segments: List[Segment]):
         # Remux video
         for packet in source.demux(source_v):
             if packet is not None and packet.dts is not None:
-                if first_pts is None:
-                    first_pts = packet.pts
-
+                if packet.pts < segment.start_pts[0]:
+                    packet.pts += segment.start_pts[0]
+                    packet.dts += segment.start_pts[0]
                 packet.pts -= first_pts
                 packet.dts -= first_pts
                 packet.stream = output_v
@@ -67,7 +67,7 @@ class RecorderOutput(StreamOutput):
     @property
     def format(self) -> str:
         """Return container format."""
-        return "mpegts"
+        return "mp4"
 
     @property
     def audio_codec(self) -> str:
@@ -75,9 +75,9 @@ class RecorderOutput(StreamOutput):
         return "aac"
 
     @property
-    def video_codec(self) -> str:
-        """Return desired video codec."""
-        return "h264"
+    def video_codecs(self) -> tuple:
+        """Return desired video codecs."""
+        return {"hevc", "h264"}
 
     def prepend(self, segments: List[Segment]) -> None:
         """Prepend segments to existing list."""
