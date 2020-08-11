@@ -666,6 +666,9 @@ class MQTT:
         else:
             self._mqttc = mqtt.Client(client_id, protocol=proto)
 
+        # Enable logging
+        self._mqttc.enable_logger()
+
         username = self.conf.get(CONF_USERNAME)
         password = self.conf.get(CONF_PASSWORD)
         if username is not None:
