@@ -137,7 +137,7 @@ def setup(hass, config):
         ipv6=zc_config.get(CONF_IPV6, DEFAULT_IPV6),
     )
 
-    install_multiple_zeroconf_warning()
+    install_multiple_zeroconf_warning(zeroconf)
 
     # Get instance UUID
     uuid = asyncio.run_coroutine_threadsafe(
