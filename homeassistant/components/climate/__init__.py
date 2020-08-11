@@ -217,7 +217,7 @@ class ClimateEntity(Entity):
 
         if supported_features & SUPPORT_SWING_MODE:
             data[ATTR_SWING_MODES] = self.swing_modes
-            
+
         if supported_features & SUPPORT_OUTSIDE_TEMPERATURE:
             data[ATTR_OUTSIDE_TEMPERATURE] = self.outside_temperature
 
@@ -278,7 +278,7 @@ class ClimateEntity(Entity):
 
         if supported_features & SUPPORT_AUX_HEAT:
             data[ATTR_AUX_HEAT] = STATE_ON if self.is_aux_heat else STATE_OFF
-            
+
         if supported_features & SUPPORT_OUTSIDE_TEMPERATURE:
             data[ATTR_OUTSIDE_TEMPERATURE] = self.outside_temperature
 
@@ -361,7 +361,7 @@ class ClimateEntity(Entity):
         Requires SUPPORT_OUTSIDE_TEMPERATURE.
         """
         raise NotImplementedError
-    
+
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp.
@@ -435,7 +435,6 @@ class ClimateEntity(Entity):
     async def async_set_outside_temperature(self, outside_temperature: float) -> None:
         """Set new outside temperature."""
         await self.hass.async_add_executor_job(self.set_outside_temperature, outside_temperature)
-
 
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
