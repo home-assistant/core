@@ -1,5 +1,4 @@
 """Test Zeroconf component setup process."""
-import pytest
 from zeroconf import InterfaceChoice, IPVersion, ServiceInfo, ServiceStateChange
 
 from homeassistant.components import zeroconf
@@ -8,7 +7,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT
 from homeassistant.generated import zeroconf as zc_gen
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, patch
+from tests.async_mock import patch
 
 NON_UTF8_VALUE = b"ABCDEF\x8a"
 NON_ASCII_KEY = b"non-ascii-key\x8a"
@@ -20,13 +19,6 @@ PROPERTIES = {
 
 HOMEKIT_STATUS_UNPAIRED = b"1"
 HOMEKIT_STATUS_PAIRED = b"0"
-
-
-@pytest.fixture
-def mock_zeroconf():
-    """Mock zeroconf."""
-    with patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc:
-        yield mock_zc.return_value
 
 
 def service_update_mock(zeroconf, services, handlers):
@@ -337,54 +329,3 @@ async def test_get_instance(hass, mock_zeroconf):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     assert len(mock_zeroconf.ha_close.mock_calls) == 1
-
-
-async def test_multiple_zeroconf_instances(hass, mock_zeroconf, caplog):
-    """Test creating multiple zeroconf throws without an integration."""
-
-    assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-    await hass.async_block_till_done()
-
-    zeroconf_instance = await zeroconf.async_get_instance(hass)
-
-    new_zeroconf_instance = zeroconf.Zeroconf()
-    assert new_zeroconf_instance == zeroconf_instance
-
-    assert "Zeroconf" in caplog.text
-
-
-async def test_multiple_zeroconf_instances_gives_shared(hass, mock_zeroconf, caplog):
-    """Test creating multiple zeroconf gives the shared instance to an integration."""
-
-    assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-    await hass.async_block_till_done()
-
-    zeroconf_instance = await zeroconf.async_get_instance(hass)
-
-    correct_frame = Mock(
-        filename="/config/custom_components/burncpu/light.py",
-        lineno="23",
-        line="self.light.is_on",
-    )
-    with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/dev/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
-            ),
-            correct_frame,
-            Mock(
-                filename="/home/dev/homeassistant/components/zeroconf/usage.py",
-                lineno="23",
-                line="self.light.is_on",
-            ),
-            Mock(filename="/home/dev/mdns/lights.py", lineno="2", line="something()",),
-        ],
-    ):
-        assert zeroconf.Zeroconf() == zeroconf_instance
-
-    assert "custom_components/burncpu/light.py" in caplog.text
-    assert "23" in caplog.text
-    assert "self.light.is_on" in caplog.text
