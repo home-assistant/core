@@ -104,6 +104,7 @@ homeassistant/components/discogs/* @thibmaek
 homeassistant/components/doorbird/* @oblogic7 @bdraco
 homeassistant/components/dsmr_reader/* @depl0y
 homeassistant/components/dunehd/* @bieniu
+homeassistant/components/dwd_weather_warnings/* @runningman84 @stephan192 @Hummel95
 homeassistant/components/dweet/* @fabaff
 homeassistant/components/dynalite/* @ziv1234
 homeassistant/components/dyson/* @etheralm
