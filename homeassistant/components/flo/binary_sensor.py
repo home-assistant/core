@@ -18,7 +18,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Flo sensors from config entry."""
     devices: List[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN]["devices"]
     entities = [FloPendingAlertsBinarySensor(device) for device in devices]
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class FloPendingAlertsBinarySensor(FloEntity, BinarySensorEntity):
