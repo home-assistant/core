@@ -357,6 +357,7 @@ class ClimateEntity(Entity):
     @property
     def outside_temperature(self) -> Optional[float]:
         """Return the outside temperature we try to display.
+
         Requires SUPPORT_OUTSIDE_TEMPERATURE.
         """
         raise NotImplementedError
