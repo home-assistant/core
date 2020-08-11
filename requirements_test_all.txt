@@ -848,7 +848,7 @@ pywebpush==1.9.2
 pyzerproc==0.2.5
 
 # homeassistant.components.rachio
-rachiopy==0.1.3
+rachiopy==0.1.4
 
 # homeassistant.components.rainmachine
 regenmaschine==2.1.0
