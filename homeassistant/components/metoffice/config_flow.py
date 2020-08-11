@@ -40,7 +40,7 @@ class MetOfficeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             await self.async_set_unique_id(
-                f"{user_input[CONF_LATITUDE]}_{user_input[CONF_LONGITUDE]}_3_hourly"
+                f"{user_input[CONF_LATITUDE]}_{user_input[CONF_LONGITUDE]}"
             )
             self._abort_if_unique_id_configured()
 

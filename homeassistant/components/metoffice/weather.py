@@ -22,7 +22,6 @@ from .const import (
     METOFFICE_COORDINATOR,
     METOFFICE_DATA,
     METOFFICE_NAME,
-    MODE_3HOURLY,
     MODE_3HOURLY_LABEL,
     MODE_DAILY,
     MODE_DAILY_LABEL,
@@ -55,7 +54,9 @@ class MetOfficeWeather(WeatherEntity):
         self._coordinator = hass_data[METOFFICE_COORDINATOR]
 
         self._name = f"{DEFAULT_NAME} {hass_data[METOFFICE_NAME]} {MODE_3HOURLY_LABEL if use_3hourly else MODE_DAILY_LABEL}"
-        self._unique_id = f"{self._data.latitude}_{self._data.longitude}_{MODE_3HOURLY if use_3hourly else MODE_DAILY}"
+        self._unique_id = f"{self._data.latitude}_{self._data.longitude}"
+        if not use_3hourly:
+            self._unique_id = f"{self._unique_id}_{MODE_DAILY}"
 
         self.use_3hourly = use_3hourly
         self.metoffice_now = None

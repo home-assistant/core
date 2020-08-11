@@ -74,7 +74,7 @@ async def test_form_already_configured(hass, requests_mock):
 
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id=f"{TEST_LATITUDE_WAVERTREE}_{TEST_LONGITUDE_WAVERTREE}_3_hourly",
+        unique_id=f"{TEST_LATITUDE_WAVERTREE}_{TEST_LONGITUDE_WAVERTREE}",
         data=METOFFICE_CONFIG_WAVERTREE,
     ).add_to_hass(hass)
 
