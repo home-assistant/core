@@ -142,8 +142,8 @@ class PingData:
             stderr=asyncio.subprocess.PIPE,
         )
         try:
-            out_data, out_error = await pinger.communicate(
-                timeout=self._count + PING_TIMEOUT
+            out_data, out_error = await asyncio.wait_for(
+                pinger.communicate(), self._count + PING_TIMEOUT
             )
 
             if out_data:
