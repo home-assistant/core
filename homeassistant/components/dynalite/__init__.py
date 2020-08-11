@@ -207,8 +207,7 @@ async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
         data = service_call.data
         host = data.get(ATTR_HOST, "")
         bridges = []
-        for entry_id in hass.data[DOMAIN]:
-            cur_bridge = hass.data[DOMAIN][entry_id]
+        for cur_bridge in hass.data[DOMAIN].values():
             if not host or cur_bridge.host == host:
                 bridges.append(cur_bridge)
         LOGGER.debug("Selected bridged for service call: %s", bridges)
