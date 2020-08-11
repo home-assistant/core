@@ -210,14 +210,16 @@ class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     if import_config[key] != entry.data[key]:
                         updated_options.update({key: import_config[key]})
 
-                if updated_data or updated_options:
-                    new_data = entry.data.copy()
-                    new_data.update(updated_data)
-                    new_options = entry.options.copy()
-                    new_options.update(updated_options)
-                    self.hass.config_entries.async_update_entry(
-                        entry=entry, data=new_data, options=new_options
-                    )
+                params = {}
+                if updated_data:
+                    params["data"] = entry.data.copy()
+                    params["data"].update(updated_data)
+                if updated_options:
+                    params["options"] = entry.options.copy()
+                    params["options"].update(updated_options)
+
+                if params:
+                    self.hass.config_entries.async_update_entry(entry=entry, **params)
                     return self.async_abort(reason="updated_entry")
 
                 return self.async_abort(reason="already_configured_account")
