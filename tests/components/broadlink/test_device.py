@@ -3,6 +3,7 @@ import broadlink.exceptions as blke
 
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
+    ENTRY_STATE_NOT_LOADED,
     ENTRY_STATE_SETUP_ERROR,
     ENTRY_STATE_SETUP_RETRY,
 )
@@ -103,3 +104,58 @@ async def test_device_setup_update_failed(hass):
         await hass.config_entries.async_setup(mock_entry.entry_id)
 
     assert mock_entry.state == ENTRY_STATE_SETUP_RETRY
+
+
+async def test_device_setup_get_fwversion_broadlink_exception(hass):
+    """Test we load the device even if we cannot read the firmware version."""
+    device = pick_device(1)
+    mock_api = device.get_mock_api()
+    mock_api.get_fwversion.side_effect = blke.BroadlinkException()
+    mock_entry = device.get_mock_entry()
+    mock_entry.add_to_hass(hass)
+
+    with patch("broadlink.gendevice", return_value=mock_api), patch.object(
+        hass.config_entries, "async_forward_entry_setup"
+    ):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+
+    assert mock_entry.state == ENTRY_STATE_LOADED
+
+
+async def test_device_setup_get_fwversion_os_error(hass):
+    """Test we load the device even if we cannot read the firmware version."""
+    device = pick_device(1)
+    mock_api = device.get_mock_api()
+    mock_api.get_fwversion.side_effect = OSError()
+    mock_entry = device.get_mock_entry()
+    mock_entry.add_to_hass(hass)
+
+    with patch("broadlink.gendevice", return_value=mock_api), patch.object(
+        hass.config_entries, "async_forward_entry_setup"
+    ):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+
+    assert mock_entry.state == ENTRY_STATE_LOADED
+
+
+async def test_device_unload_works(hass):
+    """Test we unload the device."""
+    device = pick_device(1)
+    mock_api = device.get_mock_api()
+    mock_entry = device.get_mock_entry()
+    mock_entry.add_to_hass(hass)
+
+    with patch("broadlink.gendevice", return_value=mock_api), patch.object(
+        hass.config_entries, "async_forward_entry_setup"
+    ):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+
+    with patch.object(
+        hass.config_entries, "async_forward_entry_unload", return_value=True
+    ) as mock_forward:
+        await hass.config_entries.async_unload(mock_entry.entry_id)
+
+    assert mock_entry.state == ENTRY_STATE_NOT_LOADED
+    assert len(mock_forward.mock_calls) == 3
+    forward_entries = {c[1][1] for c in mock_forward.mock_calls}
+    assert forward_entries == {"remote", "sensor", "switch"}
