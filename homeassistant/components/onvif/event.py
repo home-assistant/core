@@ -108,7 +108,9 @@ class EventManager:
             return
 
         termination_time = (
-            (dt_util.utcnow() + dt.timedelta(days=1)).replace(microsecond=0).isoformat()
+            (dt_util.utcnow() + dt.timedelta(days=1))
+            .isoformat(timespec="seconds")
+            .replace("+00:00", "Z")
         )
         await self._subscription.Renew(termination_time)
 
