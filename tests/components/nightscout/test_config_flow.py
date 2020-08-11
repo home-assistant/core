@@ -53,6 +53,24 @@ async def test_user_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
+async def test_user_form_unexpected_exception(hass):
+    """Test we handle unexpected exception."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
+        side_effect=Exception(),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_URL: "https://some.url:1234"},
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
 async def test_user_form_duplicate(hass):
     """Test duplicate entries."""
     with _patch_glucose_readings(), _patch_server_status():
