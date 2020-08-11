@@ -337,3 +337,13 @@ async def test_get_instance(hass, mock_zeroconf):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     assert len(mock_zeroconf.ha_close.mock_calls) == 1
+
+
+async def test_multiple_zeroconf_instances(hass, mock_zeroconf, caplog):
+    """Test creating multiple zeroconf throws."""
+
+    assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    with pytest.raises(RuntimeError):
+        zeroconf.Zeroconf()
