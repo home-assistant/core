@@ -208,8 +208,6 @@ def setup(hass, config):
         nonlocal zeroconf_types
         nonlocal homekit_models
 
-        raise ValueError
-
         if state_change != ServiceStateChange.Added:
             return
 
