@@ -28,7 +28,7 @@ from .auth import setup_auth
 from .ban import setup_bans
 from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER  # noqa: F401
 from .cors import setup_cors
-from .forwarded import setup_forwarded
+from .forwarded import async_setup_forwarded
 from .request_context import setup_request_context
 from .static import CACHE_HEADERS, CachingStaticResource
 from .view import HomeAssistantView  # noqa: F401
@@ -300,7 +300,7 @@ class HomeAssistantHTTP:
         # Only register middleware if `use_x_forwarded_for` is enabled
         # and trusted proxies are provided
         if use_x_forwarded_for and trusted_proxies:
-            setup_forwarded(app, trusted_proxies)
+            async_setup_forwarded(app, trusted_proxies)
 
         setup_request_context(app, current_request)
 

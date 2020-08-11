@@ -9,7 +9,7 @@ import pytest
 from homeassistant.auth.providers import trusted_networks
 from homeassistant.components.http.auth import async_sign_path, setup_auth
 from homeassistant.components.http.const import KEY_AUTHENTICATED
-from homeassistant.components.http.forwarded import setup_forwarded
+from homeassistant.components.http.forwarded import async_setup_forwarded
 from homeassistant.setup import async_setup_component
 
 from . import HTTP_HEADER_HA_AUTH, mock_real_ip
@@ -54,7 +54,7 @@ def app(hass):
     app = web.Application()
     app["hass"] = hass
     app.router.add_get("/", mock_handler)
-    setup_forwarded(app, [])
+    async_setup_forwarded(app, [])
     return app
 
 

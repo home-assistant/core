@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def setup_forwarded(app, trusted_proxies):
+def async_setup_forwarded(app, trusted_proxies):
     """Create forwarded middleware for the app.
 
     Process IP addresses, proto and host information in the forwarded for headers.
