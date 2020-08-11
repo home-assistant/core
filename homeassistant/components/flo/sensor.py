@@ -35,7 +35,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities.extend([FloCurrentFlowRateSensor(device) for device in devices])
     entities.extend([FloTemperatureSensor(device) for device in devices])
     entities.extend([FloPressureSensor(device) for device in devices])
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class FloDailyUsageSensor(FloEntity):
