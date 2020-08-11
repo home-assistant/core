@@ -11,7 +11,7 @@
                     "app_id": "App ID",
                     "app_secret": "\u5bc6\u78bc"
                 },
-                "description": "Application ID and secret code \u7531 <a href=\"https://my.starline.ru/developer\" target=\"_blank\">StarLine \u958b\u767c\u8005\u5e33\u865f</a> \u6240\u53d6\u5f97\u7684\u61c9\u7528\u7a0b\u5f0f ID \u8207\u5bc6\u78bc",
+                "description": "\u7531 [StarLine \u958b\u767c\u8005\u5e33\u865f] (https://my.starline.ru/developer) \u6240\u53d6\u5f97\u4e4b\u61c9\u7528\u7a0b\u5f0f ID \u8207\u5bc6\u78bc",
                 "title": "\u61c9\u7528\u6191\u8b49"
             },
             "auth_captcha": {

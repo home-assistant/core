@@ -10,19 +10,17 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_API_KEY, CONF_HOST
+from homeassistant.const import CONF_API_KEY, CONF_CLIENT_ID, CONF_HOST
 import homeassistant.helpers.config_validation as cv
 
 SCAN_INTERVAL = timedelta(seconds=120)
-
-CLIENT_ID = "client_id"
 
 GRANT_TYPE = "client_credentials"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Required(CLIENT_ID): cv.string,
+        vol.Required(CONF_CLIENT_ID): cv.string,
         vol.Required(CONF_API_KEY): cv.string,
     }
 )
@@ -37,7 +35,7 @@ def get_scanner(hass, config):
         "server": config[DOMAIN][CONF_HOST],
         "grant_type": GRANT_TYPE,
         "secret": config[DOMAIN][CONF_API_KEY],
-        "client": config[DOMAIN][CLIENT_ID],
+        "client": config[DOMAIN][CONF_CLIENT_ID],
     }
     cppm = ClearPass(data)
     if cppm.access_token is None:

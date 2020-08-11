@@ -1,15 +1,27 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Dit item is al ingesteld.",
+            "already_configured_device": "Dit apparaat is al geconfigureerd",
             "updated_entry": "Dit item is al ingesteld, maar de naam en/of opties die zijn gedefinieerd in de configuratie komen niet overeen met de eerder ge\u00efmporteerde configuratie, dus het configuratie-item is dienovereenkomstig bijgewerkt."
         },
         "error": {
-            "cant_connect": "Kan geen verbinding maken met het apparaat. [Bekijk de documenten] (https://www.home-assistant.io/integrations/vizio/) en controleer of:\n- Het apparaat is ingeschakeld\n- Het apparaat is aangesloten op het netwerk\n- De waarden die u ingevuld correct zijn\nvoordat u weer probeert om opnieuw in te dienen.",
+            "cannot_connect": "Verbinding mislukt",
             "host_exists": "Vizio apparaat met opgegeven host al geconfigureerd.",
             "name_exists": "Vizio apparaat met opgegeven naam al geconfigureerd."
         },
         "step": {
+            "pair_tv": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "title": "Voltooi het koppelingsproces"
+            },
+            "pairing_complete": {
+                "title": "Koppelen voltooid"
+            },
+            "pairing_complete_import": {
+                "title": "Koppelen voltooid"
+            },
             "user": {
                 "data": {
                     "access_token": "Toegangstoken",
@@ -17,6 +29,7 @@
                     "host": "<Host/IP>:<Port>",
                     "name": "Naam"
                 },
+                "description": "Een toegangstoken is alleen nodig voor tv's. Als u een TV configureert en nog geen toegangstoken heeft, laat dit dan leeg en doorloop het koppelingsproces.",
                 "title": "Vizio SmartCast Client instellen"
             }
         }
@@ -25,8 +38,11 @@
         "step": {
             "init": {
                 "data": {
+                    "apps_to_include_or_exclude": "Apps om op te nemen of uit te sluiten",
+                    "include_or_exclude": "Apps opnemen of uitsluiten?",
                     "volume_step": "Volume Stapgrootte"
                 },
+                "description": "Als je een Smart TV hebt, kun je optioneel je bronnenlijst filteren door te kiezen welke apps je in je bronnenlijst wilt opnemen of uitsluiten.",
                 "title": "Update Vizo SmartCast Opties"
             }
         }

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Det h\u00e4r kontot har redan konfigurerats."
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta, f\u00f6rs\u00f6k igen",
+            "invalid_auth": "Ogiltig autentisering",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "Klient ID",
+                    "client_secret": "Klient Nyckel",
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "description": "F\u00f6r att f\u00e5 tillg\u00e5ng till Flume Personal API m\u00e5ste du beg\u00e4ra ett 'klient-ID' och 'klienthemlighet' p\u00e5 https://portal.flumetech.com/settings#token",
+                "title": "Anslut till ditt Flume-konto"
+            }
+        }
+    }
+}

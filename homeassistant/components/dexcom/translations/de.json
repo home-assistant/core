@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_account": "Account ist bereits konfiguriert"
+        },
+        "error": {
+            "session_error": "Verbindung nicht m\u00f6glich",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "unit_of_measurement": "Ma\u00dfeinheit"
+                }
+            }
+        }
+    }
+}

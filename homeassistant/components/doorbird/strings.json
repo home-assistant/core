@@ -2,7 +2,9 @@
   "options": {
     "step": {
       "init": {
-        "data": { "events": "Comma separated list of events." },
+        "data": {
+          "events": "Comma separated list of events."
+        },
         "description": "Add an comma separated event name for each event you wish to track. After entering them here, use the DoorBird app to assign them to a specific event. See the documentation at https://www.home-assistant.io/integrations/doorbird/#events. Example: somebody_pressed_the_button, motion"
       }
     }
@@ -12,10 +14,10 @@
       "user": {
         "title": "Connect to the DoorBird",
         "data": {
-          "password": "Password",
-          "host": "Host (IP Address)",
+          "password": "[%key:common::config_flow::data::password%]",
+          "host": "[%key:common::config_flow::data::host%]",
           "name": "Device Name",
-          "username": "Username"
+          "username": "[%key:common::config_flow::data::username%]"
         }
       }
     },
@@ -26,9 +28,9 @@
     },
     "flow_title": "DoorBird {name} ({host})",
     "error": {
-      "invalid_auth": "Invalid authentication",
-      "unknown": "Unexpected error",
-      "cannot_connect": "Failed to connect, please try again"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   }
 }

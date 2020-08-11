@@ -67,6 +67,9 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
             except SmartHomeError:
                 continue
 
+        if not entities:
+            return
+
         await google_config.async_report_state_all({"devices": {"states": entities}})
 
     async_call_later(hass, INITIAL_REPORT_DELAY, inital_report)

@@ -1,7 +1,6 @@
 """Test deCONZ gateway."""
 from copy import deepcopy
 
-from asynctest import Mock, patch
 import pydeconz
 import pytest
 
@@ -9,6 +8,7 @@ from homeassistant import config_entries
 from homeassistant.components import deconz, ssdp
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 API_KEY = "1234567890ABCDEF"
@@ -135,19 +135,23 @@ async def test_update_address(hass):
     gateway = await setup_deconz_integration(hass)
     assert gateway.api.host == "1.2.3.4"
 
-    await hass.config_entries.flow.async_init(
-        deconz.config_flow.DOMAIN,
-        data={
-            ssdp.ATTR_SSDP_LOCATION: "http://2.3.4.5:80/",
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: deconz.config_flow.DECONZ_MANUFACTURERURL,
-            ssdp.ATTR_UPNP_SERIAL: BRIDGEID,
-            ssdp.ATTR_UPNP_UDN: "uuid:456DEF",
-        },
-        context={"source": "ssdp"},
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.deconz.async_setup_entry", return_value=True,
+    ) as mock_setup_entry:
+        await hass.config_entries.flow.async_init(
+            deconz.config_flow.DOMAIN,
+            data={
+                ssdp.ATTR_SSDP_LOCATION: "http://2.3.4.5:80/",
+                ssdp.ATTR_UPNP_MANUFACTURER_URL: deconz.config_flow.DECONZ_MANUFACTURERURL,
+                ssdp.ATTR_UPNP_SERIAL: BRIDGEID,
+                ssdp.ATTR_UPNP_UDN: "uuid:456DEF",
+            },
+            context={"source": "ssdp"},
+        )
+        await hass.async_block_till_done()
 
     assert gateway.api.host == "2.3.4.5"
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_reset_after_successful_setup(hass):

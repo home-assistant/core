@@ -24,7 +24,12 @@ command:
       description: >-
         Endpoint of the command. Known valid endpoints are listed in
         https://github.com/TheRealLink/pylgtv/blob/master/pylgtv/endpoints.py
-      example: "media.controls/rewind"
+      example: "system.launcher/open"
+    payload:
+      description: >-
+        An optional payload to provide to the endpoint in the format of key value pair(s).
+      example: >-
+        target: https://www.google.com
 
 select_sound_output:
   description: "Send the TV the command to change sound output."

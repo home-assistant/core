@@ -5,8 +5,7 @@
         },
         "step": {
             "confirm": {
-                "description": "\u662f\u5426\u8981\u8a2d\u5b9a\u624b\u6a5f App \u5143\u4ef6\uff1f",
-                "title": "\u624b\u6a5f App"
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a\u624b\u6a5f App \u5143\u4ef6\uff1f"
             }
         }
     }

@@ -32,7 +32,7 @@ async def test_lock_device_registry(hass):
     assert reg_device.model == "AUG-MD01"
     assert reg_device.sw_version == "undefined-4.3.0-1.8.14"
     assert reg_device.name == "online_with_doorsense Name"
-    assert reg_device.manufacturer == "August"
+    assert reg_device.manufacturer == "August Home Inc."
 
 
 async def test_lock_changed_by(hass):
@@ -71,6 +71,7 @@ async def test_one_lock_operation(hass):
     assert await hass.services.async_call(
         LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True
     )
+    await hass.async_block_till_done()
 
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
     assert lock_online_with_doorsense_name.state == STATE_UNLOCKED
@@ -84,6 +85,7 @@ async def test_one_lock_operation(hass):
     assert await hass.services.async_call(
         LOCK_DOMAIN, SERVICE_LOCK, data, blocking=True
     )
+    await hass.async_block_till_done()
 
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
     assert lock_online_with_doorsense_name.state == STATE_LOCKED

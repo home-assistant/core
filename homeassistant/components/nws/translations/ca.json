@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Clau API (correu electr\u00f2nic)",
+                    "api_key": "Clau API",
                     "latitude": "Latitud",
                     "longitude": "Longitud",
                     "station": "Codi d'estaci\u00f3 METAR"

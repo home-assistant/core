@@ -1,5 +1,4 @@
 """Define tests for the PlayStation 4 config flow."""
-from asynctest import patch
 from pyps4_2ndscreen.errors import CredentialTimeout
 import pytest
 
@@ -21,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.util import location
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 MOCK_TITLE = "PlayStation 4"

@@ -57,6 +57,7 @@ class TestTemplateLock:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -94,6 +95,7 @@ class TestTemplateLock:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -122,6 +124,7 @@ class TestTemplateLock:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -150,6 +153,7 @@ class TestTemplateLock:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -178,6 +182,7 @@ class TestTemplateLock:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -192,6 +197,7 @@ class TestTemplateLock:
                 {"lock": {"platform": "template", "value_template": "Invalid"}},
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -219,6 +225,7 @@ class TestTemplateLock:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -246,6 +253,7 @@ class TestTemplateLock:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -281,6 +289,7 @@ class TestTemplateLock:
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -315,6 +324,7 @@ class TestTemplateLock:
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -352,6 +362,7 @@ async def test_available_template_with_entities(hass):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -389,8 +400,54 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
     assert hass.states.get("lock.template_lock").state != STATE_UNAVAILABLE
     assert ("UndefinedError: 'x' is undefined") in caplog.text
+
+
+async def test_unique_id(hass):
+    """Test unique_id option only creates one lock per id."""
+    await setup.async_setup_component(
+        hass,
+        "lock",
+        {
+            "lock": {
+                "platform": "template",
+                "name": "test_template_lock_01",
+                "unique_id": "not-so-unique-anymore",
+                "value_template": "{{ true }}",
+                "lock": {"service": "switch.turn_on", "entity_id": "switch.test_state"},
+                "unlock": {
+                    "service": "switch.turn_off",
+                    "entity_id": "switch.test_state",
+                },
+            },
+        },
+    )
+
+    await setup.async_setup_component(
+        hass,
+        "lock",
+        {
+            "lock": {
+                "platform": "template",
+                "name": "test_template_lock_02",
+                "unique_id": "not-so-unique-anymore",
+                "value_template": "{{ false }}",
+                "lock": {"service": "switch.turn_on", "entity_id": "switch.test_state"},
+                "unlock": {
+                    "service": "switch.turn_off",
+                    "entity_id": "switch.test_state",
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1

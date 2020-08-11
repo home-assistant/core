@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kont ass scho registr\u00e9iert"
+        },
+        "error": {
+            "connection_error": "Feeler beim verbannen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                }
+            }
+        }
+    }
+}

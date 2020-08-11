@@ -26,7 +26,6 @@ from homeassistant.components.mqtt import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
-    CONF_UNIQUE_ID,
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,
@@ -37,6 +36,7 @@ from homeassistant.const import (
     CONF_DEVICE,
     CONF_NAME,
     CONF_OPTIMISTIC,
+    CONF_UNIQUE_ID,
     STATE_OFF,
     STATE_ON,
 )
@@ -63,6 +63,8 @@ CONF_COMMAND_ON_TEMPLATE = "command_on_template"
 CONF_EFFECT_LIST = "effect_list"
 CONF_EFFECT_TEMPLATE = "effect_template"
 CONF_GREEN_TEMPLATE = "green_template"
+CONF_MAX_MIREDS = "max_mireds"
+CONF_MIN_MIREDS = "min_mireds"
 CONF_RED_TEMPLATE = "red_template"
 CONF_STATE_TEMPLATE = "state_template"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
@@ -79,6 +81,8 @@ PLATFORM_SCHEMA_TEMPLATE = (
             vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_EFFECT_TEMPLATE): cv.template,
             vol.Optional(CONF_GREEN_TEMPLATE): cv.template,
+            vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
+            vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_RED_TEMPLATE): cv.template,
@@ -97,10 +101,10 @@ async def async_setup_entity_template(
     config, async_add_entities, config_entry, discovery_data
 ):
     """Set up a MQTT Template light."""
-    async_add_entities([MqttTemplate(config, config_entry, discovery_data)])
+    async_add_entities([MqttLightTemplate(config, config_entry, discovery_data)])
 
 
-class MqttTemplate(
+class MqttLightTemplate(
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,
@@ -336,6 +340,16 @@ class MqttTemplate(
     def color_temp(self):
         """Return the color temperature in mired."""
         return self._color_temp
+
+    @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        return self._config.get(CONF_MIN_MIREDS, super().min_mireds)
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        return self._config.get(CONF_MAX_MIREDS, super().max_mireds)
 
     @property
     def hs_color(self):

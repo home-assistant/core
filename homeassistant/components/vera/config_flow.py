@@ -1,7 +1,7 @@
 """Config flow for Vera."""
 import logging
 import re
-from typing import List, cast
+from typing import Any, List
 
 import pyvera as pv
 from requests.exceptions import RequestException
@@ -17,20 +17,22 @@ LIST_REGEX = re.compile("[^0-9]+")
 _LOGGER = logging.getLogger(__name__)
 
 
-def str_to_int_list(data: str) -> List[str]:
+def fix_device_id_list(data: List[Any]) -> List[int]:
+    """Fix the id list by converting it to a supported int list."""
+    return str_to_int_list(list_to_str(data))
+
+
+def str_to_int_list(data: str) -> List[int]:
     """Convert a string to an int list."""
-    if isinstance(str, list):
-        return cast(List[str], data)
-
-    return [s for s in LIST_REGEX.split(data) if len(s) > 0]
+    return [int(s) for s in LIST_REGEX.split(data) if len(s) > 0]
 
 
-def int_list_to_str(data: List[str]) -> str:
+def list_to_str(data: List[Any]) -> str:
     """Convert an int list to a string."""
     return " ".join([str(i) for i in data])
 
 
-def new_options(lights: List[str], exclude: List[str]) -> dict:
+def new_options(lights: List[int], exclude: List[int]) -> dict:
     """Create a standard options object."""
     return {CONF_LIGHTS: lights, CONF_EXCLUDE: exclude}
 
@@ -40,10 +42,10 @@ def options_schema(options: dict = None) -> dict:
     options = options or {}
     return {
         vol.Optional(
-            CONF_LIGHTS, default=int_list_to_str(options.get(CONF_LIGHTS, [])),
+            CONF_LIGHTS, default=list_to_str(options.get(CONF_LIGHTS, [])),
         ): str,
         vol.Optional(
-            CONF_EXCLUDE, default=int_list_to_str(options.get(CONF_EXCLUDE, [])),
+            CONF_EXCLUDE, default=list_to_str(options.get(CONF_EXCLUDE, [])),
         ): str,
     }
 

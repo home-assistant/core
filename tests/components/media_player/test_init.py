@@ -1,13 +1,11 @@
 """Test the base functions of the media player."""
 import base64
 
-from asynctest import patch
-
 from homeassistant.components import media_player
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
+from tests.async_mock import patch
 
 
 async def test_get_image(hass, hass_ws_client, caplog):
@@ -15,13 +13,14 @@ async def test_get_image(hass, hass_ws_client, caplog):
     await async_setup_component(
         hass, "media_player", {"media_player": {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
 
     with patch(
         "homeassistant.components.media_player.MediaPlayerEntity."
         "async_get_media_image",
-        return_value=mock_coro((b"image", "image/jpeg")),
+        return_value=(b"image", "image/jpeg"),
     ):
         await client.send_json(
             {
@@ -47,6 +46,7 @@ async def test_get_image_http(hass, aiohttp_client):
     await async_setup_component(
         hass, "media_player", {"media_player": {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("media_player.bedroom")
     assert "entity_picture_local" not in state.attributes
@@ -74,6 +74,7 @@ async def test_get_image_http_remote(hass, aiohttp_client):
         await async_setup_component(
             hass, "media_player", {"media_player": {"platform": "demo"}}
         )
+        await hass.async_block_till_done()
 
         state = hass.states.get("media_player.bedroom")
         assert "entity_picture_local" in state.attributes

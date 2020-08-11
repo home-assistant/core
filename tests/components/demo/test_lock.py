@@ -21,11 +21,12 @@ OPENABLE_LOCK = "lock.openable_lock"
 
 
 @pytest.fixture(autouse=True)
-def setup_comp(hass):
+async def setup_comp(hass):
     """Set up demo component."""
-    hass.loop.run_until_complete(
-        async_setup_component(hass, LOCK_DOMAIN, {LOCK_DOMAIN: {"platform": DOMAIN}})
+    assert await async_setup_component(
+        hass, LOCK_DOMAIN, {LOCK_DOMAIN: {"platform": DOMAIN}}
     )
+    await hass.async_block_till_done()
 
 
 async def test_locking(hass):

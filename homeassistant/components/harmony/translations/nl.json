@@ -4,7 +4,8 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Verbinding mislukt, probeer het opnieuw"
+            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
+            "unknown": "Onverwachte fout"
         },
         "flow_title": "Logitech Harmony Hub {name}",
         "step": {
@@ -18,6 +19,17 @@
                     "name": "Naam van hub"
                 },
                 "title": "Logitech Harmony Hub instellen"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "activity": "De standaardactiviteit die moet worden uitgevoerd wanneer er geen is opgegeven.",
+                    "delay_secs": "De vertraging tussen het verzenden van opdrachten."
+                },
+                "description": "Pas de Harmony Hub-opties aan"
             }
         }
     }

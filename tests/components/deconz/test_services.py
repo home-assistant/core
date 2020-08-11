@@ -1,6 +1,5 @@
 """deCONZ service tests."""
 
-from asynctest import Mock, patch
 import pytest
 import voluptuous as vol
 
@@ -8,6 +7,8 @@ from homeassistant.components import deconz
 from homeassistant.components.deconz.const import CONF_BRIDGE_ID
 
 from .test_gateway import BRIDGEID, setup_deconz_integration
+
+from tests.async_mock import Mock, patch
 
 GROUP = {
     "1": {

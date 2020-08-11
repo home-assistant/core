@@ -6,7 +6,7 @@ import forecastio
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -611,6 +611,14 @@ class DarkSkySensor(Entity):
         return SENSOR_TYPES[self.type][6]
 
     @property
+    def device_class(self):
+        """Device class of the entity."""
+        if SENSOR_TYPES[self.type][1] == TEMP_CELSIUS:
+            return DEVICE_CLASS_TEMPERATURE
+
+        return None
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
@@ -790,6 +798,7 @@ class DarkSkyData:
         self.longitude = longitude
         self.units = units
         self.language = language
+        self._connect_error = False
 
         self.data = None
         self.unit_system = None
@@ -817,8 +826,13 @@ class DarkSkyData:
                 units=self.units,
                 lang=self.language,
             )
+            if self._connect_error:
+                self._connect_error = False
+                _LOGGER.info("Reconnected to Dark Sky")
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
-            _LOGGER.error("Unable to connect to Dark Sky: %s", error)
+            if not self._connect_error:
+                self._connect_error = True
+                _LOGGER.error("Unable to connect to Dark Sky: %s", error)
             self.data = None
         self.unit_system = self.data and self.data.json["flags"]["units"]
 

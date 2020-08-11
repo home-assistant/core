@@ -4,6 +4,7 @@
             "options_1": {
                 "data": {
                     "bool": "\u9078\u9805\u5e03\u6797",
+                    "constant": "\u4e0d\u8b8a",
                     "int": "\u6578\u503c\u8f38\u5165"
                 }
             },

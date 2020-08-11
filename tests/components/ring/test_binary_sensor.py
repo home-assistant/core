@@ -1,8 +1,9 @@
 """The tests for the Ring binary sensor platform."""
 from time import time
-from unittest.mock import patch
 
 from .common import setup_platform
+
+from tests.async_mock import patch
 
 
 async def test_binary_sensor(hass, requests_mock):

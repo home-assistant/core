@@ -1,9 +1,9 @@
 """The tests for the Transport NSW (AU) sensor platform."""
 import unittest
-from unittest.mock import patch
 
 from homeassistant.setup import setup_component
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 VALID_CONFIG = {
@@ -37,15 +37,13 @@ class TestRMVtransportSensor(unittest.TestCase):
     def setUp(self):
         """Set up things to run when tests begin."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     @patch("TransportNSW.TransportNSW.get_departures", side_effect=get_departuresMock)
     def test_transportnsw_config(self, mock_get_departures):
         """Test minimal TransportNSW configuration."""
         assert setup_component(self.hass, "sensor", VALID_CONFIG)
+        self.hass.block_till_done()
         state = self.hass.states.get("sensor.next_bus")
         assert state.state == "16"
         assert state.attributes["stop_id"] == "209516"

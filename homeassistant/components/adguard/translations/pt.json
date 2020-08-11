@@ -1,6 +1,12 @@
 {
     "config": {
+        "error": {
+            "connection_error": "Falha na liga\u00e7\u00e3o"
+        },
         "step": {
+            "hassio_confirm": {
+                "title": "AdGuard Home via Hass.io add-on"
+            },
             "user": {
                 "data": {
                     "host": "Servidor",

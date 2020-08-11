@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 
 import homeassistant.components.automation as automation
-from homeassistant.core import Context
+from homeassistant.core import Context, callback
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -46,14 +46,14 @@ async def test_if_fires_on_change_bool(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
     await common.async_turn_off(hass)
     await hass.async_block_till_done()
 
     hass.states.async_set("test.entity", "planet")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_change_str(hass, calls):
@@ -71,7 +71,7 @@ async def test_if_fires_on_change_str(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_change_str_crazy(hass, calls):
@@ -89,7 +89,7 @@ async def test_if_fires_on_change_str_crazy(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_not_fires_on_change_bool(hass, calls):
@@ -107,7 +107,7 @@ async def test_if_not_fires_on_change_bool(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_not_fires_on_change_str(hass, calls):
@@ -125,7 +125,7 @@ async def test_if_not_fires_on_change_str(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_not_fires_on_change_str_crazy(hass, calls):
@@ -146,7 +146,7 @@ async def test_if_not_fires_on_change_str_crazy(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_fires_on_no_change(hass, calls):
@@ -186,12 +186,12 @@ async def test_if_fires_on_two_change(hass, calls):
     # Trigger once
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
     # Trigger again
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_change_with_template(hass, calls):
@@ -212,7 +212,7 @@ async def test_if_fires_on_change_with_template(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_not_fires_on_change_with_template(hass, calls):
@@ -273,7 +273,7 @@ async def test_if_fires_on_change_with_template_advanced(hass, calls):
 
     hass.states.async_set("test.entity", "world", context=context)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     assert calls[0].context.parent_id == context.id
     assert "template - test.entity - hello - world - None" == calls[0].data["some"]
 
@@ -301,12 +301,12 @@ async def test_if_fires_on_no_change_with_template_advanced(hass, calls):
     # Different state
     hass.states.async_set("test.entity", "worldz")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
     # Different state
     hass.states.async_set("test.entity", "hello")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_fires_on_change_with_template_2(hass, calls):
@@ -374,17 +374,17 @@ async def test_if_action(hass, calls):
     # Condition is not true yet
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
     # Change condition to true, but it shouldn't be triggered yet
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
     # Condition is true and event is triggered
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_change_with_bad_template(hass, calls):
@@ -420,7 +420,7 @@ async def test_if_fires_on_change_with_bad_template_2(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_wait_template_with_trigger(hass, calls):
@@ -435,6 +435,7 @@ async def test_wait_template_with_trigger(hass, calls):
                     "value_template": "{{ states.test.entity.state == 'world' }}",
                 },
                 "action": [
+                    {"event": "test_event"},
                     {"wait_template": "{{ is_state(trigger.entity_id, 'hello') }}"},
                     {
                         "service": "test.automation",
@@ -458,12 +459,16 @@ async def test_wait_template_with_trigger(hass, calls):
 
     await hass.async_block_till_done()
 
+    @callback
+    def event_handler(event):
+        hass.states.async_set("test.entity", "hello")
+
+    hass.bus.async_listen_once("test_event", event_handler)
+
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    hass.states.async_set("test.entity", "hello")
-    await hass.async_block_till_done()
-    assert 1 == len(calls)
-    assert "template - test.entity - hello - world - None" == calls[0].data["some"]
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "template - test.entity - hello - world - None"
 
 
 async def test_if_fires_on_change_with_for(hass, calls):
@@ -485,10 +490,10 @@ async def test_if_fires_on_change_with_for(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_change_with_for_advanced(hass, calls):
@@ -527,10 +532,10 @@ async def test_if_fires_on_change_with_for_advanced(hass, calls):
 
     hass.states.async_set("test.entity", "world", context=context)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     assert calls[0].context.parent_id == context.id
     assert "template - test.entity - hello - world - 0:00:05" == calls[0].data["some"]
 
@@ -554,7 +559,7 @@ async def test_if_fires_on_change_with_for_0(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_change_with_for_0_advanced(hass, calls):
@@ -593,9 +598,9 @@ async def test_if_fires_on_change_with_for_0_advanced(hass, calls):
 
     hass.states.async_set("test.entity", "world", context=context)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     assert calls[0].context.parent_id == context.id
-    assert "template - test.entity - hello - world - 0:00:00" == calls[0].data["some"]
+    assert calls[0].data["some"] == "template - test.entity - hello - world - 0:00:00"
 
 
 async def test_if_fires_on_change_with_for_2(hass, calls):
@@ -617,10 +622,10 @@ async def test_if_fires_on_change_with_for_2(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_not_fires_on_change_with_for(hass, calls):
@@ -642,16 +647,16 @@ async def test_if_not_fires_on_change_with_for(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=4))
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     hass.states.async_set("test.entity", "hello")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=6))
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_not_fires_when_turned_off_with_for(hass, calls):
@@ -673,16 +678,16 @@ async def test_if_not_fires_when_turned_off_with_for(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=4))
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     await common.async_turn_off(hass)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=6))
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_fires_on_change_with_for_template_1(hass, calls):
@@ -704,10 +709,10 @@ async def test_if_fires_on_change_with_for_template_1(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_change_with_for_template_2(hass, calls):
@@ -729,10 +734,10 @@ async def test_if_fires_on_change_with_for_template_2(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_change_with_for_template_3(hass, calls):
@@ -754,10 +759,10 @@ async def test_if_fires_on_change_with_for_template_3(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_invalid_for_template_1(hass, calls):

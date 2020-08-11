@@ -2,11 +2,11 @@
 import asyncio
 from copy import deepcopy
 
-from asynctest import patch
-
 from homeassistant.components import deconz
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
+
+from tests.async_mock import patch
 
 ENTRY1_HOST = "1.2.3.4"
 ENTRY1_PORT = 80

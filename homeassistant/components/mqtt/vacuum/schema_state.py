@@ -10,7 +10,6 @@ from homeassistant.components.mqtt import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
-    CONF_UNIQUE_ID,
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,
@@ -36,7 +35,12 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_DEVICE, CONF_NAME
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    CONF_DEVICE,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
@@ -275,24 +279,16 @@ class MqttStateVacuum(
     @property
     def fan_speed(self):
         """Return fan speed of the vacuum."""
-        if self.supported_features & SUPPORT_FAN_SPEED == 0:
-            return None
-
         return self._state_attrs.get(FAN_SPEED, 0)
 
     @property
     def fan_speed_list(self):
-        """Return fan speed list of the vacuum.
-
-        No need to check SUPPORT_FAN_SPEED, this won't be called if fan_speed is None.
-        """
+        """Return fan speed list of the vacuum."""
         return self._fan_speed_list
 
     @property
     def battery_level(self):
         """Return battery level of the vacuum."""
-        if self.supported_features & SUPPORT_BATTERY == 0:
-            return None
         return max(0, min(100, self._state_attrs.get(BATTERY, 0)))
 
     @property

@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 
 ATTR_OBSERVATIONS = "observations"
 ATTR_OCCURRED_OBSERVATION_ENTITIES = "occurred_observation_entities"
@@ -91,8 +91,7 @@ def update_probability(prior, prob_given_true, prob_given_false):
     """Update probability using Bayes' rule."""
     numerator = prob_given_true * prior
     denominator = numerator + prob_given_false * (1 - prior)
-    probability = numerator / denominator
-    return probability
+    return numerator / denominator
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -152,15 +151,19 @@ class BayesianBinarySensor(BinarySensorEntity):
         """
 
         @callback
-        def async_threshold_sensor_state_listener(entity, _old_state, new_state):
+        def async_threshold_sensor_state_listener(event):
             """
             Handle sensor state changes.
 
             When a state changes, we must update our list of current observations,
             then calculate the new probability.
             """
-            if new_state.state == STATE_UNKNOWN:
+            new_state = event.data.get("new_state")
+
+            if new_state is None or new_state.state == STATE_UNKNOWN:
                 return
+
+            entity = event.data.get("entity_id")
 
             self.current_observations.update(self._record_entity_observations(entity))
             self.probability = self._calculate_new_probability()
@@ -169,9 +172,9 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         self.current_observations.update(self._initialize_current_observations())
         self.probability = self._calculate_new_probability()
-        async_track_state_change(
+        async_track_state_change_event(
             self.hass,
-            self.observations_by_entity,
+            list(self.observations_by_entity),
             async_threshold_sensor_state_listener,
         )
 
@@ -246,7 +249,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         """Return True if numeric condition is met."""
         entity = entity_observation["entity_id"]
 
-        should_trigger = condition.async_numeric_state(
+        return condition.async_numeric_state(
             self.hass,
             entity,
             entity_observation.get("below"),
@@ -254,26 +257,18 @@ class BayesianBinarySensor(BinarySensorEntity):
             None,
             entity_observation,
         )
-        return should_trigger
 
     def _process_state(self, entity_observation):
         """Return True if state conditions are met."""
         entity = entity_observation["entity_id"]
 
-        should_trigger = condition.state(
-            self.hass, entity, entity_observation.get("to_state")
-        )
-
-        return should_trigger
+        return condition.state(self.hass, entity, entity_observation.get("to_state"))
 
     def _process_template(self, entity_observation):
         """Return True if template condition is True."""
         template = entity_observation.get(CONF_VALUE_TEMPLATE)
         template.hass = self.hass
-        should_trigger = condition.async_template(
-            self.hass, template, entity_observation
-        )
-        return should_trigger
+        return condition.async_template(self.hass, template, entity_observation)
 
     @property
     def name(self):
@@ -299,9 +294,9 @@ class BayesianBinarySensor(BinarySensorEntity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
 
-        attr_observations_list = list(
+        attr_observations_list = [
             obs.copy() for obs in self.current_observations.values() if obs is not None
-        )
+        ]
 
         for item in attr_observations_list:
             item.pop("value_template", None)

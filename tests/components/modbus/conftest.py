@@ -69,6 +69,7 @@ async def run_test(
     now = dt_util.utcnow()
     with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
         assert await async_setup_component(hass, entity_domain, config)
+        await hass.async_block_till_done()
 
     # Trigger update call with time_changed event
     now += timedelta(seconds=scan_interval + 1)

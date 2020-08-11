@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "invalid_credentials": "Ugyldige legitimationsoplysninger",
-            "user_already_configured": "Kontoen er allerede konfigureret"
+            "invalid_credentials": "Ugyldige legitimationsoplysninger"
         },
         "create_entry": {
             "default": "Hvis du vil angive avancerede indstillinger skal du se [Life360 dokumentation]({docs_url})."

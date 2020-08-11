@@ -1,7 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Aquest codi postal ja s\u2019ha configurat."
+        },
         "error": {
-            "identifier_exists": "Codi postal ja registrat",
             "invalid_zip_code": "Codi postal incorrecte"
         },
         "step": {

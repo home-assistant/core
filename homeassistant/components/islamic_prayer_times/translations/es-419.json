@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Solo una instancia es necesaria."
+        },
+        "step": {
+            "user": {
+                "description": "\u00bfDesea establecer tiempos de oraci\u00f3n isl\u00e1mica?",
+                "title": "Establecer tiempos de oraci\u00f3n isl\u00e1mica"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calculation_method": "M\u00e9todo de c\u00e1lculo de la oraci\u00f3n"
+                }
+            }
+        }
+    },
+    "title": "Tiempos de oraci\u00f3n isl\u00e1mica"
+}

@@ -20,7 +20,7 @@
             "user": {
                 "data": {
                     "authorization_code": "Autorisatioun's Code (n\u00e9ideg fir eng manuell Authentifikatioun)",
-                    "email": "E-Mail Adress",
+                    "email": "E-Mail",
                     "password": "Passwuert"
                 },
                 "description": "Eidel",

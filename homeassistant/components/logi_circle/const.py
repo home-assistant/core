@@ -1,15 +1,14 @@
 """Constants in Logi Circle component."""
 from homeassistant.const import UNIT_PERCENTAGE
 
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
+DOMAIN = "logi_circle"
+DATA_LOGI = DOMAIN
+
 CONF_API_KEY = "api_key"
 CONF_REDIRECT_URI = "redirect_uri"
 
 DEFAULT_CACHEDB = ".logi_cache.pickle"
 
-DOMAIN = "logi_circle"
-DATA_LOGI = DOMAIN
 
 LED_MODE_KEY = "LED"
 RECORDING_MODE_KEY = "RECORDING_MODE"

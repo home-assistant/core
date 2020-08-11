@@ -7,6 +7,7 @@ from homeassistant.setup import async_setup_component
 
 from .test_controller import setup_unifi_integration
 
+from tests.async_mock import AsyncMock
 from tests.common import MockConfigEntry, mock_coro
 
 
@@ -25,7 +26,7 @@ async def test_successful_config_entry(hass):
 async def test_controller_fail_setup(hass):
     """Test that a failed setup still stores controller."""
     with patch("homeassistant.components.unifi.UniFiController") as mock_controller:
-        mock_controller.return_value.async_setup.return_value = mock_coro(False)
+        mock_controller.return_value.async_setup = AsyncMock(return_value=False)
         await setup_unifi_integration(hass)
 
     assert hass.data[UNIFI_DOMAIN] == {}
@@ -55,7 +56,7 @@ async def test_controller_no_mac(hass):
         "homeassistant.helpers.device_registry.async_get_registry",
         return_value=mock_coro(mock_registry),
     ):
-        mock_controller.return_value.async_setup.return_value = mock_coro(True)
+        mock_controller.return_value.async_setup = AsyncMock(return_value=True)
         mock_controller.return_value.mac = None
         assert await unifi.async_setup_entry(hass, entry) is True
 

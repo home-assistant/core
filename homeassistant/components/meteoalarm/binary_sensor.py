@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         api = Meteoalert(country, province, language)
-    except KeyError():
+    except KeyError:
         _LOGGER.error("Wrong country digits or province name")
         return
 

@@ -26,5 +26,11 @@
                 "title": "Hub de links"
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "double_buttons_1_3": "Primeiro e terceiro bot\u00f5es",
+            "double_buttons_2_4": "Segundo e quarto bot\u00f5es"
+        }
     }
 }

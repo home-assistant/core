@@ -108,7 +108,7 @@ class GEMSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique ID for this sensor."""
-        return f"{self._monitor_serial_number}-{self._sensor_type }-{self._number}"
+        return f"{self._monitor_serial_number}-{self._sensor_type}-{self._number}"
 
     @property
     def name(self):

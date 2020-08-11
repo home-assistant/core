@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ez a fi\u00f3k m\u00e1r konfigur\u00e1lva van."
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van"
         },
         "error": {
             "cannot_connect": "Nem siker\u00fclt csatlakozni, pr\u00f3b\u00e1lkozzon \u00fajra.",

@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd.",
+            "not_forked_daapd": "Apparaat is geen forked-daapd-server."
+        },
+        "error": {
+            "unknown_error": "Onbekende fout.",
+            "websocket_not_enabled": "forked-daapd server websocket niet ingeschakeld.",
+            "wrong_host_or_port": "Verbinding mislukt, controleer het host-adres en poort.",
+            "wrong_password": "Onjuist wachtwoord.",
+            "wrong_server_type": "De forked-daapd-integratie vereist een forked-daapd-server met versie >= 27.0."
+        },
+        "flow_title": "forked-daapd server: {naam} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Vriendelijke naam",
+                    "password": "API-wachtwoord (leeg laten als er geen wachtwoord is)",
+                    "port": "API-poort"
+                },
+                "title": "Stel een forked-daapd apparaat in"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "librespot_java_port": "Poort voor librespot-java pipe control (indien gebruikt)",
+                    "max_playlists": "Maximum aantal afspeellijsten dat als bronnen wordt gebruikt",
+                    "tts_pause_time": "Seconden om te pauzeren voor en na TTS",
+                    "tts_volume": "TTS-volume (float in het bereik [0,1])"
+                },
+                "description": "Stel verschillende opties in voor de fork-daapd integratie.",
+                "title": "Configureer forked-daapd opties"
+            }
+        }
+    }
+}

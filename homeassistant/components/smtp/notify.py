@@ -138,7 +138,7 @@ class MailNotificationService(BaseNotificationService):
         except (smtplib.socket.gaierror, ConnectionRefusedError):
             _LOGGER.exception(
                 "SMTP server not found or refused connection (%s:%s). "
-                "Please check the IP address, hostname, and availability of your SMTP server.",
+                "Please check the IP address, hostname, and availability of your SMTP server",
                 self._server,
                 self._port,
             )

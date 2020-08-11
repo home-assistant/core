@@ -2,7 +2,6 @@
 from contextlib import contextmanager
 from datetime import timedelta
 import logging
-from unittest.mock import patch
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.utility_meter.const import (
@@ -20,6 +19,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
@@ -118,6 +118,17 @@ async def test_state(hass):
     state = hass.states.get("sensor.energy_bill_midpeak")
     assert state is not None
     assert state.state == "100"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CALIBRATE_METER,
+        {ATTR_ENTITY_ID: "sensor.energy_bill_midpeak", ATTR_VALUE: "0.123"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.energy_bill_midpeak")
+    assert state is not None
+    assert state.state == "0.123"
 
 
 async def test_net_consumption(hass):
@@ -249,49 +260,49 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
         assert state.state == "5"
 
 
-async def test_self_reset_hourly(hass):
+async def test_self_reset_hourly(hass, legacy_patchable_time):
     """Test hourly reset of meter."""
     await _test_self_reset(
         hass, gen_config("hourly"), "2017-12-31T23:59:00.000000+00:00"
     )
 
 
-async def test_self_reset_daily(hass):
+async def test_self_reset_daily(hass, legacy_patchable_time):
     """Test daily reset of meter."""
     await _test_self_reset(
         hass, gen_config("daily"), "2017-12-31T23:59:00.000000+00:00"
     )
 
 
-async def test_self_reset_weekly(hass):
+async def test_self_reset_weekly(hass, legacy_patchable_time):
     """Test weekly reset of meter."""
     await _test_self_reset(
         hass, gen_config("weekly"), "2017-12-31T23:59:00.000000+00:00"
     )
 
 
-async def test_self_reset_monthly(hass):
+async def test_self_reset_monthly(hass, legacy_patchable_time):
     """Test monthly reset of meter."""
     await _test_self_reset(
         hass, gen_config("monthly"), "2017-12-31T23:59:00.000000+00:00"
     )
 
 
-async def test_self_reset_quarterly(hass):
+async def test_self_reset_quarterly(hass, legacy_patchable_time):
     """Test quarterly reset of meter."""
     await _test_self_reset(
         hass, gen_config("quarterly"), "2017-03-31T23:59:00.000000+00:00"
     )
 
 
-async def test_self_reset_yearly(hass):
+async def test_self_reset_yearly(hass, legacy_patchable_time):
     """Test yearly reset of meter."""
     await _test_self_reset(
         hass, gen_config("yearly"), "2017-12-31T23:59:00.000000+00:00"
     )
 
 
-async def test_self_no_reset_yearly(hass):
+async def test_self_no_reset_yearly(hass, legacy_patchable_time):
     """Test yearly reset of meter does not occur after 1st January."""
     await _test_self_reset(
         hass,
@@ -301,7 +312,7 @@ async def test_self_no_reset_yearly(hass):
     )
 
 
-async def test_reset_yearly_offset(hass):
+async def test_reset_yearly_offset(hass, legacy_patchable_time):
     """Test yearly reset of meter."""
     await _test_self_reset(
         hass,
@@ -310,7 +321,7 @@ async def test_reset_yearly_offset(hass):
     )
 
 
-async def test_no_reset_yearly_offset(hass):
+async def test_no_reset_yearly_offset(hass, legacy_patchable_time):
     """Test yearly reset of meter."""
     await _test_self_reset(
         hass,

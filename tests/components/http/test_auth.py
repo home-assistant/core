@@ -1,7 +1,6 @@
 """The tests for the Home Assistant HTTP component."""
 from datetime import timedelta
 from ipaddress import ip_network
-from unittest.mock import patch
 
 from aiohttp import BasicAuth, web
 from aiohttp.web_exceptions import HTTPUnauthorized
@@ -14,6 +13,8 @@ from homeassistant.components.http.real_ip import setup_real_ip
 from homeassistant.setup import async_setup_component
 
 from . import HTTP_HEADER_HA_AUTH, mock_real_ip
+
+from tests.async_mock import patch
 
 API_PASSWORD = "test-password"
 

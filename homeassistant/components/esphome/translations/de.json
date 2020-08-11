@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "ESP ist bereits konfiguriert"
+            "already_configured": "ESP ist bereits konfiguriert",
+            "already_in_progress": "Die ESP-Konfiguration wird bereits ausgef\u00fchrt"
         },
         "error": {
             "connection_error": "Keine Verbindung zum ESP m\u00f6glich. Achte darauf, dass deine YAML-Datei eine Zeile 'api:' enth\u00e4lt.",
@@ -14,8 +15,7 @@
                 "data": {
                     "password": "Passwort"
                 },
-                "description": "Bitte gebe das Passwort der ESPHome-Konfiguration f\u00fcr {name} ein:",
-                "title": "Passwort eingeben"
+                "description": "Bitte gebe das Passwort der ESPHome-Konfiguration f\u00fcr {name} ein:"
             },
             "discovery_confirm": {
                 "description": "Willst du den ESPHome-Knoten `{name}` zu Home Assistant hinzuf\u00fcgen?",
@@ -26,8 +26,7 @@
                     "host": "Host",
                     "port": "Port"
                 },
-                "description": "Bitte gib die Verbindungseinstellungen deines [ESPHome](https://esphomelib.com/)-Knotens ein.",
-                "title": "ESPHome"
+                "description": "Bitte gib die Verbindungseinstellungen deines [ESPHome](https://esphomelib.com/)-Knotens ein."
             }
         }
     }

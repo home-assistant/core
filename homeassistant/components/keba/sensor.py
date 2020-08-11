@@ -1,7 +1,11 @@
 """Support for KEBA charging station sensors."""
 import logging
 
-from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_KILO_WATT_HOUR
+from homeassistant.const import (
+    DEVICE_CLASS_POWER,
+    ELECTRICAL_CURRENT_AMPERE,
+    ENERGY_KILO_WATT_HOUR,
+)
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
@@ -17,7 +21,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     keba = hass.data[DOMAIN]
 
     sensors = [
-        KebaSensor(keba, "Curr user", "Max Current", "max_current", "mdi:flash", "A"),
+        KebaSensor(
+            keba,
+            "Curr user",
+            "Max Current",
+            "max_current",
+            "mdi:flash",
+            ELECTRICAL_CURRENT_AMPERE,
+        ),
         KebaSensor(
             keba,
             "Setenergy",

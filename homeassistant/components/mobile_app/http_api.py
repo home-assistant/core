@@ -3,6 +3,7 @@ import secrets
 from typing import Dict
 
 from aiohttp.web import Request, Response
+import emoji
 from nacl.secret import SecretBox
 import voluptuous as vol
 
@@ -10,6 +11,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import CONF_WEBHOOK_ID, HTTP_CREATED
 from homeassistant.helpers import config_validation as cv
+from homeassistant.util import slugify
 
 from .const import (
     ATTR_APP_DATA,
@@ -74,6 +76,20 @@ class RegistrationsView(HomeAssistantView):
             data[CONF_SECRET] = secrets.token_hex(SecretBox.KEY_SIZE)
 
         data[CONF_USER_ID] = request["hass_user"].id
+
+        if slugify(data[ATTR_DEVICE_NAME], separator=""):
+            # if slug is not empty and would not only be underscores
+            # use DEVICE_NAME
+            pass
+        elif emoji.emoji_count(data[ATTR_DEVICE_NAME]):
+            # If otherwise empty string contains emoji
+            # use descriptive name of the first emoji
+            data[ATTR_DEVICE_NAME] = emoji.demojize(
+                emoji.emoji_lis(data[ATTR_DEVICE_NAME])[0]["emoji"]
+            ).replace(":", "")
+        else:
+            # Fallback to DEVICE_ID
+            data[ATTR_DEVICE_NAME] = data[ATTR_DEVICE_ID]
 
         await hass.async_create_task(
             hass.config_entries.flow.async_init(

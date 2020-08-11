@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u0158adi\u010d je ji\u017e nakonfigurov\u00e1n",
-            "user_privilege": "U\u017eivatel mus\u00ed b\u00fdt spr\u00e1vcem"
+            "already_configured": "\u0158adi\u010d je ji\u017e nakonfigurov\u00e1n"
         },
         "error": {
             "faulty_credentials": "Chybn\u00e9 p\u0159ihla\u0161ovac\u00ed \u00fadaje",
@@ -24,6 +23,13 @@
     },
     "options": {
         "step": {
+            "simple_options": {
+                "data": {
+                    "track_clients": "Sledov\u00e1n\u00ed p\u0159ipojen\u00fdch za\u0159\u00edzen\u00ed",
+                    "track_devices": "Sledov\u00e1n\u00ed s\u00ed\u0165ov\u00fdch za\u0159\u00edzen\u00ed (za\u0159\u00edzen\u00ed Ubiquiti)"
+                },
+                "description": "Konfigurace integrace UniFi"
+            },
             "statistics_sensors": {
                 "data": {
                     "allow_bandwidth_sensors": "Vytvo\u0159it senzory vyu\u017eit\u00ed \u0161\u00ed\u0159ky p\u00e1sma pro s\u00ed\u0165ov\u00e9 klienty"

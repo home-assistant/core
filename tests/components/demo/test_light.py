@@ -24,11 +24,12 @@ ENTITY_LIGHT = "light.bed_light"
 
 
 @pytest.fixture(autouse=True)
-def setup_comp(hass):
+async def setup_comp(hass):
     """Set up demo component."""
-    hass.loop.run_until_complete(
-        async_setup_component(hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": DOMAIN}})
+    assert await async_setup_component(
+        hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": DOMAIN}}
     )
+    await hass.async_block_till_done()
 
 
 async def test_state_attributes(hass):

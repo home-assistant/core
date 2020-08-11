@@ -1,7 +1,8 @@
 """Support for climate devices through the SmartThings cloud API."""
 import asyncio
+from collections.abc import Iterable
 import logging
-from typing import Iterable, Optional, Sequence
+from typing import Optional, Sequence
 
 from pysmartthings import Attribute, Capability
 

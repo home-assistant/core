@@ -1,6 +1,5 @@
 """The tests for the mFi sensor platform."""
 import unittest
-import unittest.mock as mock
 
 from mficlient.client import FailedToLogin
 import requests
@@ -10,6 +9,7 @@ import homeassistant.components.sensor as sensor
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.setup import setup_component
 
+import tests.async_mock as mock
 from tests.common import get_test_home_assistant
 
 
@@ -64,6 +64,7 @@ class TestMfiSensorSetup(unittest.TestCase):
         config = dict(self.GOOD_CONFIG)
         del config[self.THING]["port"]
         assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
+        self.hass.block_till_done()
         assert mock_client.call_count == 1
         assert mock_client.call_args == mock.call(
             "foo", "user", "pass", port=6443, use_tls=True, verify=True
@@ -75,6 +76,7 @@ class TestMfiSensorSetup(unittest.TestCase):
         config = dict(self.GOOD_CONFIG)
         config[self.THING]["port"] = 6123
         assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
+        self.hass.block_till_done()
         assert mock_client.call_count == 1
         assert mock_client.call_args == mock.call(
             "foo", "user", "pass", port=6123, use_tls=True, verify=True
@@ -88,6 +90,7 @@ class TestMfiSensorSetup(unittest.TestCase):
         config[self.THING]["ssl"] = False
         config[self.THING]["verify_ssl"] = False
         assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
+        self.hass.block_till_done()
         assert mock_client.call_count == 1
         assert mock_client.call_args == mock.call(
             "foo", "user", "pass", port=6080, use_tls=False, verify=False
@@ -105,6 +108,7 @@ class TestMfiSensorSetup(unittest.TestCase):
             mock.MagicMock(ports=ports)
         ]
         assert setup_component(self.hass, sensor.DOMAIN, self.GOOD_CONFIG)
+        self.hass.block_till_done()
         for ident, port in ports.items():
             if ident != "bad":
                 mock_sensor.assert_any_call(port, self.hass)

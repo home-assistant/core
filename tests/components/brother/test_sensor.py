@@ -2,8 +2,6 @@
 from datetime import timedelta
 import json
 
-from asynctest import patch
-
 from homeassistant.components.brother.const import UNIT_PAGES
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -16,6 +14,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
+from tests.async_mock import patch
 from tests.common import async_fire_time_changed, load_fixture
 from tests.components.brother import init_integration
 
@@ -209,7 +208,7 @@ async def test_sensors(hass):
 
     state = hass.states.get("sensor.hl_l2340dw_uptime")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:timer"
+    assert state.attributes.get(ATTR_ICON) == "mdi:timer-outline"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TIME_DAYS
     assert state.state == "48"
 

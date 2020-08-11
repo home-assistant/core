@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "M\u00f6chtest du Wemo einrichten?",
-                "title": "Wemo"
+                "description": "M\u00f6chtest du Wemo einrichten?"
             }
         }
     }

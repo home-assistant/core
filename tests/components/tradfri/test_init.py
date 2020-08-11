@@ -1,8 +1,7 @@
 """Tests for Tradfri setup."""
-from asynctest import patch
-
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

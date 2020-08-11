@@ -1,7 +1,6 @@
 """The tests for the emulated Hue component."""
 import json
 import unittest
-from unittest.mock import patch
 
 from aiohttp.hdrs import CONTENT_TYPE
 import defusedxml.ElementTree as ET
@@ -9,7 +8,9 @@ import requests
 
 from homeassistant import const, setup
 from homeassistant.components import emulated_hue
+from homeassistant.const import HTTP_OK
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant, get_test_instance_port
 
 HTTP_SERVER_PORT = get_test_instance_port()
@@ -47,16 +48,78 @@ class TestEmulatedHue(unittest.TestCase):
         """Stop the class."""
         cls.hass.stop()
 
+    def test_upnp_discovery_basic(self):
+        """Tests the UPnP basic discovery response."""
+        with patch("threading.Thread.__init__"):
+            upnp_responder_thread = emulated_hue.UPNPResponderThread(
+                "0.0.0.0", 80, True, "192.0.2.42", 8080
+            )
+
+            """Original request emitted by the Hue Bridge v1 app."""
+            request = """M-SEARCH * HTTP/1.1
+HOST:239.255.255.250:1900
+ST:ssdp:all
+Man:"ssdp:discover"
+MX:3
+
+"""
+            encoded_request = request.replace("\n", "\r\n").encode("utf-8")
+
+            response = upnp_responder_thread._handle_request(encoded_request)
+            expected_response = """HTTP/1.1 200 OK
+CACHE-CONTROL: max-age=60
+EXT:
+LOCATION: http://192.0.2.42:8080/description.xml
+SERVER: FreeRTOS/6.0.5, UPnP/1.0, IpBridge/1.16.0
+hue-bridgeid: 001788FFFE23BFC2
+ST: urn:schemas-upnp-org:device:basic:1
+USN: uuid:2f402f80-da50-11e1-9b23-001788255acc
+
+"""
+            assert expected_response.replace("\n", "\r\n").encode("utf-8") == response
+
+    def test_upnp_discovery_rootdevice(self):
+        """Tests the UPnP rootdevice discovery response."""
+        with patch("threading.Thread.__init__"):
+            upnp_responder_thread = emulated_hue.UPNPResponderThread(
+                "0.0.0.0", 80, True, "192.0.2.42", 8080
+            )
+
+            """Original request emitted by Busch-Jaeger free@home SysAP."""
+            request = """M-SEARCH * HTTP/1.1
+HOST: 239.255.255.250:1900
+MAN: "ssdp:discover"
+MX: 40
+ST: upnp:rootdevice
+
+"""
+            encoded_request = request.replace("\n", "\r\n").encode("utf-8")
+
+            response = upnp_responder_thread._handle_request(encoded_request)
+            expected_response = """HTTP/1.1 200 OK
+CACHE-CONTROL: max-age=60
+EXT:
+LOCATION: http://192.0.2.42:8080/description.xml
+SERVER: FreeRTOS/6.0.5, UPnP/1.0, IpBridge/1.16.0
+hue-bridgeid: 001788FFFE23BFC2
+ST: upnp:rootdevice
+USN: uuid:2f402f80-da50-11e1-9b23-001788255acc::upnp:rootdevice
+
+"""
+            assert expected_response.replace("\n", "\r\n").encode("utf-8") == response
+
     def test_description_xml(self):
         """Test the description."""
         result = requests.get(BRIDGE_URL_BASE.format("/description.xml"), timeout=5)
 
-        assert result.status_code == 200
+        assert result.status_code == HTTP_OK
         assert "text/xml" in result.headers["content-type"]
 
         # Make sure the XML is parsable
         try:
-            ET.fromstring(result.text)
+            root = ET.fromstring(result.text)
+            ns = {"s": "urn:schemas-upnp-org:device-1-0"}
+            assert root.find("./s:device/s:serialNumber", ns).text == "001788FFFE23BFC2"
         except:  # noqa: E722 pylint: disable=bare-except
             self.fail("description.xml is not valid XML!")
 
@@ -68,7 +131,7 @@ class TestEmulatedHue(unittest.TestCase):
             BRIDGE_URL_BASE.format("/api"), data=json.dumps(request_json), timeout=5
         )
 
-        assert result.status_code == 200
+        assert result.status_code == HTTP_OK
         assert "application/json" in result.headers["content-type"]
 
         resp_json = result.json()
@@ -87,7 +150,7 @@ class TestEmulatedHue(unittest.TestCase):
             timeout=5,
         )
 
-        assert result.status_code == 200
+        assert result.status_code == HTTP_OK
         assert "application/json" in result.headers["content-type"]
 
         resp_json = result.json()

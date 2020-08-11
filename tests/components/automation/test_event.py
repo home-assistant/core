@@ -46,7 +46,7 @@ async def test_if_fires_on_event(hass, calls):
 
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_event_extra_data(hass, calls):
@@ -64,14 +64,14 @@ async def test_if_fires_on_event_extra_data(hass, calls):
 
     hass.bus.async_fire("test_event", {"extra_key": "extra_data"})
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
     await common.async_turn_off(hass)
     await hass.async_block_till_done()
 
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_event_with_data(hass, calls):
@@ -93,7 +93,7 @@ async def test_if_fires_on_event_with_data(hass, calls):
 
     hass.bus.async_fire("test_event", {"some_attr": "some_value", "another": "value"})
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_event_with_empty_data_config(hass, calls):
@@ -119,7 +119,7 @@ async def test_if_fires_on_event_with_empty_data_config(hass, calls):
 
     hass.bus.async_fire("test_event", {"some_attr": "some_value", "another": "value"})
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_event_with_nested_data(hass, calls):
@@ -143,7 +143,7 @@ async def test_if_fires_on_event_with_nested_data(hass, calls):
         "test_event", {"parent_attr": {"some_attr": "some_value", "another": "value"}}
     )
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_not_fires_if_event_data_not_matches(hass, calls):
@@ -165,4 +165,4 @@ async def test_if_not_fires_if_event_data_not_matches(hass, calls):
 
     hass.bus.async_fire("test_event", {"some_attr": "some_other_value"})
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0

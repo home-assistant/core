@@ -14,7 +14,7 @@
         "step": {
             "init": {
                 "data": {
-                    "calc_method": "Berekeningsmethode voor het gebed"
+                    "calculation_method": "Berekeningsmethode voor het gebed"
                 }
             }
         }

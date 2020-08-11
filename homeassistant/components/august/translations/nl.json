@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "login_method": "Aanmeldmethode",
+                    "password": "Wachtwoord",
+                    "timeout": "Time-out (seconden)",
+                    "username": "Gebruikersnaam"
+                },
+                "description": "Als de aanmeldingsmethode 'e-mail' is, is gebruikersnaam het e-mailadres. Als de aanmeldingsmethode 'telefoon' is, is gebruikersnaam het telefoonnummer in de indeling '+ NNNNNNNNN'.",
+                "title": "Stel een augustus-account in"
+            },
+            "validation": {
+                "data": {
+                    "code": "Verificatiecode"
+                },
+                "description": "Controleer je {login_method} ( {username} ) en voer de onderstaande verificatiecode in",
+                "title": "Tweestapsverificatie"
+            }
+        }
+    }
+}

@@ -3,7 +3,6 @@
 import re
 from unittest import mock
 
-import asynctest
 import pytest
 import zigpy.quirks
 import zigpy.types
@@ -30,6 +29,8 @@ import homeassistant.helpers.entity_registry
 from .common import get_zha_gateway
 from .zha_devices_list import DEVICES
 
+from tests.async_mock import AsyncMock, patch
+
 NO_TAIL_ID = re.compile("_\\d$")
 
 
@@ -43,28 +44,28 @@ def channels_mock(zha_device_mock):
         manufacturer="mock manufacturer",
         model="mock model",
         node_desc=b"\x02@\x807\x10\x7fd\x00\x00*d\x00\x00",
+        patch_cluster=False,
     ):
-        zha_dev = zha_device_mock(endpoints, ieee, manufacturer, model, node_desc)
+        zha_dev = zha_device_mock(
+            endpoints, ieee, manufacturer, model, node_desc, patch_cluster=patch_cluster
+        )
         channels = zha_channels.Channels.new(zha_dev)
         return channels
 
     return _mock
 
 
-@asynctest.patch(
+@patch(
     "zigpy.zcl.clusters.general.Identify.request",
-    new=asynctest.CoroutineMock(
-        return_value=[mock.sentinel.data, zcl_f.Status.SUCCESS]
-    ),
+    new=AsyncMock(return_value=[mock.sentinel.data, zcl_f.Status.SUCCESS]),
 )
 @pytest.mark.parametrize("device", DEVICES)
 async def test_devices(
-    device, hass, zigpy_device_mock, monkeypatch, zha_device_joined_restored
+    device, hass_disable_services, zigpy_device_mock, zha_device_joined_restored,
 ):
     """Test device discovery."""
-
     entity_registry = await homeassistant.helpers.entity_registry.async_get_registry(
-        hass
+        hass_disable_services
     )
 
     zigpy_device = zigpy_device_mock(
@@ -73,6 +74,7 @@ async def test_devices(
         device["manufacturer"],
         device["model"],
         node_descriptor=device["node_descriptor"],
+        patch_cluster=False,
     )
 
     cluster_identify = _get_first_identify_cluster(zigpy_device)
@@ -84,12 +86,12 @@ async def test_devices(
     try:
         zha_channels.ChannelPool.async_new_entity = lambda *a, **kw: _dispatch(*a, **kw)
         zha_dev = await zha_device_joined_restored(zigpy_device)
-        await hass.async_block_till_done()
+        await hass_disable_services.async_block_till_done()
     finally:
         zha_channels.ChannelPool.async_new_entity = orig_new_entity
 
-    entity_ids = hass.states.async_entity_ids()
-    await hass.async_block_till_done()
+    entity_ids = hass_disable_services.states.async_entity_ids()
+    await hass_disable_services.async_block_till_done()
     zha_entity_ids = {
         ent for ent in entity_ids if ent.split(".")[0] in zha_const.COMPONENTS
     }
@@ -259,6 +261,7 @@ async def test_discover_endpoint(device_info, channels_mock, hass):
             manufacturer=device_info["manufacturer"],
             model=device_info["model"],
             node_desc=device_info["node_descriptor"],
+            patch_cluster=False,
         )
 
     assert device_info["event_channels"] == sorted(
@@ -365,7 +368,9 @@ def test_single_input_cluster_device_class_by_cluster_class():
         ("switch", "switch.manufacturer_model_77665544_on_off"),
     ],
 )
-async def test_device_override(hass, zigpy_device_mock, setup_zha, override, entity_id):
+async def test_device_override(
+    hass_disable_services, zigpy_device_mock, setup_zha, override, entity_id
+):
     """Test device discovery override."""
 
     zigpy_device = zigpy_device_mock(
@@ -381,23 +386,26 @@ async def test_device_override(hass, zigpy_device_mock, setup_zha, override, ent
         "00:11:22:33:44:55:66:77",
         "manufacturer",
         "model",
+        patch_cluster=False,
     )
 
     if override is not None:
         override = {"device_config": {"00:11:22:33:44:55:66:77-1": {"type": override}}}
 
     await setup_zha(override)
-    assert hass.states.get(entity_id) is None
-    zha_gateway = get_zha_gateway(hass)
+    assert hass_disable_services.states.get(entity_id) is None
+    zha_gateway = get_zha_gateway(hass_disable_services)
     await zha_gateway.async_device_initialized(zigpy_device)
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id) is not None
+    await hass_disable_services.async_block_till_done()
+    assert hass_disable_services.states.get(entity_id) is not None
 
 
-async def test_group_probe_cleanup_called(hass, setup_zha, config_entry):
+async def test_group_probe_cleanup_called(
+    hass_disable_services, setup_zha, config_entry
+):
     """Test cleanup happens when zha is unloaded."""
     await setup_zha()
     disc.GROUP_PROBE.cleanup = mock.Mock(wraps=disc.GROUP_PROBE.cleanup)
-    await config_entry.async_unload(hass)
-    await hass.async_block_till_done()
+    await config_entry.async_unload(hass_disable_services)
+    await hass_disable_services.async_block_till_done()
     disc.GROUP_PROBE.cleanup.assert_called()

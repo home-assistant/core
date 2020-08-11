@@ -185,7 +185,7 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.data[CONF_PORT] = port
         try:
             status = await get_status(self.hass, host, port)
-            self.data[CONF_ID] = status["mac"].replace(":", "")
+            self.data[CONF_ID] = status.get("chipId", status["mac"].replace(":", ""))
         except (CannotConnect, KeyError):
             raise CannotConnect
         else:
@@ -293,7 +293,9 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             else:
-                self.data[CONF_ID] = status["mac"].replace(":", "")
+                self.data[CONF_ID] = status.get(
+                    "chipId", status["mac"].replace(":", "")
+                )
                 self.data[CONF_MODEL] = status.get("model", KONN_MODEL)
 
                 # save off our discovered host info
@@ -327,7 +329,9 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             # abort and update an existing config entry if host info changes
             await self.async_set_unique_id(self.data[CONF_ID])
-            self._abort_if_unique_id_configured(updates=self.data)
+            self._abort_if_unique_id_configured(
+                updates=self.data, reload_on_update=False
+            )
             return self.async_show_form(
                 step_id="confirm",
                 description_placeholders={

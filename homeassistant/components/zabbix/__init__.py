@@ -40,7 +40,7 @@ def setup(hass, config):
     """Set up the Zabbix component."""
 
     conf = config[DOMAIN]
-    protocol = "https" if config[CONF_SSL] else "http"
+    protocol = "https" if conf[CONF_SSL] else "http"
 
     url = urljoin(f"{protocol}://{conf[CONF_HOST]}", conf[CONF_PATH])
     username = conf.get(CONF_USERNAME)

@@ -1,11 +1,11 @@
 """Test Customize config panel."""
 import json
 
-from asynctest import patch
-
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 from homeassistant.config import DATA_CUSTOMIZE
+
+from tests.async_mock import patch
 
 
 async def test_get_entity(hass, hass_client):

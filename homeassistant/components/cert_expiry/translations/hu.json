@@ -3,8 +3,9 @@
         "step": {
             "user": {
                 "data": {
+                    "host": "Hoszt",
                     "name": "A tan\u00fas\u00edtv\u00e1ny neve",
-                    "port": "A tan\u00fas\u00edtv\u00e1ny portja"
+                    "port": "Port"
                 }
             }
         }

@@ -5,7 +5,7 @@ from typing import List
 from homeassistant.components.water_heater import (
     SUPPORT_AWAY_MODE,
     SUPPORT_OPERATION_MODE,
-    WaterHeaterDevice,
+    WaterHeaterEntity,
 )
 from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, STATE_OFF, STATE_ON
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -43,7 +43,7 @@ async def async_setup_platform(
     async_add_entities([new_entity], update_before_add=True)
 
 
-class EvoDHW(EvoChild, WaterHeaterDevice):
+class EvoDHW(EvoChild, WaterHeaterEntity):
     """Base for a Honeywell TCC DHW controller (aka boiler)."""
 
     def __init__(self, evo_broker, evo_device) -> None:

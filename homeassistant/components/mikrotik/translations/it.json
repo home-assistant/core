@@ -27,7 +27,7 @@
             "device_tracker": {
                 "data": {
                     "arp_ping": "Attivare il ping ARP",
-                    "detection_time": "Considerare l'intervallo di casa",
+                    "detection_time": "Considerare in casa nell'intervallo di",
                     "force_dhcp": "Scansione forzata con DHCP"
                 }
             }

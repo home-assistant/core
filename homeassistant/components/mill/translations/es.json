@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La cuenta ya ha sido configurada"
+        },
+        "error": {
+            "connection_error": "No se pudo conectar"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Usuario"
+                }
+            }
+        }
+    }
+}

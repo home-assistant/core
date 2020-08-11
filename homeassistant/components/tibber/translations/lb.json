@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ee Tibber Kont ass scho konfigur\u00e9iert."
+        },
+        "error": {
+            "connection_error": "Feeler beim verbannen mat Tibber",
+            "invalid_access_token": "Ong\u00ebltegen Acc\u00e8s Jeton",
+            "timeout": "Z\u00e4it Iwwerschreidung beim verbannen mat Tibber"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Acc\u00e8ss Jeton"
+                },
+                "description": "F\u00ebll d\u00e4in Acc\u00e8s Jeton vun https://developer.tibber.com/settings/accesstoken aus",
+                "title": "Tibber"
+            }
+        }
+    },
+    "title": "Tibber"
+}

@@ -107,7 +107,7 @@ def wled_exception_handler(func):
     return handler
 
 
-class WLEDDataUpdateCoordinator(DataUpdateCoordinator):
+class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     """Class to manage fetching WLED data from single endpoint."""
 
     def __init__(
@@ -180,11 +180,9 @@ class WLEDEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Connect to dispatcher listening for entity data notifications."""
-        self.coordinator.async_add_listener(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect from update signal."""
-        self.coordinator.async_remove_listener(self.async_write_ha_state)
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     async def async_update(self) -> None:
         """Update WLED entity."""

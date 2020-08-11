@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "Det gick inte att ansluta, f\u00f6rs\u00f6k igen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd",
+                    "port": "Port (10000)"
+                },
+                "title": "Anslut till enheten"
+            }
+        }
+    }
+}

@@ -4,8 +4,6 @@
             "all_configured": "Alle gekoppelde servers zijn al geconfigureerd",
             "already_configured": "Deze Plex-server is al geconfigureerd",
             "already_in_progress": "Plex wordt geconfigureerd",
-            "invalid_import": "Ge\u00efmporteerde configuratie is ongeldig",
-            "non-interactive": "Niet-interactieve import",
             "token_request_timeout": "Time-out verkrijgen van token",
             "unknown": "Mislukt om onbekende reden"
         },
@@ -14,17 +12,19 @@
             "no_servers": "Geen servers gekoppeld aan account",
             "not_found": "Plex-server niet gevonden"
         },
+        "flow_title": "{naam} ({host})",
         "step": {
+            "manual_setup": {
+                "data": {
+                    "port": "Poort"
+                }
+            },
             "select_server": {
                 "data": {
                     "server": "Server"
                 },
                 "description": "Meerdere servers beschikbaar, selecteer er een:",
                 "title": "Selecteer Plex server"
-            },
-            "start_website_auth": {
-                "description": "Ga verder met autoriseren bij plex.tv.",
-                "title": "Verbind de Plex server"
             }
         }
     },

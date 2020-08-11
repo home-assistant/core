@@ -33,6 +33,8 @@ class UpdaterBinary(BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
+        if not self.coordinator.data:
+            return None
         return self.coordinator.data.update_available
 
     @property
@@ -48,6 +50,8 @@ class UpdaterBinary(BinarySensorEntity):
     @property
     def device_state_attributes(self) -> dict:
         """Return the optional state attributes."""
+        if not self.coordinator.data:
+            return None
         data = {}
         if self.coordinator.data.release_notes:
             data[ATTR_RELEASE_NOTES] = self.coordinator.data.release_notes
@@ -57,11 +61,9 @@ class UpdaterBinary(BinarySensorEntity):
 
     async def async_added_to_hass(self):
         """Register update dispatcher."""
-        self.coordinator.async_add_listener(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self):
-        """When removed from hass."""
-        self.coordinator.async_remove_listener(self.async_write_ha_state)
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     async def async_update(self):
         """Update the entity.

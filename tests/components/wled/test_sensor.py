@@ -1,10 +1,12 @@
 """Tests for the WLED sensor platform."""
 from datetime import datetime
 
-from asynctest import patch
 import pytest
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_CURRENT,
+    DOMAIN as SENSOR_DOMAIN,
+)
 from homeassistant.components.wled.const import (
     ATTR_LED_COUNT,
     ATTR_MAX_POWER,
@@ -13,6 +15,7 @@ from homeassistant.components.wled.const import (
     SIGNAL_DBM,
 )
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     DATA_BYTES,
@@ -21,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
+from tests.async_mock import patch
 from tests.components.wled import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -94,6 +98,7 @@ async def test_sensors(
     assert state.attributes.get(ATTR_LED_COUNT) == 30
     assert state.attributes.get(ATTR_MAX_POWER) == 850
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == CURRENT_MA
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_CURRENT
     assert state.state == "470"
 
     entry = registry.async_get("sensor.wled_rgb_light_estimated_current")

@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Postcode al geregistreerd",
             "invalid_zip_code": "Postcode is ongeldig"
         },
         "step": {

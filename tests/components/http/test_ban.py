@@ -2,12 +2,10 @@
 # pylint: disable=protected-access
 from ipaddress import ip_address
 import os
-from unittest.mock import Mock, mock_open
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized
 from aiohttp.web_middlewares import middleware
-from asynctest import patch
 import pytest
 
 import homeassistant.components.http as http
@@ -24,6 +22,8 @@ from homeassistant.const import HTTP_FORBIDDEN
 from homeassistant.setup import async_setup_component
 
 from . import mock_real_ip
+
+from tests.async_mock import Mock, mock_open, patch
 
 SUPERVISOR_IP = "1.2.3.4"
 BANNED_IPS = ["200.201.202.203", "100.64.0.2"]

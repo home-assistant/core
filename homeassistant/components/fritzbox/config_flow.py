@@ -2,6 +2,7 @@
 from urllib.parse import urlparse
 
 from pyfritzhome import Fritzhome, LoginError
+from requests.exceptions import HTTPError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -32,6 +33,7 @@ DATA_SCHEMA_CONFIRM = vol.Schema(
 
 RESULT_AUTH_FAILED = "auth_failed"
 RESULT_NOT_FOUND = "not_found"
+RESULT_NOT_SUPPORTED = "not_supported"
 RESULT_SUCCESS = "success"
 
 
@@ -67,12 +69,15 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         try:
             fritzbox.login()
+            fritzbox.get_device_elements()
             fritzbox.logout()
             return RESULT_SUCCESS
-        except OSError:
-            return RESULT_NOT_FOUND
         except LoginError:
             return RESULT_AUTH_FAILED
+        except HTTPError:
+            return RESULT_NOT_SUPPORTED
+        except OSError:
+            return RESULT_NOT_FOUND
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
@@ -105,12 +110,12 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA_USER, errors=errors
         )
 
-    async def async_step_ssdp(self, user_input):
+    async def async_step_ssdp(self, discovery_info):
         """Handle a flow initialized by discovery."""
-        host = urlparse(user_input[ATTR_SSDP_LOCATION]).hostname
+        host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
         self.context[CONF_HOST] = host
 
-        uuid = user_input.get(ATTR_UPNP_UDN)
+        uuid = discovery_info.get(ATTR_UPNP_UDN)
         if uuid:
             if uuid.startswith("uuid:"):
                 uuid = uuid[5:]
@@ -129,7 +134,7 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
 
         self._host = host
-        self._name = user_input[ATTR_UPNP_FRIENDLY_NAME]
+        self._name = discovery_info.get(ATTR_UPNP_FRIENDLY_NAME) or host
 
         self.context["title_placeholders"] = {"name": self._name}
         return await self.async_step_confirm()

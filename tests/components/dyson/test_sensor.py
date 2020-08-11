@@ -2,7 +2,6 @@
 import unittest
 from unittest import mock
 
-import asynctest
 from libpurecool.dyson_pure_cool import DysonPureCool
 from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
 
@@ -20,6 +19,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import load_mock_device
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 
@@ -84,8 +84,9 @@ class DysonTest(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -258,8 +259,8 @@ class DysonTest(unittest.TestCase):
         assert sensor.entity_id == "sensor.dyson_1"
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@patch(
     "libpurecool.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purecool_device()],
 )

@@ -1,10 +1,10 @@
 """The tests for the Canary component."""
 import unittest
-from unittest.mock import MagicMock, PropertyMock, patch
 
 from homeassistant import setup
 import homeassistant.components.canary as canary
 
+from tests.async_mock import MagicMock, PropertyMock, patch
 from tests.common import get_test_home_assistant
 
 
@@ -43,8 +43,9 @@ class TestCanary(unittest.TestCase):
     def setUp(self):
         """Initialize values for this test case class."""
         self.hass = get_test_home_assistant()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 

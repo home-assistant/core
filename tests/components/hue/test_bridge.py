@@ -1,17 +1,23 @@
 """Test Hue bridge."""
-from asynctest import CoroutineMock, Mock, patch
 import pytest
 
 from homeassistant.components.hue import bridge, errors
+from homeassistant.components.hue.const import (
+    CONF_ALLOW_HUE_GROUPS,
+    CONF_ALLOW_UNREACHABLE,
+)
 from homeassistant.exceptions import ConfigEntryNotReady
+
+from tests.async_mock import AsyncMock, Mock, patch
 
 
 async def test_bridge_setup(hass):
     """Test a successful setup."""
     entry = Mock()
-    api = Mock(initialize=CoroutineMock())
+    api = Mock(initialize=AsyncMock())
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
-    hue_bridge = bridge.HueBridge(hass, entry, False, False)
+    entry.options = {CONF_ALLOW_HUE_GROUPS: False, CONF_ALLOW_UNREACHABLE: False}
+    hue_bridge = bridge.HueBridge(hass, entry)
 
     with patch("aiohue.Bridge", return_value=api), patch.object(
         hass.config_entries, "async_forward_entry_setup"
@@ -28,7 +34,8 @@ async def test_bridge_setup_invalid_username(hass):
     """Test we start config flow if username is no longer whitelisted."""
     entry = Mock()
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
-    hue_bridge = bridge.HueBridge(hass, entry, False, False)
+    entry.options = {CONF_ALLOW_HUE_GROUPS: False, CONF_ALLOW_UNREACHABLE: False}
+    hue_bridge = bridge.HueBridge(hass, entry)
 
     with patch.object(
         bridge, "authenticate_bridge", side_effect=errors.AuthenticationRequired
@@ -43,7 +50,8 @@ async def test_bridge_setup_timeout(hass):
     """Test we retry to connect if we cannot connect."""
     entry = Mock()
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
-    hue_bridge = bridge.HueBridge(hass, entry, False, False)
+    entry.options = {CONF_ALLOW_HUE_GROUPS: False, CONF_ALLOW_UNREACHABLE: False}
+    hue_bridge = bridge.HueBridge(hass, entry)
 
     with patch.object(
         bridge, "authenticate_bridge", side_effect=errors.CannotConnect
@@ -55,7 +63,8 @@ async def test_reset_if_entry_had_wrong_auth(hass):
     """Test calling reset when the entry contained wrong auth."""
     entry = Mock()
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
-    hue_bridge = bridge.HueBridge(hass, entry, False, False)
+    entry.options = {CONF_ALLOW_HUE_GROUPS: False, CONF_ALLOW_UNREACHABLE: False}
+    hue_bridge = bridge.HueBridge(hass, entry)
 
     with patch.object(
         bridge, "authenticate_bridge", side_effect=errors.AuthenticationRequired
@@ -71,7 +80,8 @@ async def test_reset_unloads_entry_if_setup(hass):
     """Test calling reset while the entry has been setup."""
     entry = Mock()
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
-    hue_bridge = bridge.HueBridge(hass, entry, False, False)
+    entry.options = {CONF_ALLOW_HUE_GROUPS: False, CONF_ALLOW_UNREACHABLE: False}
+    hue_bridge = bridge.HueBridge(hass, entry)
 
     with patch.object(bridge, "authenticate_bridge", return_value=Mock()), patch(
         "aiohue.Bridge", return_value=Mock()
@@ -92,9 +102,10 @@ async def test_reset_unloads_entry_if_setup(hass):
 
 async def test_handle_unauthorized(hass):
     """Test handling an unauthorized error on update."""
-    entry = Mock(async_setup=CoroutineMock())
+    entry = Mock(async_setup=AsyncMock())
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
-    hue_bridge = bridge.HueBridge(hass, entry, False, False)
+    entry.options = {CONF_ALLOW_HUE_GROUPS: False, CONF_ALLOW_UNREACHABLE: False}
+    hue_bridge = bridge.HueBridge(hass, entry)
 
     with patch.object(bridge, "authenticate_bridge", return_value=Mock()), patch(
         "aiohue.Bridge", return_value=Mock()

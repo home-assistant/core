@@ -29,7 +29,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._errors = {}
 
     def _create_device(self, name: str, prt: str):
-        """Create an antry async."""
+        """Create an entry async."""
         return self.async_create_entry(title=name, data={CONF_PORT: prt})
 
     def _test_connection(self, prt):

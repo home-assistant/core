@@ -100,7 +100,6 @@ async def async_setup_entry(hass, entry):
         entry.data[CONF_HOST],
         psk_id=entry.data[CONF_IDENTITY],
         psk=entry.data[CONF_KEY],
-        loop=hass.loop,
     )
 
     async def on_hass_stop(event):

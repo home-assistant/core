@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El puente ya esta configurado",
-            "already_in_progress": "El flujo de configuraci\u00f3n para el puente ya est\u00e1 en curso.",
-            "no_bridges": "No se han descubierto puentes deCONZ",
-            "not_deconz_bridge": "No es un puente deCONZ",
+            "already_configured": "La pasarela ya est\u00e1 configurada",
+            "already_in_progress": "El flujo de configuraci\u00f3n para la pasarela ya est\u00e1 en marcha.",
+            "no_bridges": "No se han descubierto pasarelas deCONZ",
+            "not_deconz_bridge": "No es una pasarela deCONZ",
             "one_instance_only": "El componente solo admite una instancia de deCONZ",
             "updated_instance": "Instancia deCONZ actualizada con nueva direcci\u00f3n de host"
         },
@@ -17,31 +17,20 @@
                 "description": "\u00bfQuieres configurar Home Assistant para que se conecte al gateway de deCONZ proporcionado por el add-on {addon} de hass.io?",
                 "title": "Add-on deCONZ Zigbee v\u00eda Hass.io"
             },
-            "init": {
-                "title": "Definir pasarela deCONZ"
-            },
             "link": {
                 "description": "Desbloquea tu gateway de deCONZ para registrarte con Home Assistant.\n\n1. Dir\u00edgete a deCONZ Settings -> Gateway -> Advanced\n2. Pulsa el bot\u00f3n \"Authenticate app\"",
                 "title": "Enlazar con deCONZ"
-            },
-            "manual_confirm": {
-                "data": {
-                    "host": "Host",
-                    "port": "Puerto"
-                }
             },
             "manual_input": {
                 "data": {
                     "host": "Host",
                     "port": "Puerto"
-                },
-                "title": "Configurar la puerta de enlace deCONZ"
+                }
             },
             "user": {
                 "data": {
                     "host": "Seleccione la puerta de enlace descubierta deCONZ"
-                },
-                "title": "Seleccione la puerta de enlace deCONZ"
+                }
             }
         }
     },

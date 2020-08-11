@@ -20,7 +20,7 @@
             "user": {
                 "data": {
                     "authorization_code": "Codice di autorizzazione (necessario per l'autenticazione manuale)",
-                    "email": "Indirizzo E-mail",
+                    "email": "E-mail",
                     "password": "Password"
                 },
                 "description": "Vuoto",

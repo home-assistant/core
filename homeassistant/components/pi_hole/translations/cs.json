@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba je ji\u017e nakonfigurov\u00e1na"
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostitel",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

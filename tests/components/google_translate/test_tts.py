@@ -2,7 +2,6 @@
 import asyncio
 import os
 import shutil
-from unittest.mock import patch
 
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
@@ -10,8 +9,10 @@ from homeassistant.components.media_player.const import (
     SERVICE_PLAY_MEDIA,
 )
 import homeassistant.components.tts as tts
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.setup import setup_component
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant, mock_service
 from tests.components.tts.test_init import mutagen_mock  # noqa: F401
 
@@ -22,6 +23,13 @@ class TestTTSGooglePlatform:
     def setup_method(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+
+        asyncio.run_coroutine_threadsafe(
+            async_process_ha_core_config(
+                self.hass, {"internal_url": "http://example.local:8123"}
+            ),
+            self.hass.loop,
+        )
 
         self.url = "https://translate.google.com/translate_tts"
         self.url_param = {

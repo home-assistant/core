@@ -8,9 +8,9 @@
             "trigger": "Utl\u00f8ser {entity_name}"
         },
         "condition_type": {
-            "is_armed_away": "{entity_name} aktivert borte",
-            "is_armed_home": "{entity_name} aktivert hjemme",
-            "is_armed_night": "{entity_name} aktivert natt",
+            "is_armed_away": "{entity_name} er aktivert borte",
+            "is_armed_home": "{entity_name} er aktivert hjemme",
+            "is_armed_night": "{entity_name} er aktivert natt",
             "is_disarmed": "{entity_name} er deaktivert",
             "is_triggered": "{entity_name} er utl\u00f8st"
         },

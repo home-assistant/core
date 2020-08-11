@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane.",
+            "already_in_progress": "Konfiguracja urz\u0105dzenia jest ju\u017c w toku.",
+            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia.",
+            "not_denonavr_manufacturer": "Nie jest to urz\u0105dzenie AVR firmy Denon, producent wykrytego urz\u0105dzenia nie pasuje.",
+            "not_denonavr_missing": "Nie jest to urz\u0105dzenie AVR firmy Denon, dane z automatycznego wykrywania nie s\u0105 kompletne."
+        },
+        "error": {
+            "discovery_error": "Nie uda\u0142o si\u0119 wykry\u0107 urz\u0105dzenia AVR firmy Denon"
+        },
+        "flow_title": "Denon AVR: {name}",
+        "step": {
+            "confirm": {
+                "description": "Prosz\u0119 potwierdzi\u0107 dodanie urz\u0105dzenia",
+                "title": "Denon AVR"
+            },
+            "select": {
+                "data": {
+                    "select_host": "Adres IP"
+                },
+                "description": "Uruchom konfiguracj\u0119 integracji ponownie, je\u015bli chcesz pod\u0142\u0105czy\u0107 dodatkowe urz\u0105dzenia.",
+                "title": "Wybierz urz\u0105dzenie, z kt\u00f3rym chcesz si\u0119 po\u0142\u0105czy\u0107."
+            },
+            "user": {
+                "data": {
+                    "host": "Adres IP"
+                },
+                "description": "\u0141\u0105czenie z urz\u0105dzeniem, je\u015bli adres IP nie jest zdefiniowany, u\u017cywane jest automatyczne wykrywanie.",
+                "title": "Denon AVR"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_all_sources": "Poka\u017c wszystkie \u017ar\u00f3d\u0142a",
+                    "zone2": "Konfiguracja Strefy 2",
+                    "zone3": "Konfiguracja Strefy 3"
+                },
+                "description": "Ustawienia opcjonalne",
+                "title": "Denon AVR"
+            }
+        }
+    }
+}

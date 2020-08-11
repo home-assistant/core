@@ -5,14 +5,27 @@
         },
         "error": {
             "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
-            "invalid_auth": "Authentification non valide"
+            "invalid_auth": "Authentification non valide",
+            "no_homes": "Il n\u2019y a pas de maisons li\u00e9es \u00e0 ce compte tado.",
+            "unknown": "Erreur inattendue"
         },
         "step": {
             "user": {
                 "data": {
                     "password": "Mot de passe",
                     "username": "Nom d'utilisateur"
-                }
+                },
+                "title": "Connectez-vous \u00e0 votre compte Tado"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "fallback": "Activer le mode restreint."
+                },
+                "title": "Ajustez les options de Tado."
             }
         }
     }

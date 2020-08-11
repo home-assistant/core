@@ -3,17 +3,24 @@
     "step": {
       "user": {
         "title": "Sign-in with Ring account",
-        "data": { "username": "Username", "password": "Password" }
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       },
       "2fa": {
         "title": "Two-factor authentication",
-        "data": { "2fa": "Two-factor code" }
+        "data": {
+          "2fa": "Two-factor code"
+        }
       }
     },
     "error": {
       "invalid_auth": "Invalid authentication",
       "unknown": "Unexpected error"
     },
-    "abort": { "already_configured": "Device is already configured" }
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
   }
 }

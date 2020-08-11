@@ -8,10 +8,10 @@
         "step": {
             "hassio_confirm": {
                 "description": "Vil du konfigurere Home Assistant til \u00e5 koble til Almond levert av Hass.io add-on: {addon}?",
-                "title": "Almond via Hass.io add-on"
+                "title": ""
             },
             "pick_implementation": {
-                "title": "Velg autentiseringsmetode"
+                "title": "Velg godkjenningsmetode"
             }
         }
     }

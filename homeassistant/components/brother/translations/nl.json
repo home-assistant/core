@@ -16,8 +16,7 @@
                     "host": "Printerhostnaam of IP-adres",
                     "type": "Type printer"
                 },
-                "description": "Zet Brother printerintegratie op. Als u problemen heeft met de configuratie ga dan naar: https://www.home-assistant.io/integrations/brother",
-                "title": "Brother Printer"
+                "description": "Zet Brother printerintegratie op. Als u problemen heeft met de configuratie ga dan naar: https://www.home-assistant.io/integrations/brother"
             },
             "zeroconf_confirm": {
                 "data": {

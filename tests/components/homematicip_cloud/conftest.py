@@ -1,5 +1,4 @@
 """Initializer helpers for HomematicIP fake server."""
-from asynctest import CoroutineMock, MagicMock, Mock, patch
 from homematicip.aio.auth import AsyncAuth
 from homematicip.aio.connection import AsyncConnection
 from homematicip.aio.home import AsyncHome
@@ -23,6 +22,7 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .helper import AUTH_TOKEN, HAPID, HAPPIN, HomeFactory
 
+from tests.async_mock import AsyncMock, MagicMock, Mock, patch
 from tests.common import MockConfigEntry
 
 
@@ -37,8 +37,8 @@ def mock_connection_fixture() -> AsyncConnection:
     connection._restCall.side_effect = (  # pylint: disable=protected-access
         _rest_call_side_effect
     )
-    connection.api_call = CoroutineMock(return_value=True)
-    connection.init = CoroutineMock(side_effect=True)
+    connection.api_call = AsyncMock(return_value=True)
+    connection.init = AsyncMock(side_effect=True)
 
     return connection
 

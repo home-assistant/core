@@ -6,16 +6,16 @@ import logging
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.util.dt import as_timestamp, now
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.util.dt import as_timestamp, now, parse_datetime, utc_from_timestamp
 
 from .const import (
-    ATTR_ZONE_SHADE,
-    ATTR_ZONE_TYPE,
     CONF_MANUAL_RUN_MINS,
     DEFAULT_MANUAL_RUN_MINS,
     DOMAIN as DOMAIN_RACHIO,
     KEY_CUSTOM_CROP,
     KEY_CUSTOM_SHADE,
+    KEY_CUSTOM_SLOPE,
     KEY_DEVICE_ID,
     KEY_DURATION,
     KEY_ENABLED,
@@ -24,6 +24,7 @@ from .const import (
     KEY_NAME,
     KEY_ON,
     KEY_RAIN_DELAY,
+    KEY_RAIN_DELAY_END,
     KEY_SCHEDULE_ID,
     KEY_SUBTYPE,
     KEY_SUMMARY,
@@ -33,6 +34,10 @@ from .const import (
     SIGNAL_RACHIO_RAIN_DELAY_UPDATE,
     SIGNAL_RACHIO_SCHEDULE_UPDATE,
     SIGNAL_RACHIO_ZONE_UPDATE,
+    SLOPE_FLAT,
+    SLOPE_MODERATE,
+    SLOPE_SLIGHT,
+    SLOPE_STEEP,
 )
 from .entity import RachioDevice
 from .webhooks import (
@@ -50,11 +55,14 @@ from .webhooks import (
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ZONE_SUMMARY = "Summary"
-ATTR_ZONE_NUMBER = "Zone number"
 ATTR_SCHEDULE_SUMMARY = "Summary"
 ATTR_SCHEDULE_ENABLED = "Enabled"
 ATTR_SCHEDULE_DURATION = "Duration"
+ATTR_ZONE_NUMBER = "Zone number"
+ATTR_ZONE_SHADE = "Shade"
+ATTR_ZONE_SLOPE = "Slope"
+ATTR_ZONE_SUMMARY = "Summary"
+ATTR_ZONE_TYPE = "Type"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -88,14 +96,10 @@ def _create_entities(hass, config_entry):
 class RachioSwitch(RachioDevice, SwitchEntity):
     """Represent a Rachio state that can be toggled."""
 
-    def __init__(self, controller, poll=True):
+    def __init__(self, controller):
         """Initialize a new Rachio switch."""
         super().__init__(controller)
-
-        if poll:
-            self._state = self._poll_update()
-        else:
-            self._state = None
+        self._state = None
 
     @property
     def name(self) -> str:
@@ -106,10 +110,6 @@ class RachioSwitch(RachioDevice, SwitchEntity):
     def is_on(self) -> bool:
         """Return whether the switch is currently on."""
         return self._state
-
-    @abstractmethod
-    def _poll_update(self, data=None) -> bool:
-        """Poll the API."""
 
     @callback
     def _async_handle_any_update(self, *args, **kwargs) -> None:
@@ -129,11 +129,6 @@ class RachioSwitch(RachioDevice, SwitchEntity):
 class RachioStandbySwitch(RachioSwitch):
     """Representation of a standby status/button."""
 
-    def __init__(self, controller):
-        """Instantiate a new Rachio standby mode switch."""
-        super().__init__(controller, poll=True)
-        self._poll_update(controller.init_data)
-
     @property
     def name(self) -> str:
         """Return the name of the standby switch."""
@@ -148,13 +143,6 @@ class RachioStandbySwitch(RachioSwitch):
     def icon(self) -> str:
         """Return an icon for the standby switch."""
         return "mdi:power"
-
-    def _poll_update(self, data=None) -> bool:
-        """Request the state from the API."""
-        if data is None:
-            data = self._controller.rachio.device.get(self._controller.controller_id)[1]
-
-        return not data[KEY_ON]
 
     @callback
     def _async_handle_update(self, *args, **kwargs) -> None:
@@ -176,6 +164,9 @@ class RachioStandbySwitch(RachioSwitch):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
+        if KEY_ON in self._controller.init_data:
+            self._state = not self._controller.init_data[KEY_ON]
+
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -189,9 +180,9 @@ class RachioRainDelay(RachioSwitch):
     """Representation of a rain delay status/switch."""
 
     def __init__(self, controller):
-        """Instantiate a new Rachio rain delay switch."""
-        super().__init__(controller, poll=True)
-        self._poll_update(controller.init_data)
+        """Set up a Rachio rain delay switch."""
+        self._cancel_update = None
+        super().__init__(controller)
 
     @property
     def name(self) -> str:
@@ -208,26 +199,30 @@ class RachioRainDelay(RachioSwitch):
         """Return an icon for rain delay."""
         return "mdi:camera-timer"
 
-    def _poll_update(self, data=None) -> bool:
-        """Request the state from the API."""
-        # API returns either 0 or current UNIX time when rain delay was canceled
-        # depending if it was done from the app or via the API
-        if data is None:
-            data = self._controller.rachio.device.get(self._controller.controller_id)[1]
-
-        try:
-            return data[KEY_RAIN_DELAY] / 1000 > as_timestamp(now())
-        except KeyError:
-            return False
-
     @callback
     def _async_handle_update(self, *args, **kwargs) -> None:
         """Update the state using webhook data."""
+        if self._cancel_update:
+            self._cancel_update()
+            self._cancel_update = None
+
         if args[0][0][KEY_SUBTYPE] == SUBTYPE_RAIN_DELAY_ON:
+            endtime = parse_datetime(args[0][0][KEY_RAIN_DELAY_END])
+            _LOGGER.debug("Rain delay expires at %s", endtime)
             self._state = True
+            self._cancel_update = async_track_point_in_utc_time(
+                self.hass, self._delay_expiration, endtime
+            )
         elif args[0][0][KEY_SUBTYPE] == SUBTYPE_RAIN_DELAY_OFF:
             self._state = False
 
+        self.async_write_ha_state()
+
+    @callback
+    def _delay_expiration(self, *args) -> None:
+        """Trigger when a rain delay expires."""
+        self._state = False
+        self._cancel_update = None
         self.async_write_ha_state()
 
     def turn_on(self, **kwargs) -> None:
@@ -242,6 +237,21 @@ class RachioRainDelay(RachioSwitch):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
+        if KEY_RAIN_DELAY in self._controller.init_data:
+            self._state = self._controller.init_data[
+                KEY_RAIN_DELAY
+            ] / 1000 > as_timestamp(now())
+
+        # If the controller was in a rain delay state during a reboot, this re-sets the timer
+        if self._state is True:
+            delay_end = utc_from_timestamp(
+                self._controller.init_data[KEY_RAIN_DELAY] / 1000
+            )
+            _LOGGER.debug("Re-setting rain delay timer for %s", delay_end)
+            self._cancel_update = async_track_point_in_utc_time(
+                self.hass, self._delay_expiration, delay_end
+            )
+
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -264,10 +274,10 @@ class RachioZone(RachioSwitch):
         self._person = person
         self._shade_type = data.get(KEY_CUSTOM_SHADE, {}).get(KEY_NAME)
         self._zone_type = data.get(KEY_CUSTOM_CROP, {}).get(KEY_NAME)
+        self._slope_type = data.get(KEY_CUSTOM_SLOPE, {}).get(KEY_NAME)
         self._summary = ""
         self._current_schedule = current_schedule
-        super().__init__(controller, poll=False)
-        self._state = self.zone_id == self._current_schedule.get(KEY_ZONE_ID)
+        super().__init__(controller)
 
     def __str__(self):
         """Display the zone as a string."""
@@ -311,6 +321,15 @@ class RachioZone(RachioSwitch):
             props[ATTR_ZONE_SHADE] = self._shade_type
         if self._zone_type:
             props[ATTR_ZONE_TYPE] = self._zone_type
+        if self._slope_type:
+            if self._slope_type == SLOPE_FLAT:
+                props[ATTR_ZONE_SLOPE] = "Flat"
+            elif self._slope_type == SLOPE_SLIGHT:
+                props[ATTR_ZONE_SLOPE] = "Slight"
+            elif self._slope_type == SLOPE_MODERATE:
+                props[ATTR_ZONE_SLOPE] = "Moderate"
+            elif self._slope_type == SLOPE_STEEP:
+                props[ATTR_ZONE_SLOPE] = "Steep"
         return props
 
     def turn_on(self, **kwargs) -> None:
@@ -336,18 +355,13 @@ class RachioZone(RachioSwitch):
         """Stop watering all zones."""
         self._controller.stop_watering()
 
-    def _poll_update(self, data=None) -> bool:
-        """Poll the API to check whether the zone is running."""
-        self._current_schedule = self._controller.current_schedule
-        return self.zone_id == self._current_schedule.get(KEY_ZONE_ID)
-
     @callback
     def _async_handle_update(self, *args, **kwargs) -> None:
         """Handle incoming webhook zone data."""
         if args[0][KEY_ZONE_ID] != self.zone_id:
             return
 
-        self._summary = kwargs.get(KEY_SUMMARY, "")
+        self._summary = args[0][KEY_SUMMARY]
 
         if args[0][KEY_SUBTYPE] == SUBTYPE_ZONE_STARTED:
             self._state = True
@@ -358,6 +372,8 @@ class RachioZone(RachioSwitch):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
+        self._state = self.zone_id == self._current_schedule.get(KEY_ZONE_ID)
+
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, SIGNAL_RACHIO_ZONE_UPDATE, self._async_handle_update
@@ -376,8 +392,7 @@ class RachioSchedule(RachioSwitch):
         self._schedule_enabled = data[KEY_ENABLED]
         self._summary = data[KEY_SUMMARY]
         self._current_schedule = current_schedule
-        super().__init__(controller, poll=False)
-        self._state = self._schedule_id == self._current_schedule.get(KEY_SCHEDULE_ID)
+        super().__init__(controller)
 
     @property
     def name(self) -> str:
@@ -410,7 +425,6 @@ class RachioSchedule(RachioSwitch):
 
     def turn_on(self, **kwargs) -> None:
         """Start this schedule."""
-
         self._controller.rachio.schedulerule.start(self._schedule_id)
         _LOGGER.debug(
             "Schedule %s started on %s", self.name, self._controller.name,
@@ -419,11 +433,6 @@ class RachioSchedule(RachioSwitch):
     def turn_off(self, **kwargs) -> None:
         """Stop watering all zones."""
         self._controller.stop_watering()
-
-    def _poll_update(self, data=None) -> bool:
-        """Poll the API to check whether the schedule is running."""
-        self._current_schedule = self._controller.current_schedule
-        return self._schedule_id == self._current_schedule.get(KEY_SCHEDULE_ID)
 
     @callback
     def _async_handle_update(self, *args, **kwargs) -> None:
@@ -445,6 +454,8 @@ class RachioSchedule(RachioSwitch):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
+        self._state = self._schedule_id == self._current_schedule.get(KEY_SCHEDULE_ID)
+
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, SIGNAL_RACHIO_SCHEDULE_UPDATE, self._async_handle_update

@@ -25,6 +25,8 @@
         "step": {
             "init": {
                 "data": {
+                    "limit": "\u9650\u5236",
+                    "order": "\u6392\u5e8f",
                     "scan_interval": "\u66f4\u65b0\u983b\u7387"
                 },
                 "title": "Transmission \u8a2d\u5b9a\u9078\u9805"

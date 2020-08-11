@@ -14,8 +14,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNSET,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers import config_validation as cv, event
 from homeassistant.helpers.sun import get_astral_event_date, get_astral_event_next
 from homeassistant.util import dt as dt_util
 
@@ -55,9 +54,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([sensor])
 
 
-def is_sun_event(event):
+def is_sun_event(sun_event):
     """Return true if event is sun event not time."""
-    return event in (SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
+    return sun_event in (SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 
 
 class TodSensor(BinarySensorEntity):
@@ -236,6 +235,6 @@ class TodSensor(BinarySensorEntity):
         self._calculate_next_update()
         self.async_write_ha_state()
 
-        async_track_point_in_utc_time(
+        event.async_track_point_in_utc_time(
             self.hass, self._point_in_time_listener, self.next_update
         )

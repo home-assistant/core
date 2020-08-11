@@ -45,6 +45,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
         self.hass.block_till_done()
 
         assert setup_component(self.hass, "binary_sensor", config)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("binary_sensor.test_binary")
         assert state.attributes.get("observations")[0]["prob_given_true"] == 0.8
@@ -75,6 +76,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
         self.hass.block_till_done()
 
         assert setup_component(self.hass, "binary_sensor", config)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("binary_sensor.test_binary")
         assert state.attributes.get("observations") == []
@@ -107,6 +109,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
         }
 
         assert setup_component(self.hass, "binary_sensor", config)
+        self.hass.block_till_done()
 
         self.hass.states.set("sensor.test_monitored", 4)
         self.hass.block_till_done()
@@ -173,6 +176,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
         }
 
         assert setup_component(self.hass, "binary_sensor", config)
+        self.hass.block_till_done()
 
         self.hass.states.set("sensor.test_monitored", "on")
 
@@ -227,6 +231,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
         }
 
         assert setup_component(self.hass, "binary_sensor", config)
+        self.hass.block_till_done()
 
         self.hass.states.set("sensor.test_monitored", "on")
 
@@ -281,6 +286,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
         }
 
         assert setup_component(self.hass, "binary_sensor", config)
+        self.hass.block_till_done()
 
         self.hass.states.set("sensor.test_monitored", "on")
         self.hass.block_till_done()
@@ -318,6 +324,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
         }
 
         assert setup_component(self.hass, "binary_sensor", config)
+        self.hass.block_till_done()
 
         self.hass.states.set("sensor.test_monitored", "off")
 
@@ -401,6 +408,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
         }
 
         assert setup_component(self.hass, "binary_sensor", config)
+        self.hass.block_till_done()
 
         self.hass.states.set("sensor.test_monitored", "on")
         self.hass.block_till_done()
@@ -452,6 +460,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
         }
 
         assert setup_component(self.hass, "binary_sensor", config)
+        self.hass.block_till_done()
 
         self.hass.states.set("sensor.test_monitored", "on")
         self.hass.block_till_done()

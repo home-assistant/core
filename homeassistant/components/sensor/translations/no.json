@@ -23,5 +23,11 @@
             "value": "{entity_name} verdi endringer"
         }
     },
-    "title": "Sensor"
+    "state": {
+        "_": {
+            "off": "Av",
+            "on": "P\u00e5"
+        }
+    },
+    "title": ""
 }

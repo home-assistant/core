@@ -3,6 +3,10 @@ from copy import deepcopy
 
 from homeassistant.components import deconz
 import homeassistant.components.binary_sensor as binary_sensor
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_VIBRATION,
+)
 from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
@@ -79,6 +83,7 @@ async def test_binary_sensors(hass):
 
     presence_sensor = hass.states.get("binary_sensor.presence_sensor")
     assert presence_sensor.state == "off"
+    assert presence_sensor.attributes["device_class"] == DEVICE_CLASS_MOTION
 
     temperature_sensor = hass.states.get("binary_sensor.temperature_sensor")
     assert temperature_sensor is None
@@ -88,6 +93,7 @@ async def test_binary_sensors(hass):
 
     vibration_sensor = hass.states.get("binary_sensor.vibration_sensor")
     assert vibration_sensor.state == "on"
+    assert vibration_sensor.attributes["device_class"] == DEVICE_CLASS_VIBRATION
 
     state_changed_event = {
         "t": "event",

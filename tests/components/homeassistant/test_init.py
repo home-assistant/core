@@ -3,7 +3,6 @@
 import asyncio
 import unittest
 
-from asynctest import Mock, patch
 import pytest
 import voluptuous as vol
 import yaml
@@ -33,6 +32,7 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import entity
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import Mock, patch
 from tests.common import (
     async_capture_events,
     async_mock_service,
@@ -120,11 +120,7 @@ class TestComponentsCore(unittest.TestCase):
 
         self.hass.states.set("light.Bowl", STATE_ON)
         self.hass.states.set("light.Ceiling", STATE_OFF)
-
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_is_on(self):
         """Test is_on method."""

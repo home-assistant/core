@@ -1,5 +1,4 @@
 """Configure py.test."""
-from asynctest import patch
 import pytest
 from pyvizio.const import DEVICE_CLASS_SPEAKER, MAX_VOLUME
 
@@ -17,9 +16,12 @@ from .const import (
     RESPONSE_TOKEN,
     UNIQUE_ID,
     VERSION,
+    ZEROCONF_HOST,
     MockCompletePairingResponse,
     MockStartPairingResponse,
 )
+
+from tests.async_mock import patch
 
 
 class MockInput:
@@ -180,5 +182,15 @@ def vizio_update_with_apps_fixture(vizio_update: pytest.fixture):
     ), patch(
         "homeassistant.components.vizio.media_player.VizioAsync.get_current_app_config",
         return_value=CURRENT_APP_CONFIG,
+    ):
+        yield
+
+
+@pytest.fixture(name="vizio_hostname_check")
+def vizio_hostname_check():
+    """Mock vizio hostname resolution."""
+    with patch(
+        "homeassistant.components.vizio.config_flow.socket.gethostbyname",
+        return_value=ZEROCONF_HOST,
     ):
         yield

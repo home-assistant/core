@@ -10,7 +10,7 @@
             "user": {
                 "data": {
                     "password": "Password",
-                    "username": "Nome Utente / Indirizzo E-mail"
+                    "username": "Nome utente"
                 },
                 "description": "Inserisci il nome utente e la password del tuo account iAqualink.",
                 "title": "Collegati a iAqualink"

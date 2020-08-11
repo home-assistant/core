@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "port": "\uc2dc\ub9ac\uc5bc \ud3ec\ud2b8",
+                    "port": "\ud3ec\ud2b8",
                     "source_1": "\uc785\ub825 \uc18c\uc2a4 1 \uc774\ub984",
                     "source_2": "\uc785\ub825 \uc18c\uc2a4 2 \uc774\ub984",
                     "source_3": "\uc785\ub825 \uc18c\uc2a4 3 \uc774\ub984",
@@ -33,7 +33,7 @@
                     "source_5": "\uc785\ub825 \uc18c\uc2a4 5 \uc774\ub984",
                     "source_6": "\uc785\ub825 \uc18c\uc2a4 6 \uc774\ub984"
                 },
-                "title": "\uc785\ub825 \uc18c\uc2a4 \uad6c\uc131"
+                "title": "\uc785\ub825 \uc18c\uc2a4 \uad6c\uc131\ud558\uae30"
             }
         }
     }

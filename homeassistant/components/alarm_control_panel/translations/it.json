@@ -26,12 +26,12 @@
         "_": {
             "armed": "Attivo",
             "armed_away": "Attivo fuori casa",
-            "armed_custom_bypass": "Attivo con bypass",
+            "armed_custom_bypass": "Attivo con bypass personalizzato",
             "armed_home": "Attivo in casa",
             "armed_night": "Attivo Notte",
-            "arming": "In attivazione",
+            "arming": "In Attivazione",
             "disarmed": "Disattivo",
-            "disarming": "In disattivazione",
+            "disarming": "In Disattivazione",
             "pending": "In sospeso",
             "triggered": "Attivato"
         }

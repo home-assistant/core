@@ -189,7 +189,9 @@ async def async_setup(hass, config):
                 binary=True,
             )
         except HomeAssistantError as err:
-            _LOGGER.error("Can't delete person '%s' with error: %s", p_id, err)
+            _LOGGER.error(
+                "Can't add an image of a person '%s' with error: %s", p_id, err
+            )
 
     hass.services.async_register(
         DOMAIN, SERVICE_FACE_PERSON, async_face_person, schema=SCHEMA_FACE_SERVICE

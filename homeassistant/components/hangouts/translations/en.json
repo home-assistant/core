@@ -19,7 +19,7 @@
             "user": {
                 "data": {
                     "authorization_code": "Authorization Code (required for manual authentication)",
-                    "email": "E-Mail Address",
+                    "email": "Email",
                     "password": "Password"
                 },
                 "title": "Google Hangouts Login"

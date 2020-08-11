@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API Key",
+                    "api_key": "Chiave API",
                     "app_key": "Application Key"
                 },
                 "title": "Inserisci i tuoi dati"

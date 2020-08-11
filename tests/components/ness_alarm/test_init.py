@@ -1,7 +1,6 @@
 """Tests for the ness_alarm component."""
 from enum import Enum
 
-from asynctest import MagicMock, patch
 import pytest
 
 from homeassistant.components import alarm_control_panel
@@ -31,6 +30,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import MagicMock, patch
 
 VALID_CONFIG = {
     DOMAIN: {

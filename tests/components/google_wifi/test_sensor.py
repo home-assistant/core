@@ -1,7 +1,6 @@
 """The tests for the Google Wifi platform."""
 from datetime import datetime, timedelta
 import unittest
-from unittest.mock import Mock, patch
 
 import requests_mock
 
@@ -11,6 +10,7 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.setup import setup_component
 from homeassistant.util import dt as dt_util
 
+from tests.async_mock import Mock, patch
 from tests.common import assert_setup_component, get_test_home_assistant
 
 NAME = "foo"
@@ -40,10 +40,7 @@ class TestGoogleWifiSetup(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     @requests_mock.Mocker()
     def test_setup_minimum(self, mock_req):
@@ -92,10 +89,7 @@ class TestGoogleWifiSensor(unittest.TestCase):
         self.hass = get_test_home_assistant()
         with requests_mock.Mocker() as mock_req:
             self.setup_api(MOCK_DATA, mock_req)
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def setup_api(self, data, mock_req):
         """Set up API with fake data."""

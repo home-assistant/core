@@ -10,7 +10,6 @@ from homeassistant.components.http import (
     CONF_SERVER_HOST,
     CONF_SERVER_PORT,
     CONF_SSL_CERTIFICATE,
-    DEFAULT_SERVER_HOST,
 )
 from homeassistant.const import HTTP_BAD_REQUEST, HTTP_OK, SERVER_PORT
 
@@ -68,12 +67,20 @@ class HassIO:
         return self.send_command("/supervisor/ping", method="get", timeout=15)
 
     @_api_data
-    def get_homeassistant_info(self):
-        """Return data for Home Assistant.
+    def get_info(self):
+        """Return generic Supervisor information.
 
         This method return a coroutine.
         """
-        return self.send_command("/homeassistant/info", method="get")
+        return self.send_command("/info", method="get")
+
+    @_api_data
+    def get_host_info(self):
+        """Return data for Host.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/host/info", method="get")
 
     @_api_data
     def get_addon_info(self, addon):
@@ -134,10 +141,7 @@ class HassIO:
             "refresh_token": refresh_token.token,
         }
 
-        if (
-            http_config.get(CONF_SERVER_HOST, DEFAULT_SERVER_HOST)
-            != DEFAULT_SERVER_HOST
-        ):
+        if http_config.get(CONF_SERVER_HOST) is not None:
             options["watchdog"] = False
             _LOGGER.warning(
                 "Found incompatible HTTP option 'server_host'. Watchdog feature disabled"
@@ -168,7 +172,7 @@ class HassIO:
                 )
 
                 if request.status not in (HTTP_OK, HTTP_BAD_REQUEST):
-                    _LOGGER.error("%s return code %d.", command, request.status)
+                    _LOGGER.error("%s return code %d", command, request.status)
                     raise HassioAPIError()
 
                 answer = await request.json()

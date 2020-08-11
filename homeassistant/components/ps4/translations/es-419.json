@@ -8,7 +8,9 @@
             "port_997_bind_error": "No se pudo enlazar al puerto 997."
         },
         "error": {
+            "credential_timeout": "Servicio de credenciales agotado. Presione enviar para reiniciar.",
             "login_failed": "No se ha podido emparejar con PlayStation 4. Verifique que el PIN sea correcto.",
+            "no_ipaddress": "Ingrese la direcci\u00f3n IP de la PlayStation 4 que desea configurar.",
             "not_ready": "PlayStation 4 no est\u00e1 encendida o conectada a la red."
         },
         "step": {
@@ -28,8 +30,10 @@
             },
             "mode": {
                 "data": {
+                    "ip_address": "Direcci\u00f3n IP (dejar en blanco si se utiliza el descubrimiento autom\u00e1tico).",
                     "mode": "Modo de configuraci\u00f3n"
                 },
+                "description": "Seleccione el modo para la configuraci\u00f3n. El campo Direcci\u00f3n IP puede dejarse en blanco si selecciona Descubrimiento autom\u00e1tico, ya que los dispositivos se descubrir\u00e1n autom\u00e1ticamente.",
                 "title": "Playstation 4"
             }
         }

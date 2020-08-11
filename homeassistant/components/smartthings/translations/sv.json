@@ -8,6 +8,15 @@
             "webhook_error": "SmartThings kunde inte validera endpoint konfigurerad i \" base_url`. V\u00e4nligen granska kraven f\u00f6r komponenten."
         },
         "step": {
+            "authorize": {
+                "title": "Auktorisera Home Assistant"
+            },
+            "select_location": {
+                "data": {
+                    "location_id": "Position"
+                },
+                "title": "V\u00e4lj plats"
+            },
             "user": {
                 "description": "V\u00e4nligen ange en [personlig \u00e5tkomsttoken]({token_url}) f\u00f6r SmartThings som har skapats enligt [instruktionerna]({component_url}).",
                 "title": "Ange personlig \u00e5tkomsttoken"

@@ -2,7 +2,6 @@
 # pylint: disable=protected-access
 from collections import OrderedDict
 import unittest
-from unittest.mock import patch
 
 import homeassistant.components.group as group
 from homeassistant.const import (
@@ -15,8 +14,10 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
 )
+from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
 from homeassistant.setup import async_setup_component, setup_component
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant
 from tests.components.group import common
 
@@ -28,11 +29,7 @@ class TestComponentsGroup(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_setup_group_with_mixed_groupable_states(self):
         """Try to set up a group with mixed groupable states."""
@@ -394,7 +391,12 @@ class TestComponentsGroup(unittest.TestCase):
             "group.second_group",
             "group.test_group",
         ]
-        assert self.hass.bus.listeners["state_changed"] == 3
+        assert self.hass.bus.listeners["state_changed"] == 1
+        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["hello.world"]) == 1
+        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["sensor.happy"]) == 1
+        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["light.bowl"]) == 1
+        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.one"]) == 1
+        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.two"]) == 1
 
         with patch(
             "homeassistant.config.load_yaml_config_file",
@@ -409,7 +411,10 @@ class TestComponentsGroup(unittest.TestCase):
             "group.all_tests",
             "group.hello",
         ]
-        assert self.hass.bus.listeners["state_changed"] == 2
+        assert self.hass.bus.listeners["state_changed"] == 1
+        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["light.bowl"]) == 1
+        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.one"]) == 1
+        assert len(self.hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.two"]) == 1
 
     def test_modify_group(self):
         """Test modifying a group."""
@@ -485,3 +490,25 @@ async def test_service_group_set_group_remove_group(hass):
 
     group_state = hass.states.get("group.user_test_group")
     assert group_state is None
+
+
+async def test_group_order(hass):
+    """Test that order gets incremented when creating a new group."""
+    hass.states.async_set("light.bowl", STATE_ON)
+
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "group_zero": {"entities": "light.Bowl", "icon": "mdi:work"},
+                "group_one": {"entities": "light.Bowl", "icon": "mdi:work"},
+                "group_two": {"entities": "light.Bowl", "icon": "mdi:work"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.group_zero").attributes["order"] == 0
+    assert hass.states.get("group.group_one").attributes["order"] == 1
+    assert hass.states.get("group.group_two").attributes["order"] == 2

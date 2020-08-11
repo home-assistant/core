@@ -46,7 +46,7 @@ class SomfyShade(CoverEntity):
     def __init__(
         self,
         somfy_mylink,
-        target_id="AABBCC",
+        target_id,
         name="SomfyShade",
         reverse=False,
         device_class="window",
@@ -57,6 +57,11 @@ class SomfyShade(CoverEntity):
         self._name = name
         self._reverse = reverse
         self._device_class = device_class
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of this cover."""
+        return self._target_id
 
     @property
     def name(self):

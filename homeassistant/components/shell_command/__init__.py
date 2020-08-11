@@ -12,6 +12,8 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 DOMAIN = "shell_command"
 
+COMMAND_TIMEOUT = 60
+
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
@@ -56,7 +58,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
             # pylint: disable=no-member
             create_process = asyncio.subprocess.create_subprocess_shell(
                 cmd,
-                loop=hass.loop,
                 stdin=None,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
@@ -69,14 +70,28 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
             # pylint: disable=no-member
             create_process = asyncio.subprocess.create_subprocess_exec(
                 *shlexed_cmd,
-                loop=hass.loop,
                 stdin=None,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
 
         process = await create_process
-        stdout_data, stderr_data = await process.communicate()
+        try:
+            stdout_data, stderr_data = await asyncio.wait_for(
+                process.communicate(), COMMAND_TIMEOUT
+            )
+        except asyncio.TimeoutError:
+            _LOGGER.exception(
+                "Timed out running command: `%s`, after: %ss", cmd, COMMAND_TIMEOUT
+            )
+            if process:
+                try:
+                    await process.kill()
+                except TypeError:
+                    pass
+                del process
+
+            return
 
         if stdout_data:
             _LOGGER.debug(

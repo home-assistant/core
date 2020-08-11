@@ -17,6 +17,7 @@ from homeassistant.components.alarm_control_panel.const import (
 from homeassistant.const import (
     ATTR_CODE,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
     MATCH_ALL,
@@ -32,7 +33,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import Script
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,6 +63,7 @@ ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
         vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
         vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -86,6 +88,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         arm_home_action = device_config.get(CONF_ARM_HOME_ACTION)
         arm_night_action = device_config.get(CONF_ARM_NIGHT_ACTION)
         code_arm_required = device_config[CONF_CODE_ARM_REQUIRED]
+        unique_id = device_config.get(CONF_UNIQUE_ID)
 
         template_entity_ids = set()
 
@@ -111,6 +114,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 arm_night_action,
                 code_arm_required,
                 template_entity_ids,
+                unique_id,
             )
         )
 
@@ -132,6 +136,7 @@ class AlarmControlPanelTemplate(AlarmControlPanelEntity):
         arm_night_action,
         code_arm_required,
         template_entity_ids,
+        unique_id,
     ):
         """Initialize the panel."""
         self.hass = hass
@@ -156,6 +161,7 @@ class AlarmControlPanelTemplate(AlarmControlPanelEntity):
 
         self._state = None
         self._entities = template_entity_ids
+        self._unique_id = unique_id
 
         if self._template is not None:
             self._template.hass = self.hass
@@ -164,6 +170,11 @@ class AlarmControlPanelTemplate(AlarmControlPanelEntity):
     def name(self):
         """Return the display name of this alarm control panel."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id of this alarm control panel."""
+        return self._unique_id
 
     @property
     def should_poll(self):
@@ -204,15 +215,16 @@ class AlarmControlPanelTemplate(AlarmControlPanelEntity):
         """Register callbacks."""
 
         @callback
-        def template_alarm_state_listener(entity, old_state, new_state):
+        def template_alarm_state_listener(event):
             """Handle target device state changes."""
             self.async_schedule_update_ha_state(True)
 
         @callback
         def template_alarm_control_panel_startup(event):
             """Update template on startup."""
-            if self._template is not None:
-                async_track_state_change(
+            if self._template is not None and self._entities != MATCH_ALL:
+                # Track state change only for valid templates
+                async_track_state_change_event(
                     self.hass, self._entities, template_alarm_state_listener
                 )
 

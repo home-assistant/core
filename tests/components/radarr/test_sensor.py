@@ -6,6 +6,7 @@ import pytest
 import homeassistant.components.radarr.sensor as radarr
 from homeassistant.const import DATA_GIGABYTES
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 
@@ -207,12 +208,13 @@ class TestRadarrSetup(unittest.TestCase):
         self.DEVICES = []
         self.hass = get_test_home_assistant()
         self.hass.config.time_zone = "America/Los_Angeles"
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
+    @patch("requests.get", side_effect=mocked_requests_get)
     def test_diskspace_no_paths(self, req_mock):
         """Test getting all disk space."""
         config = {
@@ -232,7 +234,7 @@ class TestRadarrSetup(unittest.TestCase):
             assert "Radarr Disk Space" == device.name
             assert "263.10/465.42GB (56.53%)" == device.device_state_attributes["/data"]
 
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
+    @patch("requests.get", side_effect=mocked_requests_get)
     def test_diskspace_paths(self, req_mock):
         """Test getting diskspace for included paths."""
         config = {
@@ -252,7 +254,7 @@ class TestRadarrSetup(unittest.TestCase):
             assert "Radarr Disk Space" == device.name
             assert "263.10/465.42GB (56.53%)" == device.device_state_attributes["/data"]
 
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
+    @patch("requests.get", side_effect=mocked_requests_get)
     def test_commands(self, req_mock):
         """Test getting running commands."""
         config = {
@@ -272,7 +274,7 @@ class TestRadarrSetup(unittest.TestCase):
             assert "Radarr Commands" == device.name
             assert "pending" == device.device_state_attributes["RescanMovie"]
 
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
+    @patch("requests.get", side_effect=mocked_requests_get)
     def test_movies(self, req_mock):
         """Test getting the number of movies."""
         config = {
@@ -292,7 +294,7 @@ class TestRadarrSetup(unittest.TestCase):
             assert "Radarr Movies" == device.name
             assert "false" == device.device_state_attributes["Assassin's Creed (2016)"]
 
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
+    @patch("requests.get", side_effect=mocked_requests_get)
     def test_upcoming_multiple_days(self, req_mock):
         """Test the upcoming movies for multiple days."""
         config = {
@@ -316,7 +318,7 @@ class TestRadarrSetup(unittest.TestCase):
             )
 
     @pytest.mark.skip
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
+    @patch("requests.get", side_effect=mocked_requests_get)
     def test_upcoming_today(self, req_mock):
         """Test filtering for a single day.
 
@@ -342,7 +344,7 @@ class TestRadarrSetup(unittest.TestCase):
                 == device.device_state_attributes["Resident Evil (2017)"]
             )
 
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
+    @patch("requests.get", side_effect=mocked_requests_get)
     def test_system_status(self, req_mock):
         """Test the getting of the system status."""
         config = {
@@ -362,7 +364,7 @@ class TestRadarrSetup(unittest.TestCase):
             assert "4.8.13.1" == device.device_state_attributes["osVersion"]
 
     @pytest.mark.skip
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
+    @patch("requests.get", side_effect=mocked_requests_get)
     def test_ssl(self, req_mock):
         """Test SSL being enabled."""
         config = {
@@ -387,7 +389,7 @@ class TestRadarrSetup(unittest.TestCase):
                 == device.device_state_attributes["Resident Evil (2017)"]
             )
 
-    @unittest.mock.patch("requests.get", side_effect=mocked_exception)
+    @patch("requests.get", side_effect=mocked_exception)
     def test_exception_handling(self, req_mock):
         """Test exception being handled."""
         config = {

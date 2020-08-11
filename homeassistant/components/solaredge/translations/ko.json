@@ -9,11 +9,11 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "\uc774 \uc0ac\uc774\ud2b8\uc758 API \ud0a4",
+                    "api_key": "API \ud0a4",
                     "name": "\uc774 \uc124\uce58\uc758 \uc774\ub984",
                     "site_id": "SolarEdge site-id"
                 },
-                "title": "\uc774 \uc124\uce58\uc5d0 \ub300\ud55c API \ub9e4\uac1c\ubcc0\uc218\ub97c \uc815\uc758\ud574\uc8fc\uc138\uc694"
+                "title": "\uc774 \uc124\uce58\uc5d0 \ub300\ud55c API \ub9e4\uac1c\ubcc0\uc218\ub97c \uc815\uc758\ud558\uae30"
             }
         }
     }

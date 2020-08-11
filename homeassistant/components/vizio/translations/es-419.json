@@ -1,0 +1,51 @@
+{
+    "config": {
+        "abort": {
+            "updated_entry": "Esta entrada ya se configur\u00f3, pero el nombre, las aplicaciones o las opciones definidas en la configuraci\u00f3n no coinciden con la configuraci\u00f3n importada anteriormente, por lo que la entrada de configuraci\u00f3n se actualiz\u00f3 en consecuencia."
+        },
+        "error": {
+            "host_exists": "Dispositivo VIZIO con el host especificado ya configurado.",
+            "name_exists": "Dispositivo VIZIO con el nombre especificado ya configurado."
+        },
+        "step": {
+            "pair_tv": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "description": "Su televisi\u00f3n debe mostrar un c\u00f3digo. Ingrese ese c\u00f3digo en el formulario y luego contin\u00fae con el siguiente paso para completar el emparejamiento.",
+                "title": "Proceso de emparejamiento completo"
+            },
+            "pairing_complete": {
+                "description": "Su dispositivo VIZIO SmartCast ahora est\u00e1 conectado a Home Assistant.",
+                "title": "Emparejamiento completo"
+            },
+            "pairing_complete_import": {
+                "description": "Su VIZIO SmartCast TV ahora est\u00e1 conectado a Home Assistant. \n\nSu token de acceso es '** {access_token} **'.",
+                "title": "Emparejamiento completo"
+            },
+            "user": {
+                "data": {
+                    "access_token": "Token de acceso",
+                    "device_class": "Tipo de dispositivo",
+                    "host": "<Host/IP>:<Port>",
+                    "name": "Nombre"
+                },
+                "description": "Solo se necesita un token de acceso para televisores. Si est\u00e1 configurando un televisor y a\u00fan no tiene un token de acceso, d\u00e9jelo en blanco para realizar un proceso de emparejamiento.",
+                "title": "Configurar el dispositivo VIZIO SmartCast"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "apps_to_include_or_exclude": "Aplicaciones para incluir o excluir",
+                    "include_or_exclude": "\u00bfIncluir o excluir aplicaciones?",
+                    "volume_step": "Tama\u00f1o de incremento de volumen"
+                },
+                "description": "Si tiene un Smart TV, opcionalmente puede filtrar su lista de origen eligiendo qu\u00e9 aplicaciones incluir o excluir en su lista de origen.",
+                "title": "Actualizar las opciones de VIZIO SmartCast"
+            }
+        }
+    }
+}

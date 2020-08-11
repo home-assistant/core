@@ -1,9 +1,10 @@
 """Test the National Weather Service (NWS) config flow."""
 import aiohttp
-from asynctest import patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.nws.const import DOMAIN
+
+from tests.async_mock import patch
 
 
 async def test_form(hass, mock_simple_nws_config):

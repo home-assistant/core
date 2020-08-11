@@ -7,11 +7,27 @@
             "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z urz\u0105dzeniem ZHA."
         },
         "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "Typ radia"
+                },
+                "description": "Wyb\u00f3r typu radia Zigbee",
+                "title": "Typ radia"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "pr\u0119dko\u015b\u0107 portu",
+                    "flow_control": "kontrola przep\u0142ywu danych",
+                    "path": "\u015acie\u017cka urz\u0105dzenia szeregowego"
+                },
+                "description": "Wprowadzanie ustawie\u0144 dla portu",
+                "title": "Ustawienia"
+            },
             "user": {
                 "data": {
-                    "radio_type": "Typ radia",
-                    "usb_path": "\u015acie\u017cka urz\u0105dzenia USB"
+                    "path": "\u015acie\u017cka urz\u0105dzenia szeregowego"
                 },
+                "description": "Wyb\u00f3r portu szeregowego dla radia Zigbee",
                 "title": "ZHA"
             }
         }

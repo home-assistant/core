@@ -138,7 +138,7 @@ async def test_success(hass, login_requests_mock):
     login_requests_mock.request(
         ANY,
         f"{FIXTURE_USER_INPUT[CONF_URL]}api/user/login",
-        text=f"<response>OK</response>",
+        text="<response>OK</response>",
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=FIXTURE_USER_INPUT

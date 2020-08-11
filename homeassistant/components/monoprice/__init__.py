@@ -10,7 +10,13 @@ from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
+from .const import (
+    CONF_NOT_FIRST_RUN,
+    DOMAIN,
+    FIRST_RUN,
+    MONOPRICE_OBJECT,
+    UNDO_UPDATE_LISTENER,
+)
 
 PLATFORMS = ["media_player"]
 
@@ -28,12 +34,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     try:
         monoprice = await hass.async_add_executor_job(get_monoprice, port)
-        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = monoprice
     except SerialException:
         _LOGGER.error("Error connecting to Monoprice controller at %s", port)
         raise ConfigEntryNotReady
 
-    entry.add_update_listener(_update_listener)
+    # double negative to handle absence of value
+    first_run = not bool(entry.data.get(CONF_NOT_FIRST_RUN))
+
+    if first_run:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_NOT_FIRST_RUN: True}
+        )
+
+    undo_listener = entry.add_update_listener(_update_listener)
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        MONOPRICE_OBJECT: monoprice,
+        UNDO_UPDATE_LISTENER: undo_listener,
+        FIRST_RUN: first_run,
+    }
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -53,6 +72,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
+
+    if unload_ok:
+        hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 

@@ -3,7 +3,7 @@
     "step": {
       "auth": {
         "title": "Authenticate Ambiclimate",
-        "description": "Please follow this [link]({authorization_url}) and <b>Allow</b> access to your Ambiclimate account, then come back and press <b>Submit</b> below.\n(Make sure the specified callback url is {cb_url})"
+        "description": "Please follow this [link]({authorization_url}) and **Allow** access to your Ambiclimate account, then come back and press **Submit** below.\n(Make sure the specified callback url is {cb_url})"
       }
     },
     "create_entry": {

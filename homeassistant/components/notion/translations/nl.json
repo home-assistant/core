@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Deze gebruikersnaam is al in gebruik."
+        },
         "error": {
             "invalid_credentials": "Ongeldige gebruikersnaam of wachtwoord",
             "no_devices": "Geen apparaten gevonden in account"

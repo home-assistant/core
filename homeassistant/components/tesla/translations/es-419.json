@@ -1,0 +1,30 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "Error al conectar verifique la red y vuelva a intentar",
+            "identifier_exists": "correo electr\u00f3nico ya registrado",
+            "invalid_credentials": "Credenciales no v\u00e1lidas",
+            "unknown_error": "Error desconocido, informe la informaci\u00f3n del registro"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Direcci\u00f3n de correo electr\u00f3nico"
+                },
+                "description": "Por favor ingrese su informaci\u00f3n.",
+                "title": "Tesla - Configuraci\u00f3n"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "enable_wake_on_start": "Forzar a autom\u00f3viles despertar al inicio",
+                    "scan_interval": "Segundos entre escaneos"
+                }
+            }
+        }
+    }
+}

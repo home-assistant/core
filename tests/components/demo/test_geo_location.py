@@ -1,6 +1,7 @@
 """The tests for the demo platform."""
 import unittest
-from unittest.mock import patch
+
+import pytest
 
 from homeassistant.components import geo_location
 from homeassistant.components.demo.geo_location import (
@@ -11,6 +12,7 @@ from homeassistant.const import LENGTH_KILOMETERS
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import (
     assert_setup_component,
     fire_time_changed,
@@ -20,16 +22,19 @@ from tests.common import (
 CONFIG = {geo_location.DOMAIN: [{"platform": "demo"}]}
 
 
+@pytest.fixture(autouse=True)
+def mock_legacy_time(legacy_patchable_time):
+    """Make time patchable for all the tests."""
+    yield
+
+
 class TestDemoPlatform(unittest.TestCase):
     """Test the demo platform."""
 
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_setup_platform(self):
         """Test setup of demo platform via configuration."""

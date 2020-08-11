@@ -1,6 +1,5 @@
 """The tests for local file sensor platform."""
 import unittest
-from unittest.mock import Mock, patch
 
 # Using third party package because of a bug reading binary data in Python 3.4
 # https://bugs.python.org/issue23004
@@ -9,6 +8,7 @@ from mock_open import MockOpen
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.setup import setup_component
 
+from tests.async_mock import Mock, patch
 from tests.common import get_test_home_assistant, mock_registry
 
 

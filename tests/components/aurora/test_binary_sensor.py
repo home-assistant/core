@@ -20,8 +20,9 @@ class TestAuroraSensorSetUp(unittest.TestCase):
         self.hass.config.latitude = self.lat
         self.hass.config.longitude = self.lon
         self.entities = []
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 

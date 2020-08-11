@@ -1,6 +1,4 @@
 """The tests for the DirecTV remote platform."""
-from asynctest import patch
-
 from homeassistant.components.remote import (
     ATTR_COMMAND,
     DOMAIN as REMOTE_DOMAIN,
@@ -9,6 +7,7 @@ from homeassistant.components.remote import (
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.helpers.typing import HomeAssistantType
 
+from tests.async_mock import patch
 from tests.components.directv import setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
