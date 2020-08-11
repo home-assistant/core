@@ -409,7 +409,7 @@ keyrings.alt==3.4.0
 konnected==1.1.0
 
 # homeassistant.components.dyson
-libpurecool==0.6.1
+libpurecool==0.6.3
 
 # homeassistant.components.mikrotik
 librouteros==3.0.0
