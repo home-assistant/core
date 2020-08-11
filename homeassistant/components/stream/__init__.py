@@ -2,6 +2,7 @@
 import logging
 import secrets
 import threading
+from types import MappingProxyType
 
 import voluptuous as vol
 
@@ -137,8 +138,10 @@ class Stream:
 
     @property
     def outputs(self):
-        """Return stream outputs."""
-        return self._outputs
+        """Return a copy of the stream outputs."""
+        # A copy is returned so the caller can iterate through the outputs
+        # without concern about self._outputs being modified from another thread.
+        return MappingProxyType(self._outputs.copy())
 
     def add_provider(self, fmt):
         """Add provider output stream."""
