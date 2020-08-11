@@ -335,7 +335,7 @@ async def test_x_forwarded_proto_with_multiple_headers(aiohttp_client, caplog):
 async def test_x_forwarded_proto_empty_element(
     x_forwarded_proto, aiohttp_client, caplog
 ):
-    """Test that we get a HTTP 400 bad request with multiple headers."""
+    """Test that we get a HTTP 400 bad request with empty proto."""
     app = web.Application()
     app.router.add_get("/", mock_handler)
     async_setup_forwarded(app, [ip_network("127.0.0.1")])
@@ -359,7 +359,7 @@ async def test_x_forwarded_proto_empty_element(
 async def test_x_forwarded_proto_incorrect_number_of_elements(
     x_forwarded_for, x_forwarded_proto, expected, got, aiohttp_client, caplog
 ):
-    """Test that we get a HTTP 400 bad request with multiple headers."""
+    """Test that we get a HTTP 400 bad request with incorrect number of elements."""
     app = web.Application()
     app.router.add_get("/", mock_handler)
     async_setup_forwarded(app, [ip_network("127.0.0.1")])
