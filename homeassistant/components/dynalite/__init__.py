@@ -1,7 +1,7 @@
 """Support for the Dynalite networks."""
 
 import asyncio
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, Union
 
 import voluptuous as vol
 
@@ -49,6 +49,8 @@ from .const import (
     DOMAIN,
     ENTITY_PLATFORMS,
     LOGGER,
+    SERVICE_REQUEST_AREA_PRESET,
+    SERVICE_REQUEST_CHANNEL_LEVEL,
 )
 
 
@@ -201,32 +203,45 @@ async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
             )
         )
 
-    def get_bridges(host: str) -> List[DynaliteBridge]:
-        result = []
-        for entry_id in hass.data[DOMAIN]:
-            cur_bridge = hass.data[DOMAIN][entry_id]
+    async def dynalite_service(service_call: ServiceCall):
+        data = service_call.data
+        host = data.get(ATTR_HOST, "")
+        bridges = []
+        for cur_bridge in hass.data[DOMAIN].values():
             if not host or cur_bridge.host == host:
-                result.append(cur_bridge)
-        return result
-
-    async def request_area_preset_service(service_call: ServiceCall):
-        host = service_call.data.get(ATTR_HOST, "")
-        bridges = get_bridges(host)
+                bridges.append(cur_bridge)
         LOGGER.debug("Selected bridged for service call: %s", bridges)
-        area = service_call.data[ATTR_AREA]
-        channel = service_call.data.get(ATTR_CHANNEL)
+        if service_call.service == SERVICE_REQUEST_AREA_PRESET:
+            bridge_attr = "request_area_preset"
+        elif service_call.service == SERVICE_REQUEST_CHANNEL_LEVEL:
+            bridge_attr = "request_channel_level"
         for bridge in bridges:
-            bridge.dynalite_devices.request_area_preset(area, channel)
+            getattr(bridge.dynalite_devices, bridge_attr)(
+                data[ATTR_AREA], data.get(ATTR_CHANNEL)
+            )
 
     hass.services.async_register(
         DOMAIN,
-        "request_area_preset",
-        request_area_preset_service,
+        SERVICE_REQUEST_AREA_PRESET,
+        dynalite_service,
         vol.Schema(
             {
                 vol.Optional(ATTR_HOST): cv.string,
                 vol.Required(ATTR_AREA): int,
                 vol.Optional(ATTR_CHANNEL): int,
+            }
+        ),
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_REQUEST_CHANNEL_LEVEL,
+        dynalite_service,
+        vol.Schema(
+            {
+                vol.Optional(ATTR_HOST): cv.string,
+                vol.Required(ATTR_AREA): int,
+                vol.Required(ATTR_CHANNEL): int,
             }
         ),
     )
