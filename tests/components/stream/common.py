@@ -20,7 +20,7 @@ def generate_h264_video():
     total_frames = duration * fps
 
     output = io.BytesIO()
-    output.name = "test.ts"
+    output.name = "test.mp4"
     container = av.open(output, mode="w")
 
     stream = container.add_stream("libx264", rate=fps)

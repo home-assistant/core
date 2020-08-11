@@ -18,6 +18,7 @@ from .const import (
     CONF_LOOKBACK,
     CONF_STREAM_SOURCE,
     DOMAIN,
+    MAX_SEGMENTS,
     SERVICE_RECORD,
 )
 from .core import PROVIDERS
@@ -225,7 +226,7 @@ async def async_handle_record_service(hass, call):
     # Take advantage of lookback
     hls = stream.outputs.get("hls")
     if lookback > 0 and hls:
-        num_segments = min(int(lookback // hls.target_duration), hls.num_segments)
+        num_segments = min(int(lookback // hls.target_duration), MAX_SEGMENTS)
         # Wait for latest segment, then add the lookback
         await hls.recv()
         recorder.prepend(list(hls.get_segment())[-num_segments:])
