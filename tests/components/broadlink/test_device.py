@@ -1,16 +1,19 @@
 """Tests for Broadlink devices."""
 import broadlink.exceptions as blke
 
+from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
     ENTRY_STATE_SETUP_ERROR,
     ENTRY_STATE_SETUP_RETRY,
 )
+from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from . import pick_device
 
 from tests.async_mock import AsyncMock, MagicMock, patch
+from tests.common import mock_device_registry, mock_registry
 
 
 async def test_device_setup(hass):
@@ -138,6 +141,35 @@ async def test_device_setup_get_fwversion_os_error(hass):
     assert mock_entry.state == ENTRY_STATE_LOADED
 
 
+async def test_device_setup_registry(hass):
+    """Test we register the device and the entries correctly."""
+    device = pick_device(1)
+    mock_api = device.get_mock_api()
+    mock_entry = device.get_mock_entry()
+    mock_entry.add_to_hass(hass)
+
+    device_registry = mock_device_registry(hass)
+    entity_registry = mock_registry(hass)
+
+    with patch("broadlink.gendevice", return_value=mock_api):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert len(device_registry.devices) == 1
+
+    device_entry = device_registry.async_get_device(
+        {(DOMAIN, mock_entry.unique_id)}, set()
+    )
+    assert device_entry.identifiers == {(DOMAIN, device.mac)}
+    assert device_entry.name == device.name
+    assert device_entry.model == device.model
+    assert device_entry.manufacturer == device.manufacturer
+    assert device_entry.sw_version == device.fwversion
+
+    for entry in async_entries_for_device(entity_registry, device_entry.id):
+        assert entry.original_name.startswith(device.name)
+
+
 async def test_device_unload_works(hass):
     """Test we unload the device."""
     device = pick_device(1)
@@ -159,3 +191,28 @@ async def test_device_unload_works(hass):
     assert len(mock_forward.mock_calls) == 3
     forward_entries = {c[1][1] for c in mock_forward.mock_calls}
     assert forward_entries == {"remote", "sensor", "switch"}
+
+
+async def test_device_update_listener(hass):
+    """Test we update device and entity registry when the entry is renamed."""
+    device = pick_device(1)
+    mock_api = device.get_mock_api()
+    mock_entry = device.get_mock_entry()
+    mock_entry.add_to_hass(hass)
+
+    device_registry = mock_device_registry(hass)
+    entity_registry = mock_registry(hass)
+
+    with patch("broadlink.gendevice", return_value=mock_api):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+        hass.config_entries.async_update_entry(mock_entry, title="New Name")
+        await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device(
+        {(DOMAIN, mock_entry.unique_id)}, set()
+    )
+    assert device_entry.name == "New Name"
+    for entry in async_entries_for_device(entity_registry, device_entry.id):
+        assert entry.original_name.startswith("New Name")
