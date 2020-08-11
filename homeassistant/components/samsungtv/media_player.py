@@ -29,7 +29,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
@@ -98,7 +97,6 @@ class SamsungTVDevice(MediaPlayerEntity):
         # Assume that the TV is in Play mode
         self._playing = True
         self._state = None
-        self._was_on = False
         # Mark the end of a shutdown command (need to wait 15 seconds before
         # sending the next command to avoid turning the TV back ON).
         self._end_of_power_off = None
@@ -119,13 +117,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         if self._power_off_in_progress():
             self._state = STATE_OFF
         else:
-            if self._bridge.is_on():
-                self._state = STATE_ON
-                self._was_on = True
-            else:
-                self._state = STATE_OFF
-                if !self._was_on:
-                    raise PlatformNotReady
+            self._state = STATE_ON if self._bridge.is_on() else STATE_OFF
 
     def send_key(self, key):
         """Send a key to the tv and handles exceptions."""
