@@ -80,7 +80,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     api = WrappedDwDWWAPI(DwdWeatherWarningsAPI(region_name))
 
-    # Build sensor list and activate update only for the first one
     sensors = []
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(DwdWeatherWarningsSensor(api, name, sensor_type))
