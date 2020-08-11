@@ -16,13 +16,17 @@ _LOGGER = logging.getLogger(__name__)
 def install_multiple_zeroconf_catcher(hass_zc) -> None:
     """Wrap the Zeroconf class to return the shared instance if multiple instances are detected."""
 
-    def new_zeroconf_new(self, *k, **kw) -> zeroconf.Zeroconf:  # type: ignore
+    def new_zeroconf_new(self, *k, **kw):
         _report(
             "attempted to create another Zeroconf instance. Please use the shared Zeroconf via await homeassistant.components.zeroconf.async_get_instance(hass)",
         )
         return hass_zc
 
+    def new_zeroconf_init(self, *k, **kw):
+        return
+
     zeroconf.Zeroconf.__new__ = new_zeroconf_new
+    zeroconf.Zeroconf.__init__ = new_zeroconf_init
 
 
 def _report(what: str) -> None:
