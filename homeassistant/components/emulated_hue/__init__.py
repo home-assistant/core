@@ -5,7 +5,6 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.http import real_ip
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -101,7 +100,6 @@ async def async_setup(hass, yaml_config):
     app = web.Application()
     app["hass"] = hass
 
-    real_ip.setup_real_ip(app, False, [])
     # We misunderstood the startup signal. You're not allowed to change
     # anything during startup. Temp workaround.
     # pylint: disable=protected-access
