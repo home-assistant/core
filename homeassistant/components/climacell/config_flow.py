@@ -34,7 +34,6 @@ from .const import (
     DEFAULT_NAME,
     DEFAULT_TIMESTEP,
     DISABLE_FORECASTS,
-    DOMAIN,
     HOURLY,
     NOWCAST,
     USA,
@@ -49,8 +48,8 @@ def _get_config_schema(
     """
     Return schema defaults for init step based on user input/config dict.
 
-    Retain info already provided for future form views by setting them
-    as defaults in schema.
+    Retain info already provided for future form views by setting them as
+    defaults in schema.
     """
     if input_dict is None:
         input_dict = {}
@@ -141,7 +140,7 @@ class ClimaCellOptionsConfigFlow(config_entries.OptionsFlow):
         )
 
 
-class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ClimaCellConfigFlow(config_entries.ConfigFlow):
     """Handle a config flow for ClimaCell Weather API."""
 
     VERSION = 1

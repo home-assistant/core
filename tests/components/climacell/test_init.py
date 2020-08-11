@@ -30,7 +30,6 @@ async def test_load_and_unload(
     hass: HomeAssistantType, climacell_config_entry_update: pytest.fixture,
 ) -> None:
     """Test loading and unloading entry."""
-    _LOGGER.error(hass.config)
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=_get_config_schema(hass)(MIN_CONFIG),
