@@ -3,7 +3,7 @@ import asyncio
 from datetime import timedelta
 import logging
 from math import ceil
-from typing import Any, Dict
+from typing import Any, Dict, Optional, Union
 
 from pyclimacell import ClimaCell
 from pyclimacell.const import (
@@ -108,6 +108,11 @@ def _set_update_interval(
             hass.data[DOMAIN][entry_id].update_interval = interval
 
     return interval
+
+
+def get_cc_value(weather_dict: Dict[str, Any], key: str) -> Optional[Union[int, str]]:
+    """Return property from weather_dict."""
+    return weather_dict.get(key, {}).get("value")
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:

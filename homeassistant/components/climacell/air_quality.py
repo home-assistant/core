@@ -7,8 +7,19 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import ClimaCellEntity
-from .const import AQI_FIELD_LOOKUP, CONF_AQI_COUNTRY, CURRENT, DOMAIN
+from . import ClimaCellEntity, get_cc_value
+from .const import (
+    AQI_FIELD_LOOKUP,
+    CC_ATTR_CARBON_MONOXIDE,
+    CC_ATTR_NITROGEN_DIOXIDE,
+    CC_ATTR_OZONE,
+    CC_ATTR_PM_2_5,
+    CC_ATTR_PM_10,
+    CC_ATTR_SULPHUR_DIOXIDE,
+    CONF_AQI_COUNTRY,
+    CURRENT,
+    DOMAIN,
+)
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -34,41 +45,40 @@ class ClimaCellAirQualityEntity(ClimaCellEntity, AirQualityEntity):
     @property
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
-        return self._coordinator.data[CURRENT].get("pm25", {}).get("value")
+        return get_cc_value(self._coordinator.data[CURRENT], CC_ATTR_PM_2_5)
 
     @property
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
-        return self._coordinator.data[CURRENT].get("pm10", {}).get("value")
+        return get_cc_value(self._coordinator.data[CURRENT], CC_ATTR_PM_10)
 
     @property
     def air_quality_index(self):
         """Return the Air Quality Index (AQI)."""
-        return (
-            self._coordinator.data[CURRENT]
-            .get(AQI_FIELD_LOOKUP[self._config_entry.options[CONF_AQI_COUNTRY]], {})
-            .get("value")
+        return get_cc_value(
+            self._coordinator.data[CURRENT],
+            AQI_FIELD_LOOKUP[self._config_entry.options[CONF_AQI_COUNTRY]],
         )
 
     @property
     def ozone(self):
         """Return the O3 (ozone) level."""
-        return self._coordinator.data[CURRENT].get("o3", {}).get("value")
+        return get_cc_value(self._coordinator.data[CURRENT], CC_ATTR_OZONE)
 
     @property
     def carbon_monoxide(self):
         """Return the CO (carbon monoxide) level."""
-        return self._coordinator.data[CURRENT].get("co", {}).get("value")
+        return get_cc_value(self._coordinator.data[CURRENT], CC_ATTR_CARBON_MONOXIDE)
 
     @property
     def sulphur_dioxide(self):
         """Return the SO2 (sulphur dioxide) level."""
-        return self._coordinator.data[CURRENT].get("so2", {}).get("value")
+        return get_cc_value(self._coordinator.data[CURRENT], CC_ATTR_SULPHUR_DIOXIDE)
 
     @property
     def nitrogen_dioxide(self):
         """Return the NO2 (nitrogen dioxide) level."""
-        return self._coordinator.data[CURRENT].get("no2", {}).get("value")
+        return get_cc_value(self._coordinator.data[CURRENT], CC_ATTR_NITROGEN_DIOXIDE)
 
     @property
     def entity_registry_enabled_default(self):

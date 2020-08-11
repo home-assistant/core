@@ -70,3 +70,23 @@ CONDITIONS = {
 }
 
 CLEAR_CONDITIONS = {"night": "clear-night", "day": "sunny"}
+
+CC_ATTR_TIMESTAMP = "observation_time"
+CC_ATTR_TEMPERATURE = "temp"
+CC_ATTR_TEMPERATURE_HIGH = "max"
+CC_ATTR_TEMPERATURE_LOW = "min"
+CC_ATTR_PRESSURE = "baro_pressure"
+CC_ATTR_HUMIDITY = "humidity"
+CC_ATTR_WIND_SPEED = "wind_speed"
+CC_ATTR_WIND_DIRECTION = "wind_direction"
+CC_ATTR_OZONE = "o3"
+CC_ATTR_CONDITION = "weather_code"
+CC_ATTR_VISIBILITY = "visibility"
+CC_ATTR_PRECIPITATION = "precipitation"
+CC_ATTR_PRECIPITATION_DAILY = "precipitation_accumulation"
+CC_ATTR_PRECIPITATION_PROBABILITY = "precipitation_probability"
+CC_ATTR_PM_2_5 = "pm25"
+CC_ATTR_PM_10 = "pm10"
+CC_ATTR_CARBON_MONOXIDE = "co"
+CC_ATTR_SULPHUR_DIOXIDE = "so2"
+CC_ATTR_NITROGEN_DIOXIDE = "no2"
