@@ -339,14 +339,18 @@ async def test_get_instance(hass, mock_zeroconf):
     assert len(mock_zeroconf.ha_close.mock_calls) == 1
 
 
-async def test_multiple_zeroconf_instances(hass, mock_zeroconf):
+async def test_multiple_zeroconf_instances(hass, mock_zeroconf, caplog):
     """Test creating multiple zeroconf throws without an integration."""
 
     assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
     await hass.async_block_till_done()
 
-    with pytest.raises(RuntimeError):
-        zeroconf.Zeroconf()
+    zeroconf_instance = await zeroconf.async_get_instance(hass)
+
+    new_zeroconf_instance = zeroconf.Zeroconf()
+    assert new_zeroconf_instance == zeroconf_instance
+
+    assert "Zeroconf" in caplog.text
 
 
 async def test_multiple_zeroconf_instances_gives_shared(hass, mock_zeroconf, caplog):

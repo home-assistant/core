@@ -47,18 +47,29 @@ class MissingIntegrationFrame(HomeAssistantError):
     """Raised when no integration is found in the frame."""
 
 
-def report(what: str, exclude_integrations: Optional[set] = None) -> None:
+def report(what: str) -> None:
     """Report incorrect usage.
 
     Async friendly.
     """
     try:
-        found_frame, integration, path = get_integration_frame(
-            exclude_integrations=exclude_integrations
-        )
+        integration_frame = get_integration_frame()
     except MissingIntegrationFrame:
         # Did not source from an integration? Hard error.
         raise RuntimeError(f"Detected code that {what}. Please report this issue.")
+
+    report_integration(what, integration_frame)
+
+
+def report_integration(
+    what: str, integration_frame: Tuple[FrameSummary, str, str]
+) -> None:
+    """Report incorrect usage in an integration.
+
+    Async friendly.
+    """
+
+    found_frame, integration, path = integration_frame
 
     index = found_frame.filename.index(path)
     if path == "custom_components/":
