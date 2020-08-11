@@ -55,3 +55,6 @@ ATTR_CHANNEL = "channel"
 ATTR_HOST = "host"
 ATTR_PACKET = "packet"
 ATTR_PRESET = "preset"
+
+SERVICE_REQUEST_AREA_PRESET = "request_area_preset"
+SERVICE_REQUEST_CHANNEL_LEVEL = "request_channel_level"
