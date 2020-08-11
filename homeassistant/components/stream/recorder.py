@@ -17,7 +17,7 @@ def async_setup_recorder(hass):
 
 def recorder_save_worker(file_out: str, segments: List[Segment]):
     """Handle saving stream."""
-    first_pts = None
+    first_pts = segments[0].start_pts[0]
     output = av.open(file_out, "w")
     output_v = None
 
@@ -36,9 +36,9 @@ def recorder_save_worker(file_out: str, segments: List[Segment]):
         # Remux video
         for packet in source.demux(source_v):
             if packet is not None and packet.dts is not None:
-                if first_pts is None:
-                    first_pts = packet.pts
-
+                if packet.pts < segment.start_pts[0]:
+                    packet.pts += segment.start_pts[0]
+                    packet.dts += segment.start_pts[0]
                 packet.pts -= first_pts
                 packet.dts -= first_pts
                 packet.stream = output_v
