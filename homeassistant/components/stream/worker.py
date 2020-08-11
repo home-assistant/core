@@ -5,7 +5,7 @@ import logging
 
 import av
 
-from .const import AUDIO_SAMPLE_RATE
+from .const import AUDIO_SAMPLE_RATE, MIN_SEGMENT_DURATION
 from .core import Segment, StreamBuffer
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +29,15 @@ def create_stream_buffer(stream_output, video_stream, audio_frame):
 
     a_packet = None
     segment = io.BytesIO()
-    output = av.open(segment, mode="w", format=stream_output.format)
+    output = av.open(
+        segment,
+        mode="w",
+        format=stream_output.format,
+        container_options={
+            "video_track_timescale": str(int(1 / video_stream.time_base)),
+            **(stream_output.container_options or {}),
+        },
+    )
     vstream = output.add_stream(template=video_stream)
     # Check if audio is requested
     astream = None
@@ -68,6 +76,9 @@ def stream_worker(hass, stream, quit_event):
     last_dts = None
     # Keep track of consecutive packets without a dts to detect end of stream.
     last_packet_was_without_dts = False
+    # The pts at the beginning of the segment
+    segment_start_v_pts = 0
+    segment_start_a_pts = 0
 
     while not quit_event.is_set():
         try:
@@ -99,13 +110,15 @@ def stream_worker(hass, stream, quit_event):
         packet.dts -= first_pts
         packet.pts -= first_pts
 
-        # Reset segment on every keyframe
-        if packet.is_keyframe:
-            # Calculate the segment duration by multiplying the presentation
-            # timestamp by the time base, which gets us total seconds.
-            # By then dividing by the sequence, we can calculate how long
-            # each segment is, assuming the stream starts from 0.
-            segment_duration = (packet.pts * packet.time_base) / sequence
+        # Reset segment on keyframe after we reach desired segment duration
+        if (
+            packet.is_keyframe
+            and (packet.pts - segment_start_v_pts) * packet.time_base
+            >= MIN_SEGMENT_DURATION
+        ):
+            # Calculate the segment duration by multiplying the difference of the next and the current
+            # keyframe presentation timestamps by the time base, which gets us total seconds.
+            segment_duration = (packet.pts - segment_start_v_pts) * packet.time_base
             # Save segment to outputs
             for fmt, buffer in outputs.items():
                 buffer.output.close()
@@ -113,17 +126,26 @@ def stream_worker(hass, stream, quit_event):
                 if stream.outputs.get(fmt):
                     hass.loop.call_soon_threadsafe(
                         stream.outputs[fmt].put,
-                        Segment(sequence, buffer.segment, segment_duration),
+                        Segment(
+                            sequence,
+                            buffer.segment,
+                            segment_duration,
+                            (segment_start_v_pts, segment_start_a_pts),
+                        ),
                     )
 
             # Clear outputs and increment sequence
             outputs = {}
             if not first_packet:
                 sequence += 1
+                segment_start_v_pts = packet.pts
+                segment_start_a_pts = int(
+                    packet.pts * packet.time_base * AUDIO_SAMPLE_RATE
+                )
 
             # Initialize outputs
             for stream_output in stream.outputs.values():
-                if video_stream.name != stream_output.video_codec:
+                if video_stream.name not in stream_output.video_codecs:
                     continue
 
                 a_packet, buffer = create_stream_buffer(
