@@ -31,6 +31,8 @@ from homeassistant.helpers.singleton import singleton
 from homeassistant.loader import async_get_homekit, async_get_zeroconf
 from homeassistant.util.zc import install_multiple_zeroconf_warning
 
+from .usage import install_multiple_zeroconf_warning
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "zeroconf"

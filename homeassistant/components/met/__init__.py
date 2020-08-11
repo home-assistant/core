@@ -22,7 +22,7 @@ import homeassistant.util.dt as dt_util
 
 from .const import CONF_TRACK_HOME, DOMAIN
 
-URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/1.9/"
+URL = "https://api.met.no/weatherapi/locationforecast/2.0/classic"
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -116,7 +116,8 @@ class MetWeatherData:
         self._is_metric = is_metric
         self._weather_data = None
         self.current_weather_data = {}
-        self.forecast_data = None
+        self.daily_forecast = None
+        self.hourly_forecast = None
 
     def init_data(self):
         """Weather data inialization - get the coordinates."""
@@ -149,5 +150,6 @@ class MetWeatherData:
         await self._weather_data.fetching_data()
         self.current_weather_data = self._weather_data.get_current_weather()
         time_zone = dt_util.DEFAULT_TIME_ZONE
-        self.forecast_data = self._weather_data.get_forecast(time_zone)
+        self.daily_forecast = self._weather_data.get_forecast(time_zone, False)
+        self.hourly_forecast = self._weather_data.get_forecast(time_zone, True)
         return self

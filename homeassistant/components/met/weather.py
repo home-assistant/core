@@ -66,18 +66,27 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
-        [MetWeather(coordinator, config_entry.data, hass.config.units.is_metric)]
+        [
+            MetWeather(
+                coordinator, config_entry.data, hass.config.units.is_metric, False
+            ),
+            MetWeather(
+                coordinator, config_entry.data, hass.config.units.is_metric, True
+            ),
+        ]
     )
 
 
 class MetWeather(WeatherEntity):
     """Implementation of a Met.no weather condition."""
 
-    def __init__(self, coordinator, config, is_metric):
+    def __init__(self, coordinator, config, is_metric, hourly):
         """Initialise the platform with a data instance and site."""
         self._config = config
         self._coordinator = coordinator
         self._is_metric = is_metric
+        self._hourly = hourly
+        self._name_appendix = "-hourly" if hourly else ""
 
     async def async_added_to_hass(self):
         """Start fetching data."""
@@ -103,9 +112,9 @@ class MetWeather(WeatherEntity):
     def unique_id(self):
         """Return unique ID."""
         if self.track_home:
-            return "home"
+            return f"home{self._name_appendix}"
 
-        return f"{self._config[CONF_LATITUDE]}-{self._config[CONF_LONGITUDE]}"
+        return f"{self._config[CONF_LATITUDE]}-{self._config[CONF_LONGITUDE]}{self._name_appendix}"
 
     @property
     def name(self):
@@ -113,12 +122,12 @@ class MetWeather(WeatherEntity):
         name = self._config.get(CONF_NAME)
 
         if name is not None:
-            return name
+            return f"{name}{self._name_appendix}"
 
         if self.track_home:
-            return self.hass.config.location_name
+            return f"{self.hass.config.location_name}{self._name_appendix}"
 
-        return DEFAULT_NAME
+        return f"{DEFAULT_NAME}{self._name_appendix}"
 
     @property
     def condition(self):
@@ -173,4 +182,6 @@ class MetWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        return self._coordinator.data.forecast_data
+        if self._hourly:
+            return self._coordinator.data.hourly_forecast
+        return self._coordinator.data.daily_forecast
