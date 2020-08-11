@@ -213,15 +213,13 @@ async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
                 bridges.append(cur_bridge)
         LOGGER.debug("Selected bridged for service call: %s", bridges)
         if service_call.service == SERVICE_REQUEST_AREA_PRESET:
-            for bridge in bridges:
-                bridge.dynalite_devices.request_area_preset(
-                    data[ATTR_AREA], data.get(ATTR_CHANNEL)
-                )
+            bridge_attr = "request_area_preset"
         elif service_call.service == SERVICE_REQUEST_CHANNEL_LEVEL:
-            for bridge in bridges:
-                bridge.dynalite_devices.request_channel_level(
-                    data[ATTR_AREA], data[ATTR_CHANNEL]
-                )
+            bridge_attr = "request_channel_level"
+        for bridge in bridges:
+            getattr(bridge.dynalite_devices, bridge_attr)(
+                data[ATTR_AREA], data.get(ATTR_CHANNEL)
+            )
 
     hass.services.async_register(
         DOMAIN,
