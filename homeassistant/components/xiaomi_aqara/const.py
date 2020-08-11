@@ -53,3 +53,9 @@ BATTERY_MODELS = [
     "lock.aq1",
     "lock.acn02",
 ]
+
+POWER_MODELS = [
+    "86plug",
+    "ctrl_86plug",
+    "ctrl_86plug.aq1",
+]
