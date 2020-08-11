@@ -39,22 +39,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
+
         if user_input is not None:
+            unique_id = hash_from_url(user_input[CONF_URL])
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
             try:
-                return await self._try_create_entry(user_input)
+                info = await _validate_input(user_input)
+                return self.async_create_entry(title=info["title"], data=user_input)
             except InputValidationError as error:
                 errors["base"] = error.base
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-    async def _try_create_entry(self, data):
-        unique_id = hash_from_url(data[CONF_URL])
-        await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured()
-        info = await _validate_input(data)
-        return self.async_create_entry(title=info["title"], data=data)
 
 
 class InputValidationError(exceptions.HomeAssistantError):
