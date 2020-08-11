@@ -27,9 +27,8 @@ async def validate_input(hass: core.HomeAssistant, data):
         api = await async_get_api(
             data[CONF_USERNAME], data[CONF_PASSWORD], session=session
         )
-    except RequestError:
-        raise CannotConnect
-    except Exception:  # pylint: disable=broad-except
+    except RequestError as request_error:
+        _LOGGER.error("Error connecting to the Flo API: %s", request_error)
         raise CannotConnect
 
     user_info = await api.user.get_info()
@@ -48,15 +47,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_USERNAME])
+            self._abort_if_unique_id_configured()
             try:
                 info = await validate_input(self.hass, user_input)
-
                 return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
