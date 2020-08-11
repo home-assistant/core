@@ -813,6 +813,9 @@ omit =
     homeassistant/components/route53/*
     homeassistant/components/rova/sensor.py
     homeassistant/components/rpi_camera/*
+    homeassistant/components/rpi_fanshim/__init__.py
+    homeassistant/components/rpi_fanshim/const.py
+    homeassistant/components/rpi_fanshim/light.py
     homeassistant/components/rpi_gpio/*
     homeassistant/components/rpi_gpio/cover.py
     homeassistant/components/rpi_gpio_pwm/light.py
