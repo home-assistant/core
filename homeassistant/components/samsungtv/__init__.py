@@ -40,8 +40,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Samsung TV integration."""
+    hass.data[DOMAIN] = {}
     if DOMAIN in config:
-        hass.data[DOMAIN] = {}
         for entry_config in config[DOMAIN]:
             host = entry_config[CONF_HOST]
             hass.data[DOMAIN][host] = {CONF_ON_ACTION: entry_config.get(CONF_ON_ACTION)}
