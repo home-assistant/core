@@ -78,13 +78,11 @@ async def test_if_fires_using_at_input_datetime(hass, calls, has_date, has_time)
         {"input_datetime": {"trigger": {"has_date": has_date, "has_time": has_time}}},
     )
 
-    hour = 5 if has_time else 0
-
     now = dt_util.now()
 
-    trigger_dt = now.replace(hour=hour, minute=0, second=0, microsecond=0) + timedelta(
-        2
-    )
+    trigger_dt = now.replace(
+        hour=5 if has_time else 0, minute=0, second=0, microsecond=0
+    ) + timedelta(2)
 
     await hass.services.async_call(
         "input_datetime",
@@ -98,6 +96,7 @@ async def test_if_fires_using_at_input_datetime(hass, calls, has_date, has_time)
 
     time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
 
+    some_data = "{{ trigger.platform }}-{{ trigger.now.day }}-{{ trigger.now.hour }}"
     with patch(
         "homeassistant.util.dt.utcnow",
         return_value=dt_util.as_utc(time_that_will_not_match_right_away),
@@ -110,23 +109,38 @@ async def test_if_fires_using_at_input_datetime(hass, calls, has_date, has_time)
                     "trigger": {"platform": "time", "at": "input_datetime.trigger"},
                     "action": {
                         "service": "test.automation",
-                        "data_template": {
-                            "some": "{{ trigger.platform }} - {{ trigger.now.hour }}"
-                        },
+                        "data_template": {"some": some_data},
                     },
                 }
             },
         )
 
-    now = dt_util.now()
+    async_fire_time_changed(hass, trigger_dt)
+    await hass.async_block_till_done()
 
-    async_fire_time_changed(
-        hass, now.replace(hour=hour, minute=0, second=0, microsecond=0) + timedelta(2)
+    assert len(calls) == 1
+    assert calls[0].data["some"] == f"time-{trigger_dt.day}-{trigger_dt.hour}"
+
+    if has_date:
+        trigger_dt += timedelta(days=1)
+    if has_time:
+        trigger_dt += timedelta(hours=1)
+
+    await hass.services.async_call(
+        "input_datetime",
+        "set_datetime",
+        {
+            ATTR_ENTITY_ID: "input_datetime.trigger",
+            "datetime": str(trigger_dt.replace(tzinfo=None)),
+        },
+        blocking=True,
     )
 
+    async_fire_time_changed(hass, trigger_dt)
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == f"time - {hour}"
+
+    assert len(calls) == 2
+    assert calls[1].data["some"] == f"time-{trigger_dt.day}-{trigger_dt.hour}"
 
 
 async def test_if_fires_using_multiple_at(hass, calls):
