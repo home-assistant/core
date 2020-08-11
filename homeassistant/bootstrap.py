@@ -317,7 +317,7 @@ def async_enable_logging(
             logging.getLogger(None).exception(
                 "Uncaught exception in thread %s",
                 name,
-                exec_info=(args.exc_type, args.exc_value, args.exc_traceback),
+                exc_info=(args.exc_type, args.exc_value, args.exc_traceback),
             )
 
         threading.excepthook = thread_excepthook
