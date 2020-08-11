@@ -1060,7 +1060,7 @@ class StateMachine:
             EVENT_STATE_CHANGED, event_data, EventOrigin.local, context,
         )
 
-        if not old_state and self._hass.state == CoreState.not_running:
+        if not old_state and self._hass.state == CoreState.running:
             self._bus.async_fire(
                 EVENT_STATE_ADDED, event_data, EventOrigin.local, context,
             )
