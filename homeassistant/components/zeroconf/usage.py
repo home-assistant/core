@@ -5,8 +5,8 @@ import zeroconf
 from homeassistant.helpers.frame import report
 
 
-def install_multiple_zeroconf_warning(zc) -> None:
-    """Wrap the Zeroconf class to warn if multiple instances are detected."""
+def install_multiple_zeroconf_protection(zc) -> None:
+    """Wrap the Zeroconf class to return the shared instance if multiple instances are detected."""
 
     def new_zeroconf_new(self, *k, **kw) -> zeroconf.Zeroconf:  # type: ignore
         report(

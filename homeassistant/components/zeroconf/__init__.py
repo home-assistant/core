@@ -30,7 +30,7 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.singleton import singleton
 from homeassistant.loader import async_get_homekit, async_get_zeroconf
 
-from .usage import install_multiple_zeroconf_warning
+from .usage import install_multiple_zeroconf_catcher
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,7 +137,7 @@ def setup(hass, config):
         ipv6=zc_config.get(CONF_IPV6, DEFAULT_IPV6),
     )
 
-    install_multiple_zeroconf_warning(zeroconf)
+    install_multiple_zeroconf_catcher(zeroconf)
 
     # Get instance UUID
     uuid = asyncio.run_coroutine_threadsafe(
