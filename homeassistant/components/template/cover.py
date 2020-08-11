@@ -205,20 +205,21 @@ class CoverTemplate(CoverEntity):
         self._entity_picture_template = entity_picture_template
         self._availability_template = availability_template
         self._open_script = None
+        domain = __name__.split(".")[-2]
         if open_action is not None:
-            self._open_script = Script(hass, open_action)
+            self._open_script = Script(hass, open_action, friendly_name, domain)
         self._close_script = None
         if close_action is not None:
-            self._close_script = Script(hass, close_action)
+            self._close_script = Script(hass, close_action, friendly_name, domain)
         self._stop_script = None
         if stop_action is not None:
-            self._stop_script = Script(hass, stop_action)
+            self._stop_script = Script(hass, stop_action, friendly_name, domain)
         self._position_script = None
         if position_action is not None:
-            self._position_script = Script(hass, position_action)
+            self._position_script = Script(hass, position_action, friendly_name, domain)
         self._tilt_script = None
         if tilt_action is not None:
-            self._tilt_script = Script(hass, tilt_action)
+            self._tilt_script = Script(hass, tilt_action, friendly_name, domain)
         self._optimistic = optimistic or (not state_template and not position_template)
         self._tilt_optimistic = tilt_optimistic or not tilt_template
         self._icon = None

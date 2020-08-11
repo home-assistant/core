@@ -97,8 +97,9 @@ class TemplateLock(LockEntity):
         self._state_template = value_template
         self._availability_template = availability_template
         self._state_entities = entity_ids
-        self._command_lock = Script(hass, command_lock)
-        self._command_unlock = Script(hass, command_unlock)
+        domain = __name__.split(".")[-2]
+        self._command_lock = Script(hass, command_lock, name, domain)
+        self._command_unlock = Script(hass, command_unlock, name, domain)
         self._optimistic = optimistic
         self._available = True
         self._unique_id = unique_id

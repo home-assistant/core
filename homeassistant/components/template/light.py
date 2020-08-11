@@ -186,23 +186,28 @@ class LightTemplate(LightEntity):
         self._icon_template = icon_template
         self._entity_picture_template = entity_picture_template
         self._availability_template = availability_template
-        self._on_script = Script(hass, on_action)
-        self._off_script = Script(hass, off_action)
+        domain = __name__.split(".")[-2]
+        self._on_script = Script(hass, on_action, friendly_name, domain)
+        self._off_script = Script(hass, off_action, friendly_name, domain)
         self._level_script = None
         if level_action is not None:
-            self._level_script = Script(hass, level_action)
+            self._level_script = Script(hass, level_action, friendly_name, domain)
         self._level_template = level_template
         self._temperature_script = None
         if temperature_action is not None:
-            self._temperature_script = Script(hass, temperature_action)
+            self._temperature_script = Script(
+                hass, temperature_action, friendly_name, domain
+            )
         self._temperature_template = temperature_template
         self._color_script = None
         if color_action is not None:
-            self._color_script = Script(hass, color_action)
+            self._color_script = Script(hass, color_action, friendly_name, domain)
         self._color_template = color_template
         self._white_value_script = None
         if white_value_action is not None:
-            self._white_value_script = Script(hass, white_value_action)
+            self._white_value_script = Script(
+                hass, white_value_action, friendly_name, domain
+            )
         self._white_value_template = white_value_template
 
         self._state = False
