@@ -25,6 +25,7 @@ from .const import DOMAIN, PLATFORMS
 from .discovery import check_node_schema, check_value_schema
 
 _LOGGER = logging.getLogger(__name__)
+OZW_READY_STATES_VALUES = {st.value for st in OZW_READY_STATES}
 
 
 class ZWaveDeviceEntityValues:
@@ -224,9 +225,7 @@ class ZWaveDeviceEntity(Entity):
         """Return entity availability."""
         # Use OZW Daemon status for availability.
         instance_status = self.values.primary.ozw_instance.get_status()
-        return instance_status and instance_status.status in (
-            state.value for state in OZW_READY_STATES
-        )
+        return instance_status and instance_status.status in OZW_READY_STATES_VALUES
 
     @callback
     def _value_changed(self, value):
