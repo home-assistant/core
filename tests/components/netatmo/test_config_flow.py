@@ -39,7 +39,7 @@ async def test_abort_if_existing_entry(hass):
         data={"host": "0.0.0.0", "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"
 
 
 async def test_full_flow(hass, aiohttp_client, aioclient_mock):
