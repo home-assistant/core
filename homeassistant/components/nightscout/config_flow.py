@@ -17,23 +17,24 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_URL): str})
 
 
+async def _validate_input(data):
+    """Validate the user input allows us to connect."""
+    url = data[CONF_URL]
+    try:
+        api = NightscoutAPI(url)
+        status = await api.get_server_status()
+    except (ClientError, AsyncIOTimeoutError, OSError):
+        raise InputValidationError("cannot_connect")
+
+    # Return info to be stored in the config entry.
+    return {"title": status.name}
+
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Nightscout."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
-
-    async def _validate_input(self, data):
-        """Validate the user input allows us to connect."""
-        url = data[CONF_URL]
-        try:
-            api = NightscoutAPI(url)
-            status = await api.get_server_status()
-        except (ClientError, AsyncIOTimeoutError, OSError):
-            raise InputValidationError("cannot_connect")
-
-        # Return info to be stored in the config entry.
-        return {"title": status.name}
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -52,7 +53,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         unique_id = hash_from_url(data[CONF_URL])
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
-        info = await self._validate_input(data)
+        info = await _validate_input(data)
         return self.async_create_entry(title=info["title"], data=data)
 
 
