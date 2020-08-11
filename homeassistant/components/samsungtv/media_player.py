@@ -149,6 +149,11 @@ class SamsungTVDevice(MediaPlayerEntity):
         return self._state
 
     @property
+    def available(self):
+        """Return the availability of the device."""
+        return self._state == STATE_ON
+
+    @property
     def device_info(self):
         """Return device specific attributes."""
         info = {
