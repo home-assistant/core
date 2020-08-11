@@ -418,7 +418,7 @@ async def test_services(
     await _test_service(
         hass,
         DOMAIN,
-        "set_setting",
+        "VizioAsync.set_setting",
         SERVICE_UPDATE_SETTING,
         {"setting_type": "Audio", "setting_name": "AV Delay", "new_value": "0"},
         "audio",
@@ -434,17 +434,6 @@ async def test_services(
         "audio",
         "eq",
         "Music",
-    )
-    # Test that the update_setting service does config validation/transformation correctly
-    await _test_service(
-        hass,
-        DOMAIN,
-        "VizioAsync.set_setting",
-        SERVICE_UPDATE_SETTING,
-        {"setting_type": "Audio", "setting_name": "AV Delay", "new_value": "0"},
-        "audio",
-        "av_delay",
-        0,
     )
     await _test_service(
         hass, DOMAIN, "gen_apps_list_from_url", SERVICE_FETCH_LATEST_APPS, None,
