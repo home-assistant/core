@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
 from .const import ATTR_DATE, ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN
-from .utils import hash_from_url
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -28,16 +27,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Glucose Sensor."""
     api = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([NightscoutSensor(api, "Blood Sugar")], True)
+    async_add_entities([NightscoutSensor(api, "Blood Sugar", entry.unique_id)], True)
 
 
 class NightscoutSensor(Entity):
     """Implementation of a Nightscout sensor."""
 
-    def __init__(self, api: NightscoutAPI, name):
+    def __init__(self, api: NightscoutAPI, name, unique_id):
         """Initialize the Nightscout sensor."""
         self.api = api
-        self._unique_id = hash_from_url(api.server_url)
+        self._unique_id = unique_id
         self._name = name
         self._state = None
         self._attributes = None
