@@ -34,8 +34,8 @@ async def test_if_fires_using_at(hass, calls):
     now = dt_util.utcnow()
 
     time_that_will_not_match_right_away = now.replace(
-        year=now.year + 1, hour=4, minute=59, second=0
-    )
+        hour=4, minute=59, second=0
+    ) + timedelta(2)
 
     with patch(
         "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
@@ -59,12 +59,88 @@ async def test_if_fires_using_at(hass, calls):
     now = dt_util.utcnow()
 
     async_fire_time_changed(
-        hass, now.replace(year=now.year + 1, hour=5, minute=0, second=0)
+        hass, now.replace(hour=5, minute=0, second=0) + timedelta(2)
     )
 
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == "time - 5"
+
+
+@pytest.mark.parametrize(
+    "has_date,has_time", [(True, True), (True, False), (False, True)]
+)
+async def test_if_fires_using_at_input_datetime(hass, calls, has_date, has_time):
+    """Test for firing at input_datetime."""
+    await async_setup_component(
+        hass,
+        "input_datetime",
+        {"input_datetime": {"trigger": {"has_date": has_date, "has_time": has_time}}},
+    )
+
+    now = dt_util.now()
+
+    trigger_dt = now.replace(
+        hour=5 if has_time else 0, minute=0, second=0, microsecond=0
+    ) + timedelta(2)
+
+    await hass.services.async_call(
+        "input_datetime",
+        "set_datetime",
+        {
+            ATTR_ENTITY_ID: "input_datetime.trigger",
+            "datetime": str(trigger_dt.replace(tzinfo=None)),
+        },
+        blocking=True,
+    )
+
+    time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
+
+    some_data = "{{ trigger.platform }}-{{ trigger.now.day }}-{{ trigger.now.hour }}"
+    with patch(
+        "homeassistant.util.dt.utcnow",
+        return_value=dt_util.as_utc(time_that_will_not_match_right_away),
+    ):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "trigger": {"platform": "time", "at": "input_datetime.trigger"},
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": some_data},
+                    },
+                }
+            },
+        )
+
+    async_fire_time_changed(hass, trigger_dt)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["some"] == f"time-{trigger_dt.day}-{trigger_dt.hour}"
+
+    if has_date:
+        trigger_dt += timedelta(days=1)
+    if has_time:
+        trigger_dt += timedelta(hours=1)
+
+    await hass.services.async_call(
+        "input_datetime",
+        "set_datetime",
+        {
+            ATTR_ENTITY_ID: "input_datetime.trigger",
+            "datetime": str(trigger_dt.replace(tzinfo=None)),
+        },
+        blocking=True,
+    )
+
+    async_fire_time_changed(hass, trigger_dt)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 2
+    assert calls[1].data["some"] == f"time-{trigger_dt.day}-{trigger_dt.hour}"
 
 
 async def test_if_fires_using_multiple_at(hass, calls):
@@ -73,8 +149,8 @@ async def test_if_fires_using_multiple_at(hass, calls):
     now = dt_util.utcnow()
 
     time_that_will_not_match_right_away = now.replace(
-        year=now.year + 1, hour=4, minute=59, second=0
-    )
+        hour=4, minute=59, second=0
+    ) + timedelta(2)
 
     with patch(
         "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
@@ -98,7 +174,7 @@ async def test_if_fires_using_multiple_at(hass, calls):
     now = dt_util.utcnow()
 
     async_fire_time_changed(
-        hass, now.replace(year=now.year + 1, hour=5, minute=0, second=0)
+        hass, now.replace(hour=5, minute=0, second=0) + timedelta(2)
     )
 
     await hass.async_block_till_done()
@@ -106,7 +182,7 @@ async def test_if_fires_using_multiple_at(hass, calls):
     assert calls[0].data["some"] == "time - 5"
 
     async_fire_time_changed(
-        hass, now.replace(year=now.year + 1, hour=6, minute=0, second=0)
+        hass, now.replace(hour=6, minute=0, second=0) + timedelta(2)
     )
 
     await hass.async_block_till_done()
