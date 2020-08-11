@@ -79,7 +79,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _abort_if_already_configured(self):
         device_ip = gethostbyname(self._host)
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
+        for entry in self._async_current_entries():
 
             # update user configured or unique_id=ip entries
             if self._id and not entry.unique_id or device_ip == entry.unique_id:
@@ -128,7 +128,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if device_type and device_type != "Samsung SmartTV":
                     raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
                 self._model = self._device_info.get("device", {}).get("modelName")
-                break
+                return
+        raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
@@ -169,7 +170,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name = f"{self._manufacturer} {self._model}"
         self._title = self._model
 
-        self._abort_if_already_configured()
+        await self.hass.async_add_executor_job(self._abort_if_already_configured())
 
         self.context["title_placeholders"] = {"model": self._model}
         return await self.async_step_confirm()
@@ -190,7 +191,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name = f"{self._manufacturer} {self._model}"
         self._title = self._model
 
-        self._abort_if_already_configured()
+        await self.hass.async_add_executor_job(self._abort_if_already_configured())
 
         self.context["title_placeholders"] = {"model": self._model}
         return await self.async_step_confirm()
@@ -206,7 +207,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="confirm", description_placeholders={"model": self._model}
         )
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, user_input):
         """Handle configuration by re-auth."""
         self._host = user_input[CONF_HOST]
         self._manufacturer = user_input.get(CONF_MANUFACTURER)
