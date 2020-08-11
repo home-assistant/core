@@ -192,36 +192,3 @@ class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=_get_config_schema(self.hass, user_input),
             errors=errors,
         )
-
-    async def async_step_import(self, import_config: Dict[str, Any]) -> Dict[str, Any]:
-        """Handle a configuration.yaml import."""
-        # Check if new config entry matches any existing config entries
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.unique_id == _get_unique_id(self.hass, import_config):
-                updated_data = {}
-                updated_options = {}
-
-                keys = entry.data.keys()
-                for key in keys:
-                    if key in import_config and entry.data[key] != import_config[key]:
-                        updated_data[key] = import_config[key]
-
-                for key in (CONF_TIMESTEP, CONF_AQI_COUNTRY):
-                    if import_config[key] != entry.data[key]:
-                        updated_options.update({key: import_config[key]})
-
-                params = {}
-                if updated_data:
-                    params["data"] = entry.data.copy()
-                    params["data"].update(updated_data)
-                if updated_options:
-                    params["options"] = entry.options.copy()
-                    params["options"].update(updated_options)
-
-                if params:
-                    self.hass.config_entries.async_update_entry(entry=entry, **params)
-                    return self.async_abort(reason="updated_entry")
-
-                return self.async_abort(reason="already_configured_account")
-
-        return await self.async_step_user(user_input=import_config)

@@ -18,14 +18,12 @@ from pyclimacell.pyclimacell import (
     RateLimitedException,
     UnknownException,
 )
-import voluptuous as vol
 
 from homeassistant.components.air_quality import DOMAIN as AQ_DOMAIN
 from homeassistant.components.weather import DOMAIN as W_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -33,48 +31,21 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     ATTRIBUTION,
-    CHINA,
     CONF_AQI_COUNTRY,
     CONF_FORECAST_TYPE,
     CONF_TIMESTEP,
     CURRENT,
     DAILY,
     DEFAULT_AQI_COUNTRY,
-    DEFAULT_FORECAST_TYPE,
-    DEFAULT_NAME,
     DEFAULT_TIMESTEP,
-    DISABLE_FORECASTS,
     DOMAIN,
     FORECASTS,
     HOURLY,
     MAX_REQUESTS_PER_DAY,
     NOWCAST,
-    USA,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Inclusive(CONF_LATITUDE, "location"): cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, "location"): cv.longitude,
-        vol.Optional(CONF_FORECAST_TYPE, default=DEFAULT_FORECAST_TYPE): vol.In(
-            (DISABLE_FORECASTS, DAILY, HOURLY, NOWCAST)
-        ),
-        vol.Optional(CONF_TIMESTEP, default=DEFAULT_TIMESTEP): vol.All(
-            int, vol.Range(1, 60)
-        ),
-        vol.Optional(CONF_AQI_COUNTRY, default=DEFAULT_AQI_COUNTRY): vol.In(
-            (USA, CHINA)
-        ),
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [SCHEMA])}, extra=vol.ALLOW_EXTRA
-)
 
 PLATFORMS = [AQ_DOMAIN, W_DOMAIN]
 
@@ -117,14 +88,7 @@ def get_cc_value(weather_dict: Dict[str, Any], key: str) -> Optional[Union[int, 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the ClimaCell API component."""
-    if DOMAIN in config:
-        for climacell_config in config[DOMAIN]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=climacell_config
-                )
-            )
-
+    hass.data.setdefault(DOMAIN, {})
     return True
 
 
@@ -135,10 +99,8 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         hass.config_entries.async_update_entry(
             config_entry,
             options={
-                CONF_TIMESTEP: config_entry.data.get(CONF_TIMESTEP, DEFAULT_TIMESTEP),
-                CONF_AQI_COUNTRY: config_entry.data.get(
-                    CONF_AQI_COUNTRY, DEFAULT_AQI_COUNTRY
-                ),
+                CONF_TIMESTEP: DEFAULT_TIMESTEP,
+                CONF_AQI_COUNTRY: DEFAULT_AQI_COUNTRY,
             },
         )
 
