@@ -1,8 +1,13 @@
 """ONVIF event abstraction."""
+import asyncio
 import datetime as dt
 from typing import Callable, Dict, List, Optional, Set
 
-from aiohttp.client_exceptions import ServerDisconnectedError
+from aiohttp.client_exceptions import (
+    ClientConnectorError,
+    ClientOSError,
+    ServerDisconnectedError,
+)
 from onvif import ONVIFCamera, ONVIFService
 from zeep.exceptions import Fault
 
@@ -15,6 +20,13 @@ from .models import Event
 from .parsers import PARSERS
 
 UNHANDLED_TOPICS = set()
+SUBSCRIPTION_ERRORS = (
+    ClientConnectorError,
+    ClientOSError,
+    Fault,
+    ServerDisconnectedError,
+    asyncio.TimeoutError,
+)
 
 
 class EventManager:
@@ -44,11 +56,7 @@ class EventManager:
         """Listen for data updates."""
         # This is the first listener, set up polling.
         if not self._listeners:
-            self._unsub_refresh = async_track_point_in_utc_time(
-                self.hass,
-                self.async_pull_messages,
-                dt_util.utcnow() + dt.timedelta(seconds=1),
-            )
+            self.schedule_pull()
 
         self._listeners.append(update_callback)
 
@@ -89,18 +97,54 @@ class EventManager:
             )
 
             self.started = True
+            return True
 
-        return self.started
+        return False
 
     async def async_stop(self) -> None:
         """Unsubscribe from events."""
         self._listeners = []
+        self.started = False
 
         if not self._subscription:
             return
 
         await self._subscription.Unsubscribe()
         self._subscription = None
+
+    async def async_restart(self, _now: dt = None) -> None:
+        """Restart the subscription assuming the camera rebooted."""
+        if not self.started:
+            return
+
+        if self._subscription:
+            try:
+                await self._subscription.Unsubscribe()
+            except SUBSCRIPTION_ERRORS:
+                pass  # Ignored. The subscription may no longer exist.
+            self._subscription = None
+
+        try:
+            restarted = await self.async_start()
+        except SUBSCRIPTION_ERRORS:
+            restarted = False
+
+        if not restarted:
+            LOGGER.warning(
+                "Failed to restart ONVIF PullPoint subscription for '%s'. Retrying...",
+                self.unique_id,
+            )
+            # Try again in a minute
+            self._unsub_refresh = async_track_point_in_utc_time(
+                self.hass,
+                self.async_restart,
+                dt_util.utcnow() + dt.timedelta(seconds=60),
+            )
+        elif self._listeners:
+            LOGGER.info(
+                "Restarted ONVIF PullPoint subscription for '%s'", self.unique_id
+            )
+            self.schedule_pull()
 
     async def async_renew(self) -> None:
         """Renew subscription."""
@@ -113,6 +157,14 @@ class EventManager:
             .replace("+00:00", "Z")
         )
         await self._subscription.Renew(termination_time)
+
+    def schedule_pull(self) -> None:
+        """Schedule async_pull_messages to run."""
+        self._unsub_refresh = async_track_point_in_utc_time(
+            self.hass,
+            self.async_pull_messages,
+            dt_util.utcnow() + dt.timedelta(seconds=1),
+        )
 
     async def async_pull_messages(self, _now: dt = None) -> None:
         """Pull messages from device."""
@@ -129,14 +181,19 @@ class EventManager:
                     dt_util.as_utc(response.TerminationTime) - dt_util.utcnow()
                 ).total_seconds() < 7200:
                     await self.async_renew()
+            except SUBSCRIPTION_ERRORS:
+                LOGGER.warning(
+                    "Failed to fetch ONVIF PullPoint subscription messages for '%s'",
+                    self.unique_id,
+                )
+                # Treat errors as if the camera restarted. Assume that the pullpoint
+                # subscription is no longer valid.
+                self._unsub_refresh = None
+                await self.async_restart()
+                return
 
-                # Parse response
-                await self.async_parse_messages(response.NotificationMessage)
-
-            except ServerDisconnectedError:
-                pass
-            except Fault:
-                pass
+            # Parse response
+            await self.async_parse_messages(response.NotificationMessage)
 
             # Update entities
             for update_callback in self._listeners:
@@ -144,11 +201,7 @@ class EventManager:
 
         # Reschedule another pull
         if self._listeners:
-            self._unsub_refresh = async_track_point_in_utc_time(
-                self.hass,
-                self.async_pull_messages,
-                dt_util.utcnow() + dt.timedelta(seconds=1),
-            )
+            self.schedule_pull()
 
     # pylint: disable=protected-access
     async def async_parse_messages(self, messages) -> None:
