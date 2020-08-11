@@ -63,7 +63,7 @@ class HassIOBaseAuth(HomeAssistantView):
         """Check if this call is from Supervisor."""
         # Check caller IP
         hassio_ip = os.environ["HASSIO"].split(":")[0]
-        if ip_address(request.remote) != ip_address(hassio_ip):
+        if ip_address(request.transport.get_extra_info("peername")[0]) != ip_address(hassio_ip):
             _LOGGER.error("Invalid auth request from %s", request.remote)
             raise HTTPUnauthorized()
 
