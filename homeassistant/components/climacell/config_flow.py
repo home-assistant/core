@@ -34,6 +34,7 @@ from .const import (
     DEFAULT_NAME,
     DEFAULT_TIMESTEP,
     DISABLE_FORECASTS,
+    DOMAIN,
     HOURLY,
     NOWCAST,
     USA,
@@ -140,6 +141,7 @@ class ClimaCellOptionsConfigFlow(config_entries.OptionsFlow):
         )
 
 
+@config_entries.HANDLERS.register(DOMAIN)
 class ClimaCellConfigFlow(config_entries.ConfigFlow):
     """Handle a config flow for ClimaCell Weather API."""
 
