@@ -84,7 +84,8 @@ class TagStorageCollection(collection.StorageCollection):
         """Return a new updated data object."""
         data = {**data, **self.UPDATE_SCHEMA(update_data)}
         # make last_scanned JSON serializeable
-        data[LAST_SCANNED] = str(data[LAST_SCANNED])
+        if LAST_SCANNED in data:
+            data[LAST_SCANNED] = str(data[LAST_SCANNED])
         return data
 
 
