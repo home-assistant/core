@@ -38,7 +38,7 @@ set_temperature:
     hvac_mode:
       description: HVAC operation mode to set temperature to.
       example: "heat"
-      
+
 set_outside_temperature:
   description: Set outside temperature of climate device.
   fields:
