@@ -160,7 +160,21 @@ async def async_get_image(hass, entity_id, timeout=10):
 
     raise HomeAssistantError("Unable to get image")
 
+@bind_hass
+async def async_get_raw_image(hass, entity_id, timeout=10):
+    """Fetch an image from a camera entity."""
+    camera = _get_camera_from_entity_id(hass, entity_id)
 
+    with suppress(asyncio.CancelledError, asyncio.TimeoutError):
+        async with async_timeout.timeout(timeout):
+            image = await camera.async_camera_raw_image()
+            
+            if image is not None:
+                return Image(camera.content_type, image)
+
+    raise HomeAssistantError("Unable to get image")
+    
+    
 @bind_hass
 async def async_get_stream_source(hass, entity_id):
     """Fetch the stream source for a camera entity."""
