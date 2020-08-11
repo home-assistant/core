@@ -18,7 +18,7 @@ from homeassistant.const import CONTENT_TYPE_JSON, HTTP_OK, HTTP_SERVICE_UNAVAIL
 from homeassistant.core import Context, is_callback
 from homeassistant.helpers.json import JSONEncoder
 
-from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_REAL_IP
+from .const import KEY_AUTHENTICATED, KEY_HASS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,10 +116,7 @@ def request_handler_factory(view: HomeAssistantView, handler: Callable) -> Calla
             raise HTTPUnauthorized()
 
         _LOGGER.debug(
-            "Serving %s to %s (auth: %s)",
-            request.path,
-            request.get(KEY_REAL_IP),
-            authenticated,
+            "Serving %s to %s (auth: %s)", request.path, request.remote, authenticated,
         )
 
         try:

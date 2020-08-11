@@ -1,6 +1,7 @@
 """Support for a Hue API to control Home Assistant."""
 import asyncio
 import hashlib
+from ipaddress import ip_address
 import logging
 import time
 
@@ -34,7 +35,6 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
 )
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.http.const import KEY_REAL_IP
 from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
     SERVICE_SET_HUMIDITY,
@@ -131,7 +131,7 @@ class HueUsernameView(HomeAssistantView):
 
     async def post(self, request):
         """Handle a POST request."""
-        if not is_local(request[KEY_REAL_IP]):
+        if not is_local(ip_address(request.remote)):
             return self.json_message("Only local IPs allowed", HTTP_UNAUTHORIZED)
 
         try:
@@ -159,7 +159,7 @@ class HueAllGroupsStateView(HomeAssistantView):
     @core.callback
     def get(self, request, username):
         """Process a request to make the Brilliant Lightpad work."""
-        if not is_local(request[KEY_REAL_IP]):
+        if not is_local(ip_address(request.remote)):
             return self.json_message("Only local IPs allowed", HTTP_UNAUTHORIZED)
 
         return self.json({})
@@ -179,7 +179,7 @@ class HueGroupView(HomeAssistantView):
     @core.callback
     def put(self, request, username):
         """Process a request to make the Logitech Pop working."""
-        if not is_local(request[KEY_REAL_IP]):
+        if not is_local(ip_address(request.remote)):
             return self.json_message("Only local IPs allowed", HTTP_UNAUTHORIZED)
 
         return self.json(
@@ -209,7 +209,7 @@ class HueAllLightsStateView(HomeAssistantView):
     @core.callback
     def get(self, request, username):
         """Process a request to get the list of available lights."""
-        if not is_local(request[KEY_REAL_IP]):
+        if not is_local(ip_address(request.remote)):
             return self.json_message("Only local IPs allowed", HTTP_UNAUTHORIZED)
 
         return self.json(create_list_of_entities(self.config, request))
@@ -229,7 +229,7 @@ class HueFullStateView(HomeAssistantView):
     @core.callback
     def get(self, request, username):
         """Process a request to get the list of available lights."""
-        if not is_local(request[KEY_REAL_IP]):
+        if not is_local(ip_address(request.remote)):
             return self.json_message("only local IPs allowed", HTTP_UNAUTHORIZED)
         if username != HUE_API_USERNAME:
             return self.json(UNAUTHORIZED_USER)
@@ -256,7 +256,7 @@ class HueConfigView(HomeAssistantView):
     @core.callback
     def get(self, request, username):
         """Process a request to get the configuration."""
-        if not is_local(request[KEY_REAL_IP]):
+        if not is_local(ip_address(request.remote)):
             return self.json_message("only local IPs allowed", HTTP_UNAUTHORIZED)
         if username != HUE_API_USERNAME:
             return self.json(UNAUTHORIZED_USER)
@@ -280,7 +280,7 @@ class HueOneLightStateView(HomeAssistantView):
     @core.callback
     def get(self, request, username, entity_id):
         """Process a request to get the state of an individual light."""
-        if not is_local(request[KEY_REAL_IP]):
+        if not is_local(ip_address(request.remote)):
             return self.json_message("Only local IPs allowed", HTTP_UNAUTHORIZED)
 
         hass = request.app["hass"]
@@ -321,7 +321,7 @@ class HueOneLightChangeView(HomeAssistantView):
 
     async def put(self, request, username, entity_number):
         """Process a request to set the state of an individual light."""
-        if not is_local(request[KEY_REAL_IP]):
+        if not is_local(ip_address(request.remote)):
             return self.json_message("Only local IPs allowed", HTTP_UNAUTHORIZED)
 
         config = self.config
