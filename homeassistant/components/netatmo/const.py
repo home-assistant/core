@@ -1,6 +1,4 @@
 """Constants used by the Netatmo component."""
-from datetime import timedelta
-
 API = "api"
 
 DOMAIN = "netatmo"
@@ -69,9 +67,6 @@ ATTR_IS_KNOWN = "is_known"
 ATTR_FACE_URL = "face_url"
 ATTR_SCHEDULE_ID = "schedule_id"
 ATTR_SCHEDULE_NAME = "schedule_name"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
-MIN_TIME_BETWEEN_EVENT_UPDATES = timedelta(seconds=5)
 
 SERVICE_SET_SCHEDULE = "set_schedule"
 SERVICE_SET_PERSONS_HOME = "set_persons_home"
