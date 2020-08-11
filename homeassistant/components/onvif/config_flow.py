@@ -18,8 +18,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
-    HTTP_BASIC_AUTHENTICATION,
-    HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import callback
 
@@ -27,7 +25,6 @@ from homeassistant.core import callback
 from .const import (
     CONF_DEVICE_ID,
     CONF_RTSP_TRANSPORT,
-    CONF_SNAPSHOT_AUTH,
     DEFAULT_ARGUMENTS,
     DEFAULT_PORT,
     DOMAIN,
@@ -37,7 +34,6 @@ from .const import (
 from .device import get_device
 
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
-SNAPSHOT_AUTH_TYPES = [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
 
 
 def wsdiscovery() -> List[Service]:
@@ -292,7 +288,6 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             self.options[CONF_EXTRA_ARGUMENTS] = user_input[CONF_EXTRA_ARGUMENTS]
             self.options[CONF_RTSP_TRANSPORT] = user_input[CONF_RTSP_TRANSPORT]
-            self.options[CONF_SNAPSHOT_AUTH] = user_input[CONF_SNAPSHOT_AUTH]
             return self.async_create_entry(title="", data=self.options)
 
         return self.async_show_form(
@@ -311,12 +306,6 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
                             CONF_RTSP_TRANSPORT, RTSP_TRANS_PROTOCOLS[0]
                         ),
                     ): vol.In(RTSP_TRANS_PROTOCOLS),
-                    vol.Required(
-                        CONF_SNAPSHOT_AUTH,
-                        default=self.config_entry.options.get(
-                            CONF_SNAPSHOT_AUTH, HTTP_DIGEST_AUTHENTICATION
-                        ),
-                    ): vol.In(SNAPSHOT_AUTH_TYPES),
                 }
             ),
         )

@@ -50,8 +50,7 @@
             "onvif_devices": {
                 "data": {
                     "extra_arguments": "Extra FFMPEG arguments",
-                    "rtsp_transport": "RTSP transport mechanism",
-                    "snapshot_auth": "HTTP Authentication for snapshot retrieval"
+                    "rtsp_transport": "RTSP transport mechanism"
                 },
                 "title": "ONVIF Device Options"
             }

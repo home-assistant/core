@@ -82,7 +82,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
             CONF_RTSP_TRANSPORT
         )
         self._basic_auth = (
-            device.config_entry.options.get(CONF_SNAPSHOT_AUTH)
+            device.config_entry.data.get(CONF_SNAPSHOT_AUTH)
             == HTTP_BASIC_AUTHENTICATION
         )
         self._stream_uri = None
