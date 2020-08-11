@@ -146,9 +146,8 @@ def async_setup_forwarded(app, trusted_proxies):
             # Ideally this should take the scheme corresponding to the entry
             # in X-Forwarded-For that was chosen, but some proxies only retain
             # one element. In that case, use what we have.
-            if forwarded_for_index > 1 or len(forwarded_proto) == 1:
-                overrides["scheme"] = forwarded_proto[-1]
-            else:
+            overrides["scheme"] = forwarded_proto[-1]
+            if len(forwarded_proto) != 1:
                 overrides["scheme"] = forwarded_proto[forwarded_for_index]
 
         # Handle X-Forwarded-Host
