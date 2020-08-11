@@ -8,6 +8,7 @@ from aiohttp.web import HTTPBadRequest, Request, Response, json_response
 from nacl.secret import SecretBox
 import voluptuous as vol
 
+from homeassistant.components import tag
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_CLASSES,
 )
@@ -544,9 +545,10 @@ async def webhook_get_config(hass, config_entry, data):
 @validate_schema({vol.Required("tag_id"): cv.string})
 async def webhook_scan_tag(hass, config_entry, data):
     """Handle a fire event webhook."""
-    hass.bus.async_fire(
-        "tag_scanned",
-        {"tag_id": data["tag_id"], "device_id": config_entry.data[ATTR_DEVICE_ID]},
-        context=registration_context(config_entry.data),
+    await tag.async_scan_tag(
+        hass,
+        data["tag_id"],
+        config_entry.data[ATTR_DEVICE_ID],
+        registration_context(config_entry.data),
     )
     return empty_okay_response()
