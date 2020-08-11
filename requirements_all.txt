@@ -824,7 +824,7 @@ konnected==1.1.0
 lakeside==0.12
 
 # homeassistant.components.dyson
-libpurecool==0.6.1
+libpurecool==0.6.3
 
 # homeassistant.components.foscam
 libpyfoscam==1.0
