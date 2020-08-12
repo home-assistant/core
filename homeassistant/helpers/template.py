@@ -133,10 +133,6 @@ def _true(arg: Any) -> bool:
     return True
 
 
-def _false(arg: Any) -> bool:
-    return False
-
-
 class RenderInfo:
     """Holds information about a template render."""
 
