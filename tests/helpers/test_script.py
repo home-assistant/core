@@ -93,7 +93,7 @@ async def test_firing_event_basic(hass, caplog):
 
     sequence = cv.SCRIPT_SCHEMA({"event": event, "event_data": {"hello": "world"}})
     script_obj = script.Script(
-        hass, sequence, "Test Name", "test_domain", description="test script"
+        hass, sequence, "Test Name", "test_domain", running_description="test script"
     )
 
     await script_obj.async_run(context=context)

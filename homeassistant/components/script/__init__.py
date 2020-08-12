@@ -256,6 +256,7 @@ class ScriptEntity(ToggleEntity):
             cfg[CONF_SEQUENCE],
             cfg.get(CONF_ALIAS, object_id),
             DOMAIN,
+            running_description="script sequence",
             change_listener=self.async_change_listener,
             script_mode=cfg[CONF_MODE],
             max_runs=cfg[CONF_MAX],

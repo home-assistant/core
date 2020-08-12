@@ -546,7 +546,7 @@ async def _async_process_config(hass, config, component):
                 config_block[CONF_ACTION],
                 name,
                 DOMAIN,
-                description="automation actions",
+                running_description="automation actions",
                 script_mode=config_block[CONF_MODE],
                 max_runs=config_block[CONF_MAX],
                 logger=_LOGGER,

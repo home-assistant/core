@@ -176,7 +176,7 @@ class _ScriptRun:
         try:
             if self._stop.is_set():
                 return
-            self._log("Running %s", self._script.description)
+            self._log("Running %s", self._script.running_description)
             for self._step, self._action in enumerate(self._script.sequence):
                 if self._stop.is_set():
                     break
@@ -618,7 +618,8 @@ class Script:
         name: str,
         domain: str,
         *,
-        description: Optional[str] = "script",
+        # Used in "Running <running_description>" log message
+        running_description: Optional[str] = None,
         change_listener: Optional[Callable[..., Any]] = None,
         script_mode: str = DEFAULT_SCRIPT_MODE,
         max_runs: int = DEFAULT_MAX,
@@ -644,7 +645,7 @@ class Script:
         template.attach(hass, self.sequence)
         self.name = name
         self.domain = domain
-        self.description = description or f"{domain} script"
+        self.running_description = running_description or f"{domain} script"
         self.change_listener = change_listener
         self.script_mode = script_mode
         self._set_logger(logger)
@@ -835,7 +836,7 @@ class Script:
             action[CONF_REPEAT][CONF_SEQUENCE],
             f"{self.name}: {step_name}",
             self.domain,
-            description=self.description,
+            running_description=self.running_description,
             script_mode=SCRIPT_MODE_PARALLEL,
             max_runs=self.max_runs,
             logger=self._logger,
@@ -865,7 +866,7 @@ class Script:
                 choice[CONF_SEQUENCE],
                 f"{self.name}: {step_name}: choice {idx}",
                 self.domain,
-                description=self.description,
+                running_description=self.running_description,
                 script_mode=SCRIPT_MODE_PARALLEL,
                 max_runs=self.max_runs,
                 logger=self._logger,
@@ -882,7 +883,7 @@ class Script:
                 action[CONF_DEFAULT],
                 f"{self.name}: {step_name}: default",
                 self.domain,
-                description=self.description,
+                running_description=self.running_description,
                 script_mode=SCRIPT_MODE_PARALLEL,
                 max_runs=self.max_runs,
                 logger=self._logger,
