@@ -150,20 +150,21 @@ async def async_setup_entry(hass, entry, async_add_entities):
             _LOGGER.debug(
                 "Adding module %s %s", module.get("module_name"), module.get("_id"),
             )
-            conditions = data_class.get_monitored_conditions(module_id=module["_id"])
+            conditions = [
+                c.lower()
+                for c in data_class.get_monitored_conditions(module_id=module["_id"])
+            ]
             for condition in conditions:
-                if f"{condition.lower()}_value" in SENSOR_TYPES:
+                if f"{condition}_value" in SENSOR_TYPES:
                     conditions.append(f"{condition}_value")
-                elif f"{condition.lower()}_lvl" in SENSOR_TYPES:
+                elif f"{condition}_lvl" in SENSOR_TYPES:
                     conditions.append(f"{condition}_lvl")
-                elif condition.lower() == "battery_vp":
+                elif condition == "battery_vp":
                     conditions.append("battery_lvl")
 
             for condition in conditions:
                 entities.append(
-                    NetatmoSensor(
-                        data_handler, data_class_name, module, condition.lower()
-                    )
+                    NetatmoSensor(data_handler, data_class_name, module, condition)
                 )
 
         return entities
