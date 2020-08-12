@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+        },
+        "error": {
+            "duplicate_entry": "That host has already been added.",
+            "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
+        },
+        "step": {
+            "link": {
+                "description": "You must authorize Home Assistant in Roon. After you click submit, go to the Roon Core application, open Settings and enable HomeAssistant on the Extensions tab.",
+                "title": "Authorize HomeAssistant in Roon"
+            },
+            "user": {
+                "data": {
+                    "host": "[%key:common::config_flow::data::host%]"
+                },
+                "description": "Please enter your Roon server Hostname or IP.",
+                "title": "Configure Roon Server"
+            }
+        }
+    },
+    "title": "Roon"
+}

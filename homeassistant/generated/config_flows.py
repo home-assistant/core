@@ -144,6 +144,7 @@ FLOWS = [
     "ring",
     "roku",
     "roomba",
+    "roon",
     "samsungtv",
     "sense",
     "sentry",
