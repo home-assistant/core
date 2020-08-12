@@ -2,7 +2,9 @@
 
 from homeassistant.components.ozw.websocket_api import ID, NODE_ID, OZW_INSTANCE, TYPE
 
-from .common import setup_ozw
+from .common import MQTTMessage, setup_ozw
+
+from tests.async_mock import patch
 
 
 async def test_websocket_api(hass, generic_data, hass_ws_client):
@@ -56,3 +58,75 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     assert result["received_packets"] == 3594
     assert result["received_dup_packets"] == 12
     assert result["received_unsolicited"] == 3546
+
+    # Test node metadata
+    await client.send_json({ID: 8, TYPE: "ozw/node_metadata", NODE_ID: 39})
+    msg = await client.receive_json()
+    result = msg["result"]
+    assert result["metadata"]["ProductPic"] == "images/aeotec/zwa002.png"
+
+
+async def test_refresh_node(hass, generic_data, sent_messages, hass_ws_client):
+    """Test the ozw refresh node api."""
+    receive_message = await setup_ozw(hass, fixture=generic_data)
+    client = await hass_ws_client(hass)
+
+    # Send the refresh_node_info command
+    await client.send_json({ID: 9, TYPE: "ozw/refresh_node_info", NODE_ID: 39})
+    msg = await client.receive_json()
+
+    assert len(sent_messages) == 1
+    assert msg["success"]
+
+    # Receive a mock status update from OZW
+    message = MQTTMessage(
+        topic="OpenZWave/1/node/39/",
+        payload={"NodeID": 39, "NodeQueryStage": "initializing"},
+    )
+    message.encode()
+    receive_message(message)
+
+    # Verify we got expected data on the websocket
+    msg = await client.receive_json()
+    result = msg["event"]
+    assert result["type"] == "node_updated"
+    assert result["node_query_stage"] == "initializing"
+
+    # Send another mock status update from OZW
+    message = MQTTMessage(
+        topic="OpenZWave/1/node/39/",
+        payload={"NodeID": 39, "NodeQueryStage": "versions"},
+    )
+    message.encode()
+    receive_message(message)
+
+    # Send a mock status update for a different node
+    message = MQTTMessage(
+        topic="OpenZWave/1/node/35/",
+        payload={"NodeID": 35, "NodeQueryStage": "fake_shouldnt_be_received"},
+    )
+    message.encode()
+    receive_message(message)
+
+    # Verify we received the message for node 39 but not for node 35
+    msg = await client.receive_json()
+    result = msg["event"]
+    assert result["type"] == "node_updated"
+    assert result["node_query_stage"] == "versions"
+
+
+async def test_refresh_node_unsubscribe(hass, generic_data, hass_ws_client):
+    """Test unsubscribing the ozw refresh node api."""
+    await setup_ozw(hass, fixture=generic_data)
+    client = await hass_ws_client(hass)
+
+    with patch("openzwavemqtt.OZWOptions.listen") as mock_listen:
+        # Send the refresh_node_info command
+        await client.send_json({ID: 9, TYPE: "ozw/refresh_node_info", NODE_ID: 39})
+        await client.receive_json()
+
+        # Send the unsubscribe command
+        await client.send_json({ID: 10, TYPE: "unsubscribe_events", "subscription": 9})
+        await client.receive_json()
+
+        assert mock_listen.return_value.called
