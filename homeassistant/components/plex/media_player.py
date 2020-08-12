@@ -689,6 +689,6 @@ class PlexMediaPlayer(MediaPlayerEntity):
         response = await self.hass.async_add_executor_job(build_item_response, payload)
         if response is None:
             raise HomeAssistantError(
-                "Media not found: %s / %s", media_content_type, media_content_id
+                f"Media not found: {media_content_type} / {media_content_id}"
             )
         return response

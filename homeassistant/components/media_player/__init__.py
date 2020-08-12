@@ -1002,7 +1002,7 @@ async def websocket_browse_media(hass, connection, msg):
         return
     except HomeAssistantError as err:
         connection.send_message(
-            websocket_api.error_message(msg["id"], "browse_failed", err)
+            websocket_api.error_message(msg["id"], "browse_failed", str(err))
         )
         return
 
