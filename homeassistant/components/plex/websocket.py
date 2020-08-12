@@ -188,7 +188,7 @@ def _build_item_response(plex_server, payload):
             payload["can_expand"] = True
         return payload
 
-    if media.type in EXPANDABLES:
+    if media.type in EXPANDABLES and payload.get("media_type") == PLEX_DOMAIN:
         media_info = []
         for item in media:
             child_info = item_payload(item)
