@@ -1,6 +1,6 @@
 """Helpers to execute scripts."""
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import partial
 import itertools
 import logging
@@ -241,20 +241,24 @@ class _ScriptRun:
             level=level,
         )
 
-    async def _async_delay_step(self):
-        """Handle delay."""
+    def _get_pos_time_period_template(self, key):
         try:
-            delay = vol.All(cv.time_period, cv.positive_timedelta)(
-                template.render_complex(self._action[CONF_DELAY], self._variables)
+            return cv.positive_time_period(
+                template.render_complex(self._action[key], self._variables)
             )
         except (exceptions.TemplateError, vol.Invalid) as ex:
             self._log(
-                "Error rendering %s delay template: %s",
+                "Error rendering %s %s template: %s",
                 self._script.name,
+                key,
                 ex,
                 level=logging.ERROR,
             )
             raise _StopScript
+
+    async def _async_delay_step(self):
+        """Handle delay."""
+        delay = self._get_pos_time_period_template(CONF_DELAY)
 
         self._script.last_action = self._action.get(CONF_ALIAS, f"delay {delay}")
         self._log("Executing step %s", self._script.last_action)
@@ -269,41 +273,55 @@ class _ScriptRun:
 
     async def _async_wait_template_step(self):
         """Handle a wait template."""
+        if CONF_TIMEOUT in self._action:
+            delay = self._get_pos_time_period_template(CONF_TIMEOUT).total_seconds()
+        else:
+            delay = None
+
         self._script.last_action = self._action.get(CONF_ALIAS, "wait template")
-        self._log("Executing step %s", self._script.last_action)
+        self._log(
+            "Executing step %s%s",
+            self._script.last_action,
+            "" if delay is None else f" (timeout: {timedelta(seconds=delay)})",
+        )
+
+        self._variables["wait"] = {"remaining": delay, "completed": False}
 
         wait_template = self._action[CONF_WAIT_TEMPLATE]
         wait_template.hass = self._hass
 
         # check if condition already okay
         if condition.async_template(self._hass, wait_template, self._variables):
+            self._variables["wait"]["completed"] = True
             return
 
         @callback
         def async_script_wait(entity_id, from_s, to_s):
             """Handle script after template condition is true."""
+            self._variables["wait"] = {
+                "remaining": to_context.remaining if to_context else delay,
+                "completed": True,
+            }
             done.set()
 
+        to_context = None
         unsub = async_track_template(
             self._hass, wait_template, async_script_wait, self._variables
         )
 
         self._changed()
-        try:
-            delay = self._action[CONF_TIMEOUT].total_seconds()
-        except KeyError:
-            delay = None
         done = asyncio.Event()
         tasks = [
             self._hass.async_create_task(flag.wait()) for flag in (self._stop, done)
         ]
         try:
-            async with timeout(delay):
+            async with timeout(delay) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         except asyncio.TimeoutError:
             if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
                 self._log(_TIMEOUT_MSG)
                 raise _StopScript
+            self._variables["wait"]["remaining"] = 0.0
         finally:
             for task in tasks:
                 task.cancel()

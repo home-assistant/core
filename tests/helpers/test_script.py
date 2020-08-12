@@ -16,7 +16,6 @@ import homeassistant.components.scene as scene
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
 from homeassistant.core import Context, CoreState, callback
 from homeassistant.helpers import config_validation as cv, script
-from homeassistant.helpers.event import async_call_later
 import homeassistant.util.dt as dt_util
 
 from tests.async_mock import patch
@@ -27,49 +26,6 @@ from tests.common import (
 )
 
 ENTITY_ID = "script.test"
-
-
-@pytest.fixture
-def mock_timeout(hass, monkeypatch):
-    """Mock async_timeout.timeout."""
-
-    class MockTimeout:
-        def __init__(self, timeout):
-            self._timeout = timeout
-            self._loop = asyncio.get_event_loop()
-            self._task = None
-            self._cancelled = False
-            self._unsub = None
-
-        async def __aenter__(self):
-            if self._timeout is None:
-                return self
-            self._task = asyncio.Task.current_task()
-            if self._timeout <= 0:
-                self._loop.call_soon(self._cancel_task)
-                return self
-            # Wait for a time_changed event instead of real time passing.
-            self._unsub = async_call_later(hass, self._timeout, self._cancel_task)
-            return self
-
-        async def __aexit__(self, exc_type, exc_val, exc_tb):
-            if exc_type is asyncio.CancelledError and self._cancelled:
-                self._unsub = None
-                self._task = None
-                raise asyncio.TimeoutError
-            if self._timeout is not None and self._unsub:
-                self._unsub()
-                self._unsub = None
-            self._task = None
-            return None
-
-        @callback
-        def _cancel_task(self, now=None):
-            if self._task is not None:
-                self._task.cancel()
-                self._cancelled = True
-
-    monkeypatch.setattr(script, "timeout", MockTimeout)
 
 
 def async_watch_for_action(script_obj, message):
@@ -326,7 +282,7 @@ async def test_stop_no_wait(hass, count):
     assert len(events) == 0
 
 
-async def test_delay_basic(hass, mock_timeout):
+async def test_delay_basic(hass):
     """Test the delay."""
     delay_alias = "delay step"
     sequence = cv.SCRIPT_SCHEMA({"delay": {"seconds": 5}, "alias": delay_alias})
@@ -350,7 +306,7 @@ async def test_delay_basic(hass, mock_timeout):
         assert script_obj.last_action is None
 
 
-async def test_multiple_runs_delay(hass, mock_timeout):
+async def test_multiple_runs_delay(hass):
     """Test multiple runs with delay in script."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -393,7 +349,7 @@ async def test_multiple_runs_delay(hass, mock_timeout):
         assert events[-1].data["value"] == 2
 
 
-async def test_delay_template_ok(hass, mock_timeout):
+async def test_delay_template_ok(hass):
     """Test the delay as a template."""
     sequence = cv.SCRIPT_SCHEMA({"delay": "00:00:{{ 5 }}"})
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
@@ -441,7 +397,7 @@ async def test_delay_template_invalid(hass, caplog):
     assert len(events) == 1
 
 
-async def test_delay_template_complex_ok(hass, mock_timeout):
+async def test_delay_template_complex_ok(hass):
     """Test the delay with a working complex template."""
     sequence = cv.SCRIPT_SCHEMA({"delay": {"seconds": "{{ 5 }}"}})
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
@@ -648,10 +604,55 @@ async def test_wait_template_not_schedule(hass):
 
 
 @pytest.mark.parametrize(
+    "timeout_param", [5, "{{ 5 }}", {"seconds": 5}, {"seconds": "{{ 5 }}"}]
+)
+async def test_wait_template_timeout(hass, caplog, timeout_param):
+    """Test the wait timeout option."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "wait_template": "{{ states.switch.test.state == 'off' }}",
+                "timeout": timeout_param,
+                "continue_on_timeout": True,
+            },
+            {"event": event},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    wait_started_flag = async_watch_for_action(script_obj, "wait")
+
+    try:
+        hass.states.async_set("switch.test", "on")
+        hass.async_create_task(script_obj.async_run())
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
+
+        assert script_obj.is_running
+        assert len(events) == 0
+    except (AssertionError, asyncio.TimeoutError):
+        await script_obj.async_stop()
+        raise
+    else:
+        cur_time = dt_util.utcnow()
+        async_fire_time_changed(hass, cur_time + timedelta(seconds=4))
+        await asyncio.sleep(0)
+
+        assert len(events) == 0
+
+        async_fire_time_changed(hass, cur_time + timedelta(seconds=5))
+        await hass.async_block_till_done()
+
+        assert not script_obj.is_running
+        assert len(events) == 1
+        assert "(timeout: 0:00:05)" in caplog.text
+
+
+@pytest.mark.parametrize(
     "continue_on_timeout,n_events", [(False, 0), (True, 1), (None, 1)]
 )
-async def test_wait_template_timeout(hass, mock_timeout, continue_on_timeout, n_events):
-    """Test the wait template, halt on timeout."""
+async def test_wait_template_continue_on_timeout(hass, continue_on_timeout, n_events):
+    """Test the wait template continue_on_timeout option."""
     event = "test_event"
     events = async_capture_events(hass, event)
     sequence = [
@@ -682,8 +683,8 @@ async def test_wait_template_timeout(hass, mock_timeout, continue_on_timeout, n_
         assert len(events) == n_events
 
 
-async def test_wait_template_variables(hass):
-    """Test the wait template with variables."""
+async def test_wait_template_variables_in(hass):
+    """Test the wait template with input variables."""
     sequence = cv.SCRIPT_SCHEMA({"wait_template": "{{ is_state(data, 'off') }}"})
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, "wait")
@@ -704,6 +705,58 @@ async def test_wait_template_variables(hass):
         await hass.async_block_till_done()
 
         assert not script_obj.is_running
+
+
+@pytest.mark.parametrize("mode", ["no_timeout", "timeout_finish", "timeout_not_finish"])
+async def test_wait_template_variables_out(hass, mode):
+    """Test the wait template output variable."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    action = {"wait_template": "{{ states.switch.test.state == 'off' }}"}
+    if mode != "no_timeout":
+        action["timeout"] = 5
+        action["continue_on_timeout"] = True
+    sequence = [
+        action,
+        {
+            "event": event,
+            "event_data_template": {
+                "completed": "{{ wait.completed }}",
+                "remaining": "{{ wait.remaining }}",
+            },
+        },
+    ]
+    sequence = cv.SCRIPT_SCHEMA(sequence)
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    wait_started_flag = async_watch_for_action(script_obj, "wait")
+
+    try:
+        hass.states.async_set("switch.test", "on")
+        hass.async_create_task(script_obj.async_run())
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
+
+        assert script_obj.is_running
+        assert len(events) == 0
+    except (AssertionError, asyncio.TimeoutError):
+        await script_obj.async_stop()
+        raise
+    else:
+        if mode == "timeout_not_finish":
+            async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+        else:
+            hass.states.async_set("switch.test", "off")
+        await hass.async_block_till_done()
+
+        assert not script_obj.is_running
+        assert len(events) == 1
+        assert events[0].data["completed"] == str(mode != "timeout_not_finish")
+        remaining = events[0].data["remaining"]
+        if mode == "no_timeout":
+            assert remaining == "None"
+        elif mode == "timeout_finish":
+            assert 0.0 < float(remaining) < 5
+        else:
+            assert float(remaining) == 0.0
 
 
 async def test_condition_basic(hass):
