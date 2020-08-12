@@ -40,7 +40,7 @@ async def websocket_browse_media(hass, connection, msg):
         return
 
     def libraries_info():
-        """Wrap Plex library queries. Some attributes perform I/O."""
+        """Create response payload to describe available libraries."""
         response = []
         for library in plex_server.library.sections():
             response.append(
@@ -56,7 +56,7 @@ async def websocket_browse_media(hass, connection, msg):
         return response
 
     def library_contents_info():
-        """Wrap Plex library queries. Some attributes perform I/O."""
+        """Create response payload to describe contents of a specific library."""
         response = []
         for item in library.all():
             response.append(
