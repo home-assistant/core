@@ -13,9 +13,3 @@ update_setting:
     new_value:
       description: The new value for the setting
       example: "Music"
-fetch_latest_apps:
-  description: Fetch the latest apps list from the Vizio website.
-  fields:
-    entity_id:
-      description: Name of an entity to send command to.
-      example: "media_player.vizio_smartcast"

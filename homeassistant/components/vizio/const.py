@@ -26,7 +26,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-SERVICE_FETCH_LATEST_APPS = "fetch_latest_apps"
 SERVICE_UPDATE_SETTING = "update_setting"
 
 ATTR_SETTING_TYPE = "setting_type"
@@ -53,7 +52,6 @@ DEFAULT_DEVICE_CLASS = DEVICE_CLASS_TV
 DEFAULT_NAME = "Vizio SmartCast"
 DEFAULT_TIMEOUT = 8
 DEFAULT_VOLUME_STEP = 1
-DEFAULT_SCAN_INTERVAL = 0
 
 DEVICE_ID = "pyvizio"
 

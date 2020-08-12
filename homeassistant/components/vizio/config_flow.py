@@ -5,6 +5,7 @@ import socket
 from typing import Any, Dict, Optional
 
 from pyvizio import VizioAsync, async_guess_device_type
+from pyvizio.const import APP_HOME
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -24,7 +25,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PIN,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_TYPE,
 )
 from homeassistant.core import callback
@@ -40,7 +40,6 @@ from .const import (
     CONF_VOLUME_STEP,
     DEFAULT_DEVICE_CLASS,
     DEFAULT_NAME,
-    DEFAULT_SCAN_INTERVAL,
     DEFAULT_VOLUME_STEP,
     DEVICE_ID,
     DOMAIN,
@@ -113,22 +112,13 @@ class VizioOptionsConfigFlow(config_entries.OptionsFlow):
     ) -> Dict[str, Any]:
         """Manage the vizio options."""
         if user_input is not None:
-            # If there is no value for CONF_SCAN_INTERVAL we know that
-            # CONF_APPS_TO_INCLUDE_OR_EXCLUDE couldn't have been set so we don't
-            # have to check it.
-            if user_input.get(CONF_SCAN_INTERVAL) is not None:
+            if user_input.get(CONF_APPS_TO_INCLUDE_OR_EXCLUDE):
                 user_input[CONF_APPS] = {
-                    CONF_SCAN_INTERVAL: user_input.get(
-                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                    )
+                    user_input[CONF_INCLUDE_OR_EXCLUDE]: user_input[
+                        CONF_APPS_TO_INCLUDE_OR_EXCLUDE
+                    ].copy()
                 }
 
-                if user_input.get(CONF_APPS_TO_INCLUDE_OR_EXCLUDE):
-                    user_input[CONF_APPS][
-                        user_input[CONF_INCLUDE_OR_EXCLUDE]
-                    ] = user_input[CONF_APPS_TO_INCLUDE_OR_EXCLUDE].copy()
-
-                user_input.pop(CONF_SCAN_INTERVAL)
                 user_input.pop(CONF_INCLUDE_OR_EXCLUDE)
                 user_input.pop(CONF_APPS_TO_INCLUDE_OR_EXCLUDE)
 
@@ -155,12 +145,6 @@ class VizioOptionsConfigFlow(config_entries.OptionsFlow):
             options = options.extend(
                 {
                     vol.Optional(
-                        CONF_SCAN_INTERVAL,
-                        default=self.config_entry.options.get(CONF_APPS, {}).get(
-                            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                        ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=0)),
-                    vol.Optional(
                         CONF_INCLUDE_OR_EXCLUDE,
                         default=default_include_or_exclude.title(),
                     ): vol.All(
@@ -172,9 +156,15 @@ class VizioOptionsConfigFlow(config_entries.OptionsFlow):
                             default_include_or_exclude, []
                         ),
                     ): cv.multi_select(
-                        await VizioAsync.get_apps_list(
-                            session=async_get_clientsession(self.hass)
-                        )
+                        [
+                            APP_HOME["name"],
+                            *sorted(
+                                [
+                                    app["name"]
+                                    for app in self.hass.data[DOMAIN][CONF_APPS].data
+                                ]
+                            ),
+                        ]
                     ),
                 }
             )

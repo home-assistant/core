@@ -37,7 +37,9 @@ async def test_load_and_unload(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 1
+    assert DOMAIN in hass.data and "apps" in hass.data[DOMAIN]
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 0
+    assert "apps" not in hass.data.get(DOMAIN, {}) and DOMAIN not in hass.data

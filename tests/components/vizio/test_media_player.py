@@ -40,19 +40,11 @@ from homeassistant.components.vizio.const import (
     CONF_ADDITIONAL_CONFIGS,
     CONF_APPS,
     CONF_VOLUME_STEP,
-    DEFAULT_VOLUME_STEP,
     DOMAIN,
-    SERVICE_FETCH_LATEST_APPS,
     SERVICE_UPDATE_SETTING,
     VIZIO_SCHEMA,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_SCAN_INTERVAL,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
@@ -272,7 +264,7 @@ async def _test_service(
         service_data.update(additional_service_data)
 
     with patch(
-        f"homeassistant.components.vizio.media_player.{vizio_func_name}"
+        f"homeassistant.components.vizio.media_player.VizioAsync.{vizio_func_name}"
     ) as service_call:
         await hass.services.async_call(
             domain, ha_service_name, service_data=service_data, blocking=True,
@@ -359,58 +351,44 @@ async def test_services(
     """Test all Vizio media player entity services."""
     await _test_setup_tv(hass, True)
 
-    await _test_service(hass, MP_DOMAIN, "VizioAsync.pow_on", SERVICE_TURN_ON, None)
-    await _test_service(hass, MP_DOMAIN, "VizioAsync.pow_off", SERVICE_TURN_OFF, None)
+    await _test_service(hass, MP_DOMAIN, "pow_on", SERVICE_TURN_ON, None)
+    await _test_service(hass, MP_DOMAIN, "pow_off", SERVICE_TURN_OFF, None)
     await _test_service(
         hass,
         MP_DOMAIN,
-        "VizioAsync.mute_on",
+        "mute_on",
         SERVICE_VOLUME_MUTE,
         {ATTR_MEDIA_VOLUME_MUTED: True},
     )
     await _test_service(
         hass,
         MP_DOMAIN,
-        "VizioAsync.mute_off",
+        "mute_off",
         SERVICE_VOLUME_MUTE,
         {ATTR_MEDIA_VOLUME_MUTED: False},
     )
     await _test_service(
         hass,
         MP_DOMAIN,
-        "VizioAsync.set_input",
+        "set_input",
         SERVICE_SELECT_SOURCE,
         {ATTR_INPUT_SOURCE: "USB"},
         "USB",
     )
-    await _test_service(hass, MP_DOMAIN, "VizioAsync.vol_up", SERVICE_VOLUME_UP, None)
+    await _test_service(hass, MP_DOMAIN, "vol_up", SERVICE_VOLUME_UP, None)
+    await _test_service(hass, MP_DOMAIN, "vol_down", SERVICE_VOLUME_DOWN, None)
     await _test_service(
-        hass, MP_DOMAIN, "VizioAsync.vol_down", SERVICE_VOLUME_DOWN, None
+        hass, MP_DOMAIN, "vol_up", SERVICE_VOLUME_SET, {ATTR_MEDIA_VOLUME_LEVEL: 1}
     )
+    await _test_service(
+        hass, MP_DOMAIN, "vol_down", SERVICE_VOLUME_SET, {ATTR_MEDIA_VOLUME_LEVEL: 0}
+    )
+    await _test_service(hass, MP_DOMAIN, "ch_up", SERVICE_MEDIA_NEXT_TRACK, None)
+    await _test_service(hass, MP_DOMAIN, "ch_down", SERVICE_MEDIA_PREVIOUS_TRACK, None)
     await _test_service(
         hass,
         MP_DOMAIN,
-        "VizioAsync.vol_up",
-        SERVICE_VOLUME_SET,
-        {ATTR_MEDIA_VOLUME_LEVEL: 1},
-    )
-    await _test_service(
-        hass,
-        MP_DOMAIN,
-        "VizioAsync.vol_down",
-        SERVICE_VOLUME_SET,
-        {ATTR_MEDIA_VOLUME_LEVEL: 0},
-    )
-    await _test_service(
-        hass, MP_DOMAIN, "VizioAsync.ch_up", SERVICE_MEDIA_NEXT_TRACK, None
-    )
-    await _test_service(
-        hass, MP_DOMAIN, "VizioAsync.ch_down", SERVICE_MEDIA_PREVIOUS_TRACK, None
-    )
-    await _test_service(
-        hass,
-        MP_DOMAIN,
-        "VizioAsync.set_setting",
+        "set_setting",
         SERVICE_SELECT_SOUND_MODE,
         {ATTR_SOUND_MODE: "Music"},
     )
@@ -418,7 +396,7 @@ async def test_services(
     await _test_service(
         hass,
         DOMAIN,
-        "VizioAsync.set_setting",
+        "set_setting",
         SERVICE_UPDATE_SETTING,
         {"setting_type": "Audio", "setting_name": "AV Delay", "new_value": "0"},
         "audio",
@@ -428,15 +406,12 @@ async def test_services(
     await _test_service(
         hass,
         DOMAIN,
-        "VizioAsync.set_setting",
+        "set_setting",
         SERVICE_UPDATE_SETTING,
         {"setting_type": "Audio", "setting_name": "EQ", "new_value": "Music"},
         "audio",
         "eq",
         "Music",
-    )
-    await _test_service(
-        hass, DOMAIN, "gen_apps_list_from_url", SERVICE_FETCH_LATEST_APPS, None,
     )
 
 
@@ -457,7 +432,7 @@ async def test_options_update(
     )
     assert config_entry.options == updated_options
     await _test_service(
-        hass, MP_DOMAIN, "VizioAsync.vol_up", SERVICE_VOLUME_UP, None, num=VOLUME_STEP
+        hass, MP_DOMAIN, "vol_up", SERVICE_VOLUME_UP, None, num=VOLUME_STEP
     )
 
 
@@ -544,7 +519,7 @@ async def test_setup_with_apps(
     await _test_service(
         hass,
         MP_DOMAIN,
-        "VizioAsync.launch_app",
+        "launch_app",
         SERVICE_SELECT_SOURCE,
         {ATTR_INPUT_SOURCE: CURRENT_APP},
         CURRENT_APP,
@@ -622,7 +597,7 @@ async def test_setup_with_apps_additional_apps_config(
     await _test_service(
         hass,
         MP_DOMAIN,
-        "VizioAsync.launch_app",
+        "launch_app",
         SERVICE_SELECT_SOURCE,
         {ATTR_INPUT_SOURCE: "Netflix"},
         "Netflix",
@@ -631,7 +606,7 @@ async def test_setup_with_apps_additional_apps_config(
     await _test_service(
         hass,
         MP_DOMAIN,
-        "VizioAsync.launch_app_config",
+        "launch_app_config",
         SERVICE_SELECT_SOURCE,
         {ATTR_INPUT_SOURCE: CURRENT_APP},
         **CUSTOM_CONFIG,
@@ -717,55 +692,3 @@ async def test_setup_tv_without_mute(
         _assert_sources_and_volume(attr, VIZIO_DEVICE_CLASS_TV)
         assert "sound_mode" not in attr
         assert "is_volume_muted" not in attr
-
-
-async def test_update_apps_scan_interval(
-    hass: HomeAssistantType,
-    vizio_connect: pytest.fixture,
-    vizio_update: pytest.fixture,
-    caplog: pytest.fixture,
-) -> None:
-    """Test that updating the scan interval works as expected."""
-    async with _cm_for_test_setup_tv_with_apps(
-        hass, MOCK_USER_VALID_TV_CONFIG, CURRENT_APP_CONFIG
-    ):
-        config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-        assert config_entry.options
-        with patch(
-            "homeassistant.components.vizio.media_player.gen_apps_list_from_url",
-            return_value=None,
-        ) as service_call:
-            async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=14))
-            await hass.async_block_till_done()
-            assert not service_call.called
-
-            # Test that a scan interval being set will result in callback being called
-            new_options = config_entry.options.copy()
-            updated_options = {
-                CONF_VOLUME_STEP: DEFAULT_VOLUME_STEP,
-                CONF_APPS: {CONF_SCAN_INTERVAL: 1},
-            }
-            new_options.update(updated_options)
-            hass.config_entries.async_update_entry(
-                entry=config_entry, options=new_options,
-            )
-            await hass.async_block_till_done()
-            async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=14))
-            await hass.async_block_till_done()
-            assert service_call.called
-
-            # Test that scan interval update works
-            new_options = config_entry.options.copy()
-            updated_options = {
-                CONF_VOLUME_STEP: DEFAULT_VOLUME_STEP,
-                CONF_APPS: {CONF_SCAN_INTERVAL: 3},
-            }
-            new_options.update(updated_options)
-            hass.config_entries.async_update_entry(
-                entry=config_entry, options=new_options,
-            )
-            await hass.async_block_till_done()
-            service_call.reset_mock()
-            async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=14))
-            await hass.async_block_till_done()
-            assert not service_call.called

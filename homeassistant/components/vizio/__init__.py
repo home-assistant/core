@@ -1,14 +1,23 @@
 """The vizio component."""
 import asyncio
+from datetime import timedelta
+import logging
+from typing import Any, Dict
 
+from pyvizio.const import APPS
+from pyvizio.util import gen_apps_list_from_url
 import voluptuous as vol
 
 from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_APPS, CONF_DEVICE_CLASS, DOMAIN, VIZIO_SCHEMA
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def validate_apps(config: ConfigType) -> ConfigType:
@@ -47,6 +56,13 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
     """Load the saved entities."""
+
+    hass.data.setdefault(DOMAIN, {})
+    if CONF_APPS not in hass.data[DOMAIN]:
+        coordinator = VizioAppsDataUpdateCoordinator(hass)
+        await coordinator.async_refresh()
+        hass.data[DOMAIN][CONF_APPS] = coordinator
+
     for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, platform)
@@ -68,4 +84,38 @@ async def async_unload_entry(
         )
     )
 
+    if (
+        len(
+            [
+                entry.entry_id
+                for entry in hass.config_entries.async_entries(DOMAIN)
+                if entry.entry_id != config_entry.entry_id
+            ]
+        )
+        == 0
+    ):
+        hass.data[DOMAIN].pop(CONF_APPS)
+
+    if not hass.data[DOMAIN]:
+        hass.data.pop(DOMAIN)
+
     return unload_ok
+
+
+class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator):
+    """Define an object to hold Vizio app config data."""
+
+    def __init__(self, hass: HomeAssistantType) -> None:
+        """Initialize."""
+        self.data = APPS
+
+        super().__init__(
+            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(days=1),
+        )
+
+    async def _async_update_data(self) -> Dict[str, Any]:
+        """Update data via library."""
+        data = await gen_apps_list_from_url(session=async_get_clientsession(self.hass))
+        if not data:
+            raise UpdateFailed
+        return data
