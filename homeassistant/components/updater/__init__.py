@@ -76,9 +76,10 @@ async def async_setup(hass, config):
         if "dev" in current_version:
             return Updater(False, "", "")
 
-        # Load data from supervisor on Hass.io
+        # Load data from Supervisor
         if hass.components.hassio.is_hassio():
-            newest = hass.components.hassio.get_homeassistant_version()
+            core_info = hass.components.hassio.get_core_info()
+            newest = core_info["version_latest"]
 
         # Validate version
         update_available = False
