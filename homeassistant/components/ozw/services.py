@@ -85,6 +85,12 @@ class ZWaveServices:
             ),
         )
 
+        self._hass.services.async_register(
+            const.DOMAIN,
+            "migrate_zwave_integration",
+            self.async_migrate_zwave_integration,
+        )
+
     @callback
     def async_set_config_parameter(self, service):
         """Set a config parameter to a node."""
@@ -132,3 +138,9 @@ class ZWaveServices:
         if instance is None:
             raise ValueError(f"No OpenZWave Instance with ID {instance_id}")
         instance.cancel_controller_command()
+
+    async def async_migrate_zwave_integration(self, service):
+        """Migrate data from the Z-Wave integration."""
+        zwave = self._hass.components.zwave
+        data = await zwave.async_record_ozw_migration_info(self._hass)
+        _LOGGER.warning("Migration data: %s", data)
