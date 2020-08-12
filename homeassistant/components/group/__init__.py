@@ -88,21 +88,18 @@ CONFIG_SCHEMA = vol.Schema(
 
 # List of ON/OFF state tuples for groupable states
 _GROUP_TYPES = [
-    (STATE_ON, STATE_OFF),
-    (STATE_HOME, STATE_NOT_HOME),
-    (STATE_OPEN, STATE_CLOSED),
-    (STATE_LOCKED, STATE_UNLOCKED),
-    (STATE_PROBLEM, STATE_OK),
-    (STATE_IDLE, STATE_OFF),
-    (STATE_PAUSED, STATE_OFF),
-    (STATE_PLAYING, STATE_OFF),
+    ((STATE_ON, STATE_IDLE, STATE_PAUSED, STATE_PLAYING), (STATE_OFF,)),
+    ((STATE_HOME,), (STATE_NOT_HOME,)),
+    ((STATE_OPEN,), (STATE_CLOSED,)),
+    ((STATE_LOCKED,), (STATE_UNLOCKED,)),
+    ((STATE_PROBLEM,), (STATE_OK,)),
 ]
 
 
 def _get_group_on_off(state):
     """Determine the group on/off states based on a state."""
     for states in _GROUP_TYPES:
-        if state in states:
+        if state in states[0] + states[1]:
             return states
 
     return None, None
@@ -117,7 +114,7 @@ def is_on(hass, entity_id):
         group_on, _ = _get_group_on_off(state.state)
 
         # If we found a group_type, compare to ON-state
-        return group_on is not None and state.state == group_on
+        return group_on is not None and state.state in group_on
 
     return False
 
@@ -576,6 +573,14 @@ class Group(Entity):
 
         This method must be run in the event loop.
         """
+
+        def choose_state(states, values):
+            """Return the first of multiple states is they are all the same."""
+            states_list = [state.state for state in states if state.state in values]
+            if states_list.count(states_list[0]) == len(states_list):
+                return states_list[0]
+            return None
+
         # To store current states of group entities. Might not be needed.
         states = None
         gr_state = self._state
@@ -602,19 +607,19 @@ class Group(Entity):
             return
 
         if tr_state is None or (
-            (gr_state == gr_on and tr_state.state == gr_off)
-            or (gr_state == gr_off and tr_state.state == gr_on)
-            or tr_state.state not in (gr_on, gr_off)
+            (gr_state in gr_on and tr_state.state in gr_off)
+            or (gr_state in gr_off and tr_state.state in gr_on)
+            or tr_state.state not in (gr_on + gr_off)
         ):
             if states is None:
                 states = self._tracking_states
 
-            if self.mode(state.state == gr_on for state in states):
-                self._state = gr_on
+            if self.mode(state.state in gr_on for state in states):
+                self._state = choose_state(states, gr_on) or gr_on[0]
             else:
-                self._state = gr_off
+                self._state = choose_state(states, gr_off) or gr_off[0]
 
-        elif tr_state.state in (gr_on, gr_off):
+        elif tr_state.state in (gr_on + gr_off):
             self._state = tr_state.state
 
         if (
