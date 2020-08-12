@@ -49,7 +49,12 @@ _RE_GET_ENTITIES = re.compile(
     r"(?:(?:(?:states\.|(?P<func>is_state|is_state_attr|state_attr|states|expand)\((?:[\ \'\"]?))(?P<entity_id>[\w]+\.[\w]+)|states\.(?P<domain_outer>[a-z]+)|states\[(?:[\'\"]?)(?P<domain_inner>[\w]+))|(?P<variable>[\w]+))",
     re.I | re.M,
 )
+
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{")
+
+_RESERVED_NAMES = {"contextfunction", "evalcontextfunction", "environmentfunction"}
+
+_GROUP_DOMAIN_PREFIX = "group."
 
 
 @bind_hass
@@ -138,19 +143,18 @@ class RenderInfo:
         self.filter_lifecycle = _true
         self._result = None
         self._exception = None
-        self._all_states = False
-        self._domains = []
-        self._entities = []
+        self.all_states = False
+        self.domains = set()
+        self.entities = set()
 
     def filter(self, entity_id: str) -> bool:
         """Template should re-render if the state changes."""
-        return entity_id in self._entities
+        return entity_id in self.entities
 
     def _filter_lifecycle(self, entity_id: str) -> bool:
         """Template should re-render if the state changes."""
         return (
-            split_entity_id(entity_id)[0] in self._domains
-            or entity_id in self._entities
+            split_entity_id(entity_id)[0] in self.domains or entity_id in self.entities
         )
 
     @property
@@ -161,15 +165,15 @@ class RenderInfo:
         return self._result
 
     def _freeze(self) -> None:
-        self._entities = frozenset(self._entities)
-        if self._all_states:
-            # Leave lifecycle_filter as True
-            del self._domains
-        elif not self._domains:
-            del self._domains
+        self.entities = frozenset(self.entities)
+        self.domains = frozenset(self.domains)
+
+        if self.all_states:
+            return
+
+        if not self.domains:
             self.filter_lifecycle = self.filter
         else:
-            self._domains = frozenset(self._domains)
             self.filter_lifecycle = self._filter_lifecycle
 
 
@@ -342,15 +346,19 @@ class AllStates:
             if not valid_entity_id(name):
                 raise TemplateError(f"Invalid entity ID '{name}'")
             return _get_state(self._hass, name)
+
+        if name in _RESERVED_NAMES:
+            return None
+
         if not valid_entity_id(f"{name}.entity"):
             raise TemplateError(f"Invalid domain name '{name}'")
+
         return DomainStates(self._hass, name)
 
     def _collect_all(self) -> None:
         render_info = self._hass.data.get(_RENDER_INFO)
         if render_info is not None:
-            # pylint: disable=protected-access
-            render_info._all_states = True
+            render_info.all_states = True
 
     def __iter__(self):
         """Return all states."""
@@ -395,8 +403,7 @@ class DomainStates:
     def _collect_domain(self) -> None:
         entity_collect = self._hass.data.get(_RENDER_INFO)
         if entity_collect is not None:
-            # pylint: disable=protected-access
-            entity_collect._domains.append(self._domain)
+            entity_collect.domains.add(self._domain)
 
     def __iter__(self):
         """Return the iteration over all the states."""
@@ -435,7 +442,6 @@ class TemplateState(State):
     def _access_state(self):
         state = object.__getattribute__(self, "_state")
         hass = object.__getattribute__(self, "_hass")
-
         _collect_state(hass, state.entity_id)
         return state
 
@@ -447,6 +453,13 @@ class TemplateState(State):
         if unit is None:
             return state.state
         return f"{state.state} {unit}"
+
+    def __eq__(self, other: Any) -> bool:
+        """Ensure we collect on equality check."""
+        state = object.__getattribute__(self, "_state")
+        hass = object.__getattribute__(self, "_hass")
+        _collect_state(hass, state.entity_id)
+        return super().__eq__(other)
 
     def __getattribute__(self, name):
         """Return an attribute of the state."""
@@ -471,8 +484,7 @@ class TemplateState(State):
 def _collect_state(hass: HomeAssistantType, entity_id: str) -> None:
     entity_collect = hass.data.get(_RENDER_INFO)
     if entity_collect is not None:
-        # pylint: disable=protected-access
-        entity_collect._entities.append(entity_id)
+        entity_collect.entities.add(entity_id)
 
 
 def _wrap_state(
@@ -523,16 +535,29 @@ def expand(hass: HomeAssistantType, *args: Any) -> Iterable[State]:
             # ignore other types
             continue
 
-        # pylint: disable=import-outside-toplevel
-        from homeassistant.components import group
-
-        if split_entity_id(entity_id)[0] == group.DOMAIN:
-            # Collect state will be called in here since it's wrapped
-            group_entities = entity.attributes.get(ATTR_ENTITY_ID)
-            if group_entities:
-                search += group_entities
+        if entity_id.startswith(_GROUP_DOMAIN_PREFIX):
+            # Collect state would be called in here since it's wrapped
+            # so we call hass.states.get since we only want to collect
+            # the underlying entity ids.
+            #
+            # We only want to look at the underlying entities because
+            # when a expand() is in the template we check each entity
+            # instead of the state of the group. If we were to include
+            # the group we would end up re-rendering the template again
+            # when the group had finished processing the state change of
+            # the underlying entities.
+            #
+            state = hass.states.get(entity_id)
+            if state:
+                group_entities = state.attributes.get(ATTR_ENTITY_ID)
+                if group_entities:
+                    search += group_entities
         else:
             found[entity_id] = entity
+
+    for entity_id in found:
+        _collect_state(hass, entity_id)
+
     return sorted(found.values(), key=lambda a: a.entity_id)
 
 
@@ -618,7 +643,10 @@ def distance(hass, *args):
 
     while to_process:
         value = to_process.pop(0)
-        point_state = _resolve_state(hass, value)
+        if isinstance(value, str) and not valid_entity_id(value):
+            point_state = None
+        else:
+            point_state = _resolve_state(hass, value)
 
         if point_state is None:
             # We expect this and next value to be lat&lng
