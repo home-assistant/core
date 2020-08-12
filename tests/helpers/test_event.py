@@ -438,7 +438,7 @@ async def test_track_template(hass):
         "{{states.switch.test.state == 'on' and test == 5}}", hass
     )
 
-    hass.states.async_set("switch.test", "on")
+    hass.states.async_set("switch.test", "off")
 
     def specific_run_callback(entity_id, old_state, new_state):
         specific_runs.append(1)
@@ -451,14 +451,14 @@ async def test_track_template(hass):
 
     async_track_template(hass, template_condition, wildcard_run_callback)
 
-    @asyncio.coroutine
-    def wildercard_run_callback(entity_id, old_state, new_state):
+    async def wildercard_run_callback(entity_id, old_state, new_state):
         wildercard_runs.append((old_state, new_state))
 
     async_track_template(
         hass, template_condition_var, wildercard_run_callback, {"test": 5}
     )
 
+    hass.states.async_set("switch.test", "on")
     await hass.async_block_till_done()
 
     assert len(specific_runs) == 1
@@ -503,9 +503,12 @@ async def test_track_template(hass):
     async_track_template(hass, template_iterate, iterate_callback)
     await hass.async_block_till_done()
 
+    hass.states.async_set("switch.new", "on")
+    await hass.async_block_till_done()
+
     assert len(iterate_calls) == 1
-    assert iterate_calls[0][0] == "switch.test"
-    assert iterate_calls[0][1].state == "on"
+    assert iterate_calls[0][0] == "switch.new"
+    assert iterate_calls[0][1] is None
     assert iterate_calls[0][2].state == "on"
 
 
@@ -522,6 +525,9 @@ async def test_track_template_error(hass):
         async_track_template(hass, template_error, error_callback)
         await hass.async_block_till_done()
 
+        hass.states.async_set("switch.new", "on")
+        await hass.async_block_till_done()
+
         assert not error_calls
         assert call.call_count == 1
 
@@ -536,8 +542,6 @@ async def test_track_template_result(hass):
     template_condition_var = Template(
         "{{(states.sensor.test.state|int) + test }}", hass
     )
-
-    hass.states.async_set("sensor.test", 5)
 
     def specific_run_callback(event, template, old_result, new_result):
         specific_runs.append(int(new_result))
@@ -556,6 +560,9 @@ async def test_track_template_result(hass):
     async_track_template_result(
         hass, template_condition_var, wildercard_run_callback, {"test": 5}
     )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test", 5)
     await hass.async_block_till_done()
 
     assert specific_runs == [5]
@@ -622,6 +629,9 @@ async def test_track_template_result_iterator(hass):
     )
     await hass.async_block_till_done()
 
+    hass.states.async_set("sensor.test", 5)
+    await hass.async_block_till_done()
+
     assert iterator_runs == [""]
 
     filter_runs = []
@@ -640,12 +650,12 @@ async def test_track_template_result_iterator(hass):
         filter_callback,
     )
     await hass.async_block_till_done()
-    assert filter_runs == [""]
 
-    hass.states.async_set("sensor.test", 5)
+    hass.states.async_set("sensor.test", 6)
     await hass.async_block_till_done()
-    assert iterator_runs == [""]
+
     assert filter_runs == [""]
+    assert iterator_runs == [""]
 
     hass.states.async_set("sensor.new", "on")
     await hass.async_block_till_done()
@@ -729,24 +739,25 @@ async def test_track_template_result_refresh_cancel(hass):
     info = async_track_template_result(hass, template_refresh, refresh_listener)
     await hass.async_block_till_done()
 
+    hass.states.async_set("switch.test", "off")
+    await hass.async_block_till_done()
+
     assert refresh_runs == ["False"]
 
+    assert len(refresh_runs) == 1
+
+    info.async_refresh()
     hass.states.async_set("switch.test", "on")
     await hass.async_block_till_done()
 
     assert len(refresh_runs) == 2
-
-    info.async_refresh()
-    await hass.async_block_till_done()
-
-    assert len(refresh_runs) == 3
-    assert refresh_runs[1] != refresh_runs[2]
+    assert refresh_runs[0] != refresh_runs[1]
 
     info.async_remove()
     hass.states.async_set("switch.test", "off")
     await hass.async_block_till_done()
 
-    assert len(refresh_runs) == 3
+    assert len(refresh_runs) == 2
 
     template_refresh = Template("{{ value }}", hass)
     refresh_runs = []
@@ -755,6 +766,9 @@ async def test_track_template_result_refresh_cancel(hass):
         hass, template_refresh, refresh_listener, {"value": "duck"}
     )
     await hass.async_block_till_done()
+    info.async_refresh()
+    await hass.async_block_till_done()
+
     assert refresh_runs == ["duck"]
 
     info.async_refresh()
