@@ -50,7 +50,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
             await sharkiq.async_update()
 
     async def _async_update_data(self) -> bool:
-        """Update data via Awair client library."""
+        """Update data device by device."""
         try:
             all_vacuums = await self.ayla_api.async_list_devices()
             self._online_dsns = {
