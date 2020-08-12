@@ -267,13 +267,13 @@ async def async_record_ozw_migration_info(hass):
 
     for entity_values in hass.data[DATA_ENTITY_VALUES]:
         node = entity_values.primary.node
-        command_class = entity_values.primary.command_class
         unique_id = compute_value_unique_id(node, entity_values.primary)
         if unique_id not in unique_entries:
             continue
         data_to_migrate[unique_id] = {
             "node_id": node.node_id,
-            "command_class": command_class,
+            "command_class": entity_values.primary.command_class,
+            "command_class_label": entity_values.primary.label,
             "unique_id": unique_id,
             "entity_entry": unique_entries[unique_id],
         }
