@@ -125,7 +125,7 @@ class ImageProcessingEntity(Entity):
             )
         except HomeAssistantError as err:
             pass
-        
+
         try:
             image = await camera.async_get_image(
                 self.camera_entity, timeout=self.timeout
