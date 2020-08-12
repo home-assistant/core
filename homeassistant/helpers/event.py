@@ -282,6 +282,9 @@ def async_track_entity_registry_updated_event(
     return remove_listener
 
 
+# need an async_track_state_added_domain so we can listen by domain
+
+
 @callback
 @bind_hass
 def async_track_template(
