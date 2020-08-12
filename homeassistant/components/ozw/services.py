@@ -9,6 +9,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from . import const
+from .migration import async_get_own_migration_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,10 +17,11 @@ _LOGGER = logging.getLogger(__name__)
 class ZWaveServices:
     """Class that holds our services ( Zwave Commands) that should be published to hass."""
 
-    def __init__(self, hass, manager):
+    def __init__(self, hass, manager, nodes_values):
         """Initialize with both hass and ozwmanager objects."""
         self._hass = hass
         self._manager = manager
+        self._nodes_values = nodes_values
 
     @callback
     def async_register(self):
@@ -142,5 +144,8 @@ class ZWaveServices:
     async def async_migrate_zwave_integration(self, service):
         """Migrate data from the Z-Wave integration."""
         zwave = self._hass.components.zwave
-        data = await zwave.async_record_ozw_migration_info(self._hass)
-        _LOGGER.warning("Migration data: %s", data)
+        zwave_data = await zwave.async_record_ozw_migration_info(self._hass)
+        _LOGGER.warning("Migration zwave data: %s", zwave_data)
+
+        ozw_data = await async_get_own_migration_info(self._hass, self._nodes_values)
+        _LOGGER.warning("Migration ozw data: %s", ozw_data)
