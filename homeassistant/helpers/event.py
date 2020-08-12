@@ -438,8 +438,7 @@ def async_track_template(
         info = template.async_render_to_info(variables)
         state = None
         entity_id = None
-        #  pylint: disable=protected-access
-        for eid in info._entities:
+        for eid in info.entities:
             state = hass.states.get(eid)
             if state:
                 entity_id = eid
@@ -502,14 +501,14 @@ class TrackTemplateResultInfo:
 
     @callback
     def _create_listeners(self) -> None:
-        if self._info._all_states:
+        if self._info.all_states:
             self._setup_all_listener()
             return
 
-        if self._info._domains:
+        if self._info.domains:
             self._setup_domains_listener()
 
-        if self._info._entities or self._info._domains:
+        if self._info.entities or self._info.domains:
             self._setup_entities_listener()
 
     @callback
@@ -535,8 +534,7 @@ class TrackTemplateResultInfo:
 
     @callback
     def _update_listeners(self) -> None:
-        # pylint: disable=protected-access
-        if self._info._all_states:
+        if self._info.all_states:
             if self._all_listener:
                 return
             self._cancel_domains_listener()
@@ -545,20 +543,19 @@ class TrackTemplateResultInfo:
             return
 
         domains_changed = False
-        if self._info._domains != self._last_info._domains:
+        if self._info.domains != self._last_info.domains:
             domains_changed = True
             self._cancel_domains_listener()
             self._setup_domains_listener()
 
-        if domains_changed or self._info._entities != self._last_info._entities:
+        if domains_changed or self._info.entities != self._last_info.entities:
             self._cancel_entities_listener()
             self._setup_entities_listener()
 
     @callback
     def _setup_entities_listener(self) -> None:
-        # pylint: disable=protected-access
-        entities = set(self._info._entities)
-        for entity_id in self.hass.states.async_entity_ids(self._info._domains):
+        entities = set(self._info.entities)
+        for entity_id in self.hass.states.async_entity_ids(self._info.domains):
             entities.add(entity_id)
         self._entities_listener = async_track_state_change_event(
             self.hass, entities, self._state_changed_listener
@@ -566,14 +563,12 @@ class TrackTemplateResultInfo:
 
     @callback
     def _setup_domains_listener(self) -> None:
-        # pylint: disable=protected-access
         self._domains_listener = async_track_state_added_domain(
-            self.hass, self._info._domains, self._state_changed_listener
+            self.hass, self._info.domains, self._state_changed_listener
         )
 
     @callback
     def _setup_all_listener(self) -> None:
-        # pylint: disable=protected-access
         self._all_listener = self.hass.bus.async_listen(
             EVENT_STATE_CHANGED, self._state_changed_listener
         )
