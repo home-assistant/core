@@ -371,11 +371,7 @@ def async_track_template(
     in an error state when the value changes, this will be logged and not
     passed through.
 
-    On template registration, the action will be called with an entity_id
-    and state of some entity referenced by the template, or '*' if no
-    entity is referenced by the template.
-
-    If the initial run of the template is invalid and results in an
+    If the initial check of the template is invalid and results in an
     exception, the listener will still be registered but will only
     fire if the template result becomes true without an exception.
 
