@@ -273,9 +273,9 @@ class _ScriptRun:
 
     async def _async_wait_template_step(self):
         """Handle a wait template."""
-        try:
+        if CONF_TIMEOUT in self._action:
             delay = self._get_pos_time_period_template(CONF_TIMEOUT).total_seconds()
-        except KeyError:
+        else:
             delay = None
 
         self._script.last_action = self._action.get(CONF_ALIAS, "wait template")
