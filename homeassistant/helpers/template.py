@@ -233,7 +233,7 @@ class Template:
 
         This method must be run in the event loop.
         """
-        return self._render_compiled(
+        return render_compiled(
             self._compiled or self._ensure_compiled(), variables, **kwargs
         )
 
@@ -245,28 +245,12 @@ class Template:
 
         This method must be run in the event loop.
         """
-        return self._render_compiled(
+        return render_compiled(
             self._compiled_without_conditionals
             or self._ensure_compiled_without_conditionals(),
             variables,
             **kwargs,
         )
-
-    @callback
-    def _render_compiled(
-        self, compiled: Any, variables: TemplateVarsType = None, **kwargs: Any,
-    ) -> str:
-        """Render given compiled template.
-
-        This method must be run in the event loop.
-        """
-        if variables is not None:
-            kwargs.update(variables)
-
-        try:
-            return compiled.render(kwargs).strip()
-        except jinja2.TemplateError as err:
-            raise TemplateError(err)
 
     @callback
     def async_render_to_info(
@@ -387,6 +371,23 @@ class Template:
     def __repr__(self) -> str:
         """Representation of Template."""
         return 'Template("' + self.template + '")'
+
+
+@callback
+def render_compiled(
+    compiled: Any, variables: TemplateVarsType = None, **kwargs: Any,
+) -> str:
+    """Render given compiled template.
+
+    This method must be run in the event loop.
+    """
+    if variables is not None:
+        kwargs.update(variables)
+
+    try:
+        return compiled.render(kwargs).strip()
+    except jinja2.TemplateError as err:
+        raise TemplateError(err)
 
 
 class AllStates:
