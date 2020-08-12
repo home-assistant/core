@@ -12,6 +12,11 @@ SSDP = {
             "manufacturer": "ARCAM"
         }
     ],
+    "control4": [
+        {
+            "st": "c4:director"
+        }
+    ],
     "deconz": [
         {
             "manufacturer": "Royal Philips Electronics"

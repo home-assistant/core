@@ -225,7 +225,7 @@ class PrometheusMetrics:
         try:
             value = state_helper.state_as_number(state)
         except ValueError:
-            _LOGGER.warning("Could not convert %s to float", state)
+            _LOGGER.debug("Could not convert %s to float", state)
             value = 0
         return value
 

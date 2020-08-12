@@ -23,7 +23,13 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import Context, CoreState, HomeAssistant, callback
+from homeassistant.core import (
+    Context,
+    CoreState,
+    HomeAssistant,
+    callback,
+    split_entity_id,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, extract_domain_configs
 import homeassistant.helpers.config_validation as cv
@@ -61,6 +67,7 @@ CONF_TRIGGER = "trigger"
 CONF_CONDITION_TYPE = "condition_type"
 CONF_INITIAL_STATE = "initial_state"
 CONF_SKIP_CONDITION = "skip_condition"
+CONF_STOP_ACTIONS = "stop_actions"
 
 CONDITION_USE_TRIGGER_VALUES = "use_trigger_values"
 CONDITION_TYPE_AND = "and"
@@ -69,6 +76,7 @@ CONDITION_TYPE_OR = "or"
 
 DEFAULT_CONDITION_TYPE = CONDITION_TYPE_AND
 DEFAULT_INITIAL_STATE = True
+DEFAULT_STOP_ACTIONS = True
 
 EVENT_AUTOMATION_RELOADED = "automation_reloaded"
 EVENT_AUTOMATION_TRIGGERED = "automation_triggered"
@@ -219,7 +227,11 @@ async def async_setup(hass, config):
     )
     component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
     component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
-    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF,
+        {vol.Optional(CONF_STOP_ACTIONS, default=DEFAULT_STOP_ACTIONS): cv.boolean},
+        "async_turn_off",
+    )
 
     async def reload_service_handler(service_call):
         """Remove all automations and load new ones from config."""
@@ -255,11 +267,13 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._async_detach_triggers = None
         self._cond_func = cond_func
         self.action_script = action_script
+        self.action_script.change_listener = self.async_write_ha_state
         self._last_triggered = None
         self._initial_state = initial_state
         self._is_enabled = False
         self._referenced_entities: Optional[Set[str]] = None
         self._referenced_devices: Optional[Set[str]] = None
+        self._logger = _LOGGER
 
     @property
     def name(self):
@@ -282,11 +296,10 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         attrs = {
             ATTR_LAST_TRIGGERED: self._last_triggered,
             ATTR_MODE: self.action_script.script_mode,
+            ATTR_CUR: self.action_script.runs,
         }
         if self.action_script.supports_max:
             attrs[ATTR_MAX] = self.action_script.max_runs
-            if self.is_on:
-                attrs[ATTR_CUR] = self.action_script.runs
         return attrs
 
     @property
@@ -337,13 +350,18 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         """Startup with initial state or previous state."""
         await super().async_added_to_hass()
 
+        self._logger = logging.getLogger(
+            f"{__name__}.{split_entity_id(self.entity_id)[1]}"
+        )
+        self.action_script.update_logger(self._logger)
+
         state = await self.async_get_last_state()
         if state:
             enable_automation = state.state == STATE_ON
             last_triggered = state.attributes.get("last_triggered")
             if last_triggered is not None:
                 self._last_triggered = parse_datetime(last_triggered)
-            _LOGGER.debug(
+            self._logger.debug(
                 "Loaded automation %s with state %s from state "
                 " storage last state %s",
                 self.entity_id,
@@ -352,7 +370,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             )
         else:
             enable_automation = DEFAULT_INITIAL_STATE
-            _LOGGER.debug(
+            self._logger.debug(
                 "Automation %s not in state storage, state %s from default is used",
                 self.entity_id,
                 enable_automation,
@@ -360,7 +378,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 
         if self._initial_state is not None:
             enable_automation = self._initial_state
-            _LOGGER.debug(
+            self._logger.debug(
                 "Automation %s initial state %s overridden from "
                 "config initial_state",
                 self.entity_id,
@@ -376,7 +394,10 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self.async_disable()
+        if CONF_STOP_ACTIONS in kwargs:
+            await self.async_disable(kwargs[CONF_STOP_ACTIONS])
+        else:
+            await self.async_disable()
 
     async def async_trigger(self, variables, skip_condition=False, context=None):
         """Trigger automation.
@@ -403,12 +424,12 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             context=trigger_context,
         )
 
-        _LOGGER.info("Executing %s", self._name)
+        self._logger.info("Executing %s", self._name)
 
         try:
             await self.action_script.async_run(variables, trigger_context)
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("While executing automation %s", self.entity_id)
+            self._logger.exception("While executing automation %s", self.entity_id)
 
     async def async_will_remove_from_hass(self):
         """Remove listeners when removing automation from Home Assistant."""
@@ -444,9 +465,9 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         )
         self.async_write_ha_state()
 
-    async def async_disable(self):
+    async def async_disable(self, stop_actions=DEFAULT_STOP_ACTIONS):
         """Disable the automation entity."""
-        if not self._is_enabled:
+        if not self._is_enabled and not self.action_script.runs:
             return
 
         self._is_enabled = False
@@ -455,7 +476,8 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             self._async_detach_triggers()
             self._async_detach_triggers = None
 
-        await self.action_script.async_stop()
+        if stop_actions:
+            await self.action_script.async_stop()
 
         self.async_write_ha_state()
 
@@ -478,13 +500,13 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         results = await asyncio.gather(*triggers)
 
         if None in results:
-            _LOGGER.error("Error setting up trigger %s", self._name)
+            self._logger.error("Error setting up trigger %s", self._name)
 
         removes = [remove for remove in results if remove is not None]
         if not removes:
             return None
 
-        _LOGGER.info("Initialized trigger %s", self._name)
+        self._logger.info("Initialized trigger %s", self._name)
 
         @callback
         def remove_triggers():

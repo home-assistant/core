@@ -390,6 +390,17 @@ async def test_services(hass, calls):
     await hass.async_block_till_done()
     assert len(calls) == 2
 
+    await common.async_toggle(hass, entity_id)
+    await hass.async_block_till_done()
+
+    assert not automation.is_on(hass, entity_id)
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    await common.async_toggle(hass, entity_id)
+    await hass.async_block_till_done()
+
     await common.async_trigger(hass, entity_id)
     await hass.async_block_till_done()
     assert len(calls) == 3
@@ -556,9 +567,9 @@ async def test_reload_config_handles_load_fails(hass, calls):
     assert len(calls) == 2
 
 
-@pytest.mark.parametrize("service", ["turn_off", "reload"])
+@pytest.mark.parametrize("service", ["turn_off_stop", "turn_off_no_stop", "reload"])
 async def test_automation_stops(hass, calls, service):
-    """Test that turning off / reloading an automation stops any running actions."""
+    """Test that turning off / reloading stops any running actions as appropriate."""
     entity_id = "automation.hello"
     test_entity = "test.entity"
 
@@ -587,11 +598,18 @@ async def test_automation_stops(hass, calls, service):
     hass.bus.async_fire("test_event")
     await running.wait()
 
-    if service == "turn_off":
+    if service == "turn_off_stop":
         await hass.services.async_call(
             automation.DOMAIN,
             SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    elif service == "turn_off_no_stop":
+        await hass.services.async_call(
+            automation.DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id, automation.CONF_STOP_ACTIONS: False},
             blocking=True,
         )
     else:
@@ -605,7 +623,7 @@ async def test_automation_stops(hass, calls, service):
     hass.states.async_set(test_entity, "goodbye")
     await hass.async_block_till_done()
 
-    assert len(calls) == 0
+    assert len(calls) == (1 if service == "turn_off_no_stop" else 0)
 
 
 async def test_automation_restore_state(hass):

@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Tidsavbrudd ved generering av autoriseringsadresse.",
-            "missing_configuration": "Komponenten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen."
+            "missing_configuration": "Komponenten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen.",
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "step": {
             "pick_implementation": {

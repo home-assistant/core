@@ -2,9 +2,11 @@
 import asyncio
 from datetime import timedelta
 import logging
+import urllib.error
 
 import aiohttp
 import pytest
+import requests
 
 from homeassistant.helpers import update_coordinator
 from homeassistant.util.dt import utcnow
@@ -19,12 +21,12 @@ def get_crd(hass, update_interval):
     """Make coordinator mocks."""
     calls = 0
 
-    async def refresh():
+    async def refresh() -> int:
         nonlocal calls
         calls += 1
         return calls
 
-    crd = update_coordinator.DataUpdateCoordinator(
+    crd = update_coordinator.DataUpdateCoordinator[int](
         hass,
         LOGGER,
         name="test",
@@ -111,7 +113,11 @@ async def test_request_refresh_no_auto_update(crd_without_update_interval):
     "err_msg",
     [
         (asyncio.TimeoutError, "Timeout fetching test data"),
+        (requests.exceptions.Timeout, "Timeout fetching test data"),
+        (urllib.error.URLError("timed out"), "Timeout fetching test data"),
         (aiohttp.ClientError, "Error requesting test data"),
+        (requests.exceptions.RequestException, "Error requesting test data"),
+        (urllib.error.URLError("something"), "Error requesting test data"),
         (update_coordinator.UpdateFailed, "Error fetching test data"),
     ],
 )

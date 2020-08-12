@@ -19,13 +19,15 @@ async def async_setup_entry(
     entities = []
     for device in devices:
         for binary_switch in device.binary_switch_property:
-            entities.append(
-                DevoloSwitch(
-                    homecontrol=hass.data[DOMAIN]["homecontrol"],
-                    device_instance=device,
-                    element_uid=binary_switch,
+            # Exclude the binary switch which have also a multi_level_switches here, because they are implemented as light devices now.
+            if not hasattr(device, "multi_level_switch_property"):
+                entities.append(
+                    DevoloSwitch(
+                        homecontrol=hass.data[DOMAIN]["homecontrol"],
+                        device_instance=device,
+                        element_uid=binary_switch,
+                    )
                 )
-            )
     async_add_entities(entities)
 
 

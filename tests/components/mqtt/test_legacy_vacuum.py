@@ -31,6 +31,7 @@ from .test_common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_discovery_update_unchanged,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -45,6 +46,7 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
+from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message
 from tests.components.vacuum import common
 
@@ -641,6 +643,17 @@ async def test_discovery_update_vacuum(hass, mqtt_mock, caplog):
     await help_test_discovery_update(
         hass, mqtt_mock, caplog, vacuum.DOMAIN, data1, data2
     )
+
+
+async def test_discovery_update_unchanged_vacuum(hass, mqtt_mock, caplog):
+    """Test update of discovered vacuum."""
+    data1 = '{ "name": "Beer", "command_topic": "test_topic" }'
+    with patch(
+        "homeassistant.components.mqtt.vacuum.schema_legacy.MqttVacuum.discovery_update"
+    ) as discovery_update:
+        await help_test_discovery_update_unchanged(
+            hass, mqtt_mock, caplog, vacuum.DOMAIN, data1, discovery_update
+        )
 
 
 @pytest.mark.no_fail_on_log_exception

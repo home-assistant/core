@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT
 from .sensor import CommandSensorData
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,8 +30,6 @@ DEFAULT_PAYLOAD_OFF = "OFF"
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-CONF_COMMAND_TIMEOUT = "command_timeout"
-DEFAULT_TIMEOUT = 15
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

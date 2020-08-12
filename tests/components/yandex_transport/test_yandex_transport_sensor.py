@@ -9,7 +9,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
+from tests.async_mock import AsyncMock, patch
 from tests.common import assert_setup_component, load_fixture
 
 REPLY = json.loads(load_fixture("yandex_transport_reply.json"))
@@ -17,10 +17,10 @@ REPLY = json.loads(load_fixture("yandex_transport_reply.json"))
 
 @pytest.fixture
 def mock_requester():
-    """Create a mock ya_ma module and YandexMapsRequester."""
-    with patch("ya_ma.YandexMapsRequester") as requester:
+    """Create a mock for YandexMapsRequester."""
+    with patch("aioymaps.YandexMapsRequester") as requester:
         instance = requester.return_value
-        instance.get_stop_info.return_value = REPLY
+        instance.get_stop_info = AsyncMock(return_value=REPLY)
         yield instance
 
 

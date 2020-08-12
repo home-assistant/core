@@ -82,7 +82,7 @@ class PlexSensor(Entity):
             now_playing_user = f"{user} - {device}"
             now_playing_title = ""
 
-            if sess.TYPE in ["clip", "episode"]:
+            if sess.TYPE == "episode":
                 # example:
                 # "Supernatural (2005) - s01e13 - Route 666"
 
@@ -111,7 +111,7 @@ class PlexSensor(Entity):
                 track_album = sess.parentTitle
                 track_title = sess.title
                 now_playing_title = f"{track_artist} - {track_album} - {track_title}"
-            else:
+            elif sess.TYPE == "movie":
                 # example:
                 # "picture_of_last_summer_camp (2015)"
                 # "The Incredible Hulk (2008)"
@@ -119,6 +119,8 @@ class PlexSensor(Entity):
                 year = await self.hass.async_add_executor_job(getattr, sess, "year")
                 if year is not None:
                     now_playing_title += f" ({year})"
+            else:
+                now_playing_title = sess.title
 
             now_playing.append((now_playing_user, now_playing_title))
         self._state = len(self.sessions)

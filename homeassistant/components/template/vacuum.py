@@ -33,6 +33,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
     MATCH_ALL,
@@ -84,6 +85,7 @@ VACUUM_SCHEMA = vol.Schema(
         vol.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
         vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -114,6 +116,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         set_fan_speed_action = device_config.get(SERVICE_SET_FAN_SPEED)
 
         fan_speed_list = device_config[CONF_FAN_SPEED_LIST]
+        unique_id = device_config.get(CONF_UNIQUE_ID)
 
         templates = {
             CONF_VALUE_TEMPLATE: state_template,
@@ -146,6 +149,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 fan_speed_list,
                 entity_ids,
                 attribute_templates,
+                unique_id,
             )
         )
 
@@ -174,6 +178,7 @@ class TemplateVacuum(StateVacuumEntity):
         fan_speed_list,
         entity_ids,
         attribute_templates,
+        unique_id,
     ):
         """Initialize the vacuum."""
         self.hass = hass
@@ -233,6 +238,8 @@ class TemplateVacuum(StateVacuumEntity):
             self._supported_features |= SUPPORT_BATTERY
 
         self._entities = entity_ids
+        self._unique_id = unique_id
+
         # List of valid fan speeds
         self._fan_speed_list = fan_speed_list
 
@@ -240,6 +247,11 @@ class TemplateVacuum(StateVacuumEntity):
     def name(self):
         """Return the display name of this vacuum."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id of this vacuum."""
+        return self._unique_id
 
     @property
     def supported_features(self) -> int:

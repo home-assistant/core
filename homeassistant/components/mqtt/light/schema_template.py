@@ -101,10 +101,10 @@ async def async_setup_entity_template(
     config, async_add_entities, config_entry, discovery_data
 ):
     """Set up a MQTT Template light."""
-    async_add_entities([MqttTemplate(config, config_entry, discovery_data)])
+    async_add_entities([MqttLightTemplate(config, config_entry, discovery_data)])
 
 
-class MqttTemplate(
+class MqttLightTemplate(
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,

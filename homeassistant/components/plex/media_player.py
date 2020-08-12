@@ -10,6 +10,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
+    MEDIA_TYPE_VIDEO,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -304,7 +305,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             self._state = STATE_OFF
 
     def _set_media_type(self):
-        if self._session_type in ["clip", "episode"]:
+        if self._session_type == "episode":
             self._media_content_type = MEDIA_TYPE_TVSHOW
 
             # season number (00)
@@ -333,6 +334,12 @@ class PlexMediaPlayer(MediaPlayerEntity):
                     self.name,
                 )
                 self._media_artist = self._media_album_artist
+
+        elif self._session_type == "clip":
+            _LOGGER.debug(
+                "Clip content type detected, compatibility may vary: %s", self.name
+            )
+            self._media_content_type = MEDIA_TYPE_VIDEO
 
     def force_idle(self):
         """Force client to idle."""
@@ -397,19 +404,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
     @property
     def media_content_type(self):
         """Return the content type of current playing media."""
-        if self._session_type == "clip":
-            _LOGGER.debug(
-                "Clip content type detected, compatibility may vary: %s", self.name
-            )
-            return MEDIA_TYPE_TVSHOW
-        if self._session_type == "episode":
-            return MEDIA_TYPE_TVSHOW
-        if self._session_type == "movie":
-            return MEDIA_TYPE_MOVIE
-        if self._session_type == "track":
-            return MEDIA_TYPE_MUSIC
-
-        return None
+        return self._media_content_type
 
     @property
     def media_artist(self):

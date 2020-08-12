@@ -103,7 +103,7 @@ async def test_user_device_exists_abort(
     hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort user flow if DirecTV receiver already configured."""
-    await setup_integration(hass, aioclient_mock)
+    await setup_integration(hass, aioclient_mock, skip_entry_setup=True)
 
     user_input = MOCK_USER_INPUT.copy()
     result = await hass.config_entries.flow.async_init(
@@ -118,7 +118,7 @@ async def test_ssdp_device_exists_abort(
     hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort SSDP flow if DirecTV receiver already configured."""
-    await setup_integration(hass, aioclient_mock)
+    await setup_integration(hass, aioclient_mock, skip_entry_setup=True)
 
     discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
     result = await hass.config_entries.flow.async_init(
@@ -133,7 +133,7 @@ async def test_ssdp_with_receiver_id_device_exists_abort(
     hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort SSDP flow if DirecTV receiver already configured."""
-    await setup_integration(hass, aioclient_mock)
+    await setup_integration(hass, aioclient_mock, skip_entry_setup=True)
 
     discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
     discovery_info[ATTR_UPNP_SERIAL] = UPNP_SERIAL
