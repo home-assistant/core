@@ -46,6 +46,7 @@ CONF_AVOID_FERRIES = "avoid_ferries"
 DEFAULT_NAME = "Waze Travel Time"
 DEFAULT_REALTIME = True
 DEFAULT_VEHICLE_TYPE = "car"
+DEFAULT_REGION = "EU"
 DEFAULT_AVOID_TOLL_ROADS = False
 DEFAULT_AVOID_SUBSCRIPTION_ROADS = False
 DEFAULT_AVOID_FERRIES = False
@@ -63,7 +64,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ORIGIN): cv.string,
         vol.Required(CONF_DESTINATION): cv.string,
-        vol.Required(CONF_REGION): vol.In(REGIONS),
+        vol.Optional(CONF_REGION, default=DEFAULT_REGION): vol.In(REGIONS),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_INCL_FILTER): cv.string,
         vol.Optional(CONF_EXCL_FILTER): cv.string,
