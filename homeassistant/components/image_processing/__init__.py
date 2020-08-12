@@ -123,6 +123,7 @@ class ImageProcessingEntity(Entity):
             image = await camera.async_get_raw_image(
                 self.camera_entity, timeout=self.timeout
             )
+
         except AttributeError:
             try:
                 image = await camera.async_get_image(
