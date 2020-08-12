@@ -193,13 +193,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         ]
 
     # Listen to events for node and value changes
-    options.listen(EVENT_NODE_ADDED, async_node_added)
-    options.listen(EVENT_NODE_CHANGED, async_node_changed)
-    options.listen(EVENT_NODE_REMOVED, async_node_removed)
-    options.listen(EVENT_VALUE_ADDED, async_value_added)
-    options.listen(EVENT_VALUE_CHANGED, async_value_changed)
-    options.listen(EVENT_VALUE_REMOVED, async_value_removed)
-    options.listen(EVENT_INSTANCE_EVENT, async_instance_event)
+    for event, event_callback in (
+        (EVENT_NODE_ADDED, async_node_added),
+        (EVENT_NODE_CHANGED, async_node_changed),
+        (EVENT_NODE_REMOVED, async_node_removed),
+        (EVENT_VALUE_ADDED, async_value_added),
+        (EVENT_VALUE_CHANGED, async_value_changed),
+        (EVENT_VALUE_REMOVED, async_value_removed),
+        (EVENT_INSTANCE_EVENT, async_instance_event),
+    ):
+        ozw_data[DATA_UNSUBSCRIBE].append(options.listen(event, event_callback))
 
     # Register Services
     services = ZWaveServices(hass, manager)
