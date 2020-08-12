@@ -1,9 +1,9 @@
 """Test Zeroconf component setup process."""
 import pytest
-from zeroconf import InterfaceChoice, ServiceInfo, ServiceStateChange
+from zeroconf import InterfaceChoice, IPVersion, ServiceInfo, ServiceStateChange
 
 from homeassistant.components import zeroconf
-from homeassistant.components.zeroconf import CONF_DEFAULT_INTERFACE
+from homeassistant.components.zeroconf import CONF_DEFAULT_INTERFACE, CONF_IPV6
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.generated import zeroconf as zc_gen
 from homeassistant.setup import async_setup_component
@@ -41,6 +41,20 @@ def get_service_info_mock(service_type, name):
         service_type,
         name,
         addresses=[b"\n\x00\x00\x14"],
+        port=80,
+        weight=0,
+        priority=0,
+        server="name.local.",
+        properties=PROPERTIES,
+    )
+
+
+def get_service_info_mock_without_an_address(service_type, name):
+    """Return service info for get_service_info without any addresses."""
+    return ServiceInfo(
+        service_type,
+        name,
+        addresses=[],
         port=80,
         weight=0,
         priority=0,
@@ -110,6 +124,43 @@ async def test_setup_without_default_interface(hass, mock_zeroconf):
         assert await async_setup_component(
             hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {CONF_DEFAULT_INTERFACE: False}}
         )
+
+    assert mock_zeroconf.called_with()
+
+
+async def test_setup_without_ipv6(hass, mock_zeroconf):
+    """Test without ipv6."""
+    with patch.object(hass.config_entries.flow, "async_init"), patch.object(
+        zeroconf, "HaServiceBrowser", side_effect=service_update_mock
+    ):
+        mock_zeroconf.get_service_info.side_effect = get_service_info_mock
+        assert await async_setup_component(
+            hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {CONF_IPV6: False}}
+        )
+
+    assert mock_zeroconf.called_with(ip_version=IPVersion.V4Only)
+
+
+async def test_setup_with_ipv6(hass, mock_zeroconf):
+    """Test without ipv6."""
+    with patch.object(hass.config_entries.flow, "async_init"), patch.object(
+        zeroconf, "HaServiceBrowser", side_effect=service_update_mock
+    ):
+        mock_zeroconf.get_service_info.side_effect = get_service_info_mock
+        assert await async_setup_component(
+            hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {CONF_IPV6: True}}
+        )
+
+    assert mock_zeroconf.called_with()
+
+
+async def test_setup_with_ipv6_default(hass, mock_zeroconf):
+    """Test without ipv6 as default."""
+    with patch.object(hass.config_entries.flow, "async_init"), patch.object(
+        zeroconf, "HaServiceBrowser", side_effect=service_update_mock
+    ):
+        mock_zeroconf.get_service_info.side_effect = get_service_info_mock
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
 
     assert mock_zeroconf.called_with()
 
@@ -247,6 +298,15 @@ async def test_info_from_service_non_utf8(hass):
     assert len(info["properties"]) <= len(raw_info)
     assert "non-utf8-value" not in info["properties"]
     assert raw_info["non-utf8-value"] is NON_UTF8_VALUE
+
+
+async def test_info_from_service_with_addresses(hass):
+    """Test info_from_service does not throw when there are no addresses."""
+    service_type = "_test._tcp.local."
+    info = zeroconf.info_from_service(
+        get_service_info_mock_without_an_address(service_type, f"test.{service_type}")
+    )
+    assert info is None
 
 
 async def test_get_instance(hass, mock_zeroconf):

@@ -57,7 +57,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up from legacy configuration file. Obsolete."""
     _LOGGER.error(
-        "Configuring Songpal through media_player platform is no longer supported. Convert to songpal platform or UI configuration."
+        "Configuring Songpal through media_player platform is no longer supported. Convert to songpal platform or UI configuration"
     )
 
 
@@ -75,7 +75,7 @@ async def async_setup_entry(
         ):  # set timeout to avoid blocking the setup process
             await device.get_supported_methods()
     except (SongpalException, asyncio.TimeoutError) as ex:
-        _LOGGER.warning("[%s(%s)] Unable to connect.", name, endpoint)
+        _LOGGER.warning("[%s(%s)] Unable to connect", name, endpoint)
         _LOGGER.debug("Unable to get methods from songpal: %s", ex)
         raise PlatformNotReady
 
@@ -128,7 +128,7 @@ class SongpalEntity(MediaPlayerEntity):
 
     async def async_activate_websocket(self):
         """Activate websocket for listening if wanted."""
-        _LOGGER.info("Activating websocket connection..")
+        _LOGGER.info("Activating websocket connection")
 
         async def _volume_changed(volume: VolumeChange):
             _LOGGER.debug("Volume changed: %s", volume)
@@ -152,7 +152,7 @@ class SongpalEntity(MediaPlayerEntity):
 
         async def _try_reconnect(connect: ConnectChange):
             _LOGGER.warning(
-                "[%s(%s)] Got disconnected, trying to reconnect.",
+                "[%s(%s)] Got disconnected, trying to reconnect",
                 self.name,
                 self._dev.endpoint,
             )
@@ -179,7 +179,7 @@ class SongpalEntity(MediaPlayerEntity):
 
             self.hass.loop.create_task(self._dev.listen_notifications())
             _LOGGER.warning(
-                "[%s(%s)] Connection reestablished.", self.name, self._dev.endpoint
+                "[%s(%s)] Connection reestablished", self.name, self._dev.endpoint
             )
 
         self._dev.on_notification(VolumeChange, _volume_changed)

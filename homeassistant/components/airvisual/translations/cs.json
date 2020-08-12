@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "geography": {
+                "data": {
+                    "api_key": "Kl\u00ed\u010d API"
+                }
+            },
+            "node_pro": {
+                "data": {
+                    "password": "Heslo"
+                }
+            }
+        }
+    }
+}

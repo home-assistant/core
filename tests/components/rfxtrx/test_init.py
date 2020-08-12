@@ -1,201 +1,124 @@
 """The tests for the Rfxtrx component."""
-# pylint: disable=protected-access
-import unittest
-
-import pytest
 
 from homeassistant.components import rfxtrx
 from homeassistant.core import callback
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component
 
-from tests.common import get_test_home_assistant
+from . import _signal_event
+
+from tests.async_mock import call
 
 
-@pytest.mark.skipif("os.environ.get('RFXTRX') != 'RUN'")
-class TestRFXTRX(unittest.TestCase):
-    """Test the Rfxtrx component."""
+async def test_valid_config(hass):
+    """Test configuration."""
+    assert await async_setup_component(
+        hass,
+        "rfxtrx",
+        {
+            "rfxtrx": {
+                "device": "/dev/serial/by-id/usb"
+                + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
+            }
+        },
+    )
 
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.addCleanup(self.tear_down_cleanup)
 
-    def tear_down_cleanup(self):
-        """Stop everything that was started."""
-        rfxtrx.RECEIVED_EVT_SUBSCRIBERS = []
-        rfxtrx.RFX_DEVICES = {}
-        if rfxtrx.RFXOBJECT:
-            rfxtrx.RFXOBJECT.close_connection()
-        self.hass.stop()
+async def test_valid_config2(hass):
+    """Test configuration."""
+    assert await async_setup_component(
+        hass,
+        "rfxtrx",
+        {
+            "rfxtrx": {
+                "device": "/dev/serial/by-id/usb"
+                + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
+                "debug": True,
+            }
+        },
+    )
 
-    def test_default_config(self):
-        """Test configuration."""
-        assert setup_component(
-            self.hass,
-            "rfxtrx",
-            {
-                "rfxtrx": {
-                    "device": "/dev/serial/by-id/usb"
-                    + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                    "dummy": True,
-                }
-            },
-        )
 
-        assert setup_component(
-            self.hass,
-            "sensor",
-            {"sensor": {"platform": "rfxtrx", "automatic_add": True, "devices": {}}},
-        )
+async def test_invalid_config(hass):
+    """Test configuration."""
+    assert not await async_setup_component(hass, "rfxtrx", {"rfxtrx": {}})
 
-        assert len(rfxtrx.RFXOBJECT.sensors()) == 2
+    assert not await async_setup_component(
+        hass,
+        "rfxtrx",
+        {
+            "rfxtrx": {
+                "device": "/dev/serial/by-id/usb"
+                + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
+                "invalid_key": True,
+            }
+        },
+    )
 
-    def test_valid_config(self):
-        """Test configuration."""
-        assert setup_component(
-            self.hass,
-            "rfxtrx",
-            {
-                "rfxtrx": {
-                    "device": "/dev/serial/by-id/usb"
-                    + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                    "dummy": True,
-                }
-            },
-        )
 
-    def test_valid_config2(self):
-        """Test configuration."""
-        assert setup_component(
-            self.hass,
-            "rfxtrx",
-            {
-                "rfxtrx": {
-                    "device": "/dev/serial/by-id/usb"
-                    + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                    "dummy": True,
-                    "debug": True,
-                }
-            },
-        )
+async def test_fire_event(hass):
+    """Test fire event."""
+    assert await async_setup_component(
+        hass,
+        "rfxtrx",
+        {
+            "rfxtrx": {
+                "device": "/dev/serial/by-id/usb"
+                + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
+                "automatic_add": True,
+                "devices": {
+                    "0b1100cd0213c7f210010f51": {rfxtrx.CONF_FIRE_EVENT: True},
+                    "0716000100900970": {rfxtrx.CONF_FIRE_EVENT: True},
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
 
-    def test_invalid_config(self):
-        """Test configuration."""
-        assert not setup_component(self.hass, "rfxtrx", {"rfxtrx": {}})
+    calls = []
 
-        assert not setup_component(
-            self.hass,
-            "rfxtrx",
-            {
-                "rfxtrx": {
-                    "device": "/dev/serial/by-id/usb"
-                    + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                    "invalid_key": True,
-                }
-            },
-        )
+    @callback
+    def record_event(event):
+        """Add recorded event to set."""
+        assert event.event_type == "rfxtrx_event"
+        calls.append(event.data)
 
-    def test_fire_event(self):
-        """Test fire event."""
-        assert setup_component(
-            self.hass,
-            "rfxtrx",
-            {
-                "rfxtrx": {
-                    "device": "/dev/serial/by-id/usb"
-                    + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                    "dummy": True,
-                }
-            },
-        )
-        assert setup_component(
-            self.hass,
-            "switch",
-            {
-                "switch": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "0b1100cd0213c7f210010f51": {
-                            "name": "Test",
-                            rfxtrx.ATTR_FIREEVENT: True,
-                        }
-                    },
-                }
-            },
-        )
+    hass.bus.async_listen(rfxtrx.const.EVENT_RFXTRX_EVENT, record_event)
 
-        calls = []
+    await _signal_event(hass, "0b1100cd0213c7f210010f51")
+    await _signal_event(hass, "0716000100900970")
 
-        @callback
-        def record_event(event):
-            """Add recorded event to set."""
-            calls.append(event)
+    assert calls == [
+        {
+            "packet_type": 17,
+            "sub_type": 0,
+            "type_string": "AC",
+            "id_string": "213c7f2:16",
+            "data": "0b1100cd0213c7f210010f51",
+            "values": {"Command": "On", "Rssi numeric": 5},
+        },
+        {
+            "packet_type": 22,
+            "sub_type": 0,
+            "type_string": "Byron SX",
+            "id_string": "00:90",
+            "data": "0716000100900970",
+            "values": {"Sound": 9, "Battery numeric": 0, "Rssi numeric": 7},
+        },
+    ]
 
-        self.hass.bus.listen(rfxtrx.EVENT_BUTTON_PRESSED, record_event)
-        self.hass.block_till_done()
 
-        entity = rfxtrx.RFX_DEVICES["213c7f216"]
-        assert "Test" == entity.name
-        assert "off" == entity.state
-        assert entity.should_fire_event
+async def test_send(hass, rfxtrx):
+    """Test configuration."""
+    assert await async_setup_component(
+        hass, "rfxtrx", {"rfxtrx": {"device": "/dev/null"}}
+    )
+    await hass.async_block_till_done()
 
-        event = rfxtrx.get_rfx_object("0b1100cd0213c7f210010f51")
-        event.data = bytearray(
-            [0x0B, 0x11, 0x00, 0x10, 0x01, 0x18, 0xCD, 0xEA, 0x01, 0x01, 0x0F, 0x70]
-        )
-        rfxtrx.RECEIVED_EVT_SUBSCRIBERS[0](event)
-        self.hass.block_till_done()
+    await hass.services.async_call(
+        "rfxtrx", "send", {"event": "0a520802060101ff0f0269"}, blocking=True
+    )
 
-        assert event.values["Command"] == "On"
-        assert "on" == entity.state
-        assert self.hass.states.get("switch.test").state == "on"
-        assert 1 == len(calls)
-        assert calls[0].data == {"entity_id": "switch.test", "state": "on"}
-
-    def test_fire_event_sensor(self):
-        """Test fire event."""
-        assert setup_component(
-            self.hass,
-            "rfxtrx",
-            {
-                "rfxtrx": {
-                    "device": "/dev/serial/by-id/usb"
-                    + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                    "dummy": True,
-                }
-            },
-        )
-        assert setup_component(
-            self.hass,
-            "sensor",
-            {
-                "sensor": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "0a520802060100ff0e0269": {
-                            "name": "Test",
-                            rfxtrx.ATTR_FIREEVENT: True,
-                        }
-                    },
-                }
-            },
-        )
-
-        calls = []
-
-        @callback
-        def record_event(event):
-            """Add recorded event to set."""
-            calls.append(event)
-
-        self.hass.bus.listen("signal_received", record_event)
-        self.hass.block_till_done()
-        event = rfxtrx.get_rfx_object("0a520802060101ff0f0269")
-        event.data = bytearray(b"\nR\x08\x01\x07\x01\x00\xb8\x1b\x02y")
-        rfxtrx.RECEIVED_EVT_SUBSCRIBERS[0](event)
-
-        self.hass.block_till_done()
-        assert 1 == len(calls)
-        assert calls[0].data == {"entity_id": "sensor.test"}
+    assert rfxtrx.transport.send.mock_calls == [
+        call(bytearray(b"\x0a\x52\x08\x02\x06\x01\x01\xff\x0f\x02\x69"))
+    ]

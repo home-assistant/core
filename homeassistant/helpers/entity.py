@@ -297,7 +297,7 @@ class Entity(ABC):
                 self._disabled_reported = True
                 assert self.platform is not None
                 _LOGGER.warning(
-                    "Entity %s is incorrectly being triggered for updates while it is disabled. This is a bug in the %s integration.",
+                    "Entity %s is incorrectly being triggered for updates while it is disabled. This is a bug in the %s integration",
                     self.entity_id,
                     self.platform.platform_name,
                 )

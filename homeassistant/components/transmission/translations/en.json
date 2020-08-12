@@ -12,7 +12,9 @@
             "user": {
                 "data": {
                     "host": "Host",
+                    "limit": "Limit",
                     "name": "Name",
+                    "order": "Order",
                     "password": "Password",
                     "port": "Port",
                     "username": "Username"
@@ -25,6 +27,8 @@
         "step": {
             "init": {
                 "data": {
+                    "limit": "Limit",
+                    "order": "Order",
                     "scan_interval": "Update frequency"
                 },
                 "title": "Configure options for Transmission"

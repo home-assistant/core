@@ -2,10 +2,11 @@
 from datetime import timedelta
 import io
 
-from homeassistant import core as ha
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+
+from tests.common import async_fire_time_changed
 
 
 async def test_bad_posting(hass, aiohttp_client):
@@ -74,7 +75,7 @@ async def test_posting_url(hass, aiohttp_client):
 
     # await timeout
     shifted_time = dt_util.utcnow() + timedelta(seconds=15)
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: shifted_time})
+    async_fire_time_changed(hass, shifted_time)
     await hass.async_block_till_done()
 
     # back to initial state

@@ -44,6 +44,9 @@ ZEROCONF = {
     "_nut._tcp.local.": [
         "nut"
     ],
+    "_plugwise._tcp.local.": [
+        "plugwise"
+    ],
     "_printer._tcp.local.": [
         "brother"
     ],

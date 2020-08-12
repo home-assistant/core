@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "edit": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

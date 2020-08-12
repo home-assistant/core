@@ -9,6 +9,7 @@ import math
 import random
 import re
 from typing import Any, Dict, Iterable, List, Optional, Union
+from urllib.parse import urlencode as urllib_urlencode
 
 import jinja2
 from jinja2 import contextfilter, contextfunction
@@ -945,6 +946,11 @@ def relative_time(value):
     return dt_util.get_age(value)
 
 
+def urlencode(value):
+    """Urlencode dictionary and return as UTF-8 string."""
+    return urllib_urlencode(value).encode("utf-8")
+
+
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
     """The Home Assistant template environment."""
 
@@ -1001,6 +1007,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["relative_time"] = relative_time
         self.globals["strptime"] = strptime
+        self.globals["urlencode"] = urlencode
         if hass is None:
             return
 

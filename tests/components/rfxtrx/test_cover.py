@@ -1,274 +1,122 @@
 """The tests for the Rfxtrx cover platform."""
-import unittest
+from unittest.mock import call
 
-import RFXtrx as rfxtrxmod
 import pytest
 
-from homeassistant.components import rfxtrx as rfxtrx_core
-from homeassistant.setup import setup_component
+from homeassistant.core import State
+from homeassistant.setup import async_setup_component
 
-from tests.common import get_test_home_assistant, mock_component
+from . import _signal_event
+
+from tests.common import mock_restore_cache
 
 
-@pytest.mark.skipif("os.environ.get('RFXTRX') != 'RUN'")
-class TestCoverRfxtrx(unittest.TestCase):
-    """Test the Rfxtrx cover platform."""
+async def test_one_cover(hass, rfxtrx):
+    """Test with 1 cover."""
+    assert await async_setup_component(
+        hass,
+        "rfxtrx",
+        {"rfxtrx": {"device": "abcd", "devices": {"0b1400cd0213c7f20d010f51": {}}}},
+    )
+    await hass.async_block_till_done()
 
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        mock_component("rfxtrx")
-        self.addCleanup(self.tear_down_cleanup)
+    state = hass.states.get("cover.lightwaverf_siemens_0213c7_242")
+    assert state
 
-    def tear_down_cleanup(self):
-        """Stop everything that was started."""
-        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS = []
-        rfxtrx_core.RFX_DEVICES = {}
-        if rfxtrx_core.RFXOBJECT:
-            rfxtrx_core.RFXOBJECT.close_connection()
-        self.hass.stop()
+    await hass.services.async_call(
+        "cover",
+        "open_cover",
+        {"entity_id": "cover.lightwaverf_siemens_0213c7_242"},
+        blocking=True,
+    )
 
-    def test_valid_config(self):
-        """Test configuration."""
-        assert setup_component(
-            self.hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "0b1100cd0213c7f210010f51": {
-                            "name": "Test",
-                            rfxtrx_core.ATTR_FIREEVENT: True,
-                        }
-                    },
-                }
-            },
-        )
+    await hass.services.async_call(
+        "cover",
+        "close_cover",
+        {"entity_id": "cover.lightwaverf_siemens_0213c7_242"},
+        blocking=True,
+    )
 
-    def test_invalid_config_capital_letters(self):
-        """Test configuration."""
-        assert not setup_component(
-            self.hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "2FF7f216": {
-                            "name": "Test",
-                            "packetid": "0b1100cd0213c7f210010f51",
-                            "signal_repetitions": 3,
-                        }
-                    },
-                }
-            },
-        )
+    await hass.services.async_call(
+        "cover",
+        "stop_cover",
+        {"entity_id": "cover.lightwaverf_siemens_0213c7_242"},
+        blocking=True,
+    )
 
-    def test_invalid_config_extra_key(self):
-        """Test configuration."""
-        assert not setup_component(
-            self.hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "invalid_key": "afda",
-                    "devices": {
-                        "213c7f216": {
-                            "name": "Test",
-                            "packetid": "0b1100cd0213c7f210010f51",
-                            rfxtrx_core.ATTR_FIREEVENT: True,
-                        }
-                    },
-                }
-            },
-        )
+    assert rfxtrx.transport.send.mock_calls == [
+        call(bytearray(b"\n\x14\x00\x00\x02\x13\xc7\xf2\x0f\x00\x00")),
+        call(bytearray(b"\n\x14\x00\x00\x02\x13\xc7\xf2\r\x00\x00")),
+        call(bytearray(b"\n\x14\x00\x00\x02\x13\xc7\xf2\x0e\x00\x00")),
+    ]
 
-    def test_invalid_config_capital_packetid(self):
-        """Test configuration."""
-        assert not setup_component(
-            self.hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "213c7f216": {
-                            "name": "Test",
-                            "packetid": "AA1100cd0213c7f210010f51",
-                            rfxtrx_core.ATTR_FIREEVENT: True,
-                        }
-                    },
-                }
-            },
-        )
 
-    def test_invalid_config_missing_packetid(self):
-        """Test configuration."""
-        assert not setup_component(
-            self.hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "213c7f216": {"name": "Test", rfxtrx_core.ATTR_FIREEVENT: True}
-                    },
-                }
-            },
-        )
+@pytest.mark.parametrize("state", ["open", "closed"])
+async def test_state_restore(hass, rfxtrx, state):
+    """State restoration."""
 
-    def test_default_config(self):
-        """Test with 0 cover."""
-        assert setup_component(
-            self.hass, "cover", {"cover": {"platform": "rfxtrx", "devices": {}}}
-        )
-        assert 0 == len(rfxtrx_core.RFX_DEVICES)
+    entity_id = "cover.lightwaverf_siemens_0213c7_242"
 
-    def test_one_cover(self):
-        """Test with 1 cover."""
-        assert setup_component(
-            self.hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "rfxtrx",
-                    "devices": {"0b1400cd0213c7f210010f51": {"name": "Test"}},
-                }
-            },
-        )
+    mock_restore_cache(hass, [State(entity_id, state)])
 
-        rfxtrx_core.RFXOBJECT = rfxtrxmod.Core(
-            "", transport_protocol=rfxtrxmod.DummyTransport
-        )
+    assert await async_setup_component(
+        hass,
+        "rfxtrx",
+        {"rfxtrx": {"device": "abcd", "devices": {"0b1400cd0213c7f20d010f51": {}}}},
+    )
+    await hass.async_block_till_done()
 
-        assert 1 == len(rfxtrx_core.RFX_DEVICES)
-        for id in rfxtrx_core.RFX_DEVICES:
-            entity = rfxtrx_core.RFX_DEVICES[id]
-            assert entity.signal_repetitions == 1
-            assert not entity.should_fire_event
-            assert not entity.should_poll
-            entity.open_cover()
-            entity.close_cover()
-            entity.stop_cover()
+    assert hass.states.get(entity_id).state == state
 
-    def test_several_covers(self):
-        """Test with 3 covers."""
-        assert setup_component(
-            self.hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "rfxtrx",
-                    "signal_repetitions": 3,
-                    "devices": {
-                        "0b1100cd0213c7f230010f71": {"name": "Test"},
-                        "0b1100100118cdea02010f70": {"name": "Bath"},
-                        "0b1100101118cdea02010f70": {"name": "Living"},
-                    },
-                }
-            },
-        )
 
-        assert 3 == len(rfxtrx_core.RFX_DEVICES)
-        device_num = 0
-        for id in rfxtrx_core.RFX_DEVICES:
-            entity = rfxtrx_core.RFX_DEVICES[id]
-            assert entity.signal_repetitions == 3
-            if entity.name == "Living":
-                device_num = device_num + 1
-            elif entity.name == "Bath":
-                device_num = device_num + 1
-            elif entity.name == "Test":
-                device_num = device_num + 1
+async def test_several_covers(hass, rfxtrx):
+    """Test with 3 covers."""
+    assert await async_setup_component(
+        hass,
+        "rfxtrx",
+        {
+            "rfxtrx": {
+                "device": "abcd",
+                "devices": {
+                    "0b1400cd0213c7f20d010f51": {},
+                    "0A1400ADF394AB010D0060": {},
+                    "09190000009ba8010100": {},
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
-        assert 3 == device_num
+    state = hass.states.get("cover.lightwaverf_siemens_0213c7_242")
+    assert state
+    assert state.state == "closed"
+    assert state.attributes.get("friendly_name") == "LightwaveRF, Siemens 0213c7:242"
 
-    def test_discover_covers(self):
-        """Test with discovery of covers."""
-        assert setup_component(
-            self.hass,
-            "cover",
-            {"cover": {"platform": "rfxtrx", "automatic_add": True, "devices": {}}},
-        )
+    state = hass.states.get("cover.lightwaverf_siemens_f394ab_1")
+    assert state
+    assert state.state == "closed"
+    assert state.attributes.get("friendly_name") == "LightwaveRF, Siemens f394ab:1"
 
-        event = rfxtrx_core.get_rfx_object("0a140002f38cae010f0070")
-        event.data = bytearray(
-            [0x0A, 0x14, 0x00, 0x02, 0xF3, 0x8C, 0xAE, 0x01, 0x0F, 0x00, 0x70]
-        )
+    state = hass.states.get("cover.rollertrol_009ba8_1")
+    assert state
+    assert state.state == "closed"
+    assert state.attributes.get("friendly_name") == "RollerTrol 009ba8:1"
 
-        for evt_sub in rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS:
-            evt_sub(event)
-        assert 1 == len(rfxtrx_core.RFX_DEVICES)
 
-        event = rfxtrx_core.get_rfx_object("0a1400adf394ab020e0060")
-        event.data = bytearray(
-            [0x0A, 0x14, 0x00, 0xAD, 0xF3, 0x94, 0xAB, 0x02, 0x0E, 0x00, 0x60]
-        )
+async def test_discover_covers(hass, rfxtrx):
+    """Test with discovery of covers."""
+    assert await async_setup_component(
+        hass, "rfxtrx", {"rfxtrx": {"device": "abcd", "automatic_add": True}}
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
 
-        for evt_sub in rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS:
-            evt_sub(event)
-        assert 2 == len(rfxtrx_core.RFX_DEVICES)
+    await _signal_event(hass, "0a140002f38cae010f0070")
+    state = hass.states.get("cover.lightwaverf_siemens_f38cae_1")
+    assert state
+    assert state.state == "open"
 
-        # Trying to add a sensor
-        event = rfxtrx_core.get_rfx_object("0a52085e070100b31b0279")
-        event.data = bytearray(b"\nR\x08^\x07\x01\x00\xb3\x1b\x02y")
-        for evt_sub in rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS:
-            evt_sub(event)
-        assert 2 == len(rfxtrx_core.RFX_DEVICES)
-
-        # Trying to add a light
-        event = rfxtrx_core.get_rfx_object("0b1100100118cdea02010f70")
-        event.data = bytearray(
-            [0x0B, 0x11, 0x11, 0x10, 0x01, 0x18, 0xCD, 0xEA, 0x01, 0x02, 0x0F, 0x70]
-        )
-        for evt_sub in rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS:
-            evt_sub(event)
-        assert 2 == len(rfxtrx_core.RFX_DEVICES)
-
-    def test_discover_cover_noautoadd(self):
-        """Test with discovery of cover when auto add is False."""
-        assert setup_component(
-            self.hass,
-            "cover",
-            {"cover": {"platform": "rfxtrx", "automatic_add": False, "devices": {}}},
-        )
-
-        event = rfxtrx_core.get_rfx_object("0a1400adf394ab010d0060")
-        event.data = bytearray(
-            [0x0A, 0x14, 0x00, 0xAD, 0xF3, 0x94, 0xAB, 0x01, 0x0D, 0x00, 0x60]
-        )
-
-        for evt_sub in rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS:
-            evt_sub(event)
-        assert 0 == len(rfxtrx_core.RFX_DEVICES)
-
-        event = rfxtrx_core.get_rfx_object("0a1400adf394ab020e0060")
-        event.data = bytearray(
-            [0x0A, 0x14, 0x00, 0xAD, 0xF3, 0x94, 0xAB, 0x02, 0x0E, 0x00, 0x60]
-        )
-        for evt_sub in rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS:
-            evt_sub(event)
-        assert 0 == len(rfxtrx_core.RFX_DEVICES)
-
-        # Trying to add a sensor
-        event = rfxtrx_core.get_rfx_object("0a52085e070100b31b0279")
-        event.data = bytearray(b"\nR\x08^\x07\x01\x00\xb3\x1b\x02y")
-        for evt_sub in rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS:
-            evt_sub(event)
-        assert 0 == len(rfxtrx_core.RFX_DEVICES)
-
-        # Trying to add a light
-        event = rfxtrx_core.get_rfx_object("0b1100100118cdea02010f70")
-        event.data = bytearray(
-            [0x0B, 0x11, 0x11, 0x10, 0x01, 0x18, 0xCD, 0xEA, 0x01, 0x02, 0x0F, 0x70]
-        )
-        for evt_sub in rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS:
-            evt_sub(event)
-        assert 0 == len(rfxtrx_core.RFX_DEVICES)
+    await _signal_event(hass, "0a1400adf394ab020e0060")
+    state = hass.states.get("cover.lightwaverf_siemens_f394ab_2")
+    assert state
+    assert state.state == "open"

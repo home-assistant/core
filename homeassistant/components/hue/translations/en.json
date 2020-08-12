@@ -24,6 +24,12 @@
             "link": {
                 "description": "Press the button on the bridge to register Philips Hue with Home Assistant.\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)",
                 "title": "Link Hub"
+            },
+            "manual": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Manual configure a Hue bridge"
             }
         }
     },
@@ -46,6 +52,17 @@
             "remote_button_short_release": "\"{subtype}\" button released",
             "remote_double_button_long_press": "Both \"{subtype}\" released after long press",
             "remote_double_button_short_press": "Both \"{subtype}\" released"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_how_groups": "Allow Hue groups",
+                    "allow_hue_groups": "Allow Hue groups",
+                    "allow_unreachable": "Allow unreachable bulbs to report their state correctly"
+                }
+            }
         }
     }
 }

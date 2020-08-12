@@ -24,7 +24,7 @@ async def async_setup(hass, config):
     )
     """Register the built-in galery panel."""
     hass.components.frontend.async_register_built_in_panel(
-        "aisaudio", "Audio", "mdi:library-music"
+        "aisaudio", "Audio", "mdi:music-box-multiple"
     )
 
     # TEST

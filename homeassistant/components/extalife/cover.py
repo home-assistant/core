@@ -18,7 +18,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from . import ExtaLifeChannel
 from .helpers.const import DOMAIN, OPTIONS_COVER_INVERTED_CONTROL
 from .helpers.core import Core
-from .pyextalife import ExtaLifeAPI
+from .pyextalife import DEVICE_MAP_TYPE_TO_MODEL, MODEL_ROB01, ExtaLifeAPI
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,8 +55,13 @@ class ExtaLifeCover(ExtaLifeChannel, CoverEntity):
 
     @property
     def supported_features(self):
-        features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION | SUPPORT_STOP
-        return features
+        if not self.is_exta_free:
+            features = (
+                SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION | SUPPORT_STOP
+            )
+            return features
+        else:
+            return SUPPORT_OPEN | SUPPORT_CLOSE
 
     @property
     def current_cover_position(self):
@@ -65,6 +70,9 @@ class ExtaLifeCover(ExtaLifeChannel, CoverEntity):
         # ARROW UP   - open cover
         # ARROW DOWN - close cover
         # THIS CANNOT BE CHANGED AS IT'S HARDCODED IN HA GUI
+
+        if self.is_exta_free:
+            return
 
         val = self.channel_data.get("value")
         pos = val if self.is_inverted_control else 100 - val
@@ -120,20 +128,39 @@ class ExtaLifeCover(ExtaLifeChannel, CoverEntity):
         data = self.channel_data
         pos = ExtaLifeCover.POS_OPEN
 
-        if await self.async_action(ExtaLifeAPI.ACTN_SET_POS, value=pos):
-            data["value"] = pos
-            _LOGGER.debug("open_cover for cover: %s. model: %s", self.entity_id, pos)
-            self.async_schedule_update_ha_state()
+        if not self.is_exta_free:
+            if await self.async_action(ExtaLifeAPI.ACTN_SET_POS, value=pos):
+                data["value"] = pos
+                _LOGGER.debug(
+                    "open_cover for cover: %s. model: %s", self.entity_id, pos
+                )
+                self.async_schedule_update_ha_state()
+        else:
+            if await self.async_action(
+                ExtaLifeAPI.ACTN_EXFREE_UP_PRESS
+            ) and await self.async_action(ExtaLifeAPI.ACTN_EXFREE_UP_RELEASE):
+                self.async_schedule_update_ha_state()
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
         data = self.channel_data
         pos = ExtaLifeCover.POS_CLOSED
 
-        if await self.async_action(ExtaLifeAPI.ACTN_SET_POS, value=pos):
-            data["value"] = pos
-            _LOGGER.debug("close_cover for cover: %s. model: %s", self.entity_id, pos)
-            self.async_schedule_update_ha_state()
+        if not self.is_exta_free:
+            if await self.async_action(ExtaLifeAPI.ACTN_SET_POS, value=pos):
+                data["value"] = pos
+                _LOGGER.debug(
+                    "close_cover for cover: %s. model: %s", self.entity_id, pos
+                )
+                self.async_schedule_update_ha_state()
+
+        elif (
+            DEVICE_MAP_TYPE_TO_MODEL.get(self.channel_data.get("type")) != MODEL_ROB01
+        ):  # ROB-01 supports only 1 toggle mode using 1 command
+            if await self.async_action(
+                ExtaLifeAPI.ACTN_EXFREE_DOWN_PRESS
+            ) and await self.async_action(ExtaLifeAPI.ACTN_EXFREE_DOWN_RELEASE):
+                self.async_schedule_update_ha_state()
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""

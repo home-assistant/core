@@ -21,7 +21,8 @@
                 "data": {
                     "access_token": "Token d'acc\u00e9s",
                     "email": "Correu electr\u00f2nic"
-                }
+                },
+                "description": "T'has de registrar a Awair per a obtenir un token d'acc\u00e9s de desenvolupador a trav\u00e9s de l'enlla\u00e7 seg\u00fcent: https://developer.getawair.com/onboard/login"
             }
         }
     }

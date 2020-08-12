@@ -1,6 +1,8 @@
 """Support for Tado thermostats."""
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_OFF,
@@ -17,6 +19,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
@@ -29,6 +32,7 @@ from .const import (
     CONST_MODE_SMART_SCHEDULE,
     CONST_OVERLAY_MANUAL,
     CONST_OVERLAY_TADO_MODE,
+    CONST_OVERLAY_TIMER,
     DATA,
     DOMAIN,
     HA_TO_TADO_FAN_MODE_MAP,
@@ -49,6 +53,16 @@ from .entity import TadoZoneEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+SERVICE_CLIMATE_TIMER = "set_climate_timer"
+ATTR_TIME_PERIOD = "time_period"
+
+CLIMATE_TIMER_SCHEMA = {
+    vol.Required(ATTR_TIME_PERIOD, default="01:00:00"): vol.All(
+        cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds()
+    ),
+    vol.Required(ATTR_TEMPERATURE): vol.Coerce(float),
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
@@ -57,6 +71,12 @@ async def async_setup_entry(
 
     tado = hass.data[DOMAIN][entry.entry_id][DATA]
     entities = await hass.async_add_executor_job(_generate_entities, tado)
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_CLIMATE_TIMER, CLIMATE_TIMER_SCHEMA, "set_timer",
+    )
 
     if entities:
         async_add_entities(entities, True)
@@ -337,6 +357,13 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         # the device is switching states
         return self._tado_zone_data.target_temp or self._tado_zone_data.current_temp
 
+    def set_timer(self, time_period, temperature=None):
+        """Set the timer on the entity, and temperature if supported."""
+
+        self._control_hvac(
+            hvac_mode=CONST_MODE_HEAT, target_temp=temperature, duration=time_period
+        )
+
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -438,7 +465,12 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
                 self._target_temp = self._heat_min_temp
 
     def _control_hvac(
-        self, hvac_mode=None, target_temp=None, fan_mode=None, swing_mode=None
+        self,
+        hvac_mode=None,
+        target_temp=None,
+        fan_mode=None,
+        swing_mode=None,
+        duration=None,
     ):
         """Send new target temperature to Tado."""
 
@@ -481,17 +513,20 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             return
 
         _LOGGER.debug(
-            "Switching to %s for zone %s (%d) with temperature %s °C",
+            "Switching to %s for zone %s (%d) with temperature %s °C and duration %s",
             self._current_tado_hvac_mode,
             self.zone_name,
             self.zone_id,
             self._target_temp,
+            duration,
         )
 
-        # Fallback to Smart Schedule at next Schedule switch if we have fallback enabled
-        overlay_mode = (
-            CONST_OVERLAY_TADO_MODE if self._tado.fallback else CONST_OVERLAY_MANUAL
-        )
+        overlay_mode = CONST_OVERLAY_MANUAL
+        if duration:
+            overlay_mode = CONST_OVERLAY_TIMER
+        elif self._tado.fallback:
+            # Fallback to Smart Schedule at next Schedule switch if we have fallback enabled
+            overlay_mode = CONST_OVERLAY_TADO_MODE
 
         temperature_to_send = self._target_temp
         if self._current_tado_hvac_mode in TADO_MODES_WITH_NO_TEMP_SETTING:
@@ -509,7 +544,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             zone_id=self.zone_id,
             overlay_mode=overlay_mode,  # What to do when the period ends
             temperature=temperature_to_send,
-            duration=None,
+            duration=duration,
             device_type=self.zone_type,
             mode=self._current_tado_hvac_mode,
             fan_speed=fan_speed,  # api defaults to not sending fanSpeed if None specified

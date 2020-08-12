@@ -2,11 +2,11 @@
     "config": {
         "step": {
             "confirm": {
-                  "description": "![AIS logo](/static/icons/cloud_drive.png)\n\nDo you want to configure a new remote disk?",
+                  "description": "###### ![AIS logo](/static/icons/cloud_drive.png)\n\nDo you want to configure a new remote disk?",
                   "title": "Remote disks"
              },
             "drive_name": {
-                "description": "Select the provider and provide the disk name\n(disk name cannot contain spaces or special characters)\n\n ![AIS logo](/static/icons/favicon-100x100.png)",
+                "description": "Select the provider and provide the disk name\n(disk name cannot contain spaces or special characters)\n\n###### ![AIS logo](/static/icons/favicon-100x100.png)",
                 "title": "Disk name",
                 "data": {
                     "type": "Service",
@@ -14,14 +14,14 @@
                 }
             },
             "token": {
-                "description": "To attach a remote drive [Google Drive](https://www.google.com/drive/) to **Asystent domowy**: \n 1. Click the link below \n 2.Log in with your disk provider \n 3. Authorize **Asystent domowy**. \n 4. Return here, enter the code you received from the supplier and click **SUBMIT**. \n\n ![AIS logo](/static/icons/favicon-100x100.png) [Authentication link]({auth_url})",
+                "description": "To attach a remote drive [Google Drive](https://www.google.com/drive/) to **Asystent domowy**: \n 1. Click the link below \n 2.Log in with your disk provider \n 3. Authorize **Asystent domowy**. \n 4. Return here, enter the code you received from the supplier and click **SUBMIT**. \n\n###### ![AIS logo](/static/icons/favicon-100x100.png) [Authentication link]({auth_url})",
                 "title": "Authentication",
                 "data": {
                     "token_key": "authentication code"
                 }
             },
             "passwd": {
-                "description": "To attach a remote drive [MEGA](https://mega.nz/) to the **Asystent domowy**: \n 1.Create an account / log in with your disk provider \n 2. Enter your username and password and then click **SUBMIT**. \n\n ![AIS logo](/static/icons/favicon-100x100.png)",
+                "description": "To attach a remote drive [MEGA](https://mega.nz/) to the **Asystent domowy**: \n 1.Create an account / log in with your disk provider \n 2. Enter your username and password and then click **SUBMIT**. \n\n###### ![AIS logo](/static/icons/favicon-100x100.png)",
                 "title": "Authentication",
                 "data": {
                     "email": "login - email",
@@ -29,7 +29,7 @@
                 }
             },
             "ftp": {
-                "description": "To attach a remote drive FTP to the Home Assistant: \n Fill this form then click **SUBMIT**. \n\n ![AIS logo](/static/icons/favicon-100x100.png)",
+                "description": "To attach a remote drive FTP to the Home Assistant: \n Fill this form then click **SUBMIT**. \n\n###### ![AIS logo](/static/icons/favicon-100x100.png)",
                 "title": "Attach a remote FTP drive",
                 "data": {
                     "host": "host",

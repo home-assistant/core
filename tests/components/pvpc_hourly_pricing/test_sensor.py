@@ -29,7 +29,7 @@ async def _process_time_step(
 
 
 async def test_sensor_availability(
-    hass, caplog, pvpc_aioclient_mock: AiohttpClientMocker
+    hass, caplog, legacy_patchable_time, pvpc_aioclient_mock: AiohttpClientMocker
 ):
     """Test sensor availability and handling of cloud access."""
     hass.config.time_zone = timezone("Europe/Madrid")

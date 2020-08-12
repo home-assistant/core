@@ -165,7 +165,7 @@ def _drop_index(engine, table_name, index_name):
         _LOGGER.warning(
             "Failed to drop index %s from table %s. Schema "
             "Migration will continue; this is not a "
-            "critical operation.",
+            "critical operation",
             index_name,
             table_name,
         )
@@ -195,7 +195,7 @@ def _add_columns(engine, table_name, columns_def):
     except (InternalError, OperationalError):
         # Some engines support adding all columns at once,
         # this error is when they don't
-        _LOGGER.info("Unable to use quick column add. Adding 1 by 1.")
+        _LOGGER.info("Unable to use quick column add. Adding 1 by 1")
 
     for column_def in columns_def:
         try:

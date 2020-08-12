@@ -9,7 +9,7 @@
                 }
             },
             "confirm": {
-                "description": "![AIS logo](/static/icons/change_host_name.png)\n\nDo you want to set up own host name for AIS dom device?",
+                "description": "###### ![AIS logo](/static/icons/change_host_name.png)\n\nDo you want to set up own host name for AIS dom device?",
                 "title": "AIS host name"
             }
         },

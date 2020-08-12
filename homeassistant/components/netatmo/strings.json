@@ -13,5 +13,30 @@
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
+  },
+  "options": {
+    "step": {
+      "public_weather": {
+        "data": {
+          "area_name": "Name of the area",
+          "lat_ne": "Latitude North-East corner",
+          "lon_ne": "Longitude North-East corner",
+          "lat_sw": "Latitude South-West corner",
+          "lon_sw": "Longitude South-West corner",
+          "mode": "Calculation",
+          "show_on_map": "Show on map"
+        },
+        "description": "Configure a public weather sensor for an area.",
+        "title": "Netatmo public weather sensor"
+      },
+      "public_weather_areas": {
+        "data": {
+          "new_area": "Area name",
+          "weather_areas": "Weather areas"
+        },
+        "description": "Configure public weather sensors.",
+        "title": "Netatmo public weather sensor"
+      }
+    }
   }
 }

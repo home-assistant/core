@@ -25,5 +25,26 @@
                 "title": "MQTT Broker prost\u0159ednictv\u00edm dopl\u0148ku Hass.io"
             }
         }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Nelze se p\u0159ipojit k brokeru."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "password": "Heslo",
+                    "port": "Port",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
+                },
+                "description": "Zadejte informace proo p\u0159ipojen\u00ed zprost\u0159edkovatele protokolu MQTT."
+            },
+            "options": {
+                "data": {
+                    "discovery": "Povolit zji\u0161\u0165ov\u00e1n\u00ed"
+                },
+                "description": "Zvolte mo\u017enosti MQTT."
+            }
+        }
     }
 }

@@ -2,6 +2,6 @@
   "domain": "influxdb",
   "name": "InfluxDB",
   "documentation": "https://www.home-assistant.io/integrations/influxdb",
-  "requirements": ["influxdb==5.2.3", "influxdb-client==1.6.0"],
-  "codeowners": ["@fabaff"]
+  "requirements": ["influxdb==5.2.3", "influxdb-client==1.8.0"],
+  "codeowners": ["@fabaff", "@mdegat01"]
 }

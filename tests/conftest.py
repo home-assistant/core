@@ -1,11 +1,13 @@
 """Set up some common test helper things."""
+import asyncio
 import functools
 import logging
+import threading
 
 import pytest
 import requests_mock as _requests_mock
 
-from homeassistant import core as ha, util
+from homeassistant import core as ha, loader, runner, util
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.providers import homeassistant, legacy_api_password
 from homeassistant.components import mqtt
@@ -15,7 +17,9 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.http import URL
+from homeassistant.const import ATTR_NOW, EVENT_TIME_CHANGED
 from homeassistant.exceptions import ServiceNotFound
+from homeassistant.helpers import event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
 
@@ -37,6 +41,10 @@ from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:ski
 
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+
+asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
+# Disable fixtures overriding our beautiful policy
+asyncio.set_event_loop_policy = lambda policy: None
 
 
 def pytest_configure(config):
@@ -71,6 +79,8 @@ util.get_local_ip = lambda: "127.0.0.1"
 @pytest.fixture(autouse=True)
 def verify_cleanup():
     """Verify that the test has cleaned up resources correctly."""
+    threads_before = frozenset(threading.enumerate())
+
     yield
 
     if len(INSTANCES) >= 2:
@@ -78,6 +88,9 @@ def verify_cleanup():
         for inst in INSTANCES:
             inst.stop()
         pytest.exit(f"Detected non stopped instances ({count}), aborting test run")
+
+    threads = frozenset(threading.enumerate()) - threads_before
+    assert not threads
 
 
 @pytest.fixture
@@ -113,6 +126,30 @@ def hass(loop, hass_storage, request):
         if isinstance(ex, ServiceNotFound):
             continue
         raise ex
+
+
+@pytest.fixture
+async def stop_hass():
+    """Make sure all hass are stopped."""
+    orig_hass = ha.HomeAssistant
+
+    created = []
+
+    def mock_hass():
+        hass_inst = orig_hass()
+        created.append(hass_inst)
+        return hass_inst
+
+    with patch("homeassistant.core.HomeAssistant", mock_hass):
+        yield
+
+    for hass_inst in created:
+        if hass_inst.state == ha.CoreState.stopped:
+            continue
+
+        with patch.object(hass_inst.loop, "stop"):
+            await hass_inst.async_block_till_done()
+            await hass_inst.async_stop(force=True)
 
 
 @pytest.fixture
@@ -315,3 +352,43 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     component = hass.data["mqtt"]
     component.reset_mock()
     return component
+
+
+@pytest.fixture
+def legacy_patchable_time():
+    """Allow time to be patchable by using event listeners instead of asyncio loop."""
+
+    @ha.callback
+    @loader.bind_hass
+    def async_track_point_in_utc_time(hass, action, point_in_time):
+        """Add a listener that fires once after a specific point in UTC time."""
+        # Ensure point_in_time is UTC
+        point_in_time = event.dt_util.as_utc(point_in_time)
+
+        @ha.callback
+        def point_in_time_listener(event):
+            """Listen for matching time_changed events."""
+            now = event.data[ATTR_NOW]
+
+            if now < point_in_time or hasattr(point_in_time_listener, "run"):
+                return
+
+            # Set variable so that we will never run twice.
+            # Because the event bus might have to wait till a thread comes
+            # available to execute this listener it might occur that the
+            # listener gets lined up twice to be executed. This will make
+            # sure the second time it does nothing.
+            setattr(point_in_time_listener, "run", True)
+            async_unsub()
+
+            hass.async_run_job(action, now)
+
+        async_unsub = hass.bus.async_listen(EVENT_TIME_CHANGED, point_in_time_listener)
+
+        return async_unsub
+
+    with patch(
+        "homeassistant.helpers.event.async_track_point_in_utc_time",
+        async_track_point_in_utc_time,
+    ):
+        yield

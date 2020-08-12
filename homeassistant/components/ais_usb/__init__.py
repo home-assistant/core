@@ -417,7 +417,11 @@ def _lsusb():
                                 .decode("utf-8")
                                 .strip()
                             )
-                            manufacturer = " producent " + manufacturer
+                            if manufacturer != product:
+                                # do not say Android producent Android
+                                manufacturer = " producent " + manufacturer
+                            else:
+                                manufacturer = " "
                         else:
                             manufacturer = " "
 

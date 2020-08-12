@@ -12,9 +12,9 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Sertifikatets vertsnavn",
+                    "host": "Vert",
                     "name": "Sertifikatets navn",
-                    "port": "Sertifikatets port"
+                    "port": "Port"
                 },
                 "title": "Definer sertifikatet som skal testes"
             }

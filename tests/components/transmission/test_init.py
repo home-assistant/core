@@ -81,7 +81,9 @@ async def test_successful_config_entry(hass, api):
 
     assert await transmission.async_setup_entry(hass, entry) is True
     assert entry.options == {
-        transmission.CONF_SCAN_INTERVAL: transmission.DEFAULT_SCAN_INTERVAL
+        transmission.CONF_SCAN_INTERVAL: transmission.DEFAULT_SCAN_INTERVAL,
+        transmission.CONF_LIMIT: transmission.DEFAULT_LIMIT,
+        transmission.CONF_ORDER: transmission.DEFAULT_ORDER,
     }
 
 

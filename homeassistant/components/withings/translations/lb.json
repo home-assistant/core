@@ -1,11 +1,15 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Konfiguratioun aktualis\u00e9iert fir de Profil.",
             "authorize_url_timeout": "Z\u00e4it Iwwerschreidung beim gener\u00e9ieren vun der Autorisatiouns URL.",
             "missing_configuration": "Withings Integratioun ass nach net konfigur\u00e9iert. Follegt w.e.g der Dokumentatioun."
         },
         "create_entry": {
             "default": "Erfollegr\u00e4ich mat Withings authentifiz\u00e9iert."
+        },
+        "error": {
+            "profile_exists": "Benotzer Profil ass scho konfigur\u00e9iert. G\u00ebff eem eenzegartege Profil Numm un"
         },
         "flow_title": "Withing: {profile}",
         "step": {

@@ -20,6 +20,7 @@ MODELS = {
     "NAModule4": "Smart Additional Indoor module",
     "NAModule3": "Smart Rain Gauge",
     "NAModule2": "Smart Anemometer",
+    "public": "Public Weather stations",
 }
 
 AUTH = "netatmo_auth"
@@ -28,6 +29,14 @@ CAMERA_DATA = "netatmo_camera"
 HOME_DATA = "netatmo_home_data"
 
 CONF_CLOUDHOOK_URL = "cloudhook_url"
+CONF_WEATHER_AREAS = "weather_areas"
+CONF_NEW_AREA = "new_area"
+CONF_AREA_NAME = "area_name"
+CONF_LAT_NE = "lat_ne"
+CONF_LON_NE = "lon_ne"
+CONF_LAT_SW = "lat_sw"
+CONF_LON_SW = "lon_sw"
+CONF_PUBLIC_MODE = "mode"
 
 OAUTH2_AUTHORIZE = "https://api.netatmo.com/oauth2/authorize"
 OAUTH2_TOKEN = "https://api.netatmo.com/oauth2/token"

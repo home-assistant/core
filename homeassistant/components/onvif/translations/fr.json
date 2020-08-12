@@ -33,7 +33,7 @@
             },
             "manual_input": {
                 "data": {
-                    "host": "H\u00f4te",
+                    "host": "Nom d'h\u00f4te ou adresse IP",
                     "name": "Nom",
                     "port": "Port"
                 },

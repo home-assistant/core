@@ -5,7 +5,7 @@
             "duplicated_name": "El nom ja existeix"
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar"
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
             "user": {

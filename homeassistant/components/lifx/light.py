@@ -163,7 +163,7 @@ def aiolifx_effects():
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the LIFX light platform. Obsolete."""
-    _LOGGER.warning("LIFX no longer works with light platform configuration.")
+    _LOGGER.warning("LIFX no longer works with light platform configuration")
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

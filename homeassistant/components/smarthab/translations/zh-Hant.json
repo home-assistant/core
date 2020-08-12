@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "service": "\u5617\u8a66\u8a2a\u554f Smarthab \u6642\u767c\u751f\u932f\u8aa4\uff0c\u670d\u52d9\u53ef\u4ee5\u5df2\u7d93\u5931\u6548\uff0c\u8acb\u6aa2\u67e5\u9023\u7dda\u3002",
+            "unknown_error": "\u672a\u9810\u671f\u932f\u8aa4",
+            "wrong_login": "\u9a57\u8b49\u78bc\u7121\u6548"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "\u96fb\u5b50\u90f5\u4ef6",
+                    "password": "\u5bc6\u78bc"
+                },
+                "description": "\u7531\u65bc\u6280\u8853\u539f\u56e0\u3001\u8acb\u78ba\u5b9a\u6307\u5b9a Home Assistant \u8a2d\u5b9a\u5099\u7528\u5e33\u6236\u3002\u53ef\u4ee5\u900f\u904e Smarthab \u61c9\u7528\u7a0b\u5f0f\u5275\u5efa\u3002",
+                "title": "\u8a2d\u5b9a SmartHab"
+            }
+        }
+    }
+}

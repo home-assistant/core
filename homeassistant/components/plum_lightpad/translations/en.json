@@ -1,20 +1,18 @@
 {
     "config": {
         "abort": {
-            "single_instance_per_username_allowed": "Only one config entry per unique username is supported"
+            "already_configured": "Account is already configured"
         },
         "error": {
-            "cannot_connect": "Unable to connect to Plum Cloud."
+            "cannot_connect": "Failed to connect"
         },
         "step": {
             "user": {
                 "data": {
                     "password": "Password",
                     "username": "Email"
-                },
-                "title": "Fill in your Plum Cloud login information"
+                }
             }
         }
-    },
-    "title": "Plum Lightpad"
+    }
 }

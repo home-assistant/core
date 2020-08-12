@@ -1,5 +1,7 @@
 """The tests for the Apache Kafka component."""
-from collections import namedtuple
+from asyncio import AbstractEventLoop
+from dataclasses import dataclass
+from typing import Callable, Type
 
 import pytest
 
@@ -16,8 +18,23 @@ MIN_CONFIG = {
     "port": 8080,
     "topic": "topic",
 }
-FilterTest = namedtuple("FilterTest", "id should_pass")
-MockKafkaClient = namedtuple("MockKafkaClient", "init start send_and_wait")
+
+
+@dataclass
+class FilterTest:
+    """Class for capturing a filter test."""
+
+    id: str
+    should_pass: bool
+
+
+@dataclass
+class MockKafkaClient:
+    """Mock of the Apache Kafka client for testing."""
+
+    init: Callable[[Type[AbstractEventLoop], str, str], None]
+    start: Callable[[], None]
+    send_and_wait: Callable[[str, str], None]
 
 
 @pytest.fixture(name="mock_client")

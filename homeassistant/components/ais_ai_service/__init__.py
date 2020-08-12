@@ -67,7 +67,6 @@ from .ais_agent import AisAgent
 
 aisCloudWS = None
 
-
 ATTR_TEXT = "text"
 DOMAIN = "ais_ai_service"
 
@@ -100,6 +99,7 @@ INTENT_CHANGE_CONTEXT = "AisChangeContext"
 INTENT_GET_WEATHER = "AisGetWeather"
 INTENT_GET_WEATHER_48 = "AisGetWeather48"
 INTENT_STATUS = "AisStatusInfo"
+INTENT_PERSON_STATUS = "AisPersonStatusInfo"
 INTENT_TURN_ON = "AisTurnOn"
 INTENT_TURN_OFF = "AisTurnOff"
 INTENT_LAMPS_ON = "AisLampsOn"
@@ -2793,6 +2793,7 @@ async def async_setup(hass, config):
     hass.helpers.intent.async_register(TurnOnIntent())
     hass.helpers.intent.async_register(TurnOffIntent())
     hass.helpers.intent.async_register(StatusIntent())
+    hass.helpers.intent.async_register(PersonStatusIntent())
     hass.helpers.intent.async_register(PlayRadioIntent())
     hass.helpers.intent.async_register(AisPlayPodcastIntent())
     hass.helpers.intent.async_register(AisPlayYtMusicIntent())
@@ -2976,6 +2977,9 @@ async def async_setup(hass, config):
         hass, INTENT_RUN_AUTOMATION, ["Uruchom {item}", "Automatyzacja {item}"]
     )
     async_register(hass, INTENT_ASK_GOOGLE, ["Google {item}"])
+    async_register(
+        hass, INTENT_PERSON_STATUS, ["Gdzie jest {item}", "Lokalizacja {item}"]
+    )
     async_register(
         hass,
         INTENT_NEXT,
@@ -3931,13 +3935,22 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
 
 
 @core.callback
-def _match_entity(hass, name):
+def _match_entity(hass, name, domain=None):
     """Match a name to an entity."""
-    from fuzzywuzzy import process as fuzzyExtract
+    from fuzzywuzzy import process as fuzzy_extract
 
-    entities = {state.entity_id: state.name for state in hass.states.async_all()}
+    if domain is not None:
+        # entities = hass.states.async_entity_ids(domain)
+        entities = {
+            state.entity_id: state.name
+            for state in hass.states.async_all()
+            if state.entity_id.startswith(domain)
+        }
+    else:
+        entities = {state.entity_id: state.name for state in hass.states.async_all()}
+
     try:
-        entity_id = fuzzyExtract.extractOne(name, entities, score_cutoff=86)[2]
+        entity_id = fuzzy_extract.extractOne(name, entities, score_cutoff=86)[2]
     except Exception as e:
         entity_id = None
 
@@ -4811,3 +4824,34 @@ class AisClimateSetAllOff(intent.IntentHandler):
         )
         message = "ok, całe ogrzewanie wyłączone"
         return message, True
+
+
+class PersonStatusIntent(intent.IntentHandler):
+    """Handle status item on intents."""
+
+    intent_type = INTENT_PERSON_STATUS
+    slot_schema = {"item": cv.string}
+
+    async def async_handle(self, intent_obj):
+        """Handle status intent."""
+        hass = intent_obj.hass
+        slots = self.async_validate_slots(intent_obj.slots)
+        name = slots["item"]["value"]
+        entity = _match_entity(hass, name, "person")
+        success = False
+
+        if not entity:
+            message = "Nie znajduję lokalizacji: " + name
+            success = False
+        else:
+            if entity.state == STATE_UNKNOWN:
+                location = "lokalizacja nieznana"
+            elif entity.state == STATE_HOME:
+                location = "jest w domu"
+            elif entity.state == STATE_NOT_HOME:
+                location = "jest poza domem"
+            else:
+                location = "lokalizacja " + entity.state
+            message = format(entity.name) + ": " + location
+            success = True
+        return message, success

@@ -16,7 +16,7 @@
             "response_error": "Ukjent feil fra enheten",
             "unknown_connection_error": "Ukjent feil under tilkobling til enhet"
         },
-        "flow_title": "Huawei LTE: {name}",
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {

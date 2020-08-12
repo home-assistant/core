@@ -24,6 +24,12 @@
             "link": {
                 "description": "Dr\u00e9ckt de Kn\u00e4ppchen un der Bridge fir den Philips Hue mam Home Assistant ze registr\u00e9ieren.\n\n![Kn\u00e4ppchen un der Bridge](/static/images/config_philips_hue.jpg)",
                 "title": "Link Hub"
+            },
+            "manual": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Eng Hue Bridge manuell konfigur\u00e9ieren"
             }
         }
     },
@@ -46,6 +52,15 @@
             "remote_button_short_release": "\"{subtype}\" Kn\u00e4ppche lassgelooss",
             "remote_double_button_long_press": "B\u00e9id \"{subtype}\" no laangem unhalen lassgelooss",
             "remote_double_button_short_press": "B\u00e9id \"{subtype}\" lassgeloss"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_how_groups": "Hue Gruppen erlaaben"
+                }
+            }
         }
     }
 }

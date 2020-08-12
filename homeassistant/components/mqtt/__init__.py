@@ -56,9 +56,14 @@ from .const import (
     CONF_RETAIN,
     CONF_STATE_TOPIC,
     CONF_WILL_MESSAGE,
+    DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
+    DEFAULT_PAYLOAD_AVAILABLE,
+    DEFAULT_PAYLOAD_NOT_AVAILABLE,
+    DEFAULT_PREFIX,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
+    DEFAULT_WILL,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
     PROTOCOL_311,
@@ -110,10 +115,7 @@ PROTOCOL_31 = "3.1"
 DEFAULT_PORT = 1883
 DEFAULT_KEEPALIVE = 60
 DEFAULT_PROTOCOL = PROTOCOL_311
-DEFAULT_DISCOVERY_PREFIX = "homeassistant"
 DEFAULT_TLS_PROTOCOL = "auto"
-DEFAULT_PAYLOAD_AVAILABLE = "online"
-DEFAULT_PAYLOAD_NOT_AVAILABLE = "offline"
 
 ATTR_PAYLOAD_TEMPLATE = "payload_template"
 
@@ -141,8 +143,8 @@ CLIENT_KEY_AUTH_MSG = (
 
 MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_TOPIC): valid_publish_topic,
-        vol.Required(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
+        vol.Inclusive(ATTR_TOPIC, "topic_payload"): valid_publish_topic,
+        vol.Inclusive(ATTR_PAYLOAD, "topic_payload"): cv.string,
         vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
         vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     },
@@ -188,13 +190,17 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.All(
                         cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])
                     ),
-                    vol.Optional(CONF_WILL_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
-                    vol.Optional(CONF_BIRTH_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
+                    vol.Optional(
+                        CONF_WILL_MESSAGE, default=DEFAULT_WILL
+                    ): MQTT_WILL_BIRTH_SCHEMA,
+                    vol.Optional(
+                        CONF_BIRTH_MESSAGE, default=DEFAULT_BIRTH
+                    ): MQTT_WILL_BIRTH_SCHEMA,
                     vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
                     # discovery_prefix must be a valid publish topic because if no
                     # state topic is specified, it will be created with the given prefix.
                     vol.Optional(
-                        CONF_DISCOVERY_PREFIX, default=DEFAULT_DISCOVERY_PREFIX
+                        CONF_DISCOVERY_PREFIX, default=DEFAULT_PREFIX
                     ): valid_publish_topic,
                 }
             ),
@@ -594,10 +600,10 @@ async def async_setup_entry(hass, entry):
 class Subscription:
     """Class to hold data about an active subscription."""
 
-    topic = attr.ib(type=str)
-    callback = attr.ib(type=MessageCallbackType)
-    qos = attr.ib(type=int, default=0)
-    encoding = attr.ib(type=str, default="utf-8")
+    topic: str = attr.ib()
+    callback: MessageCallbackType = attr.ib()
+    qos: int = attr.ib(default=0)
+    encoding: str = attr.ib(default="utf-8")
 
 
 class MQTT:
@@ -698,17 +704,20 @@ class MQTT:
         self._mqttc.on_disconnect = self._mqtt_on_disconnect
         self._mqttc.on_message = self._mqtt_on_message
 
-        if CONF_WILL_MESSAGE in self.conf:
+        if (
+            CONF_WILL_MESSAGE in self.conf
+            and ATTR_TOPIC in self.conf[CONF_WILL_MESSAGE]
+        ):
             will_message = Message(**self.conf[CONF_WILL_MESSAGE])
         else:
             will_message = None
 
         if will_message is not None:
             self._mqttc.will_set(  # pylint: disable=no-value-for-parameter
-                *attr.astuple(
-                    will_message,
-                    filter=lambda attr, value: attr.name != "subscribed_topic",
-                )
+                topic=will_message.topic,
+                payload=will_message.payload,
+                qos=will_message.qos,
+                retain=will_message.retain,
             )
 
     async def async_publish(
@@ -749,7 +758,7 @@ class MQTT:
 
         def stop():
             """Stop the MQTT client."""
-            self._mqttc.disconnect()
+            # Do not disconnect, we want the broker to always publish will
             self._mqttc.loop_stop()
 
         await self.hass.async_add_executor_job(stop)
@@ -848,15 +857,17 @@ class MQTT:
             max_qos = max(subscription.qos for subscription in subs)
             self.hass.add_job(self._async_perform_subscription, topic, max_qos)
 
-        if CONF_BIRTH_MESSAGE in self.conf:
+        if (
+            CONF_BIRTH_MESSAGE in self.conf
+            and ATTR_TOPIC in self.conf[CONF_BIRTH_MESSAGE]
+        ):
             birth_message = Message(**self.conf[CONF_BIRTH_MESSAGE])
             self.hass.add_job(
                 self.async_publish(  # pylint: disable=no-value-for-parameter
-                    *attr.astuple(
-                        birth_message,
-                        filter=lambda attr, value: attr.name
-                        not in ["subscribed_topic", "timestamp"],
-                    )
+                    topic=birth_message.topic,
+                    payload=birth_message.payload,
+                    qos=birth_message.qos,
+                    retain=birth_message.retain,
                 )
             )
 

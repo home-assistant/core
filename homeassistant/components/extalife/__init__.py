@@ -60,11 +60,13 @@ from .pyextalife import (
     DEVICE_ARR_ALL_SENSOR_MULTI,
     DEVICE_ARR_ALL_SWITCH,
     DEVICE_ARR_ALL_TRANSMITTER,
+    DEVICE_ARR_EXTA_FREE_RECEIVER,
     DEVICE_ICON_ARR_LIGHT,
     DEVICE_MAP_TYPE_TO_MODEL,
     PRODUCT_CONTROLLER_MODEL,
     PRODUCT_MANUFACTURER,
     PRODUCT_SERIES,
+    PRODUCT_SERIES_EXTA_FREE,
     ExtaLifeAPI,
     TCPConnError,
 )
@@ -555,10 +557,25 @@ class ExtaLifeChannel(Entity):
         return DEVICE_MAP_TYPE_TO_MODEL.get(self.channel_data.get("type"))
 
     @property
+    def is_exta_free(self) -> bool:
+        """ Returns boolean if entity represents Exta Free device """
+        return self.channel_data.get("exta_free_device")
+
+    @property
+    def assumed_state(self) -> bool:
+        """ Returns boolean if entity status is assumed status """
+        ret = self.is_exta_free
+        _LOGGER.debug("Assumed state for entity: %s, %s", self.entity_id, ret)
+        return ret
+
+    @property
     def device_info(self):
+        prod_series = (
+            PRODUCT_SERIES if not self.is_exta_free else PRODUCT_SERIES_EXTA_FREE
+        )
         return {
             "identifiers": {(DOMAIN, self.channel_data.get("serial"))},
-            "name": f"{PRODUCT_MANUFACTURER} {PRODUCT_SERIES} {self.model}",
+            "name": f"{PRODUCT_MANUFACTURER} {prod_series} {self.model}",
             "manufacturer": PRODUCT_MANUFACTURER,
             "model": self.model,
             "via_device": (DOMAIN, self.controller.mac),

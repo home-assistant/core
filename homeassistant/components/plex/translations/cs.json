@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Hostitel",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

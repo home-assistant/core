@@ -60,7 +60,16 @@ MELACHA_TEST_IDS = [
     ids=MELACHA_TEST_IDS,
 )
 async def test_issur_melacha_sensor(
-    hass, now, candle_lighting, havdalah, diaspora, tzname, latitude, longitude, result
+    hass,
+    legacy_patchable_time,
+    now,
+    candle_lighting,
+    havdalah,
+    diaspora,
+    tzname,
+    latitude,
+    longitude,
+    result,
 ):
     """Test Issur Melacha sensor output."""
     time_zone = dt_util.get_time_zone(tzname)

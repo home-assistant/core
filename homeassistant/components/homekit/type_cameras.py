@@ -16,7 +16,7 @@ from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.event import (
-    async_track_state_change,
+    async_track_state_change_event,
     async_track_time_interval,
 )
 from homeassistant.util import get_local_ip
@@ -164,7 +164,12 @@ class Camera(HomeAccessory, PyhapCamera):
             },
             "resolutions": resolutions,
         }
-        audio_options = {"codecs": [{"type": "OPUS", "samplerate": 24}]}
+        audio_options = {
+            "codecs": [
+                {"type": "OPUS", "samplerate": 24},
+                {"type": "OPUS", "samplerate": 16},
+            ]
+        }
 
         stream_address = config.get(CONF_STREAM_ADDRESS, get_local_ip())
 
@@ -196,7 +201,7 @@ class Camera(HomeAccessory, PyhapCamera):
         self._char_motion_detected = serv_motion.configure_char(
             CHAR_MOTION_DETECTED, value=False
         )
-        self._async_update_motion_state(None, None, state)
+        self._async_update_motion_state(state)
 
     async def run_handler(self):
         """Handle accessory driver started event.
@@ -204,17 +209,25 @@ class Camera(HomeAccessory, PyhapCamera):
         Run inside the Home Assistant event loop.
         """
         if self._char_motion_detected:
-            async_track_state_change(
-                self.hass, self.linked_motion_sensor, self._async_update_motion_state
+            async_track_state_change_event(
+                self.hass,
+                [self.linked_motion_sensor],
+                self._async_update_motion_state_event,
             )
 
         await super().run_handler()
 
     @callback
-    def _async_update_motion_state(
-        self, entity_id=None, old_state=None, new_state=None
-    ):
+    def _async_update_motion_state_event(self, event):
+        """Handle state change event listener callback."""
+        self._async_update_motion_state(event.data.get("new_state"))
+
+    @callback
+    def _async_update_motion_state(self, new_state):
         """Handle link motion sensor state change to update HomeKit value."""
+        if not new_state:
+            return
+
         detected = new_state.state == STATE_ON
         if self._char_motion_detected.value == detected:
             return
@@ -357,17 +370,17 @@ class Camera(HomeAccessory, PyhapCamera):
         self._async_stop_ffmpeg_watch()
 
         if not pid_is_alive(stream.process.pid):
-            _LOGGER.info("[%s] Stream already stopped.", session_id)
+            _LOGGER.info("[%s] Stream already stopped", session_id)
             return True
 
         for shutdown_method in ["close", "kill"]:
-            _LOGGER.info("[%s] %s stream.", session_id, shutdown_method)
+            _LOGGER.info("[%s] %s stream", session_id, shutdown_method)
             try:
                 await getattr(stream, shutdown_method)()
                 return
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception(
-                    "[%s] Failed to %s stream.", session_id, shutdown_method
+                    "[%s] Failed to %s stream", session_id, shutdown_method
                 )
 
     async def reconfigure_stream(self, session_info, stream_config):

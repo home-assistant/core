@@ -14,7 +14,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -132,8 +132,11 @@ class MinMaxSensor(Entity):
         self.states = {}
 
         @callback
-        def async_min_max_sensor_state_listener(entity, old_state, new_state):
+        def async_min_max_sensor_state_listener(event):
             """Handle the sensor state changes."""
+            new_state = event.data.get("new_state")
+            entity = event.data.get("entity_id")
+
             if new_state.state is None or new_state.state in [
                 STATE_UNKNOWN,
                 STATE_UNAVAILABLE,
@@ -166,7 +169,9 @@ class MinMaxSensor(Entity):
 
             hass.async_add_job(self.async_update_ha_state, True)
 
-        async_track_state_change(hass, entity_ids, async_min_max_sensor_state_listener)
+        async_track_state_change_event(
+            hass, entity_ids, async_min_max_sensor_state_listener
+        )
 
     @property
     def name(self):

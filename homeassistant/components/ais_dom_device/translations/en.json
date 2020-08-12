@@ -2,15 +2,15 @@
     "config": {
       "step": {
         "confirm": {
-          "description": "Do you want to add a new device?\n\n![AIS logo](/static/icons/ais_logo_works_with_dom-100-black.png)\n\nThis wizard works with devices having ** open source and free ** software developed as part of the project [Tasmota] (https://github.com/arendst/Tasmota). The software is installed on devices ** AI-Speaker **, it can also be an alternative software for devices manufactured by many manufacturers.\n\nDetails in the documentation [Works with AI-Speaker] (https://www.ai-speaker.com/docs/ais_iot_works_with)",
+          "description": "Do you want to add a new device?\n\n###### ![AIS logo](/static/icons/ais_logo_works_with_dom-100-black.png)\n\nThis wizard works with devices having ** open source and free ** software developed as part of the project [Tasmota] (https://github.com/arendst/Tasmota). The software is installed on devices ** AI-Speaker **, it can also be an alternative software for devices manufactured by many manufacturers.\n\nDetails in the documentation [Works with AI-Speaker] (https://www.ai-speaker.com/docs/ais_iot_works_with)",
           "title": "Add the AIS device"
         },
         "one": {
-          "description": "![AIS logo](/static/icons/ais_s20_1.jpg)\n\nMake sure the device is within range of the WiFi router.\nIn the next steps we will attach them to your local WiFi network and to the gate **AIS dom**",
+          "description": "###### ![AIS logo](/static/icons/ais_s20_1.jpg)\n\nMake sure the device is within range of the WiFi router.\nIn the next steps we will attach them to your local WiFi network and to the gate **AIS dom**",
           "title": "Connect the device to the power supply."
         },
         "two": {
-          "description": "![AIS logo](https://www.ai-speaker.com/images/ais_s20_2.gif)\n\nThe pairing mode is signaled by the blinking of the LED on the device.\nTo start the pairing mode, press the button on the device 4 times quickly and wait for its LED to blink.\n\nThen start searching for the device by pressing **SUBMIT**",
+          "description": "###### ![AIS logo](/static/icons/ais_s20_2.jpg)\n\nThe pairing mode is signaled by the blinking of the LED on the device.\nTo start the pairing mode, press the button on the device 4 times quickly and wait for its LED to blink.\n\nThen start searching for the device by pressing **SUBMIT**",
           "title": "Start the pairing mode"
         },
         "search_iot": {

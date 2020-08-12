@@ -131,6 +131,79 @@ DISCOVERY_SCHEMAS = (
             },
         },
     },
+    {  # Z-Wave Thermostat device without mode support
+        const.DISC_COMPONENT: "climate",
+        const.DISC_GENERIC_DEVICE_CLASS: (const_ozw.GENERIC_TYPE_THERMOSTAT,),
+        const.DISC_SPECIFIC_DEVICE_CLASS: (
+            const_ozw.SPECIFIC_TYPE_SETPOINT_THERMOSTAT,
+        ),
+        const.DISC_VALUES: {
+            const.DISC_PRIMARY: {
+                const.DISC_COMMAND_CLASS: (CommandClass.THERMOSTAT_SETPOINT,)
+            },
+            "temperature": {
+                const.DISC_COMMAND_CLASS: (CommandClass.SENSOR_MULTILEVEL,),
+                const.DISC_INDEX: (1,),
+                const.DISC_OPTIONAL: True,
+            },
+            "operating_state": {
+                const.DISC_COMMAND_CLASS: (CommandClass.THERMOSTAT_OPERATING_STATE,),
+                const.DISC_OPTIONAL: True,
+            },
+            "valve_position": {
+                const.DISC_COMMAND_CLASS: (CommandClass.SWITCH_MULTILEVEL,),
+                const.DISC_INDEX: (0,),
+                const.DISC_OPTIONAL: True,
+            },
+            "setpoint_heating": {
+                const.DISC_COMMAND_CLASS: (CommandClass.THERMOSTAT_SETPOINT,),
+                const.DISC_INDEX: (1,),
+                const.DISC_OPTIONAL: True,
+            },
+        },
+    },
+    {  # Rollershutter
+        const.DISC_COMPONENT: "cover",
+        const.DISC_GENERIC_DEVICE_CLASS: (const_ozw.GENERIC_TYPE_SWITCH_MULTILEVEL,),
+        const.DISC_SPECIFIC_DEVICE_CLASS: (
+            const_ozw.SPECIFIC_TYPE_CLASS_A_MOTOR_CONTROL,
+            const_ozw.SPECIFIC_TYPE_CLASS_B_MOTOR_CONTROL,
+            const_ozw.SPECIFIC_TYPE_CLASS_C_MOTOR_CONTROL,
+            const_ozw.SPECIFIC_TYPE_MOTOR_MULTIPOSITION,
+            const_ozw.SPECIFIC_TYPE_SECURE_BARRIER_ADDON,
+            const_ozw.SPECIFIC_TYPE_SECURE_DOOR,
+        ),
+        const.DISC_VALUES: {
+            const.DISC_PRIMARY: {
+                const.DISC_COMMAND_CLASS: CommandClass.SWITCH_MULTILEVEL,
+                const.DISC_INDEX: ValueIndex.SWITCH_MULTILEVEL_LEVEL,
+                const.DISC_GENRE: ValueGenre.USER,
+            },
+            "open": {
+                const.DISC_COMMAND_CLASS: CommandClass.SWITCH_MULTILEVEL,
+                const.DISC_INDEX: ValueIndex.SWITCH_MULTILEVEL_BRIGHT,
+                const.DISC_OPTIONAL: True,
+            },
+            "close": {
+                const.DISC_COMMAND_CLASS: CommandClass.SWITCH_MULTILEVEL,
+                const.DISC_INDEX: ValueIndex.SWITCH_MULTILEVEL_DIM,
+                const.DISC_OPTIONAL: True,
+            },
+        },
+    },
+    {  # Garage Door Barrier
+        const.DISC_COMPONENT: "cover",
+        const.DISC_GENERIC_DEVICE_CLASS: (const_ozw.GENERIC_TYPE_ENTRY_CONTROL,),
+        const.DISC_SPECIFIC_DEVICE_CLASS: (
+            const_ozw.SPECIFIC_TYPE_SECURE_BARRIER_ADDON,
+        ),
+        const.DISC_VALUES: {
+            const.DISC_PRIMARY: {
+                const.DISC_COMMAND_CLASS: CommandClass.BARRIER_OPERATOR,
+                const.DISC_INDEX: ValueIndex.BARRIER_OPERATOR_LABEL,
+            },
+        },
+    },
     {  # Fan
         const.DISC_COMPONENT: "fan",
         const.DISC_GENERIC_DEVICE_CLASS: const_ozw.GENERIC_TYPE_SWITCH_MULTILEVEL,

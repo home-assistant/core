@@ -34,7 +34,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     async with Client(data[CONF_IP_ADDRESS]) as client:
-        ping_data = await client.device.ping()
+        ping_data = await client.system.ping()
 
     return {
         CONF_UID: ping_data["data"]["uid"],
