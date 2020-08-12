@@ -12,7 +12,7 @@ from onvif import ONVIFCamera, ONVIFService
 from zeep.exceptions import Fault
 
 from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 
 from .const import LOGGER
@@ -56,7 +56,7 @@ class EventManager:
         """Listen for data updates."""
         # This is the first listener, set up polling.
         if not self._listeners:
-            self.schedule_pull()
+            self.async_schedule_pull()
 
         self._listeners.append(update_callback)
 
@@ -135,16 +135,12 @@ class EventManager:
                 self.unique_id,
             )
             # Try again in a minute
-            self._unsub_refresh = async_track_point_in_utc_time(
-                self.hass,
-                self.async_restart,
-                dt_util.utcnow() + dt.timedelta(seconds=60),
-            )
+            self._unsub_refresh = async_call_later(self.hass, 60, self.async_restart)
         elif self._listeners:
-            LOGGER.info(
+            LOGGER.debug(
                 "Restarted ONVIF PullPoint subscription for '%s'", self.unique_id
             )
-            self.schedule_pull()
+            self.async_schedule_pull()
 
     async def async_renew(self) -> None:
         """Renew subscription."""
@@ -158,13 +154,9 @@ class EventManager:
         )
         await self._subscription.Renew(termination_time)
 
-    def schedule_pull(self) -> None:
+    def async_schedule_pull(self) -> None:
         """Schedule async_pull_messages to run."""
-        self._unsub_refresh = async_track_point_in_utc_time(
-            self.hass,
-            self.async_pull_messages,
-            dt_util.utcnow() + dt.timedelta(seconds=1),
-        )
+        self._unsub_refresh = async_call_later(self.hass, 1, self.async_pull_messages)
 
     async def async_pull_messages(self, _now: dt = None) -> None:
         """Pull messages from device."""
@@ -201,7 +193,7 @@ class EventManager:
 
         # Reschedule another pull
         if self._listeners:
-            self.schedule_pull()
+            self.async_schedule_pull()
 
     # pylint: disable=protected-access
     async def async_parse_messages(self, messages) -> None:
