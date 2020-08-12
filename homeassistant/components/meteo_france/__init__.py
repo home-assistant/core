@@ -20,6 +20,7 @@ from .const import (
     COORDINATOR_RAIN,
     DOMAIN,
     PLATFORMS,
+    UNDO_UPDATE_LISTENER,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,7 +78,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     async def _async_update_data_forecast_forecast():
         """Fetch data from API endpoint."""
-        return await hass.async_add_executor_job(client.get_forecast, latitude, longitude)
+        return await hass.async_add_executor_job(
+            client.get_forecast, latitude, longitude
+        )
 
     async def _async_update_data_rain():
         """Fetch data from API endpoint."""
@@ -156,10 +159,13 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
             entry.title,
         )
 
+    undo_listener = entry.add_update_listener(_async_update_listener)
+
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR_FORECAST: coordinator_forecast,
         COORDINATOR_RAIN: coordinator_rain,
         COORDINATOR_ALERT: coordinator_alert,
+        UNDO_UPDATE_LISTENER: undo_listener,
     }
 
     for platform in PLATFORMS:
@@ -197,3 +203,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
             hass.data.pop(DOMAIN)
 
     return unload_ok
+
+
+async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
