@@ -27,7 +27,8 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return MeteoFranceOptionsFlowHandler(config_entry)
 
-    async def _show_setup_form(self, user_input=None, errors=None):
+    @callback
+    def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
 
         if user_input is None:
@@ -46,7 +47,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is None:
-            return await self._show_setup_form(user_input, errors)
+            return self._show_setup_form(user_input, errors)
 
         city = user_input[CONF_CITY]  # Might be a city name or a postal code
         latitude = user_input.get(CONF_LATITUDE)
@@ -58,7 +59,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Places search result: %s", places)
             if not places:
                 errors[CONF_CITY] = "empty"
-                return await self._show_setup_form(user_input, errors)
+                return self._show_setup_form(user_input, errors)
 
             return await self.async_step_cities(places=places)
 
