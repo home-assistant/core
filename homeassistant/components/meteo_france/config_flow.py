@@ -55,7 +55,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not latitude:
             client = MeteoFranceClient()
             places = await self.hass.async_add_executor_job(client.search_places, city)
-            _LOGGER.debug("places search result: %s", places)
+            _LOGGER.debug("Places search result: %s", places)
             if not places:
                 errors[CONF_CITY] = "empty"
                 return await self._show_setup_form(user_input, errors)
