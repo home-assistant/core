@@ -57,7 +57,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
-    EVENT_STATE_ADDED,
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
     EVENT_TIMER_OUT_OF_SYNC,
@@ -179,7 +178,7 @@ class HomeAssistant:
         self._track_task = True
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
-        self.states = StateMachine(self, self.bus, self.loop)
+        self.states = StateMachine(self.bus, self.loop)
         self.config = Config(self)
         self.components = loader.Components(self)
         self.helpers = loader.Helpers(self)
@@ -892,12 +891,9 @@ class State:
 class StateMachine:
     """Helper class that tracks the state of different entities."""
 
-    def __init__(
-        self, hass: HomeAssistant, bus: EventBus, loop: asyncio.events.AbstractEventLoop
-    ) -> None:
+    def __init__(self, bus: EventBus, loop: asyncio.events.AbstractEventLoop) -> None:
         """Initialize state machine."""
         self._states: Dict[str, State] = {}
-        self._hass = hass
         self._bus = bus
         self._loop = loop
 
@@ -1047,20 +1043,12 @@ class StateMachine:
 
         state = State(entity_id, new_state, attributes, last_changed, None, context)
         self._states[entity_id] = state
-        event_data = {
-            "entity_id": entity_id,
-            "old_state": old_state,
-            "new_state": state,
-        }
-
         self._bus.async_fire(
-            EVENT_STATE_CHANGED, event_data, EventOrigin.local, context,
+            EVENT_STATE_CHANGED,
+            {"entity_id": entity_id, "old_state": old_state, "new_state": state},
+            EventOrigin.local,
+            context,
         )
-
-        if not old_state and self._hass.state == CoreState.running:
-            self._bus.async_fire(
-                EVENT_STATE_ADDED, event_data, EventOrigin.local, context,
-            )
 
 
 class Service:

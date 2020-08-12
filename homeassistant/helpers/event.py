@@ -28,6 +28,9 @@ from homeassistant.util.async_ import run_callback_threadsafe
 TRACK_STATE_CHANGE_CALLBACKS = "track_state_change_callbacks"
 TRACK_STATE_CHANGE_LISTENER = "track_state_change_listener"
 
+TRACK_STATE_ADDED_DOMAIN_CALLBACKS = "track_state_added_domain_callbacks"
+TRACK_STATE_ADDED_DOMAIN_LISTENER = "track_state_added_domain_listener"
+
 TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS = "track_entity_registry_updated_callbacks"
 TRACK_ENTITY_REGISTRY_UPDATED_LISTENER = "track_entity_registry_updated_listener"
 
@@ -191,7 +194,7 @@ def async_track_state_change_event(
     @callback
     def remove_listener() -> None:
         """Remove state change listener."""
-        _async_remove_entity_listeners(
+        _async_remove_indexed_listeners(
             hass,
             TRACK_STATE_CHANGE_CALLBACKS,
             TRACK_STATE_CHANGE_LISTENER,
@@ -203,23 +206,23 @@ def async_track_state_change_event(
 
 
 @callback
-def _async_remove_entity_listeners(
+def _async_remove_indexed_listeners(
     hass: HomeAssistant,
     storage_key: str,
     listener_key: str,
-    entity_ids: Iterable[str],
+    storage_keys: Iterable[str],
     action: Callable[[Event], Any],
 ) -> None:
     """Remove a listener."""
 
-    entity_callbacks = hass.data[storage_key]
+    callbacks = hass.data[storage_key]
 
-    for entity_id in entity_ids:
-        entity_callbacks[entity_id].remove(action)
-        if len(entity_callbacks[entity_id]) == 0:
-            del entity_callbacks[entity_id]
+    for storage_key in storage_keys:
+        callbacks[storage_key].remove(action)
+        if len(callbacks[storage_key]) == 0:
+            del callbacks[storage_key]
 
-    if not entity_callbacks:
+    if not callbacks:
         hass.data[listener_key]()
         del hass.data[listener_key]
 
@@ -271,7 +274,7 @@ def async_track_entity_registry_updated_event(
     @callback
     def remove_listener() -> None:
         """Remove state change listener."""
-        _async_remove_entity_listeners(
+        _async_remove_indexed_listeners(
             hass,
             TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS,
             TRACK_ENTITY_REGISTRY_UPDATED_LISTENER,
@@ -282,7 +285,61 @@ def async_track_entity_registry_updated_event(
     return remove_listener
 
 
-# need an async_track_state_added_domain so we can listen by domain
+@bind_hass
+def async_track_state_added_domain(
+    hass: HomeAssistant,
+    domains: Union[str, Iterable[str]],
+    action: Callable[[Event], Any],
+) -> Callable[[], None]:
+    """Track state change events when an entity is added to domains."""
+
+    domain_callbacks = hass.data.setdefault(TRACK_STATE_ADDED_DOMAIN_CALLBACKS, {})
+
+    if TRACK_STATE_ADDED_DOMAIN_LISTENER not in hass.data:
+
+        @callback
+        def _async_state_change_dispatcher(event: Event) -> None:
+            """Dispatch state changes by entity_id."""
+            if event.data.get("old_state") is not None:
+                return
+
+            domain = event.data["entity_id"].domain
+
+            if domain not in domain_callbacks:
+                return
+
+            for action in domain_callbacks[domain][:]:
+                try:
+                    hass.async_run_job(action, event)
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception(
+                        "Error while processing state added for %s", domain
+                    )
+
+        hass.data[TRACK_STATE_ADDED_DOMAIN_LISTENER] = hass.bus.async_listen(
+            EVENT_STATE_CHANGED, _async_state_change_dispatcher
+        )
+
+    if isinstance(domains, str):
+        domains = [domains]
+
+    domains = [domains.lower() for domains in domains]
+
+    for domain in domains:
+        domain_callbacks.setdefault(domain, []).append(action)
+
+    @callback
+    def remove_listener() -> None:
+        """Remove state change listener."""
+        _async_remove_indexed_listeners(
+            hass,
+            TRACK_STATE_ADDED_DOMAIN_CALLBACKS,
+            TRACK_STATE_ADDED_DOMAIN_LISTENER,
+            domains,
+            action,
+        )
+
+    return remove_listener
 
 
 @callback
