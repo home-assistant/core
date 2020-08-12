@@ -206,7 +206,6 @@ class SlackNotificationService(BaseNotificationService):
                     "text": message,
                     "blocks": blocks,
                     "link_names": True,
-                    "as_user": True,
                     "username": username,
                     "icon_" + icon_type: icon,
                 }
