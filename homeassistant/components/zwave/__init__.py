@@ -28,6 +28,7 @@ from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import (
+    async_entries_for_config_entry,
     async_get_registry as async_get_entity_registry,
 )
 from homeassistant.helpers.entity_values import EntityValues
@@ -248,6 +249,36 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+
+async def async_record_ozw_migration_info(hass):
+    """Return dict with info for migration to ozw integration."""
+    data_to_migrate = {}
+
+    zwave_config_entries = hass.config_entries.async_entries(DOMAIN)
+    if not zwave_config_entries:
+        _LOGGER.error("Config entry not set up")
+        return data_to_migrate
+
+    config_entry = zwave_config_entries[0]  # zwave only has a single config entry
+    ent_reg = await async_get_entity_registry(hass)
+    entity_entries = async_entries_for_config_entry(ent_reg, config_entry.entry_id)
+    unique_entries = {entry.unique_id: entry for entry in entity_entries}
+
+    for entity_values in hass.data[DATA_ENTITY_VALUES]:
+        node = entity_values.primary.node
+        command_class = entity_values.primary.command_class
+        unique_id = compute_value_unique_id(node, entity_values.primary)
+        if unique_id not in unique_entries:
+            continue
+        data_to_migrate[unique_id] = {
+            "node_id": node.node_id,
+            "command_class": command_class,
+            "unique_id": unique_id,
+            "entity_entry": unique_entries[unique_id],
+        }
+
+    return data_to_migrate
 
 
 def _obj_to_dict(obj):
