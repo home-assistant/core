@@ -4,6 +4,8 @@ from homeassistant.components.ozw.websocket_api import ID, NODE_ID, OZW_INSTANCE
 
 from .common import MQTTMessage, setup_ozw
 
+from tests.async_mock import patch
+
 
 async def test_websocket_api(hass, generic_data, hass_ws_client):
     """Test the ozw websocket api."""
@@ -111,3 +113,20 @@ async def test_refresh_node(hass, generic_data, sent_messages, hass_ws_client):
     result = msg["event"]
     assert result["type"] == "node_updated"
     assert result["node_query_stage"] == "versions"
+
+
+async def test_refresh_node_unsubscribe(hass, generic_data, hass_ws_client):
+    """Test unsubscribing the ozw refresh node api."""
+    await setup_ozw(hass, fixture=generic_data)
+    client = await hass_ws_client(hass)
+
+    with patch("openzwavemqtt.OZWOptions.listen") as mock_listen:
+        # Send the refresh_node_info command
+        await client.send_json({ID: 9, TYPE: "ozw/refresh_node_info", NODE_ID: 39})
+
+        # Send the unsubscribe command
+        await client.send_json({ID: 10, TYPE: "unsubscribe_events", "subscription": 9})
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+        assert mock_listen.return_value.called
