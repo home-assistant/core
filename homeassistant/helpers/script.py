@@ -644,7 +644,7 @@ class Script:
         template.attach(hass, self.sequence)
         self.name = name
         self.domain = domain
-        self.description = description
+        self.description = description or f"{domain} script"
         self.change_listener = change_listener
         self.script_mode = script_mode
         self._set_logger(logger)
@@ -667,7 +667,7 @@ class Script:
         if logger:
             self._logger = logger
         else:
-            self._logger = logging.getLogger(".".join([__name__, slugify(self.name)]))
+            self._logger = logging.getLogger(f"{__name__}.{slugify(self.name)}")
 
     def update_logger(self, logger: Optional[logging.Logger] = None) -> None:
         """Update logger."""
