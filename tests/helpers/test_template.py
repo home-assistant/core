@@ -1667,6 +1667,42 @@ def test_generate_select(hass):
     )
 
 
+async def test_async_render_to_info_in_conditional(hass):
+    """Test extract entities function with none entities stuff."""
+    template_str = """
+{{ states("sensor.xyz") == "dog" }}
+        """
+
+    tmp = template.Template(template_str, hass)
+    info = tmp.async_render_to_info()
+    assert_result_info(info, "False", ["sensor.xyz"], [])
+
+    hass.states.async_set("sensor.xyz", "dog")
+    hass.states.async_set("sensor.cow", "True")
+    await hass.async_block_till_done()
+
+    template_str = """
+{% if states("sensor.xyz") == "dog" %}
+  {{ states("sensor.cow") }}
+{% else %}
+  {{ states("sensor.pig") }}
+{% endif %}
+        """
+
+    tmp = template.Template(template_str, hass)
+    info = tmp.async_render_to_info()
+    assert_result_info(info, "True", ["sensor.xyz", "sensor.cow"], [])
+
+    hass.states.async_set("sensor.xyz", "sheep")
+    hass.states.async_set("sensor.pig", "oink")
+
+    await hass.async_block_till_done()
+
+    tmp = template.Template(template_str, hass)
+    info = tmp.async_render_to_info()
+    assert_result_info(info, "oink", ["sensor.xyz", "sensor.pig"], [])
+
+
 async def test_extract_entities_match_entities(hass):
     """Test extract entities function with entities stuff."""
     assert (
