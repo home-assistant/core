@@ -407,7 +407,7 @@ def async_track_template(
 
     @callback
     def state_changed_listener(
-        event: Optional[Event],
+        event: Event,
         template: Template,
         last_result: Optional[str],
         result: Union[str, TemplateError],
@@ -417,39 +417,15 @@ def async_track_template(
             _LOGGER.exception(result)
             return
 
-        if event and last_result is not None:
-            if not _boolean_coerce(last_result) and _boolean_coerce(result):
-                hass.async_run_job(
-                    action,
-                    event.data.get("entity_id"),
-                    event.data.get("old_state"),
-                    event.data.get("new_state"),
-                )
+        if _boolean_coerce(last_result) or not _boolean_coerce(result):
             return
 
-        if not _boolean_coerce(result):
-            return
-
-        #
-        # First run of the listener.
-        #
-        # Figure out an entity ID to
-        # pass back to the action because it expects one.
-        info = template.async_render_to_info(variables)
-        state = None
-        entity_id = None
-        for eid in info.entities:
-            state = hass.states.get(eid)
-            if state:
-                entity_id = eid
-                break
-        if not state:
-            for st in hass.states.async_all():
-                if info.filter_lifecycle(st.entity_id):
-                    state = st
-                    entity_id = st.entity_id
-                    break
-        hass.async_run_job(action, entity_id or MATCH_ALL, state, state)
+        hass.async_run_job(
+            action,
+            event.data.get("entity_id"),
+            event.data.get("old_state"),
+            event.data.get("new_state"),
+        )
 
     info = async_track_template_result(
         hass, template, state_changed_listener, variables
@@ -479,25 +455,14 @@ class TrackTemplateResultInfo:
         self._template = template
         self._action = action
         self._variables = variables
-        self._last_result = None
+        self._last_result: Optional[str] = None
         self._last_exception = False
         self._all_listener: Optional[Callable] = None
         self._domains_listener: Optional[Callable] = None
         self._entities_listener: Optional[Callable] = None
-
         self._info = template.async_render_to_info(variables)
         self._create_listeners()
         self._last_info = self._info
-
-        try:
-            self._last_result = self._info.result
-        except TemplateError as ex:
-            self._last_exception = True
-            self.hass.async_run_job(self._action, None, self._template, None, ex)
-        else:
-            self.hass.async_run_job(
-                self._action, None, self._template, None, self._last_result
-            )
 
     @callback
     def _create_listeners(self) -> None:
@@ -632,7 +597,7 @@ class TrackTemplateResultInfo:
 
 
 TrackTemplateResultListener = Callable[
-    [Optional[Event], Template, Optional[str], Union[str, TemplateError]], None
+    [Event, Template, Optional[str], Union[str, TemplateError]], None
 ]
 """Type for the listener for template results.
 

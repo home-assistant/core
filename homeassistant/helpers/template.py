@@ -133,6 +133,10 @@ def _true(arg: Any) -> bool:
     return True
 
 
+def _false(arg: Any) -> bool:
+    return False
+
+
 class RenderInfo:
     """Holds information about a template render."""
 
@@ -164,9 +168,17 @@ class RenderInfo:
             raise self._exception
         return self._result
 
+    def _freeze_static(self) -> None:
+        self.entities = frozenset(self.entities)
+        self.domains = frozenset(self.domains)
+        self.all_states = False
+
     def _freeze(self) -> None:
         self.entities = frozenset(self.entities)
         self.domains = frozenset(self.domains)
+
+        if not self.entities and not self.domains:
+            self.all_states = True
 
         if self.all_states:
             return
@@ -254,7 +266,10 @@ class Template:
             render_info._exception = ex
         finally:
             del self.hass.data[_RENDER_INFO]
-            render_info._freeze()
+            if _RE_JINJA_DELIMITERS.search(self.template) is None:
+                render_info._freeze_static()
+            else:
+                render_info._freeze()
         return render_info
 
     def render_with_possible_json_value(self, value, error_value=_SENTINEL):
