@@ -509,16 +509,15 @@ class TrackTemplateResultInfo:
             )
             return
 
-        entities = set(self._info._entities)
-
         if self._info._domains:
             self._domains_listener = async_track_state_added_domain(
                 self.hass, self._info._domains, self._state_changed_listener
             )
-            for entity_id in self.hass.states.async_entity_ids(self._info._domains):
-                entities.add(entity_id)
 
-        if entities:
+        if self._info._entities or self._info._domains:
+            entities = set(self._info._entities)
+            for entity_id in self.hass.states.async_entity_ids(self._info._domains):
+                entities.add(entity_id)            
             self._entities_listener = async_track_state_change_event(
                 self.hass, entities, self._state_changed_listener
             )
@@ -567,9 +566,8 @@ class TrackTemplateResultInfo:
 
         if domains_changed or self._info._entities != self._last_info._entities:
             entities = set(self._info._entities)
-            if domains_changed:
-                for entity_id in self.hass.states.async_entity_ids(self._info._domains):
-                    entities.add(entity_id)
+            for entity_id in self.hass.states.async_entity_ids(self._info._domains):
+                entities.add(entity_id)
             self._cancel_entities_listener()
             self._entities_listener = async_track_state_change_event(
                 self.hass, entities, self._state_changed_listener
