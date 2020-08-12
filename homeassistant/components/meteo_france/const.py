@@ -131,7 +131,7 @@ CONDITION_CLASSES = {
         "Brouillard",
         "Brouillard givrant",
     ],
-    "hail": ["Risque de grêle"],
+    "hail": ["Risque de grêle", "Risque de grèle"],
     "lightning": ["Risque d'orages", "Orages"],
     "lightning-rainy": ["Pluie orageuses", "Pluies orageuses", "Averses orageuses"],
     "partlycloudy": [
