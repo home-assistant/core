@@ -4,7 +4,7 @@ import logging
 from pyinsteon.constants import FanSpeed
 
 from homeassistant.components.fan import (
-    DOMAIN,
+    DOMAIN as FAN_DOMAIN,
     SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
@@ -12,7 +12,9 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from .const import SIGNAL_ADD_ENTITIES
 from .insteon_entity import InsteonEntity
 from .utils import async_add_insteon_entities
 
@@ -26,11 +28,18 @@ SPEED_TO_VALUE = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the INSTEON entity class for the hass platform."""
-    async_add_insteon_entities(
-        hass, DOMAIN, InsteonFanEntity, async_add_entities, discovery_info
-    )
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Insteon fans from a config entry."""
+
+    def add_entities(discovery_info=None):
+        """Add the Insteon entities for the platform."""
+        async_add_insteon_entities(
+            hass, FAN_DOMAIN, InsteonFanEntity, async_add_entities, discovery_info
+        )
+
+    signal = f"{SIGNAL_ADD_ENTITIES}_{FAN_DOMAIN}"
+    async_dispatcher_connect(hass, signal, add_entities)
+    add_entities()
 
 
 class InsteonFanEntity(InsteonEntity, FanEntity):

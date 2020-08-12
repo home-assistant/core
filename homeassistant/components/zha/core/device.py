@@ -30,6 +30,7 @@ from .const import (
     ATTR_CLUSTER_ID,
     ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
+    ATTR_DEVICE_IEEE,
     ATTR_DEVICE_TYPE,
     ATTR_ENDPOINT_ID,
     ATTR_ENDPOINTS,
@@ -247,9 +248,14 @@ class ZHADevice(LogMixin):
     @property
     def device_automation_triggers(self):
         """Return the device automation triggers for this device."""
+        triggers = {
+            ("device_offline", "device_offline"): {
+                "device_event_type": "device_offline"
+            }
+        }
         if hasattr(self._zigpy_device, "device_automation_triggers"):
-            return self._zigpy_device.device_automation_triggers
-        return None
+            triggers.update(self._zigpy_device.device_automation_triggers)
+        return triggers
 
     @property
     def available_signal(self):
@@ -346,6 +352,14 @@ class ZHADevice(LogMixin):
             # reinit channels then signal entities
             self.hass.async_create_task(self._async_became_available())
             return
+        if availability_changed and not available:
+            self.hass.bus.async_fire(
+                "zha_event",
+                {
+                    ATTR_DEVICE_IEEE: str(self.ieee),
+                    "device_event_type": "device_offline",
+                },
+            )
         async_dispatcher_send(self.hass, f"{self._available_signal}_entity")
 
     async def _async_became_available(self) -> None:

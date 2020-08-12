@@ -22,6 +22,7 @@ COMMENT_REQUIREMENTS = (
     "bme680",
     "credstash",
     "decora",
+    "env_canada",
     "envirophat",
     "evdev",
     "face_recognition",

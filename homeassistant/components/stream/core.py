@@ -12,7 +12,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.decorator import Registry
 
-from .const import ATTR_STREAMS, DOMAIN
+from .const import ATTR_STREAMS, DOMAIN, MAX_SEGMENTS
 
 PROVIDERS = Registry()
 
@@ -34,12 +34,11 @@ class Segment:
     sequence: int = attr.ib()
     segment: io.BytesIO = attr.ib()
     duration: float = attr.ib()
+    start_pts: tuple = attr.ib()
 
 
 class StreamOutput:
     """Represents a stream output."""
-
-    num_segments = 3
 
     def __init__(self, stream, timeout: int = 300) -> None:
         """Initialize a stream output."""
@@ -48,7 +47,7 @@ class StreamOutput:
         self._stream = stream
         self._cursor = None
         self._event = asyncio.Event()
-        self._segments = deque(maxlen=self.num_segments)
+        self._segments = deque(maxlen=MAX_SEGMENTS)
         self._unsub = None
 
     @property
@@ -67,8 +66,13 @@ class StreamOutput:
         return None
 
     @property
-    def video_codec(self) -> str:
-        """Return desired video codec."""
+    def video_codecs(self) -> tuple:
+        """Return desired video codecs."""
+        return None
+
+    @property
+    def container_options(self) -> dict:
+        """Return container options."""
         return None
 
     @property
@@ -78,12 +82,12 @@ class StreamOutput:
 
     @property
     def target_duration(self) -> int:
-        """Return the average duration of the segments in seconds."""
+        """Return the max duration of any given segment in seconds."""
         segment_length = len(self._segments)
         if not segment_length:
             return 0
         durations = [s.duration for s in self._segments]
-        return round(sum(durations) // segment_length) or 1
+        return round(max(durations)) or 1
 
     def get_segment(self, sequence: int = None) -> Any:
         """Retrieve a specific segment, or the whole list."""
@@ -147,7 +151,7 @@ class StreamOutput:
 
     def cleanup(self):
         """Handle cleanup."""
-        self._segments = deque(maxlen=self.num_segments)
+        self._segments = deque(maxlen=MAX_SEGMENTS)
         self._stream.remove_provider(self)
 
 

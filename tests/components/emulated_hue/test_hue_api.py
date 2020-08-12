@@ -1157,7 +1157,7 @@ async def test_external_ip_blocked(hue_client):
     postUrls = ["/api"]
     putUrls = ["/api/username/lights/light.ceiling_lights/state"]
     with patch(
-        "homeassistant.components.http.real_ip.ip_address",
+        "homeassistant.components.emulated_hue.hue_api.ip_address",
         return_value=ip_address("45.45.45.45"),
     ):
         for getUrl in getUrls:

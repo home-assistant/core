@@ -147,17 +147,18 @@ class AlarmControlPanelTemplate(AlarmControlPanelEntity):
         self._template = state_template
         self._disarm_script = None
         self._code_arm_required = code_arm_required
+        domain = __name__.split(".")[-2]
         if disarm_action is not None:
-            self._disarm_script = Script(hass, disarm_action)
+            self._disarm_script = Script(hass, disarm_action, name, domain)
         self._arm_away_script = None
         if arm_away_action is not None:
-            self._arm_away_script = Script(hass, arm_away_action)
+            self._arm_away_script = Script(hass, arm_away_action, name, domain)
         self._arm_home_script = None
         if arm_home_action is not None:
-            self._arm_home_script = Script(hass, arm_home_action)
+            self._arm_home_script = Script(hass, arm_home_action, name, domain)
         self._arm_night_script = None
         if arm_night_action is not None:
-            self._arm_night_script = Script(hass, arm_night_action)
+            self._arm_night_script = Script(hass, arm_night_action, name, domain)
 
         self._state = None
         self._entities = template_entity_ids

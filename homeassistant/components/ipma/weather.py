@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
@@ -256,9 +256,9 @@ class IPMAWeather(WeatherEntity):
                         None,
                     ),
                     ATTR_FORECAST_TEMP: float(data_in.feels_like_temperature),
-                    ATTR_FORECAST_PRECIPITATION: (
-                        data_in.precipitation_probability
-                        if float(data_in.precipitation_probability) >= 0
+                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: (
+                        int(float(data_in.precipitation_probability))
+                        if int(float(data_in.precipitation_probability)) >= 0
                         else None
                     ),
                     ATTR_FORECAST_WIND_SPEED: data_in.wind_strength,
@@ -281,7 +281,7 @@ class IPMAWeather(WeatherEntity):
                     ),
                     ATTR_FORECAST_TEMP_LOW: data_in.min_temperature,
                     ATTR_FORECAST_TEMP: data_in.max_temperature,
-                    ATTR_FORECAST_PRECIPITATION: data_in.precipitation_probability,
+                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: data_in.precipitation_probability,
                     ATTR_FORECAST_WIND_SPEED: data_in.wind_strength,
                     ATTR_FORECAST_WIND_BEARING: data_in.wind_direction,
                 }
