@@ -179,7 +179,7 @@ class PingData:
             match = PING_MATCHER.search(str(out_data).split("\n")[-1])
             rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
             return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             kill_subprocess(pinger)
             return False
         except (subprocess.CalledProcessError, AttributeError):
