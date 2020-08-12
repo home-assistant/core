@@ -82,7 +82,16 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             for place in places:
                 places_for_form[_build_place_key(place)] = f"{place}"
 
-            return await self._show_cities_form(places_for_form)
+            return self.async_show_form(
+                step_id="cities",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_CITY): vol.All(
+                            vol.Coerce(str), vol.In(places_for_form)
+                        )
+                    }
+                ),
+            )
         # for import and only 1 city in the search result
         if places and not user_input:
             user_input = {CONF_CITY: _build_place_key(places[0])}
@@ -94,15 +103,6 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_LATITUDE: city_infos[1],
                 CONF_LONGITUDE: city_infos[2],
             }
-        )
-
-    async def _show_cities_form(self, cities):
-        """Show the form to choose the city."""
-        return self.async_show_form(
-            step_id="cities",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_CITY): vol.All(vol.Coerce(str), vol.In(cities))}
-            ),
         )
 
 
