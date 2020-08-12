@@ -4,6 +4,7 @@ import pytest
 from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
 from homeassistant.components.vizio.const import DOMAIN
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.setup import async_setup_component
 
 from .const import MOCK_USER_VALID_TV_CONFIG, UNIQUE_ID
@@ -37,9 +38,12 @@ async def test_load_and_unload(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 1
-    assert DOMAIN in hass.data and "apps" in hass.data[DOMAIN]
+    assert DOMAIN in hass.data
+    assert "apps" in hass.data[DOMAIN]
+    assert isinstance(hass.data[DOMAIN]["apps"], DataUpdateCoordinator)
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 0
-    assert "apps" not in hass.data.get(DOMAIN, {}) and DOMAIN not in hass.data
+    assert "apps" not in hass.data.get(DOMAIN, {})
+    assert DOMAIN not in hass.data
