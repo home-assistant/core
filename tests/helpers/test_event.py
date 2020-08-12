@@ -604,6 +604,82 @@ async def test_track_template_result(hass):
     assert len(wildercard_runs) == 4
 
 
+async def test_track_template_result_complex(hass):
+    """Test tracking template."""
+    specific_runs = []
+    template_complex_str = """
+
+{% if states("sensor.domain") == "light" %}
+  {{ states.light | list }}
+{% elif states("sensor.domain") == "lock" %}
+  {{ states.lock | list }}
+{% elif states("sensor.domain") == "single_binary_sensor" %}
+  {{ states("binary_sensor.single") }}
+{% else %}
+  {{ states | list }}
+{% endif %}
+
+"""
+    template_complex = Template(template_complex_str, hass)
+
+    def specific_run_callback(event, template, old_result, new_result):
+        specific_runs.append(new_result)
+
+    hass.states.async_set("light.one", "on")
+    hass.states.async_set("lock.one", "locked")
+
+    async_track_template_result(hass, template_complex, specific_run_callback)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.domain", "light")
+    await hass.async_block_till_done()
+    assert specific_runs[0].strip() == "light.one"
+
+    hass.states.async_set("sensor.domain", "lock")
+    await hass.async_block_till_done()
+    assert specific_runs[1].strip() == "lock.one"
+
+    hass.states.async_set("sensor.domain", "all")
+    await hass.async_block_till_done()
+    assert "light.one" in specific_runs[2]
+    assert "lock.one" in specific_runs[2]
+    assert "sensor.domain" in specific_runs[2]
+
+    hass.states.async_set("sensor.domain", "light")
+    await hass.async_block_till_done()
+    assert specific_runs[3].strip() == "light.one"
+
+    hass.states.async_set("light.two", "on")
+    await hass.async_block_till_done()
+    assert "light.one" in specific_runs[4]
+    assert "light.two" in specific_runs[4]
+    assert "sensor.domain" not in specific_runs[4]
+
+    hass.states.async_set("light.three", "on")
+    await hass.async_block_till_done()
+    assert specific_runs[4].strip() == "light.three"
+    assert "light.one" in specific_runs[5]
+    assert "light.two" in specific_runs[5]
+    assert "light.three" in specific_runs[5]
+    assert "sensor.domain" not in specific_runs[5]
+
+    hass.states.async_set("sensor.domain", "lock")
+    await hass.async_block_till_done()
+    assert specific_runs[6].strip() == "lock.one"
+
+    hass.states.async_set("sensor.domain", "single_binary_sensor")
+    await hass.async_block_till_done()
+    assert specific_runs[7].strip() == "unknown"
+
+    hass.states.async_set("binary_sensor.single", "binary_sensor_on")
+    await hass.async_block_till_done()
+    assert specific_runs[8].strip() == "binary_sensor_on"
+
+    hass.states.async_set("sensor.domain", "lock")
+    await hass.async_block_till_done()
+    assert specific_runs[9].strip() == "lock.one"
+
+
 async def test_track_template_result_iterator(hass):
     """Test tracking template."""
     iterator_runs = []
