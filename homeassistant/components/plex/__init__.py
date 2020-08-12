@@ -43,7 +43,6 @@ from .const import (
 )
 from .errors import ShouldUpdateConfigEntry
 from .server import PlexServer
-from .websocket import websocket_browse_media, websocket_lookup_media
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -177,8 +176,6 @@ async def async_setup_entry(hass, entry):
             schema=play_on_sonos_schema,
         )
 
-    hass.components.websocket_api.async_register_command(websocket_browse_media)
-    hass.components.websocket_api.async_register_command(websocket_lookup_media)
     return True
 
 

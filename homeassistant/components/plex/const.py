@@ -45,3 +45,5 @@ AUTOMATIC_SETUP_STRING = "Obtain a new token from plex.tv"
 MANUAL_SETUP_STRING = "Configure Plex server manually"
 
 SERVICE_PLAY_ON_SONOS = "play_on_sonos"
+
+EXPANDABLES = ["album", "artist", "playlist", "season", "show"]

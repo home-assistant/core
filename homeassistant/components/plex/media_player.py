@@ -22,6 +22,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.util import dt as dt_util
@@ -31,6 +32,7 @@ from .const import (
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
+    EXPANDABLES,
     NAME_FORMAT,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
@@ -611,3 +613,82 @@ class PlexMediaPlayer(MediaPlayerEntity):
             "sw_version": self._device_version,
             "via_device": (PLEX_DOMAIN, self.plex_server.machine_identifier),
         }
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+
+        def libraries_info():
+            """Create response payload to describe available libraries."""
+            response = []
+            for library in self.plex_server.library.sections():
+                response.append(
+                    {
+                        "title": library.title,
+                        "media_content_id": library.key,
+                        "media_content_type": "library",
+                        "can_play": False,
+                        "can_expand": True,
+                    }
+                )
+            return response
+
+        def library_contents_info():
+            """Create response payload to describe contents of a specific library."""
+            response = []
+            for item in library.all():
+                response.append(
+                    {
+                        "title": item.title,
+                        "media_content_id": item.ratingKey,
+                        "media_content_type": item.type,
+                        "can_play": True,
+                        "can_expand": True,
+                    }
+                )
+            return response
+
+        def build_item_response(payload):
+            """Build the response payload for the provided media query."""
+            media = self.plex_server.lookup_media(**payload)
+
+            if media is None:
+                return None
+
+            def item_payload(item):
+                payload = {
+                    "title": item.title,
+                    "thumbnail": item.thumbUrl,
+                    "media_content_id": item.ratingKey,
+                    "media_content_type": item.type,
+                    "can_play": True,
+                }
+                if item.type in EXPANDABLES:
+                    payload["can_expand"] = True
+                return payload
+
+            if media.type in EXPANDABLES:
+                media_info = []
+                for item in media:
+                    child_info = item_payload(item)
+                    media_info.append(child_info)
+            else:
+                media_info = [item_payload(media)]
+            return media_info
+
+        if media_content_type is None:
+            return await self.hass.async_add_executor_job(libraries_info)
+
+        if media_content_type == "library":
+            library = self.plex_server.library.sectionByID(str(media_content_id))
+            return await self.hass.async_add_executor_job(library_contents_info)
+
+        payload = {
+            "media_type": PLEX_DOMAIN,
+            "plex_key": media_content_id,
+        }
+        response = await self.hass.async_add_executor_job(build_item_response, payload)
+        if response is None:
+            raise HomeAssistantError(
+                "Media not found: %s / %s", media_content_type, media_content_id
+            )
+        return response

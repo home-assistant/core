@@ -41,6 +41,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_PLAYING,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -176,6 +177,24 @@ SCHEMA_WEBSOCKET_GET_THUMBNAIL = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.exten
     {"type": WS_TYPE_MEDIA_PLAYER_THUMBNAIL, "entity_id": cv.entity_id}
 )
 
+WS_TYPE_MEDIA_PLAYER_BROWSE_MEDIA = "media_player/browse_media"
+SCHEMA_WEBSOCKET_BROWSE_MEDIA = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+    {
+        "type": WS_TYPE_MEDIA_PLAYER_BROWSE_MEDIA,
+        vol.Required("entity_id"): cv.entity_id,
+        vol.Inclusive(
+            "media_content_type",
+            "media_ids",
+            "media_content_type and media_content_id must be provided together",
+        ): str,
+        vol.Inclusive(
+            "media_content_id",
+            "media_ids",
+            "media_content_type and media_content_id must be provided together",
+        ): int,
+    }
+)
+
 
 def _rename_keys(**keys):
     """Create validator that renames keys.
@@ -204,6 +223,11 @@ async def async_setup(hass, config):
         WS_TYPE_MEDIA_PLAYER_THUMBNAIL,
         websocket_handle_thumbnail,
         SCHEMA_WEBSOCKET_GET_THUMBNAIL,
+    )
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_MEDIA_PLAYER_BROWSE_MEDIA,
+        websocket_browse_media,
+        SCHEMA_WEBSOCKET_BROWSE_MEDIA,
     )
     hass.http.register_view(MediaPlayerImageView(component))
 
@@ -812,6 +836,22 @@ class MediaPlayerEntity(Entity):
 
         return state_attr
 
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """
+        Return a payload for the "media_player/browse_media" websocket command.
+
+        Payload should follow this format:
+            [{
+                "title": str - Title of the item
+                "thumbnail": str - URL to image thumbnail for item if available
+                "media_content_id": str - Can be used as-is to send to media_player.play_media
+                "media_content_type": str - Can be used as-is to send to media_player.play_media
+                "can_play": bool - If item is playable
+                "can_expand": bool - If item contains other media
+            }]
+        """
+        raise NotImplementedError()
+
 
 async def _async_fetch_image(hass, url):
     """Fetch image.
@@ -926,6 +966,47 @@ async def websocket_handle_thumbnail(hass, connection, msg):
             "content": base64.b64encode(data).decode("utf-8"),
         },
     )
+
+
+@websocket_api.async_response
+async def websocket_browse_media(hass, connection, msg):
+    """
+    Browse media available to the media_player entity.
+
+    To use, media_player integrations can implement MediaPlayerEntity.async_browse_media()
+    """
+    component = hass.data[DOMAIN]
+    player = component.get_entity(msg["entity_id"])
+
+    if player is None:
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"], "entity_not_found", "Entity not found"
+            )
+        )
+        return
+
+    media_content_type = msg.get("media_content_type")
+    media_content_id = msg.get("media_content_id")
+
+    try:
+        payload = await player.async_browse_media(media_content_type, media_content_id)
+    except NotImplementedError:
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"],
+                "browse_failed",
+                "This entity's integration does not support browsing media",
+            )
+        )
+        return
+    except HomeAssistantError as err:
+        connection.send_message(
+            websocket_api.error_message(msg["id"], "browse_failed", err)
+        )
+        return
+
+    connection.send_result(msg["id"], payload)
 
 
 class MediaPlayerDevice(MediaPlayerEntity):
