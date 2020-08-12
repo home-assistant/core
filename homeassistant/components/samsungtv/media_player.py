@@ -34,7 +34,14 @@ from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
 
 from .bridge import SamsungTVBridge
-from .const import CONF_MANUFACTURER, CONF_MODEL, CONF_ON_ACTION, DOMAIN, LOGGER
+from .const import (
+    CONF_MANUFACTURER,
+    CONF_MODEL,
+    CONF_ON_ACTION,
+    DEFAULT_NAME,
+    DOMAIN,
+    LOGGER,
+)
 
 KEY_PRESS_TIMEOUT = 1.2
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
@@ -63,7 +70,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         and hass.data[DOMAIN][ip_address][CONF_ON_ACTION]
     ):
         turn_on_action = hass.data[DOMAIN][ip_address][CONF_ON_ACTION]
-        on_script = Script(hass, turn_on_action)
+        on_script = Script(
+            hass, turn_on_action, config_entry.data.get(CONF_NAME, DEFAULT_NAME), DOMAIN
+        )
 
     # Initialize bridge
     data = config_entry.data.copy()

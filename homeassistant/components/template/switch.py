@@ -126,8 +126,9 @@ class SwitchTemplate(SwitchEntity, RestoreEntity):
         )
         self._name = friendly_name
         self._template = state_template
-        self._on_script = Script(hass, on_action)
-        self._off_script = Script(hass, off_action)
+        domain = __name__.split(".")[-2]
+        self._on_script = Script(hass, on_action, friendly_name, domain)
+        self._off_script = Script(hass, off_action, friendly_name, domain)
         self._state = False
         self._icon_template = icon_template
         self._entity_picture_template = entity_picture_template

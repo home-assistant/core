@@ -176,7 +176,7 @@ class _ScriptRun:
         try:
             if self._stop.is_set():
                 return
-            self._log("Running script")
+            self._log("Running %s", self._script.running_description)
             for self._step, self._action in enumerate(self._script.sequence):
                 if self._stop.is_set():
                     break
@@ -615,7 +615,11 @@ class Script:
         self,
         hass: HomeAssistant,
         sequence: Sequence[Dict[str, Any]],
-        name: Optional[str] = None,
+        name: str,
+        domain: str,
+        *,
+        # Used in "Running <running_description>" log message
+        running_description: Optional[str] = None,
         change_listener: Optional[Callable[..., Any]] = None,
         script_mode: str = DEFAULT_SCRIPT_MODE,
         max_runs: int = DEFAULT_MAX,
@@ -640,6 +644,8 @@ class Script:
         self.sequence = sequence
         template.attach(hass, self.sequence)
         self.name = name
+        self.domain = domain
+        self.running_description = running_description or f"{domain} script"
         self.change_listener = change_listener
         self.script_mode = script_mode
         self._set_logger(logger)
@@ -662,10 +668,7 @@ class Script:
         if logger:
             self._logger = logger
         else:
-            logger_name = __name__
-            if self.name:
-                logger_name = ".".join([logger_name, slugify(self.name)])
-            self._logger = logging.getLogger(logger_name)
+            self._logger = logging.getLogger(f"{__name__}.{slugify(self.name)}")
 
     def update_logger(self, logger: Optional[logging.Logger] = None) -> None:
         """Update logger."""
@@ -832,6 +835,8 @@ class Script:
             self._hass,
             action[CONF_REPEAT][CONF_SEQUENCE],
             f"{self.name}: {step_name}",
+            self.domain,
+            running_description=self.running_description,
             script_mode=SCRIPT_MODE_PARALLEL,
             max_runs=self.max_runs,
             logger=self._logger,
@@ -860,6 +865,8 @@ class Script:
                 self._hass,
                 choice[CONF_SEQUENCE],
                 f"{self.name}: {step_name}: choice {idx}",
+                self.domain,
+                running_description=self.running_description,
                 script_mode=SCRIPT_MODE_PARALLEL,
                 max_runs=self.max_runs,
                 logger=self._logger,
@@ -875,6 +882,8 @@ class Script:
                 self._hass,
                 action[CONF_DEFAULT],
                 f"{self.name}: {step_name}: default",
+                self.domain,
+                running_description=self.running_description,
                 script_mode=SCRIPT_MODE_PARALLEL,
                 max_runs=self.max_runs,
                 logger=self._logger,
@@ -896,9 +905,8 @@ class Script:
         return choose_data
 
     def _log(self, msg, *args, level=logging.INFO):
-        if self.name:
-            msg = f"%s: {msg}"
-            args = [self.name, *args]
+        msg = f"%s: {msg}"
+        args = [self.name, *args]
 
         if level == _LOG_EXCEPTION:
             self._logger.exception(msg, *args)

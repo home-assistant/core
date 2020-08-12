@@ -74,7 +74,7 @@ async def async_setup_entry(hass, config_entry):
 
     on_action = config[CONF_ON_ACTION]
     if on_action is not None:
-        on_action = Script(hass, on_action)
+        on_action = Script(hass, on_action, config[CONF_NAME], DOMAIN)
 
     params = {}
     if CONF_APP_ID in config and CONF_ENCRYPTION_KEY in config:

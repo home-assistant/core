@@ -310,7 +310,7 @@ class KNXAutomation:
         self.hass = hass
         self.device = device
         script_name = f"{device.get_name()} turn ON script"
-        self.script = Script(hass, action, script_name)
+        self.script = Script(hass, action, script_name, DOMAIN)
 
         self.action = ActionCallback(
             hass.data[DATA_KNX].xknx, self.script.async_run, hook=hook, counter=counter

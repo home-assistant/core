@@ -255,10 +255,12 @@ class ScriptEntity(ToggleEntity):
             hass,
             cfg[CONF_SEQUENCE],
             cfg.get(CONF_ALIAS, object_id),
-            self.async_change_listener,
-            cfg[CONF_MODE],
-            cfg[CONF_MAX],
-            logging.getLogger(f"{__name__}.{object_id}"),
+            DOMAIN,
+            running_description="script sequence",
+            change_listener=self.async_change_listener,
+            script_mode=cfg[CONF_MODE],
+            max_runs=cfg[CONF_MAX],
+            logger=logging.getLogger(f"{__name__}.{object_id}"),
         )
         self._changed = asyncio.Event()
 
