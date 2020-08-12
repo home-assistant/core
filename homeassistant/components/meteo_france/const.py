@@ -1,6 +1,9 @@
 """Meteo-France component constants."""
 
 from homeassistant.const import (
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
@@ -24,7 +27,7 @@ ATTR_NEXT_RAIN_1_HOUR_FORECAST = "1_hour_forecast"
 ENTITY_NAME = "name"
 ENTITY_UNIT = "unit"
 ENTITY_ICON = "icon"
-ENTITY_CLASS = "device_class"
+ENTITY_DEVICE_CLASS = "device_class"
 ENTITY_ENABLE = "enable"
 ENTITY_API_DATA_PATH = "data_path"
 
@@ -32,8 +35,8 @@ SENSOR_TYPES = {
     "pressure": {
         ENTITY_NAME: "Pressure",
         ENTITY_UNIT: PRESSURE_HPA,
-        ENTITY_ICON: "mdi:gauge",
-        ENTITY_CLASS: "pressure",
+        ENTITY_ICON: None,
+        ENTITY_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
         ENTITY_ENABLE: False,
         ENTITY_API_DATA_PATH: "current_forecast:sea_level",
     },
@@ -41,7 +44,7 @@ SENSOR_TYPES = {
         ENTITY_NAME: "Rain chance",
         ENTITY_UNIT: UNIT_PERCENTAGE,
         ENTITY_ICON: "mdi:weather-rainy",
-        ENTITY_CLASS: None,
+        ENTITY_DEVICE_CLASS: None,
         ENTITY_ENABLE: True,
         ENTITY_API_DATA_PATH: "probability_forecast:rain:3h",
     },
@@ -49,7 +52,7 @@ SENSOR_TYPES = {
         ENTITY_NAME: "Snow chance",
         ENTITY_UNIT: UNIT_PERCENTAGE,
         ENTITY_ICON: "mdi:weather-snowy",
-        ENTITY_CLASS: None,
+        ENTITY_DEVICE_CLASS: None,
         ENTITY_ENABLE: True,
         ENTITY_API_DATA_PATH: "probability_forecast:snow:3h",
     },
@@ -57,7 +60,7 @@ SENSOR_TYPES = {
         ENTITY_NAME: "Freeze chance",
         ENTITY_UNIT: UNIT_PERCENTAGE,
         ENTITY_ICON: "mdi:snowflake",
-        ENTITY_CLASS: None,
+        ENTITY_DEVICE_CLASS: None,
         ENTITY_ENABLE: True,
         ENTITY_API_DATA_PATH: "probability_forecast:freezing",
     },
@@ -65,7 +68,7 @@ SENSOR_TYPES = {
         ENTITY_NAME: "Wind speed",
         ENTITY_UNIT: SPEED_KILOMETERS_PER_HOUR,
         ENTITY_ICON: "mdi:weather-windy",
-        ENTITY_CLASS: None,
+        ENTITY_DEVICE_CLASS: None,
         ENTITY_ENABLE: False,
         ENTITY_API_DATA_PATH: "current_forecast:wind:speed",
     },
@@ -73,15 +76,15 @@ SENSOR_TYPES = {
         ENTITY_NAME: "Next rain",
         ENTITY_UNIT: None,
         ENTITY_ICON: "mdi:weather-pouring",
-        ENTITY_CLASS: "timestamp",
+        ENTITY_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
         ENTITY_ENABLE: True,
         ENTITY_API_DATA_PATH: None,
     },
     "temperature": {
         ENTITY_NAME: "Temperature",
         ENTITY_UNIT: TEMP_CELSIUS,
-        ENTITY_ICON: "mdi:thermometer",
-        ENTITY_CLASS: "temperature",
+        ENTITY_ICON: None,
+        ENTITY_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ENTITY_ENABLE: False,
         ENTITY_API_DATA_PATH: "current_forecast:T:value",
     },
@@ -89,7 +92,7 @@ SENSOR_TYPES = {
         ENTITY_NAME: "UV",
         ENTITY_UNIT: None,
         ENTITY_ICON: "mdi:sunglasses",
-        ENTITY_CLASS: None,
+        ENTITY_DEVICE_CLASS: None,
         ENTITY_ENABLE: True,
         ENTITY_API_DATA_PATH: "today_forecast:uv",
     },
@@ -97,7 +100,7 @@ SENSOR_TYPES = {
         ENTITY_NAME: "Weather alert",
         ENTITY_UNIT: None,
         ENTITY_ICON: "mdi:weather-cloudy-alert",
-        ENTITY_CLASS: None,
+        ENTITY_DEVICE_CLASS: None,
         ENTITY_ENABLE: True,
         ENTITY_API_DATA_PATH: None,
     },
@@ -105,7 +108,7 @@ SENSOR_TYPES = {
         ENTITY_NAME: "Daily precipitation",
         ENTITY_UNIT: "mm",
         ENTITY_ICON: "mdi:cup-water",
-        ENTITY_CLASS: None,
+        ENTITY_DEVICE_CLASS: None,
         ENTITY_ENABLE: True,
         ENTITY_API_DATA_PATH: "today_forecast:precipitation:24h",
     },
@@ -113,7 +116,7 @@ SENSOR_TYPES = {
         ENTITY_NAME: "Cloud cover",
         ENTITY_UNIT: UNIT_PERCENTAGE,
         ENTITY_ICON: "mdi:weather-partly-cloudy",
-        ENTITY_CLASS: None,
+        ENTITY_DEVICE_CLASS: None,
         ENTITY_ENABLE: True,
         ENTITY_API_DATA_PATH: "current_forecast:clouds",
     },

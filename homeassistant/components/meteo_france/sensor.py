@@ -21,7 +21,7 @@ from .const import (
     COORDINATOR_RAIN,
     DOMAIN,
     ENTITY_API_DATA_PATH,
-    ENTITY_CLASS,
+    ENTITY_DEVICE_CLASS,
     ENTITY_ENABLE,
     ENTITY_ICON,
     ENTITY_NAME,
@@ -128,7 +128,7 @@ class MeteoFranceSensor(Entity):
     @property
     def device_class(self):
         """Return the device class."""
-        return SENSOR_TYPES[self._type][ENTITY_CLASS]
+        return SENSOR_TYPES[self._type][ENTITY_DEVICE_CLASS]
 
     @property
     def entity_registry_enabled_default(self) -> bool:
