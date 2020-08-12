@@ -77,8 +77,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data[CONF_TOKEN] = self._bridge.token
         return self.async_create_entry(title=self._title, data=data)
 
-    def _abort_if_already_configured(self):
-        device_ip = gethostbyname(self._host)
+    async def _abort_if_already_configured(self):
+        device_ip = await self.hass.async_add_executor_job(gethostbyname(self._host))
         for entry in self._async_current_entries():
 
             # update user configured or unique_id=ip entries
@@ -142,7 +142,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._name = user_input[CONF_NAME]
             self._title = self._name
 
-            self._abort_if_already_configured()
+            await self._abort_if_already_configured()
 
             await self.hass.async_add_executor_job(self._try_connect)
 
@@ -170,7 +170,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name = f"{self._manufacturer} {self._model}"
         self._title = self._model
 
-        await self.hass.async_add_executor_job(self._abort_if_already_configured())
+        await self._abort_if_already_configured()
 
         self.context["title_placeholders"] = {"model": self._model}
         return await self.async_step_confirm()
@@ -191,7 +191,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name = f"{self._manufacturer} {self._model}"
         self._title = self._model
 
-        await self.hass.async_add_executor_job(self._abort_if_already_configured())
+        await self._abort_if_already_configured()
 
         self.context["title_placeholders"] = {"model": self._model}
         return await self.async_step_confirm()
