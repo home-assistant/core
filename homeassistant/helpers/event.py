@@ -425,25 +425,29 @@ def async_track_template(
                     event.data.get("old_state"),
                     event.data.get("new_state"),
                 )
-        elif _boolean_coerce(result):
-            # First run of the listener. Figure out an entity ID to
-            # pass back to the action because it expects one.
-            info = template.async_render_to_info(variables)
-            state = None
-            entity_id = None
-            #  pylint: disable=protected-access
-            for eid in info._entities:
-                state = hass.states.get(eid)
-                if state:
-                    entity_id = eid
+            return
+
+        if not _boolean_coerce(result):
+            return
+
+        # First run of the listener. Figure out an entity ID to
+        # pass back to the action because it expects one.
+        info = template.async_render_to_info(variables)
+        state = None
+        entity_id = None
+        #  pylint: disable=protected-access
+        for eid in info._entities:
+            state = hass.states.get(eid)
+            if state:
+                entity_id = eid
+                break
+        if not state:
+            for st in hass.states.async_all():
+                if info.filter_lifecycle(st.entity_id):
+                    state = st
+                    entity_id = st.entity_id
                     break
-            if not state:
-                for st in hass.states.async_all():
-                    if info.filter_lifecycle(st.entity_id):
-                        state = st
-                        entity_id = st.entity_id
-                        break
-            hass.async_run_job(action, entity_id or MATCH_ALL, state, state)
+        hass.async_run_job(action, entity_id or MATCH_ALL, state, state)
 
     info = async_track_template_result(
         hass, template, state_changed_listener, variables
