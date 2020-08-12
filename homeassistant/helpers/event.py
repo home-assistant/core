@@ -430,7 +430,10 @@ def async_track_template(
         if not _boolean_coerce(result):
             return
 
-        # First run of the listener. Figure out an entity ID to
+        #
+        # First run of the listener.
+        #
+        # Figure out an entity ID to
         # pass back to the action because it expects one.
         info = template.async_render_to_info(variables)
         state = None
@@ -479,12 +482,14 @@ class TrackTemplateResultInfo:
         self._variables = variables
         self._last_result = None
         self._last_exception = False
-
-        self._cancel = hass.bus.async_listen(
-            EVENT_STATE_CHANGED, self._state_changed_listener
-        )
+        self._all_listener: Optional[Callable] = None
+        self._domains_listener: Optional[Callable] = None
+        self._entities_listener: Optional[Callable] = None
 
         self._info = template.async_render_to_info(variables)
+        self._create_listeners()
+        self._last_info = self._info
+
         try:
             self._last_result = self._info.result
         except TemplateError as ex:
@@ -496,9 +501,86 @@ class TrackTemplateResultInfo:
             )
 
     @callback
+    def _create_listeners(self) -> None:
+        # pylint: disable=protected-access
+        if self._info._all_states:
+            self._all_listener = self.hass.bus.async_listen(
+                EVENT_STATE_CHANGED, self._state_changed_listener
+            )
+            return
+
+        entities = set(self._info._entities)
+
+        if self._info._domains:
+            self._domains_listener = async_track_state_added_domain(
+                self.hass, self._info._domains, self._state_changed_listener
+            )
+            for entity_id in self.hass.states.async_entity_ids(self._info._domains):
+                entities.add(entity_id)
+
+        if entities:
+            self._entities_listener = async_track_state_change_event(
+                self.hass, entities, self._state_changed_listener
+            )
+
+    @callback
+    def _cancel_domains_listener(self) -> None:
+        if self._domains_listener is None:
+            return
+        self._domains_listener()
+        self._domains_listener = None
+
+    @callback
+    def _cancel_entities_listener(self) -> None:
+        if self._entities_listener is None:
+            return
+        self._entities_listener()
+        self._entities_listener = None
+
+    @callback
+    def _cancel_all_listener(self) -> None:
+        if self._all_listener is None:
+            return
+        self._all_listener()
+        self._all_listener = None
+
+    @callback
+    def _update_listeners(self) -> None:
+        # pylint: disable=protected-access
+        if self._info._all_states:
+            if self._all_listener:
+                return
+            self._cancel_domains_listener()
+            self._cancel_entities_listener()
+            self._all_listener = self.hass.bus.async_listen(
+                EVENT_STATE_CHANGED, self._state_changed_listener
+            )
+            return
+
+        domains_changed = False
+        if self._info._domains != self._last_info._domains:
+            domains_changed = True
+            self._cancel_domains_listener()
+            self._domains_listener = async_track_state_added_domain(
+                self.hass, self._info._domains, self._state_changed_listener
+            )
+
+        if domains_changed or self._info._entities != self._last_info._entities:
+            entities = set(self._info._entities)
+            if domains_changed:
+                for entity_id in self.hass.states.async_entity_ids(self._info._domains):
+                    entities.add(entity_id)
+            self._cancel_entities_listener()
+            self._entities_listener = async_track_state_change_event(
+                self.hass, entities, self._state_changed_listener
+            )
+
+    @callback
     def async_remove(self) -> None:
         """Cancel the listener."""
-        self._cancel()
+        self._cancel_all_listener()
+        self._cancel_domains_listener()
+        self._cancel_entities_listener()
 
     @callback
     def async_refresh(self, variables: Any = _UNCHANGED) -> None:
@@ -527,6 +609,8 @@ class TrackTemplateResultInfo:
 
     def _refresh(self, event: Optional[Event] = None) -> None:
         self._info = self._template.async_render_to_info(self._variables)
+        self._update_listeners()
+        self._last_info = self._info
 
         try:
             result = self._info.result
