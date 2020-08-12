@@ -620,7 +620,7 @@ async def test_wait_template_timeout(hass, caplog, timeout_param):
             {"event": event},
         ]
     )
-    script_obj = script.Script(hass, sequence)
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, "wait")
 
     try:
@@ -727,7 +727,7 @@ async def test_wait_template_variables_out(hass, mode):
         },
     ]
     sequence = cv.SCRIPT_SCHEMA(sequence)
-    script_obj = script.Script(hass, sequence)
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, "wait")
 
     try:
