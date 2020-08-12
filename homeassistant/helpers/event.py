@@ -4,9 +4,10 @@ from datetime import datetime, timedelta
 import functools as ft
 import logging
 import time
-from typing import Any, Awaitable, Callable, Dict, Iterable, Optional, Union
+from typing import Any, Awaitable, Callable, Iterable, Optional, Union
 
 import attr
+import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_NOW,
@@ -25,9 +26,12 @@ from homeassistant.core import (
     callback,
     split_entity_id,
 )
+from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.sun import get_astral_event_next
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -349,39 +353,258 @@ def async_track_state_added_domain(
     return remove_listener
 
 
+_boolean_coerce = vol.Any(cv.boolean, lambda val: False)
+
+
 @callback
 @bind_hass
 def async_track_template(
     hass: HomeAssistant,
     template: Template,
-    action: Callable[[str, State, State], None],
-    variables: Optional[Dict[str, Any]] = None,
-) -> CALLBACK_TYPE:
-    """Add a listener that track state changes with template condition."""
-    from . import condition  # pylint: disable=import-outside-toplevel
+    action: Callable[[str, Optional[State], Optional[State]], None],
+    variables: Optional[TemplateVarsType] = None,
+) -> Callable[[], None]:
+    """Add a listener that fires when a a template evaluates to 'true'.
 
-    # Local variable to keep track of if the action has already been triggered
-    already_triggered = False
+    Listen for the result of the template becoming true, or a true-like
+    string result, such as 'On', 'Open', or 'Yes'. If the template results
+    in an error state when the value changes, this will be logged and not
+    passed through.
+
+    On template registration, the action will be called with an entity_id
+    and state of some entity referenced by the template, or '*' if no
+    entity is referenced by the template.
+
+    If the initial run of the template is invalid and results in an
+    exception, the listener will still be registered but will only
+    fire if the template result becomes true without an exception.
+
+    Action arguments
+    ----------------
+    entity_id
+        ID of the entity that triggered the state change.
+    old_state
+        The old state of the entity that changed.
+    new_state
+        New state of the entity that changed.
+
+    Parameters
+    ----------
+    hass
+        Home assistant object.
+    template
+        The template to calculate.
+    action
+        Callable to call with results. See above for arguments.
+    variables
+        Variables to pass to the template.
+
+    Returns
+    -------
+    Callable to unregister the listener.
+
+    """
 
     @callback
-    def template_condition_listener(entity_id: str, from_s: State, to_s: State) -> None:
+    def state_changed_listener(
+        event: Optional[Event],
+        template: Template,
+        last_result: Optional[str],
+        result: Union[str, TemplateError],
+    ) -> None:
         """Check if condition is correct and run action."""
-        nonlocal already_triggered
-        template_result = condition.async_template(hass, template, variables)
+        if isinstance(result, TemplateError):
+            _LOGGER.exception(result)
+            return
 
-        # Check to see if template returns true
-        if template_result and not already_triggered:
-            already_triggered = True
-            hass.async_run_job(action, entity_id, from_s, to_s)
-        elif not template_result:
-            already_triggered = False
+        if event and last_result is not None:
+            if not _boolean_coerce(last_result) and _boolean_coerce(result):
+                hass.async_run_job(
+                    action,
+                    event.data.get("entity_id"),
+                    event.data.get("old_state"),
+                    event.data.get("new_state"),
+                )
+        elif _boolean_coerce(result):
+            # First run of the listener. Figure out an entity ID to
+            # pass back to the action because it expects one.
+            info = template.async_render_to_info(variables)
+            state = None
+            entity_id = None
+            #  pylint: disable=protected-access
+            for eid in info._entities:
+                state = hass.states.get(eid)
+                if state:
+                    entity_id = eid
+                    break
+            if not state:
+                for st in hass.states.async_all():
+                    if info.filter_lifecycle(st.entity_id):
+                        state = st
+                        entity_id = st.entity_id
+                        break
+            hass.async_run_job(action, entity_id or MATCH_ALL, state, state)
 
-    return async_track_state_change(
-        hass, template.extract_entities(variables), template_condition_listener
+    info = async_track_template_result(
+        hass, template, state_changed_listener, variables
     )
+
+    return info.async_remove
 
 
 track_template = threaded_listener_factory(async_track_template)
+
+
+_UNCHANGED = object()
+
+
+class TrackTemplateResultInfo:
+    """Handle removal / refresh of tracker."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        template: Template,
+        action: Callable,
+        variables: Optional[TemplateVarsType],
+    ):
+        """Handle removal / refresh of tracker init."""
+        self.hass = hass
+        self._template = template
+        self._action = action
+        self._variables = variables
+        self._last_result = None
+        self._last_exception = False
+
+        self._cancel = hass.bus.async_listen(
+            EVENT_STATE_CHANGED, self._state_changed_listener
+        )
+
+        self._info = template.async_render_to_info(variables)
+        try:
+            self._last_result = self._info.result
+        except TemplateError as ex:
+            self._last_exception = True
+            self.hass.async_run_job(self._action, None, self._template, None, ex)
+        else:
+            self.hass.async_run_job(
+                self._action, None, self._template, None, self._last_result
+            )
+
+    @callback
+    def async_remove(self) -> None:
+        """Cancel the listener."""
+        self._cancel()
+
+    @callback
+    def async_refresh(self, variables: Any = _UNCHANGED) -> None:
+        """Force recalculate the template."""
+        if variables is not _UNCHANGED:
+            self._variables = variables
+        self._refresh()
+
+    @callback
+    def _state_changed_listener(self, event: Event) -> None:
+        """Check if condition is correct and run action."""
+        # Optimisation: if the old and new states are not None then this is
+        # a state change rather than a life-cycle event, and therefore we
+        # only need to check the include entities.
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
+        entity_id = event.data["entity_id"]
+
+        if old_state is not None and new_state is not None:
+            if not self._info.filter(entity_id):
+                return
+        elif not self._info.filter_lifecycle(entity_id):
+            return
+
+        self._refresh(event)
+
+    def _refresh(self, event: Optional[Event] = None) -> None:
+        self._info = self._template.async_render_to_info(self._variables)
+
+        try:
+            result = self._info.result
+        except TemplateError as ex:
+            if not self._last_exception:
+                self.hass.async_run_job(
+                    self._action, event, self._template, self._last_result, ex
+                )
+            self._last_exception = True
+            return
+        self._last_exception = False
+
+        # Check to see if the result has changed
+        if result == self._last_result:
+            return
+
+        self.hass.async_run_job(
+            self._action, event, self._template, self._last_result, result
+        )
+        self._last_result = result
+
+
+TrackTemplateResultListener = Callable[
+    [Optional[Event], Template, Optional[str], Union[str, TemplateError]], None
+]
+"""Type for the listener for template results.
+
+    Action arguments
+    ----------------
+    event
+        Event that caused the template to change output. None if not
+        triggered by an event.
+    template
+        The template that has changed.
+    last_result
+        The output from the template on the last successful run, or None
+        if no previous successful run.
+    result
+        Result from the template run. This will be a string or an
+        TemplateError if the template resulted in an error.
+"""
+
+
+@callback
+@bind_hass
+def async_track_template_result(
+    hass: HomeAssistant,
+    template: Template,
+    action: TrackTemplateResultListener,
+    variables: Optional[TemplateVarsType] = None,
+) -> TrackTemplateResultInfo:
+    """Add a listener that fires when a the result of a template changes.
+
+    The action will fire with the initial result from the template, and
+    then whenever the output from the template changes. The template will
+    be reevaluated if any states referenced in the last run of the
+    template change, or if manually triggered. If the result of the
+    evaluation is different from the previous run, the listener is passed
+    the result.
+
+    If the template results in an TemplateError, this will be returned to
+    the listener the first time this happens but not for subsequent errors.
+    Once the template returns to a non-error condition the result is sent
+    to the action as usual.
+
+    Parameters
+    ----------
+    hass
+        Home assistant object.
+    template
+        The template to calculate.
+    action
+        Callable to call with results.
+    variables
+        Variables to pass to the template.
+
+    Returns
+    -------
+    Info object used to unregister the listener, and refresh the template.
+
+    """
+    return TrackTemplateResultInfo(hass, template, action, variables)
 
 
 @callback

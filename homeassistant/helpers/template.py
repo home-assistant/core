@@ -8,7 +8,7 @@ import logging
 import math
 import random
 import re
-from typing import Any, Dict, Iterable, List, Optional, Union
+from typing import Any, Iterable, List, Optional, Union
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -79,7 +79,7 @@ def render_complex(value: Any, variables: TemplateVarsType = None) -> Any:
 def extract_entities(
     hass: HomeAssistantType,
     template: Optional[str],
-    variables: Optional[Dict[str, Any]] = None,
+    variables: TemplateVarsType = None,
 ) -> Union[str, List[str]]:
     """Extract all entities for state_changed listener from template string."""
     if template is None or _RE_JINJA_DELIMITERS.search(template) is None:
@@ -206,7 +206,7 @@ class Template:
             raise TemplateError(err)
 
     def extract_entities(
-        self, variables: Optional[Dict[str, Any]] = None
+        self, variables: TemplateVarsType = None
     ) -> Union[str, List[str]]:
         """Extract all entities for state_changed listener."""
         return extract_entities(self.hass, self.template, variables)

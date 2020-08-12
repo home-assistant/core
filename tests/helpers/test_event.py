@@ -2,6 +2,7 @@
 # pylint: disable=protected-access
 import asyncio
 from datetime import datetime, timedelta
+from logging import Logger
 
 from astral import Astral
 import pytest
@@ -10,6 +11,7 @@ from homeassistant.components import sun
 from homeassistant.const import MATCH_ALL
 import homeassistant.core as ha
 from homeassistant.core import callback
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.event import (
     async_call_later,
@@ -22,6 +24,7 @@ from homeassistant.helpers.event import (
     async_track_sunrise,
     async_track_sunset,
     async_track_template,
+    async_track_template_result,
     async_track_time_change,
     async_track_time_interval,
     async_track_utc_time_change,
@@ -435,7 +438,7 @@ async def test_track_template(hass):
         "{{states.switch.test.state == 'on' and test == 5}}", hass
     )
 
-    hass.states.async_set("switch.test", "off")
+    hass.states.async_set("switch.test", "on")
 
     def specific_run_callback(entity_id, old_state, new_state):
         specific_runs.append(1)
@@ -448,14 +451,14 @@ async def test_track_template(hass):
 
     async_track_template(hass, template_condition, wildcard_run_callback)
 
-    async def wildercard_run_callback(entity_id, old_state, new_state):
+    @asyncio.coroutine
+    def wildercard_run_callback(entity_id, old_state, new_state):
         wildercard_runs.append((old_state, new_state))
 
     async_track_template(
         hass, template_condition_var, wildercard_run_callback, {"test": 5}
     )
 
-    hass.states.async_set("switch.test", "on")
     await hass.async_block_till_done()
 
     assert len(specific_runs) == 1
@@ -490,61 +493,277 @@ async def test_track_template(hass):
     assert len(wildcard_runs) == 2
     assert len(wildercard_runs) == 2
 
-
-async def test_track_same_state_simple_trigger(hass):
-    """Test track_same_change with trigger simple."""
-    thread_runs = []
-    callback_runs = []
-    coroutine_runs = []
-    period = timedelta(minutes=1)
-
-    def thread_run_callback():
-        thread_runs.append(1)
-
-    async_track_same_state(
-        hass,
-        period,
-        thread_run_callback,
-        lambda _, _2, to_s: to_s.state == "on",
-        entity_ids="light.Bowl",
-    )
+    template_iterate = Template("{{ (states.switch | length) > 0 }}", hass)
+    iterate_calls = []
 
     @ha.callback
-    def callback_run_callback():
-        callback_runs.append(1)
+    def iterate_callback(entity_id, old_state, new_state):
+        iterate_calls.append((entity_id, old_state, new_state))
 
-    async_track_same_state(
-        hass,
-        period,
-        callback_run_callback,
-        callback(lambda _, _2, to_s: to_s.state == "on"),
-        entity_ids="light.Bowl",
+    async_track_template(hass, template_iterate, iterate_callback)
+    await hass.async_block_till_done()
+
+    assert len(iterate_calls) == 1
+    assert iterate_calls[0][0] == "switch.test"
+    assert iterate_calls[0][1].state == "on"
+    assert iterate_calls[0][2].state == "on"
+
+
+async def test_track_template_error(hass):
+    """Test tracking template with error."""
+    template_error = Template("{{ (states.switch | lunch) > 0 }}", hass)
+    error_calls = []
+
+    @ha.callback
+    def error_callback(entity_id, old_state, new_state):
+        error_calls.append((entity_id, old_state, new_state))
+
+    with patch.object(Logger, "exception") as call:
+        async_track_template(hass, template_error, error_callback)
+        await hass.async_block_till_done()
+
+        assert not error_calls
+        assert call.call_count == 1
+
+
+async def test_track_template_result(hass):
+    """Test tracking template."""
+    specific_runs = []
+    wildcard_runs = []
+    wildercard_runs = []
+
+    template_condition = Template("{{states.sensor.test.state}}", hass)
+    template_condition_var = Template(
+        "{{(states.sensor.test.state|int) + test }}", hass
     )
 
-    async def coroutine_run_callback():
-        coroutine_runs.append(1)
+    hass.states.async_set("sensor.test", 5)
 
-    async_track_same_state(
-        hass,
-        period,
-        coroutine_run_callback,
-        callback(lambda _, _2, to_s: to_s.state == "on"),
+    def specific_run_callback(event, template, old_result, new_result):
+        specific_runs.append(int(new_result))
+
+    async_track_template_result(hass, template_condition, specific_run_callback)
+
+    @ha.callback
+    def wildcard_run_callback(event, template, old_result, new_result):
+        wildcard_runs.append((int(old_result or 0), int(new_result)))
+
+    async_track_template_result(hass, template_condition, wildcard_run_callback)
+
+    async def wildercard_run_callback(event, template, old_result, new_result):
+        wildercard_runs.append((int(old_result or 0), int(new_result)))
+
+    async_track_template_result(
+        hass, template_condition_var, wildercard_run_callback, {"test": 5}
     )
-
-    # Adding state to state machine
-    hass.states.async_set("light.Bowl", "on")
     await hass.async_block_till_done()
-    assert len(thread_runs) == 0
-    assert len(callback_runs) == 0
-    assert len(coroutine_runs) == 0
 
-    # change time to track and see if they trigger
-    future = dt_util.utcnow() + period
-    async_fire_time_changed(hass, future)
+    assert specific_runs == [5]
+    assert wildcard_runs == [(0, 5)]
+    assert wildercard_runs == [(0, 10)]
+
+    hass.states.async_set("sensor.test", 30)
     await hass.async_block_till_done()
-    assert len(thread_runs) == 1
-    assert len(callback_runs) == 1
-    assert len(coroutine_runs) == 1
+
+    assert specific_runs == [5, 30]
+    assert wildcard_runs == [(0, 5), (5, 30)]
+    assert wildercard_runs == [(0, 10), (10, 35)]
+
+    hass.states.async_set("sensor.test", 30)
+    await hass.async_block_till_done()
+
+    assert len(specific_runs) == 2
+    assert len(wildcard_runs) == 2
+    assert len(wildercard_runs) == 2
+
+    hass.states.async_set("sensor.test", 5)
+    await hass.async_block_till_done()
+
+    assert len(specific_runs) == 3
+    assert len(wildcard_runs) == 3
+    assert len(wildercard_runs) == 3
+
+    hass.states.async_set("sensor.test", 5)
+    await hass.async_block_till_done()
+
+    assert len(specific_runs) == 3
+    assert len(wildcard_runs) == 3
+    assert len(wildercard_runs) == 3
+
+    hass.states.async_set("sensor.test", 20)
+    await hass.async_block_till_done()
+
+    assert len(specific_runs) == 4
+    assert len(wildcard_runs) == 4
+    assert len(wildercard_runs) == 4
+
+
+async def test_track_template_result_iterator(hass):
+    """Test tracking template."""
+    iterator_runs = []
+
+    @ha.callback
+    def iterator_callback(event, template, old_result, new_result):
+        iterator_runs.append(new_result)
+
+    async_track_template_result(
+        hass,
+        Template(
+            """
+            {% for state in states.sensor %}
+                {% if state.state == 'on' %}
+                    {{ state.entity_id }},
+                {% endif %}
+            {% endfor %}
+            """,
+            hass,
+        ),
+        iterator_callback,
+    )
+    await hass.async_block_till_done()
+
+    assert iterator_runs == [""]
+
+    filter_runs = []
+
+    @ha.callback
+    def filter_callback(event, template, old_result, new_result):
+        filter_runs.append(new_result)
+
+    async_track_template_result(
+        hass,
+        Template(
+            """{{ states.sensor|selectattr("state","equalto","on")
+                |join(",", attribute="entity_id") }}""",
+            hass,
+        ),
+        filter_callback,
+    )
+    await hass.async_block_till_done()
+    assert filter_runs == [""]
+
+    hass.states.async_set("sensor.test", 5)
+    await hass.async_block_till_done()
+    assert iterator_runs == [""]
+    assert filter_runs == [""]
+
+    hass.states.async_set("sensor.new", "on")
+    await hass.async_block_till_done()
+    assert iterator_runs == ["", "sensor.new,"]
+    assert filter_runs == ["", "sensor.new"]
+
+
+async def test_track_template_result_errors(hass):
+    """Test tracking template with errors in the template."""
+    template_syntax_error = Template("{{states.switch", hass)
+
+    template_not_exist = Template("{{states.switch.not_exist.state }}", hass)
+
+    syntax_error_runs = []
+    not_exist_runs = []
+
+    def syntax_error_listener(event, template, last_result, result):
+        syntax_error_runs.append((event, template, last_result, result))
+
+    async_track_template_result(hass, template_syntax_error, syntax_error_listener)
+    await hass.async_block_till_done()
+
+    assert len(syntax_error_runs) == 1
+    assert syntax_error_runs[0][1] == template_syntax_error
+    assert isinstance(syntax_error_runs[0][3], TemplateError)
+
+    async_track_template_result(
+        hass,
+        template_not_exist,
+        lambda event, template, last_result, result: (
+            not_exist_runs.append((event, template, last_result, result))
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert len(syntax_error_runs) == 1
+    assert len(not_exist_runs) == 1
+    assert not_exist_runs[0] == (None, template_not_exist, None, "")
+
+    hass.states.async_set("switch.not_exist", "off")
+    await hass.async_block_till_done()
+
+    assert len(not_exist_runs) == 2
+    assert not_exist_runs[1][0].data.get("entity_id") == "switch.not_exist"
+    assert not_exist_runs[1][1] == template_not_exist
+    assert not_exist_runs[1][2] == ""
+    assert not_exist_runs[1][3] == "off"
+
+    hass.states.async_set("switch.not_exist", "on")
+    await hass.async_block_till_done()
+
+    assert len(syntax_error_runs) == 1
+    assert len(not_exist_runs) == 3
+    assert not_exist_runs[2][0].data.get("entity_id") == "switch.not_exist"
+    assert not_exist_runs[2][1] == template_not_exist
+    assert not_exist_runs[2][2] == "off"
+    assert not_exist_runs[2][3] == "on"
+
+    with patch.object(Template, "async_render") as render:
+        render.side_effect = TemplateError("Test")
+
+        hass.states.async_set("switch.not_exist", "off")
+        await hass.async_block_till_done()
+
+        assert len(not_exist_runs) == 4
+        assert not_exist_runs[3][0].data.get("entity_id") == "switch.not_exist"
+        assert not_exist_runs[3][1] == template_not_exist
+        assert not_exist_runs[3][2] == "on"
+        assert isinstance(not_exist_runs[3][3], TemplateError)
+
+
+async def test_track_template_result_refresh_cancel(hass):
+    """Test cancelling and refreshing result."""
+    template_refresh = Template("{{states.switch.test.state == 'on' and now() }}", hass)
+
+    refresh_runs = []
+
+    def refresh_listener(event, template, last_result, result):
+        refresh_runs.append(result)
+
+    info = async_track_template_result(hass, template_refresh, refresh_listener)
+    await hass.async_block_till_done()
+
+    assert refresh_runs == ["False"]
+
+    hass.states.async_set("switch.test", "on")
+    await hass.async_block_till_done()
+
+    assert len(refresh_runs) == 2
+
+    info.async_refresh()
+    await hass.async_block_till_done()
+
+    assert len(refresh_runs) == 3
+    assert refresh_runs[1] != refresh_runs[2]
+
+    info.async_remove()
+    hass.states.async_set("switch.test", "off")
+    await hass.async_block_till_done()
+
+    assert len(refresh_runs) == 3
+
+    template_refresh = Template("{{ value }}", hass)
+    refresh_runs = []
+
+    info = async_track_template_result(
+        hass, template_refresh, refresh_listener, {"value": "duck"}
+    )
+    await hass.async_block_till_done()
+    assert refresh_runs == ["duck"]
+
+    info.async_refresh()
+    await hass.async_block_till_done()
+    assert refresh_runs == ["duck"]
+
+    info.async_refresh({"value": "dog"})
+    await hass.async_block_till_done()
+    assert refresh_runs == ["duck", "dog"]
 
 
 async def test_track_same_state_simple_no_trigger(hass):
