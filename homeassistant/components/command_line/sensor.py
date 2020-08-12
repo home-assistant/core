@@ -3,7 +3,6 @@ from collections.abc import Mapping
 from datetime import timedelta
 import json
 import logging
-import subprocess
 
 import voluptuous as vol
 
@@ -20,13 +19,14 @@ from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
+from . import check_output_or_log
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_COMMAND_TIMEOUT = "command_timeout"
 CONF_JSON_ATTRIBUTES = "json_attributes"
 
 DEFAULT_NAME = "Command Sensor"
-DEFAULT_TIMEOUT = 15
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -171,13 +171,6 @@ class CommandSensorData:
         else:
             # Template used. Construct the string used in the shell
             command = f"{prog} {rendered_args}"
-        try:
-            _LOGGER.debug("Running command: %s", command)
-            return_value = subprocess.check_output(
-                command, shell=True, timeout=self.timeout  # nosec # shell by design
-            )
-            self.value = return_value.strip().decode("utf-8")
-        except subprocess.CalledProcessError:
-            _LOGGER.error("Command failed: %s", command)
-        except subprocess.TimeoutExpired:
-            _LOGGER.error("Timeout for command: %s", command)
+
+        _LOGGER.debug("Running command: %s", command)
+        self.value = check_output_or_log(command, self.timeout)

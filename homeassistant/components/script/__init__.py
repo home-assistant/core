@@ -278,11 +278,10 @@ class ScriptEntity(ToggleEntity):
         attrs = {
             ATTR_LAST_TRIGGERED: self.script.last_triggered,
             ATTR_MODE: self.script.script_mode,
+            ATTR_CUR: self.script.runs,
         }
         if self.script.supports_max:
             attrs[ATTR_MAX] = self.script.max_runs
-            if self.is_on:
-                attrs[ATTR_CUR] = self.script.runs
         if self.script.last_action:
             attrs[ATTR_LAST_ACTION] = self.script.last_action
         return attrs

@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_ICON_TEMPLATE,
     CONF_SWITCHES,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
     MATCH_ALL,
@@ -47,6 +48,7 @@ SWITCH_SCHEMA = vol.Schema(
         vol.Required(OFF_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -67,6 +69,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
         on_action = device_config[ON_ACTION]
         off_action = device_config[OFF_ACTION]
+        unique_id = device_config.get(CONF_UNIQUE_ID)
 
         templates = {
             CONF_VALUE_TEMPLATE: state_template,
@@ -92,6 +95,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 on_action,
                 off_action,
                 entity_ids,
+                unique_id,
             )
         )
 
@@ -113,6 +117,7 @@ class SwitchTemplate(SwitchEntity, RestoreEntity):
         on_action,
         off_action,
         entity_ids,
+        unique_id,
     ):
         """Initialize the Template switch."""
         self.hass = hass
@@ -131,6 +136,7 @@ class SwitchTemplate(SwitchEntity, RestoreEntity):
         self._entity_picture = None
         self._entities = entity_ids
         self._available = True
+        self._unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -171,6 +177,11 @@ class SwitchTemplate(SwitchEntity, RestoreEntity):
     def name(self):
         """Return the name of the switch."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id of this switch."""
+        return self._unique_id
 
     @property
     def is_on(self):

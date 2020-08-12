@@ -1,14 +1,24 @@
 {
     "config": {
+        "abort": {
+            "auth_failed": "Ugyldig godkjenning",
+            "conn_error": "Tilkobling mislyktes.",
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
+        },
+        "error": {
+            "auth_failed": "Ugyldig godkjenning"
+        },
         "flow_title": "Tuya konfigurasjon",
         "step": {
             "user": {
                 "data": {
                     "country_code": "Din landskode for kontoen din (f.eks. 1 for USA eller 86 for Kina)",
-                    "platform": "Appen der kontoen din registreres"
+                    "password": "Passord",
+                    "platform": "Appen der kontoen din registreres",
+                    "username": "Brukernavn"
                 },
                 "description": "Skriv inn din Tuya-legitimasjon.",
-                "title": "Tuya"
+                "title": ""
             }
         }
     }

@@ -4,8 +4,11 @@ set_theme:
   description: Set a theme unless the client selected per-device theme.
   fields:
     name:
-      description: Name of a predefined theme or 'default'.
+      description: Name of a predefined theme, 'default' or 'none'.
       example: "light"
+    mode:
+      description: The mode the theme is for, either 'dark' or 'light' (default).
+      example: "dark"
 
 reload_themes:
   description: Reload themes from yaml configuration.

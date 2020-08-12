@@ -4,7 +4,7 @@ import tempfile
 import unittest
 
 import homeassistant.components.notify as notify
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component, setup_component
 
 from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant
@@ -93,3 +93,25 @@ class TestCommandLine(unittest.TestCase):
             "notify", "test", {"message": "error"}, blocking=True
         )
         assert mock_error.call_count == 1
+
+
+async def test_timeout(hass, caplog):
+    """Test we do not block forever."""
+    assert await async_setup_component(
+        hass,
+        notify.DOMAIN,
+        {
+            "notify": {
+                "name": "test",
+                "platform": "command_line",
+                "command": "sleep 10000",
+                "command_timeout": 0.0000001,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert await hass.services.async_call(
+        "notify", "test", {"message": "error"}, blocking=True
+    )
+    await hass.async_block_till_done()
+    assert "Timeout" in caplog.text

@@ -21,8 +21,8 @@ from .const import CONF_CLOUDHOOK_URL, DEFAULT_SCAN_INTERVAL, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class ToonDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching WLED data from single endpoint."""
+class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
+    """Class to manage fetching Toon data from single endpoint."""
 
     def __init__(
         self, hass: HomeAssistant, *, entry: ConfigEntry, session: OAuth2Session

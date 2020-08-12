@@ -1,32 +1,25 @@
 """Support for Blink Home Camera System."""
 import asyncio
+from copy import deepcopy
 import logging
 
+from blinkpy.auth import Auth
 from blinkpy.blinkpy import Blink
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_FILENAME,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PIN,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
-from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
-
-from .const import (
-    DEFAULT_OFFSET,
+from homeassistant.components import persistent_notification
+from homeassistant.components.blink.const import (
     DEFAULT_SCAN_INTERVAL,
-    DEVICE_ID,
     DOMAIN,
     PLATFORMS,
     SERVICE_REFRESH,
     SERVICE_SAVE_VIDEO,
     SERVICE_SEND_PIN,
 )
+from homeassistant.const import CONF_FILENAME, CONF_NAME, CONF_PIN, CONF_SCAN_INTERVAL
+from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,58 +28,50 @@ SERVICE_SAVE_VIDEO_SCHEMA = vol.Schema(
 )
 SERVICE_SEND_PIN_SCHEMA = vol.Schema({vol.Optional(CONF_PIN): cv.string})
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): int,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
-
-def _blink_startup_wrapper(entry):
+def _blink_startup_wrapper(hass, entry):
     """Startup wrapper for blink."""
-    blink = Blink(
-        username=entry.data[CONF_USERNAME],
-        password=entry.data[CONF_PASSWORD],
-        motion_interval=DEFAULT_OFFSET,
-        legacy_subdomain=False,
-        no_prompt=True,
-        device_id=DEVICE_ID,
-    )
+    blink = Blink()
+    auth_data = deepcopy(dict(entry.data))
+    blink.auth = Auth(auth_data, no_prompt=True)
     blink.refresh_rate = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
-    try:
-        blink.login_response = entry.data["login_response"]
-        blink.setup_params(entry.data["login_response"])
-    except KeyError:
-        blink.get_auth_token()
+    if blink.start():
+        blink.setup_post_verify()
+    elif blink.auth.check_key_required():
+        _LOGGER.debug("Attempting a reauth flow")
+        _reauth_flow_wrapper(hass, auth_data)
 
-    blink.setup_params(entry.data["login_response"])
-    blink.setup_post_verify()
     return blink
 
 
-async def async_setup(hass, config):
-    """Set up a config entry."""
-    hass.data[DOMAIN] = {}
-    if DOMAIN not in config:
-        return True
-
-    conf = config.get(DOMAIN, {})
-
-    if not hass.config_entries.async_entries(DOMAIN):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-            )
+def _reauth_flow_wrapper(hass, data):
+    """Reauth flow wrapper."""
+    hass.add_job(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "reauth"}, data=data
         )
+    )
+    persistent_notification.async_create(
+        hass,
+        "Blink configuration migrated to a new version. Please go to the integrations page to re-configure (such as sending a new 2FA key).",
+        "Blink Migration",
+    )
 
+
+async def async_setup(hass, config):
+    """Set up a Blink component."""
+    hass.data[DOMAIN] = {}
+    return True
+
+
+async def async_migrate_entry(hass, entry):
+    """Handle migration of a previous version config entry."""
+    data = {**entry.data}
+    if entry.version == 1:
+        data.pop("login_response", None)
+        await hass.async_add_executor_job(_reauth_flow_wrapper, hass, data)
+        return False
     return True
 
 
@@ -95,12 +80,11 @@ async def async_setup_entry(hass, entry):
     _async_import_options_from_data_if_missing(hass, entry)
 
     hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(
-        _blink_startup_wrapper, entry
+        _blink_startup_wrapper, hass, entry
     )
 
     if not hass.data[DOMAIN][entry.entry_id].available:
-        _LOGGER.error("Blink unavailable for setup")
-        return False
+        raise ConfigEntryNotReady
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -118,7 +102,7 @@ async def async_setup_entry(hass, entry):
     def send_pin(call):
         """Call blink to send new pin."""
         pin = call.data[CONF_PIN]
-        hass.data[DOMAIN][entry.entry_id].login_handler.send_auth_key(
+        hass.data[DOMAIN][entry.entry_id].auth.send_auth_key(
             hass.data[DOMAIN][entry.entry_id], pin,
         )
 

@@ -17,8 +17,10 @@
             "user": {
                 "data": {
                     "host": "Vert",
+                    "password": "Passord",
                     "port": "",
                     "ssl": "AdGuard Hjem bruker et SSL-sertifikat",
+                    "username": "Brukernavn",
                     "verify_ssl": "AdGuard Home bruker et riktig sertifikat"
                 },
                 "description": "Sett opp din AdGuard Hjem instans for \u00e5 tillate overv\u00e5king og kontroll."

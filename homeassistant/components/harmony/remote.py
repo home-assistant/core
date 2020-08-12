@@ -30,6 +30,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .const import (
     ACTIVITY_POWER_OFF,
     ATTR_ACTIVITY_LIST,
+    ATTR_ACTIVITY_STARTING,
     ATTR_CURRENT_ACTIVITY,
     ATTR_DEVICES_LIST,
     ATTR_LAST_ACTIVITY,
@@ -136,8 +137,10 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         self._name = name
         self.host = host
         self._state = None
-        self._current_activity = None
+        self._current_activity = ACTIVITY_POWER_OFF
         self.default_activity = activity
+        self._activity_starting = None
+        self._is_initial_update = True
         self._client = HarmonyClient(ip_address=host)
         self._config_path = out_path
         self.delay_secs = delay_secs
@@ -172,9 +175,14 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
             "connect": self.got_connected,
             "disconnect": self.got_disconnected,
             "new_activity_starting": self.new_activity,
-            "new_activity": None,
+            "new_activity": self._new_activity_finished,
         }
         self._client.callbacks = ClientCallbackType(**callbacks)
+
+    def _new_activity_finished(self, activity_info: tuple) -> None:
+        """Call for finished updated current activity."""
+        self._activity_starting = None
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Complete the initialization."""
@@ -252,6 +260,7 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
     def device_state_attributes(self):
         """Add platform specific attributes."""
         return {
+            ATTR_ACTIVITY_STARTING: self._activity_starting,
             ATTR_CURRENT_ACTIVITY: self._current_activity,
             ATTR_ACTIVITY_LIST: list_names_from_hublist(
                 self._client.hub_config.activities
@@ -288,6 +297,10 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         activity_id, activity_name = activity_info
         _LOGGER.debug("%s: activity reported as: %s", self._name, activity_name)
         self._current_activity = activity_name
+        if self._is_initial_update:
+            self._is_initial_update = False
+        else:
+            self._activity_starting = activity_name
         if activity_id != -1:
             # Save the activity so we can restore
             # to that activity if none is specified
@@ -340,17 +353,31 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
 
         if activity:
             activity_id = None
+            activity_name = None
+
             if activity.isdigit() or activity == "-1":
                 _LOGGER.debug("%s: Activity is numeric", self.name)
-                if self._client.get_activity_name(int(activity)):
+                activity_name = self._client.get_activity_name(int(activity))
+                if activity_name:
                     activity_id = activity
 
             if activity_id is None:
                 _LOGGER.debug("%s: Find activity ID based on name", self.name)
-                activity_id = self._client.get_activity_id(str(activity))
+                activity_name = str(activity)
+                activity_id = self._client.get_activity_id(activity_name)
 
             if activity_id is None:
                 _LOGGER.error("%s: Activity %s is invalid", self.name, activity)
+                return
+
+            if self._current_activity == activity_name:
+                # Automations or HomeKit may turn the device on multiple times
+                # when the current activity is already active which will cause
+                # harmony to loose state.  This behavior is unexpected as turning
+                # the device on when its already on isn't expected to reset state.
+                _LOGGER.debug(
+                    "%s: Current activity is already %s", self.name, activity_name
+                )
                 return
 
             try:

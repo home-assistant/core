@@ -10,8 +10,9 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Clau API (opcional)",
+                    "api_key": "Clau API",
                     "host": "Amfitri\u00f3",
+                    "location": "Ubicaci\u00f3",
                     "name": "Nom",
                     "port": "Port",
                     "ssl": "Utilitza SSL",

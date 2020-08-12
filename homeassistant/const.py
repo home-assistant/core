@@ -1,7 +1,7 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 113
-PATCH_VERSION = "3"
+MINOR_VERSION = 114
+PATCH_VERSION = "0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER = (3, 7, 1)
@@ -171,6 +171,7 @@ CONF_TOKEN = "token"
 CONF_TRIGGER_TIME = "trigger_time"
 CONF_TTL = "ttl"
 CONF_TYPE = "type"
+CONF_UNIQUE_ID = "unique_id"
 CONF_UNIT_OF_MEASUREMENT = "unit_of_measurement"
 CONF_UNIT_SYSTEM = "unit_system"
 CONF_UNTIL = "until"

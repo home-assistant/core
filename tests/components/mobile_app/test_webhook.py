@@ -406,3 +406,28 @@ async def test_webhook_camera_stream_stream_available_but_errors(
     webhook_json = await resp.json()
     assert webhook_json["hls_path"] is None
     assert webhook_json["mjpeg_path"] == "/api/camera_proxy_stream/camera.stream_camera"
+
+
+async def test_webhook_handle_scan_tag(hass, create_registrations, webhook_client):
+    """Test that we can scan tags."""
+    events = []
+
+    @callback
+    def store_event(event):
+        """Helepr to store events."""
+        events.append(event)
+
+    hass.bus.async_listen("tag_scanned", store_event)
+
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        json={"type": "scan_tag", "data": {"tag_id": "mock-tag-id"}},
+    )
+
+    assert resp.status == 200
+    json = await resp.json()
+    assert json == {}
+
+    assert len(events) == 1
+    assert events[0].data["tag_id"] == "mock-tag-id"
+    assert events[0].data["device_id"] == "mock-device-id"

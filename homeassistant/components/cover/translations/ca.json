@@ -6,7 +6,8 @@
             "open": "Obre {entity_name}",
             "open_tilt": "Inclinaci\u00f3 {entity_name} obert/a",
             "set_position": "Estableix la posici\u00f3 de {entity_name}",
-            "set_tilt_position": "Estableix la inclinaci\u00f3 de {entity_name}"
+            "set_tilt_position": "Estableix la inclinaci\u00f3 de {entity_name}",
+            "stop": "Atura {entity_name}"
         },
         "condition_type": {
             "is_closed": "{entity_name} est\u00e0 tancat/da",

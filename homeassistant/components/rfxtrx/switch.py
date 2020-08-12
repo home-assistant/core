@@ -18,7 +18,7 @@ from . import (
     get_device_id,
     get_rfx_object,
 )
-from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST, DATA_RFXTRX_CONFIG
+from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
 
 DATA_SWITCH = f"{DOMAIN}_switch"
 
@@ -29,7 +29,7 @@ async def async_setup_entry(
     hass, config_entry, async_add_entities,
 ):
     """Set up config entry."""
-    discovery_info = hass.data[DATA_RFXTRX_CONFIG]
+    discovery_info = config_entry.data
     device_ids = set()
 
     def supported(event):
@@ -37,6 +37,7 @@ async def async_setup_entry(
             isinstance(event.device, rfxtrxmod.LightingDevice)
             and not event.device.known_to_be_dimmable
             and not event.device.known_to_be_rollershutter
+            or isinstance(event.device, rfxtrxmod.RfyDevice)
         )
 
     # Add switch from config file
@@ -126,12 +127,14 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
         """Return true if device is on."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        self._send_command("turn_on")
-        self.schedule_update_ha_state()
+        await self._async_send(self._device.send_on)
+        self._state = True
+        self.async_write_ha_state()
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        self._send_command("turn_off")
-        self.schedule_update_ha_state()
+        await self._async_send(self._device.send_off)
+        self._state = False
+        self.async_write_ha_state()

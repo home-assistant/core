@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert",
+            "reauth_successful": "Tilgangstoken oppdatert"
+        },
+        "error": {
+            "authorization_error": "Autoriseringsfeil. Sjekk at du har tilgang til prosjektet og har riktig legitimasjon.",
+            "connection_error": "Kunne ikke koble til Azure DevOps.",
+            "project_error": "Kunne ikke f\u00e5 prosjektinformasjon."
+        },
+        "flow_title": "Azure DevOps: {project_url}",
+        "step": {
+            "reauth": {
+                "data": {
+                    "personal_access_token": "Token for personlig tilgang (PAT)"
+                },
+                "description": "Autentiseringen mislyktes for {project_url} . Vennligst skriv inn gjeldende legitimasjon.",
+                "title": "reautentisering"
+            },
+            "user": {
+                "data": {
+                    "organization": "Organisasjon",
+                    "personal_access_token": "Token for personlig tilgang (PAT)",
+                    "project": "Prosjekt"
+                },
+                "description": "Sett opp en Azure DevOps-forekomst for \u00e5 f\u00e5 tilgang til prosjektet ditt. En personlig tilgangstoken er bare n\u00f8dvendig for et privat prosjekt.",
+                "title": "Legg til Azure DevOps Project"
+            }
+        }
+    },
+    "title": "Azure DevOps"
+}
