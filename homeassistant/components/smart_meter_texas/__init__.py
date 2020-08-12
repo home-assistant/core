@@ -106,11 +106,6 @@ class SmartMeterTexasData:
         self.meters = await self.account.fetch_meters(self.client)
         _LOGGER.debug("Discovered %s meter(s)", len(self.meters))
 
-        if not self.meters:
-            return False
-
-        return True
-
     async def read_meters(self):
         """Read each meter."""
         for meter in self.meters:
