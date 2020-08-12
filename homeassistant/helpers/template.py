@@ -8,7 +8,7 @@ import logging
 import math
 import random
 import re
-from typing import Any, Dict, Iterable, List, Optional, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -202,7 +202,7 @@ class Template:
         if _RE_NONE_ENTITIES.search(self.template):
             return MATCH_ALL
 
-        info = self.async_render_to_info(variables)
+        info = self.async_render_without_conditionals_to_info(variables)
 
         if info.all_states:
             return MATCH_ALL
@@ -232,15 +232,9 @@ class Template:
 
         This method must be run in the event loop.
         """
-        compiled = self._compiled or self._ensure_compiled()
-
-        if variables is not None:
-            kwargs.update(variables)
-
-        try:
-            return compiled.render(kwargs).strip()
-        except jinja2.TemplateError as err:
-            raise TemplateError(err)
+        return self._render_compiled(
+            self._compiled or self._ensure_compiled(), variables, **kwargs
+        )
 
     @callback
     def async_render_without_conditionals(
@@ -250,11 +244,21 @@ class Template:
 
         This method must be run in the event loop.
         """
-        compiled = (
+        return self._render_compiled(
             self._compiled_without_conditionals
-            or self._ensure_compiled_without_conditionals()
+            or self._ensure_compiled_without_conditionals(),
+            variables,
+            **kwargs,
         )
 
+    @callback
+    def _render_compiled(
+        self, compiled: Any, variables: TemplateVarsType = None, **kwargs: Any,
+    ) -> str:
+        """Render given compiled template.
+
+        This method must be run in the event loop.
+        """
         if variables is not None:
             kwargs.update(variables)
 
@@ -268,13 +272,29 @@ class Template:
         self, variables: TemplateVarsType = None, **kwargs: Any
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
+        return self._async_render_to_info(
+            self.async_render, variables=variables, **kwargs
+        )
+
+    @callback
+    def async_render_without_conditionals_to_info(
+        self, variables: TemplateVarsType = None, **kwargs: Any
+    ) -> RenderInfo:
+        """Render the template and collect an entity filter."""
+        return self._async_render_to_info(
+            self.async_render_without_conditionals, variables=variables, **kwargs
+        )
+
+    @callback
+    def _async_render_to_info(
+        self, renderer: Callable, variables: TemplateVarsType = None, **kwargs: Any
+    ) -> RenderInfo:
+        """Render the template and collect an entity filter."""
         assert self.hass and _RENDER_INFO not in self.hass.data
         render_info = self.hass.data[_RENDER_INFO] = RenderInfo(self)
         # pylint: disable=protected-access
         try:
-            render_info._result = self.async_render_without_conditionals(
-                variables, **kwargs
-            )
+            render_info._result = renderer(variables, **kwargs)
         except TemplateError as ex:
             render_info._exception = ex
         finally:
