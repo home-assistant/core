@@ -123,10 +123,10 @@ async def test_refresh_node_unsubscribe(hass, generic_data, hass_ws_client):
     with patch("openzwavemqtt.OZWOptions.listen") as mock_listen:
         # Send the refresh_node_info command
         await client.send_json({ID: 9, TYPE: "ozw/refresh_node_info", NODE_ID: 39})
+        await client.receive_json()
 
         # Send the unsubscribe command
         await client.send_json({ID: 10, TYPE: "unsubscribe_events", "subscription": 9})
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+        await client.receive_json()
 
         assert mock_listen.return_value.called
