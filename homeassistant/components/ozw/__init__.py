@@ -26,7 +26,14 @@ from homeassistant.helpers.device_registry import async_get_registry as get_dev_
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import const
-from .const import DATA_UNSUBSCRIBE, DOMAIN, PLATFORMS, TOPIC_OPENZWAVE
+from .const import (
+    DATA_UNSUBSCRIBE,
+    DOMAIN,
+    MANAGER,
+    OPTIONS,
+    PLATFORMS,
+    TOPIC_OPENZWAVE,
+)
 from .discovery import DISCOVERY_SCHEMAS, check_node_schema, check_value_schema
 from .entity import (
     ZWaveDeviceEntityValues,
@@ -35,7 +42,7 @@ from .entity import (
     create_value_id,
 )
 from .services import ZWaveServices
-from .websocket_api import ZWaveWebsocketApi
+from .websocket_api import async_register_api
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +74,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     options = OZWOptions(send_message=send_message, topic_prefix=f"{TOPIC_OPENZWAVE}/")
     manager = OZWManager(options)
+
+    hass.data[DOMAIN][MANAGER] = manager
+    hass.data[DOMAIN][OPTIONS] = options
 
     @callback
     def async_node_added(node):
@@ -209,8 +219,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     services.async_register()
 
     # Register WebSocket API
-    ws_api = ZWaveWebsocketApi(hass, manager)
-    ws_api.async_register_api()
+    async_register_api(hass)
 
     @callback
     def async_receive_message(msg):
