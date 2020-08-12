@@ -718,6 +718,10 @@ omit =
     homeassistant/components/roomba/roomba.py
     homeassistant/components/roomba/sensor.py
     homeassistant/components/roomba/vacuum.py
+    homeassistant/components/roon/__init__.py
+    homeassistant/components/roon/const.py
+    homeassistant/components/roon/media_player.py
+    homeassistant/components/roon/server.py
     homeassistant/components/route53/*
     homeassistant/components/rova/sensor.py
     homeassistant/components/rpi_camera/*
