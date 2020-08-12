@@ -7,8 +7,9 @@ import aiohttp
 from defusedxml import ElementTree
 from netdisco import ssdp, util
 
-from homeassistant.generated.ssdp import SSDP
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.loader import async_get_ssdp
 
 DOMAIN = "ssdp"
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -33,12 +34,12 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass, config):
     """Set up the SSDP integration."""
 
-    async def initialize():
-        scanner = Scanner(hass)
+    async def initialize(_):
+        scanner = Scanner(hass, await async_get_ssdp(hass))
         await scanner.async_scan(None)
         async_track_time_interval(hass, scanner.async_scan, SCAN_INTERVAL)
 
-    hass.loop.create_task(initialize())
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, initialize)
 
     return True
 
@@ -46,10 +47,11 @@ async def async_setup(hass, config):
 class Scanner:
     """Class to manage SSDP scanning."""
 
-    def __init__(self, hass):
+    def __init__(self, hass, integration_matchers):
         """Initialize class."""
         self.hass = hass
         self.seen = set()
+        self._integration_matchers = integration_matchers
         self._description_cache = {}
 
     async def async_scan(self, _):
@@ -120,7 +122,7 @@ class Scanner:
             info.update(await info_req)
 
         domains = set()
-        for domain, matchers in SSDP.items():
+        for domain, matchers in self._integration_matchers.items():
             for matcher in matchers:
                 if all(info.get(k) == v for (k, v) in matcher.items()):
                     domains.add(domain)

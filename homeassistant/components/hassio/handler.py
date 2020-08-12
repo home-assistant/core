@@ -10,7 +10,6 @@ from homeassistant.components.http import (
     CONF_SERVER_HOST,
     CONF_SERVER_PORT,
     CONF_SSL_CERTIFICATE,
-    DEFAULT_SERVER_HOST,
 )
 from homeassistant.const import HTTP_BAD_REQUEST, HTTP_OK, SERVER_PORT
 
@@ -84,6 +83,14 @@ class HassIO:
         return self.send_command("/host/info", method="get")
 
     @_api_data
+    def get_core_info(self):
+        """Return data for Home Asssistant Core.
+
+        This method returns a coroutine.
+        """
+        return self.send_command("/core/info", method="get")
+
+    @_api_data
     def get_addon_info(self, addon):
         """Return data for a Add-on.
 
@@ -142,10 +149,7 @@ class HassIO:
             "refresh_token": refresh_token.token,
         }
 
-        if (
-            http_config.get(CONF_SERVER_HOST, DEFAULT_SERVER_HOST)
-            != DEFAULT_SERVER_HOST
-        ):
+        if http_config.get(CONF_SERVER_HOST) is not None:
             options["watchdog"] = False
             _LOGGER.warning(
                 "Found incompatible HTTP option 'server_host'. Watchdog feature disabled"

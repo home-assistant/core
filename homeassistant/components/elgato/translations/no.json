@@ -12,7 +12,7 @@
             "user": {
                 "data": {
                     "host": "Vert",
-                    "port": "Port"
+                    "port": ""
                 },
                 "description": "Sett opp Elgato Key Light for \u00e5 integrere med Home Assistant."
             },

@@ -86,7 +86,7 @@ import homeassistant.util.dt as dt_util
 
 # pylint: disable=invalid-name
 
-TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM' or 'HH:MM:SS'"
+TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
 
 # Home Assistant types
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
@@ -299,11 +299,11 @@ time_period_dict = vol.All(
     dict,
     vol.Schema(
         {
-            "days": vol.Coerce(int),
-            "hours": vol.Coerce(int),
-            "minutes": vol.Coerce(int),
-            "seconds": vol.Coerce(int),
-            "milliseconds": vol.Coerce(int),
+            "days": vol.Coerce(float),
+            "hours": vol.Coerce(float),
+            "minutes": vol.Coerce(float),
+            "seconds": vol.Coerce(float),
+            "milliseconds": vol.Coerce(float),
         }
     ),
     has_at_least_one_key("days", "hours", "minutes", "seconds", "milliseconds"),
@@ -357,17 +357,17 @@ def time_period_str(value: str) -> timedelta:
     elif value.startswith("+"):
         value = value[1:]
 
-    try:
-        parsed = [int(x) for x in value.split(":")]
-    except ValueError:
+    parsed = value.split(":")
+    if len(parsed) not in (2, 3):
         raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
-
-    if len(parsed) == 2:
-        hour, minute = parsed
-        second = 0
-    elif len(parsed) == 3:
-        hour, minute, second = parsed
-    else:
+    try:
+        hour = int(parsed[0])
+        minute = int(parsed[1])
+        try:
+            second = float(parsed[2])
+        except IndexError:
+            second = 0
+    except ValueError:
         raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
 
     offset = timedelta(hours=hour, minutes=minute, seconds=second)
@@ -378,10 +378,10 @@ def time_period_str(value: str) -> timedelta:
     return offset
 
 
-def time_period_seconds(value: Union[int, str]) -> timedelta:
+def time_period_seconds(value: Union[float, str]) -> timedelta:
     """Validate and transform seconds to a time offset."""
     try:
-        return timedelta(seconds=int(value))
+        return timedelta(seconds=float(value))
     except (ValueError, TypeError):
         raise vol.Invalid(f"Expected seconds, got {value}")
 

@@ -188,8 +188,8 @@ async def test_platform_warn_slow_setup(hass):
         assert mock_call.called
 
         # mock_calls[0] is the warning message for component setup
-        # mock_calls[6] is the warning message for platform setup
-        timeout, logger_method = mock_call.mock_calls[6][1][:2]
+        # mock_calls[4] is the warning message for platform setup
+        timeout, logger_method = mock_call.mock_calls[4][1][:2]
 
         assert timeout == entity_platform.SLOW_SETUP_WARNING
         assert logger_method == _LOGGER.warning
@@ -375,8 +375,9 @@ async def test_async_remove_with_platform(hass):
     assert len(hass.states.async_entity_ids()) == 0
 
 
-async def test_not_adding_duplicate_entities_with_unique_id(hass):
+async def test_not_adding_duplicate_entities_with_unique_id(hass, caplog):
     """Test for not adding duplicate entities."""
+    caplog.set_level(logging.ERROR)
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     await component.async_add_entities(
@@ -384,9 +385,20 @@ async def test_not_adding_duplicate_entities_with_unique_id(hass):
     )
 
     assert len(hass.states.async_entity_ids()) == 1
+    assert not caplog.text
 
     ent2 = MockEntity(name="test2", unique_id="not_very_unique")
     await component.async_add_entities([ent2])
+    assert "test1" in caplog.text
+    assert DOMAIN in caplog.text
+
+    ent3 = MockEntity(
+        name="test2", entity_id="test_domain.test3", unique_id="not_very_unique"
+    )
+    await component.async_add_entities([ent3])
+    assert "test1" in caplog.text
+    assert "test3" in caplog.text
+    assert DOMAIN in caplog.text
 
     assert ent2.hass is None
     assert ent2.platform is None
@@ -919,3 +931,41 @@ async def test_invalid_entity_id(hass):
         await platform.async_add_entities([entity])
     assert entity.hass is None
     assert entity.platform is None
+
+
+class MockBlockingEntity(MockEntity):
+    """Class to mock an entity that will block adding entities."""
+
+    async def async_added_to_hass(self):
+        """Block for a long time."""
+        await asyncio.sleep(1000)
+
+
+async def test_setup_entry_with_entities_that_block_forever(hass, caplog):
+    """Test we cancel adding entities when we reach the timeout."""
+    registry = mock_registry(hass)
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities([MockBlockingEntity(name="test1", unique_id="unique")])
+        return True
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    mock_entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    with patch.object(entity_platform, "SLOW_ADD_ENTITY_MAX_WAIT", 0.01), patch.object(
+        entity_platform, "SLOW_ADD_MIN_TIMEOUT", 0.01
+    ):
+        assert await mock_entity_platform.async_setup_entry(config_entry)
+        await hass.async_block_till_done()
+    full_name = f"{mock_entity_platform.domain}.{config_entry.domain}"
+    assert full_name in hass.config.components
+    assert len(hass.states.async_entity_ids()) == 0
+    assert len(registry.entities) == 1
+    assert "Timed out adding entities" in caplog.text
+    assert "test_domain.test1" in caplog.text
+    assert "test_domain" in caplog.text
+    assert "test" in caplog.text

@@ -26,6 +26,7 @@ from .test_common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_discovery_update_unchanged,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -591,6 +592,20 @@ async def test_discovery_update_binary_sensor(hass, mqtt_mock, caplog):
     await help_test_discovery_update(
         hass, mqtt_mock, caplog, binary_sensor.DOMAIN, data1, data2
     )
+
+
+async def test_discovery_update_unchanged_binary_sensor(hass, mqtt_mock, caplog):
+    """Test update of discovered binary_sensor."""
+    config1 = copy.deepcopy(DEFAULT_CONFIG[binary_sensor.DOMAIN])
+    config1["name"] = "Beer"
+
+    data1 = json.dumps(config1)
+    with patch(
+        "homeassistant.components.mqtt.binary_sensor.MqttBinarySensor.discovery_update"
+    ) as discovery_update:
+        await help_test_discovery_update_unchanged(
+            hass, mqtt_mock, caplog, binary_sensor.DOMAIN, data1, discovery_update
+        )
 
 
 async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
