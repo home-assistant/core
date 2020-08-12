@@ -35,7 +35,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_SERVER_ID): cv.positive_int,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=timedelta(minutes=DEFAULT_SCAN_INTERVAL)
-                ): vol.All(cv.time_period, cv.positive_timedelta),
+                ): cv.positive_time_period,
                 vol.Optional(CONF_MANUAL, default=False): cv.boolean,
                 vol.Optional(
                     CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
