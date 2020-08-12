@@ -1,5 +1,4 @@
 """Support for interacting with Smappee Comport Plugs, Switches and Output Modules."""
-from datetime import timedelta
 import logging
 
 from homeassistant.components.switch import SwitchEntity
@@ -10,7 +9,6 @@ _LOGGER = logging.getLogger(__name__)
 
 SWITCH_PREFIX = "Switch"
 ICON = "mdi:toggle-switch"
-SCAN_INTERVAL = timedelta(seconds=5)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
