@@ -2,7 +2,6 @@
 # pylint: disable=protected-access
 import asyncio
 from datetime import datetime, timedelta
-from logging import Logger
 
 from astral import Astral
 import pytest
@@ -512,7 +511,7 @@ async def test_track_template(hass):
     assert iterate_calls[0][2].state == "on"
 
 
-async def test_track_template_error(hass):
+async def test_track_template_error(hass, caplog):
     """Test tracking template with error."""
     template_error = Template("{{ (states.switch | lunch) > 0 }}", hass)
     error_calls = []
@@ -521,15 +520,15 @@ async def test_track_template_error(hass):
     def error_callback(entity_id, old_state, new_state):
         error_calls.append((entity_id, old_state, new_state))
 
-    with patch.object(Logger, "exception") as call:
-        async_track_template(hass, template_error, error_callback)
-        await hass.async_block_till_done()
+    async_track_template(hass, template_error, error_callback)
+    await hass.async_block_till_done()
 
-        hass.states.async_set("switch.new", "on")
-        await hass.async_block_till_done()
+    hass.states.async_set("switch.new", "on")
+    await hass.async_block_till_done()
 
-        assert not error_calls
-        assert call.call_count == 1
+    assert not error_calls
+    assert "lunch" in caplog.text
+    assert "TemplateAssertionError" in caplog.text
 
 
 async def test_track_template_result(hass):
@@ -663,7 +662,7 @@ async def test_track_template_result_iterator(hass):
     assert filter_runs == ["", "sensor.new"]
 
 
-async def test_track_template_result_errors(hass):
+async def test_track_template_result_errors(hass, caplog):
     """Test tracking template with errors in the template."""
     template_syntax_error = Template("{{states.switch", hass)
 
@@ -678,9 +677,8 @@ async def test_track_template_result_errors(hass):
     async_track_template_result(hass, template_syntax_error, syntax_error_listener)
     await hass.async_block_till_done()
 
-    assert len(syntax_error_runs) == 1
-    assert syntax_error_runs[0][1] == template_syntax_error
-    assert isinstance(syntax_error_runs[0][3], TemplateError)
+    assert len(syntax_error_runs) == 0
+    assert "TemplateSyntaxError" in caplog.text
 
     async_track_template_result(
         hass,
@@ -691,28 +689,27 @@ async def test_track_template_result_errors(hass):
     )
     await hass.async_block_till_done()
 
-    assert len(syntax_error_runs) == 1
-    assert len(not_exist_runs) == 1
-    assert not_exist_runs[0] == (None, template_not_exist, None, "")
+    assert len(syntax_error_runs) == 0
+    assert len(not_exist_runs) == 0
 
     hass.states.async_set("switch.not_exist", "off")
     await hass.async_block_till_done()
 
-    assert len(not_exist_runs) == 2
-    assert not_exist_runs[1][0].data.get("entity_id") == "switch.not_exist"
-    assert not_exist_runs[1][1] == template_not_exist
-    assert not_exist_runs[1][2] == ""
-    assert not_exist_runs[1][3] == "off"
+    assert len(not_exist_runs) == 1
+    assert not_exist_runs[0][0].data.get("entity_id") == "switch.not_exist"
+    assert not_exist_runs[0][1] == template_not_exist
+    assert not_exist_runs[0][2] is None
+    assert not_exist_runs[0][3] == "off"
 
     hass.states.async_set("switch.not_exist", "on")
     await hass.async_block_till_done()
 
-    assert len(syntax_error_runs) == 1
-    assert len(not_exist_runs) == 3
-    assert not_exist_runs[2][0].data.get("entity_id") == "switch.not_exist"
-    assert not_exist_runs[2][1] == template_not_exist
-    assert not_exist_runs[2][2] == "off"
-    assert not_exist_runs[2][3] == "on"
+    assert len(syntax_error_runs) == 0
+    assert len(not_exist_runs) == 2
+    assert not_exist_runs[1][0].data.get("entity_id") == "switch.not_exist"
+    assert not_exist_runs[1][1] == template_not_exist
+    assert not_exist_runs[1][2] == "off"
+    assert not_exist_runs[1][3] == "on"
 
     with patch.object(Template, "async_render") as render:
         render.side_effect = TemplateError("Test")
@@ -720,11 +717,11 @@ async def test_track_template_result_errors(hass):
         hass.states.async_set("switch.not_exist", "off")
         await hass.async_block_till_done()
 
-        assert len(not_exist_runs) == 4
-        assert not_exist_runs[3][0].data.get("entity_id") == "switch.not_exist"
-        assert not_exist_runs[3][1] == template_not_exist
-        assert not_exist_runs[3][2] == "on"
-        assert isinstance(not_exist_runs[3][3], TemplateError)
+        assert len(not_exist_runs) == 3
+        assert not_exist_runs[2][0].data.get("entity_id") == "switch.not_exist"
+        assert not_exist_runs[2][1] == template_not_exist
+        assert not_exist_runs[2][2] == "on"
+        assert isinstance(not_exist_runs[2][3], TemplateError)
 
 
 async def test_track_template_result_refresh_cancel(hass):

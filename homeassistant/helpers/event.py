@@ -461,6 +461,9 @@ class TrackTemplateResultInfo:
         self._domains_listener: Optional[Callable] = None
         self._entities_listener: Optional[Callable] = None
         self._info = template.async_render_to_info(variables)
+        if self._info.exception:
+            self._last_exception = True
+            _LOGGER.exception(self._info.exception)
         self._create_listeners()
         self._last_info = self._info
 
