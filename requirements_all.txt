@@ -1007,7 +1007,7 @@ oauth2client==4.0.0
 oemthermostat==1.1
 
 # homeassistant.components.omnilogic
-omnilogic==0.3.2
+omnilogic==0.3.4
 
 # homeassistant.components.onkyo
 onkyo-eiscp==1.2.7

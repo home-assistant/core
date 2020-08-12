@@ -1,8 +1,9 @@
-"""Support for the Omnilogic integration sensors."""
+"""Definition and setup of the Omnilogic Sensors for Home Assistant."""
 
 from datetime import timedelta
 import logging
 
+from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
@@ -14,9 +15,27 @@ PERCENT_UNITS = [UNIT_PERCENTAGE, UNIT_PERCENTAGE]
 SALT_UNITS = ["g/L", "ppm"]
 
 SENSORS = [
-    ("pool_temperature", "Pool Temperature", "temperature", "mdi:thermometer", TEMP_UNITS),
-    ("air_temperature", "Air Temperature", "temperature", "mdi:thermometer", TEMP_UNITS),
-    ("spa_temperature", "Spa Temperature", "temperature", "mdi:thermometer", TEMP_UNITS),
+    (
+        "pool_temperature",
+        "Pool Temperature",
+        "temperature",
+        "mdi:thermometer",
+        TEMP_UNITS,
+    ),
+    (
+        "air_temperature",
+        "Air Temperature",
+        "temperature",
+        "mdi:thermometer",
+        TEMP_UNITS,
+    ),
+    (
+        "spa_temperature",
+        "Spa Temperature",
+        "temperature",
+        "mdi:thermometer",
+        TEMP_UNITS,
+    ),
     ("pool_chlorinator", "Pool Chlorinator", "none", "mdi:gauge", PERCENT_UNITS),
     ("spa_chlorinator", "Spa Chlorinator", "none", "mdi:gauge", PERCENT_UNITS),
     ("salt_level", "Salt Level", "none", "mdi:gauge", SALT_UNITS),
@@ -46,8 +65,18 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
 class OmnilogicSensor(Entity):
     """Defines an Omnilogic sensor entity."""
 
-    def __init__(self, coordinator, kind, name, backyard, bow, icon, unit):
-        """Set up the Omnilogic sensor platform."""
+    def __init__(
+        self, coordinator, kind, name, backyard, bow, device_class, icon, unit
+    ):
+        """Initialize Entities."""
+        sensorname = (
+            "omni_"
+            + backyard["BackyardName"].replace(" ", "_")
+            + "_"
+            + bow["Name"].replace(" ", "_")
+            + "_"
+            + kind
+        )
         self._kind = kind
         self._name = None
         self.entity_id = ENTITY_ID_FORMAT.format(sensorname)
@@ -62,7 +91,6 @@ class OmnilogicSensor(Entity):
         self.coordinator = coordinator
         self.attrs = {}
         self.attrs["MspSystemId"] = backyard["systemId"]
-        
     @property
     def should_poll(self) -> bool:
         """Return the polling requirement of the entity."""
@@ -72,7 +100,7 @@ class OmnilogicSensor(Entity):
     def unique_id(self) -> str:
         """Return a unique, Home Assistant friendly identifier for this entity."""
         # need a more unique id
-        return self._name
+        return self.entity_id
 
     @property
     def name(self) -> str:
@@ -98,7 +126,6 @@ class OmnilogicSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the attributes."""
-        
         return self.attrs
 
     @property
@@ -108,7 +135,7 @@ class OmnilogicSensor(Entity):
 
     @property
     def state(self):
-        """Return the state of the sensor."""
+        """Return the state."""
         return self._state
 
     async def async_update(self):
@@ -126,17 +153,25 @@ class OmnilogicSensor(Entity):
             self.attrs["hayward_unit_of_measure"] = unit_of_measurement
             self._state = float(self.coordinator.data[0]["BOWS"][0].get("waterTemp"))
             self._unit = TEMP_FAHRENHEIT
-            self.attrs['SystemId'] = self.coordinator.data[0]["BOWS"][0].get("systemId")
-            self._name = self.coordinator.data[0]["BOWS"][0].get("Name") + " Water Temperature"
+            self.attrs["SystemId"] = self.coordinator.data[0]["BOWS"][0].get("systemId")
+            self._name = (
+                self.coordinator.data[0]["BOWS"][0].get("Name") + " Water Temperature"
+            )
 
         elif self._kind == "pump_speed":
             self._state = self.coordinator.data[0]["BOWS"][0]["Filter"].get(
                 "filterSpeed"
             )
             self._unit = "%"
-            self._name = self.coordinator.data[0]["BOWS"][0].get("Name") + " " + self.coordinator.data[0]["BOWS"][0]["Filter"].get("Name")
+            self._name = (
+                self.coordinator.data[0]["BOWS"][0].get("Name")
+                + " "
+                + self.coordinator.data[0]["BOWS"][0]["Filter"].get("Name")
+            )
         elif self._kind == "salt_level":
-            salt_return = float(self.coordinator.data[0]["BOWS"][0]["Chlorinator"].get("avgSaltLevel"))
+            salt_return = float(
+                self.coordinator.data[0]["BOWS"][0]["Chlorinator"].get("avgSaltLevel")
+            )
             unit_of_measurement = "ppm"
 
             if self.coordinator.data[0]["Unit-of-Measurement"] == "Metric":
@@ -145,15 +180,27 @@ class OmnilogicSensor(Entity):
 
             self._state = salt_return
             self._unit = unit_of_measurement
-            self.attrs['SystemId'] = self.coordinator.data[0]["BOWS"][0]["Chlorinator"].get("systemId")
-            self._name = self.coordinator.data[0]["BOWS"][0].get("Name") + " " + self.coordinator.data[0]["BOWS"][0]["Chlorinator"].get("Name") + " Salt Level"
+            self.attrs["SystemId"] = self.coordinator.data[0]["BOWS"][0][
+                "Chlorinator"
+            ].get("systemId")
+            self._name = (
+                self.coordinator.data[0]["BOWS"][0].get("Name")
+                + " "
+                + self.coordinator.data[0]["BOWS"][0]["Chlorinator"].get("Name")
+                + " Salt Level"
+            )
 
         elif self._kind == "pool_chlorinator":
             self._state = self.coordinator.data[0]["BOWS"][0]["Chlorinator"].get(
                 "Timed-Percent"
             )
             self._unit = "%"
-            self._name = self.coordinator.data[0]["BOWS"][0].get("Name") + " " + self.coordinator.data[0]["BOWS"][0]["Chlorinator"].get("Name") + " Setting"
+            self._name = (
+                self.coordinator.data[0]["BOWS"][0].get("Name")
+                + " "
+                + self.coordinator.data[0]["BOWS"][0]["Chlorinator"].get("Name")
+                + " Setting"
+            )
 
         elif self._kind == "air_temperature":
             temp_return = float(self.coordinator.data[0].get("airTemp"))
@@ -166,8 +213,10 @@ class OmnilogicSensor(Entity):
             self.attrs["hayward_unit_of_measure"] = unit_of_measurement
             self._state = float(self.coordinator.data[0].get("airTemp"))
             self._unit = TEMP_FAHRENHEIT
-            self.attrs['SystemId'] = self.coordinator.data[0]["BOWS"][0].get("systemId")
-            self._name = self.coordinator.data[0]["BOWS"][0].get("Name") + " Air Temperature"
+            self.attrs["SystemId"] = self.coordinator.data[0]["BOWS"][0].get("systemId")
+            self._name = (
+                self.coordinator.data[0]["BOWS"][0].get("Name") + " Air Temperature"
+            )
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
