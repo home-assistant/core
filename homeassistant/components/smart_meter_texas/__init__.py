@@ -103,11 +103,7 @@ class SmartMeterTexasData:
 
     async def setup(self):
         """Fetch all of the user's meters."""
-        try:
-            self.meters = await self.account.fetch_meters(self.client)
-        except SmartMeterTexasAuthError as error:
-            _LOGGER.error("Error authenticating: %s", error)
-
+        self.meters = await self.account.fetch_meters(self.client)
         _LOGGER.debug("Discovered %s meter(s)", len(self.meters))
 
         if not self.meters:
