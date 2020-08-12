@@ -488,6 +488,7 @@ class ExtaLifeChannel(Entity):
     async def async_added_to_hass(self):
         await super().async_added_to_hass()
 
+        _LOGGER.debug("async_added_to_hass() for entity: %s", self.entity_id)
         Core.get(self.config_entry.entry_id).async_signal_register(
             SIGNAL_DATA_UPDATED, self.async_update_callback
         )

@@ -163,7 +163,7 @@ class ExtaLifeClimate(ExtaLifeChannel, ClimateEntity):
         state = data.get("state")
 
         ch_data = self.channel_data.copy()
-        ch_data["work_mode"] = EXTA_STATE_HVAC_MODE.get(state)
+        ch_data["work_mode"] = True if state == 1 else False
         ch_data["value"] = data.get("value")  # update set (target) temperature
 
         # update only if notification data contains new status; prevent HA event bus overloading
