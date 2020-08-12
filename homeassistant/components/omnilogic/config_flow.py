@@ -1,7 +1,6 @@
 """Config flow for Omnilogic integration."""
 import logging
 
-from omnilogic import LoginException, OmniLogic
 import voluptuous as vol
 
 from homeassistant import config_entries
