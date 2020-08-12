@@ -33,7 +33,6 @@ from .const import (
     ATTR_AUX_HEAT,
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
-    ATTR_OUTSIDE_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
     ATTR_HUMIDITY,
@@ -44,6 +43,7 @@ from .const import (
     ATTR_MAX_TEMP,
     ATTR_MIN_HUMIDITY,
     ATTR_MIN_TEMP,
+    ATTR_OUTSIDE_TEMPERATURE,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
     ATTR_SWING_MODE,
@@ -61,18 +61,18 @@ from .const import (
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_OUTSIDE_TEMPERATURE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
-    SERVICE_SET_OUTSIDE_TEMPERATURE,
     SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
+    SUPPORT_OUTSIDE_TEMPERATURE,
     SUPPORT_PRESET_MODE,
     SUPPORT_SWING_MODE,
     SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
-    SUPPORT_OUTSIDE_TEMPERATURE,
 )
 
 DEFAULT_MIN_TEMP = 7
@@ -434,7 +434,9 @@ class ClimateEntity(Entity):
 
     async def async_set_outside_temperature(self, outside_temperature: float) -> None:
         """Set new outside temperature."""
-        await self.hass.async_add_executor_job(self.set_outside_temperature, outside_temperature)
+        await self.hass.async_add_executor_job(
+            self.set_outside_temperature, outside_temperature
+        )
 
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
