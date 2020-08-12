@@ -327,13 +327,15 @@ class KodiDevice(MediaPlayerEntity):
                 self.hass,
                 turn_on_action,
                 f"{self.name} turn ON script",
-                self.async_update_ha_state(True),
+                DOMAIN,
+                change_listener=self.async_update_ha_state(True),
             )
         if turn_off_action is not None:
             turn_off_action = script.Script(
                 self.hass,
                 _check_deprecated_turn_off(hass, turn_off_action),
                 f"{self.name} turn OFF script",
+                DOMAIN,
             )
         self._turn_on_action = turn_on_action
         self._turn_off_action = turn_off_action

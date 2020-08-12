@@ -77,7 +77,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     turn_on_action = config.get(CONF_ON_ACTION)
 
     tvapi = PhilipsTV(host, api_version)
-    on_script = Script(hass, turn_on_action) if turn_on_action else None
+    domain = __name__.split(".")[-2]
+    on_script = Script(hass, turn_on_action, name, domain) if turn_on_action else None
 
     add_entities([PhilipsTVMediaPlayer(tvapi, name, on_script)])
 
