@@ -33,6 +33,7 @@ from .const import (
     CONF_DEVICE_CLASS,
     CONF_DURATION,
     CONF_FADE,
+    CONF_LEVEL,
     CONF_NO_DEFAULT,
     CONF_OPEN_PRESET,
     CONF_POLL_TIMER,
@@ -75,7 +76,11 @@ CHANNEL_DATA_SCHEMA = vol.Schema(
 CHANNEL_SCHEMA = vol.Schema({num_string: CHANNEL_DATA_SCHEMA})
 
 PRESET_DATA_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_NAME): cv.string, vol.Optional(CONF_FADE): vol.Coerce(float)}
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_FADE): vol.Coerce(float),
+        vol.Optional(CONF_LEVEL): vol.Coerce(float),
+    }
 )
 
 PRESET_SCHEMA = vol.Schema({num_string: vol.Any(PRESET_DATA_SCHEMA, None)})
