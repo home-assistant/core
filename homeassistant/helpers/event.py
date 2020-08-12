@@ -466,7 +466,7 @@ class TrackTemplateResultInfo:
 
     @callback
     def _create_listeners(self) -> None:
-        if self._info.all_states:
+        if self._info.all_states or self._info.exception:
             self._setup_all_listener()
             return
 
@@ -499,7 +499,7 @@ class TrackTemplateResultInfo:
 
     @callback
     def _update_listeners(self) -> None:
-        if self._info.all_states:
+        if self._info.all_states or self._info.exception:
             if self._all_listener:
                 return
             self._cancel_domains_listener()

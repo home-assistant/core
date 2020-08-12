@@ -146,7 +146,7 @@ class RenderInfo:
         # Will be set sensibly once frozen.
         self.filter_lifecycle = _true
         self._result = None
-        self._exception = None
+        self.exception = None
         self.all_states = False
         self.domains = set()
         self.entities = set()
@@ -164,8 +164,8 @@ class RenderInfo:
     @property
     def result(self) -> str:
         """Results of the template computation."""
-        if self._exception is not None:
-            raise self._exception
+        if self.exception is not None:
+            raise self.exception
         return self._result
 
     def _freeze_static(self) -> None:
@@ -260,7 +260,7 @@ class Template:
         try:
             render_info._result = self.async_render(variables, **kwargs)
         except TemplateError as ex:
-            render_info._exception = ex
+            render_info.exception = ex
         finally:
             del self.hass.data[_RENDER_INFO]
             if _RE_JINJA_DELIMITERS.search(self.template) is None:
