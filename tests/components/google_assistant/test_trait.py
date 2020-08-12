@@ -1313,14 +1313,73 @@ async def test_fan_speed(hass):
     assert calls[0].data == {"entity_id": "fan.living_room_fan", "speed": "medium"}
 
 
-async def test_modes_media_player(hass):
-    """Test Media Player Mode trait."""
+async def test_climate_fan_speed(hass):
+    """Test FanSpeed trait speed control support for climate domain."""
+    assert helpers.get_google_type(climate.DOMAIN, None) is not None
+    assert trait.FanSpeedTrait.supported(climate.DOMAIN, climate.SUPPORT_FAN_MODE, None)
+
+    trt = trait.FanSpeedTrait(
+        hass,
+        State(
+            "climate.living_room_ac",
+            "on",
+            attributes={
+                "fan_modes": ["auto", "low", "medium", "high"],
+                "fan_mode": "low",
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "availableFanSpeeds": {
+            "ordered": True,
+            "speeds": [
+                {
+                    "speed_name": "auto",
+                    "speed_values": [{"speed_synonym": ["auto"], "lang": "en"}],
+                },
+                {
+                    "speed_name": "low",
+                    "speed_values": [{"speed_synonym": ["low"], "lang": "en"}],
+                },
+                {
+                    "speed_name": "medium",
+                    "speed_values": [{"speed_synonym": ["medium"], "lang": "en"}],
+                },
+                {
+                    "speed_name": "high",
+                    "speed_values": [{"speed_synonym": ["high"], "lang": "en"}],
+                },
+            ],
+        },
+        "reversible": False,
+    }
+
+    assert trt.query_attributes() == {
+        "currentFanSpeedSetting": "low",
+    }
+
+    assert trt.can_execute(trait.COMMAND_FANSPEED, params={"fanSpeed": "medium"})
+
+    calls = async_mock_service(hass, climate.DOMAIN, climate.SERVICE_SET_FAN_MODE)
+    await trt.execute(trait.COMMAND_FANSPEED, BASIC_DATA, {"fanSpeed": "medium"}, {})
+
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "entity_id": "climate.living_room_ac",
+        "fan_mode": "medium",
+    }
+
+
+async def test_inputselector(hass):
+    """Test input selector trait."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
-    assert trait.ModesTrait.supported(
+    assert trait.InputSelectorTrait.supported(
         media_player.DOMAIN, media_player.SUPPORT_SELECT_SOURCE, None
     )
 
-    trt = trait.ModesTrait(
+    trt = trait.InputSelectorTrait(
         hass,
         State(
             "media_player.living_room",
@@ -1340,56 +1399,29 @@ async def test_modes_media_player(hass):
 
     attribs = trt.sync_attributes()
     assert attribs == {
-        "availableModes": [
+        "availableInputs": [
+            {"key": "media", "names": [{"name_synonym": ["media"], "lang": "en"}]},
+            {"key": "game", "names": [{"name_synonym": ["game"], "lang": "en"}]},
             {
-                "name": "input source",
-                "name_values": [
-                    {"name_synonym": ["input source", "input", "source"], "lang": "en"}
-                ],
-                "settings": [
-                    {
-                        "setting_name": "media",
-                        "setting_values": [
-                            {"setting_synonym": ["media"], "lang": "en"}
-                        ],
-                    },
-                    {
-                        "setting_name": "game",
-                        "setting_values": [{"setting_synonym": ["game"], "lang": "en"}],
-                    },
-                    {
-                        "setting_name": "chromecast",
-                        "setting_values": [
-                            {"setting_synonym": ["chromecast"], "lang": "en"}
-                        ],
-                    },
-                    {
-                        "setting_name": "plex",
-                        "setting_values": [{"setting_synonym": ["plex"], "lang": "en"}],
-                    },
-                ],
-                "ordered": False,
-            }
-        ]
+                "key": "chromecast",
+                "names": [{"name_synonym": ["chromecast"], "lang": "en"}],
+            },
+            {"key": "plex", "names": [{"name_synonym": ["plex"], "lang": "en"}]},
+        ],
+        "orderedInputs": True,
     }
 
     assert trt.query_attributes() == {
-        "currentModeSettings": {"input source": "game"},
-        "on": True,
+        "currentInput": "game",
     }
 
-    assert trt.can_execute(
-        trait.COMMAND_MODES, params={"updateModeSettings": {"input source": "media"}},
-    )
+    assert trt.can_execute(trait.COMMAND_INPUT, params={"newInput": "media"},)
 
     calls = async_mock_service(
         hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOURCE
     )
     await trt.execute(
-        trait.COMMAND_MODES,
-        BASIC_DATA,
-        {"updateModeSettings": {"input source": "media"}},
-        {},
+        trait.COMMAND_INPUT, BASIC_DATA, {"newInput": "media"}, {},
     )
 
     assert len(calls) == 1
@@ -1400,6 +1432,11 @@ async def test_modes_input_select(hass):
     """Test Input Select Mode trait."""
     assert helpers.get_google_type(input_select.DOMAIN, None) is not None
     assert trait.ModesTrait.supported(input_select.DOMAIN, None, None)
+
+    trt = trait.ModesTrait(
+        hass, State("input_select.bla", "unavailable"), BASIC_CONFIG,
+    )
+    assert trt.sync_attributes() == {"availableModes": []}
 
     trt = trait.ModesTrait(
         hass,

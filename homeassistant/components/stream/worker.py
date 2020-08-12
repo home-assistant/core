@@ -174,5 +174,6 @@ def stream_worker(hass, stream, quit_event):
             buffer.output.mux(packet)
 
     # Close stream
-    buffer.output.close()
+    for buffer in outputs.values():
+        buffer.output.close()
     container.close()

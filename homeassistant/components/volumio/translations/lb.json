@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "cannot_connect": "Kann sech net mam enteckte Volumio verbannen"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Soll de Volumio (`{name}`) am Home Assistant dob\u00e4i gesaat ginn?",
+                "title": "Entdeckte Volumio"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

@@ -13,5 +13,17 @@
                 "title": "Izberite medoto za preverjanje pristnosti"
             }
         }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Ime obmo\u010dja"
+                }
+            },
+            "public_weather_areas": {
+                "title": "Javni vremenski senzor Netatmo"
+            }
+        }
     }
 }

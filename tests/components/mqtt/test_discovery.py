@@ -338,6 +338,7 @@ async def test_cleanup_device(hass, device_reg, entity_reg, mqtt_mock):
     # Verify state is removed
     state = hass.states.get("sensor.mqtt_sensor")
     assert state is None
+    await hass.async_block_till_done()
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_once_with(

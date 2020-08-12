@@ -162,6 +162,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
     def update_sources(self):
         """Update list of sources from current source, apps, inputs and configured list."""
+        source_list = self._source_list
         self._source_list = {}
         conf_sources = self._customize[CONF_SOURCES]
 
@@ -206,6 +207,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
                 or any(word in app["id"] for word in conf_sources)
             ):
                 self._source_list["Live TV"] = app
+        if not self._source_list and source_list:
+            self._source_list = source_list
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     async def async_update(self):

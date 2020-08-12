@@ -5,7 +5,6 @@ import logging
 
 from haffmpeg.core import HAFFmpeg
 from pyhap.camera import (
-    STREAMING_STATUS,
     VIDEO_CODEC_PARAM_LEVEL_TYPES,
     VIDEO_CODEC_PARAM_PROFILE_ID_TYPES,
     Camera as PyhapCamera,
@@ -24,15 +23,18 @@ from homeassistant.util import get_local_ip
 from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_MOTION_DETECTED,
-    CHAR_STREAMING_STRATUS,
+    CHAR_MUTE,
+    CHAR_PROGRAMMABLE_SWITCH_EVENT,
     CONF_AUDIO_CODEC,
     CONF_AUDIO_MAP,
     CONF_AUDIO_PACKET_SIZE,
+    CONF_LINKED_DOORBELL_SENSOR,
     CONF_LINKED_MOTION_SENSOR,
     CONF_MAX_FPS,
     CONF_MAX_HEIGHT,
     CONF_MAX_WIDTH,
     CONF_STREAM_ADDRESS,
+    CONF_STREAM_COUNT,
     CONF_STREAM_SOURCE,
     CONF_SUPPORT_AUDIO,
     CONF_VIDEO_CODEC,
@@ -44,18 +46,24 @@ from .const import (
     DEFAULT_MAX_FPS,
     DEFAULT_MAX_HEIGHT,
     DEFAULT_MAX_WIDTH,
+    DEFAULT_STREAM_COUNT,
     DEFAULT_SUPPORT_AUDIO,
     DEFAULT_VIDEO_CODEC,
     DEFAULT_VIDEO_MAP,
     DEFAULT_VIDEO_PACKET_SIZE,
-    SERV_CAMERA_RTP_STREAM_MANAGEMENT,
+    SERV_DOORBELL,
     SERV_MOTION_SENSOR,
+    SERV_SPEAKER,
+    SERV_STATELESS_PROGRAMMABLE_SWITCH,
 )
 from .img_util import scale_jpeg_camera_image
 from .util import pid_is_alive
 
 _LOGGER = logging.getLogger(__name__)
 
+DOORBELL_SINGLE_PRESS = 0
+DOORBELL_DOUBLE_PRESS = 1
+DOORBELL_LONG_PRESS = 2
 
 VIDEO_OUTPUT = (
     "-map {v_map} -an "
@@ -121,6 +129,7 @@ CONFIG_DEFAULTS = {
     CONF_VIDEO_CODEC: DEFAULT_VIDEO_CODEC,
     CONF_AUDIO_PACKET_SIZE: DEFAULT_AUDIO_PACKET_SIZE,
     CONF_VIDEO_PACKET_SIZE: DEFAULT_VIDEO_PACKET_SIZE,
+    CONF_STREAM_COUNT: DEFAULT_STREAM_COUNT,
 }
 
 
@@ -131,7 +140,6 @@ class Camera(HomeAccessory, PyhapCamera):
     def __init__(self, hass, driver, name, entity_id, aid, config):
         """Initialize a Camera accessory object."""
         self._ffmpeg = hass.data[DATA_FFMPEG]
-        self._cur_session = None
         for config_key in CONFIG_DEFAULTS:
             if config_key not in config:
                 config[config_key] = CONFIG_DEFAULTS[config_key]
@@ -178,6 +186,7 @@ class Camera(HomeAccessory, PyhapCamera):
             "audio": audio_options,
             "address": stream_address,
             "srtp": True,
+            "stream_count": config[CONF_STREAM_COUNT],
         }
 
         super().__init__(
@@ -190,18 +199,41 @@ class Camera(HomeAccessory, PyhapCamera):
             category=CATEGORY_CAMERA,
             options=options,
         )
+
         self._char_motion_detected = None
         self.linked_motion_sensor = self.config.get(CONF_LINKED_MOTION_SENSOR)
-        if not self.linked_motion_sensor:
-            return
-        state = self.hass.states.get(self.linked_motion_sensor)
-        if not state:
-            return
-        serv_motion = self.add_preload_service(SERV_MOTION_SENSOR)
-        self._char_motion_detected = serv_motion.configure_char(
-            CHAR_MOTION_DETECTED, value=False
-        )
-        self._async_update_motion_state(state)
+        if self.linked_motion_sensor:
+            state = self.hass.states.get(self.linked_motion_sensor)
+            if state:
+                serv_motion = self.add_preload_service(SERV_MOTION_SENSOR)
+                self._char_motion_detected = serv_motion.configure_char(
+                    CHAR_MOTION_DETECTED, value=False
+                )
+                self._async_update_motion_state(state)
+
+        self._char_doorbell_detected = None
+        self._char_doorbell_detected_switch = None
+        self.linked_doorbell_sensor = self.config.get(CONF_LINKED_DOORBELL_SENSOR)
+        if self.linked_doorbell_sensor:
+            state = self.hass.states.get(self.linked_doorbell_sensor)
+            if state:
+                serv_doorbell = self.add_preload_service(SERV_DOORBELL)
+                self.set_primary_service(serv_doorbell)
+                self._char_doorbell_detected = serv_doorbell.configure_char(
+                    CHAR_PROGRAMMABLE_SWITCH_EVENT, value=0,
+                )
+                serv_stateless_switch = self.add_preload_service(
+                    SERV_STATELESS_PROGRAMMABLE_SWITCH
+                )
+                self._char_doorbell_detected_switch = serv_stateless_switch.configure_char(
+                    CHAR_PROGRAMMABLE_SWITCH_EVENT,
+                    value=0,
+                    valid_values={"SinglePress": DOORBELL_SINGLE_PRESS},
+                )
+                serv_speaker = self.add_preload_service(SERV_SPEAKER)
+                serv_speaker.configure_char(CHAR_MUTE, value=0)
+
+                self._async_update_doorbell_state(state)
 
     async def run_handler(self):
         """Handle accessory driver started event.
@@ -213,6 +245,13 @@ class Camera(HomeAccessory, PyhapCamera):
                 self.hass,
                 [self.linked_motion_sensor],
                 self._async_update_motion_state_event,
+            )
+
+        if self._char_doorbell_detected:
+            async_track_state_change_event(
+                self.hass,
+                [self.linked_doorbell_sensor],
+                self._async_update_doorbell_state_event,
             )
 
         await super().run_handler()
@@ -239,6 +278,27 @@ class Camera(HomeAccessory, PyhapCamera):
             self.linked_motion_sensor,
             detected,
         )
+
+    @callback
+    def _async_update_doorbell_state_event(self, event):
+        """Handle state change event listener callback."""
+        self._async_update_doorbell_state(event.data.get("new_state"))
+
+    @callback
+    def _async_update_doorbell_state(self, new_state):
+        """Handle link doorbell sensor state change to update HomeKit value."""
+        if not new_state:
+            return
+
+        if new_state.state == STATE_ON:
+            self._char_doorbell_detected.set_value(DOORBELL_SINGLE_PRESS)
+            self._char_doorbell_detected_switch.set_value(DOORBELL_SINGLE_PRESS)
+            _LOGGER.debug(
+                "%s: Set linked doorbell %s sensor to %d",
+                self.entity_id,
+                self.linked_doorbell_sensor,
+                DOORBELL_SINGLE_PRESS,
+            )
 
     @callback
     def async_update_state(self, new_state):
@@ -313,51 +373,42 @@ class Camera(HomeAccessory, PyhapCamera):
         if not opened:
             _LOGGER.error("Failed to open ffmpeg stream")
             return False
-        session_info["stream"] = stream
+
         _LOGGER.info(
             "[%s] Started stream process - PID %d",
             session_info["id"],
             stream.process.pid,
         )
 
-        ffmpeg_watcher = async_track_time_interval(
-            self.hass, self._async_ffmpeg_watch, FFMPEG_WATCH_INTERVAL
+        session_info["stream"] = stream
+        session_info[FFMPEG_PID] = stream.process.pid
+
+        async def watch_session(_):
+            await self._async_ffmpeg_watch(session_info["id"])
+
+        session_info[FFMPEG_WATCHER] = async_track_time_interval(
+            self.hass, watch_session, FFMPEG_WATCH_INTERVAL,
         )
-        self._cur_session = {
-            FFMPEG_WATCHER: ffmpeg_watcher,
-            FFMPEG_PID: stream.process.pid,
-            SESSION_ID: session_info["id"],
-        }
 
-        return await self._async_ffmpeg_watch(0)
+        return await self._async_ffmpeg_watch(session_info["id"])
 
-    async def _async_ffmpeg_watch(self, _):
+    async def _async_ffmpeg_watch(self, session_id):
         """Check to make sure ffmpeg is still running and cleanup if not."""
-        ffmpeg_pid = self._cur_session[FFMPEG_PID]
-        session_id = self._cur_session[SESSION_ID]
+        ffmpeg_pid = self.sessions[session_id][FFMPEG_PID]
         if pid_is_alive(ffmpeg_pid):
             return True
 
         _LOGGER.warning("Streaming process ended unexpectedly - PID %d", ffmpeg_pid)
-        self._async_stop_ffmpeg_watch()
-        self._async_set_streaming_available(session_id)
+        self._async_stop_ffmpeg_watch(session_id)
+        self.set_streaming_available(self.sessions[session_id]["stream_idx"])
         return False
 
     @callback
-    def _async_stop_ffmpeg_watch(self):
+    def _async_stop_ffmpeg_watch(self, session_id):
         """Cleanup a streaming session after stopping."""
-        if not self._cur_session:
+        if FFMPEG_WATCHER not in self.sessions[session_id]:
             return
-        self._cur_session[FFMPEG_WATCHER]()
-        self._cur_session = None
-
-    @callback
-    def _async_set_streaming_available(self, session_id):
-        """Free the session so they can start another."""
-        self.streaming_status = STREAMING_STATUS["AVAILABLE"]
-        self.get_service(SERV_CAMERA_RTP_STREAM_MANAGEMENT).get_characteristic(
-            CHAR_STREAMING_STRATUS
-        ).notify()
+        self.sessions[session_id].pop(FFMPEG_WATCHER)()
 
     async def stop_stream(self, session_info):
         """Stop the stream for the given ``session_id``."""
@@ -367,7 +418,7 @@ class Camera(HomeAccessory, PyhapCamera):
             _LOGGER.debug("No stream for session ID %s", session_id)
             return
 
-        self._async_stop_ffmpeg_watch()
+        self._async_stop_ffmpeg_watch(session_id)
 
         if not pid_is_alive(stream.process.pid):
             _LOGGER.info("[%s] Stream already stopped", session_id)

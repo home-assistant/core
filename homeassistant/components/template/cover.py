@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONF_FRIENDLY_NAME,
     CONF_ICON_TEMPLATE,
     CONF_OPTIMISTIC,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
     MATCH_ALL,
@@ -90,6 +91,7 @@ COVER_SCHEMA = vol.All(
             vol.Optional(TILT_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_FRIENDLY_NAME): cv.string,
             vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
     ),
     cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
@@ -121,6 +123,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         tilt_action = device_config.get(TILT_ACTION)
         optimistic = device_config.get(CONF_OPTIMISTIC)
         tilt_optimistic = device_config.get(CONF_TILT_OPTIMISTIC)
+        unique_id = device_config.get(CONF_UNIQUE_ID)
 
         templates = {
             CONF_VALUE_TEMPLATE: state_template,
@@ -156,6 +159,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 optimistic,
                 tilt_optimistic,
                 entity_ids,
+                unique_id,
             )
         )
 
@@ -185,6 +189,7 @@ class CoverTemplate(CoverEntity):
         optimistic,
         tilt_optimistic,
         entity_ids,
+        unique_id,
     ):
         """Initialize the Template cover."""
         self.hass = hass
@@ -222,6 +227,7 @@ class CoverTemplate(CoverEntity):
         self._tilt_value = None
         self._entities = entity_ids
         self._available = True
+        self._unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -250,6 +256,11 @@ class CoverTemplate(CoverEntity):
     def name(self):
         """Return the name of the cover."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id of this cover."""
+        return self._unique_id
 
     @property
     def is_closed(self):

@@ -21,7 +21,7 @@ from . import (
     get_device_id,
     get_rfx_object,
 )
-from .const import ATTR_EVENT, DATA_RFXTRX_CONFIG
+from .const import ATTR_EVENT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,14 +58,14 @@ async def async_setup_entry(
     hass, config_entry, async_add_entities,
 ):
     """Set up platform."""
-    discovery_info = hass.data[DATA_RFXTRX_CONFIG]
+    discovery_info = config_entry.data
     data_ids = set()
 
     def supported(event):
         return isinstance(event, (ControlEvent, SensorEvent))
 
     entities = []
-    for packet_id, entity in discovery_info[CONF_DEVICES].items():
+    for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
         event = get_rfx_object(packet_id)
         if event is None:
             _LOGGER.error("Invalid device: %s", packet_id)
@@ -73,7 +73,9 @@ async def async_setup_entry(
         if not supported(event):
             continue
 
-        device_id = get_device_id(event.device, data_bits=entity.get(CONF_DATA_BITS))
+        device_id = get_device_id(
+            event.device, data_bits=entity_info.get(CONF_DATA_BITS)
+        )
         for data_type in set(event.values) & set(DATA_TYPES):
             data_id = (*device_id, data_type)
             if data_id in data_ids:
@@ -169,9 +171,6 @@ class RfxtrxSensor(RfxtrxEntity):
     @callback
     def _handle_event(self, event, device_id):
         """Check if event applies to me and update."""
-        if not isinstance(event, SensorEvent):
-            return
-
         if device_id != self._device_id:
             return
 

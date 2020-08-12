@@ -222,6 +222,64 @@ async def test_templates_with_entities(hass, calls):
     _verify(hass, STATE_ON, SPEED_MEDIUM, True, DIRECTION_FORWARD)
 
 
+async def test_template_with_unavailable_entities(hass, calls):
+    """Test unavailability with value_template."""
+
+    with assert_setup_component(1, "fan"):
+        assert await setup.async_setup_component(
+            hass,
+            "fan",
+            {
+                "fan": {
+                    "platform": "template",
+                    "fans": {
+                        "test_fan": {
+                            "value_template": "{{ 'unavailable' }}",
+                            "turn_on": {"service": "script.fan_on"},
+                            "turn_off": {"service": "script.fan_off"},
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+    assert hass.states.get(_TEST_FAN).state == STATE_OFF
+
+
+async def test_template_with_unavailable_parameters(hass, calls):
+    """Test unavailability of speed, direction and oscillating parameters."""
+
+    with assert_setup_component(1, "fan"):
+        assert await setup.async_setup_component(
+            hass,
+            "fan",
+            {
+                "fan": {
+                    "platform": "template",
+                    "fans": {
+                        "test_fan": {
+                            "value_template": "{{ 'on' }}",
+                            "speed_template": "{{ 'unavailable' }}",
+                            "oscillating_template": "{{ 'unavailable' }}",
+                            "direction_template": "{{ 'unavailable' }}",
+                            "turn_on": {"service": "script.fan_on"},
+                            "turn_off": {"service": "script.fan_off"},
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    _verify(hass, STATE_ON, None, None, None)
+
+
 async def test_availability_template_with_entities(hass, calls):
     """Test availability tempalates with values from other entities."""
 
@@ -700,3 +758,48 @@ async def _register_components(hass, speed_list=None):
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
+
+
+async def test_unique_id(hass):
+    """Test unique_id option only creates one fan per id."""
+    await setup.async_setup_component(
+        hass,
+        "fan",
+        {
+            "fan": {
+                "platform": "template",
+                "fans": {
+                    "test_template_fan_01": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ true }}",
+                        "turn_on": {
+                            "service": "fan.turn_on",
+                            "entity_id": "fan.test_state",
+                        },
+                        "turn_off": {
+                            "service": "fan.turn_off",
+                            "entity_id": "fan.test_state",
+                        },
+                    },
+                    "test_template_fan_02": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ false }}",
+                        "turn_on": {
+                            "service": "fan.turn_on",
+                            "entity_id": "fan.test_state",
+                        },
+                        "turn_off": {
+                            "service": "fan.turn_off",
+                            "entity_id": "fan.test_state",
+                        },
+                    },
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1

@@ -1,4 +1,5 @@
 """Support for RFXtrx devices."""
+import asyncio
 import binascii
 from collections import OrderedDict
 import logging
@@ -13,10 +14,10 @@ from homeassistant.const import (
     CONF_COMMAND_ON,
     CONF_DEVICE,
     CONF_DEVICE_CLASS,
+    CONF_DEVICE_ID,
     CONF_DEVICES,
     CONF_HOST,
     CONF_PORT,
-    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     POWER_WATT,
     TEMP_CELSIUS,
@@ -29,7 +30,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     ATTR_EVENT,
-    DATA_RFXTRX_CONFIG,
     DEVICE_PACKET_TYPE_LIGHTING4,
     EVENT_RFXTRX_EVENT,
     SERVICE_SEND,
@@ -83,6 +83,7 @@ DATA_TYPES = OrderedDict(
 
 _LOGGER = logging.getLogger(__name__)
 DATA_RFXOBJECT = "rfxobject"
+DATA_LISTENER = "ha_stop"
 
 
 def _bytearray_string(data):
@@ -105,7 +106,9 @@ DEVICE_DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-        vol.Optional(CONF_OFF_DELAY): vol.Any(cv.time_period, cv.positive_timedelta),
+        vol.Optional(CONF_OFF_DELAY): vol.All(
+            cv.time_period, cv.positive_timedelta, lambda value: value.total_seconds()
+        ),
         vol.Optional(CONF_DATA_BITS): cv.positive_int,
         vol.Optional(CONF_COMMAND_ON): cv.byte,
         vol.Optional(CONF_COMMAND_OFF): cv.byte,
@@ -131,25 +134,34 @@ CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Any(DEVICE_SCHEMA, PORT_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
 
+DOMAINS = ["switch", "sensor", "light", "binary_sensor", "cover"]
+
 
 async def async_setup(hass, config):
     """Set up the RFXtrx component."""
     if DOMAIN not in config:
-        hass.data[DATA_RFXTRX_CONFIG] = BASE_SCHEMA({})
         return True
 
-    hass.data[DATA_RFXTRX_CONFIG] = config[DOMAIN]
+    data = {
+        CONF_HOST: config[DOMAIN].get(CONF_HOST),
+        CONF_PORT: config[DOMAIN].get(CONF_PORT),
+        CONF_DEVICE: config[DOMAIN].get(CONF_DEVICE),
+        CONF_DEBUG: config[DOMAIN].get(CONF_DEBUG),
+        CONF_AUTOMATIC_ADD: config[DOMAIN].get(CONF_AUTOMATIC_ADD),
+        CONF_DEVICES: config[DOMAIN][CONF_DEVICES],
+    }
+
+    # Read device_id from the event code add to the data that will end up in the ConfigEntry
+    for event_code, event_config in data[CONF_DEVICES].items():
+        event = get_rfx_object(event_code)
+        device_id = get_device_id(
+            event.device, data_bits=event_config.get(CONF_DATA_BITS)
+        )
+        event_config[CONF_DEVICE_ID] = device_id
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_HOST: config[DOMAIN].get(CONF_HOST),
-                CONF_PORT: config[DOMAIN].get(CONF_PORT),
-                CONF_DEVICE: config[DOMAIN].get(CONF_DEVICE),
-                CONF_DEBUG: config[DOMAIN][CONF_DEBUG],
-            },
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data,
         )
     )
     return True
@@ -157,9 +169,11 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
     """Set up the RFXtrx component."""
-    await hass.async_add_executor_job(setup_internal, hass, entry.data)
+    hass.data.setdefault(DOMAIN, {})
 
-    for domain in ["switch", "sensor", "light", "binary_sensor", "cover"]:
+    await async_setup_internal(hass, entry)
+
+    for domain in DOMAINS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, domain)
         )
@@ -167,23 +181,70 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
     return True
 
 
-def setup_internal(hass, config):
-    """Set up the RFXtrx component."""
+async def async_unload_entry(hass, entry: config_entries.ConfigEntry):
+    """Unload RFXtrx component."""
+    if not all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in DOMAINS
+            ]
+        )
+    ):
+        return False
 
-    # Setup some per device config
-    device_events = set()
-    device_bits = {}
-    for event_code, event_config in hass.data[DATA_RFXTRX_CONFIG][CONF_DEVICES].items():
+    hass.services.async_remove(DOMAIN, SERVICE_SEND)
+
+    listener = hass.data[DOMAIN][DATA_LISTENER]
+    listener()
+
+    rfx_object = hass.data[DOMAIN][DATA_RFXOBJECT]
+    await hass.async_add_executor_job(rfx_object.close_connection)
+
+    return True
+
+
+def _create_rfx(config):
+    """Construct a rfx object based on config."""
+    if config[CONF_PORT] is not None:
+        # If port is set then we create a TCP connection
+        rfx = rfxtrxmod.Connect(
+            (config[CONF_HOST], config[CONF_PORT]),
+            None,
+            debug=config[CONF_DEBUG],
+            transport_protocol=rfxtrxmod.PyNetworkTransport,
+        )
+    else:
+        rfx = rfxtrxmod.Connect(config[CONF_DEVICE], None, debug=config[CONF_DEBUG])
+
+    return rfx
+
+
+def _get_device_lookup(devices):
+    """Get a lookup structure for devices."""
+    lookup = dict()
+    for event_code, event_config in devices.items():
         event = get_rfx_object(event_code)
         device_id = get_device_id(
             event.device, data_bits=event_config.get(CONF_DATA_BITS)
         )
-        device_bits[device_id] = event_config.get(CONF_DATA_BITS)
-        if event_config[CONF_FIRE_EVENT]:
-            device_events.add(device_id)
+        lookup[device_id] = event_config
+    return lookup
+
+
+async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
+    """Set up the RFXtrx component."""
+    config = entry.data
+
+    # Initialize library
+    rfx_object = await hass.async_add_executor_job(_create_rfx, config)
+
+    # Setup some per device config
+    devices = _get_device_lookup(config[CONF_DEVICES])
 
     # Declare the Handle event
-    def handle_receive(event):
+    @callback
+    def async_handle_receive(event):
         """Handle received messages from RFXtrx gateway."""
         # Log RFXCOM event
         if not event.device.id_string:
@@ -200,50 +261,49 @@ def setup_internal(hass, config):
 
         _LOGGER.debug("Receive RFXCOM event: %s", event_data)
 
-        data_bits = get_device_data_bits(event.device, device_bits)
+        data_bits = get_device_data_bits(event.device, devices)
         device_id = get_device_id(event.device, data_bits=data_bits)
 
+        # Register new devices
+        if config[CONF_AUTOMATIC_ADD] and device_id not in devices:
+            _add_device(event, device_id)
+
         # Callback to HA registered components.
-        hass.helpers.dispatcher.dispatcher_send(SIGNAL_EVENT, event, device_id)
+        hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_EVENT, event, device_id)
 
         # Signal event to any other listeners
-        if device_id in device_events:
-            hass.bus.fire(EVENT_RFXTRX_EVENT, event_data)
+        fire_event = devices.get(device_id, {}).get(CONF_FIRE_EVENT)
+        if fire_event:
+            hass.bus.async_fire(EVENT_RFXTRX_EVENT, event_data)
 
-    device = config[CONF_DEVICE]
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    debug = config[CONF_DEBUG]
+    @callback
+    def _add_device(event, device_id):
+        """Add a device to config entry."""
+        config = DEVICE_DATA_SCHEMA({})
+        config[CONF_DEVICE_ID] = device_id
 
-    if port is not None:
-        # If port is set then we create a TCP connection
-        rfx_object = rfxtrxmod.Connect(
-            (host, port),
-            None,
-            debug=debug,
-            transport_protocol=rfxtrxmod.PyNetworkTransport,
-        )
-    else:
-        rfx_object = rfxtrxmod.Connect(device, None, debug=debug)
-
-    def _start_rfxtrx(event):
-        rfx_object.event_callback = handle_receive
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, _start_rfxtrx)
+        data = entry.data.copy()
+        event_code = binascii.hexlify(event.data).decode("ASCII")
+        data[CONF_DEVICES][event_code] = config
+        hass.config_entries.async_update_entry(entry=entry, data=data)
+        devices[device_id] = config
 
     def _shutdown_rfxtrx(event):
         """Close connection with RFXtrx."""
         rfx_object.close_connection()
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_rfxtrx)
+    listener = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_rfxtrx)
 
-    hass.data[DATA_RFXOBJECT] = rfx_object
+    hass.data[DOMAIN][DATA_LISTENER] = listener
+    hass.data[DOMAIN][DATA_RFXOBJECT] = rfx_object
+
+    rfx_object.event_callback = lambda event: hass.add_job(async_handle_receive, event)
 
     def send(call):
         event = call.data[ATTR_EVENT]
         rfx_object.transport.send(event)
 
-    hass.services.register(DOMAIN, SERVICE_SEND, send, schema=SERVICE_SEND_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_SEND, send, schema=SERVICE_SEND_SCHEMA)
 
 
 def get_rfx_object(packetid):
@@ -295,11 +355,12 @@ def get_pt2262_cmd(device_id, data_bits):
     return hex(data[-1] & mask)
 
 
-def get_device_data_bits(device, device_bits):
+def get_device_data_bits(device, devices):
     """Deduce data bits for device based on a cache of device bits."""
     data_bits = None
     if device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
-        for device_id, bits in device_bits.items():
+        for device_id, entity_config in devices.items():
+            bits = entity_config.get(CONF_DATA_BITS)
             if get_device_id(device, bits) == device_id:
                 data_bits = bits
                 break
@@ -426,38 +487,7 @@ class RfxtrxCommandEntity(RfxtrxEntity):
         self.signal_repetitions = signal_repetitions
         self._state = None
 
-    def _send_command(self, command, brightness=0):
-        rfx_object = self.hass.data[DATA_RFXOBJECT]
-
-        if command == "turn_on":
-            for _ in range(self.signal_repetitions):
-                self._device.send_on(rfx_object.transport)
-            self._state = True
-
-        elif command == "dim":
-            for _ in range(self.signal_repetitions):
-                self._device.send_dim(rfx_object.transport, brightness)
-            self._state = True
-
-        elif command == "turn_off":
-            for _ in range(self.signal_repetitions):
-                self._device.send_off(rfx_object.transport)
-            self._state = False
-
-        elif command == "roll_up":
-            for _ in range(self.signal_repetitions):
-                self._device.send_open(rfx_object.transport)
-            self._state = True
-
-        elif command == "roll_down":
-            for _ in range(self.signal_repetitions):
-                self._device.send_close(rfx_object.transport)
-            self._state = False
-
-        elif command == "stop_roll":
-            for _ in range(self.signal_repetitions):
-                self._device.send_stop(rfx_object.transport)
-            self._state = True
-
-        if self.hass:
-            self.schedule_update_ha_state()
+    async def _async_send(self, fun, *args):
+        rfx_object = self.hass.data[DOMAIN][DATA_RFXOBJECT]
+        for _ in range(self.signal_repetitions):
+            await self.hass.async_add_executor_job(fun, rfx_object.transport, *args)

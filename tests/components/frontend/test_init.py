@@ -1,4 +1,5 @@
 """The tests for Home Assistant frontend."""
+from datetime import timedelta
 import re
 
 import pytest
@@ -10,16 +11,25 @@ from homeassistant.components.frontend import (
     CONF_THEMES,
     DOMAIN,
     EVENT_PANELS_UPDATED,
+    THEMES_STORAGE_KEY,
 )
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt
 
 from tests.async_mock import patch
-from tests.common import async_capture_events
+from tests.common import async_capture_events, async_fire_time_changed
 
-CONFIG_THEMES = {DOMAIN: {CONF_THEMES: {"happy": {"primary-color": "red"}}}}
+CONFIG_THEMES = {
+    DOMAIN: {
+        CONF_THEMES: {
+            "happy": {"primary-color": "red"},
+            "dark": {"primary-color": "black"},
+        }
+    }
+}
 
 
 @pytest.fixture
@@ -117,7 +127,11 @@ async def test_themes_api(hass, hass_ws_client):
     msg = await client.receive_json()
 
     assert msg["result"]["default_theme"] == "default"
-    assert msg["result"]["themes"] == {"happy": {"primary-color": "red"}}
+    assert msg["result"]["default_dark_theme"] is None
+    assert msg["result"]["themes"] == {
+        "happy": {"primary-color": "red"},
+        "dark": {"primary-color": "black"},
+    }
 
     # safe mode
     hass.config.safe_mode = True
@@ -127,6 +141,58 @@ async def test_themes_api(hass, hass_ws_client):
     assert msg["result"]["default_theme"] == "safe_mode"
     assert msg["result"]["themes"] == {
         "safe_mode": {"primary-color": "#db4437", "accent-color": "#eeee02"}
+    }
+
+
+async def test_themes_persist(hass, hass_ws_client, hass_storage):
+    """Test that theme settings are restores after restart."""
+
+    hass_storage[THEMES_STORAGE_KEY] = {
+        "key": THEMES_STORAGE_KEY,
+        "version": 1,
+        "data": {
+            "frontend_default_theme": "happy",
+            "frontend_default_dark_theme": "dark",
+        },
+    }
+
+    assert await async_setup_component(hass, "frontend", CONFIG_THEMES)
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 5, "type": "frontend/get_themes"})
+    msg = await client.receive_json()
+
+    assert msg["result"]["default_theme"] == "happy"
+    assert msg["result"]["default_dark_theme"] == "dark"
+
+
+async def test_themes_save_storage(hass, hass_storage):
+    """Test that theme settings are restores after restart."""
+
+    hass_storage[THEMES_STORAGE_KEY] = {
+        "key": THEMES_STORAGE_KEY,
+        "version": 1,
+        "data": {},
+    }
+
+    assert await async_setup_component(hass, "frontend", CONFIG_THEMES)
+
+    await hass.services.async_call(
+        DOMAIN, "set_theme", {"name": "happy"}, blocking=True
+    )
+
+    await hass.services.async_call(
+        DOMAIN, "set_theme", {"name": "dark", "mode": "dark"}, blocking=True
+    )
+
+    # To trigger the call_later
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=60))
+    # To execute the save
+    await hass.async_block_till_done()
+
+    assert hass_storage[THEMES_STORAGE_KEY]["data"] == {
+        "frontend_default_theme": "happy",
+        "frontend_default_dark_theme": "dark",
     }
 
 
@@ -153,6 +219,17 @@ async def test_themes_set_theme(hass, hass_ws_client):
 
     assert msg["result"]["default_theme"] == "default"
 
+    await hass.services.async_call(
+        DOMAIN, "set_theme", {"name": "happy"}, blocking=True
+    )
+
+    await hass.services.async_call(DOMAIN, "set_theme", {"name": "none"}, blocking=True)
+
+    await client.send_json({"id": 7, "type": "frontend/get_themes"})
+    msg = await client.receive_json()
+
+    assert msg["result"]["default_theme"] == "default"
+
 
 async def test_themes_set_theme_wrong_name(hass, hass_ws_client):
     """Test frontend.set_theme service called with wrong name."""
@@ -168,6 +245,55 @@ async def test_themes_set_theme_wrong_name(hass, hass_ws_client):
     msg = await client.receive_json()
 
     assert msg["result"]["default_theme"] == "default"
+
+
+async def test_themes_set_dark_theme(hass, hass_ws_client):
+    """Test frontend.set_theme service called with dark mode."""
+    assert await async_setup_component(hass, "frontend", CONFIG_THEMES)
+    client = await hass_ws_client(hass)
+
+    await hass.services.async_call(
+        DOMAIN, "set_theme", {"name": "dark", "mode": "dark"}, blocking=True
+    )
+
+    await client.send_json({"id": 5, "type": "frontend/get_themes"})
+    msg = await client.receive_json()
+
+    assert msg["result"]["default_dark_theme"] == "dark"
+
+    await hass.services.async_call(
+        DOMAIN, "set_theme", {"name": "default", "mode": "dark"}, blocking=True
+    )
+
+    await client.send_json({"id": 6, "type": "frontend/get_themes"})
+    msg = await client.receive_json()
+
+    assert msg["result"]["default_dark_theme"] == "default"
+
+    await hass.services.async_call(
+        DOMAIN, "set_theme", {"name": "none", "mode": "dark"}, blocking=True
+    )
+
+    await client.send_json({"id": 7, "type": "frontend/get_themes"})
+    msg = await client.receive_json()
+
+    assert msg["result"]["default_dark_theme"] is None
+
+
+async def test_themes_set_dark_theme_wrong_name(hass, hass_ws_client):
+    """Test frontend.set_theme service called with mode dark and wrong name."""
+    assert await async_setup_component(hass, "frontend", CONFIG_THEMES)
+    client = await hass_ws_client(hass)
+
+    await hass.services.async_call(
+        DOMAIN, "set_theme", {"name": "wrong", "mode": "dark"}, blocking=True
+    )
+
+    await client.send_json({"id": 5, "type": "frontend/get_themes"})
+
+    msg = await client.receive_json()
+
+    assert msg["result"]["default_dark_theme"] is None
 
 
 async def test_themes_reload_themes(hass, hass_ws_client):

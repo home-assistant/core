@@ -497,6 +497,29 @@ async def help_test_discovery_update(hass, mqtt_mock, caplog, domain, data1, dat
     assert state is None
 
 
+async def help_test_discovery_update_unchanged(
+    hass, mqtt_mock, caplog, domain, data1, discovery_update
+):
+    """Test update of discovered component without changes.
+
+    This is a test helper for the MqttDiscoveryUpdate mixin.
+    """
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    await async_start(hass, "homeassistant", entry)
+
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data1)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{domain}.beer")
+    assert state is not None
+    assert state.name == "Beer"
+
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data1)
+    await hass.async_block_till_done()
+
+    assert not discovery_update.called
+
+
 async def help_test_discovery_broken(hass, mqtt_mock, caplog, domain, data1, data2):
     """Test handling of bad discovery message."""
     entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]

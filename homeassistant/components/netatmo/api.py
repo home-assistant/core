@@ -10,7 +10,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigEntryNetatmoAuth(pyatmo.auth.NetatmOAuth2):
+class ConfigEntryNetatmoAuth(pyatmo.auth.NetatmoOAuth2):
     """Provide Netatmo authentication tied to an OAuth2 based config entry."""
 
     def __init__(
