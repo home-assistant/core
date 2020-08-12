@@ -215,14 +215,14 @@ def async_track_state_change_event(
 @callback
 def _async_remove_indexed_listeners(
     hass: HomeAssistant,
-    storage_key: str,
+    data_key: str,
     listener_key: str,
     storage_keys: Iterable[str],
     action: Callable[[Event], Any],
 ) -> None:
     """Remove a listener."""
 
-    callbacks = hass.data[storage_key]
+    callbacks = hass.data[data_key]
 
     for storage_key in storage_keys:
         callbacks[storage_key].remove(action)
