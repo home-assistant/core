@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "service": "Feil under fors\u00f8k p\u00e5 \u00e5 n\u00e5 SmartHab. Tjenesten kan v\u00e6re nede. Sjekk tilkoblingen din.",
+            "unknown_error": "Uventet feil",
+            "wrong_login": "Ugyldig godkjenning"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-post",
+                    "password": "Passord"
+                },
+                "description": "Av tekniske \u00e5rsaker m\u00e5 du s\u00f8rge for \u00e5 bruke en sekund\u00e6r konto som er spesifikk for oppsettet i Home Assistant. Du kan opprette en fra SmartHab-programmet.",
+                "title": "Oppsett av SmartHab"
+            }
+        }
+    }
+}

@@ -12,6 +12,7 @@ addons:
       - libavfilter-dev
     sources:
       - sourceline: ppa:savoury1/ffmpeg4
+      - sourceline: ppa:savoury1/multimedia
 
 python:
   - "3.7.1"

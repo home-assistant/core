@@ -20,6 +20,10 @@ from .const import (
     DISCOVERY_UDN,
     DISCOVERY_USN,
     DOMAIN,
+    DOMAIN_CONFIG,
+    DOMAIN_COORDINATORS,
+    DOMAIN_DEVICES,
+    DOMAIN_LOCAL_IP,
     LOGGER as _LOGGER,
 )
 from .device import Device
@@ -78,10 +82,10 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     conf = config.get(DOMAIN, conf_default)
     local_ip = await hass.async_add_executor_job(get_local_ip)
     hass.data[DOMAIN] = {
-        "config": conf,
-        "devices": {},
-        "coordinators": {},
-        "local_ip": conf.get(CONF_LOCAL_IP, local_ip),
+        DOMAIN_CONFIG: conf,
+        DOMAIN_COORDINATORS: {},
+        DOMAIN_DEVICES: {},
+        DOMAIN_LOCAL_IP: conf.get(CONF_LOCAL_IP, local_ip),
     }
 
     # Only start if set up via configuration.yaml.
@@ -108,7 +112,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         raise ConfigEntryNotReady
 
     # Save device
-    hass.data[DOMAIN]["devices"][device.udn] = device
+    hass.data[DOMAIN][DOMAIN_DEVICES][device.udn] = device
 
     # Ensure entry has proper unique_id.
     if config_entry.unique_id != device.unique_id:
@@ -141,8 +145,10 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a UPnP/IGD device from a config entry."""
     udn = config_entry.data.get(CONFIG_ENTRY_UDN)
-    del hass.data[DOMAIN]["devices"][udn]
-    del hass.data[DOMAIN]["coordinators"][udn]
+    if udn in hass.data[DOMAIN][DOMAIN_DEVICES]:
+        del hass.data[DOMAIN][DOMAIN_DEVICES][udn]
+    if udn in hass.data[DOMAIN][DOMAIN_COORDINATORS]:
+        del hass.data[DOMAIN][DOMAIN_COORDINATORS][udn]
 
     _LOGGER.debug("Deleting sensors")
     return await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")

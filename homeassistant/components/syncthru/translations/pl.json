@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane."
+        },
         "error": {
             "invalid_url": "Nieprawid\u0142owy URL",
             "unknown_state": "Nieznany stan drukarki, sprawd\u017a adres URL i \u0142\u0105czno\u015b\u0107 sieciow\u0105"

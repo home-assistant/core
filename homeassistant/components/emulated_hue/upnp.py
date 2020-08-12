@@ -74,11 +74,14 @@ class UPNPResponderThread(threading.Thread):
         self.upnp_bind_multicast = upnp_bind_multicast
         self.advertise_ip = advertise_ip
         self.advertise_port = advertise_port
+        self._ssdp_socket = None
 
     def run(self):
         """Run the server."""
         # Listen for UDP port 1900 packets sent to SSDP multicast address
-        ssdp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._ssdp_socket = ssdp_socket = socket.socket(
+            socket.AF_INET, socket.SOCK_DGRAM
+        )
         ssdp_socket.setblocking(False)
 
         # Required for receiving multicast
@@ -101,7 +104,6 @@ class UPNPResponderThread(threading.Thread):
 
         while True:
             if self._interrupted:
-                clean_socket_close(ssdp_socket)
                 return
 
             try:
@@ -114,7 +116,6 @@ class UPNPResponderThread(threading.Thread):
                     continue
             except OSError as ex:
                 if self._interrupted:
-                    clean_socket_close(ssdp_socket)
                     return
 
                 _LOGGER.error(
@@ -138,6 +139,8 @@ class UPNPResponderThread(threading.Thread):
         """Stop the server."""
         # Request for server
         self._interrupted = True
+        if self._ssdp_socket:
+            clean_socket_close(self._ssdp_socket)
         self.join()
 
     def _handle_request(self, data):

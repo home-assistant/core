@@ -222,6 +222,9 @@ def play_on_sonos(hass, service_call):
 
     if isinstance(content, int):
         content = {"plex_key": content}
+        content_type = PLEX_DOMAIN
+    else:
+        content_type = "music"
 
     plex_server_name = content.get("plex_server")
     shuffle = content.pop("shuffle", 0)
@@ -246,7 +249,7 @@ def play_on_sonos(hass, service_call):
         )
         return
 
-    media = plex_server.lookup_media("music", **content)
+    media = plex_server.lookup_media(content_type, **content)
     if media is None:
         _LOGGER.error("Media could not be found: %s", content)
         return

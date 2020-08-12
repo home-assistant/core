@@ -92,6 +92,30 @@ async def test_api_host_info_error(hassio_handler, aioclient_mock):
     assert aioclient_mock.call_count == 1
 
 
+async def test_api_core_info(hassio_handler, aioclient_mock):
+    """Test setup with API Home Assistant Core info."""
+    aioclient_mock.get(
+        "http://127.0.0.1/core/info",
+        json={"result": "ok", "data": {"version_latest": "1.0.0"}},
+    )
+
+    data = await hassio_handler.get_core_info()
+    assert aioclient_mock.call_count == 1
+    assert data["version_latest"] == "1.0.0"
+
+
+async def test_api_core_info_error(hassio_handler, aioclient_mock):
+    """Test setup with API Home Assistant Core info error."""
+    aioclient_mock.get(
+        "http://127.0.0.1/core/info", json={"result": "error", "message": None}
+    )
+
+    with pytest.raises(HassioAPIError):
+        await hassio_handler.get_core_info()
+
+    assert aioclient_mock.call_count == 1
+
+
 async def test_api_homeassistant_stop(hassio_handler, aioclient_mock):
     """Test setup with API Home Assistant stop."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/stop", json={"result": "ok"})

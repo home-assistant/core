@@ -253,6 +253,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
             None,
             None,
             None,
+            None,
         ).result()
         assert not vs.should_poll
         assert "motion" == vs.device_class
@@ -312,6 +313,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
             None,
             None,
             MATCH_ALL,
+            None,
             None,
             None,
             None,
@@ -640,3 +642,32 @@ async def test_no_update_template_match_all(hass, caplog):
     assert hass.states.get("binary_sensor.all_icon").state == "off"
     assert hass.states.get("binary_sensor.all_entity_picture").state == "off"
     assert hass.states.get("binary_sensor.all_attribute").state == "off"
+
+
+async def test_unique_id(hass):
+    """Test unique_id option only creates one binary sensor per id."""
+    await setup.async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test_template_cover_01": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ true }}",
+                    },
+                    "test_template_cover_02": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ false }}",
+                    },
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1

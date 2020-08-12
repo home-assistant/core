@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia.",
+            "invalid_auth": "Niepoprawne uwierzytelnienie.",
+            "unknown": "[%key::common::config_flow::error::unknown%]"
+        },
+        "step": {
+            "device": {
+                "data": {
+                    "device_name": "Urz\u0105dzenie"
+                },
+                "title": "Wybierz urz\u0105dzenie WOLF"
+            },
+            "user": {
+                "data": {
+                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "username": "[%key_id:common::config_flow::data::username%]"
+                },
+                "title": "Po\u0142\u0105czenie WOLF SmartSet"
+            }
+        }
+    }
+}

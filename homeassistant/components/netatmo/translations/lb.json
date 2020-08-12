@@ -13,5 +13,23 @@
                 "title": "Authentifikatiouns Method auswielen"
             }
         }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Numm vum Ber\u00e4ich",
+                    "mode": "Berechnung",
+                    "show_on_map": "Op der Kaart uweisen"
+                },
+                "title": "Netatmo Publique Wieder Sensor"
+            },
+            "public_weather_areas": {
+                "data": {
+                    "new_area": "Numm vum Ber\u00e4ich",
+                    "weather_areas": "Wieder Ber\u00e4icher"
+                }
+            }
+        }
     }
 }

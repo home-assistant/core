@@ -176,8 +176,6 @@ class _ScriptRun:
         try:
             if self._stop.is_set():
                 return
-            self._script.last_triggered = utcnow()
-            self._changed()
             self._log("Running script")
             for self._step, self._action in enumerate(self._script.sequence):
                 if self._stop.is_set():
@@ -644,13 +642,7 @@ class Script:
         self.name = name
         self.change_listener = change_listener
         self.script_mode = script_mode
-        if logger:
-            self._logger = logger
-        else:
-            logger_name = __name__
-            if name:
-                logger_name = ".".join([logger_name, slugify(name)])
-            self._logger = logging.getLogger(logger_name)
+        self._set_logger(logger)
         self._log_exceptions = log_exceptions
 
         self.last_action = None
@@ -662,11 +654,29 @@ class Script:
             self._queue_lck = asyncio.Lock()
         self._config_cache: Dict[Set[Tuple], Callable[..., bool]] = {}
         self._repeat_script: Dict[int, Script] = {}
-        self._choose_data: Dict[
-            int, List[Tuple[List[Callable[[HomeAssistant, Dict], bool]], Script]]
-        ] = {}
+        self._choose_data: Dict[int, Dict[str, Any]] = {}
         self._referenced_entities: Optional[Set[str]] = None
         self._referenced_devices: Optional[Set[str]] = None
+
+    def _set_logger(self, logger: Optional[logging.Logger] = None) -> None:
+        if logger:
+            self._logger = logger
+        else:
+            logger_name = __name__
+            if self.name:
+                logger_name = ".".join([logger_name, slugify(self.name)])
+            self._logger = logging.getLogger(logger_name)
+
+    def update_logger(self, logger: Optional[logging.Logger] = None) -> None:
+        """Update logger."""
+        self._set_logger(logger)
+        for script in self._repeat_script.values():
+            script.update_logger(self._logger)
+        for choose_data in self._choose_data.values():
+            for _, script in choose_data["choices"]:
+                script.update_logger(self._logger)
+            if choose_data["default"]:
+                choose_data["default"].update_logger(self._logger)
 
     def _changed(self):
         if self.change_listener:
@@ -785,6 +795,8 @@ class Script:
             self._hass, self, cast(dict, variables), context, self._log_exceptions
         )
         self._runs.append(run)
+        self.last_triggered = utcnow()
+        self._changed()
 
         try:
             await asyncio.shield(run.async_run())

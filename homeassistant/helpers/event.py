@@ -1,4 +1,5 @@
 """Helpers for listening to events."""
+import asyncio
 from datetime import datetime, timedelta
 import functools as ft
 import logging
@@ -17,6 +18,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNSET,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, State, callback
+from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.sun import get_astral_event_next
 from homeassistant.helpers.template import Template
 from homeassistant.loader import bind_hass
@@ -25,6 +27,9 @@ from homeassistant.util.async_ import run_callback_threadsafe
 
 TRACK_STATE_CHANGE_CALLBACKS = "track_state_change_callbacks"
 TRACK_STATE_CHANGE_LISTENER = "track_state_change_listener"
+
+TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS = "track_entity_registry_updated_callbacks"
+TRACK_ENTITY_REGISTRY_UPDATED_LISTENER = "track_entity_registry_updated_listener"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,7 +142,7 @@ track_state_change = threaded_listener_factory(async_track_state_change)
 def async_track_state_change_event(
     hass: HomeAssistant,
     entity_ids: Union[str, Iterable[str]],
-    action: Callable[[Event], None],
+    action: Callable[[Event], Any],
 ) -> Callable[[], None]:
     """Track specific state change events indexed by entity_id.
 
@@ -186,17 +191,28 @@ def async_track_state_change_event(
     @callback
     def remove_listener() -> None:
         """Remove state change listener."""
-        _async_remove_state_change_listeners(hass, entity_ids, action)
+        _async_remove_entity_listeners(
+            hass,
+            TRACK_STATE_CHANGE_CALLBACKS,
+            TRACK_STATE_CHANGE_LISTENER,
+            entity_ids,
+            action,
+        )
 
     return remove_listener
 
 
 @callback
-def _async_remove_state_change_listeners(
-    hass: HomeAssistant, entity_ids: Iterable[str], action: Callable[[Event], None]
+def _async_remove_entity_listeners(
+    hass: HomeAssistant,
+    storage_key: str,
+    listener_key: str,
+    entity_ids: Iterable[str],
+    action: Callable[[Event], Any],
 ) -> None:
     """Remove a listener."""
-    entity_callbacks = hass.data[TRACK_STATE_CHANGE_CALLBACKS]
+
+    entity_callbacks = hass.data[storage_key]
 
     for entity_id in entity_ids:
         entity_callbacks[entity_id].remove(action)
@@ -204,8 +220,66 @@ def _async_remove_state_change_listeners(
             del entity_callbacks[entity_id]
 
     if not entity_callbacks:
-        hass.data[TRACK_STATE_CHANGE_LISTENER]()
-        del hass.data[TRACK_STATE_CHANGE_LISTENER]
+        hass.data[listener_key]()
+        del hass.data[listener_key]
+
+
+@bind_hass
+def async_track_entity_registry_updated_event(
+    hass: HomeAssistant,
+    entity_ids: Union[str, Iterable[str]],
+    action: Callable[[Event], Any],
+) -> Callable[[], None]:
+    """Track specific entity registry updated events indexed by entity_id.
+
+    Similar to async_track_state_change_event.
+    """
+
+    entity_callbacks = hass.data.setdefault(TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS, {})
+
+    if TRACK_ENTITY_REGISTRY_UPDATED_LISTENER not in hass.data:
+
+        @callback
+        def _async_entity_registry_updated_dispatcher(event: Event) -> None:
+            """Dispatch entity registry updates by entity_id."""
+            entity_id = event.data.get("old_entity_id", event.data["entity_id"])
+
+            if entity_id not in entity_callbacks:
+                return
+
+            for action in entity_callbacks[entity_id][:]:
+                try:
+                    hass.async_run_job(action, event)
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception(
+                        "Error while processing entity registry update for %s",
+                        entity_id,
+                    )
+
+        hass.data[TRACK_ENTITY_REGISTRY_UPDATED_LISTENER] = hass.bus.async_listen(
+            EVENT_ENTITY_REGISTRY_UPDATED, _async_entity_registry_updated_dispatcher
+        )
+
+    if isinstance(entity_ids, str):
+        entity_ids = [entity_ids]
+
+    entity_ids = [entity_id.lower() for entity_id in entity_ids]
+
+    for entity_id in entity_ids:
+        entity_callbacks.setdefault(entity_id, []).append(action)
+
+    @callback
+    def remove_listener() -> None:
+        """Remove state change listener."""
+        _async_remove_entity_listeners(
+            hass,
+            TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS,
+            TRACK_ENTITY_REGISTRY_UPDATED_LISTENER,
+            entity_ids,
+            action,
+        )
+
+    return remove_listener
 
 
 @callback
@@ -317,14 +391,13 @@ def async_track_point_in_time(
     hass: HomeAssistant, action: Callable[..., None], point_in_time: datetime
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in time."""
-    utc_point_in_time = dt_util.as_utc(point_in_time)
 
     @callback
     def utc_converter(utc_now: datetime) -> None:
         """Convert passed in UTC now to local now."""
         hass.async_run_job(action, dt_util.as_local(utc_now))
 
-    return async_track_point_in_utc_time(hass, utc_converter, utc_point_in_time)
+    return async_track_point_in_utc_time(hass, utc_converter, point_in_time)
 
 
 track_point_in_time = threaded_listener_factory(async_track_point_in_time)
@@ -337,13 +410,13 @@ def async_track_point_in_utc_time(
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in UTC time."""
     # Ensure point_in_time is UTC
-    point_in_time = dt_util.as_utc(point_in_time)
+    utc_point_in_time = dt_util.as_utc(point_in_time)
 
     cancel_callback = hass.loop.call_at(
         hass.loop.time() + point_in_time.timestamp() - time.time(),
         hass.async_run_job,
         action,
-        point_in_time,
+        utc_point_in_time,
     )
 
     @callback
@@ -491,6 +564,9 @@ def async_track_sunset(
 
 track_sunset = threaded_listener_factory(async_track_sunset)
 
+# For targeted patching in tests
+pattern_utc_now = dt_util.utcnow
+
 
 @callback
 @bind_hass
@@ -518,7 +594,7 @@ def async_track_utc_time_change(
     matching_minutes = dt_util.parse_time_expression(minute, 0, 59)
     matching_hours = dt_util.parse_time_expression(hour, 0, 23)
 
-    next_time = None
+    next_time: datetime = dt_util.utcnow()
 
     def calculate_next(now: datetime) -> None:
         """Calculate and set the next time the trigger should fire."""
@@ -531,29 +607,37 @@ def async_track_utc_time_change(
 
     # Make sure rolling back the clock doesn't prevent the timer from
     # triggering.
-    last_now: Optional[datetime] = None
+    cancel_callback: Optional[asyncio.TimerHandle] = None
+    calculate_next(next_time)
 
     @callback
-    def pattern_time_change_listener(event: Event) -> None:
+    def pattern_time_change_listener() -> None:
         """Listen for matching time_changed events."""
-        nonlocal next_time, last_now
+        nonlocal next_time, cancel_callback
 
-        now = event.data[ATTR_NOW]
+        now = pattern_utc_now()
+        hass.async_run_job(action, dt_util.as_local(now) if local else now)
 
-        if last_now is None or now < last_now:
-            # Time rolled back or next time not yet calculated
-            calculate_next(now)
+        calculate_next(now + timedelta(seconds=1))
 
-        last_now = now
+        cancel_callback = hass.loop.call_at(
+            hass.loop.time() + next_time.timestamp() - time.time(),
+            pattern_time_change_listener,
+        )
 
-        if next_time <= now:
-            hass.async_run_job(action, dt_util.as_local(now) if local else now)
-            calculate_next(now + timedelta(seconds=1))
+    cancel_callback = hass.loop.call_at(
+        hass.loop.time() + next_time.timestamp() - time.time(),
+        pattern_time_change_listener,
+    )
 
-    # We can't use async_track_point_in_utc_time here because it would
-    # break in the case that the system time abruptly jumps backwards.
-    # Our custom last_now logic takes care of resolving that scenario.
-    return hass.bus.async_listen(EVENT_TIME_CHANGED, pattern_time_change_listener)
+    @callback
+    def unsub_pattern_time_change_listener() -> None:
+        """Cancel the call_later."""
+        nonlocal cancel_callback
+        assert cancel_callback is not None
+        cancel_callback.cancel()
+
+    return unsub_pattern_time_change_listener
 
 
 track_utc_time_change = threaded_listener_factory(async_track_utc_time_change)
