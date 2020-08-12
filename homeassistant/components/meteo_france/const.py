@@ -76,7 +76,7 @@ SENSOR_TYPES = {
     "next_rain": {
         ENTITY_NAME: "Next rain",
         ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:weather-pouring",
+        ENTITY_ICON: None,
         ENTITY_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
         ENTITY_ENABLE: True,
         ENTITY_API_DATA_PATH: None,
