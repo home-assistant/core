@@ -17,7 +17,14 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+)
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.sun import get_astral_event_next
 from homeassistant.helpers.template import Template
@@ -303,7 +310,7 @@ def async_track_state_added_domain(
             if event.data.get("old_state") is not None:
                 return
 
-            domain = event.data["entity_id"].domain
+            domain = split_entity_id(event.data["entity_id"])[0]
 
             if domain not in domain_callbacks:
                 return
