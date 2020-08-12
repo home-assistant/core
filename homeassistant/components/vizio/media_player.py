@@ -267,7 +267,6 @@ class VizioDevice(MediaPlayerEntity):
             log_api_exception=False
         )
 
-        _LOGGER.debug(self._current_app_config)
         self._current_app = find_app_name(
             self._current_app_config,
             [APP_HOME, *self._apps_coordinator.data, *self._additional_app_configs],
