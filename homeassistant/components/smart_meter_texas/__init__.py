@@ -19,7 +19,13 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DEBOUNCE_COOLDOWN, DOMAIN, SCAN_INTERVAL
+from .const import (
+    DATA_COORDINATOR,
+    DATA_SMART_METER,
+    DEBOUNCE_COOLDOWN,
+    DOMAIN,
+    SCAN_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,9 +75,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         ),
     )
 
-    await coordinator.async_refresh()
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_COORDINATOR: coordinator,
+        DATA_SMART_METER: smartmetertexas,
+    }
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    asyncio.create_task(coordinator.async_refresh())
 
     for component in PLATFORMS:
         hass.async_create_task(
