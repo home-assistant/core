@@ -465,7 +465,14 @@ class TrackTemplateResultInfo:
 
     @callback
     def _create_listeners(self) -> None:
-        if self._info.all_states or self._info.exception:
+        if self._info.is_static:
+            return
+
+        if (
+            self._info.all_states
+            or self._info.exception
+            or (not self._info.domains and not self._info.entities)
+        ):
             self._setup_all_listener()
             return
 
@@ -498,7 +505,11 @@ class TrackTemplateResultInfo:
 
     @callback
     def _update_listeners(self) -> None:
-        if self._info.all_states or self._info.exception:
+        if (
+            self._info.all_states
+            or self._info.exception
+            or (not self._info.domains and not self._info.entities)
+        ):
             if self._all_listener:
                 return
             self._cancel_domains_listener()
@@ -561,11 +572,12 @@ class TrackTemplateResultInfo:
         new_state = event.data.get("new_state")
         entity_id = event.data["entity_id"]
 
-        if old_state is not None and new_state is not None:
-            if not self._info.filter(entity_id):
+        if self._info.domains or self._info.entities:
+            if old_state is not None and new_state is not None:
+                if not self._info.filter(entity_id):
+                    return
+            elif not self._info.filter_lifecycle(entity_id):
                 return
-        elif not self._info.filter_lifecycle(entity_id):
-            return
 
         self._refresh(event)
 

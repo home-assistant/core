@@ -142,6 +142,7 @@ class RenderInfo:
         # Will be set sensibly once frozen.
         self.filter_lifecycle = _true
         self._result = None
+        self.is_static = False
         self.exception = None
         self.all_states = False
         self.domains = set()
@@ -165,6 +166,7 @@ class RenderInfo:
         return self._result
 
     def _freeze_static(self) -> None:
+        self.is_static = True
         self.entities = frozenset(self.entities)
         self.domains = frozenset(self.domains)
         self.all_states = False
