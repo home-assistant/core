@@ -159,17 +159,14 @@ class Template:
             ret = self.hass.data[_ENVIRONMENT] = TemplateEnvironment(self.hass)
         return ret
 
-    def ensure_valid(self):
+    def ensure_valid(self) -> None:
         """Return if template is valid."""
         if self._compiled_code is not None:
             return
 
-        try:
-            self._compiled_code = self._env.compile(self.template)
-        except jinja2.exceptions.TemplateSyntaxError as err:
-            raise TemplateError(err)
+        self._compiled_code = self._ensure_valid(self.template)
 
-    def ensure_valid_without_conditionals(self):
+    def ensure_valid_without_conditionals(self) -> None:
         """Return if template is valid with the conditionals removed."""
         if self._compiled_code_without_conditionals is not None:
             return
@@ -184,10 +181,14 @@ class Template:
             _RE_JINJA_ELSE_ENDIF, '{% print ""', template_without_conditionals,
         )
 
+        self._compiled_code_without_conditionals = self._ensure_valid(
+            template_without_conditionals
+        )
+
+    def _ensure_valid(self, template: str) -> Any:
+        """Return if template is valid."""
         try:
-            self._compiled_code_without_conditionals = self._env.compile(
-                template_without_conditionals
-            )
+            return self._env.compile(template)
         except jinja2.exceptions.TemplateSyntaxError as err:
             raise TemplateError(err)
 
@@ -353,10 +354,8 @@ class Template:
 
         assert self.hass is not None, "hass variable not set on template"
 
-        env = self._env
-
         self._compiled = jinja2.Template.from_code(
-            env, self._compiled_code, env.globals, None
+            self._env, self._compiled_code, self._env.globals, None
         )
 
         return self._compiled
@@ -367,10 +366,8 @@ class Template:
 
         assert self.hass is not None, "hass variable not set on template"
 
-        env = self._env
-
         self._compiled_without_conditionals = jinja2.Template.from_code(
-            env, self._compiled_code_without_conditionals, env.globals, None
+            self._env, self._compiled_code_without_conditionals, self._env.globals, None
         )
 
         return self._compiled_without_conditionals
