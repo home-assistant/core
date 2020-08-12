@@ -365,7 +365,7 @@ async def test_async_track_state_added_domain(hass):
     def callback_that_throws(event):
         raise ValueError
 
-    unsub_single = async_track_state_added_domain(hass, ["light"], single_run_callback)
+    unsub_single = async_track_state_added_domain(hass, "light", single_run_callback)
     unsub_multi = async_track_state_added_domain(
         hass, ["light", "switch"], multiple_run_callback
     )
