@@ -74,10 +74,6 @@ class NetatmoFlowHandler(
 
         return await super().async_step_user(user_input)
 
-    async def async_step_homekit(self, homekit_info):
-        """Handle HomeKit discovery."""
-        return await self.async_step_user()
-
 
 class NetatmoOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Netatmo options."""
