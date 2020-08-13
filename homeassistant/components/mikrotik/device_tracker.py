@@ -116,6 +116,8 @@ class MikrotikHubTracker(ScannerEntity):
         info = {
             "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
             "identifiers": {(DOMAIN, self.device.mac)},
+            # We only get generic info from device discovery and so don't want
+            # to override API specific info that integrations can provide
             "default_name": self.name,
         }
         return info
