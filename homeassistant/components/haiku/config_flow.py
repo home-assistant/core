@@ -2,12 +2,17 @@
 
 from homeassistant import config_entries
 from homeassistant.helpers import config_entry_flow
-
+from haiku import discover
 from .const import DOMAIN
 
 
 async def _async_has_devices(hass) -> bool:
     """Return if there are devices that can be discovered."""
+    devices = await discover()
+    if devices == [[],[]]:
+        result = False
+    else:
+        result =  True
     return True
 
 
