@@ -4,6 +4,7 @@ import logging
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+
 from . import DATA_NZBGET, DATA_UPDATED, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)

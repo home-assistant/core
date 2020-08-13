@@ -6,17 +6,17 @@ import pynzbgetapi
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_SSL,
     CONF_HOST,
+    CONF_MONITORED_VARIABLES,
     CONF_NAME,
-    CONF_PORT,
-    TIME_MINUTES,
     CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+    CONF_SSL,
     CONF_USERNAME,
     DATA_MEGABYTES,
-    CONF_SCAN_INTERVAL,
-    CONF_MONITORED_VARIABLES,
     DATA_RATE_MEGABYTES_PER_SECOND,
+    TIME_MINUTES,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
