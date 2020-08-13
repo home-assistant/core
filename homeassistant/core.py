@@ -916,7 +916,7 @@ class StateMachine:
             return list(self._states.keys())
 
         if isinstance(domain_filter, str):
-            domain_filter = [domain_filter.lower()]
+            domain_filter = (domain_filter.lower(),)
 
         return [
             state.entity_id
