@@ -14,7 +14,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CLIENT, DOMAIN
 from .device import FloDeviceDataUpdateCoordinator
-from .services import async_load_services, async_unload_services
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -53,8 +52,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     tasks = [device.async_refresh() for device in devices]
     await asyncio.gather(*tasks)
 
-    async_load_services(hass)
-
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
@@ -65,7 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    async_unload_services(hass)
     unload_ok = all(
         await asyncio.gather(
             *[
