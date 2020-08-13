@@ -2,7 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from pyvizio.const import APPS
 from pyvizio.util import gen_apps_list_from_url
@@ -114,7 +114,7 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self.data = APPS
 
-    async def _async_update_data(self) -> Dict[str, Any]:
+    async def _async_update_data(self) -> List[Dict[str, Any]]:
         """Update data via library."""
         data = await gen_apps_list_from_url(session=async_get_clientsession(self.hass))
         if not data:
