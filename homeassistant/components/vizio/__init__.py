@@ -58,7 +58,10 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     """Load the saved entities."""
 
     hass.data.setdefault(DOMAIN, {})
-    if CONF_APPS not in hass.data[DOMAIN]:
+    if (
+        CONF_APPS not in hass.data[DOMAIN]
+        and config_entry.data[CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
+    ):
         coordinator = VizioAppsDataUpdateCoordinator(hass)
         await coordinator.async_refresh()
         hass.data[DOMAIN][CONF_APPS] = coordinator
@@ -87,6 +90,8 @@ async def async_unload_entry(
     if not any(
         [
             entry.state == ENTRY_STATE_LOADED
+            and entry.entry_id != config_entry.entry_id
+            and entry.data[CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
             for entry in hass.config_entries.async_entries(DOMAIN)
         ]
     ):
@@ -113,4 +118,4 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator):
         data = await gen_apps_list_from_url(session=async_get_clientsession(self.hass))
         if not data:
             raise UpdateFailed
-        return sorted(data)
+        return sorted(data, key=lambda k: k["name"])

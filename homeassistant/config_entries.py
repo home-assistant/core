@@ -283,8 +283,9 @@ class ConfigEntry:
                 # entry.
                 self.state = ENTRY_STATE_NOT_LOADED
                 return True
-
+        _LOGGER.error(integration.domain)
         component = integration.get_component()
+        _LOGGER.error(component)
 
         if integration.domain == self.domain:
             if self.state in UNRECOVERABLE_STATES:

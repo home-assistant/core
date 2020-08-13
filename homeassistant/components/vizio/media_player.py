@@ -9,6 +9,7 @@ from pyvizio.const import APP_HOME, INPUT_APPS, NO_APP_RUNNING, UNKNOWN_APP
 
 from homeassistant.components.media_player import (
     DEVICE_CLASS_SPEAKER,
+    DEVICE_CLASS_TV,
     SUPPORT_SELECT_SOUND_MODE,
     MediaPlayerEntity,
 )
@@ -118,7 +119,7 @@ async def async_setup_entry(
         _LOGGER.warning("Failed to connect to %s", host)
         raise PlatformNotReady
 
-    apps_coordinator = hass.data[DOMAIN][CONF_APPS]
+    apps_coordinator = hass.data[DOMAIN].get(CONF_APPS)
 
     entity = VizioDevice(config_entry, device, name, device_class, apps_coordinator)
 
@@ -157,7 +158,7 @@ class VizioDevice(MediaPlayerEntity):
         self._available_sound_modes = []
         self._available_inputs = []
         self._available_apps = []
-        self._all_apps = apps_coordinator.data
+        self._all_apps = apps_coordinator.data if apps_coordinator else None
         self._conf_apps = config_entry.options.get(CONF_APPS, {})
         self._additional_app_configs = config_entry.data.get(CONF_APPS, {}).get(
             CONF_ADDITIONAL_CONFIGS, []
@@ -322,15 +323,16 @@ class VizioDevice(MediaPlayerEntity):
             )
         )
 
-        # Register callback for app list updates
+        # Register callback for app list updates if device is a TV
         @callback
         def update():
             """Update list of all apps."""
             self._all_apps = self._apps_coordinator.data
 
-        self._async_unsub_listeners.append(
-            self._apps_coordinator.async_add_listener(update)
-        )
+        if self._device_class == DEVICE_CLASS_TV:
+            self._async_unsub_listeners.append(
+                self._apps_coordinator.async_add_listener(update)
+            )
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect callbacks when entity is removed."""

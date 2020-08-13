@@ -42,7 +42,7 @@ async def test_load_and_unload(
     assert "apps" in hass.data[DOMAIN]
     assert isinstance(hass.data[DOMAIN]["apps"], DataUpdateCoordinator)
 
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert await config_entry.async_unload(hass)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 0
     assert "apps" not in hass.data.get(DOMAIN, {})
