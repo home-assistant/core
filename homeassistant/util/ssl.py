@@ -1,9 +1,9 @@
 """Helper to create SSL contexts."""
+from os import environ
 import ssl
 
 import certifi
 
-from os import environ
 
 def client_context() -> ssl.SSLContext:
     """Return an SSL context for making requests."""
@@ -12,9 +12,7 @@ def client_context() -> ssl.SSLContext:
     # If the environment variable has no value, fall back to using certs from certifi package
     cafile = environ.get("REQUESTS_CA_BUNDLE", certifi.where())
 
-    context = ssl.create_default_context(
-        purpose=ssl.Purpose.SERVER_AUTH, cafile=cafile
-    )
+    context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH, cafile=cafile)
     return context
 
 
