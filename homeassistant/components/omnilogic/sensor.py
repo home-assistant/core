@@ -40,11 +40,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
                 backyard.get("airTemp"),
             )
         )
-        _LOGGER.info(
-            "OmniLogic - air temperature for backyard "
-            + backyard.get("Name")
-            + " set up successfully."
-        )
+        _LOGGER.info("OmniLogic - air temperature for backyard set up successfully.")
 
         for bow in backyard["BOWS"]:
             """Add bow level sensors."""
