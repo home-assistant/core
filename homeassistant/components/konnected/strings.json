@@ -59,7 +59,7 @@
       },
       "options_binary": {
         "title": "Configure Binary Sensor",
-        "description": "Zone {zone} options",
+        "description": "{zone} options",
         "data": {
           "type": "Binary Sensor Type",
           "name": "Name (optional)",
@@ -68,7 +68,7 @@
       },
       "options_digital": {
         "title": "Configure Digital Sensor",
-        "description": "Zone {zone} options",
+        "description": "{zone} options",
         "data": {
           "type": "Sensor Type",
           "name": "Name (optional)",
@@ -77,7 +77,7 @@
       },
       "options_switch": {
         "title": "Configure Switchable Output",
-        "description": "Zone {zone} options: state {state}",
+        "description": "{zone} options: state {state}",
         "data": {
           "name": "Name (optional)",
           "activation": "Output when on",

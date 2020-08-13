@@ -161,7 +161,7 @@ CONFIG_ENTRY_SCHEMA = vol.Schema(
 
 
 class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for NEW_NAME."""
+    """Handle a config flow for Konnected Panels."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
