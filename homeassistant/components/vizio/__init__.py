@@ -119,4 +119,4 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator):
         data = await gen_apps_list_from_url(session=async_get_clientsession(self.hass))
         if not data:
             raise UpdateFailed
-        return sorted(data, key=lambda k: k["name"])
+        return sorted(data, key=lambda app: app["name"])
