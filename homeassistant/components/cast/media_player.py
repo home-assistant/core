@@ -345,38 +345,44 @@ class CastDevice(MediaPlayerEntity):
             and media_status.player_is_idle
             and media_status.idle_reason == "ERROR"
         ):
-            tts_base_url = self.hass.data["tts_base_url"]
-            if (
-                tts_base_url
-                and media_status.content_id
-                and media_status.content_id.startswith(tts_base_url)
-            ):
-                external_url = None
+            external_url = None
+            internal_url = None
+            tts_base_url = None
+            url_description = ""
+            if "tts" in self.hass.config.components:
+                from homeassistant.components.tts import getBaseURL
+
                 try:
-                    external_url = get_url(self.hass, allow_internal=False)
-                except NoURLAvailableError:
-                    # external_url not configured, ignore
+                    tts_base_url = getBaseURL(self.hass)
+                except KeyError:
+                    # base_url not configured, ignore
                     pass
-                internal_url = None
-                try:
-                    internal_url = get_url(self.hass, allow_external=False)
-                except NoURLAvailableError:
-                    # internal_url not configured, ignore
-                    pass
-                url_description = "tts.base_url"
-                if tts_base_url == external_url:
-                    url_description = "external_url"
-                if tts_base_url == internal_url:
-                    url_description = "internal_url"
-                _LOGGER.error(
-                    "Failed to cast media %s from %s (%s). Please make sure %s is: "
-                    "Reachable from the cast device and either a publicly resolvable "
-                    "hostname or an IP address.",
-                    media_status.content_id,
-                    url_description,
-                    tts_base_url,
-                    tts_base_url,
-                )
+            try:
+                external_url = get_url(self.hass, allow_internal=False)
+            except NoURLAvailableError:
+                # external_url not configured, ignore
+                pass
+            try:
+                internal_url = get_url(self.hass, allow_external=False)
+            except NoURLAvailableError:
+                # internal_url not configured, ignore
+                pass
+
+            if media_status.content_id:
+                if tts_base_url and media_status.content_id.startswith(tts_base_url):
+                    url_description = f" from tts.base_url ({tts_base_url})"
+                if external_url and media_status.content_id.startswith(external_url):
+                    url_description = " from external_url ({external_url})"
+                if internal_url and media_status.content_id.startswith(internal_url):
+                    url_description = " from internal_url ({internal_url})"
+
+            _LOGGER.error(
+                "Failed to cast media %s%s. Please make sure the URL is: "
+                "Reachable from the cast device and either a publicly resolvable "
+                "hostname or an IP address.",
+                media_status.content_id,
+                url_description,
+            )
 
         self.media_status = media_status
         self.media_status_received = dt_util.utcnow()

@@ -540,6 +540,53 @@ async def test_group_media_control(hass: HomeAssistantType):
     assert chromecast.media_controller.play_media.called
 
 
+async def test_failed_cast_on_idle(hass, caplog):
+    """Test no warning when unless player went idle with reason "ERROR"."""
+    info = get_fake_chromecast_info()
+    chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    media_status = MagicMock(images=None)
+    media_status.player_is_idle = False
+    media_status.idle_reason = "ERROR"
+    media_status.content_id = "http://example.com:8123/tts.mp3"
+    entity.new_media_status(media_status)
+    assert "Failed to cast media" not in caplog.text
+
+    media_status = MagicMock(images=None)
+    media_status.player_is_idle = True
+    media_status.idle_reason = "Other"
+    media_status.content_id = "http://example.com:8123/tts.mp3"
+    entity.new_media_status(media_status)
+    assert "Failed to cast media" not in caplog.text
+
+    media_status = MagicMock(images=None)
+    media_status.player_is_idle = True
+    media_status.idle_reason = "ERROR"
+    media_status.content_id = "http://example.com:8123/tts.mp3"
+    entity.new_media_status(media_status)
+    assert "Failed to cast media http://example.com:8123/tts.mp3." in caplog.text
+
+
+async def test_failed_cast_other_url(hass, caplog):
+    """Test warning when casting from internal_url fails."""
+    with assert_setup_component(1, tts.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            tts.DOMAIN,
+            {tts.DOMAIN: {"platform": "demo", "base_url": "http://example.local:8123"}},
+        )
+
+    info = get_fake_chromecast_info()
+    chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    media_status = MagicMock(images=None)
+    media_status.player_is_idle = True
+    media_status.idle_reason = "ERROR"
+    media_status.content_id = "http://example.com:8123/tts.mp3"
+    entity.new_media_status(media_status)
+    assert "Failed to cast media http://example.com:8123/tts.mp3." in caplog.text
+
+
 async def test_failed_cast_internal_url(hass, caplog):
     """Test warning when casting from internal_url fails."""
     await async_process_ha_core_config(
@@ -552,27 +599,6 @@ async def test_failed_cast_internal_url(hass, caplog):
 
     info = get_fake_chromecast_info()
     chromecast, entity = await async_setup_media_player_cast(hass, info)
-
-    media_status = MagicMock(images=None)
-    media_status.player_is_idle = False
-    media_status.idle_reason = "ERROR"
-    media_status.content_id = "http://example.local:8123/tts.mp3"
-    entity.new_media_status(media_status)
-    assert "Failed to cast media" not in caplog.text
-
-    media_status = MagicMock(images=None)
-    media_status.player_is_idle = True
-    media_status.idle_reason = "Other"
-    media_status.content_id = "http://example.local:8123/tts.mp3"
-    entity.new_media_status(media_status)
-    assert "Failed to cast media" not in caplog.text
-
-    media_status = MagicMock(images=None)
-    media_status.player_is_idle = True
-    media_status.idle_reason = "ERROR"
-    media_status.content_id = "http://example.com:8123/tts.mp3"
-    entity.new_media_status(media_status)
-    assert "Failed to cast media" not in caplog.text
 
     media_status = MagicMock(images=None)
     media_status.player_is_idle = True
@@ -601,27 +627,6 @@ async def test_failed_cast_external_url(hass, caplog):
     chromecast, entity = await async_setup_media_player_cast(hass, info)
 
     media_status = MagicMock(images=None)
-    media_status.player_is_idle = False
-    media_status.idle_reason = "ERROR"
-    media_status.content_id = "http://example.local:8123/tts.mp3"
-    entity.new_media_status(media_status)
-    assert "Failed to cast media" not in caplog.text
-
-    media_status = MagicMock(images=None)
-    media_status.player_is_idle = True
-    media_status.idle_reason = "Other"
-    media_status.content_id = "http://example.local:8123/tts.mp3"
-    entity.new_media_status(media_status)
-    assert "Failed to cast media" not in caplog.text
-
-    media_status = MagicMock(images=None)
-    media_status.player_is_idle = True
-    media_status.idle_reason = "ERROR"
-    media_status.content_id = "http://example.local:8123/tts.mp3"
-    entity.new_media_status(media_status)
-    assert "Failed to cast media" not in caplog.text
-
-    media_status = MagicMock(images=None)
     media_status.player_is_idle = True
     media_status.idle_reason = "ERROR"
     media_status.content_id = "http://example.com:8123/tts.mp3"
@@ -643,27 +648,6 @@ async def test_failed_cast_tts_base_url(hass, caplog):
 
     info = get_fake_chromecast_info()
     chromecast, entity = await async_setup_media_player_cast(hass, info)
-
-    media_status = MagicMock(images=None)
-    media_status.player_is_idle = False
-    media_status.idle_reason = "ERROR"
-    media_status.content_id = "http://example.local:8123/tts.mp3"
-    entity.new_media_status(media_status)
-    assert "Failed to cast media" not in caplog.text
-
-    media_status = MagicMock(images=None)
-    media_status.player_is_idle = True
-    media_status.idle_reason = "Other"
-    media_status.content_id = "http://example.local:8123/tts.mp3"
-    entity.new_media_status(media_status)
-    assert "Failed to cast media" not in caplog.text
-
-    media_status = MagicMock(images=None)
-    media_status.player_is_idle = True
-    media_status.idle_reason = "ERROR"
-    media_status.content_id = "http://example.com:8123/tts.mp3"
-    entity.new_media_status(media_status)
-    assert "Failed to cast media" not in caplog.text
 
     media_status = MagicMock(images=None)
     media_status.player_is_idle = True
