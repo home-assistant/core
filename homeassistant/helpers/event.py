@@ -463,16 +463,32 @@ class TrackTemplateResultInfo:
         self._create_listeners()
         self._last_info = self._info
 
+    @property
+    def _needs_all_listener(self) -> bool:
+        # Tracking all states
+        if self._info.all_states:
+            return True
+
+        # Previous call had an exception
+        # so we do not know which states
+        # to track
+        if self._info.exception:
+            return True
+
+        # There are no entities in the template
+        # to track so this template will
+        # re-render on EVERY state change
+        if not self._info.domains and not self._info.entities:
+            return True
+
+        return False
+
     @callback
     def _create_listeners(self) -> None:
         if self._info.is_static:
             return
 
-        if (
-            self._info.all_states
-            or self._info.exception
-            or (not self._info.domains and not self._info.entities)
-        ):
+        if self._needs_all_listener:
             self._setup_all_listener()
             return
 
@@ -505,11 +521,7 @@ class TrackTemplateResultInfo:
 
     @callback
     def _update_listeners(self) -> None:
-        if (
-            self._info.all_states
-            or self._info.exception
-            or (not self._info.domains and not self._info.entities)
-        ):
+        if self._needs_all_listener:
             if self._all_listener:
                 return
             self._cancel_domains_listener()
