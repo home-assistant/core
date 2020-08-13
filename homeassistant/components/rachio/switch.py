@@ -1,13 +1,14 @@
 """Integration with the Rachio Iro sprinkler system controller."""
 from abc import abstractmethod
 from datetime import timedelta
-import homeassistant.helpers.config_validation as cv
 import logging
+
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.service import extract_entity_ids
@@ -91,7 +92,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if isinstance(entity, RachioZone):
             zones.append(entity)
         if isinstance(entity, RachioSchedule):
-            if entity._type == "FLEX":
+            if entity.type == "FLEX":
                 has_flex_sched = True
 
     async_add_entities(entities)
@@ -443,7 +444,7 @@ class RachioSchedule(RachioSwitch):
         self._duration = data[KEY_DURATION]
         self._schedule_enabled = data[KEY_ENABLED]
         self._summary = data[KEY_SUMMARY]
-        self._type = data.get(KEY_TYPE)
+        self.type = data.get(KEY_TYPE)
         self._current_schedule = current_schedule
         super().__init__(controller)
 
@@ -470,8 +471,8 @@ class RachioSchedule(RachioSwitch):
             ATTR_SCHEDULE_ENABLED: self.schedule_is_enabled,
             ATTR_SCHEDULE_DURATION: f"{round(self._duration / 60)} minutes",
         }
-        if self._type:
-            props[ATTR_SCHEDULE_TYPE] = self._type
+        if self.type:
+            props[ATTR_SCHEDULE_TYPE] = self.type
         else:
             props[ATTR_SCHEDULE_TYPE] = "FIXED"
         return props

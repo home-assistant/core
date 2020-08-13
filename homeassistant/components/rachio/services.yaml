@@ -7,4 +7,3 @@ set_zone_moisture_percent:
     percent:
       description: Set the desired zone moisture percentage from 0 to 100. [Required]
       example: 50
-      
