@@ -27,19 +27,25 @@ async def async_setup_entry(
     ]
     client: OVOEnergy = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
 
-    currency = coordinator.data.electricity[
-        len(coordinator.data.electricity) - 1
-    ].cost.currency_unit
-
-    async_add_entities(
-        [
-            OVOEnergyLastElectricityReading(coordinator, client),
-            OVOEnergyLastGasReading(coordinator, client),
-            OVOEnergyLastElectricityCost(coordinator, client, currency),
-            OVOEnergyLastGasCost(coordinator, client, currency),
-        ],
-        True,
-    )
+    if coordinator.data.electricity:
+        currency = coordinator.data.electricity[
+            len(coordinator.data.electricity) - 1
+        ].cost.currency_unit
+        async_add_entities(
+            [
+                OVOEnergyLastElectricityReading(coordinator, client),
+                OVOEnergyLastElectricityCost(coordinator, client, currency),
+            ],
+            True,
+        )
+    if coordinator.data.gas:
+        async_add_entities(
+            [
+                OVOEnergyLastGasReading(coordinator, client),
+                OVOEnergyLastGasCost(coordinator, client, currency),
+            ],
+            True,
+        )
 
 
 class OVOEnergySensor(OVOEnergyDeviceEntity):
