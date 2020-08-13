@@ -9,7 +9,7 @@ from pydaikin.daikin_base import Appliance
 from pydaikin.discovery import Discovery
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
 from .const import CONF_KEY, CONF_UUID, KEY_IP, KEY_MAC, TIMEOUT
@@ -130,6 +130,13 @@ class FlowHandler(config_entries.ConfigFlow):
         """Prepare configuration for a discovered Daikin device."""
         _LOGGER.debug("Zeroconf user_input: %s", discovery_info)
         devices = Discovery().poll(ip=discovery_info[CONF_HOST])
+        if not devices:
+            _LOGGER.debug(
+                "Could not find MAC-address for %s,"
+                " make sure the required UDP ports are open (see integration documentation).",
+                discovery_info[CONF_HOST],
+            )
+            raise data_entry_flow.AbortFlow("cannot_connect")
         await self.async_set_unique_id(next(iter(devices))[KEY_MAC])
         self._abort_if_unique_id_configured()
         self.host = discovery_info[CONF_HOST]
