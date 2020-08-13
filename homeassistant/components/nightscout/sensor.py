@@ -1,7 +1,6 @@
 """Support for Nightscout sensors."""
 from asyncio import TimeoutError as AsyncIOTimeoutError
 from datetime import timedelta
-import hashlib
 import logging
 from typing import Callable, List
 
@@ -12,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
-from .const import ATTR_DATE, ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, ATTR_SVG, DOMAIN
+from .const import ATTR_DATE, ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -28,16 +27,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Glucose Sensor."""
     api = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([NightscoutSensor(api, "Blood Sugar")], True)
+    async_add_entities([NightscoutSensor(api, "Blood Sugar", entry.unique_id)], True)
 
 
 class NightscoutSensor(Entity):
     """Implementation of a Nightscout sensor."""
 
-    def __init__(self, api: NightscoutAPI, name):
+    def __init__(self, api: NightscoutAPI, name, unique_id):
         """Initialize the Nightscout sensor."""
         self.api = api
-        self._unique_id = hashlib.sha256(api.server_url.encode("utf-8")).hexdigest()
+        self._unique_id = unique_id
         self._name = name
         self._state = None
         self._attributes = None
@@ -75,11 +74,6 @@ class NightscoutSensor(Entity):
         """Return the icon to use in the frontend, if any."""
         return self._icon
 
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
     async def async_update(self):
         """Fetch the latest data from Nightscout REST API and update the state."""
         try:
@@ -97,7 +91,6 @@ class NightscoutSensor(Entity):
             self._attributes = {
                 ATTR_DEVICE: value.device,
                 ATTR_DATE: value.date,
-                ATTR_SVG: value.sgv,
                 ATTR_DELTA: value.delta,
                 ATTR_DIRECTION: value.direction,
             }
