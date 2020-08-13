@@ -14,7 +14,7 @@ async def test_sensors(hass, config_entry, aioclient_mock_fixture):
     )
     await hass.async_block_till_done()
 
-    assert len(hass.data[FLO_DOMAIN]["devices"]) == 1
+    assert len(hass.data[FLO_DOMAIN][config_entry.entry_id]["devices"]) == 1
 
     # we should have 5 entities for the device
     assert hass.states.get("sensor.current_system_mode").state == "home"
@@ -34,7 +34,7 @@ async def test_manual_update_entity(
     )
     await hass.async_block_till_done()
 
-    assert len(hass.data[FLO_DOMAIN]["devices"]) == 1
+    assert len(hass.data[FLO_DOMAIN][config_entry.entry_id]["devices"]) == 1
 
     await async_setup_component(hass, "homeassistant", {})
 

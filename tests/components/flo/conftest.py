@@ -94,6 +94,7 @@ def aioclient_mock_fixture(aioclient_mock):
         status=200,
         headers={"Content-Type": "application/json"},
         json={"valve": {"target": "closed"}},
+    )
     # Mocks the health test call for flo.
     aioclient_mock.post(
         "https://api-gw.meetflo.com/api/v2/devices/98765/healthTest/run",

@@ -23,7 +23,9 @@ SERVICE_RUN_HEALTH_TEST = "run_health_test"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Flo switches from config entry."""
-    devices: List[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN]["devices"]
+    devices: List[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
+        config_entry.entry_id
+    ]["devices"]
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(

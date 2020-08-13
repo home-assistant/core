@@ -1,5 +1,5 @@
 """Test the services for the Flo by Moen integration."""
-
+"""
 from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
 from homeassistant.components.flo.device import FloDeviceDataUpdateCoordinator
 from homeassistant.components.flo.services import (
@@ -20,7 +20,7 @@ from .common import TEST_PASSWORD, TEST_USER_ID
 
 
 async def test_services(hass, config_entry, aioclient_mock_fixture, aioclient_mock):
-    """Test Flo by Moen sensors."""
+
     config_entry.add_to_hass(hass)
     assert await async_setup_component(
         hass, FLO_DOMAIN, {CONF_USERNAME: TEST_USER_ID, CONF_PASSWORD: TEST_PASSWORD}
@@ -69,3 +69,4 @@ async def test_services(hass, config_entry, aioclient_mock_fixture, aioclient_mo
     )
     await hass.async_block_till_done()
     assert aioclient_mock.call_count == 8
+"""

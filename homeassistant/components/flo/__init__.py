@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     _LOGGER.debug("Flo user information with locations: %s", user_info)
 
-    hass.data[DOMAIN]["devices"] = devices = [
+    hass.data[DOMAIN][entry.entry_id]["devices"] = devices = [
         FloDeviceDataUpdateCoordinator(hass, client, location["id"], device["id"])
         for location in user_info["locations"]
         for device in location["devices"]

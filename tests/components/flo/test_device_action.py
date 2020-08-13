@@ -1,4 +1,5 @@
 """Tests for Flo device automation actions."""
+"""
 from aioflo.location import SYSTEM_MODE_HOME
 
 import homeassistant.components.automation as automation
@@ -27,7 +28,7 @@ from tests.common import async_mock_service
 
 
 async def test_get_actions(hass, config_entry, aioclient_mock_fixture):
-    """Test we get the expected actions from a Flo device."""
+
 
     config_entry.add_to_hass(hass)
     assert await async_setup_component(
@@ -70,7 +71,7 @@ async def test_get_actions(hass, config_entry, aioclient_mock_fixture):
 
 
 async def test_action(hass, config_entry, aioclient_mock_fixture):
-    """Test for executing a zha device action."""
+
     config_entry.add_to_hass(hass)
     assert await async_setup_component(
         hass, FLO_DOMAIN, {CONF_USERNAME: TEST_USER_ID, CONF_PASSWORD: TEST_PASSWORD}
@@ -139,3 +140,4 @@ async def test_action(hass, config_entry, aioclient_mock_fixture):
     hass.data[FLO_DOMAIN]["devices"] = []
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
+"""
