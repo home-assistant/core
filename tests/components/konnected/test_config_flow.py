@@ -788,7 +788,12 @@ async def test_option_flow(hass, mock_panel):
     # make sure we enforce url format
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"blink": True, "override_api_host": True, "api_host": "badhosturl"},
+        user_input={
+            "discovery": False,
+            "blink": True,
+            "override_api_host": True,
+            "api_host": "badhosturl",
+        },
     )
 
     assert result["type"] == "form"
@@ -796,6 +801,7 @@ async def test_option_flow(hass, mock_panel):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
+            "discovery": False,
             "blink": True,
             "override_api_host": True,
             "api_host": "http://overridehost:1111",
@@ -810,6 +816,7 @@ async def test_option_flow(hass, mock_panel):
             "6": "Binary Sensor",
             "out": "Switchable Output",
         },
+        "discovery": False,
         "blink": True,
         "api_host": "http://overridehost:1111",
         "binary_sensors": [
@@ -978,7 +985,8 @@ async def test_option_flow_pro(hass, mock_panel):
     assert result["step_id"] == "options_misc"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"blink": True, "override_api_host": False},
+        result["flow_id"],
+        user_input={"discovery": False, "blink": True, "override_api_host": False},
     )
 
     assert result["type"] == "create_entry"
@@ -995,6 +1003,7 @@ async def test_option_flow_pro(hass, mock_panel):
             "alarm1": "Switchable Output",
             "out1": "Switchable Output",
         },
+        "discovery": False,
         "blink": True,
         "api_host": "",
         "binary_sensors": [
@@ -1141,14 +1150,17 @@ async def test_option_flow_import(hass, mock_panel):
 
     schema = result["data_schema"]({})
     assert schema["blink"] is True
+    assert schema["discovery"] is True
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"blink": False, "override_api_host": False},
+        result["flow_id"],
+        user_input={"discovery": True, "blink": False, "override_api_host": False},
     )
 
     # verify the updated fields
     assert result["type"] == "create_entry"
     assert result["data"] == {
         "io": {"1": "Binary Sensor", "2": "Digital Sensor", "3": "Switchable Output"},
+        "discovery": True,
         "blink": False,
         "api_host": "",
         "binary_sensors": [

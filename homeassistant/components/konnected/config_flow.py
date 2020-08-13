@@ -811,6 +811,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(
+                        CONF_DISCOVERY,
+                        default=self.current_opt.get(CONF_DISCOVERY, True),
+                    ): bool,
+                    vol.Required(
                         CONF_BLINK, default=self.current_opt.get(CONF_BLINK, True)
                     ): bool,
                     vol.Required(
