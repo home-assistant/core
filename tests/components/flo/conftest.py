@@ -79,3 +79,19 @@ def aioclient_mock_fixture(aioclient_mock):
         status=200,
         headers={"Content-Type": "application/json"},
     )
+    # Mocks the valve open call for flo.
+    aioclient_mock.post(
+        "https://api-gw.meetflo.com/api/v2/devices/98765",
+        text=load_fixture("flo/device_info_response.json"),
+        status=200,
+        headers={"Content-Type": "application/json"},
+        json={"valve": {"target": "open"}},
+    )
+    # Mocks the valve close call for flo.
+    aioclient_mock.post(
+        "https://api-gw.meetflo.com/api/v2/devices/98765",
+        text=load_fixture("flo/device_info_response_closed.json"),
+        status=200,
+        headers={"Content-Type": "application/json"},
+        json={"valve": {"target": "closed"}},
+    )
