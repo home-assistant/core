@@ -87,6 +87,7 @@ async def async_unload_entry(
         )
     )
 
+    # Exclude this config entry because its not unloaded yet
     if not any(
         [
             entry.state == ENTRY_STATE_LOADED
