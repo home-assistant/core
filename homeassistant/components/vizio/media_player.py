@@ -325,13 +325,14 @@ class VizioDevice(MediaPlayerEntity):
 
         # Register callback for app list updates if device is a TV
         @callback
-        def update():
+        def apps_list_update():
             """Update list of all apps."""
             self._all_apps = self._apps_coordinator.data
+            self.async_write_ha_state()
 
         if self._device_class == DEVICE_CLASS_TV:
             self._async_unsub_listeners.append(
-                self._apps_coordinator.async_add_listener(update)
+                self._apps_coordinator.async_add_listener(apps_list_update)
             )
 
     async def async_will_remove_from_hass(self) -> None:
