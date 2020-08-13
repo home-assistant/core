@@ -529,13 +529,12 @@ class TrackTemplateResultInfo:
             self._setup_all_listener()
             return
 
-        had_all_listner = False
-        if self._all_listener:
-            had_all_listner = True
+        had_all_listner = True if self._all_listener else False
+        if had_all_listner:
             self._cancel_all_listener()
 
-        domains_changed = False
-        if had_all_listner or self._info.domains != self._last_info.domains:
+        domains_changed = self._info.domains != self._last_info.domains
+        if had_all_listner or domains_changed:
             domains_changed = True
             self._cancel_domains_listener()
             self._setup_domains_listener()
