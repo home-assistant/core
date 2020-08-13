@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # https://docs.sentry.io/platforms/python/logging/
     sentry_logging = LoggingIntegration(
-        level=logging.WARNING,  # Capture info and above as breadcrumbs
+        level=logging.WARNING,  # Capture warning and above as breadcrumbs
         event_level=logging.ERROR,  # Send errors as events
     )
 
