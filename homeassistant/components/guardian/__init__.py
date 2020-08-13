@@ -192,7 +192,7 @@ class PairedSensorManager:
             self._hass,
             client=self._client,
             api_name=f"{API_SENSOR_PAIRED_SENSOR_STATUS}_{uid}",
-            api_coro=lambda uid=uid: self._client.sensor.paired_sensor_status(uid),
+            api_coro=lambda: self._client.sensor.paired_sensor_status(uid),
             api_lock=self._api_lock,
             valve_controller_uid=self._entry.data[CONF_UID],
         )
@@ -236,16 +236,23 @@ class PairedSensorManager:
         for uid in to_remove:
             self.async_unpair_sensor(uid)
 
-    @callback
-    def async_unpair_sensor(self, uid: str) -> None:
+    async def async_unpair_sensor(self, uid: str) -> None:
         """Remove a paired sensor coordinator."""
         LOGGER.info("Removing paired sensor: %s", uid)
 
+        # Clear out objects related to this paired sensor:
         self._paired_uids.remove(uid)
-
         self._hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
             API_SENSOR_PAIRED_SENSOR_STATUS
         ].pop(uid)
+
+        # Remove the paired sensor device from the device registry (which will
+        # clean up entities and the entity registry):
+        dev_reg = await self._hass.helpers.device_registry.async_get_registry()
+        device = dev_reg.async_get_or_create(
+            config_entry_id=self._entry.entry_id, identifiers={(DOMAIN, uid)}
+        )
+        dev_reg.async_remove_device(device.id)
 
 
 class GuardianEntity(Entity):
@@ -340,40 +347,6 @@ class PairedSensorEntity(GuardianEntity):
         """Perform tasks when the entity is added."""
         self.async_on_remove(
             self._coordinator.async_add_listener(self._async_update_state_callback)
-        )
-
-        async def async_remove(uid: str):
-            """Remove the entity from the registry and the state machine.
-
-            Also removes the associated paired sensor device if this is the last entity.
-            """
-            if uid != self._paired_sensor_uid:
-                return
-
-            ent_reg = await self.hass.helpers.entity_registry.async_get_registry()
-            ent_entry = ent_reg.async_get(self.entity_id)
-            if not ent_entry:
-                await self.async_remove()
-                return
-
-            dev_reg = await self.hass.helpers.device_registry.async_get_registry()
-            dev_ent = dev_reg.async_get(ent_entry.device_id)
-            if not dev_ent:
-                ent_reg.async_remove(self.entity_id)
-                return
-
-            if len(async_entries_for_device(ent_reg, ent_entry.device_id)) == 1:
-                dev_reg.async_remove_device(dev_ent.id)
-                return
-
-            ent_reg.async_remove(self.entity_id)
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_REMOVE_PAIRED_SENSOR.format(self._entry.data[CONF_UID]),
-                async_remove,
-            )
         )
 
         self._async_update_from_latest_data()

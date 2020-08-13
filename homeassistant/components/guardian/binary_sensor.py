@@ -62,7 +62,7 @@ async def async_setup_entry(
                 )
             )
 
-        async_add_entities(entities, True)
+        async_add_entities(entities)
 
     # Handle adding paired sensors after HASS startup:
     async_register_dispatcher_connect(
@@ -186,9 +186,9 @@ class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
             self._is_on = self._coordinators[API_WIFI_STATUS].data["station_connected"]
             self._attrs.update(
                 {
-                    ATTR_CONNECTED_CLIENTS: self._coordinators[API_WIFI_STATUS].data[
-                        "ap_clients"
-                    ]
+                    ATTR_CONNECTED_CLIENTS: self._coordinators[
+                        API_WIFI_STATUS
+                    ].data.get("ap_clients")
                 }
             )
         elif self._kind == SENSOR_KIND_LEAK_DETECTED:
