@@ -312,7 +312,7 @@ async def test_ssdp_host_update(hass, mock_panel):
                 "10": "Binary Sensor",
                 "3": "Digital Sensor",
                 "7": "Digital Sensor",
-                "11": "Digital Sensor",
+                "11": "Binary Sensor",
                 "4": "Switchable Output",
                 "out1": "Switchable Output",
                 "alarm1": "Switchable Output",
@@ -321,11 +321,11 @@ async def test_ssdp_host_update(hass, mock_panel):
                 {"zone": "2", "type": "door"},
                 {"zone": "6", "type": "window", "name": "winder", "inverse": True},
                 {"zone": "10", "type": "door"},
+                {"zone": "11", "type": "window"},
             ],
             "sensors": [
                 {"zone": "3", "type": "dht"},
                 {"zone": "7", "type": "ds18b20", "name": "temper"},
-                {"zone": "11", "type": "dht"},
             ],
             "switches": [
                 {"zone": "4"},
@@ -391,11 +391,11 @@ async def test_import_existing_config(hass, mock_panel):
                     {"zone": "2", "type": "door"},
                     {"zone": 6, "type": "window", "name": "winder", "inverse": True},
                     {"zone": "10", "type": "door"},
+                    {"zone": "11", "type": "window"},
                 ],
                 "sensors": [
                     {"zone": "3", "type": "dht"},
                     {"zone": 7, "type": "ds18b20", "name": "temper"},
-                    {"zone": "11", "type": "dht"},
                 ],
                 "switches": [
                     {"zone": "4"},
@@ -447,7 +447,7 @@ async def test_import_existing_config(hass, mock_panel):
                 "10": "Binary Sensor",
                 "3": "Digital Sensor",
                 "7": "Digital Sensor",
-                "11": "Digital Sensor",
+                "11": "Binary Sensor",
                 "4": "Switchable Output",
                 "8": "Switchable Output",
                 "out1": "Switchable Output",
@@ -460,11 +460,11 @@ async def test_import_existing_config(hass, mock_panel):
                 {"zone": "2", "type": "door", "inverse": False},
                 {"zone": "6", "type": "window", "name": "winder", "inverse": True},
                 {"zone": "10", "type": "door", "inverse": False},
+                {"zone": "11", "type": "window", "inverse": False},
             ],
             "sensors": [
                 {"zone": "3", "type": "dht", "poll_interval": 3},
                 {"zone": "7", "type": "ds18b20", "name": "temper", "poll_interval": 3},
-                {"zone": "11", "type": "dht", "poll_interval": 3},
             ],
             "switches": [
                 {"activation": "high", "zone": "4"},
@@ -889,7 +889,7 @@ async def test_option_flow_pro(hass, mock_panel):
             "8": "Switchable Output",
             "9": "Disabled",
             "10": "Binary Sensor",
-            "11": "Digital Sensor",
+            "11": "Binary Sensor",
             "12": "Disabled",
             "out1": "Switchable Output",
             "alarm1": "Switchable Output",
@@ -919,6 +919,13 @@ async def test_option_flow_pro(hass, mock_panel):
         result["flow_id"], user_input={"type": "door"}
     )
     assert result["type"] == "form"
+    assert result["step_id"] == "options_binary"
+
+    # zone 11
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"type": "window"}
+    )
+    assert result["type"] == "form"
     assert result["step_id"] == "options_digital"
 
     # zone 3
@@ -931,13 +938,6 @@ async def test_option_flow_pro(hass, mock_panel):
     # zone 7
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"type": "ds18b20", "name": "temper"}
-    )
-    assert result["type"] == "form"
-    assert result["step_id"] == "options_digital"
-
-    # zone 11
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"type": "dht"}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "options_switch"
@@ -985,7 +985,7 @@ async def test_option_flow_pro(hass, mock_panel):
     assert result["data"] == {
         "io": {
             "10": "Binary Sensor",
-            "11": "Digital Sensor",
+            "11": "Binary Sensor",
             "2": "Binary Sensor",
             "3": "Digital Sensor",
             "4": "Switchable Output",
@@ -1001,11 +1001,11 @@ async def test_option_flow_pro(hass, mock_panel):
             {"zone": "2", "type": "door", "inverse": False},
             {"zone": "6", "type": "window", "name": "winder", "inverse": True},
             {"zone": "10", "type": "door", "inverse": False},
+            {"zone": "11", "type": "window", "inverse": False},
         ],
         "sensors": [
             {"zone": "3", "type": "dht", "poll_interval": 3},
             {"zone": "7", "type": "ds18b20", "name": "temper", "poll_interval": 3},
-            {"zone": "11", "type": "dht", "poll_interval": 3},
         ],
         "switches": [
             {"activation": "high", "zone": "4"},
