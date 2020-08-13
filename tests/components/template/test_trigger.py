@@ -5,8 +5,8 @@ from unittest import mock
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.template import trigger as template_trigger
 from homeassistant.core import Context, callback
-from homeassistant.helpers.triggers import template as template_trigger
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 

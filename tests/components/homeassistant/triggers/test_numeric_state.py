@@ -5,8 +5,10 @@ import pytest
 import voluptuous as vol
 
 import homeassistant.components.automation as automation
+from homeassistant.components.homeassistant.triggers import (
+    numeric_state as numeric_state_trigger,
+)
 from homeassistant.core import Context
-from homeassistant.helpers.triggers import numeric_state as numeric_state_trigger
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
