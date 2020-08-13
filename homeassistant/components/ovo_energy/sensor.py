@@ -47,7 +47,9 @@ async def async_setup_entry(
                 OVOEnergyLastGasCost(
                     coordinator,
                     client,
-                    coordinator.data.gas[len(coordinator.data.gas) - 1].cost.currency_unit,
+                    coordinator.data.gas[
+                        len(coordinator.data.gas) - 1
+                    ].cost.currency_unit,
                 )
             )
 
