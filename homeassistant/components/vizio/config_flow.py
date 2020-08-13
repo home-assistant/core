@@ -158,12 +158,10 @@ class VizioOptionsConfigFlow(config_entries.OptionsFlow):
                     ): cv.multi_select(
                         [
                             APP_HOME["name"],
-                            *sorted(
-                                [
-                                    app["name"]
-                                    for app in self.hass.data[DOMAIN][CONF_APPS].data
-                                ]
-                            ),
+                            *[
+                                app["name"]
+                                for app in self.hass.data[DOMAIN][CONF_APPS].data
+                            ],
                         ]
                     ),
                 }

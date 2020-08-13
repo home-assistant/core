@@ -9,7 +9,7 @@ from pyvizio.util import gen_apps_list_from_url
 import voluptuous as vol
 
 from homeassistant.components.media_player import DEVICE_CLASS_TV
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ENTRY_STATE_LOADED, SOURCE_IMPORT, ConfigEntry
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -84,15 +84,12 @@ async def async_unload_entry(
         )
     )
 
-    if (
-        len(
-            [
-                entry.entry_id
-                for entry in hass.config_entries.async_entries(DOMAIN)
-                if entry.entry_id != config_entry.entry_id
-            ]
-        )
-        == 0
+    if not any(
+        [
+            entry.entry_id
+            for entry in hass.config_entries.async_entries(DOMAIN)
+            if entry.state == ENTRY_STATE_LOADED
+        ]
     ):
         hass.data[DOMAIN].pop(CONF_APPS)
 
@@ -118,4 +115,4 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator):
         data = await gen_apps_list_from_url(session=async_get_clientsession(self.hass))
         if not data:
             raise UpdateFailed
-        return data
+        return sorted(data)

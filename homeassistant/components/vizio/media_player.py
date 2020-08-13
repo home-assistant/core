@@ -23,6 +23,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -156,6 +157,7 @@ class VizioDevice(MediaPlayerEntity):
         self._available_sound_modes = []
         self._available_inputs = []
         self._available_apps = []
+        self._all_apps = apps_coordinator.data
         self._conf_apps = config_entry.options.get(CONF_APPS, {})
         self._additional_app_configs = config_entry.data.get(CONF_APPS, {}).get(
             CONF_ADDITIONAL_CONFIGS, []
@@ -260,7 +262,7 @@ class VizioDevice(MediaPlayerEntity):
         # Create list of available known apps from known app list after
         # filtering by CONF_INCLUDE/CONF_EXCLUDE
         self._available_apps = self._apps_list(
-            sorted([app["name"] for app in self._apps_coordinator.data])
+            sorted([app["name"] for app in self._all_apps])
         )
 
         self._current_app_config = await self._device.get_current_app_config(
@@ -269,7 +271,7 @@ class VizioDevice(MediaPlayerEntity):
 
         self._current_app = find_app_name(
             self._current_app_config,
-            [APP_HOME, *self._apps_coordinator.data, *self._additional_app_configs],
+            [APP_HOME, *self._all_apps, *self._additional_app_configs],
         )
 
         if self._current_app == NO_APP_RUNNING:
@@ -318,6 +320,15 @@ class VizioDevice(MediaPlayerEntity):
             async_dispatcher_connect(
                 self.hass, self._config_entry.entry_id, self._async_update_options
             )
+        )
+
+        # Register callback for app list updates
+        @callback
+        def update():
+            self._all_apps = self._apps_coordinator.data
+
+        self._async_unsub_listeners.append(
+            self._apps_coordinator.async_add_listener(update)
         )
 
     async def async_will_remove_from_hass(self) -> None:
@@ -485,7 +496,7 @@ class VizioDevice(MediaPlayerEntity):
                 )
             )
         elif source in self._available_apps:
-            await self._device.launch_app(source, self._apps_coordinator.data)
+            await self._device.launch_app(source, self._all_apps)
 
     async def async_volume_up(self) -> None:
         """Increase volume of the device."""
