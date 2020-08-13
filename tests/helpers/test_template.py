@@ -1459,6 +1459,31 @@ def test_nested_async_render_to_info_case(hass):
     assert_result_info(info, "off", {"input_select.picker", "vacuum.a"})
 
 
+def test_result_as_boolean(hass):
+    """Test converting a template result to a boolean."""
+
+    template.result_as_boolean(True) is True
+    template.result_as_boolean(" 1 ") is True
+    template.result_as_boolean(" true ") is True
+    template.result_as_boolean(" TrUE ") is True
+    template.result_as_boolean(" YeS ") is True
+    template.result_as_boolean(" On ") is True
+    template.result_as_boolean(" Enable ") is True
+    template.result_as_boolean(1) is True
+    template.result_as_boolean(-1) is True
+    template.result_as_boolean(500) is True
+
+    template.result_as_boolean(False) is False
+    template.result_as_boolean(" 0 ") is False
+    template.result_as_boolean(" false ") is False
+    template.result_as_boolean(" FaLsE ") is False
+    template.result_as_boolean(" no ") is False
+    template.result_as_boolean(" off ") is False
+    template.result_as_boolean(" disable ") is False
+    template.result_as_boolean(0) is False
+    template.result_as_boolean(None) is False
+
+
 def test_closest_function_to_entity_id(hass):
     """Test closest function to entity id."""
     hass.states.async_set(

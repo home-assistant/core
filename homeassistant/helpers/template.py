@@ -16,6 +16,7 @@ import jinja2
 from jinja2 import contextfilter, contextfunction
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace  # type: ignore
+import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -28,7 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import State, callback, split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import location as loc_helper
+from homeassistant.helpers import config_validation as cv, location as loc_helper
 from homeassistant.helpers.typing import HomeAssistantType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
@@ -523,6 +524,19 @@ def _resolve_state(
     if isinstance(entity_id_or_state, str):
         return _get_state(hass, entity_id_or_state)
     return None
+
+
+def result_as_boolean(template_result: Optional[str]) -> bool:
+    """Convert the template result to a boolean.
+
+    True/not 0/'1'/'true'/'yes'/'on'/'enable' are considered truthy
+    False/0/None/'0'/'false'/'no'/'off'/'disable' are considered falsy
+
+    """
+    try:
+        return cv.boolean(template_result)
+    except vol.Invalid:
+        return False
 
 
 def expand(hass: HomeAssistantType, *args: Any) -> Iterable[State]:

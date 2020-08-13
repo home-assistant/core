@@ -7,7 +7,6 @@ import time
 from typing import Any, Awaitable, Callable, Iterable, Optional, Union
 
 import attr
-import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_NOW,
@@ -27,10 +26,9 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.sun import get_astral_event_next
-from homeassistant.helpers.template import Template
+from homeassistant.helpers.template import Template, result_as_boolean
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
@@ -353,9 +351,6 @@ def async_track_state_added_domain(
     return remove_listener
 
 
-_boolean_coerce = vol.Any(cv.boolean, lambda val: False)
-
-
 @callback
 @bind_hass
 def async_track_template(
@@ -413,7 +408,7 @@ def async_track_template(
             _LOGGER.exception(result)
             return
 
-        if _boolean_coerce(last_result) or not _boolean_coerce(result):
+        if result_as_boolean(last_result) or not result_as_boolean(result):
             return
 
         hass.async_run_job(
