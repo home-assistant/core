@@ -195,9 +195,11 @@ class SlackNotificationService(BaseNotificationService):
         """Send a text-only message."""
         username = self._username
         icon = self._icon
-        icon_type = (
-            "url" if self._icon.lower().startswith(("http://", "https://")) else "emoji"
-        )
+
+        if self._icon.lower().startswith(("http://", "https://")):
+            icon_type = "url"
+        else:
+            icon_type = "emoji"
 
         tasks = {
             target: self._client.chat_postMessage(
