@@ -1411,7 +1411,7 @@ def test_async_render_to_info_with_branching(hass):
     assert_result_info(info, "on", {"light.a", "light.b"})
 
 
-def test_extract_entities_with_complex_branching(hass):
+def test_async_render_to_info_with_complex_branching(hass):
     """Test async_render_to_info function by domain."""
     hass.states.async_set("light.a", "off")
     hass.states.async_set("light.b", "on")
@@ -1445,6 +1445,95 @@ def test_extract_entities_with_complex_branching(hass):
     )
 
     assert_result_info(info, "['sensor.a']", {"light.a", "light.b"}, {"sensor"})
+
+
+async def test_async_render_to_info_with_wildcard_matching_entity_id(hass):
+    """Test tracking template with a wildcard."""
+    template_complex_str = r"""
+
+{% for state in states %}
+  {% if state.entity_id | regex_match('.*\.office_') %}
+    {{ state.entity_id }}={{ state.state }}
+  {% endif %}
+{% endfor %}
+
+"""
+    hass.states.async_set("cover.office_drapes", "closed")
+    hass.states.async_set("cover.office_window", "closed")
+    hass.states.async_set("cover.office_skylight", "open")
+    info = render_to_info(hass, template_complex_str)
+
+    assert not info.domains
+    assert info.entities == {
+        "cover.office_drapes",
+        "cover.office_window",
+        "cover.office_skylight",
+    }
+    assert info.all_states is True
+
+
+async def test_async_render_to_info_with_wildcard_matching_state(hass):
+    """Test tracking template with a wildcard."""
+    template_complex_str = """
+
+{% for state in states %}
+  {% if state.state | regex_match('ope.*') %}
+    {{ state.entity_id }}={{ state.state }}
+  {% endif %}
+{% endfor %}
+
+"""
+    hass.states.async_set("cover.office_drapes", "closed")
+    hass.states.async_set("cover.office_window", "closed")
+    hass.states.async_set("cover.office_skylight", "open")
+    hass.states.async_set("cover.x_skylight", "open")
+    hass.states.async_set("binary_sensor.door", "open")
+
+    info = render_to_info(hass, template_complex_str)
+
+    assert not info.domains
+    assert info.entities == {
+        "cover.x_skylight",
+        "binary_sensor.door",
+        "cover.office_drapes",
+        "cover.office_window",
+        "cover.office_skylight",
+    }
+    assert info.all_states is True
+
+    hass.states.async_set("binary_sensor.door", "closed")
+    info = render_to_info(hass, template_complex_str)
+
+    assert not info.domains
+    assert info.entities == {
+        "cover.x_skylight",
+        "binary_sensor.door",
+        "cover.office_drapes",
+        "cover.office_window",
+        "cover.office_skylight",
+    }
+    assert info.all_states is True
+
+    template_cover_str = """
+
+{% for state in states.cover %}
+  {% if state.state | regex_match('ope.*') %}
+    {{ state.entity_id }}={{ state.state }}
+  {% endif %}
+{% endfor %}
+
+"""
+    hass.states.async_set("cover.x_skylight", "closed")
+    info = render_to_info(hass, template_cover_str)
+
+    assert info.domains == {"cover"}
+    assert info.entities == {
+        "cover.x_skylight",
+        "cover.office_drapes",
+        "cover.office_window",
+        "cover.office_skylight",
+    }
+    assert info.all_states is False
 
 
 def test_nested_async_render_to_info_case(hass):

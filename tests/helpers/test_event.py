@@ -706,6 +706,39 @@ async def test_track_template_result_complex(hass):
     assert specific_runs[9].strip() == "['lock.one']"
 
 
+async def test_track_template_result_with_wildcard(hass):
+    """Test tracking template with a wildcard."""
+    specific_runs = []
+    template_complex_str = r"""
+
+{% for state in states %}
+  {% if state.entity_id | regex_match('.*\.office_') %}
+    {{ state.entity_id }}={{ state.state }}
+  {% endif %}
+{% endfor %}
+
+"""
+    template_complex = Template(template_complex_str, hass)
+
+    def specific_run_callback(event, template, old_result, new_result):
+        specific_runs.append(new_result)
+
+    hass.states.async_set("cover.office_drapes", "closed")
+    hass.states.async_set("cover.office_window", "closed")
+    hass.states.async_set("cover.office_skylight", "open")
+
+    async_track_template_result(hass, template_complex, specific_run_callback)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("cover.office_window", "open")
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
+
+    assert "cover.office_drapes=closed" in specific_runs[0]
+    assert "cover.office_window=open" in specific_runs[0]
+    assert "cover.office_skylight=open" in specific_runs[0]
+
+
 async def test_track_template_result_iterator(hass):
     """Test tracking template."""
     iterator_runs = []
