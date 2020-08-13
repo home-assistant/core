@@ -89,12 +89,10 @@ async def async_unload_entry(
 
     # Exclude this config entry because its not unloaded yet
     if not any(
-        [
-            entry.state == ENTRY_STATE_LOADED
-            and entry.entry_id != config_entry.entry_id
-            and entry.data[CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
-            for entry in hass.config_entries.async_entries(DOMAIN)
-        ]
+        entry.state == ENTRY_STATE_LOADED
+        and entry.entry_id != config_entry.entry_id
+        and entry.data[CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
+        for entry in hass.config_entries.async_entries(DOMAIN)
     ):
         hass.data[DOMAIN].pop(CONF_APPS)
 
