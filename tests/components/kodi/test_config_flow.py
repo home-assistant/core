@@ -51,7 +51,6 @@ async def discovery_flow(hass):
 
     assert result["type"] == "form"
     assert result["errors"] == {}
-
     return result["flow_id"]
 
 
@@ -250,7 +249,6 @@ async def test_discovery(hass, discovery_flow):
         **TEST_CREDENTIALS,
         **TEST_WS_PORT,
         "name": "hostname",
-        "id": UUID,
         "timeout": DEFAULT_TIMEOUT,
     }
 
@@ -290,7 +288,7 @@ async def test_discovery_updates_unique_id(hass):
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=UUID,
-        data={"host": "dummy", "port": 11, "namename": "dummy.local.", "id": UUID},
+        data={"host": "dummy", "port": 11, "namename": "dummy.local."},
     )
 
     entry.add_to_hass(hass)

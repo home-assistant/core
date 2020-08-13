@@ -7,7 +7,6 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import (
     CONF_HOST,
-    CONF_ID,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
@@ -95,7 +94,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._port: Optional[int] = None
         self._ws_port: Optional[int] = None
         self._name: Optional[str] = None
-        self._uuid: Optional[str] = None
         self._username: Optional[str] = None
         self._password: Optional[str] = None
         self._ssl: Optional[bool] = DEFAULT_SSL
@@ -106,10 +104,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._host = discovery_info["host"]
         self._port = int(discovery_info["port"])
         self._name = discovery_info["hostname"][: -len(".local.")]
-        self._uuid = discovery_info["properties"]["uuid"]
+        uuid = discovery_info["properties"]["uuid"]
         self._discovery_name = discovery_info["name"]
 
-        await self.async_set_unique_id(self._uuid)
+        await self.async_set_unique_id(uuid)
         self._abort_if_unique_id_configured(
             updates={
                 CONF_HOST: self._host,
@@ -214,8 +212,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_SSL: self._ssl,
             CONF_TIMEOUT: DEFAULT_TIMEOUT,
         }
-        if self._uuid:
-            data[CONF_ID] = self._uuid
 
         return data
 

@@ -33,7 +33,6 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
-    CONF_ID,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
@@ -216,10 +215,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     version = data[DATA_VERSION]
     kodi = data[DATA_KODI]
     name = config_entry.data[CONF_NAME]
-    uid = config_entry.data.get(CONF_ID)
-
-    if uid is None:
-        uid = config_entry.entry_id
+    uid = config_entry.unique_id
 
     entity = KodiEntity(connection, kodi, name, uid, version)
     async_add_entities([entity])
