@@ -13,7 +13,6 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.triggers import mqtt as mqtt_trigger
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import (
@@ -27,6 +26,7 @@ from . import (
     DOMAIN,
     cleanup_device_registry,
     debug_info,
+    trigger as mqtt_trigger,
 )
 from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash
 

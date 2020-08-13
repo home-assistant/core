@@ -5,6 +5,9 @@ from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
+from homeassistant.components.homeassistant.triggers import (
+    numeric_state as numeric_state_trigger,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -28,7 +31,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_registry import async_entries_for_device
-from homeassistant.helpers.triggers import numeric_state as numeric_state_trigger
 
 from . import DOMAIN
 

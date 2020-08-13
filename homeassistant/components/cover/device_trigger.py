@@ -5,6 +5,10 @@ import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.homeassistant.triggers import (
+    numeric_state as numeric_state_trigger,
+    state as state_trigger,
+)
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     CONF_ABOVE,
@@ -14,6 +18,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_PLATFORM,
     CONF_TYPE,
+    CONF_VALUE_TEMPLATE,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
@@ -21,10 +26,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
-from homeassistant.helpers.triggers import (
-    numeric_state as numeric_state_trigger,
-    state as state_trigger,
-)
 from homeassistant.helpers.typing import ConfigType
 
 from . import (
@@ -182,7 +183,7 @@ async def async_attach_trigger(
             to_state = STATE_CLOSING
 
         state_config = {
-            state_trigger.CONF_PLATFORM: "state",
+            CONF_PLATFORM: "state",
             CONF_ENTITY_ID: config[CONF_ENTITY_ID],
             state_trigger.CONF_TO: to_state,
         }
@@ -200,11 +201,11 @@ async def async_attach_trigger(
     value_template = f"{{{{ state.attributes.{position} }}}}"
 
     numeric_state_config = {
-        numeric_state_trigger.CONF_PLATFORM: "numeric_state",
-        numeric_state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        numeric_state_trigger.CONF_BELOW: max_pos,
-        numeric_state_trigger.CONF_ABOVE: min_pos,
-        numeric_state_trigger.CONF_VALUE_TEMPLATE: value_template,
+        CONF_PLATFORM: "numeric_state",
+        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        CONF_BELOW: max_pos,
+        CONF_ABOVE: min_pos,
+        CONF_VALUE_TEMPLATE: value_template,
     }
     numeric_state_config = numeric_state_trigger.TRIGGER_SCHEMA(numeric_state_config)
     return await numeric_state_trigger.async_attach_trigger(

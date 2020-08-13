@@ -5,6 +5,10 @@ import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.homeassistant.triggers import (
+    numeric_state as numeric_state_trigger,
+    state as state_trigger,
+)
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -18,10 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
-from homeassistant.helpers.triggers import (
-    numeric_state as numeric_state_trigger,
-    state as state_trigger,
-)
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN, const

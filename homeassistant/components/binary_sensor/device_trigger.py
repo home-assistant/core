@@ -6,10 +6,10 @@ from homeassistant.components.device_automation.const import (
     CONF_TURNED_OFF,
     CONF_TURNED_ON,
 )
+from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_registry import async_entries_for_device
-from homeassistant.helpers.triggers import state as state_trigger
 
 from . import (
     DEVICE_CLASS_BATTERY,

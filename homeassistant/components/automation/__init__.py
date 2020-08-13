@@ -44,7 +44,7 @@ from homeassistant.helpers.script import (
     make_script_schema,
 )
 from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.helpers.triggers import async_initialize_triggers
+from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime, utcnow
@@ -472,6 +472,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             cast(HomeAssistant, self.hass),
             self._trigger_config,
             self.async_trigger,
+            DOMAIN,
             self._name,
             log_cb,
             home_assistant_start,

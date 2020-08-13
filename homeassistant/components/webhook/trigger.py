@@ -37,7 +37,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
     """Trigger based on incoming webhooks."""
     webhook_id = config.get(CONF_WEBHOOK_ID)
     hass.components.webhook.async_register(
-        "automation",
+        automation_info["domain"],
         automation_info["name"],
         webhook_id,
         partial(_handle_webhook, action),

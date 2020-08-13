@@ -11,7 +11,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.condition import async_validate_condition_config
 from homeassistant.helpers.script import async_validate_action_config
-from homeassistant.helpers.triggers import async_validate_trigger_config
+from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.loader import IntegrationNotFound
 
 from . import CONF_ACTION, CONF_CONDITION, CONF_TRIGGER, DOMAIN, PLATFORM_SCHEMA

@@ -81,7 +81,6 @@ from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template as template_helper
 from homeassistant.helpers.logging import KeywordStyleAdapter
-from homeassistant.helpers.triggers import trigger_platform_validator
 from homeassistant.util import slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
@@ -997,13 +996,7 @@ CONDITION_SCHEMA: vol.Schema = key_value_schemas(
 )
 
 TRIGGER_SCHEMA = vol.All(
-    ensure_list,
-    [
-        vol.All(
-            vol.Schema({vol.Required(CONF_PLATFORM): str}, extra=vol.ALLOW_EXTRA),
-            trigger_platform_validator,
-        )
-    ],
+    ensure_list, [vol.Schema({vol.Required(CONF_PLATFORM): str}, extra=vol.ALLOW_EXTRA)]
 )
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(
