@@ -1381,6 +1381,84 @@ def test_closest_function_to_coord(hass):
     assert tpl.async_render() == "test_domain.closest_zone"
 
 
+def test_async_render_to_info_with_branching(hass):
+    """Test async_render_to_info function by domain."""
+    hass.states.async_set("light.a", "off")
+    hass.states.async_set("light.b", "on")
+    hass.states.async_set("light.c", "off")
+
+    info = render_to_info(
+        hass,
+        """
+{% if states.light.a == "on" %}
+  {{ states.light.b.state }}
+{% else %}
+  {{ states.light.c.state }}
+{% endif %}
+""",
+    )
+    assert_result_info(info, "off", {"light.a", "light.c"})
+
+    info = render_to_info(
+        hass,
+        """
+            {% if states.light.a.state == "off" %}
+            {% set domain = "light" %}
+            {{ states[domain].b.state }}
+            {% endif %}
+""",
+    )
+    assert_result_info(info, "on", {"light.a", "light.b"})
+
+
+def test_extract_entities_with_complex_branching(hass):
+    """Test async_render_to_info function by domain."""
+    hass.states.async_set("light.a", "off")
+    hass.states.async_set("light.b", "on")
+    hass.states.async_set("light.c", "off")
+    hass.states.async_set("vacuum.a", "off")
+    hass.states.async_set("device_tracker.a", "off")
+    hass.states.async_set("device_tracker.b", "off")
+    hass.states.async_set("lock.a", "off")
+    hass.states.async_set("sensor.a", "off")
+    hass.states.async_set("binary_sensor.a", "off")
+
+    info = render_to_info(
+        hass,
+        """
+{% set domain = "vacuum" %}
+{%      if                 states.light.a == "on" %}
+  {{ states.light.b.state }}
+{% elif  states.light.a == "on" %}
+  {{ states.device_tracker }}
+{%     elif     states.light.a == "on" %}
+  {{ states[domain] | list }}
+{%         elif     states('light.b') == "on" %}
+  {{ states[otherdomain] | map(attribute='entity_id') | list }}
+{% elif states.light.a == "on" %}
+  {{ states["nonexist"] | list }}
+{% else %}
+  else
+{% endif %}
+""",
+        {"otherdomain": "sensor"},
+    )
+
+    assert_result_info(info, "['sensor.a']", {"light.a", "light.b"}, {"sensor"})
+
+
+def test_nested_async_render_to_info_case(hass):
+    """Test a deeply nested state with async_render_to_info."""
+
+    hass.states.async_set("input_select.picker", "vacuum.a")
+    hass.states.async_set("vacuum.a", "off")
+
+    info = render_to_info(
+        hass, "{{ states[states['input_select.picker'].state].state }}", {}
+    )
+    assert_result_info(info, "off", {"input_select.picker", "vacuum.a"})
+
+
 def test_closest_function_to_entity_id(hass):
     """Test closest function to entity id."""
     hass.states.async_set(

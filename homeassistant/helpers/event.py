@@ -529,7 +529,7 @@ class TrackTemplateResultInfo:
             self._setup_all_listener()
             return
 
-        had_all_listner = True if self._all_listener else False
+        had_all_listner = self._all_listener is not None
         if had_all_listner:
             self._cancel_all_listener()
 
