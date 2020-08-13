@@ -75,8 +75,7 @@ async def async_setup_entry(
                 hass.data[DOMAIN][DATA_CLIENT][entry.entry_id],
                 hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id],
             )
-        ],
-        True,
+        ]
     )
 
 

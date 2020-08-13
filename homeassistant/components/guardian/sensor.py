@@ -105,7 +105,7 @@ async def async_setup_entry(
                 )
             )
 
-    async_add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
 class PairedSensorSensor(PairedSensorEntity):
