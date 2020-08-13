@@ -81,11 +81,6 @@ def _set_update_interval(
     return interval
 
 
-def get_cc_value(weather_dict: Dict[str, Any], key: str) -> Optional[Union[int, str]]:
-    """Return property from weather_dict."""
-    return weather_dict.get(key, {}).get("value")
-
-
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the ClimaCell API component."""
     hass.data.setdefault(DOMAIN, {})
@@ -232,10 +227,21 @@ class ClimaCellEntity(Entity):
         """Retrieve latest state of the device."""
         await self._coordinator.async_request_refresh()
 
+    @staticmethod
+    def _get_cc_value(
+        weather_dict: Dict[str, Any], key: str
+    ) -> Optional[Union[int, str]]:
+        """Return property from weather_dict."""
+        return weather_dict.get(key, {}).get("value")
+
+    def refresh_state(self) -> None:
+        """Refresh state for entity after DataUpdateCoordinator update."""
+        raise NotImplementedError
+
     async def async_added_to_hass(self) -> None:
         """Connect to dispatcher listening for entity data notifications."""
         self._async_unsub_listeners.append(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
+            self._coordinator.async_add_listener(self.refresh_state)
         )
 
     async def async_will_remove_from_hass(self) -> None:
