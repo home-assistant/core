@@ -12,7 +12,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
