@@ -157,8 +157,14 @@ aiobotocore==0.11.1
 # homeassistant.components.minecraft_server
 aiodns==2.0.0
 
+# homeassistant.components.eafm
+aioeafm==0.1.2
+
 # homeassistant.components.esphome
 aioesphomeapi==2.6.1
+
+# homeassistant.components.flo
+aioflo==0.4.0
 
 # homeassistant.components.freebox
 aiofreepybox==0.0.8
@@ -240,7 +246,7 @@ ambiclimate==0.2.1
 amcrest==1.7.0
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.48
+androidtv[async]==0.0.49
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -328,7 +334,7 @@ beautifulsoup4==4.9.0
 beewi_smartclim==0.0.7
 
 # homeassistant.components.zha
-bellows==0.18.0
+bellows==0.18.1
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.7.7
@@ -473,7 +479,7 @@ deluge-client==1.7.1
 denonavr==0.9.4
 
 # homeassistant.components.devolo_home_control
-devolo-home-control-api==0.11.0
+devolo-home-control-api==0.13.0
 
 # homeassistant.components.directv
 directv==0.3.0
@@ -499,11 +505,14 @@ dovado==0.4.1
 # homeassistant.components.dsmr
 dsmr_parser==0.18
 
+# homeassistant.components.dwd_weather_warnings
+dwdwfsapi==1.0.2
+
 # homeassistant.components.dweet
 dweepy==0.3.0
 
 # homeassistant.components.dynalite
-dynalite_devices==0.1.44
+dynalite_devices==0.1.45
 
 # homeassistant.components.rainforest_eagle
 eagle200_reader==0.2.4
@@ -539,7 +548,7 @@ enocean==0.50
 enturclient==0.2.1
 
 # homeassistant.components.environment_canada
-env_canada==0.2.0
+# env_canada==0.2.0
 
 # homeassistant.components.envirophat
 # envirophat==0.0.6
@@ -733,7 +742,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200807.1
+home-assistant-frontend==20200811.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -812,13 +821,13 @@ keyrings.alt==3.4.0
 kiwiki-client==0.1.1
 
 # homeassistant.components.konnected
-konnected==1.1.0
+konnected==1.2.0
 
 # homeassistant.components.eufy
 lakeside==0.12
 
 # homeassistant.components.dyson
-libpurecool==0.6.1
+libpurecool==0.6.3
 
 # homeassistant.components.foscam
 libpyfoscam==1.0
@@ -990,7 +999,7 @@ oemthermostat==1.1
 onkyo-eiscp==1.2.7
 
 # homeassistant.components.onvif
-onvif-zeep-async==0.4.0
+onvif-zeep-async==0.5.0
 
 # homeassistant.components.opengarage
 open-garage==0.1.4
@@ -1103,9 +1112,6 @@ praw==6.5.1
 
 # homeassistant.components.islamic_prayer_times
 prayer_times_calculator==0.0.3
-
-# homeassistant.components.prezzibenzina
-prezzibenzina-py==1.1.4
 
 # homeassistant.components.proliphix
 proliphix==0.4.1
@@ -1401,7 +1407,7 @@ pyintesishome==1.7.5
 pyipma==2.0.5
 
 # homeassistant.components.ipp
-pyipp==0.10.1
+pyipp==0.11.0
 
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
@@ -1620,13 +1626,13 @@ pyskyqhub==0.1.1
 pysma==0.3.5
 
 # homeassistant.components.smappee
-pysmappee==0.1.5
+pysmappee==0.2.9
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.2
 
 # homeassistant.components.smartthings
-pysmartthings==0.7.2
+pysmartthings==0.7.3
 
 # homeassistant.components.smarty
 pysmarty==0.8
@@ -1825,7 +1831,7 @@ pyversasense==0.0.6
 pyvesync==1.1.0
 
 # homeassistant.components.vizio
-pyvizio==0.1.49
+pyvizio==0.1.51
 
 # homeassistant.components.velux
 pyvlx==0.2.16
@@ -1858,7 +1864,7 @@ qnapstats==0.3.0
 quantum-gateway==0.0.5
 
 # homeassistant.components.rachio
-rachiopy==0.1.3
+rachiopy==0.1.4
 
 # homeassistant.components.radiotherm
 radiotherm==2.0.0
@@ -1900,10 +1906,13 @@ rjpl==0.3.6
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.5.0
+rokuecp==0.6.0
 
 # homeassistant.components.roomba
 roombapy==1.6.1
+
+# homeassistant.components.roon
+roonapi==0.0.21
 
 # homeassistant.components.rova
 rova==0.1.0
@@ -1963,7 +1972,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.2.2
+simplisafe-python==9.3.0
 
 # homeassistant.components.sisyphus
 sisyphus-control==2.2.1
@@ -2272,7 +2281,7 @@ zengge==0.2
 zeroconf==0.28.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.42
+zha-quirks==0.0.43
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9

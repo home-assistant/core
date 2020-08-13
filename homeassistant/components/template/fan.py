@@ -176,20 +176,28 @@ class TemplateFan(FanEntity):
         self._available = True
         self._supported_features = 0
 
-        self._on_script = Script(hass, on_action)
-        self._off_script = Script(hass, off_action)
+        domain = __name__.split(".")[-2]
+
+        self._on_script = Script(hass, on_action, friendly_name, domain)
+        self._off_script = Script(hass, off_action, friendly_name, domain)
 
         self._set_speed_script = None
         if set_speed_action:
-            self._set_speed_script = Script(hass, set_speed_action)
+            self._set_speed_script = Script(
+                hass, set_speed_action, friendly_name, domain
+            )
 
         self._set_oscillating_script = None
         if set_oscillating_action:
-            self._set_oscillating_script = Script(hass, set_oscillating_action)
+            self._set_oscillating_script = Script(
+                hass, set_oscillating_action, friendly_name, domain
+            )
 
         self._set_direction_script = None
         if set_direction_action:
-            self._set_direction_script = Script(hass, set_direction_action)
+            self._set_direction_script = Script(
+                hass, set_direction_action, friendly_name, domain
+            )
 
         self._state = STATE_OFF
         self._speed = None

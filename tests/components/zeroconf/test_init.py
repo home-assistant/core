@@ -1,5 +1,4 @@
 """Test Zeroconf component setup process."""
-import pytest
 from zeroconf import InterfaceChoice, IPVersion, ServiceInfo, ServiceStateChange
 
 from homeassistant.components import zeroconf
@@ -20,13 +19,6 @@ PROPERTIES = {
 
 HOMEKIT_STATUS_UNPAIRED = b"1"
 HOMEKIT_STATUS_PAIRED = b"0"
-
-
-@pytest.fixture
-def mock_zeroconf():
-    """Mock zeroconf."""
-    with patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc:
-        yield mock_zc.return_value
 
 
 def service_update_mock(zeroconf, services, handlers):

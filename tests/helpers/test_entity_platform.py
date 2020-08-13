@@ -777,7 +777,13 @@ async def test_device_info_not_overrides(hass):
         async_add_entities(
             [
                 MockEntity(
-                    unique_id="qwer", device_info={"connections": {("mac", "abcd")}}
+                    unique_id="qwer",
+                    device_info={
+                        "connections": {("mac", "abcd")},
+                        "default_name": "default name 1",
+                        "default_model": "default model 1",
+                        "default_manufacturer": "default manufacturer 1",
+                    },
                 )
             ]
         )

@@ -2,6 +2,7 @@
 import logging
 import secrets
 import threading
+from types import MappingProxyType
 
 import voluptuous as vol
 
@@ -18,6 +19,7 @@ from .const import (
     CONF_LOOKBACK,
     CONF_STREAM_SOURCE,
     DOMAIN,
+    MAX_SEGMENTS,
     SERVICE_RECORD,
 )
 from .core import PROVIDERS
@@ -136,8 +138,10 @@ class Stream:
 
     @property
     def outputs(self):
-        """Return stream outputs."""
-        return self._outputs
+        """Return a copy of the stream outputs."""
+        # A copy is returned so the caller can iterate through the outputs
+        # without concern about self._outputs being modified from another thread.
+        return MappingProxyType(self._outputs.copy())
 
     def add_provider(self, fmt):
         """Add provider output stream."""
@@ -225,7 +229,7 @@ async def async_handle_record_service(hass, call):
     # Take advantage of lookback
     hls = stream.outputs.get("hls")
     if lookback > 0 and hls:
-        num_segments = min(int(lookback // hls.target_duration), hls.num_segments)
+        num_segments = min(int(lookback // hls.target_duration), MAX_SEGMENTS)
         # Wait for latest segment, then add the lookback
         await hls.recv()
         recorder.prepend(list(hls.get_segment())[-num_segments:])

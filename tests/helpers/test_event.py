@@ -16,6 +16,7 @@ from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_point_in_utc_time,
     async_track_same_state,
+    async_track_state_added_domain,
     async_track_state_change,
     async_track_state_change_event,
     async_track_sunrise,
@@ -336,6 +337,88 @@ async def test_async_track_state_change_event(hass):
     await hass.async_block_till_done()
     assert len(single_entity_id_tracker) == 5
     assert len(multiple_entity_id_tracker) == 7
+
+    unsub_multi()
+    unsub_throws()
+
+
+async def test_async_track_state_added_domain(hass):
+    """Test async_track_state_added_domain."""
+    single_entity_id_tracker = []
+    multiple_entity_id_tracker = []
+
+    @ha.callback
+    def single_run_callback(event):
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
+
+        single_entity_id_tracker.append((old_state, new_state))
+
+    @ha.callback
+    def multiple_run_callback(event):
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
+
+        multiple_entity_id_tracker.append((old_state, new_state))
+
+    @ha.callback
+    def callback_that_throws(event):
+        raise ValueError
+
+    unsub_single = async_track_state_added_domain(hass, "light", single_run_callback)
+    unsub_multi = async_track_state_added_domain(
+        hass, ["light", "switch"], multiple_run_callback
+    )
+    unsub_throws = async_track_state_added_domain(
+        hass, ["light", "switch"], callback_that_throws
+    )
+
+    # Adding state to state machine
+    hass.states.async_set("light.Bowl", "on")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 1
+    assert single_entity_id_tracker[-1][0] is None
+    assert single_entity_id_tracker[-1][1] is not None
+    assert len(multiple_entity_id_tracker) == 1
+    assert multiple_entity_id_tracker[-1][0] is None
+    assert multiple_entity_id_tracker[-1][1] is not None
+
+    # Set same state should not trigger a state change/listener
+    hass.states.async_set("light.Bowl", "on")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 1
+    assert len(multiple_entity_id_tracker) == 1
+
+    # State change off -> on - nothing added so no trigger
+    hass.states.async_set("light.Bowl", "off")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 1
+    assert len(multiple_entity_id_tracker) == 1
+
+    # State change off -> off - nothing added so no trigger
+    hass.states.async_set("light.Bowl", "off", {"some_attr": 1})
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 1
+    assert len(multiple_entity_id_tracker) == 1
+
+    # Removing state does not trigger
+    hass.states.async_remove("light.bowl")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 1
+    assert len(multiple_entity_id_tracker) == 1
+
+    # Set state for different entity id
+    hass.states.async_set("switch.kitchen", "on")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 1
+    assert len(multiple_entity_id_tracker) == 2
+
+    unsub_single()
+    # Ensure unsubing the listener works
+    hass.states.async_set("light.new", "off")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 1
+    assert len(multiple_entity_id_tracker) == 3
 
     unsub_multi()
     unsub_throws()

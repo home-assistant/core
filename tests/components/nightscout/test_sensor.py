@@ -5,7 +5,6 @@ from homeassistant.components.nightscout.const import (
     ATTR_DELTA,
     ATTR_DEVICE,
     ATTR_DIRECTION,
-    ATTR_SVG,
 )
 from homeassistant.const import ATTR_ICON, STATE_UNAVAILABLE
 
@@ -56,5 +55,4 @@ async def test_sensor_attributes(hass):
     assert attr[ATTR_DELTA] == reading.delta  # pylint: disable=maybe-no-member
     assert attr[ATTR_DEVICE] == reading.device  # pylint: disable=maybe-no-member
     assert attr[ATTR_DIRECTION] == reading.direction  # pylint: disable=maybe-no-member
-    assert attr[ATTR_SVG] == reading.sgv  # pylint: disable=maybe-no-member
     assert attr[ATTR_ICON] == "mdi:arrow-bottom-right"
