@@ -24,7 +24,7 @@ async def test_binary_sensors(hass, config_entry, aioclient_mock_fixture):
     # we should have 6 entities for the device
     state = hass.states.get("binary_sensor.pending_system_alerts")
     assert state.state == STATE_ON
-    assert state.attributes.get("Info Alerts") == 0
-    assert state.attributes.get("Warning Alerts") == 2
-    assert state.attributes.get("Critical Alerts") == 0
+    assert state.attributes.get("info") == 0
+    assert state.attributes.get("warning") == 2
+    assert state.attributes.get("critical") == 0
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Pending System Alerts"
