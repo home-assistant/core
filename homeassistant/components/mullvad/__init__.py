@@ -55,7 +55,8 @@ async def get_coordinator(hass):
 
     async def async_get_mullvad_api_data():
         with async_timeout.timeout(10):
-            return MullvadAPI().data
+            api = await hass.async_add_executor_job(MullvadAPI)
+            return api.data
 
     hass.data[DOMAIN] = update_coordinator.DataUpdateCoordinator(
         hass,
