@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.network import get_url
 from homeassistant.helpers.storage import Store
 
 from . import trait
@@ -425,7 +426,8 @@ class GoogleEntity:
                 "webhookId": self.config.local_sdk_webhook_id,
                 "httpPort": self.hass.http.server_port,
                 "httpSSL": self.hass.config.api.use_ssl,
-                "baseUrl": self.hass.config.api.base_url,
+                "uuid": await self.hass.helpers.instance_id.async_get(),
+                "baseUrl": get_url(self.hass, prefer_external=True),
                 "proxyDeviceId": agent_user_id,
             }
 

@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Nadzornik je \u017ee konfiguriran",
-            "user_privilege": "Uporabnik mora biti skrbnik"
+            "already_configured": "Nadzornik je \u017ee konfiguriran"
         },
         "error": {
             "faulty_credentials": "Napa\u010dni uporabni\u0161ki podatki",
@@ -28,7 +27,6 @@
             "client_control": {
                 "data": {
                     "block_client": "Odjemalci pod nadzorom dostopa do omre\u017eja",
-                    "new_client": "Dodajte novega odjemalca za nadzor dostopa do omre\u017eja",
                     "poe_clients": "Dovoli POE nadzor strank"
                 },
                 "description": "Konfigurirajte nadzor odjemalcev \n\n Ustvarite stikala za serijske \u0161tevilke, za katere \u017eelite nadzirati dostop do omre\u017eja.",
@@ -37,6 +35,7 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "\u010cas v sekundah od zadnjega videnja na omre\u017eju do odsotnosti",
+                    "ignore_wired_bug": "Onemogo\u010di logiko \u017ei\u010dnega hro\u0161\u010da UniFi",
                     "ssid_filter": "Izberite SSID-e za sledenje brez\u017ei\u010dnim odjemalcem",
                     "track_clients": "Sledite odjemalcem omre\u017eja",
                     "track_devices": "Sledite omre\u017enim napravam (naprave Ubiquiti)",
@@ -52,6 +51,14 @@
                     "other": "OSTALO",
                     "two": "DVA"
                 }
+            },
+            "simple_options": {
+                "data": {
+                    "block_client": "Nadzorovani mre\u017eni klienti",
+                    "track_clients": "Sledite mre\u017enim klientom",
+                    "track_devices": "Sledite mre\u017enim napravam (Ubiquiti naprave)"
+                },
+                "description": "Nastavite UniFi integracijo"
             },
             "statistics_sensors": {
                 "data": {

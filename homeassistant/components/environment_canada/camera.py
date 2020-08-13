@@ -17,8 +17,6 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_STATION = "station"
-ATTR_LOCATION = "location"
 ATTR_UPDATED = "updated"
 
 CONF_ATTRIBUTION = "Data provided by Environment Canada"
@@ -50,7 +48,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     else:
         lat = config.get(CONF_LATITUDE, hass.config.latitude)
         lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-        radar_object = ECRadar(coordinates=(lat, lon))
+        radar_object = ECRadar(
+            coordinates=(lat, lon), precip_type=config.get(CONF_PRECIP_TYPE)
+        )
 
     add_devices([ECCamera(radar_object, config.get(CONF_NAME))], True)
 
@@ -78,17 +78,12 @@ class ECCamera(Camera):
         """Return the name of the camera."""
         if self.camera_name is not None:
             return self.camera_name
-        return " ".join([self.radar_object.station_name, "Radar"])
+        return "Environment Canada Radar"
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        attr = {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            ATTR_LOCATION: self.radar_object.station_name,
-            ATTR_STATION: self.radar_object.station_code,
-            ATTR_UPDATED: self.timestamp,
-        }
+        attr = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION, ATTR_UPDATED: self.timestamp}
 
         return attr
 
@@ -99,4 +94,4 @@ class ECCamera(Camera):
             self.image = self.radar_object.get_loop()
         else:
             self.image = self.radar_object.get_latest_frame()
-        self.timestamp = self.radar_object.timestamp.isoformat()
+        self.timestamp = self.radar_object.timestamp

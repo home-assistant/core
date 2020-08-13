@@ -3,7 +3,7 @@
         "abort": {
             "access_token": "Errore sconosciuto durante la generazione di un token di accesso.",
             "already_setup": "L'account Ambiclimate \u00e8 configurato.",
-            "no_config": "\u00c8 necessario configurare Ambiclimate prima di poter eseguire l'autenticazione con esso. [Leggere le istruzioni] (https://www.home-assistant.io/components/ambiclimate/)."
+            "no_config": "\u00c8 necessario configurare Ambiclimate prima di poter eseguire l'autenticazione con esso. [Leggere le istruzioni](https://www.home-assistant.io/components/ambiclimate/)."
         },
         "create_entry": {
             "default": "Autenticato con successo con Ambiclimate"
@@ -14,7 +14,7 @@
         },
         "step": {
             "auth": {
-                "description": "Segui questo [link]({authorization_url}) e <b>Consenti</b> accesso al tuo account Ambiclimate, quindi torna indietro e premi <b>Invia</b> qui sotto. \n (Assicurati che l'URL di richiamata specificato sia {cb_url})",
+                "description": "Segui questo [link]({authorization_url}) e **Consenti** l'accesso al tuo account Ambiclimate, quindi torna indietro e premi **Invia** qui sotto. \n(Assicurati che l'URL di richiamata specificato sia {cb_url})",
                 "title": "Autenticare Ambiclimate"
             }
         }

@@ -21,7 +21,7 @@ class Debouncer:
         """Initialize debounce.
 
         immediate: indicate if the function needs to be called right away and
-                   wait 0.3s until executing next invocation.
+                   wait <cooldown> until executing next invocation.
         function: optional and can be instantiated later.
         """
         self.hass = hass

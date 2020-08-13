@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Vuoi configurare Wemo?",
-                "title": "Wemo"
+                "description": "Vuoi configurare Wemo?"
             }
         }
     }

@@ -8,6 +8,7 @@ from homeassistant.components.media_player.const import (
     SERVICE_PLAY_MEDIA,
 )
 import homeassistant.components.tts as tts
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import HTTP_FORBIDDEN
 from homeassistant.setup import setup_component
 
@@ -24,6 +25,13 @@ class TestTTSYandexPlatform:
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self._base_url = "https://tts.voicetech.yandex.net/generate?"
+
+        asyncio.run_coroutine_threadsafe(
+            async_process_ha_core_config(
+                self.hass, {"internal_url": "http://example.local:8123"}
+            ),
+            self.hass.loop,
+        )
 
     def teardown_method(self):
         """Stop everything that was started."""

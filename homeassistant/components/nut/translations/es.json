@@ -39,7 +39,7 @@
                     "resources": "Recursos",
                     "scan_interval": "Intervalo de escaneo (segundos)"
                 },
-                "description": "Elegir Recursos del Sensor"
+                "description": "Elige los recursos del sensor."
             }
         }
     }

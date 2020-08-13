@@ -19,8 +19,7 @@
                     "host": "Konnected-enhetens IP-adress",
                     "port": "Konnected-enhetens port"
                 },
-                "description": "Ange v\u00e4rdinformationen f\u00f6r din Konnected Panel.",
-                "title": "Uppt\u00e4ck Konnected-enhet"
+                "description": "Ange v\u00e4rdinformationen f\u00f6r din Konnected Panel."
             }
         }
     },

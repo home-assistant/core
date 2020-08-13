@@ -3,9 +3,9 @@
         "abort": {
             "already_configured": "Bridge is al geconfigureerd",
             "already_in_progress": "Configuratiestroom voor bridge wordt al ingesteld.",
-            "no_bridges": "Geen deCONZ bruggen ontdekt",
+            "no_bridges": "Geen deCONZ apparaten ontdekt",
             "not_deconz_bridge": "Dit is geen deCONZ bridge",
-            "one_instance_only": "Component ondersteunt slechts \u00e9\u00e9n deCONZ instance",
+            "one_instance_only": "Component ondersteunt slechts \u00e9\u00e9n deCONZ instantie",
             "updated_instance": "DeCONZ-instantie bijgewerkt met nieuw host-adres"
         },
         "error": {
@@ -17,31 +17,20 @@
                 "description": "Wilt u de Home Assistant configureren om verbinding te maken met de deCONZ gateway van de hass.io add-on {addon}?",
                 "title": "deCONZ Zigbee Gateway via Hass.io add-on"
             },
-            "init": {
-                "title": "Definieer deCONZ gateway"
-            },
             "link": {
                 "description": "Ontgrendel je deCONZ gateway om te registreren met Home Assistant.\n\n1. Ga naar deCONZ systeeminstellingen (Instellingen -> Gateway -> Geavanceerd)\n2. Druk op de knop \"Gateway ontgrendelen\"",
                 "title": "Koppel met deCONZ"
-            },
-            "manual_confirm": {
-                "data": {
-                    "host": "Host",
-                    "port": "Poort"
-                }
             },
             "manual_input": {
                 "data": {
                     "host": "Host",
                     "port": "Poort"
-                },
-                "title": "Configureer deCONZ gateway"
+                }
             },
             "user": {
                 "data": {
                     "host": "Selecteer gevonden deCONZ gateway"
-                },
-                "title": "Selecteer DeCONZ gateway"
+                }
             }
         }
     },

@@ -8,6 +8,7 @@ from sml.asyncio import SmlProtocol
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -15,6 +16,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import Optional
 from homeassistant.util.dt import utcnow
 
@@ -26,7 +28,12 @@ ICON_POWER = "mdi:flash"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 SIGNAL_EDL21_TELEGRAM = "edl21_telegram"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_SERIAL_PORT): cv.string})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_SERIAL_PORT): cv.string,
+        vol.Optional(CONF_NAME, default=""): cv.string,
+    },
+)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -54,6 +61,14 @@ class EDL21:
         # D=17: Time integral 7
         # E=0: Total
         "1-0:1.17.0*255": "Last signed positive active energy total",
+        # C=2: Active power -
+        # D=8: Time integral 1
+        # E=0: Total
+        "1-0:2.8.0*255": "Negative active energy total",
+        # E=1: Rate 1
+        "1-0:2.8.1*255": "Negative active energy in tariff T1",
+        # E=2: Rate 2
+        "1-0:2.8.2*255": "Negative active energy in tariff T2",
         # C=15: Active power absolute
         # D=7: Instantaneous value
         # E=0: Total
@@ -74,6 +89,7 @@ class EDL21:
         self._registered_obis = set()
         self._hass = hass
         self._async_add_entities = async_add_entities
+        self._name = config[CONF_NAME]
         self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
 
@@ -85,19 +101,35 @@ class EDL21:
         """Handle events from pysml."""
         assert isinstance(message_body, SmlGetListResponse)
 
+        electricity_id = None
+        for telegram in message_body.get("valList", []):
+            if telegram.get("objName") == "1-0:0.0.9*255":
+                electricity_id = telegram.get("value")
+                break
+
+        if electricity_id is None:
+            return
+        electricity_id = electricity_id.replace(" ", "")
+
         new_entities = []
         for telegram in message_body.get("valList", []):
             obis = telegram.get("objName")
             if not obis:
                 continue
 
-            if obis in self._registered_obis:
-                async_dispatcher_send(self._hass, SIGNAL_EDL21_TELEGRAM, telegram)
+            if (electricity_id, obis) in self._registered_obis:
+                async_dispatcher_send(
+                    self._hass, SIGNAL_EDL21_TELEGRAM, electricity_id, telegram
+                )
             else:
                 name = self._OBIS_NAMES.get(obis)
                 if name:
-                    new_entities.append(EDL21Entity(obis, name, telegram))
-                    self._registered_obis.add(obis)
+                    if self._name:
+                        name = f"{self._name}: {name}"
+                    new_entities.append(
+                        EDL21Entity(electricity_id, obis, name, telegram)
+                    )
+                    self._registered_obis.add((electricity_id, obis))
                 elif obis not in self._OBIS_BLACKLIST:
                     _LOGGER.warning(
                         "Unhandled sensor %s detected. Please report at "
@@ -107,16 +139,41 @@ class EDL21:
                     self._OBIS_BLACKLIST.add(obis)
 
         if new_entities:
-            self._async_add_entities(new_entities, update_before_add=True)
+            self._hass.loop.create_task(self.add_entities(new_entities))
+
+    async def add_entities(self, new_entities) -> None:
+        """Migrate old unique IDs, then add entities to hass."""
+        registry = await async_get_registry(self._hass)
+
+        for entity in new_entities:
+            old_entity_id = registry.async_get_entity_id(
+                "sensor", DOMAIN, entity.old_unique_id
+            )
+            if old_entity_id is not None:
+                _LOGGER.debug(
+                    "Migrating unique_id from [%s] to [%s]",
+                    entity.old_unique_id,
+                    entity.unique_id,
+                )
+                if registry.async_get_entity_id("sensor", DOMAIN, entity.unique_id):
+                    registry.async_remove(old_entity_id)
+                else:
+                    registry.async_update_entity(
+                        old_entity_id, new_unique_id=entity.unique_id
+                    )
+
+        self._async_add_entities(new_entities, update_before_add=True)
 
 
 class EDL21Entity(Entity):
     """Entity reading values from EDL21 telegram."""
 
-    def __init__(self, obis, name, telegram):
+    def __init__(self, electricity_id, obis, name, telegram):
         """Initialize an EDL21Entity."""
+        self._electricity_id = electricity_id
         self._obis = obis
         self._name = name
+        self._unique_id = f"{electricity_id}_{obis}"
         self._telegram = telegram
         self._min_time = MIN_TIME_BETWEEN_UPDATES
         self._last_update = utcnow()
@@ -132,8 +189,10 @@ class EDL21Entity(Entity):
         """Run when entity about to be added to hass."""
 
         @callback
-        def handle_telegram(telegram):
+        def handle_telegram(electricity_id, telegram):
             """Update attributes from last received telegram for this object."""
+            if self._electricity_id != electricity_id:
+                return
             if self._obis != telegram.get("objName"):
                 return
             if self._telegram == telegram:
@@ -164,6 +223,11 @@ class EDL21Entity(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
+        return self._unique_id
+
+    @property
+    def old_unique_id(self) -> str:
+        """Return a less unique ID as used in the first version of edl21."""
         return self._obis
 
     @property

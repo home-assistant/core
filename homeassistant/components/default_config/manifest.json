@@ -5,7 +5,6 @@
   "dependencies": [
     "automation",
     "cloud",
-    "config",
     "frontend",
     "history",
     "logbook",
@@ -17,6 +16,7 @@
     "ssdp",
     "sun",
     "system_health",
+    "tag",
     "updater",
     "zeroconf",
     "zone",

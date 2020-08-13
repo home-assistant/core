@@ -13,7 +13,7 @@
         },
         "step": {
             "authorize": {
-                "title": "Autoryzuj Home Assistant'a"
+                "title": "Autoryzuj Home Assistanta"
             },
             "pat": {
                 "data": {
@@ -26,7 +26,7 @@
                 "data": {
                     "location_id": "Lokalizacja"
                 },
-                "description": "Wybierz lokalizacj\u0119 SmartThings, kt\u00f3r\u0105 chcesz doda\u0107 do Home Assistant'a. Nast\u0119pnie otwarte zostanie nowe okno i zostaniesz poproszony o zalogowanie si\u0119 i autoryzacj\u0119 instalacji integracji Home Assistant w wybranej lokalizacji.",
+                "description": "Wybierz lokalizacj\u0119 SmartThings, kt\u00f3r\u0105 chcesz doda\u0107 do Home Assistanta. Nast\u0119pnie otwarte zostanie nowe okno i zostaniesz poproszony o zalogowanie si\u0119 i autoryzacj\u0119 instalacji integracji Home Assistant w wybranej lokalizacji.",
                 "title": "Wybierz lokalizacj\u0119"
             },
             "user": {

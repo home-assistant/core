@@ -10,14 +10,12 @@
         "flow_title": "DirecTV: {name}",
         "step": {
             "ssdp_confirm": {
-                "description": "Wilt u {name} instellen?",
-                "title": "Maak verbinding met de DirecTV-ontvanger"
+                "description": "Wilt u {name} instellen?"
             },
             "user": {
                 "data": {
                     "host": "Host- of IP-adres"
-                },
-                "title": "Maak verbinding met de DirecTV-ontvanger"
+                }
             }
         }
     }

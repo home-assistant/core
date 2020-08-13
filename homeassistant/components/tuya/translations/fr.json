@@ -1,0 +1,14 @@
+{
+    "config": {
+        "flow_title": "Configuration Tuya",
+        "step": {
+            "user": {
+                "data": {
+                    "platform": "L'application dans laquelle votre compte est enregistr\u00e9"
+                },
+                "description": "Saisissez vos informations d'identification Tuya.",
+                "title": "Tuya"
+            }
+        }
+    }
+}

@@ -23,6 +23,7 @@ from .entity import HMDevice
 _LOGGER = logging.getLogger(__name__)
 
 HM_STATE_HA_CAST = {
+    "IPGarage": {0: "closed", 1: "open", 2: "ventilation", 3: None},
     "RotaryHandleSensor": {0: "closed", 1: "tilted", 2: "open"},
     "RotaryHandleSensorIP": {0: "closed", 1: "tilted", 2: "open"},
     "WaterSensor": {0: "dry", 1: "wet", 2: "water"},
@@ -61,6 +62,7 @@ HM_UNIT_HA_CAST = {
     "AIR_PRESSURE": "hPa",
     "FREQUENCY": FREQUENCY_HERTZ,
     "VALUE": "#",
+    "VALVE_STATE": UNIT_PERCENTAGE,
 }
 
 HM_DEVICE_CLASS_HA_CAST = {

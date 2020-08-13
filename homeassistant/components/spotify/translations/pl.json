@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_setup": "Mo\u017cesz skonfigurowa\u0107 tylko jedno konto Spotify.",
-            "authorize_url_timeout": "Min\u0105\u0142 limit czasu generowania url autoryzacji.",
+            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji.",
             "missing_configuration": "Integracja ze Spotify nie jest skonfigurowana. Post\u0119puj zgodnie z dokumentacj\u0105."
         },
         "create_entry": {
@@ -10,7 +10,7 @@
         },
         "step": {
             "pick_implementation": {
-                "title": "Wybierz metod\u0119 uwierzytelnienia"
+                "title": "Wybierz metod\u0119 uwierzytelniania"
             }
         }
     }

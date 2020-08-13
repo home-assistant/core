@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "conn_error": "Yhdist\u00e4minen ep\u00e4onnistui"
+        },
+        "error": {
+            "auth_failed": "Virheellinen tunnistautuminen"
+        },
+        "flow_title": "Tuya-asetukset",
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "Tilisi maakoodi (esim. 1 Yhdysvalloissa, 358 Suomessa)",
+                    "password": "Salasana",
+                    "platform": "Sovellus, johon tili rekister\u00f6id\u00e4\u00e4n",
+                    "username": "K\u00e4ytt\u00e4j\u00e4tunnus"
+                },
+                "description": "Anna Tuya-tunnistetietosi.",
+                "title": "Tuya"
+            }
+        }
+    }
+}

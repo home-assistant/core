@@ -1,6 +1,5 @@
 """Test different accessory types: Fans."""
 from collections import namedtuple
-from unittest.mock import Mock
 
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
 import pytest
@@ -33,6 +32,7 @@ from homeassistant.const import (
 from homeassistant.core import CoreState
 from homeassistant.helpers import entity_registry
 
+from tests.async_mock import Mock
 from tests.common import async_mock_service
 from tests.components.homekit.common import patch_debounce
 

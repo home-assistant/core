@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_setup": "Ji\u017e nakonfigurov\u00e1no. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace.",
             "authorize_url_fail": "Nezn\u00e1m\u00e1 chyba p\u0159i generov\u00e1n\u00ed autoriza\u010dn\u00ed URL.",
             "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el",
             "external_setup": "Point \u00fasp\u011b\u0161n\u011b nakonfigurov\u00e1n z jin\u00e9ho toku.",

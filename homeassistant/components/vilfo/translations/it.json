@@ -11,8 +11,8 @@
         "step": {
             "user": {
                 "data": {
-                    "access_token": "Token di accesso per il Vilfo Router API",
-                    "host": "Nome host o IP del router"
+                    "access_token": "Token di accesso",
+                    "host": "Host"
                 },
                 "description": "Configurare l'integrazione del Vilfo Router. \u00c8 necessario il vostro hostname/IP del Vilfo Router e un token di accesso API. Per ulteriori informazioni su questa integrazione e su come ottenere tali dettagli, visitare il sito: https://www.home-assistant.io/integrations/vilfo",
                 "title": "Collegamento al Vilfo Router"

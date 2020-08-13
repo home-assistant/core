@@ -7,7 +7,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "OpenUV API kulcs",
+                    "api_key": "API kulcs",
                     "elevation": "Magass\u00e1g",
                     "latitude": "Sz\u00e9less\u00e9g",
                     "longitude": "Hossz\u00fas\u00e1g"

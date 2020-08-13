@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/somfy",
   "dependencies": ["http"],
   "codeowners": ["@tetienne"],
-  "requirements": ["pymfy==0.7.1"]
+  "requirements": ["pymfy==0.9.0"]
 }

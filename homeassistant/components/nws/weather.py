@@ -1,4 +1,5 @@
 """Support for NWS weather service."""
+from datetime import timedelta
 import logging
 
 from homeassistant.components.weather import (
@@ -24,6 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.distance import convert as convert_distance
+from homeassistant.util.dt import utcnow
 from homeassistant.util.pressure import convert as convert_pressure
 from homeassistant.util.temperature import convert as convert_temperature
 
@@ -44,6 +46,11 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
+
+OBSERVATION_VALID_TIME = timedelta(minutes=20)
+FORECAST_VALID_TIME = timedelta(minutes=45)
 
 
 def convert_condition(time, weather):
@@ -183,17 +190,16 @@ class NWSWeather(WeatherEntity):
     @property
     def wind_speed(self):
         """Return the current windspeed."""
-        wind_m_s = None
+        wind_km_hr = None
         if self.observation:
-            wind_m_s = self.observation.get("windSpeed")
-        if wind_m_s is None:
+            wind_km_hr = self.observation.get("windSpeed")
+        if wind_km_hr is None:
             return None
-        wind_m_hr = wind_m_s * 3600
 
         if self.is_metric:
-            wind = convert_distance(wind_m_hr, LENGTH_METERS, LENGTH_KILOMETERS)
+            wind = wind_km_hr
         else:
-            wind = convert_distance(wind_m_hr, LENGTH_METERS, LENGTH_MILES)
+            wind = convert_distance(wind_km_hr, LENGTH_KILOMETERS, LENGTH_MILES)
         return round(wind)
 
     @property
@@ -285,7 +291,28 @@ class NWSWeather(WeatherEntity):
     @property
     def available(self):
         """Return if state is available."""
-        return (
+        last_success = (
             self.coordinator_observation.last_update_success
             and self.coordinator_forecast.last_update_success
         )
+        if (
+            self.coordinator_observation.last_update_success_time
+            and self.coordinator_forecast.last_update_success_time
+        ):
+            last_success_time = (
+                utcnow() - self.coordinator_observation.last_update_success_time
+                < OBSERVATION_VALID_TIME
+                and utcnow() - self.coordinator_forecast.last_update_success_time
+                < FORECAST_VALID_TIME
+            )
+        else:
+            last_success_time = False
+        return last_success or last_success_time
+
+    async def async_update(self):
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """
+        await self.coordinator_observation.async_request_refresh()
+        await self.coordinator_forecast.async_request_refresh()

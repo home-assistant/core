@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "link": {
+                "description": "Soll {name} ({host}) konfigur\u00e9iert ginn?",
+                "title": "Mam PowerView Hub verbannen"
+            },
+            "user": {
+                "data": {
+                    "host": "IP Adresse"
+                },
+                "title": "Mam PowerView Hub verbannen"
+            }
+        }
+    },
+    "title": "Hunter Douglas PowerView"
+}

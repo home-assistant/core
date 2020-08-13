@@ -1,11 +1,11 @@
 """Vera tests."""
-from unittest.mock import MagicMock
-
 import pyvera as pv
 
 from homeassistant.core import HomeAssistant
 
 from .common import ComponentFactory, new_simple_controller_config
+
+from tests.async_mock import MagicMock
 
 
 async def test_cover(

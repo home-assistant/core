@@ -3,7 +3,10 @@
     "step": {
       "user": {
         "title": "Fill in your Abode login information",
-        "data": { "username": "Email Address", "password": "Password" }
+        "data": {
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {

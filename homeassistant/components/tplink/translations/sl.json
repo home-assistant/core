@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "\u017delite namestiti pametne naprave TP-Link?",
-                "title": "TP-Link Pametni Dom"
+                "description": "\u017delite namestiti pametne naprave TP-Link?"
             }
         }
     }

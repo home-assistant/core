@@ -5,16 +5,16 @@
       "user": {
         "description": "Enter your AVM FRITZ!Box information.",
         "data": {
-          "host": "Host or IP address",
-          "username": "Username",
-          "password": "Password"
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       },
       "confirm": {
         "description": "Do you want to set up {name}?",
         "data": {
-          "username": "Username",
-          "password": "Password"
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },

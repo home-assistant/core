@@ -126,31 +126,21 @@ class DemoVacuum(VacuumEntity):
     @property
     def status(self):
         """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_STATUS == 0:
-            return
-
         return self._status
 
     @property
     def fan_speed(self):
         """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_FAN_SPEED == 0:
-            return
-
         return self._fan_speed
 
     @property
     def fan_speed_list(self):
         """Return the status of the vacuum."""
-        assert self.supported_features & SUPPORT_FAN_SPEED != 0
         return FAN_SPEEDS
 
     @property
     def battery_level(self):
         """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_BATTERY == 0:
-            return
-
         return max(0, min(100, self._battery_level))
 
     @property
@@ -289,24 +279,16 @@ class StateDemoVacuum(StateVacuumEntity):
     @property
     def battery_level(self):
         """Return the current battery level of the vacuum."""
-        if self.supported_features & SUPPORT_BATTERY == 0:
-            return
-
         return max(0, min(100, self._battery_level))
 
     @property
     def fan_speed(self):
         """Return the current fan speed of the vacuum."""
-        if self.supported_features & SUPPORT_FAN_SPEED == 0:
-            return
-
         return self._fan_speed
 
     @property
     def fan_speed_list(self):
         """Return the list of supported fan speeds."""
-        if self.supported_features & SUPPORT_FAN_SPEED == 0:
-            return
         return FAN_SPEEDS
 
     @property

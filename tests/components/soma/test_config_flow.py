@@ -1,12 +1,11 @@
 """Tests for the Soma config flow."""
-from unittest.mock import patch
-
 from api.soma_api import SomaApi
 from requests import RequestException
 
 from homeassistant import data_entry_flow
 from homeassistant.components.soma import DOMAIN, config_flow
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 MOCK_HOST = "123.45.67.89"

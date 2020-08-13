@@ -9,6 +9,8 @@ import math
 import random
 import re
 from typing import Any, Dict, Iterable, List, Optional, Union
+from urllib.parse import urlencode as urllib_urlencode
+import weakref
 
 import jinja2
 from jinja2 import contextfilter, contextfunction
@@ -44,8 +46,7 @@ _ENVIRONMENT = "template.environment"
 
 _RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
 _RE_GET_ENTITIES = re.compile(
-    r"(?:(?:states\.|(?:is_state|is_state_attr|state_attr|states)"
-    r"\((?:[\ \'\"]?))([\w]+\.[\w]+)|([\w]+))",
+    r"(?:(?:(?:states\.|(?P<func>is_state|is_state_attr|state_attr|states|expand)\((?:[\ \'\"]?))(?P<entity_id>[\w]+\.[\w]+)|states\.(?P<domain_outer>[a-z]+)|states\[(?:[\'\"]?)(?P<domain_inner>[\w]+))|(?P<variable>[\w]+))",
     re.I | re.M,
 )
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{")
@@ -76,7 +77,9 @@ def render_complex(value: Any, variables: TemplateVarsType = None) -> Any:
 
 
 def extract_entities(
-    template: Optional[str], variables: Optional[Dict[str, Any]] = None
+    hass: HomeAssistantType,
+    template: Optional[str],
+    variables: Optional[Dict[str, Any]] = None,
 ) -> Union[str, List[str]]:
     """Extract all entities for state_changed listener from template string."""
     if template is None or _RE_JINJA_DELIMITERS.search(template) is None:
@@ -85,27 +88,36 @@ def extract_entities(
     if _RE_NONE_ENTITIES.search(template):
         return MATCH_ALL
 
-    extraction = _RE_GET_ENTITIES.findall(template)
     extraction_final = []
 
-    for result in extraction:
+    for result in _RE_GET_ENTITIES.finditer(template):
         if (
-            result[0] == "trigger.entity_id"
+            result.group("entity_id") == "trigger.entity_id"
             and variables
             and "trigger" in variables
             and "entity_id" in variables["trigger"]
         ):
             extraction_final.append(variables["trigger"]["entity_id"])
-        elif result[0]:
-            extraction_final.append(result[0])
+        elif result.group("entity_id"):
+            if result.group("func") == "expand":
+                for entity in expand(hass, result.group("entity_id")):
+                    extraction_final.append(entity.entity_id)
+
+            extraction_final.append(result.group("entity_id"))
+        elif result.group("domain_inner") or result.group("domain_outer"):
+            extraction_final.extend(
+                hass.states.async_entity_ids(
+                    result.group("domain_inner") or result.group("domain_outer")
+                )
+            )
 
         if (
             variables
-            and result[1] in variables
-            and isinstance(variables[result[1]], str)
-            and valid_entity_id(variables[result[1]])
+            and result.group("variable") in variables
+            and isinstance(variables[result.group("variable")], str)
+            and valid_entity_id(variables[result.group("variable")])
         ):
-            extraction_final.append(variables[result[1]])
+            extraction_final.append(variables[result.group("variable")])
 
     if extraction_final:
         return list(set(extraction_final))
@@ -197,7 +209,7 @@ class Template:
         self, variables: Optional[Dict[str, Any]] = None
     ) -> Union[str, List[str]]:
         """Extract all entities for state_changed listener."""
-        return extract_entities(self.template, variables)
+        return extract_entities(self.hass, self.template, variables)
 
     def render(self, variables: TemplateVarsType = None, **kwargs: Any) -> str:
         """Render given template."""
@@ -940,6 +952,11 @@ def relative_time(value):
     return dt_util.get_age(value)
 
 
+def urlencode(value):
+    """Urlencode dictionary and return as UTF-8 string."""
+    return urllib_urlencode(value).encode("utf-8")
+
+
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
     """The Home Assistant template environment."""
 
@@ -947,6 +964,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         """Initialise template environment."""
         super().__init__()
         self.hass = hass
+        self.template_cache = weakref.WeakValueDictionary()
         self.filters["round"] = forgiving_round
         self.filters["multiply"] = multiply
         self.filters["log"] = logarithm
@@ -996,6 +1014,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["relative_time"] = relative_time
         self.globals["strptime"] = strptime
+        self.globals["urlencode"] = urlencode
         if hass is None:
             return
 
@@ -1029,6 +1048,26 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
         return isinstance(obj, Namespace) or super().is_safe_attribute(obj, attr, value)
+
+    def compile(self, source, name=None, filename=None, raw=False, defer_init=False):
+        """Compile the template."""
+        if (
+            name is not None
+            or filename is not None
+            or raw is not False
+            or defer_init is not False
+        ):
+            # If there are any non-default keywords args, we do
+            # not cache.  In prodution we currently do not have
+            # any instance of this.
+            return super().compile(source, name, filename, raw, defer_init)
+
+        cached = self.template_cache.get(source)
+
+        if cached is None:
+            cached = self.template_cache[source] = super().compile(source)
+
+        return cached
 
 
 _NO_HASS_ENV = TemplateEnvironment(None)

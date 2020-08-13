@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "D\u00ebse Kont ass scho konfigur\u00e9iert"
+            "already_configured": "Kont ass scho konfigur\u00e9iert"
         },
         "error": {
             "cannot_connect": "Feeler beim verbannen, prob\u00e9iert w.e.g. nach emol.",

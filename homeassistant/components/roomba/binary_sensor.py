@@ -42,6 +42,10 @@ class RoombaBinStatus(IRobotEntity, BinarySensorEntity):
         return self.ICON
 
     @property
-    def state(self):
+    def is_on(self):
         """Return the state of the sensor."""
         return roomba_reported_state(self.vacuum).get("bin", {}).get("full", False)
+
+    def new_state_filter(self, new_state):
+        """Filter the new state."""
+        return "bin" in new_state

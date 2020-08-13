@@ -1,0 +1,11 @@
+{
+  "domain": "wiffi",
+  "name": "Wiffi",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/wiffi",
+  "requirements": ["wiffi==1.0.1"],
+  "dependencies": [],
+  "codeowners": [
+    "@mampfes"
+  ]
+}

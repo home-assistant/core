@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "missing_configuration": "El componente Home Connect no est\u00e1 configurado. Por favor, sigue la documentaci\u00f3n."
+        },
+        "create_entry": {
+            "default": "Autenticado correctamente con Home Assistant."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Selecciona el M\u00e9todo de Autenticaci\u00f3n"
+            }
+        }
+    }
+}

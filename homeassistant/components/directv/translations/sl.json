@@ -16,14 +16,12 @@
                     "other": "drugo",
                     "two": "dva"
                 },
-                "description": "Ali \u017eelite nastaviti {name} ?",
-                "title": "Pove\u017eite se s sprejemnikom DirecTV"
+                "description": "Ali \u017eelite nastaviti {name} ?"
             },
             "user": {
                 "data": {
                     "host": "Gostitelj ali IP naslov"
-                },
-                "title": "Pove\u017eite se s sprejemnikom DirecTV"
+                }
             }
         }
     }

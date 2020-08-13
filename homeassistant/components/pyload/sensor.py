@@ -60,7 +60,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         pyloadapi = PyLoadAPI(api_url=url, username=username, password=password)
-        pyloadapi.update()
     except (
         requests.exceptions.ConnectionError,
         requests.exceptions.HTTPError,
@@ -144,17 +143,11 @@ class PyLoadAPI:
             self.login = requests.post(f"{api_url}login", data=self.payload, timeout=5)
         self.update()
 
-    def post(self, method, params=None):
+    def post(self):
         """Send a POST request and return the response as a dict."""
-        payload = {"method": method}
-
-        if params:
-            payload["params"] = params
-
         try:
             response = requests.post(
                 f"{self.api_url}statusServer",
-                json=payload,
                 cookies=self.login.cookies,
                 headers=self.headers,
                 timeout=5,
@@ -170,4 +163,4 @@ class PyLoadAPI:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update cached response."""
-        self.status = self.post("speed")
+        self.status = self.post()

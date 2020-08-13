@@ -11,8 +11,10 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_per_platform
 
 from .const import (
@@ -25,10 +27,9 @@ from .const import (
     DOMAIN,
     RTSP_TRANS_PROTOCOLS,
 )
+from .device import ONVIFDevice
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
-
-PLATFORMS = ["camera"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -61,24 +62,52 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up ONVIF from a config entry."""
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+
     if not entry.options:
         await async_populate_options(hass, entry)
 
-    for component in PLATFORMS:
+    device = ONVIFDevice(hass, entry)
+
+    if not await device.async_setup():
+        return False
+
+    if not device.available:
+        raise ConfigEntryNotReady()
+
+    hass.data[DOMAIN][entry.unique_id] = device
+
+    platforms = ["camera"]
+
+    if device.capabilities.events and await device.events.async_start():
+        platforms += ["binary_sensor", "sensor"]
+
+    for component in platforms:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.async_stop)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+
+    device = hass.data[DOMAIN][entry.unique_id]
+    platforms = ["camera"]
+
+    if device.capabilities.events and device.events.started:
+        platforms += ["binary_sensor", "sensor"]
+        await device.events.async_stop()
+
     return all(
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                for component in platforms
             ]
         )
     )

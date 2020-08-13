@@ -1,11 +1,10 @@
 """Test Group config panel."""
 import json
-from unittest.mock import patch
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 
-from tests.async_mock import AsyncMock
+from tests.async_mock import AsyncMock, patch
 
 VIEW_NAME = "api:config:group:config"
 

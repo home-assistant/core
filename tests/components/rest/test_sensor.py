@@ -1,6 +1,5 @@
 """The tests for the REST sensor platform."""
 import unittest
-from unittest.mock import Mock, patch
 
 import pytest
 from pytest import raises
@@ -16,6 +15,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.config_validation import template
 from homeassistant.setup import setup_component
 
+from tests.async_mock import Mock, patch
 from tests.common import assert_setup_component, get_test_home_assistant
 
 
@@ -25,10 +25,7 @@ class TestRestSensorSetup(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_setup_missing_config(self):
         """Test setup with configuration missing required entries."""
@@ -76,6 +73,7 @@ class TestRestSensorSetup(unittest.TestCase):
                 "sensor",
                 {"sensor": {"platform": "rest", "resource": "http://localhost"}},
             )
+            self.hass.block_till_done()
         assert 2 == mock_req.call_count
 
     @requests_mock.Mocker()
@@ -93,6 +91,7 @@ class TestRestSensorSetup(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
         assert mock_req.call_count == 2
 
     @requests_mock.Mocker()
@@ -111,6 +110,7 @@ class TestRestSensorSetup(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
 
     @requests_mock.Mocker()
     def test_setup_get(self, mock_req):
@@ -137,6 +137,7 @@ class TestRestSensorSetup(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
         assert 2 == mock_req.call_count
 
     @requests_mock.Mocker()
@@ -165,6 +166,7 @@ class TestRestSensorSetup(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
         assert 2 == mock_req.call_count
 
     @requests_mock.Mocker()
@@ -192,6 +194,7 @@ class TestRestSensorSetup(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
         assert 2 == mock_req.call_count
 
 
@@ -231,10 +234,7 @@ class TestRestSensor(unittest.TestCase):
             self.resource_template,
             self.json_attrs_path,
         )
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def update_side_effect(self, data, headers):
         """Side effect function for mocking RestData.update()."""

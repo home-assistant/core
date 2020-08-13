@@ -20,7 +20,6 @@
             "user": {
                 "data": {
                     "password": "Adgangskode",
-                    "username": "Email",
                     "with_family": "Med familien"
                 },
                 "description": "Indtast dine legitimationsoplysninger",

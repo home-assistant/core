@@ -6,12 +6,12 @@
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
             "invalid_auth": "Niepoprawne uwierzytelnienie.",
-            "unknown": "Niespodziewany b\u0142\u0105d."
+            "unknown": "Nieoczekiwany b\u0142\u0105d."
         },
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Klucz API dla konta Rachio."
+                    "api_key": "Klucz API"
                 },
                 "description": "B\u0119dziesz potrzebowa\u0142 klucza API ze strony https://app.rach.io/. Wybierz 'Account Settings', a nast\u0119pnie kliknij 'GET API KEY'.",
                 "title": "Po\u0142\u0105czenie z urz\u0105dzeniem Rachio"

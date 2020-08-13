@@ -8,6 +8,9 @@
             "unknown": "Odottamaton virhe"
         },
         "step": {
+            "link": {
+                "title": "Yhdist\u00e4 PowerView-keskittimeen"
+            },
             "user": {
                 "data": {
                     "host": "IP-osoite"

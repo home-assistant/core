@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "ESP je \u017ee konfiguriran"
+            "already_configured": "ESP je \u017ee konfiguriran",
+            "already_in_progress": "Konfiguracija ESP je \u017ee v teku"
         },
         "error": {
             "connection_error": "Ne morem se povezati z ESP. Poskrbite, da va\u0161a datoteka YAML vsebuje vrstico \"api:\".",
@@ -14,8 +15,7 @@
                 "data": {
                     "password": "Geslo"
                 },
-                "description": "Vnesite geslo, ki ste ga nastavili v konfiguraciji za {name}.",
-                "title": "Vnesite geslo"
+                "description": "Vnesite geslo, ki ste ga nastavili v konfiguraciji za {name}."
             },
             "discovery_confirm": {
                 "description": "\u017delite dodati ESPHome vozli\u0161\u010de ` {name} ` v Home Assistant?",
@@ -26,8 +26,7 @@
                     "host": "Gostitelj",
                     "port": "Vrata"
                 },
-                "description": "Prosimo, vnesite nastavitve povezave va\u0161ega vozli\u0161\u010da [ESPHome] (https://esphomelib.com/).",
-                "title": "ESPHome"
+                "description": "Prosimo, vnesite nastavitve povezave va\u0161ega vozli\u0161\u010da [ESPHome] (https://esphomelib.com/)."
             }
         }
     }

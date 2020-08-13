@@ -1,12 +1,12 @@
 """Tests for the lastfm sensor."""
-from unittest.mock import patch
-
 from pylast import Track
 import pytest
 
 from homeassistant.components import sensor
 from homeassistant.components.lastfm.sensor import STATE_NOT_SCROBBLING
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import patch
 
 
 class MockUser:
@@ -54,6 +54,7 @@ async def test_update_not_playing(hass, lastfm_network):
         sensor.DOMAIN,
         {"sensor": {"platform": "lastfm", "api_key": "secret-key", "users": ["test"]}},
     )
+    await hass.async_block_till_done()
 
     entity_id = "sensor.test"
 
@@ -74,6 +75,7 @@ async def test_update_playing(hass, lastfm_network):
         sensor.DOMAIN,
         {"sensor": {"platform": "lastfm", "api_key": "secret-key", "users": ["test"]}},
     )
+    await hass.async_block_till_done()
 
     entity_id = "sensor.test"
 

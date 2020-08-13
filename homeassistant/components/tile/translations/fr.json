@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ce compte Tile est d\u00e9j\u00e0 enregistr\u00e9."
+        },
+        "error": {
+            "invalid_credentials": "Informations d'identification de Tile non valides."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Email"
+                },
+                "title": "Configurer Tile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_inactive": "Afficher les Tiles inactives"
+                },
+                "title": "Configurer Tile"
+            }
+        }
+    }
+}

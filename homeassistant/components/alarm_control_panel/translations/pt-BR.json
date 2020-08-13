@@ -7,6 +7,13 @@
             "disarm": "Desarmar {entity_name}",
             "trigger": "Disparar {entidade_nome}"
         },
+        "condition_type": {
+            "is_armed_away": "{entity_name} est\u00e1 armado modo longe",
+            "is_armed_home": "{entity_name} est\u00e1 armadado modo casa",
+            "is_armed_night": "{entity_name} est\u00e1 armadado modo noite",
+            "is_disarmed": "{entity_name} est\u00e1 desarmado",
+            "is_triggered": "{entity_name} est\u00e1 acionado"
+        },
         "trigger_type": {
             "armed_away": "{entity_name} armado modo longe",
             "armed_home": "{entity_name} armadado modo casa",

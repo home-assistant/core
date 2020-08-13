@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar, tente novamente",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "no_homes": "N\u00e3o h\u00e1 casas vinculadas a esta conta Tado.",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "user": {
+                "title": "Conecte-se \u00e0 sua conta Tado"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "fallback": "Ative o modo de fallback."
+                },
+                "title": "Ajuste as op\u00e7\u00f5es do Tado."
+            }
+        }
+    }
+}

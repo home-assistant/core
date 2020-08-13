@@ -11,11 +11,9 @@ from homeassistant.core import callback
 from . import CannotConnect, async_connect_or_timeout, async_disconnect_or_timeout
 from .const import (
     CONF_BLID,
-    CONF_CERT,
     CONF_CONTINUOUS,
     CONF_DELAY,
     CONF_NAME,
-    DEFAULT_CERT,
     DEFAULT_CONTINUOUS,
     DEFAULT_DELAY,
     ROOMBA_SESSION,
@@ -27,7 +25,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_BLID): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_CERT, default=DEFAULT_CERT): str,
         vol.Optional(CONF_CONTINUOUS, default=DEFAULT_CONTINUOUS): bool,
         vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): int,
     }
@@ -45,7 +42,6 @@ async def validate_input(hass: core.HomeAssistant, data):
         address=data[CONF_HOST],
         blid=data[CONF_BLID],
         password=data[CONF_PASSWORD],
-        cert_name=data[CONF_CERT],
         continuous=data[CONF_CONTINUOUS],
         delay=data[CONF_DELAY],
     )

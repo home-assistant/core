@@ -1,12 +1,12 @@
 """The tests for SleepIQ binary sensor platform."""
 import unittest
-from unittest.mock import MagicMock
 
 import requests_mock
 
 from homeassistant.components.sleepiq import binary_sensor as sleepiq
 from homeassistant.setup import setup_component
 
+from tests.async_mock import MagicMock
 from tests.common import get_test_home_assistant
 from tests.components.sleepiq.test_init import mock_responses
 
@@ -28,8 +28,9 @@ class TestSleepIQBinarySensorSetup(unittest.TestCase):
         self.password = "bar"
         self.config = {"username": self.username, "password": self.password}
         self.DEVICES = []
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 

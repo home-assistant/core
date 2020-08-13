@@ -13,11 +13,10 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Nome host o indirizzo IP della stampante",
+                    "host": "Host",
                     "type": "Tipo di stampante"
                 },
-                "description": "Configurare l'integrazione della stampante Brother. In caso di problemi con la configurazione, visitare: https://www.home-assistant.io/integrations/brother",
-                "title": "Stampante Brother"
+                "description": "Configurare l'integrazione della stampante Brother. In caso di problemi con la configurazione, visitare: https://www.home-assistant.io/integrations/brother"
             },
             "zeroconf_confirm": {
                 "data": {

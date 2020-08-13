@@ -23,6 +23,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import callback
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -77,7 +78,7 @@ class Light(HomeAccessory):
 
         if CHAR_BRIGHTNESS in self.chars:
             # Initial value is set to 100 because 0 is a special value (off). 100 is
-            # an arbitrary non-zero value. It is updated immediately by update_state
+            # an arbitrary non-zero value. It is updated immediately by async_update_state
             # to set to the correct initial value.
             self.char_brightness = serv_light.configure_char(CHAR_BRIGHTNESS, value=100)
 
@@ -100,7 +101,7 @@ class Light(HomeAccessory):
         if CHAR_SATURATION in self.chars:
             self.char_saturation = serv_light.configure_char(CHAR_SATURATION, value=75)
 
-        self.update_state(state)
+        self.async_update_state(state)
 
         serv_light.setter_callback = self._set_chars
 
@@ -138,7 +139,8 @@ class Light(HomeAccessory):
 
         self.call_service(DOMAIN, service, params, ", ".join(events))
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update light after state change."""
         # Handle State
         state = new_state.state

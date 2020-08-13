@@ -11,7 +11,8 @@
                 "data": {
                     "latitude": "Latitude",
                     "longitude": "Longitude"
-                }
+                },
+                "title": "Configurer Flu Near You"
             }
         }
     }

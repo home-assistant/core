@@ -1,7 +1,0 @@
-{
-  "domain": "zigbee",
-  "name": "Zigbee",
-  "documentation": "https://www.home-assistant.io/integrations/zigbee",
-  "requirements": ["xbee-helper==0.0.7"],
-  "codeowners": []
-}

@@ -42,6 +42,7 @@ async def setup_comp(hass):
     """Set up demo cover component."""
     with assert_setup_component(1, DOMAIN):
         await async_setup_component(hass, DOMAIN, CONFIG)
+        await hass.async_block_till_done()
 
 
 async def test_supported_features(hass, setup_comp):

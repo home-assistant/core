@@ -250,7 +250,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     host=self.host,
                     port=self.port,
                     token=self.token,
-                    timeout=1,
+                    timeout=10,
                     name=VALUE_CONF_NAME,
                 )
                 self._remote.open()
@@ -259,4 +259,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
             except ConnectionFailure:
                 self._notify_callback()
                 raise
+            except WebSocketException:
+                self._remote = None
         return self._remote

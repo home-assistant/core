@@ -1,10 +1,17 @@
 {
     "config": {
+        "abort": {
+            "port_name_in_use": "A bridge with the same name or port is already configured.\nEine HomeKit Bridge mit dem selben Namen oder Port ist bereits vorhanden"
+        },
         "step": {
+            "pairing": {
+                "title": "HomeKit Bridge verbinden\n"
+            },
             "user": {
                 "data": {
                     "include_domains": "Einzubeziehende Domains"
-                }
+                },
+                "title": "HomeKit Bridge aktivieren\n"
             }
         }
     },
@@ -16,14 +23,25 @@
                 },
                 "title": "Erweiterte Konfiguration"
             },
+            "cameras": {
+                "data": {
+                    "camera_copy": "Kameras, die native H.264-Streams unterst\u00fctzen"
+                },
+                "title": "W\u00e4hlen Sie den Kamera-Video-Codec."
+            },
             "exclude": {
                 "data": {
                     "exclude_entities": "Auszuschlie\u00dfende Entit\u00e4ten"
                 }
             },
+            "init": {
+                "title": "W\u00e4hlen Sie die zu \u00fcberbr\u00fcckenden Dom\u00e4nen aus."
+            },
             "yaml": {
-                "description": "Dieser Eintrag wird \u00fcber YAML gesteuert"
+                "description": "Dieser Eintrag wird \u00fcber YAML gesteuert",
+                "title": "Passen Sie die HomeKit Bridge-Optionen an"
             }
         }
-    }
+    },
+    "title": "HomeKit Bridge"
 }

@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Vill du konfigurera Hisense AEH-W4A1?",
-                "title": "Hisense AEH-W4A1"
+                "description": "Vill du konfigurera Hisense AEH-W4A1?"
             }
         }
     }

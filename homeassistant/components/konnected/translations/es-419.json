@@ -23,8 +23,7 @@
                     "host": "Direcci\u00f3n IP del dispositivo Konnected",
                     "port": "Puerto de dispositivo Konnected"
                 },
-                "description": "Ingrese la informaci\u00f3n del host para su Panel Konnected.",
-                "title": "Descubrir el dispositivo Konnected"
+                "description": "Ingrese la informaci\u00f3n del host para su Panel Konnected."
             }
         }
     },

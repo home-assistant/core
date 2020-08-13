@@ -32,6 +32,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     SPC,
+    SURE_API_TIMEOUT,
     TOPIC_UPDATE,
 )
 
@@ -78,6 +79,7 @@ async def async_setup(hass, config) -> bool:
             conf[CONF_PASSWORD],
             hass.loop,
             async_get_clientsession(hass),
+            api_timeout=SURE_API_TIMEOUT,
         )
         await surepy.get_data()
     except SurePetcareAuthenticationError:

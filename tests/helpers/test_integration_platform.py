@@ -1,8 +1,7 @@
 """Test integration platform helpers."""
-from unittest.mock import Mock
-
 from homeassistant.setup import ATTR_COMPONENT, EVENT_COMPONENT_LOADED
 
+from tests.async_mock import Mock
 from tests.common import mock_platform
 
 

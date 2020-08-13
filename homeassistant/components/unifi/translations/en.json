@@ -1,13 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Controller site is already configured",
-            "no_local_user": "No local user found, configure a local account on controller and try again",
-            "user_privilege": "User needs to be administrator"
+            "already_configured": "Controller site is already configured"
         },
         "error": {
-            "faulty_credentials": "Bad user credentials",
-            "service_unavailable": "No service available",
+            "faulty_credentials": "Invalid authentication",
+            "service_unavailable": "Failed to connect",
             "unknown_client_mac": "No client available on that MAC address"
         },
         "step": {
@@ -17,7 +15,7 @@
                     "password": "Password",
                     "port": "Port",
                     "site": "Site ID",
-                    "username": "User name",
+                    "username": "Username",
                     "verify_ssl": "Controller using proper certificate"
                 },
                 "title": "Set up UniFi Controller"
@@ -29,7 +27,6 @@
             "client_control": {
                 "data": {
                     "block_client": "Network access controlled clients",
-                    "new_client": "Add new client for network access control",
                     "poe_clients": "Allow POE control of clients"
                 },
                 "description": "Configure client controls\n\nCreate switches for serial numbers you want to control network access for.",

@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "Falha ao conectar, tente novamente"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-mail (Opcional)"
+                }
+            }
+        }
+    }
+}

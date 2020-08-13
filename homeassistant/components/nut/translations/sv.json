@@ -11,6 +11,12 @@
             "resources": {
                 "data": {
                     "resources": "Resurser"
+                },
+                "title": "V\u00e4lj resurser som ska \u00f6vervakas"
+            },
+            "ups": {
+                "data": {
+                    "alias": "Alias"
                 }
             },
             "user": {
@@ -19,6 +25,15 @@
                     "password": "L\u00f6senord",
                     "port": "Port",
                     "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Skanningsintervall (sekunder)"
                 }
             }
         }

@@ -1,11 +1,16 @@
 """The test for the Template sensor platform."""
+from asyncio import Event
+from unittest.mock import patch
+
+from homeassistant.bootstrap import async_from_config_dict
 from homeassistant.const import (
+    EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_START,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.setup import async_setup_component, setup_component
+from homeassistant.setup import ATTR_COMPONENT, async_setup_component, setup_component
 
 from tests.common import assert_setup_component, get_test_home_assistant
 
@@ -42,6 +47,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -75,6 +81,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -108,6 +115,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -138,6 +146,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -168,6 +177,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -200,6 +210,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -229,6 +240,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
         assert self.hass.states.all() == []
@@ -252,6 +264,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -276,6 +289,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -295,6 +309,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
 
         assert self.hass.states.all() == []
@@ -306,6 +321,7 @@ class TestTemplateSensor:
                 self.hass, "sensor", {"sensor": {"platform": "template"}}
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -329,6 +345,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -401,6 +418,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -425,6 +443,45 @@ class TestTemplateSensor:
         )
 
 
+async def test_creating_sensor_loads_group(hass):
+    """Test setting up template sensor loads group component first."""
+    order = []
+    after_dep_event = Event()
+
+    async def async_setup_group(hass, config):
+        # Make sure group takes longer to load, so that it won't
+        # be loaded first by chance
+        await after_dep_event.wait()
+
+        order.append("group")
+        return True
+
+    async def async_setup_template(
+        hass, config, async_add_entities, discovery_info=None
+    ):
+        order.append("sensor.template")
+        return True
+
+    async def set_after_dep_event(event):
+        if event.data[ATTR_COMPONENT] == "sensor":
+            after_dep_event.set()
+
+    hass.bus.async_listen(EVENT_COMPONENT_LOADED, set_after_dep_event)
+
+    with patch(
+        "homeassistant.components.group.async_setup", new=async_setup_group,
+    ), patch(
+        "homeassistant.components.template.sensor.async_setup_platform",
+        new=async_setup_template,
+    ):
+        await async_from_config_dict(
+            {"sensor": {"platform": "template", "sensors": {}}, "group": {}}, hass
+        )
+        await hass.async_block_till_done()
+
+    assert order == ["group", "sensor.template"]
+
+
 async def test_available_template_with_entities(hass):
     """Test availability tempalates with values from other entities."""
     hass.states.async_set("sensor.availability_sensor", STATE_OFF)
@@ -445,6 +502,7 @@ async def test_available_template_with_entities(hass):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -510,6 +568,7 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -549,6 +608,7 @@ async def test_no_template_match_all(hass, caplog):
             }
         },
     )
+    await hass.async_block_till_done()
 
     assert hass.states.get("sensor.invalid_state").state == "unknown"
     assert hass.states.get("sensor.invalid_icon").state == "unknown"
@@ -602,10 +662,11 @@ async def test_no_template_match_all(hass, caplog):
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.invalid_state").state == "2"
-    assert hass.states.get("sensor.invalid_icon").state == "startup"
-    assert hass.states.get("sensor.invalid_entity_picture").state == "startup"
-    assert hass.states.get("sensor.invalid_friendly_name").state == "startup"
-    assert hass.states.get("sensor.invalid_attribute").state == "startup"
+    # Will now process because we have at least one valid template
+    assert hass.states.get("sensor.invalid_icon").state == "hello"
+    assert hass.states.get("sensor.invalid_entity_picture").state == "hello"
+    assert hass.states.get("sensor.invalid_friendly_name").state == "hello"
+    assert hass.states.get("sensor.invalid_attribute").state == "hello"
 
     await hass.helpers.entity_component.async_update_entity("sensor.invalid_state")
     await hass.helpers.entity_component.async_update_entity("sensor.invalid_icon")
@@ -622,3 +683,32 @@ async def test_no_template_match_all(hass, caplog):
     assert hass.states.get("sensor.invalid_entity_picture").state == "hello"
     assert hass.states.get("sensor.invalid_friendly_name").state == "hello"
     assert hass.states.get("sensor.invalid_attribute").state == "hello"
+
+
+async def test_unique_id(hass):
+    """Test unique_id option only creates one sensor per id."""
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test_template_sensor_01": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ true }}",
+                    },
+                    "test_template_sensor_02": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ false }}",
+                    },
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1

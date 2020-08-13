@@ -1,10 +1,10 @@
 """The test for the Trend sensor platform."""
 from datetime import timedelta
-from unittest.mock import patch
 
 from homeassistant import setup
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant
 
 
@@ -35,6 +35,7 @@ class TestTrendBinarySensor:
                 }
             },
         )
+        self.hass.block_till_done()
 
         self.hass.states.set("sensor.test_state", "1")
         self.hass.block_till_done()
@@ -62,6 +63,7 @@ class TestTrendBinarySensor:
                 }
             },
         )
+        self.hass.block_till_done()
 
         now = dt_util.utcnow()
         for val in [10, 0, 20, 30]:
@@ -103,6 +105,7 @@ class TestTrendBinarySensor:
                 }
             },
         )
+        self.hass.block_till_done()
 
         now = dt_util.utcnow()
         for val in [30, 20, 30, 10]:
@@ -137,6 +140,7 @@ class TestTrendBinarySensor:
                 }
             },
         )
+        self.hass.block_till_done()
 
         self.hass.states.set("sensor.test_state", "2")
         self.hass.block_till_done()
@@ -162,6 +166,7 @@ class TestTrendBinarySensor:
                 }
             },
         )
+        self.hass.block_till_done()
 
         self.hass.states.set("sensor.test_state", "1")
         self.hass.block_till_done()
@@ -187,6 +192,7 @@ class TestTrendBinarySensor:
                 }
             },
         )
+        self.hass.block_till_done()
 
         self.hass.states.set("sensor.test_state", "2")
         self.hass.block_till_done()
@@ -212,6 +218,7 @@ class TestTrendBinarySensor:
                 }
             },
         )
+        self.hass.block_till_done()
         self.hass.states.set("sensor.test_state", "State", {"attr": "1"})
         self.hass.block_till_done()
         self.hass.states.set("sensor.test_state", "State", {"attr": "2"})
@@ -236,6 +243,7 @@ class TestTrendBinarySensor:
                 }
             },
         )
+        self.hass.block_till_done()
 
         self.hass.states.set("sensor.test_state", "State", {"attr": "2"})
         self.hass.block_till_done()
@@ -262,6 +270,7 @@ class TestTrendBinarySensor:
                 }
             },
         )
+        self.hass.block_till_done()
 
         for val in [0, 1, 2, 3, 2, 1]:
             self.hass.states.set("sensor.test_state", val)
@@ -285,6 +294,7 @@ class TestTrendBinarySensor:
                 }
             },
         )
+        self.hass.block_till_done()
 
         self.hass.states.set("sensor.test_state", "Non")
         self.hass.block_till_done()
@@ -310,6 +320,7 @@ class TestTrendBinarySensor:
                 }
             },
         )
+        self.hass.block_till_done()
 
         self.hass.states.set("sensor.test_state", "State", {"attr": "2"})
         self.hass.block_till_done()

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "Un UPB PIM con questo indirizzo \u00e8 gi\u00e0 configurato."
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi a UPB PIM, riprovare.",
+            "invalid_upb_file": "File di esportazione UPStart UPB mancante o non valido, controllare il nome e il percorso del file.",
+            "unknown": "Errore imprevisto."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Indirizzo (vedi descrizione sopra)",
+                    "file_path": "Percorso e nome del file di esportazione UPStart UPB.",
+                    "protocol": "Protocollo"
+                },
+                "description": "Collegare un Modulo Interfaccia Powerline del Bus Universale Powerline (UPB PIM). La stringa dell'indirizzo deve essere nel formato 'address[:port]' per 'tcp'. La porta \u00e8 facoltativa e il valore predefinito \u00e8 2101. Esempio: '192.168.1.42'. Per il protocollo seriale, l'indirizzo deve essere nella forma 'tty[:baud]'. Baud \u00e8 opzionale e il valore predefinito \u00e8 4800. Esempio: '/dev/ttyS1'.",
+                "title": "Collegamento a UPB PIM"
+            }
+        }
+    }
+}

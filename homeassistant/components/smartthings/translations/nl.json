@@ -16,9 +16,6 @@
                 "title": "Machtig Home Assistant"
             },
             "pat": {
-                "data": {
-                    "access_token": "Toegangstoken"
-                },
                 "description": "Voer een SmartThings [Personal Access Token] ( {token_url} ) in dat is gemaakt volgens de [instructies] ( {component_url} ). Dit wordt gebruikt om de Home Assistant-integratie te cre\u00ebren binnen uw SmartThings-account.",
                 "title": "Persoonlijk toegangstoken invoeren"
             },

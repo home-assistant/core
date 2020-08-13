@@ -10,9 +10,9 @@
             "user": {
                 "data": {
                     "password": "Passord",
-                    "username": "E-postadresse"
+                    "username": "E-post"
                 },
-                "title": "Skriv inn brukernavn og passord"
+                "title": "Fyll inn brukernavn og passord"
             }
         }
     }

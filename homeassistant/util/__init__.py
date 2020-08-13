@@ -24,11 +24,9 @@ import slugify as unicode_slug
 
 from .dt import as_local, utcnow
 
-# pylint: disable=invalid-name
 T = TypeVar("T")
-U = TypeVar("U")
-ENUM_T = TypeVar("ENUM_T", bound=enum.Enum)
-# pylint: enable=invalid-name
+U = TypeVar("U")  # pylint: disable=invalid-name
+ENUM_T = TypeVar("ENUM_T", bound=enum.Enum)  # pylint: disable=invalid-name
 
 RE_SANITIZE_FILENAME = re.compile(r"(~|\.\.|/|\\)")
 RE_SANITIZE_PATH = re.compile(r"(~|\.(\.)+)")
@@ -214,7 +212,6 @@ class Throttle:
 
             If we cannot acquire the lock, it is running so return None.
             """
-            # pylint: disable=protected-access
             if hasattr(method, "__self__"):
                 host = getattr(method, "__self__")
             elif is_func:
@@ -222,12 +219,14 @@ class Throttle:
             else:
                 host = args[0] if args else wrapper
 
+            # pylint: disable=protected-access # to _throttle
             if not hasattr(host, "_throttle"):
                 host._throttle = {}
 
             if id(self) not in host._throttle:
                 host._throttle[id(self)] = [threading.Lock(), None]
             throttle = host._throttle[id(self)]
+            # pylint: enable=protected-access
 
             if not throttle[0].acquire(False):
                 return throttled_value()

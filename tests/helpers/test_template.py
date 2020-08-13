@@ -2,7 +2,6 @@
 from datetime import datetime
 import math
 import random
-from unittest.mock import patch
 
 import pytest
 import pytz
@@ -20,6 +19,8 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
+
+from tests.async_mock import patch
 
 
 def _set_up_units(hass):
@@ -1551,19 +1552,19 @@ def test_closest_function_no_location_states(hass):
 
 def test_extract_entities_none_exclude_stuff(hass):
     """Test extract entities function with none or exclude stuff."""
-    assert template.extract_entities(None) == []
+    assert template.extract_entities(hass, None) == []
 
-    assert template.extract_entities("mdi:water") == []
+    assert template.extract_entities(hass, "mdi:water") == []
 
     assert (
         template.extract_entities(
-            "{{ closest(states.zone.far_away, states.test_domain).entity_id }}"
+            hass, "{{ closest(states.zone.far_away, states.test_domain).entity_id }}"
         )
         == MATCH_ALL
     )
 
     assert (
-        template.extract_entities('{{ distance("123", states.test_object_2) }}')
+        template.extract_entities(hass, '{{ distance("123", states.test_object_2) }}')
         == MATCH_ALL
     )
 
@@ -1571,7 +1572,9 @@ def test_extract_entities_none_exclude_stuff(hass):
 def test_extract_entities_no_match_entities(hass):
     """Test extract entities function with none entities stuff."""
     assert (
-        template.extract_entities("{{ value_json.tst | timestamp_custom('%Y' True) }}")
+        template.extract_entities(
+            hass, "{{ value_json.tst | timestamp_custom('%Y' True) }}"
+        )
         == MATCH_ALL
     )
 
@@ -1670,35 +1673,38 @@ def test_generate_select(hass):
     )
 
 
-def test_extract_entities_match_entities(hass):
+async def test_extract_entities_match_entities(hass):
     """Test extract entities function with entities stuff."""
     assert (
         template.extract_entities(
+            hass,
             """
 {% if is_state('device_tracker.phone_1', 'home') %}
 Ha, Hercules is home!
 {% else %}
 Hercules is at {{ states('device_tracker.phone_1') }}.
 {% endif %}
-        """
+        """,
         )
         == ["device_tracker.phone_1"]
     )
 
     assert (
         template.extract_entities(
+            hass,
             """
 {{ as_timestamp(states.binary_sensor.garage_door.last_changed) }}
-        """
+        """,
         )
         == ["binary_sensor.garage_door"]
     )
 
     assert (
         template.extract_entities(
+            hass,
             """
 {{ states("binary_sensor.garage_door") }}
-        """
+        """,
         )
         == ["binary_sensor.garage_door"]
     )
@@ -1707,33 +1713,36 @@ Hercules is at {{ states('device_tracker.phone_1') }}.
 
     assert (
         template.extract_entities(
+            hass,
             """
 {{ is_state_attr('device_tracker.phone_2', 'battery', 40) }}
-        """
+        """,
         )
         == ["device_tracker.phone_2"]
     )
 
     assert sorted(["device_tracker.phone_1", "device_tracker.phone_2"]) == sorted(
         template.extract_entities(
+            hass,
             """
 {% if is_state('device_tracker.phone_1', 'home') %}
 Ha, Hercules is home!
 {% elif states.device_tracker.phone_2.attributes.battery < 40 %}
 Hercules you power goes done!.
 {% endif %}
-        """
+        """,
         )
     )
 
     assert sorted(["sensor.pick_humidity", "sensor.pick_temperature"]) == sorted(
         template.extract_entities(
+            hass,
             """
 {{
 states.sensor.pick_temperature.state ~ „°C (“ ~
 states.sensor.pick_humidity.state ~ „ %“
 }}
-        """
+        """,
         )
     )
 
@@ -1741,35 +1750,55 @@ states.sensor.pick_humidity.state ~ „ %“
         ["sensor.luftfeuchtigkeit_mean", "input_number.luftfeuchtigkeit"]
     ) == sorted(
         template.extract_entities(
+            hass,
             "{% if (states('sensor.luftfeuchtigkeit_mean') | int)"
             " > (states('input_number.luftfeuchtigkeit') | int +1.5)"
-            " %}true{% endif %}"
+            " %}true{% endif %}",
         )
     )
+
+    await group.Group.async_create_group(hass, "empty group", [])
+
+    assert ["group.empty_group"] == template.extract_entities(
+        hass, "{{ expand('group.empty_group') | list | length }}"
+    )
+
+    hass.states.async_set("test_domain.object", "exists")
+    await group.Group.async_create_group(hass, "expand group", ["test_domain.object"])
+
+    assert sorted(["group.expand_group", "test_domain.object"]) == sorted(
+        template.extract_entities(
+            hass, "{{ expand('group.expand_group') | list | length }}"
+        )
+    )
+
+    assert ["test_domain.entity"] == template.Template(
+        '{{ is_state("test_domain.entity", "on") }}', hass
+    ).extract_entities()
 
 
 def test_extract_entities_with_variables(hass):
     """Test extract entities function with variables and entities stuff."""
     hass.states.async_set("input_boolean.switch", "on")
-    assert {"input_boolean.switch"} == extract_entities(
+    assert ["input_boolean.switch"] == template.extract_entities(
         hass, "{{ is_state('input_boolean.switch', 'off') }}", {}
     )
 
-    assert {"input_boolean.switch"} == extract_entities(
+    assert ["input_boolean.switch"] == template.extract_entities(
         hass,
         "{{ is_state(trigger.entity_id, 'off') }}",
         {"trigger": {"entity_id": "input_boolean.switch"}},
     )
 
-    assert {"no_state"} == extract_entities(
+    assert MATCH_ALL == template.extract_entities(
         hass, "{{ is_state(data, 'off') }}", {"data": "no_state"}
     )
 
-    assert {"input_boolean.switch"} == extract_entities(
+    assert ["input_boolean.switch"] == template.extract_entities(
         hass, "{{ is_state(data, 'off') }}", {"data": "input_boolean.switch"}
     )
 
-    assert {"input_boolean.switch"} == extract_entities(
+    assert ["input_boolean.switch"] == template.extract_entities(
         hass,
         "{{ is_state(trigger.entity_id, 'off') }}",
         {"trigger": {"entity_id": "input_boolean.switch"}},
@@ -1781,6 +1810,53 @@ def test_extract_entities_with_variables(hass):
         "{{ is_state('media_player.' ~ where , 'playing') }}",
         {"where": "livingroom"},
     )
+
+
+def test_extract_entities_domain_states_inner(hass):
+    """Test extract entities function by domain."""
+    hass.states.async_set("light.switch", "on")
+    hass.states.async_set("light.switch2", "on")
+    hass.states.async_set("light.switch3", "off")
+
+    assert set(
+        template.extract_entities(
+            hass,
+            "{{ states['light'] | selectattr('state','eq','on') | list | count > 0 }}",
+            {},
+        )
+    ) == {"light.switch", "light.switch2", "light.switch3"}
+
+
+def test_extract_entities_domain_states_outer(hass):
+    """Test extract entities function by domain."""
+    hass.states.async_set("light.switch", "on")
+    hass.states.async_set("light.switch2", "on")
+    hass.states.async_set("light.switch3", "off")
+
+    assert set(
+        template.extract_entities(
+            hass,
+            "{{ states.light | selectattr('state','eq','off') | list | count > 0 }}",
+            {},
+        )
+    ) == {"light.switch", "light.switch2", "light.switch3"}
+
+
+def test_extract_entities_domain_states_outer_with_group(hass):
+    """Test extract entities function by domain."""
+    hass.states.async_set("light.switch", "on")
+    hass.states.async_set("light.switch2", "on")
+    hass.states.async_set("light.switch3", "off")
+    hass.states.async_set("switch.pool_light", "off")
+    hass.states.async_set("group.lights", "off", {"entity_id": ["switch.pool_light"]})
+
+    assert set(
+        template.extract_entities(
+            hass,
+            "{{ states.light | selectattr('entity_id', 'in', state_attr('group.lights', 'entity_id')) }}",
+            {},
+        )
+    ) == {"light.switch", "light.switch2", "light.switch3", "group.lights"}
 
 
 def test_jinja_namespace(hass):
@@ -1843,3 +1919,43 @@ def test_render_complex_handling_non_template_values(hass):
     assert template.render_complex(
         {True: 1, False: template.Template("{{ hello }}", hass)}, {"hello": 2}
     ) == {True: 1, False: "2"}
+
+
+def test_urlencode(hass):
+    """Test the urlencode method."""
+    tpl = template.Template(
+        ("{% set dict = {'foo': 'x&y', 'bar': 42} %}" "{{ dict | urlencode }}"), hass,
+    )
+    assert tpl.async_render() == "foo=x%26y&bar=42"
+    tpl = template.Template(
+        ("{% set string = 'the quick brown fox = true' %}" "{{ string | urlencode }}"),
+        hass,
+    )
+    assert tpl.async_render() == "the%20quick%20brown%20fox%20%3D%20true"
+
+
+async def test_cache_garbage_collection():
+    """Test caching a template."""
+    template_string = (
+        "{% set dict = {'foo': 'x&y', 'bar': 42} %} {{ dict | urlencode }}"
+    )
+    tpl = template.Template((template_string),)
+    tpl.ensure_valid()
+    assert template._NO_HASS_ENV.template_cache.get(
+        template_string
+    )  # pylint: disable=protected-access
+
+    tpl2 = template.Template((template_string),)
+    tpl2.ensure_valid()
+    assert template._NO_HASS_ENV.template_cache.get(
+        template_string
+    )  # pylint: disable=protected-access
+
+    del tpl
+    assert template._NO_HASS_ENV.template_cache.get(
+        template_string
+    )  # pylint: disable=protected-access
+    del tpl2
+    assert not template._NO_HASS_ENV.template_cache.get(
+        template_string
+    )  # pylint: disable=protected-access

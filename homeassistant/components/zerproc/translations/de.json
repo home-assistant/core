@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden"
+        },
+        "step": {
+            "confirm": {
+                "description": "M\u00f6chtest du die Installation starten?"
+            }
+        }
+    }
+}

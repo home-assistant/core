@@ -1,7 +1,4 @@
 """Vera tests."""
-from unittest.mock import MagicMock
-
-from mock import patch
 from requests.exceptions import RequestException
 
 from homeassistant import config_entries, data_entry_flow
@@ -14,6 +11,7 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
+from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 

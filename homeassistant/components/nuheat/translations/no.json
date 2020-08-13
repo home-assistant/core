@@ -16,7 +16,7 @@
                     "serial_number": "Termostatenes serienummer.",
                     "username": "Brukernavn"
                 },
-                "description": "Du m\u00e5 skaffe termostats numeriske serienummer eller ID ved \u00e5 logge inn p\u00e5 https://MyNuHeat.com og velge termostaten (e).",
+                "description": "Du m\u00e5 skaffe termostatets numeriske serienummer eller ID ved \u00e5 logge inn p\u00e5 https://MyNuHeat.com og velge termostaten (e).",
                 "title": "Koble til NuHeat"
             }
         }

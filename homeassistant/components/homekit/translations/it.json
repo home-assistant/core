@@ -23,11 +23,17 @@
             "advanced": {
                 "data": {
                     "auto_start": "Avvio automatico (disabilitare se si utilizza Z-Wave o un altro sistema di avvio ritardato)",
-                    "safe_mode": "Modalit\u00e0 provvisoria (attivare solo in caso di errore di associazione)",
-                    "zeroconf_default_interface": "Utilizzare l'interfaccia zeroconf predefinita (abilitare se il bridge non pu\u00f2 essere trovato nell'app Home)"
+                    "safe_mode": "Modalit\u00e0 provvisoria (attivare solo in caso di errore di associazione)"
                 },
                 "description": "Queste impostazioni devono essere modificate solo se il bridge HomeKit non funziona.",
                 "title": "Configurazione Avanzata"
+            },
+            "cameras": {
+                "data": {
+                    "camera_copy": "Telecamere che supportano flussi H.264 nativi"
+                },
+                "description": "Controllare tutte le telecamere che supportano i flussi H.264 nativi. Se la videocamera non emette uno stream H.264, il sistema provveder\u00e0 a transcodificare il video in H.264 per HomeKit. La transcodifica richiede una CPU performante ed \u00e8 improbabile che funzioni su computer a scheda singola.",
+                "title": "Seleziona il codec video della videocamera."
             },
             "exclude": {
                 "data": {

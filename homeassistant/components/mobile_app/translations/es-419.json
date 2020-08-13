@@ -5,8 +5,7 @@
         },
         "step": {
             "confirm": {
-                "description": "\u00bfDesea configurar el componente de la aplicaci\u00f3n m\u00f3vil?",
-                "title": "Aplicaci\u00f3n movil"
+                "description": "\u00bfDesea configurar el componente de la aplicaci\u00f3n m\u00f3vil?"
             }
         }
     }

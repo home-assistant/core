@@ -14,8 +14,7 @@
                     "host": "Gostitelj ali IP naslov",
                     "port": "\u0160tevilka vrat"
                 },
-                "description": "Nastavite svojo Elgato Key Light tako, da se bo vklju\u010dila v Home Assistant.",
-                "title": "Pove\u017eite svojo Elgato Key Light"
+                "description": "Nastavite svojo Elgato Key Light tako, da se bo vklju\u010dila v Home Assistant."
             },
             "zeroconf_confirm": {
                 "description": "Ali \u017eelite dodati Elgato Key Light s serijsko \u0161tevilko ' {serial_number} ' v Home Assistant-a?",

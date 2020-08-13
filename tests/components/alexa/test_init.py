@@ -1,24 +1,28 @@
 """Tests for alexa."""
 from homeassistant.components import logbook
 from homeassistant.components.alexa.const import EVENT_ALEXA_SMART_HOME
-import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
+
+from tests.components.logbook.test_init import MockLazyEventPartialState
 
 
 async def test_humanify_alexa_event(hass):
     """Test humanifying Alexa event."""
+    hass.config.components.add("recorder")
     await async_setup_component(hass, "alexa", {})
+    await async_setup_component(hass, "logbook", {})
     hass.states.async_set("light.kitchen", "on", {"friendly_name": "Kitchen Light"})
+    entity_attr_cache = logbook.EntityAttributeCache(hass)
 
     results = list(
         logbook.humanify(
             hass,
             [
-                ha.Event(
+                MockLazyEventPartialState(
                     EVENT_ALEXA_SMART_HOME,
                     {"request": {"namespace": "Alexa.Discovery", "name": "Discover"}},
                 ),
-                ha.Event(
+                MockLazyEventPartialState(
                     EVENT_ALEXA_SMART_HOME,
                     {
                         "request": {
@@ -28,7 +32,7 @@ async def test_humanify_alexa_event(hass):
                         }
                     },
                 ),
-                ha.Event(
+                MockLazyEventPartialState(
                     EVENT_ALEXA_SMART_HOME,
                     {
                         "request": {
@@ -39,6 +43,7 @@ async def test_humanify_alexa_event(hass):
                     },
                 ),
             ],
+            entity_attr_cache,
         )
     )
 

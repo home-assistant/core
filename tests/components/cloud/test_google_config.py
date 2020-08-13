@@ -1,6 +1,4 @@
 """Test the Cloud Google Config."""
-from unittest.mock import Mock
-
 from homeassistant.components.cloud import GACTIONS_SCHEMA
 from homeassistant.components.cloud.google_config import CloudGoogleConfig
 from homeassistant.components.google_assistant import helpers as ga_helpers
@@ -9,7 +7,7 @@ from homeassistant.core import CoreState
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import AsyncMock, patch
+from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import async_fire_time_changed
 
 
@@ -53,7 +51,9 @@ async def test_sync_entities(aioclient_mock, hass, cloud_prefs):
         assert len(mock_request_sync.mock_calls) == 1
 
 
-async def test_google_update_expose_trigger_sync(hass, cloud_prefs):
+async def test_google_update_expose_trigger_sync(
+    hass, legacy_patchable_time, cloud_prefs
+):
     """Test Google config responds to updating exposed entities."""
     config = CloudGoogleConfig(
         hass,

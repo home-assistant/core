@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie ONVIF jest ju\u017c skonfigurowane.",
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane.",
             "already_in_progress": "Proces konfiguracji dla urz\u0105dzenia ONVIF jest ju\u017c w toku.",
             "no_h264": "Nie by\u0142o dost\u0119pnych \u017cadnych strumieni H264.  Sprawd\u017a konfiguracj\u0119 profilu w swoim urz\u0105dzeniu.",
             "no_mac": "Nie mo\u017cna utworzy\u0107 unikalnego identyfikatora urz\u0105dzenia ONVIF.",
@@ -33,13 +33,14 @@
             },
             "manual_input": {
                 "data": {
-                    "host": "Host",
+                    "host": "Nazwa hosta lub adres IP",
+                    "name": "Nazwa",
                     "port": "Port"
                 },
                 "title": "Konfigurowanie urz\u0105dzenia ONVIF"
             },
             "user": {
-                "description": "Klikaj\u0105c przycisk Prze\u015blij, Twoja sie\u0107 zostanie przeszukana pod k\u0105tem urz\u0105dze\u0144 ONVIF obs\u0142uguj\u0105cych profil S.\n\nNiekt\u00f3rzy producenci zacz\u0119li domy\u015blnie wy\u0142\u0105cza\u0107 ONVIF. Upewnij si\u0119, \u017ce ONVIF jest w\u0142\u0105czony w konfiguracji kamery.",
+                "description": "Klikaj\u0105c przycisk Zatwierd\u017a, Twoja sie\u0107 zostanie przeszukana pod k\u0105tem urz\u0105dze\u0144 ONVIF obs\u0142uguj\u0105cych profil S.\n\nNiekt\u00f3rzy producenci zacz\u0119li domy\u015blnie wy\u0142\u0105cza\u0107 ONVIF. Upewnij si\u0119, \u017ce ONVIF jest w\u0142\u0105czony w konfiguracji kamery.",
                 "title": "Konfiguracja urz\u0105dzenia ONVIF"
             }
         }

@@ -1,5 +1,7 @@
 """Tests for the WLED integration."""
 
+import json
+
 from homeassistant.components.wled.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
@@ -17,27 +19,29 @@ async def init_integration(
     """Set up the WLED integration in Home Assistant."""
 
     fixture = "wled/rgb.json" if not rgbw else "wled/rgbw.json"
+    data = json.loads(load_fixture(fixture))
+
     aioclient_mock.get(
         "http://192.168.1.123:80/json/",
-        text=load_fixture(fixture),
+        json=data,
         headers={"Content-Type": "application/json"},
     )
 
     aioclient_mock.post(
         "http://192.168.1.123:80/json/state",
-        json={},
+        json=data["state"],
         headers={"Content-Type": "application/json"},
     )
 
     aioclient_mock.get(
         "http://192.168.1.123:80/json/info",
-        json={},
+        json=data["info"],
         headers={"Content-Type": "application/json"},
     )
 
     aioclient_mock.get(
         "http://192.168.1.123:80/json/state",
-        json={},
+        json=data["state"],
         headers={"Content-Type": "application/json"},
     )
 

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "unknown_error": "Unbekannter Fehler",
+            "wrong_host_or_port": "Verbindung konnte nicht hergestellt werden. Bitte \u00fcberpr\u00fcfen Sie Host und Port.",
+            "wrong_password": "Ung\u00fcltiges Passwort",
+            "wrong_server_type": "F\u00fcr die forked-daapd Integration ist ein forked-daapd Server mit der Version > = 27.0 erforderlich."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "API-Passwort (leer lassen, wenn kein Passwort vorhanden ist)",
+                    "port": "API Port"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "max_playlists": "Maximale Anzahl der als Quellen verwendeten Wiedergabelisten",
+                    "tts_pause_time": "Sekunden bis zur Pause vor und nach der TTS"
+                }
+            }
+        }
+    }
+}

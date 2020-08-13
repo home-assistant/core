@@ -1,12 +1,11 @@
 """Package to test the get_accessory method."""
-from unittest.mock import Mock, patch
-
 import pytest
 
 import homeassistant.components.climate as climate
 import homeassistant.components.cover as cover
 from homeassistant.components.homekit.accessories import TYPES, get_accessory
 from homeassistant.components.homekit.const import (
+    ATTR_INTERGRATION,
     CONF_FEATURE_LIST,
     FEATURE_ON_OFF,
     TYPE_FAUCET,
@@ -30,6 +29,8 @@ from homeassistant.const import (
     UNIT_PERCENTAGE,
 )
 from homeassistant.core import State
+
+from tests.async_mock import Mock, patch
 
 
 def test_not_supported(caplog):
@@ -61,10 +62,12 @@ def test_not_supported_media_player():
 def test_customize_options(config, name):
     """Test with customized options."""
     mock_type = Mock()
+    conf = config.copy()
+    conf[ATTR_INTERGRATION] = "platform_name"
     with patch.dict(TYPES, {"Light": mock_type}):
         entity_state = State("light.demo", "on")
-        get_accessory(None, None, entity_state, 2, config)
-    mock_type.assert_called_with(None, None, name, "light.demo", 2, config)
+        get_accessory(None, None, entity_state, 2, conf)
+    mock_type.assert_called_with(None, None, name, "light.demo", 2, conf)
 
 
 @pytest.mark.parametrize(
@@ -88,6 +91,7 @@ def test_customize_options(config, name):
             {ATTR_SUPPORTED_FEATURES: climate.SUPPORT_TARGET_TEMPERATURE_RANGE},
             {},
         ),
+        ("HumidifierDehumidifier", "humidifier.test", "auto", {}, {}),
         ("WaterHeater", "water_heater.test", "auto", {}, {}),
     ],
 )
@@ -254,11 +258,23 @@ def test_type_switches(type_name, entity_id, state, attrs, config):
                 | vacuum.SUPPORT_RETURN_HOME
             },
         ),
-        ("Switch", "vacuum.basic_vacuum", "off", {},),
+        ("Switch", "vacuum.basic_vacuum", "off", {}),
     ],
 )
 def test_type_vacuum(type_name, entity_id, state, attrs):
     """Test if vacuum types are associated correctly."""
+    mock_type = Mock()
+    with patch.dict(TYPES, {type_name: mock_type}):
+        entity_state = State(entity_id, state, attrs)
+        get_accessory(None, None, entity_state, 2, {})
+    assert mock_type.called
+
+
+@pytest.mark.parametrize(
+    "type_name, entity_id, state, attrs", [("Camera", "camera.basic", "on", {})],
+)
+def test_type_camera(type_name, entity_id, state, attrs):
+    """Test if camera types are associated correctly."""
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
         entity_state = State(entity_id, state, attrs)
