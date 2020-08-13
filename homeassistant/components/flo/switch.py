@@ -26,6 +26,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     devices: List[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
         config_entry.entry_id
     ]["devices"]
+    async_add_entities([FloSwitch(device) for device in devices])
+
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(
@@ -47,8 +49,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         },
         "async_set_mode_sleep",
     )
-
-    async_add_entities([FloSwitch(device) for device in devices])
 
 
 class FloSwitch(FloEntity, SwitchEntity):

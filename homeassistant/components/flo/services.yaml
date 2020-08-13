@@ -3,9 +3,9 @@
 set_sleep_mode:
   description: Set the location into sleep mode.
   fields:
-    location_id:
-      description: The location id for the Flo device
-      example: "123456789"
+    entity_id:
+      description: Flo switch entity id
+      example: "switch.shutoff_valve"
     sleep_minutes:
       description: The time to sleep in minutes.
       example: 120
@@ -15,18 +15,18 @@ set_sleep_mode:
 set_away_mode:
   description: Set the location into away mode.
   fields:
-    location_id:
-      description: The location id for the Flo device
-      example: "123456789"
+    entity_id:
+      description: Flo switch entity id
+      example: "switch.shutoff_valve"
 set_home_mode:
   description: Set the location into home mode.
   fields:
-    location_id:
-      description: The location id for the Flo device
-      example: "123456789"
+    entity_id:
+      description: Flo switch entity id
+      example: "switch.shutoff_valve"
 run_health_test:
   description: Have the Flo device run a health test.
   fields:
-    device_id:
-      description: The id for the Flo device to run the test with
-      example: "98764321"
+    entity_id:
+      description: Flo switch entity id
+      example: "switch.shutoff_valve"
