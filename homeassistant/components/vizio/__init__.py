@@ -103,11 +103,10 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistantType) -> None:
         """Initialize."""
-        self.data = APPS
-
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=timedelta(days=1),
         )
+        self.data = APPS
 
     async def _async_update_data(self) -> Dict[str, Any]:
         """Update data via library."""
