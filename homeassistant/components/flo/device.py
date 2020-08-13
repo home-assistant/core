@@ -162,6 +162,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             or self.pending_warning_alerts_count
         )
 
+    @property
     def last_known_valve_state(self) -> str:
         """Return the last known valve state for the device."""
         return self._device_information["valve"]["lastKnown"]
