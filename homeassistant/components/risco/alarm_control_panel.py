@@ -19,7 +19,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 
-from .const import DATA_RISCO, DOMAIN
+from . import call_with_retry
+from .const import DATA_COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,9 +36,11 @@ SUPPORTED_STATES = [
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Risco alarm control panel."""
-    risco = hass.data[DOMAIN][config_entry.entry_id][DATA_RISCO]
-    alarm = await risco.get_state()
-    entities = [RiscoAlarm(hass, risco, partition) for partition in alarm.partitions]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
+    entities = [
+        RiscoAlarm(hass, coordinator, partition_id)
+        for partition_id in coordinator.data.partitions.keys()
+    ]
 
     async_add_entities(entities, False)
 
@@ -45,39 +48,74 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RiscoAlarm(AlarmControlPanelEntity):
     """Representation of a Risco partition."""
 
-    def __init__(self, hass, risco, partition):
+    def __init__(self, hass, coordinator, partition_id):
         """Init the partition."""
         self._hass = hass
-        self._risco = risco
-        self._state = partition
-        self._partition_id = partition.id
+        self._coordinator = coordinator
+        self._partition_id = partition_id
+        self._partition = self._coordinator.data.partitions[self._partition_id]
+
+    @property
+    def should_poll(self):
+        """No need to poll. Coordinator notifies entity of updates."""
+        return False
+
+    @property
+    def available(self):
+        """Return if entity is available."""
+        return self._coordinator.last_update_success
+
+    def _refresh_from_coordinator(self):
+        self._partition = self._coordinator.data.partitions[self._partition_id]
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self._refresh_from_coordinator)
+        )
+
+    @property
+    def partition(self):
+        """Return representation of the current partition state."""
+        return self._partition
+
+    @property
+    def risco(self):
+        """Return he Risco API object."""
+        return self._coordinator.risco
 
     @property
     def device_info(self):
         """Return device info for this device."""
         return {
             "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.unique_id,
+            "name": self.name,
             "manufacturer": "Risco",
         }
 
     @property
+    def name(self):
+        """Return the name of the partition."""
+        return f"Risco {self.risco.site_name} Partition {self._partition_id}"
+
+    @property
     def unique_id(self):
         """Return a unique id for that partition."""
-        return f"{self._risco.site_id}_{self._partition_id}"
+        return f"{self.risco.site_uuid}_{self._partition_id}"
 
     @property
     def state(self):
         """Return the state of the device."""
-        if self._state.triggered:
+        if self.partition.triggered:
             return STATE_ALARM_TRIGGERED
-        if self._state.arming:
+        if self.partition.arming:
             return STATE_ALARM_ARMING
-        if self._state.armed:
+        if self.partition.armed:
             return STATE_ALARM_ARMED_AWAY
-        if self._state.partially_armed:
+        if self.partition.partially_armed:
             return STATE_ALARM_ARMED_HOME
-        if self._state.disarmed:
+        if self.partition.disarmed:
             return STATE_ALARM_DISARMED
 
         return STATE_UNKNOWN
@@ -97,37 +135,44 @@ class RiscoAlarm(AlarmControlPanelEntity):
         """Whether the code is required for arm actions."""
         return False
 
+    @call_with_retry
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        alarm = await self._risco.disarm(self._partition_id)
-        self._state = alarm.partitions[self._partition_id]
+        alarm = await self.risco.disarm(self._partition_id)
+        self._partition = alarm.partitions[self._partition_id]
         self.async_write_ha_state()
 
+    @call_with_retry
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
-        alarm = await self._risco.partial_arm(self._partition_id)
-        self._state = alarm.partitions[self._partition_id]
+        alarm = await self.risco.partial_arm(self._partition_id)
+        self._partition = alarm.partitions[self._partition_id]
         self.async_write_ha_state()
 
+    @call_with_retry
     async def async_alarm_arm_night(self, code=None):
         """Send arm night command."""
-        alarm = await self._risco.partial_arm(self._partition_id)
-        self._state = alarm.partitions[self._partition_id]
+        alarm = await self.risco.partial_arm(self._partition_id)
+        self._partition = alarm.partitions[self._partition_id]
         self.async_write_ha_state()
 
+    @call_with_retry
     async def async_alarm_arm_custom_bypass(self, code=None):
         """Send arm custom bypass command."""
-        alarm = await self._risco.partial_arm(self._partition_id)
-        self._state = alarm.partitions[self._partition_id]
+        alarm = await self.risco.partial_arm(self._partition_id)
+        self._partition = alarm.partitions[self._partition_id]
         self.async_write_ha_state()
 
+    @call_with_retry
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
-        alarm = await self._risco.arm(self._partition_id)
-        self._state = alarm.partitions[self._partition_id]
+        alarm = await self.risco.arm(self._partition_id)
+        self._partition = alarm.partitions[self._partition_id]
         self.async_write_ha_state()
 
     async def async_update(self):
-        """Retrieve latest state."""
-        alarm = await self._risco.get_state()
-        self._state = alarm.partitions[self._partition_id]
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """
+        await self._coordinator.async_request_refresh()

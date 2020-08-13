@@ -2,4 +2,6 @@
 
 DOMAIN = "risco"
 
-DATA_RISCO = "risco"
+DATA_COORDINATOR = "risco"
+
+NUM_RETRIES = 3

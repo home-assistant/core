@@ -25,7 +25,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     try:
         await risco.login(async_get_clientsession(hass))
-        return {"title": risco.site_id}
+        return {"title": risco.site_name}
     except UnauthorizedError as error:
         _LOGGER.error("Unauthorized connection to Risco Cloud")
         raise InvalidAuth from error

@@ -30,10 +30,10 @@ TEST_CONFIG = {
     CONF_PASSWORD: "test-password",
     CONF_PIN: "1234",
 }
-TEST_SITE_ID = "test-site-id"
-
-FIRST_ENTITY_ID = "alarm_control_panel.risco_test_site_id_0"
-SECOND_ENTITY_ID = "alarm_control_panel.risco_test_site_id_1"
+TEST_SITE_UUID = "test-site-uuid"
+TEST_SITE_NAME = "test-site-name"
+FIRST_ENTITY_ID = "alarm_control_panel.risco_test_site_name_partition_0"
+SECOND_ENTITY_ID = "alarm_control_panel.risco_test_site_name_partition_1"
 
 
 def _partition_mock():
@@ -49,7 +49,7 @@ def _partition_mock():
 @pytest.fixture
 def two_part_alarm():
     """Fixture to mock alarm with two partitions."""
-    partition_mocks = [_partition_mock(), _partition_mock()]
+    partition_mocks = {0: _partition_mock(), 1: _partition_mock()}
     alarm_mock = MagicMock()
     with patch.object(
         partition_mocks[0], "id", new_callable=PropertyMock(return_value=0)
@@ -71,8 +71,11 @@ async def _setup_risco(hass, alarm=MagicMock()):
     with patch(
         "homeassistant.components.risco.RiscoAPI.login", return_value=True,
     ), patch(
-        "homeassistant.components.risco.RiscoAPI.site_id",
-        new_callable=PropertyMock(return_value=TEST_SITE_ID),
+        "homeassistant.components.risco.RiscoAPI.site_uuid",
+        new_callable=PropertyMock(return_value=TEST_SITE_UUID),
+    ), patch(
+        "homeassistant.components.risco.RiscoAPI.site_name",
+        new_callable=PropertyMock(return_value=TEST_SITE_NAME),
     ), patch(
         "homeassistant.components.risco.RiscoAPI.close", AsyncMock()
     ):
@@ -126,11 +129,11 @@ async def test_setup(hass, two_part_alarm):
     assert registry.async_is_registered(SECOND_ENTITY_ID)
 
     registry = await hass.helpers.device_registry.async_get_registry()
-    device = registry.async_get_device({(DOMAIN, TEST_SITE_ID + "_0")}, {})
+    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_0")}, {})
     assert device is not None
     assert device.manufacturer == "Risco"
 
-    device = registry.async_get_device({(DOMAIN, TEST_SITE_ID + "_1")}, {})
+    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_1")}, {})
     assert device is not None
     assert device.manufacturer == "Risco"
 

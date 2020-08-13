@@ -8,7 +8,7 @@ from homeassistant.components.risco.const import DOMAIN
 
 from tests.async_mock import AsyncMock, PropertyMock, patch
 
-TEST_SITE_ID = "test-site-id"
+TEST_SITE_NAME = "test-site-name"
 TEST_DATA = {
     "username": "test-username",
     "password": "test-password",
@@ -28,8 +28,8 @@ async def test_form(hass):
     with patch(
         "homeassistant.components.risco.config_flow.RiscoAPI.login", return_value=True,
     ), patch(
-        "homeassistant.components.risco.config_flow.RiscoAPI.site_id",
-        new_callable=PropertyMock(return_value=TEST_SITE_ID),
+        "homeassistant.components.risco.config_flow.RiscoAPI.site_name",
+        new_callable=PropertyMock(return_value=TEST_SITE_NAME),
     ), patch(
         "homeassistant.components.risco.config_flow.RiscoAPI.close", AsyncMock()
     ) as mock_close, patch(
@@ -42,7 +42,7 @@ async def test_form(hass):
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == TEST_SITE_ID
+    assert result2["title"] == TEST_SITE_NAME
     assert result2["data"] == TEST_DATA
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
