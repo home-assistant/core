@@ -86,9 +86,8 @@ async def async_unload_entry(
 
     if not any(
         [
-            entry.entry_id
+            entry.state == ENTRY_STATE_LOADED
             for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.state == ENTRY_STATE_LOADED
         ]
     ):
         hass.data[DOMAIN].pop(CONF_APPS)
