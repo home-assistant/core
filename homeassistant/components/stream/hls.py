@@ -90,7 +90,6 @@ class M3U8Renderer:
             "#EXT-X-VERSION:7",
             f"#EXT-X-TARGETDURATION:{track.target_duration}",
             '#EXT-X-MAP:URI="init.mp4"',
-            "#EXT-X-INDEPENDENT-SEGMENTS",
         ]
 
     @staticmethod
@@ -139,9 +138,9 @@ class HlsStreamOutput(StreamOutput):
         return "mp4"
 
     @property
-    def audio_codec(self) -> str:
+    def audio_codecs(self) -> str:
         """Return desired audio codec."""
-        return "aac"
+        return {"aac", "ac3", "mp3"}
 
     @property
     def video_codecs(self) -> tuple:

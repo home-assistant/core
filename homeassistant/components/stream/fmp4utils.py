@@ -41,10 +41,11 @@ def get_m4s(segment: io.BytesIO, start_pts: tuple, sequence: int) -> bytes:
     traf_location = next(traf_finder)
     tfdt_location = next(find_box(segment, b"tfdt", traf_location))
     view[tfdt_location + 12 : tfdt_location + 20] = start_pts[0].to_bytes(8, "big")
-    # adjust tfdt in audio traf
-    traf_location = next(traf_finder)
-    tfdt_location = next(find_box(segment, b"tfdt", traf_location))
-    view[tfdt_location + 12 : tfdt_location + 20] = start_pts[1].to_bytes(8, "big")
+    # adjust tfdt in audio traf (if exists)
+    if start_pts[1] is not None:
+        traf_location = next(traf_finder)
+        tfdt_location = next(find_box(segment, b"tfdt", traf_location))
+        view[tfdt_location + 12 : tfdt_location + 20] = start_pts[1].to_bytes(8, "big")
     # done adjusting
     segment.seek(moof_location)
     return segment.read(mfra_location - moof_location)

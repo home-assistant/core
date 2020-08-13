@@ -61,8 +61,8 @@ class StreamOutput:
         return None
 
     @property
-    def audio_codec(self) -> str:
-        """Return desired audio codec."""
+    def audio_codecs(self) -> str:
+        """Return desired audio codecs."""
         return None
 
     @property
