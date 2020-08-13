@@ -3,6 +3,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import dataclasses
 import logging
+import os
 import sys
 import threading
 from typing import Any, Dict, Optional
@@ -57,7 +58,10 @@ class HassEventLoopPolicy(PolicyBase):  # type: ignore
         if self.debug:
             loop.set_debug(True)
 
-        executor = ThreadPoolExecutor(thread_name_prefix="SyncWorker")
+        executor = ThreadPoolExecutor(
+            thread_name_prefix="SyncWorker",
+            max_workers=min(32, 5 * (os.cpu_count() or 1) * 4),
+        )
         loop.set_default_executor(executor)
         loop.set_default_executor = warn_use(  # type: ignore
             loop.set_default_executor, "sets default executor on the event loop"
