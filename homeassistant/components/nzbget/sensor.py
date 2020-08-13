@@ -1,37 +1,14 @@
 """Monitor the NZBGet API."""
 import logging
 
-from homeassistant.const import (
-    DATA_MEGABYTES,
-    DATA_RATE_MEGABYTES_PER_SECOND,
-    TIME_MINUTES,
-)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-
-from . import DATA_NZBGET, DATA_UPDATED
+from . import DATA_NZBGET, DATA_UPDATED, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "NZBGet"
-
-SENSOR_TYPES = {
-    "article_cache": ["ArticleCacheMB", "Article Cache", DATA_MEGABYTES],
-    "average_download_rate": [
-        "AverageDownloadRate",
-        "Average Speed",
-        DATA_RATE_MEGABYTES_PER_SECOND,
-    ],
-    "download_paused": ["DownloadPaused", "Download Paused", None],
-    "download_rate": ["DownloadRate", "Speed", DATA_RATE_MEGABYTES_PER_SECOND],
-    "download_size": ["DownloadedSizeMB", "Size", DATA_MEGABYTES],
-    "free_disk_space": ["FreeDiskSpaceMB", "Disk Free", DATA_MEGABYTES],
-    "post_job_count": ["PostJobCount", "Post Processing Jobs", "Jobs"],
-    "post_paused": ["PostPaused", "Post Processing Paused", None],
-    "remaining_size": ["RemainingSizeMB", "Queue Size", DATA_MEGABYTES],
-    "uptime": ["UpTimeSec", "Uptime", TIME_MINUTES],
-}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -44,9 +21,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = discovery_info["client_name"]
 
     devices = []
-    for sensor_config in SENSOR_TYPES.values():
+    for sensor_config in discovery_info["monitored_variables"]:
         new_sensor = NZBGetSensor(
-            nzbget_data, sensor_config[0], name, sensor_config[1], sensor_config[2]
+            nzbget_data,
+            SENSOR_TYPES[sensor_config][0],
+            name,
+            SENSOR_TYPES[sensor_config][1],
+            SENSOR_TYPES[sensor_config][2],
         )
         devices.append(new_sensor)
 

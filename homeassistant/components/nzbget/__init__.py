@@ -6,17 +6,23 @@ import pynzbgetapi
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONF_SSL,
     CONF_HOST,
     CONF_NAME,
-    CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    CONF_SSL,
+    TIME_MINUTES,
+    CONF_PASSWORD,
     CONF_USERNAME,
+    DATA_MEGABYTES,
+    CONF_SCAN_INTERVAL,
+    CONF_MONITORED_VARIABLES,
+    DATA_RATE_MEGABYTES_PER_SECOND,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
+
+# from .sensor import SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +46,23 @@ SPEED_LIMIT_SCHEMA = vol.Schema(
     {vol.Optional(ATTR_SPEED, default=DEFAULT_SPEED_LIMIT): cv.positive_int}
 )
 
+SENSOR_TYPES = {
+    "article_cache": ["ArticleCacheMB", "Article Cache", DATA_MEGABYTES],
+    "average_download_rate": [
+        "AverageDownloadRate",
+        "Average Speed",
+        DATA_RATE_MEGABYTES_PER_SECOND,
+    ],
+    "download_paused": ["DownloadPaused", "Download Paused", None],
+    "download_rate": ["DownloadRate", "Speed", DATA_RATE_MEGABYTES_PER_SECOND],
+    "download_size": ["DownloadedSizeMB", "Size", DATA_MEGABYTES],
+    "free_disk_space": ["FreeDiskSpaceMB", "Disk Free", DATA_MEGABYTES],
+    "post_job_count": ["PostJobCount", "Post Processing Jobs", "Jobs"],
+    "post_paused": ["PostPaused", "Post Processing Paused", None],
+    "remaining_size": ["RemainingSizeMB", "Queue Size", DATA_MEGABYTES],
+    "uptime": ["UpTimeSec", "Uptime", TIME_MINUTES],
+}
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -53,6 +76,9 @@ CONFIG_SCHEMA = vol.Schema(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.time_period,
                 vol.Optional(CONF_SSL, default=False): cv.boolean,
+                vol.Optional(
+                    CONF_MONITORED_VARIABLES, default=list(SENSOR_TYPES)
+                ): vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
             }
         )
     },
@@ -112,7 +138,10 @@ def setup(hass, config):
 
     track_time_interval(hass, refresh, scan_interval)
 
-    sensorconfig = {"client_name": name}
+    sensorconfig = {
+        "client_name": name,
+        "monitored_variables": config[DOMAIN][CONF_MONITORED_VARIABLES],
+    }
 
     hass.helpers.discovery.load_platform("sensor", DOMAIN, sensorconfig, config)
 
