@@ -7,8 +7,8 @@ from homeassistant.setup import async_setup_component
 from .common import TEST_PASSWORD, TEST_USER_ID
 
 
-async def test_sensors(hass, config_entry, aioclient_mock_fixture):
-    """Test Flo by Moen sensors."""
+async def test_valve_switches(hass, config_entry, aioclient_mock_fixture):
+    """Test Flo by Moen valve switches."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(
         hass, FLO_DOMAIN, {CONF_USERNAME: TEST_USER_ID, CONF_PASSWORD: TEST_PASSWORD}
