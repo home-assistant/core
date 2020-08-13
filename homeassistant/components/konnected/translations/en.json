@@ -20,8 +20,8 @@
             },
             "user": {
                 "data": {
-                    "host": "[%key:common::config_flow::data::ip%]",
-                    "port": "[%key:common::config_flow::data::port%]"
+                    "host": "IP Address",
+                    "port": "Port"
                 },
                 "description": "Please enter the host information for your Konnected Panel."
             }
