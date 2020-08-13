@@ -18,7 +18,12 @@ from homeassistant.components.climate.const import (
     PRESET_ECO,
     PRESET_SLEEP,
     SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE,    
+    CURRENT_HVAC_OFF,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_DRY,
+    CURRENT_HVAC_IDLE
 )
 from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
 from homeassistant.core import callback
@@ -278,8 +283,6 @@ class KNXClimate(ClimateEntity):
         """Return current operation ie. heat, cool, idle."""
         if self.device.supports_on_off and not self.device.is_on:
             return HVAC_MODE_OFF
-        if self.device.supports_on_off and self.device.is_on:
-            return HVAC_MODE_HEAT
         if self.device.mode.supports_operation_mode:
             return OPERATION_MODES.get(
                 self.device.mode.operation_mode.value, HVAC_MODE_HEAT
@@ -296,21 +299,33 @@ class KNXClimate(ClimateEntity):
         ]
 
         if self.device.supports_on_off:
-            _operations.append(HVAC_MODE_HEAT)
             _operations.append(HVAC_MODE_OFF)
 
         _modes = list(filter(None, _operations))
         # default to ["heat"]
         return _modes if _modes else [HVAC_MODE_HEAT]
-
+    
+    @property
+    def hvac_action(self):
+        """The current HVAC action (heating, cooling)"""
+        mode = self.hvac_mode
+        if mode == HVAC_MODE_FAN_ONLY:
+            return CURRENT_HVAC_IDLE
+        if mode == HVAC_MODE_HEAT:
+            return CURRENT_HVAC_HEAT
+        if mode == HVAC_MODE_COOL:
+            return CURRENT_HVAC_COOL
+        if mode == HVAC_MODE_DRY:
+            return CURRENT_HVAC_DRY
+        return CURRENT_HVAC_OFF
+    
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set operation mode."""
         if self.device.supports_on_off and hvac_mode == HVAC_MODE_OFF:
             await self.device.turn_off()
-        elif self.device.supports_on_off and hvac_mode == HVAC_MODE_HEAT:
-            await self.device.turn_on()
         elif self.device.mode.supports_operation_mode:
             knx_operation_mode = HVACOperationMode(OPERATION_MODES_INV.get(hvac_mode))
+            await self.device.turn_on()
             await self.device.mode.set_operation_mode(knx_operation_mode)
             self.async_write_ha_state()
 
