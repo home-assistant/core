@@ -45,7 +45,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                     entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
                 )
                 return await client.get_daily_usage(now.strftime("%Y-%m"))
-            except:
+            except aiohttp.ClientError as exception:
+                _LOGGER.warning(exception)
                 return None
 
     coordinator = DataUpdateCoordinator(
