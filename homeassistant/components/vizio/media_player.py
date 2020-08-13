@@ -325,6 +325,7 @@ class VizioDevice(MediaPlayerEntity):
         # Register callback for app list updates
         @callback
         def update():
+            """Update list of all apps."""
             self._all_apps = self._apps_coordinator.data
 
         self._async_unsub_listeners.append(
