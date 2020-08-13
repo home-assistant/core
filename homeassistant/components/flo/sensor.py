@@ -15,8 +15,6 @@ from .const import DOMAIN as FLO_DOMAIN
 from .device import FloDeviceDataUpdateCoordinator
 from .entity import FloEntity
 
-DEPENDENCIES = ["flo"]
-
 WATER_ICON = "mdi:water"
 GAUGE_ICON = "mdi:gauge"
 NAME_DAILY_USAGE = "Today's Water Usage"
