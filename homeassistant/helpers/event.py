@@ -529,18 +529,18 @@ class TrackTemplateResultInfo:
             self._setup_all_listener()
             return
 
-        had_all_listner = self._all_listener is not None
-        if had_all_listner:
+        had_all_listener = self._all_listener is not None
+        if had_all_listener:
             self._cancel_all_listener()
 
         domains_changed = self._info.domains != self._last_info.domains
-        if had_all_listner or domains_changed:
+        if had_all_listener or domains_changed:
             domains_changed = True
             self._cancel_domains_listener()
             self._setup_domains_listener()
 
         if (
-            had_all_listner
+            had_all_listener
             or domains_changed
             or self._info.entities != self._last_info.entities
         ):
