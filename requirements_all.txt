@@ -1846,7 +1846,7 @@ pyvolumio==0.1.1
 pywebpush==1.9.2
 
 # homeassistant.components.wemo
-pywemo==0.4.45
+pywemo==0.4.46
 
 # homeassistant.components.xeoma
 pyxeoma==1.4.1
