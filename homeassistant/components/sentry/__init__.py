@@ -92,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         # Additional extra data to add to the event
         extra_data = {
             **system_info,
-            "custom_components": "\n".join(sorted(custom_components.keys())),
+            "custom_components": "\n".join(sorted(custom_components)),
             "integrations": "\n".join(sorted(integrations)),
         }
 
