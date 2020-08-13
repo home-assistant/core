@@ -20,7 +20,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
@@ -61,12 +60,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 # Service call validation schemas
 ATTR_SECONDS = "seconds"
 
-CHANNELS_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_id})
-
-CHANNELS_SEEK_BY_SCHEMA = CHANNELS_SCHEMA.extend(
-    {vol.Required(ATTR_SECONDS): vol.Coerce(int)}
-)
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Channels platform."""
@@ -79,7 +72,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         SERVICE_SEEK_FORWARD, {}, "seek_forward",
     )
     platform.async_register_entity_service(
-        SERVICE_SEEK_BACKWARD, {}, "seek_forward",
+        SERVICE_SEEK_BACKWARD, {}, "seek_backward",
     )
     platform.async_register_entity_service(
         SERVICE_SEEK_BY, {vol.Required(ATTR_SECONDS): vol.Coerce(int)}, "seek_by",
