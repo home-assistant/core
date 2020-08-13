@@ -21,6 +21,10 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
+    def __init__(self):
+        """Init MeteoFranceFlowHandler."""
+        self.places = []
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
@@ -55,13 +59,15 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if not latitude:
             client = MeteoFranceClient()
-            places = await self.hass.async_add_executor_job(client.search_places, city)
-            _LOGGER.debug("Places search result: %s", places)
-            if not places:
+            self.places = await self.hass.async_add_executor_job(
+                client.search_places, city
+            )
+            _LOGGER.debug("Places search result: %s", self.places)
+            if not self.places:
                 errors[CONF_CITY] = "empty"
                 return self._show_setup_form(user_input, errors)
 
-            return await self.async_step_cities(places=places)
+            return await self.async_step_cities()
 
         # Check if already configured
         await self.async_set_unique_id(f"{latitude}, {longitude}")
@@ -75,28 +81,27 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry."""
         return await self.async_step_user(user_input)
 
-    async def async_step_cities(self, user_input=None, places=None):
+    async def async_step_cities(self, user_input=None):
         """Step where the user choose the city from the API search results."""
-        if places and len(places) > 1 and self.source != SOURCE_IMPORT:
-            places_for_form = {}
-            for place in places:
-                places_for_form[_build_place_key(place)] = f"{place}"
+        if not user_input:
+            if len(self.places) > 1 and self.source != SOURCE_IMPORT:
+                places_for_form = {}
+                for place in self.places:
+                    places_for_form[_build_place_key(place)] = f"{place}"
 
-            return self.async_show_form(
-                step_id="cities",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_CITY): vol.All(
-                            vol.Coerce(str), vol.In(places_for_form)
-                        )
-                    }
-                ),
-            )
-        # for import and only 1 city in the search result
-        if places and not user_input:
-            user_input = {CONF_CITY: _build_place_key(places[0])}
+                return self.async_show_form(
+                    step_id="cities",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(CONF_CITY): vol.All(
+                                vol.Coerce(str), vol.In(places_for_form)
+                            )
+                        }
+                    ),
+                )
+            user_input = {CONF_CITY: _build_place_key(self.places[0])}
 
-        city_infos = user_input.get(CONF_CITY).split(";")
+        city_infos = user_input[CONF_CITY].split(";")
         return await self.async_step_user(
             {
                 CONF_CITY: city_infos[0],
