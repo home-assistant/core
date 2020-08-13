@@ -32,8 +32,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up flo from a config entry."""
     session = async_get_clientsession(hass)
+    hass.data[DOMAIN][entry.entry_id] = {}
     try:
-        hass.data[DOMAIN][CLIENT] = client = await async_get_api(
+        hass.data[DOMAIN][entry.entry_id][CLIENT] = client = await async_get_api(
             entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], session=session
         )
     except RequestError:
@@ -74,6 +75,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN].pop(CLIENT)
+        hass.data[DOMAIN][entry.entry_id].pop(CLIENT)
 
     return unload_ok
