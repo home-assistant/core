@@ -117,7 +117,6 @@ class MikrotikHubTracker(ScannerEntity):
             "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
             "identifiers": {(DOMAIN, self.device.mac)},
             "default_name": self.name,
-            "via_device": (DOMAIN, self.hub.serial_num),
         }
         return info
 
