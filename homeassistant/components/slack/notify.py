@@ -207,7 +207,7 @@ class SlackNotificationService(BaseNotificationService):
                     "blocks": blocks,
                     "link_names": True,
                     "username": username,
-                    "icon_" + icon_type: icon,
+                    f"icon_{icon_type}": icon,
                 }
             )
             for target in targets
