@@ -15,17 +15,17 @@ def async_setup_recorder(hass):
     """Only here so Provider Registry works."""
 
 
-def recorder_save_worker(file_out: str, segments: List[Segment], output_format: str):
+def recorder_save_worker(file_out: str, segments: List[Segment], container_format: str):
     """Handle saving stream."""
     first_pts = {"video": None, "audio": None}
-    output = av.open(file_out, "w")
+    output = av.open(file_out, "w", format=container_format)
     output_v = None
     output_a = None
 
     for segment in segments:
         # Seek to beginning and open segment
         segment.segment.seek(0)
-        source = av.open(segment.segment, "r", format=output_format)
+        source = av.open(segment.segment, "r", format=container_format)
         source_v = source.streams.video[0]
 
         # Add output streams
