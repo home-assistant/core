@@ -100,12 +100,19 @@ The integration reached or maintains the following [Integration Quality Scale][q
 
 <!--
   This project is very active and we have a high turnover of pull requests.
-  Unfortunately the number of incoming pull requests is higher than what our
+
+  Unfortunately, the number of incoming pull requests is higher than what our
   reviewers can review and merge so there is a long backlog of pull requests
-  waiting for review. You can help here! By reviewing another pull request
-  you will help raise the code quality of that pull request and the final
-  review will be faster. This way the general pace of pull request review
-  will go up and your wait time will go down. Thanks for helping out!
+  waiting for review. You can help here!
+  
+  By reviewing another pull request, you will help raise the code quality of
+  that pull request and the final review will be faster. This way the general
+  pace of pull request reviews will go up and your wait time will go down.
+  
+  When picking a pull request to review, try to choose one that hasn't yet
+  been reviewed.
+
+  Thanks for helping out!
 -->
 
 To help with the load of incoming pull requests:
