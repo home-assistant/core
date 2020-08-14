@@ -167,4 +167,4 @@ async def test_user_flow_bridge_unavailable(hass):
         )
         assert result["type"] == "form"
         assert result["step_id"] == "init"
-        assert result["errors"]["base"] == "no_connection"
+        assert result["errors"]["base"] == "cannot_connect"
