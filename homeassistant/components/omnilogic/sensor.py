@@ -66,7 +66,9 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
                     + " set up successfully."
                 )
             except Exception as ex:
-                _LOGGER.info("OmniLogic - no water temperature to set up. (" + ex + ")")
+                _LOGGER.info(
+                    "OmniLogic - no water temperature to set up. (" + str(ex) + ")"
+                )
 
             """Filter Pump."""
             try:
@@ -89,7 +91,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
                     + " set up successfully."
                 )
             except Exception as ex:
-                _LOGGER.info("OmniLogic - No filter pump to set up. (" + ex + ")")
+                _LOGGER.info("OmniLogic - No filter pump to set up. (" + str(ex) + ")")
 
             """All other pumps."""
             try:
@@ -111,7 +113,9 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
                         "OmniLogic - pump " + pump["Name"] + " set up successfully."
                     )
             except Exception as ex:
-                _LOGGER.info("Omnilogic - No additional pumps to set up. (" + ex + ")")
+                _LOGGER.info(
+                    "Omnilogic - No additional pumps to set up. (" + str(ex) + ")"
+                )
 
             """Chlorinator Information."""
             try:
@@ -147,7 +151,39 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
                     + " set up successfully."
                 )
             except Exception as ex:
-                _LOGGER.info("OmniLogic - no chlorinator to set up. (" + ex + ")")
+                _LOGGER.info("OmniLogic - no chlorinator to set up. (" + str(ex) + ")")
+
+            """CSAD Water Balance Sensors."""
+            try:
+                sensors.append(
+                    OmnilogicSensor(
+                        coordinator,
+                        "csad_ph",
+                        "CSAD",
+                        backyard,
+                        bow,
+                        "none",
+                        "mdi:gauge",
+                        PERCENT_UNITS,
+                        bow["CSAD"],
+                    )
+                )
+                sensors.append(
+                    OmnilogicSensor(
+                        coordinator,
+                        "csad_orp",
+                        "CSAD",
+                        backyard,
+                        bow,
+                        "none",
+                        "mdi:gauge",
+                        PERCENT_UNITS,
+                        bow["CSAD"],
+                    )
+                )
+                _LOGGER.info("OmniLogic - successfully parsed CSAD data.")
+            except Exception as ex:
+                _LOGGER.info("OmniLogic - no CSAD data available. (" + str(ex) + ")")
 
     async_add_entities(sensors, update_before_add=True)
 
@@ -311,6 +347,7 @@ class OmnilogicSensor(Entity):
                     for pump in bow.get("Pumps"):
                         if pump["systemId"] == self.sensordata["systemId"]:
                             sensordata = pump
+                            break
 
             if self.sensordata.get("Type") == "PMP_SINGLE_SPEED":
                 if sensordata.get("pumpSpeed") == "100":
@@ -340,6 +377,7 @@ class OmnilogicSensor(Entity):
                 for bow in backyard.get("BOWS"):
                     if bow["Chlorinator"]["systemId"] == self.sensordata["systemId"]:
                         sensordata = bow.get("Chlorinator")
+                        break
 
             salt_return = float(sensordata.get("avgSaltLevel"))
             unit_of_measurement = "ppm"
@@ -368,6 +406,7 @@ class OmnilogicSensor(Entity):
                 for bow in backyard.get("BOWS"):
                     if bow["Chlorinator"]["systemId"] == self.sensordata["systemId"]:
                         sensordata = bow.get("Chlorinator")
+                        break
 
             self._state = sensordata.get("Timed-Percent")
             self._unit = "%"
@@ -378,6 +417,38 @@ class OmnilogicSensor(Entity):
                 + " "
                 + self.sensordata.get("Name")
                 + " Setting"
+            )
+
+        elif self._kind == "csad_ph":
+            """Find the right CSAD for the updated data."""
+            sensordata = {}
+
+            for backyard in self.coordinator.data:
+                for bow in backyard.get("BOWS"):
+                    if bow["CSAD"]["systemId"] == self.sensordata["systemId"]:
+                        sensordata = bow.get("CSAD")
+                        break
+
+            self._state = sensordata.get("ph")
+            self._unit = "pH"
+            self._name = (
+                self._backyard["BackyardName"] + " " + self.bow.get("Name") + " pH"
+            )
+
+        elif self._kind == "csad_orp":
+            """Find the right CSAD for the updated data."""
+            sensordata = {}
+
+            for backyard in self.coordinator.data:
+                for bow in backyard.get("BOWS"):
+                    if bow["CSAD"]["systemId"] == self.sensordata["systemId"]:
+                        sensordata = bow.get("CSAD")
+                        break
+
+            self._state = sensordata.get("ph")
+            self._unit = "mV"
+            self._name = (
+                self._backyard["BackyardName"] + " " + self.bow.get("Name") + " ORP"
             )
 
         elif self._kind == "air_temperature":
