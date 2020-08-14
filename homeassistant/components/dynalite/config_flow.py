@@ -68,9 +68,9 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     step_id="init",
                     data_schema=vol.Schema(
                         {
-                            vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-                            vol.Required(CONF_HOST): str,
-                            vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                            vol.Optional(CONF_NAME, default=user_input[CONF_NAME]): str,
+                            vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
+                            vol.Optional(CONF_PORT, default=user_input[CONF_PORT]): int,
                         }
                     ),
                     errors={"base": "no_connection"},
