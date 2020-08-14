@@ -97,7 +97,11 @@ async def process_wrong_login(request):
     remote_addr = ip_address(request.remote)
     username = payload.get("username")
 
-    msg = f"Login attempt or request with invalid authentication from {remote_addr}\nUsername: {username}"
+    msg = (
+        f"Login attempt or request with invalid authentication from {remote_addr}\nUsername: {username}"
+        if username
+        else f"Login attempt or request with invalid authentication from {remote_addr}"
+    )
     _LOGGER.warning(msg)
 
     hass = request.app["hass"]
