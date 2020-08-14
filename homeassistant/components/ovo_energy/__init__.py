@@ -147,6 +147,6 @@ class OVOEnergyDeviceEntity(OVOEnergyEntity):
         return {
             "identifiers": {(DOMAIN, self._client.account_id)},
             "manufacturer": "OVO Energy",
-            "name": self._client.account_id,
+            "name": self._client.username,
             "entry_type": "service",
         }
