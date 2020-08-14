@@ -24,9 +24,6 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
     sensors = []
 
     for backyard in coordinator.data:
-        """Add backyard level sensors."""
-
-        """Air Temperature."""
         sensors.append(
             OmnilogicSensor(
                 coordinator,
@@ -40,7 +37,6 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
                 backyard.get("airTemp"),
             )
         )
-        _LOGGER.info("OmniLogic - air temperature for backyard set up successfully.")
 
         for bow in backyard["BOWS"]:
             sensors.append(
@@ -56,11 +52,6 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
                     bow.get("waterTemp"),
                 )
             )
-            _LOGGER.info(
-                "OmniLogic - water temperature for "
-                + bow["Name"]
-                + " set up successfully."
-            )
 
             sensors.append(
                 OmnilogicSensor(
@@ -74,11 +65,6 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
                     PERCENT_UNITS,
                     bow["Filter"],
                 )
-            )
-            _LOGGER.info(
-                "OmnilLogic - filter pump "
-                + bow["Filter"]["Name"]
-                + " set up successfully."
             )
 
             for pump in bow["Pumps"]:
@@ -94,9 +80,6 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
                         PERCENT_UNITS,
                         pump,
                     )
-                )
-                _LOGGER.info(
-                    "OmniLogic - pump " + pump["Name"] + " set up successfully."
                 )
 
             sensors.append(
@@ -125,11 +108,6 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
                     bow["Chlorinator"],
                 )
             )
-            _LOGGER.info(
-                "OmniLogic - chlorinator "
-                + bow["Chlorinator"]["Name"]
-                + " set up successfully."
-            )
 
             if "CSAD" in bow.keys():
                 if bow["CSAD"]["ph"] != "" and bow["CSAD"]["ph"] != "0":
@@ -146,7 +124,6 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
                             bow["CSAD"],
                         )
                     )
-                    _LOGGER.info("OmniLogic - successfully parsed CSAD pH data.")
 
                 if bow["CSAD"]["orp"] != "" and bow["CSAD"]["orp"] != "0":
                     sensors.append(
@@ -162,7 +139,6 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
                             bow["CSAD"],
                         )
                     )
-                    _LOGGER.info("OmniLogic - successfully parsed CSAD ORP data.")
 
     async_add_entities(sensors, update_before_add=True)
 
@@ -183,21 +159,17 @@ class OmnilogicSensor(Entity):
         sensordata,
     ):
         """Initialize Entities."""
+
         if bow != {}:
-            """This is a bow sensor."""
             sensorname = (
-                "omni_"
-                + backyard["BackyardName"].replace(" ", "_")
+                backyard["BackyardName"].replace(" ", "_")
                 + "_"
                 + bow["Name"].replace(" ", "_")
                 + "_"
                 + kind
             )
         else:
-            """This is a back yard level sensor."""
-            sensorname = (
-                "omni_" + backyard["BackyardName"].replace(" ", "_") + "_" + kind
-            )
+            sensorname = backyard["BackyardName"].replace(" ", "_") + "_" + kind
 
         self._kind = kind
         self._name = None
@@ -267,7 +239,6 @@ class OmnilogicSensor(Entity):
         await self.coordinator.async_request_refresh()
 
         if self._kind == "water_temperature":
-            """Find the right bow for updated data."""
             sensordata = None
 
             for backyard in self.coordinator.data:
@@ -295,7 +266,6 @@ class OmnilogicSensor(Entity):
             )
 
         elif self._kind == "filter_pump_speed":
-            """Find the right filter_pump for updated data."""
             sensordata = {}
 
             for backyard in self.coordinator.data:
@@ -318,7 +288,6 @@ class OmnilogicSensor(Entity):
             self.attrs["PumpType"] = self.sensordata.get("Filter-Type")
 
         elif self._kind == "pump_speed":
-            """Find the right pump for the updated data."""
             sensordata = {}
 
             for backyard in self.coordinator.data:
@@ -349,7 +318,6 @@ class OmnilogicSensor(Entity):
             self.attrs["PumpType"] = self.sensordata.get("Type")
 
         elif self._kind == "salt_level":
-            """Find the right chlorinator for the updated data."""
             sensordata = {}
 
             for backyard in self.coordinator.data:
@@ -378,7 +346,6 @@ class OmnilogicSensor(Entity):
             )
 
         elif self._kind == "chlorinator":
-            """Find the right chlorinator for the updated data."""
             sensordata = {}
 
             for backyard in self.coordinator.data:
@@ -399,7 +366,6 @@ class OmnilogicSensor(Entity):
             )
 
         elif self._kind == "csad_ph":
-            """Find the right CSAD for the updated data."""
             sensordata = {}
 
             for backyard in self.coordinator.data:
@@ -415,7 +381,6 @@ class OmnilogicSensor(Entity):
             )
 
         elif self._kind == "csad_orp":
-            """Find the right CSAD for the updated data."""
             sensordata = {}
 
             for backyard in self.coordinator.data:
@@ -431,7 +396,6 @@ class OmnilogicSensor(Entity):
             )
 
         elif self._kind == "air_temperature":
-            """Find the right system for the updated data."""
             sensordata = 0
 
             for backyard in self.coordinator.data:
