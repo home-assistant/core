@@ -47,39 +47,19 @@ SUPPORTED_PUBLIC_SENSOR_TYPES = [
 ]
 
 SENSOR_TYPES = {
-    "temperature": [
-        "Temperature",
-        TEMP_CELSIUS,
-        "mdi:thermometer",
-        DEVICE_CLASS_TEMPERATURE,
-    ],
+    "temperature": ["Temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
     "co2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, "mdi:molecule-co2", None],
-    "pressure": ["Pressure", PRESSURE_MBAR, "mdi:gauge", DEVICE_CLASS_PRESSURE],
+    "pressure": ["Pressure", PRESSURE_MBAR, None, DEVICE_CLASS_PRESSURE],
     "noise": ["Noise", "dB", "mdi:volume-high", None],
-    "humidity": [
-        "Humidity",
-        UNIT_PERCENTAGE,
-        "mdi:water-percent",
-        DEVICE_CLASS_HUMIDITY,
-    ],
+    "humidity": ["Humidity", UNIT_PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
     "rain": ["Rain", "mm", "mdi:weather-rainy", None],
     "sum_rain_1": ["Rain last hour", "mm", "mdi:weather-rainy", None],
     "sum_rain_24": ["Rain last 24h", "mm", "mdi:weather-rainy", None],
     "battery_vp": ["Battery", "", "mdi:battery", None],
     "battery_lvl": ["Battery Level", "", "mdi:battery", None],
     "battery_percent": ["Battery Percent", UNIT_PERCENTAGE, None, DEVICE_CLASS_BATTERY],
-    "min_temp": [
-        "Min Temp.",
-        TEMP_CELSIUS,
-        "mdi:thermometer",
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    "max_temp": [
-        "Max Temp.",
-        TEMP_CELSIUS,
-        "mdi:thermometer",
-        DEVICE_CLASS_TEMPERATURE,
-    ],
+    "min_temp": ["Min Temp.", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
+    "max_temp": ["Max Temp.", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
     "windangle": ["Angle", None, "mdi:compass-outline", None],
     "windangle_value": ["Angle Value", DEGREE, "mdi:compass-outline", None],
     "windstrength": [
@@ -98,9 +78,9 @@ SENSOR_TYPES = {
     ],
     "reachable": ["Reachability", None, "mdi:signal", None],
     "rf_status": ["Radio", None, "mdi:signal", None],
-    "rf_status_lvl": ["Radio Level", "", "mdi:signal", DEVICE_CLASS_SIGNAL_STRENGTH],
+    "rf_status_lvl": ["Radio Level", "", None, DEVICE_CLASS_SIGNAL_STRENGTH],
     "wifi_status": ["Wifi", None, "mdi:wifi", None],
-    "wifi_status_lvl": ["Wifi Level", "dBm", "mdi:wifi", DEVICE_CLASS_SIGNAL_STRENGTH],
+    "wifi_status_lvl": ["Wifi Level", "dBm", None, DEVICE_CLASS_SIGNAL_STRENGTH],
     "health_idx": ["Health", None, "mdi:cloud", None],
 }
 
