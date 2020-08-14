@@ -8,6 +8,7 @@ import pytest
 from pytest import raises
 from pyvizio.api.apps import AppConfig
 from pyvizio.const import (
+    APPS,
     DEVICE_CLASS_SPEAKER as VIZIO_DEVICE_CLASS_SPEAKER,
     DEVICE_CLASS_TV as VIZIO_DEVICE_CLASS_TV,
     INPUT_APPS,
@@ -692,3 +693,35 @@ async def test_setup_tv_without_mute(
         _assert_sources_and_volume(attr, VIZIO_DEVICE_CLASS_TV)
         assert "sound_mode" not in attr
         assert "is_volume_muted" not in attr
+
+
+async def test_apps_update(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_update_with_apps: pytest.fixture,
+    caplog: pytest.fixture,
+) -> None:
+    """Test device setup with apps where no app is running."""
+    with patch(
+        "homeassistant.components.vizio.gen_apps_list_from_url", return_value=None,
+    ):
+        async with _cm_for_test_setup_tv_with_apps(
+            hass, MOCK_USER_VALID_TV_CONFIG, vars(AppConfig())
+        ):
+            # Check source list, remove TV inputs, and verify that the integration is
+            # using the default APPS list
+            sources = hass.states.get(ENTITY_ID).attributes["source_list"]
+            apps = list(set(sources) - set(INPUT_LIST))
+            assert len(apps) == len(APPS)
+
+            with patch(
+                "homeassistant.components.vizio.gen_apps_list_from_url",
+                return_value=APP_LIST,
+            ):
+                async_fire_time_changed(hass, dt_util.now() + timedelta(days=2))
+                await hass.async_block_till_done()
+                # Check source list, remove TV inputs, and verify that the integration is
+                # now using the APP_LIST list
+                sources = hass.states.get(ENTITY_ID).attributes["source_list"]
+                apps = list(set(sources) - set(INPUT_LIST))
+                assert len(apps) == len(APP_LIST)
