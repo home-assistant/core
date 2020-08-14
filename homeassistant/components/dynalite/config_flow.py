@@ -73,7 +73,7 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                             vol.Optional(CONF_PORT, default=user_input[CONF_PORT]): int,
                         }
                     ),
-                    errors={"base": "no_connection"},
+                    errors={"base": "cannot_connect"},
                 )
             LOGGER.debug("Creating entry for the bridge - %s", user_input)
             return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
