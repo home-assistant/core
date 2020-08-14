@@ -334,19 +334,21 @@ async def test_pair_try_later_errors_on_start(hass, controller, exception, expec
     test_exc = exception("error")
     with patch.object(device, "start_pairing", side_effect=test_exc):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result2["step_id"] == "try_pair_later"
+    assert result2["step_id"] == expected
     assert result2["type"] == "form"
-    assert result2["errors"]["base"] == expected
 
     # Device is rebooted or placed into pairing mode as they have been instructed
 
     # We start pairing again
-    result3 = await hass.config_entries.flow.async_configure(result2["flow_id"])
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"], user_input={"any": "key"}
+    )
 
     # .. and successfully complete pair
     result4 = await hass.config_entries.flow.async_configure(
         result3["flow_id"], user_input={"pairing_code": "111-22-333"}
     )
+
     assert result4["type"] == "create_entry"
     assert result4["title"] == "Koogeek-LS1-20833F"
 
@@ -373,7 +375,9 @@ async def test_pair_form_errors_on_start(hass, controller, exception, expected):
     # User initiates pairing - device refuses to enter pairing mode
     test_exc = exception("error")
     with patch.object(device, "start_pairing", side_effect=test_exc):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"pairing_code": "111-22-333"}
+        )
     assert result["type"] == "form"
     assert result["errors"]["pairing_code"] == expected
 
@@ -384,10 +388,16 @@ async def test_pair_form_errors_on_start(hass, controller, exception, expected):
         "source": "zeroconf",
     }
 
+    # User gets back the form
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
     # User re-tries entering pairing code
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"pairing_code": "111-22-333"}
     )
+
     assert result["type"] == "create_entry"
     assert result["title"] == "Koogeek-LS1-20833F"
 
