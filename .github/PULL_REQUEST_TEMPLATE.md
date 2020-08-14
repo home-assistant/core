@@ -110,7 +110,9 @@ The integration reached or maintains the following [Integration Quality Scale][q
 
 To help with the load of incoming pull requests:
 
-- [ ] I have reviewed two other open pull requests in this repository.
+- [ ] I have reviewed two other [open pull requests][prs] in this repository.
+
+prs: https://github.com/home-assistant/core/pulls?page=5&q=is%3Aopen+is%3Apr+-author%3A%40me+-draft%3Atrue+-label%3Awaiting-for-upstream+sort%3Acreated-asc+-review%3Aapproved
 
 <!--
   Thank you for contributing <3
