@@ -21,7 +21,7 @@ from .const import (
     COORDINATOR_RAIN,
     DOMAIN,
     ENTITY_API_DATA_PATH,
-    ENTITY_CLASS,
+    ENTITY_DEVICE_CLASS,
     ENTITY_ENABLE,
     ENTITY_ICON,
     ENTITY_NAME,
@@ -128,7 +128,7 @@ class MeteoFranceSensor(Entity):
     @property
     def device_class(self):
         """Return the device class."""
-        return SENSOR_TYPES[self._type][ENTITY_CLASS]
+        return SENSOR_TYPES[self._type][ENTITY_DEVICE_CLASS]
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -170,9 +170,15 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
     @property
     def state(self):
         """Return the state."""
-        next_rain_date_locale = self.coordinator.data.next_rain_date_locale()
+        # search first cadran with rain
+        next_rain = next(
+            (cadran for cadran in self.coordinator.data.forecast if cadran["rain"] > 1),
+            None,
+        )
         return (
-            dt_util.as_local(next_rain_date_locale) if next_rain_date_locale else None
+            dt_util.utc_from_timestamp(next_rain["dt"]).isoformat()
+            if next_rain
+            else None
         )
 
     @property
@@ -180,11 +186,7 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
         """Return the state attributes."""
         return {
             ATTR_NEXT_RAIN_1_HOUR_FORECAST: [
-                {
-                    dt_util.as_local(
-                        self.coordinator.data.timestamp_to_locale_time(item["dt"])
-                    ).strftime("%H:%M"): item["desc"]
-                }
+                {dt_util.utc_from_timestamp(item["dt"]).isoformat(): item["desc"]}
                 for item in self.coordinator.data.forecast
             ],
             ATTR_ATTRIBUTION: ATTRIBUTION,
