@@ -285,6 +285,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
             try:
                 self.finish_pairing = await discovery.start_pairing(self.hkid)
+                self.try_later_reason = None
 
             except aiohomekit.BusyError:
                 # Already performing a pair setup operation with a different
@@ -316,7 +317,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
     async def async_step_try_pair_later(self, user_input=None):
         """Retry pairing after the accessory is busy or unavailable."""
         if user_input is not None:
-            self.try_later_reason = None
             return await self.async_step_pair()
 
         return self.async_show_form(
