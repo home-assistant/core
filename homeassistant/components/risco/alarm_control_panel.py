@@ -19,7 +19,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 
-from . import call_with_retry
 from .const import DATA_COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -135,35 +134,30 @@ class RiscoAlarm(AlarmControlPanelEntity):
         """Whether the code is required for arm actions."""
         return False
 
-    @call_with_retry
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
         alarm = await self.risco.disarm(self._partition_id)
         self._partition = alarm.partitions[self._partition_id]
         self.async_write_ha_state()
 
-    @call_with_retry
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
         alarm = await self.risco.partial_arm(self._partition_id)
         self._partition = alarm.partitions[self._partition_id]
         self.async_write_ha_state()
 
-    @call_with_retry
     async def async_alarm_arm_night(self, code=None):
         """Send arm night command."""
         alarm = await self.risco.partial_arm(self._partition_id)
         self._partition = alarm.partitions[self._partition_id]
         self.async_write_ha_state()
 
-    @call_with_retry
     async def async_alarm_arm_custom_bypass(self, code=None):
         """Send arm custom bypass command."""
         alarm = await self.risco.partial_arm(self._partition_id)
         self._partition = alarm.partitions[self._partition_id]
         self.async_write_ha_state()
 
-    @call_with_retry
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
         alarm = await self.risco.arm(self._partition_id)

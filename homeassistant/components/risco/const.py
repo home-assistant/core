@@ -3,5 +3,3 @@
 DOMAIN = "risco"
 
 DATA_COORDINATOR = "risco"
-
-NUM_RETRIES = 3

@@ -12,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DATA_COORDINATOR, DOMAIN, NUM_RETRIES
+from .const import DATA_COORDINATOR, DOMAIN
 
 PLATFORMS = ["alarm_control_panel"]
 
@@ -67,28 +67,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-def call_with_retry(func):
-    """Make a call to the Risco API and retry if session expires.
-
-    The risco api ends the session every hour.
-    The only way around it is retrying here.
-    For some odd reason, retrying in the package doesn't work...
-    """
-
-    async def _wrap(*args, **kwargs):
-        for i in range(NUM_RETRIES):
-            try:
-                return await func(*args, **kwargs)
-            except UnauthorizedError:
-                _LOGGER.info("Risco session. Expired. Retry %d", i + 1)
-                await args[0].risco.close()
-                await args[0].risco.login()
-                if i + 1 == NUM_RETRIES:
-                    raise
-
-    return _wrap
-
-
 class RiscoDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching risco data."""
 
@@ -100,14 +78,10 @@ class RiscoDataUpdateCoordinator(DataUpdateCoordinator):
             hass, _LOGGER, name=DOMAIN, update_interval=interval,
         )
 
-    @call_with_retry
-    async def _get_state(self):
-        return await self.risco.get_state()
-
     async def _async_update_data(self):
         """Fetch data from risco."""
         try:
-            return await self._get_state()
+            return await self.risco.get_state()
         except (CannotConnectError, UnauthorizedError, OperationError) as error:
             _LOGGER.exception("Error updating Risco state")
             raise UpdateFailed from error
