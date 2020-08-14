@@ -254,11 +254,13 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             except aiohomekit.BusyError:
                 # Already performing a pair setup operation with a different
                 # controller
-                return self.async_step_try_pair_later({"reason": "busy_error"})
+                return await self.async_step_try_pair_later({"reason": "busy_error"})
             except aiohomekit.MaxTriesError:
                 # The accessory has received more than 100 unsuccessful auth
                 # attempts.
-                return self.async_step_try_pair_later({"reason": "max_tries_error"})
+                return await self.async_step_try_pair_later(
+                    {"reason": "max_tries_error"}
+                )
             except aiohomekit.UnavailableError:
                 # The accessory is already paired - cannot try to pair again.
                 return self.async_abort(reason="already_paired")
@@ -268,7 +270,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             except IndexError:
                 # TLV error, usually not in pairing mode
                 _LOGGER.exception("Pairing communication failed")
-                return self.async_step_try_pair_later({"reason": "protocol_error"})
+                return await self.async_step_try_pair_later(
+                    {"reason": "protocol_error"}
+                )
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
                 errors["pairing_code"] = "pairing_failed"
