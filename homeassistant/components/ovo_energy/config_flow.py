@@ -10,7 +10,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from .const import DOMAIN  # pylint: disable=unused-import
 
 REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
-
 USER_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
 )
@@ -88,6 +87,8 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
                                 },
                             )
                             return self.async_abort(reason="reauth_successful")
+
+                errors["base"] = "authorization_error"
 
         return self.async_show_form(
             step_id="reauth", data_schema=REAUTH_SCHEMA, errors=errors
