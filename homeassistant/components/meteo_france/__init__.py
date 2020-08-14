@@ -198,6 +198,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
         )
     )
     if unload_ok:
+        hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
         hass.data[DOMAIN].pop(entry.entry_id)
         if not hass.data[DOMAIN]:
             hass.data.pop(DOMAIN)
