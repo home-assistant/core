@@ -254,11 +254,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             except aiohomekit.BusyError:
                 # Already performing a pair setup operation with a different
                 # controller
-                errors["base"] = "busy_error"
+                return self.async_step_try_pair_later({"reason": "busy_error"})
             except aiohomekit.MaxTriesError:
                 # The accessory has received more than 100 unsuccessful auth
                 # attempts.
-                errors["base"] = "max_tries_error"
+                return self.async_step_try_pair_later({"reason": "max_tries_error"})
             except aiohomekit.UnavailableError:
                 # The accessory is already paired - cannot try to pair again.
                 return self.async_abort(reason="already_paired")
@@ -268,7 +268,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             except IndexError:
                 # TLV error, usually not in pairing mode
                 _LOGGER.exception("Pairing communication failed")
-                errors["base"] = "protocol_error"
+                return self.async_step_try_pair_later({"reason": "protocol_error"})
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
                 errors["pairing_code"] = "pairing_failed"
@@ -308,13 +308,18 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
                 errors["pairing_code"] = "pairing_failed"
 
         if errors and "base" in errors:
-            return self.async_show_form(step_id="try_pair_later", errors=errors)
+            return self.async_step_try_pair_later()
 
         return self._async_step_pair_show_form(errors)
 
-    async def async_step_try_pair_later(self, pair_info=None):
+    async def async_step_try_pair_later(self, pairing_retry=None):
         """Retry pairing after the accessory is busy or unavailable."""
-        return await self.async_step_pair(pair_info)
+        if pairing_retry:
+            return self.async_show_form(
+                step_id="try_pair_later", errors={"base": pairing_retry["reason"]}
+            )
+
+        return await self.async_step_pair()
 
     @callback
     def _async_step_pair_show_form(self, errors=None):
