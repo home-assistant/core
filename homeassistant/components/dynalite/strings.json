@@ -6,7 +6,7 @@
         "data": {
           "name": "Name",
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
+          "port": "[%key:common::config_flow::data::port%]"
         }
       }
     },
