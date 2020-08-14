@@ -5,8 +5,8 @@
         "description": "Please enter the connection information of your Dynalite gateway.",
         "data": {
           "name": "Name",
-          "host": "Gateway IP",
-          "port": "Port"
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
         }
       }
     },
