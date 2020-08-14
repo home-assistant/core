@@ -47,7 +47,7 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # New entry
         if not await self.check_bridge_connection(import_info):
             LOGGER.error("Unable to setup bridge - import info=%s", import_info)
-            return self.async_abort(reason="no_connection")
+            return self.async_abort(reason="cannot_connect")
         LOGGER.debug("Creating entry for the bridge - %s", import_info)
         return self.async_create_entry(title=host, data=import_info)
 

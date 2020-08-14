@@ -15,7 +15,7 @@
     },
     "abort": {
       "already_configured": "This gateway is already configured in the system.", 
-      "no_connection": "Unable to connect to the gateway."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   }
 }

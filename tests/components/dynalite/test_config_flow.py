@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry
     "first_con, second_con,exp_type, exp_result, exp_reason",
     [
         (True, True, "create_entry", "loaded", ""),
-        (False, False, "abort", "", "no_connection"),
+        (False, False, "abort", "", "cannot_connect"),
         (True, False, "create_entry", "setup_retry", ""),
     ],
 )
