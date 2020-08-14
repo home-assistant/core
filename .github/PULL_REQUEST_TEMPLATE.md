@@ -13,7 +13,7 @@
 
 
 ## Proposed change
-<!-- 
+<!--
   Describe the big picture of your changes here to communicate to the
   maintainers why we should accept this pull request. If it fixes a bug
   or resolves a feature request, be sure to link to that issue in the
@@ -24,7 +24,7 @@
 ## Type of change
 <!--
   What type of change does your PR introduce to Home Assistant?
-  NOTE: Please, check only 1! box! 
+  NOTE: Please, check only 1! box!
   If your PR requires multiple boxes to be checked, you'll most likely need to
   split it into multiple PRs. This makes things easier and faster to code review.
 -->
@@ -56,8 +56,8 @@
 -->
 
 - This PR fixes or closes issue: fixes #
-- This PR is related to issue: 
-- Link to documentation pull request: 
+- This PR is related to issue:
+- Link to documentation pull request:
 
 ## Checklist
 <!--
@@ -80,9 +80,9 @@ If user exposed functionality or configuration variables are added/changed:
 
 If the code communicates with devices, web services, or third-party tools:
 
-- [ ] The [manifest file][manifest-docs] has all fields filled out correctly.  
+- [ ] The [manifest file][manifest-docs] has all fields filled out correctly.
       Updated and included derived files by running: `python3 -m script.hassfest`.
-- [ ] New or updated dependencies have been added to `requirements_all.txt`.  
+- [ ] New or updated dependencies have been added to `requirements_all.txt`.
       Updated by running `python3 -m script.gen_requirements_all`.
 - [ ] Untested files have been added to `.coveragerc`.
 
@@ -97,6 +97,20 @@ The integration reached or maintains the following [Integration Quality Scale][q
 - [ ] 🥈 Silver
 - [ ] 🥇 Gold
 - [ ] 🏆 Platinum
+
+<!--
+  This project is very active and we have a high turnover of pull requests.
+  Unfortunately the number of incoming pull requests is higher than what our
+  reviewers can review and merge so there is a long backlog of pull requests
+  waiting for review. You can help here! By reviewing another pull request
+  you will help raise the code quality of that pull request and the final
+  review will be faster. This way the general pace of pull request review
+  will go up and your wait time will go down. Thanks for helping out!
+-->
+
+To help with the load of incoming pull requests:
+
+- [ ] I have reviewed two other open pull requests in this repository.
 
 <!--
   Thank you for contributing <3
