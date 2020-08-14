@@ -11,18 +11,20 @@ from .core import Segment, StreamBuffer
 _LOGGER = logging.getLogger(__name__)
 
 
-def create_stream_buffer(stream_output, video_stream, audio_stream):
+def create_stream_buffer(stream_output, video_stream, audio_stream, sequence):
     """Create a new StreamBuffer."""
 
     segment = io.BytesIO()
+    container_options = (
+        stream_output.container_options(sequence)
+        if stream_output.container_options
+        else {}
+    )
     output = av.open(
         segment,
         mode="w",
         format=stream_output.format,
-        container_options={
-            "video_track_timescale": str(int(1 / video_stream.time_base)),
-            **(stream_output.container_options or {}),
-        },
+        container_options=container_options,
     )
     vstream = output.add_stream(template=video_stream)
     # Check if audio is requested
@@ -57,8 +59,8 @@ def stream_worker(hass, stream, quit_event):
     outputs = None
     # Keep track of the number of segments we've processed
     sequence = 0
-    # The pts at the beginning of the segment
-    segment_start_pts = {}
+    # The video pts at the beginning of the segment
+    segment_start_pts = None
     # Because of problems 1 and 2 below, we need to store the first few packets and replay them
     initial_packets = deque()
 
@@ -124,13 +126,13 @@ def stream_worker(hass, stream, quit_event):
         # Clear outputs and increment sequence
         outputs = {}
         sequence += 1
-        segment_start_pts[video_stream] = video_pts
-        if audio_stream:
-            segment_start_pts[audio_stream] = audio_pts
+        segment_start_pts = video_pts
         for stream_output in stream.outputs.values():
             if video_stream.name not in stream_output.video_codecs:
                 continue
-            buffer = create_stream_buffer(stream_output, video_stream, audio_stream)
+            buffer = create_stream_buffer(
+                stream_output, video_stream, audio_stream, sequence
+            )
             outputs[stream_output.name] = (
                 buffer,
                 {video_stream: buffer.vstream, audio_stream: buffer.astream},
@@ -209,9 +211,7 @@ def stream_worker(hass, stream, quit_event):
 
         # Check for end of segment
         if packet.stream == video_stream and packet.is_keyframe:
-            segment_duration = (
-                packet.pts - segment_start_pts[video_stream]
-            ) * packet.time_base
+            segment_duration = (packet.pts - segment_start_pts) * packet.time_base
             if segment_duration >= MIN_SEGMENT_DURATION:
                 # Save segment to outputs
                 for fmt, (buffer, _) in outputs.items():
@@ -219,19 +219,7 @@ def stream_worker(hass, stream, quit_event):
                     if stream.outputs.get(fmt):
                         hass.loop.call_soon_threadsafe(
                             stream.outputs[fmt].put,
-                            Segment(
-                                sequence,
-                                buffer.segment,
-                                segment_duration,
-                                (
-                                    segment_start_pts[video_stream]
-                                    - first_pts[video_stream],
-                                    segment_start_pts[audio_stream]
-                                    - first_pts[audio_stream]
-                                    if buffer.astream
-                                    else None,
-                                ),
-                            ),
+                            Segment(sequence, buffer.segment, segment_duration,),
                         )
 
                 # Reinitialize

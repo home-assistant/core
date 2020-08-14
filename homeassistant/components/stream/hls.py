@@ -1,4 +1,6 @@
 """Provide functionality to stream HLS."""
+from typing import Callable
+
 from aiohttp import web
 
 from homeassistant.core import callback
@@ -71,8 +73,7 @@ class HlsSegmentView(StreamView):
             return web.HTTPNotFound()
         headers = {"Content-Type": "video/iso.segment"}
         return web.Response(
-            body=get_m4s(segment.segment, segment.start_pts, int(sequence)),
-            headers=headers,
+            body=get_m4s(segment.segment, int(sequence)), headers=headers,
         )
 
 
@@ -148,6 +149,10 @@ class HlsStreamOutput(StreamOutput):
         return {"hevc", "h264"}
 
     @property
-    def container_options(self) -> dict:
-        """Return container options."""
-        return {"movflags": "frag_custom+empty_moov+default_base_moof"}
+    def container_options(self) -> Callable[[int], dict]:
+        """Return Callable which takes a sequence number and returns container options."""
+        return lambda sequence: {
+            "movflags": "frag_custom+empty_moov+default_base_moof+skip_sidx+frag_discont",
+            "avoid_negative_ts": "make_non_negative",
+            "fragment_index": str(sequence),
+        }
