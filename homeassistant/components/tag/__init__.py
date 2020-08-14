@@ -95,7 +95,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     id_manager = TagIDManager()
     hass.data[DOMAIN][TAGS] = storage_collection = TagStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}_storage_collection"),
+        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     await storage_collection.async_load()
