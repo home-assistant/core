@@ -93,9 +93,11 @@ async def process_wrong_login(request):
     Increase failed login attempts counter for remote IP address.
     Add ip ban entry if failed login attempts exceeds threshold.
     """
+    payload = await request.json()
     remote_addr = ip_address(request.remote)
+    username = payload.get("username")
 
-    msg = f"Login attempt or request with invalid authentication from {remote_addr}"
+    msg = f"Login attempt or request with invalid authentication from {remote_addr}\nUsername: {username}"
     _LOGGER.warning(msg)
 
     hass = request.app["hass"]
