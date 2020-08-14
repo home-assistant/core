@@ -40,7 +40,14 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         """Fetch data from OVO Energy."""
         now = datetime.utcnow()
         async with async_timeout.timeout(10):
-            return await client.get_daily_usage(now.strftime("%Y-%m"))
+            try:
+                await client.authenticate(
+                    entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+                )
+                return await client.get_daily_usage(now.strftime("%Y-%m"))
+            except aiohttp.ClientError as exception:
+                _LOGGER.warning(exception)
+                return None
 
     coordinator = DataUpdateCoordinator(
         hass,

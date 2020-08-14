@@ -29,15 +29,29 @@ async def async_setup_entry(
 
     entities = []
 
-    if coordinator.data.electricity:
-        currency = coordinator.data.electricity[
-            len(coordinator.data.electricity) - 1
-        ].cost.currency_unit
-        entities.append(OVOEnergyLastElectricityReading(coordinator, client))
-        entities.append(OVOEnergyLastElectricityCost(coordinator, client, currency))
-    if coordinator.data.gas:
-        entities.append(OVOEnergyLastGasReading(coordinator, client))
-        entities.append(OVOEnergyLastGasCost(coordinator, client, currency))
+    if coordinator.data:
+        if coordinator.data.electricity:
+            entities.append(OVOEnergyLastElectricityReading(coordinator, client))
+            entities.append(
+                OVOEnergyLastElectricityCost(
+                    coordinator,
+                    client,
+                    coordinator.data.electricity[
+                        len(coordinator.data.electricity) - 1
+                    ].cost.currency_unit,
+                )
+            )
+        if coordinator.data.gas:
+            entities.append(OVOEnergyLastGasReading(coordinator, client))
+            entities.append(
+                OVOEnergyLastGasCost(
+                    coordinator,
+                    client,
+                    coordinator.data.gas[
+                        len(coordinator.data.gas) - 1
+                    ].cost.currency_unit,
+                )
+            )
 
     async_add_entities(
         entities, True,
