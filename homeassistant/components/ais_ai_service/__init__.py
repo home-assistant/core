@@ -135,6 +135,7 @@ CURR_ENTITIE_ENTERED = False
 CURR_ENTITIE_SELECTED_ACTION = None
 CURR_BUTTON_CODE = None
 CURR_BUTTON_LONG_PRESS = False
+CURR_REMOTE_MODE_IS_IN_AUDIO_MODE = False
 CURR_ENTITIE_POSITION = None
 PREV_CURR_GROUP = None
 PREV_CURR_ENTITIE = None
@@ -2037,6 +2038,8 @@ def type_to_input_text_from_virtual_keyboard(hass):
 
 
 def go_to_player(hass, say):
+    global CURR_REMOTE_MODE_IS_IN_AUDIO_MODE
+    CURR_REMOTE_MODE_IS_IN_AUDIO_MODE = True
     # remember the previous context
     global PREV_CURR_GROUP, PREV_CURR_ENTITIE
     # selecting the player to control via remote
@@ -2060,6 +2063,8 @@ def go_to_player(hass, say):
 
 
 def go_home(hass):
+    global CURR_REMOTE_MODE_IS_IN_AUDIO_MODE
+    CURR_REMOTE_MODE_IS_IN_AUDIO_MODE = False
     if len(GROUP_ENTITIES) == 0:
         get_groups(hass)
     global CURR_GROUP_VIEW
@@ -3595,6 +3600,7 @@ def _process_code(hass, data):
     global CURR_BUTTON_CODE
     global CURR_BUTTON_LONG_PRESS
     global CURR_ENTITIE_ENTERED
+    global CURR_REMOTE_MODE_IS_IN_AUDIO_MODE
     if "Action" not in data or "KeyCode" not in data:
         return
     action = data["Action"]
@@ -3692,12 +3698,18 @@ def _process_code(hass, data):
     elif code == 24:
         # Volume up -> KEYCODE_VOLUME_UP
         pass
-    elif code == 190:
+    # button to switch from dom to audio, 190 - legacy button_3, new 170 - tv
+    elif code == 190 or code == 170:
         # go home -> KEYCODE_HOME
         if CURR_BUTTON_LONG_PRESS:
             go_to_player(hass, True)
         else:
-            go_home(hass)
+            # toggle mode
+            if CURR_REMOTE_MODE_IS_IN_AUDIO_MODE:
+                go_home(hass)
+            else:
+                go_to_player(hass, True)
+
     # other code on text field
     else:
         type_to_input_text(hass, code)
