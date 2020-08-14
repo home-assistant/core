@@ -52,6 +52,7 @@ class FreeboxRouter:
         self.sensors_connection: Dict[str, float] = {}
         self.call_list: List[Dict[str, Any]] = []
 
+        self._unsub_dispatcher = None
         self.listeners = []
 
     async def setup(self) -> None:
@@ -72,7 +73,9 @@ class FreeboxRouter:
 
         # Devices & sensors
         await self.update_all()
-        async_track_time_interval(self.hass, self.update_all, SCAN_INTERVAL)
+        self._unsub_dispatcher = async_track_time_interval(
+            self.hass, self.update_all, SCAN_INTERVAL
+        )
 
     async def update_all(self, now: Optional[datetime] = None) -> None:
         """Update all Freebox platforms."""
@@ -147,6 +150,7 @@ class FreeboxRouter:
         """Close the connection."""
         if self._api is not None:
             await self._api.close()
+            self._unsub_dispatcher()
         self._api = None
 
     @property
