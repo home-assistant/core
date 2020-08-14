@@ -36,6 +36,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         await client.authenticate(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
     except aiohttp.ClientError as exception:
         _LOGGER.warning(exception)
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": "reauth"}, data=entry.data,
+            )
+        )
         raise ConfigEntryNotReady from exception
 
     async def async_update_data() -> OVODailyUsage:
@@ -49,6 +54,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                 return await client.get_daily_usage(now.strftime("%Y-%m"))
             except aiohttp.ClientError as exception:
                 _LOGGER.warning(exception)
+                hass.async_create_task(
+                    hass.config_entries.flow.async_init(
+                        DOMAIN, context={"source": "reauth"}, data=entry.data,
+                    )
+                )
                 return None
 
     coordinator = DataUpdateCoordinator(

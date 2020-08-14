@@ -50,3 +50,30 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=USER_SCHEMA, errors=errors
         )
+
+    async def async_step_reauth(self, user_input):
+        """Handle configuration by re-auth."""
+        errors = {}
+
+        if user_input is not None:
+            client = OVOEnergy()
+            try:
+                authenticated = await client.authenticate(
+                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                )
+            except aiohttp.ClientError:
+                errors["base"] = "connection_error"
+            else:
+                if authenticated:
+                    await self.async_set_unique_id(user_input[CONF_USERNAME])
+
+                    for entry in self._async_current_entries():
+                        if entry.unique_id == self.unique_id:
+                            self.hass.config_entries.async_update_entry(
+                                entry, data=user_input,
+                            )
+                            return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth", data_schema=USER_SCHEMA, errors=errors
+        )
