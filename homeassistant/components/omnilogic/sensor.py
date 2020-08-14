@@ -445,7 +445,7 @@ class OmnilogicSensor(Entity):
                         sensordata = bow.get("CSAD")
                         break
 
-            self._state = sensordata.get("ph")
+            self._state = sensordata.get("orp")
             self._unit = "mV"
             self._name = (
                 self._backyard["BackyardName"] + " " + self.bow.get("Name") + " ORP"
