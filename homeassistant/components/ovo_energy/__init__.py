@@ -33,32 +33,37 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     client = OVOEnergy()
 
     try:
-        await client.authenticate(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
+        authenticated = await client.authenticate(
+            entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+        )
+        if not authenticated:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": "reauth"}, data=entry.data
+                )
+            )
+            return False
     except aiohttp.ClientError as exception:
         _LOGGER.warning(exception)
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": "reauth"}, data=entry.data,
-            )
-        )
         raise ConfigEntryNotReady from exception
 
     async def async_update_data() -> OVODailyUsage:
         """Fetch data from OVO Energy."""
-        now = datetime.utcnow()
         async with async_timeout.timeout(10):
             try:
-                await client.authenticate(
+                authenticated = await client.authenticate(
                     entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
                 )
-                return await client.get_daily_usage(now.strftime("%Y-%m"))
-            except aiohttp.ClientError as exception:
-                _LOGGER.warning(exception)
-                hass.async_create_task(
-                    hass.config_entries.flow.async_init(
-                        DOMAIN, context={"source": "reauth"}, data=entry.data,
+                if not authenticated:
+                    hass.async_create_task(
+                        hass.config_entries.flow.async_init(
+                            DOMAIN, context={"source": "reauth"}, data=entry.data
+                        )
                     )
-                )
+                    return None
+                return await client.get_daily_usage(datetime.utcnow().strftime("%Y-%m"))
+            except aiohttp.ClientError as exception:
+                _LOGGER.error(exception)
                 return None
 
     coordinator = DataUpdateCoordinator(
@@ -68,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         name="sensor",
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=300),
+        update_interval=timedelta(seconds=20),
     )
 
     hass.data.setdefault(DOMAIN, {})
