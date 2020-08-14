@@ -118,7 +118,6 @@ async def test_user_flow(hass):
         result = await hass.config_entries.flow.async_init(
             dynalite.DOMAIN, context={"source": config_entries.SOURCE_USER},
         )
-        await hass.async_block_till_done()
         assert result["type"] == "form"
         assert result["step_id"] == "init"
         result = await hass.config_entries.flow.async_configure(
@@ -126,6 +125,7 @@ async def test_user_flow(hass):
         )
         assert result["type"] == "create_entry"
         assert result["result"].state == "loaded"
+        assert result["data"]["host"] == host
 
 
 async def test_user_flow_with_existing(hass):
@@ -140,7 +140,6 @@ async def test_user_flow_with_existing(hass):
         result = await hass.config_entries.flow.async_init(
             dynalite.DOMAIN, context={"source": config_entries.SOURCE_USER},
         )
-        await hass.async_block_till_done()
         assert result["type"] == "form"
         assert result["step_id"] == "init"
         result = await hass.config_entries.flow.async_configure(
