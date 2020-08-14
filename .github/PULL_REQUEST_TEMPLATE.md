@@ -56,7 +56,7 @@
 -->
 
 - This PR fixes or closes issue: fixes #
-- This PR is related to issue:
+- This PR is related to issue: 
 - Link to documentation pull request:
 
 ## Checklist
@@ -80,7 +80,7 @@ If user exposed functionality or configuration variables are added/changed:
 
 If the code communicates with devices, web services, or third-party tools:
 
-- [ ] The [manifest file][manifest-docs] has all fields filled out correctly. 
+- [ ] The [manifest file][manifest-docs] has all fields filled out correctly.
       Updated and included derived files by running: `python3 -m script.hassfest`.
 - [ ] New or updated dependencies have been added to `requirements_all.txt`.
       Updated by running `python3 -m script.gen_requirements_all`.
