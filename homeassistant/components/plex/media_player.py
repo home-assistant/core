@@ -11,6 +11,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
     MEDIA_TYPE_VIDEO,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -491,9 +492,10 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 | SUPPORT_PLAY
                 | SUPPORT_PLAY_MEDIA
                 | SUPPORT_VOLUME_MUTE
+                | SUPPORT_BROWSE_MEDIA
             )
 
-        return SUPPORT_PLAY_MEDIA
+        return SUPPORT_BROWSE_MEDIA | SUPPORT_PLAY_MEDIA
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""

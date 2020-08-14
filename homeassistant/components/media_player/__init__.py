@@ -85,6 +85,7 @@ from .const import (
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -986,6 +987,14 @@ async def websocket_browse_media(hass, connection, msg):
         )
         return
 
+    if not player.supported_features & SUPPORT_BROWSE_MEDIA:
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"], "browse_failed", "Player does not support browsing media"
+            )
+        )
+        return
+
     media_content_type = msg.get("media_content_type")
     media_content_id = msg.get("media_content_id")
 
@@ -996,7 +1005,7 @@ async def websocket_browse_media(hass, connection, msg):
             websocket_api.error_message(
                 msg["id"],
                 "browse_failed",
-                "This entity's integration does not support browsing media",
+                "Integration does not support browsing media",
             )
         )
         return
