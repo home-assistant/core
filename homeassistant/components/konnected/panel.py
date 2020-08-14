@@ -134,14 +134,14 @@ class AlarmPanel:
         except self.client.ClientError as err:
             _LOGGER.warning("Exception trying to connect to panel: %s", err)
 
-            # retry in a bit, never more than ~2 min
+            # retry in a bit, never more than ~3 min
             self.connect_attempts += 1
             self.cancel_connect_retry = self.hass.helpers.event.async_call_later(
                 2 ** min(self.connect_attempts, 5) * 5, self.async_connect
             )
             return
 
-        self.connect_attempts += 0
+        self.connect_attempts = 0
         self.connected = True
         _LOGGER.info(
             "Set up Konnected device %s. Open http://%s:%s in a "
