@@ -62,7 +62,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         self.devices = {}
         self.controller = None
         self.finish_pairing = None
-        self.try_later_reason = None
 
     async def _async_setup_controller(self):
         """Create the controller."""
@@ -285,18 +284,15 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
             try:
                 self.finish_pairing = await discovery.start_pairing(self.hkid)
-                self.try_later_reason = None
 
             except aiohomekit.BusyError:
                 # Already performing a pair setup operation with a different
                 # controller
-                self.try_later_reason = "busy_error"
-                return await self.async_step_try_pair_later()
+                return await self.async_step_busy_error()
             except aiohomekit.MaxTriesError:
                 # The accessory has received more than 100 unsuccessful auth
                 # attempts.
-                self.try_later_reason = "max_tries_error"
-                return await self.async_step_try_pair_later()
+                return await self.async_step_max_tries_error()
             except aiohomekit.UnavailableError:
                 # The accessory is already paired - cannot try to pair again.
                 return self.async_abort(reason="already_paired")
@@ -306,22 +302,33 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             except IndexError:
                 # TLV error, usually not in pairing mode
                 _LOGGER.exception("Pairing communication failed")
-                self.try_later_reason = "protocol_error"
-                return await self.async_step_try_pair_later()
+                return await self.async_step_protocol_error()
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
                 errors["pairing_code"] = "pairing_failed"
 
         return self._async_step_pair_show_form(errors)
 
-    async def async_step_try_pair_later(self, user_input=None):
-        """Retry pairing after the accessory is busy or unavailable."""
+    async def async_step_busy_error(self, user_input=None):
+        """Retry pairing after the accessory is busy."""
         if user_input is not None:
             return await self.async_step_pair()
 
-        return self.async_show_form(
-            step_id="try_pair_later", errors={"base": self.try_later_reason}
-        )
+        return self.async_show_form(step_id="busy_error")
+
+    async def async_step_max_tries_error(self, user_input=None):
+        """Retry pairing after the accessory has reached max tries."""
+        if user_input is not None:
+            return await self.async_step_pair()
+
+        return self.async_show_form(step_id="max_tries_error")
+
+    async def async_step_protocol_error(self, user_input=None):
+        """Retry pairing after the accessory has a protocol error."""
+        if user_input is not None:
+            return await self.async_step_pair()
+
+        return self.async_show_form(step_id="protocol_error")
 
     @callback
     def _async_step_pair_show_form(self, errors=None):
