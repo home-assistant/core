@@ -83,11 +83,13 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 can_connect = await self.hass.async_add_executor_job(
                     self._check_site, site, api
                 )
-                token = user_input[CONF_ACCESS_TOKEN]
-                if token != "":
-                    can_connect_ha = await self.hass.async_add_executor_job(
-                        self._check_ha_site, site, token
-                    )
+                can_connect_ha = False
+                if CONF_ACCESS_TOKEN in user_input:
+                    token = user_input[CONF_ACCESS_TOKEN]
+                    if token != "":
+                        can_connect_ha = await self.hass.async_add_executor_job(
+                            self._check_ha_site, site, token
+                        )
                 if can_connect:
                     if can_connect_ha:
                         return self.async_create_entry(

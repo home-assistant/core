@@ -1,4 +1,6 @@
 """The solaredge component."""
+import asyncio
+
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -7,6 +9,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import CONF_SITE_ID, DEFAULT_NAME, DOMAIN
+
+PLATFORMS = ["sensor", "light"]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -38,10 +42,21 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Load the saved entities."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
-    )
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "light")
-    )
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
     return True
+
+
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    return unload_ok
