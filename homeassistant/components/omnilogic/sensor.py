@@ -258,7 +258,7 @@ class OmnilogicSensor(Entity):
                         sensordata = bow["waterTemp"]
                         break
 
-            temp_return = float(sensordata)
+            temp_return = int(sensordata)
             unit_of_measurement = TEMP_FAHRENHEIT
             if self._backyard["Unit-of-Measurement"] == "Metric":
                 temp_return = round((temp_return - 32) * 5 / 9, 1)
@@ -337,7 +337,7 @@ class OmnilogicSensor(Entity):
                         sensordata = bow.get("Chlorinator")
                         break
 
-            salt_return = float(sensordata.get("avgSaltLevel"))
+            salt_return = int(sensordata.get("avgSaltLevel"))
             unit_of_measurement = "ppm"
 
             if self._backyard["Unit-of-Measurement"] == "Metric":
@@ -413,7 +413,7 @@ class OmnilogicSensor(Entity):
                 if backyard.get("systemId") == self.attrs["MspSystemId"]:
                     sensordata = backyard.get("airTemp")
 
-            temp_return = float(sensordata)
+            temp_return = int(sensordata)
             unit_of_measurement = TEMP_FAHRENHEIT
             if self._backyard["Unit-of-Measurement"] == "Metric":
                 temp_return = round((temp_return - 32) * 5 / 9, 1)
