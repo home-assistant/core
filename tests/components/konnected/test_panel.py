@@ -551,3 +551,85 @@ async def test_default_options(hass, mock_panel):
             },
         ],
     }
+
+
+async def test_connect_retry(hass, mock_panel):
+    """Test that we create a Konnected Panel and save the data."""
+    device_config = config_flow.CONFIG_ENTRY_SCHEMA(
+        {
+            "host": "1.2.3.4",
+            "port": 1234,
+            "id": "112233445566",
+            "model": "Konnected Pro",
+            "access_token": "11223344556677889900",
+            "default_options": config_flow.OPTIONS_SCHEMA({config_flow.CONF_IO: {}}),
+        }
+    )
+
+    entry = MockConfigEntry(
+        domain="konnected",
+        title="Konnected Alarm Panel",
+        data=device_config,
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    # fail first 2 attempts, and succeed the third
+    mock_panel.get_status.side_effect = [
+        mock_panel.ClientError,
+        mock_panel.ClientError,
+        {
+            "hwVersion": "2.3.0",
+            "swVersion": "2.3.1",
+            "heap": 10000,
+            "uptime": 12222,
+            "ip": "192.168.1.90",
+            "port": 9123,
+            "sensors": [],
+            "actuators": [],
+            "dht_sensors": [],
+            "ds18b20_sensors": [],
+            "mac": "11:22:33:44:55:66",
+            "model": "Konnected Pro",
+            "settings": {},
+        },
+    ]
+
+    # setup the integration and inspect panel behavior
+    with patch.object(hass.helpers.event, "async_call_later") as mock_call_later:
+        assert (
+            await async_setup_component(
+                hass,
+                panel.DOMAIN,
+                {
+                    panel.DOMAIN: {
+                        panel.CONF_ACCESS_TOKEN: "arandomstringvalue",
+                        panel.CONF_API_HOST: "http://192.168.1.1:8123",
+                    }
+                },
+            )
+            is True
+        )
+
+        # confirm the call later occurs and execute it now
+        assert not hass.data[panel.DOMAIN][panel.CONF_DEVICES]["112233445566"][
+            "panel"
+        ].available
+        assert len(mock_call_later.mock_calls) == 1
+        assert mock_call_later.mock_calls[0][1][0] == 10
+        await mock_call_later.mock_calls[0][1][1]()
+
+        # calls 1 and 2 are cancel related
+        assert not hass.data[panel.DOMAIN][panel.CONF_DEVICES]["112233445566"][
+            "panel"
+        ].available
+        assert len(mock_call_later.mock_calls) == 4
+        assert mock_call_later.mock_calls[3][1][0] == 20
+        await mock_call_later.mock_calls[3][1][1]()
+
+    # confirm panel instance was created and configured
+    # hass.data is the only mechanism to get a reference to the created panel instance
+    assert hass.data[panel.DOMAIN][panel.CONF_DEVICES]["112233445566"][
+        "panel"
+    ].available
+    assert mock_panel.get_status.call_count == 3
