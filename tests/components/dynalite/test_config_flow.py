@@ -165,5 +165,6 @@ async def test_user_flow_bridge_unavailable(hass):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={"host": host}
         )
-        assert result["type"] == "abort"
-        assert result["reason"] == "no_connection"
+        assert result["type"] == "form"
+        assert result["step_id"] == "init"
+        assert result["errors"]["base"] == "no_connection"

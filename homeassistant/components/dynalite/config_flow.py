@@ -64,7 +64,17 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
             if not await self.check_bridge_connection(user_input):
                 LOGGER.error("Unable to setup bridge - init user_input=%s", user_input)
-                return self.async_abort(reason="no_connection")
+                return self.async_show_form(
+                    step_id="init",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+                            vol.Required(CONF_HOST): str,
+                            vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                        }
+                    ),
+                    errors={"base": "no_connection"},
+                )
             LOGGER.debug("Creating entry for the bridge - %s", user_input)
             return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 

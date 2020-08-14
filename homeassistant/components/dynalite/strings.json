@@ -10,6 +10,9 @@
         }
       }
     },
+    "error": {
+      "no_connection": "Unable to connect to the gateway."
+    },
     "abort": {
       "already_configured": "This gateway is already configured in the system.", 
       "no_connection": "Unable to connect to the gateway."
