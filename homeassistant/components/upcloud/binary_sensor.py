@@ -21,7 +21,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Legacy platform set up."""
     _LOGGER.warning(
         "Loading upcloud binary sensors via platform config is deprecated and no longer "
-        "necessary as of 0.114. Please remove it from binary_sensor YAML configuration."
+        "necessary as of 0.115. Please remove it from binary_sensor YAML configuration."
     )
     return True
 
