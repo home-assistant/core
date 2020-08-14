@@ -43,147 +43,126 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
         _LOGGER.info("OmniLogic - air temperature for backyard set up successfully.")
 
         for bow in backyard["BOWS"]:
-            """Add bow level sensors."""
+            sensors.append(
+                OmnilogicSensor(
+                    coordinator,
+                    "water_temperature",
+                    "Water Temperature",
+                    backyard,
+                    bow,
+                    "temperature",
+                    "mdi:thermometer",
+                    TEMP_UNITS,
+                    bow.get("waterTemp"),
+                )
+            )
+            _LOGGER.info(
+                "OmniLogic - water temperature for "
+                + bow["Name"]
+                + " set up successfully."
+            )
 
-            """Water Temperature."""
-            try:
+            sensors.append(
+                OmnilogicSensor(
+                    coordinator,
+                    "filter_pump_speed",
+                    "Pump Speed",
+                    backyard,
+                    bow,
+                    "none",
+                    "mdi:speedometer",
+                    PERCENT_UNITS,
+                    bow["Filter"],
+                )
+            )
+            _LOGGER.info(
+                "OmnilLogic - filter pump "
+                + bow["Filter"]["Name"]
+                + " set up successfully."
+            )
+
+            for pump in bow["Pumps"]:
                 sensors.append(
                     OmnilogicSensor(
                         coordinator,
-                        "water_temperature",
-                        "Water Temperature",
-                        backyard,
-                        bow,
-                        "temperature",
-                        "mdi:thermometer",
-                        TEMP_UNITS,
-                        bow.get("waterTemp"),
-                    )
-                )
-                _LOGGER.info(
-                    "OmniLogic - water temperature for "
-                    + bow["Name"]
-                    + " set up successfully."
-                )
-            except Exception as ex:
-                _LOGGER.info(
-                    "OmniLogic - no water temperature to set up. (" + str(ex) + ")"
-                )
-
-            """Filter Pump."""
-            try:
-                sensors.append(
-                    OmnilogicSensor(
-                        coordinator,
-                        "filter_pump_speed",
+                        "pump_speed",
                         "Pump Speed",
                         backyard,
                         bow,
                         "none",
                         "mdi:speedometer",
                         PERCENT_UNITS,
-                        bow["Filter"],
+                        pump,
                     )
                 )
                 _LOGGER.info(
-                    "OmnilLogic - filter pump "
-                    + bow["Filter"]["Name"]
-                    + " set up successfully."
+                    "OmniLogic - pump " + pump["Name"] + " set up successfully."
                 )
-            except Exception as ex:
-                _LOGGER.info("OmniLogic - No filter pump to set up. (" + str(ex) + ")")
 
-            """All other pumps."""
-            try:
-                for pump in bow["Pumps"]:
+            sensors.append(
+                OmnilogicSensor(
+                    coordinator,
+                    "chlorinator",
+                    "Chlorinator",
+                    backyard,
+                    bow,
+                    "none",
+                    "mdi:gauge",
+                    PERCENT_UNITS,
+                    bow["Chlorinator"],
+                )
+            )
+            sensors.append(
+                OmnilogicSensor(
+                    coordinator,
+                    "salt_level",
+                    "Salt Level",
+                    backyard,
+                    bow,
+                    "none",
+                    "mdi:gauge",
+                    PERCENT_UNITS,
+                    bow["Chlorinator"],
+                )
+            )
+            _LOGGER.info(
+                "OmniLogic - chlorinator "
+                + bow["Chlorinator"]["Name"]
+                + " set up successfully."
+            )
+
+            if "CSAD" in bow.keys():
+                if bow["CSAD"]["ph"] != "" and bow["CSAD"]["ph"] != "0":
                     sensors.append(
                         OmnilogicSensor(
                             coordinator,
-                            "pump_speed",
-                            "Pump Speed",
+                            "csad_ph",
+                            "CSAD",
                             backyard,
                             bow,
                             "none",
-                            "mdi:speedometer",
+                            "mdi:gauge",
                             PERCENT_UNITS,
-                            pump,
+                            bow["CSAD"],
                         )
                     )
-                    _LOGGER.info(
-                        "OmniLogic - pump " + pump["Name"] + " set up successfully."
-                    )
-            except Exception as ex:
-                _LOGGER.info(
-                    "Omnilogic - No additional pumps to set up. (" + str(ex) + ")"
-                )
+                    _LOGGER.info("OmniLogic - successfully parsed CSAD pH data.")
 
-            """Chlorinator Information."""
-            try:
-                sensors.append(
-                    OmnilogicSensor(
-                        coordinator,
-                        "chlorinator",
-                        "Chlorinator",
-                        backyard,
-                        bow,
-                        "none",
-                        "mdi:gauge",
-                        PERCENT_UNITS,
-                        bow["Chlorinator"],
+                if bow["CSAD"]["orp"] != "" and bow["CSAD"]["orp"] != "0":
+                    sensors.append(
+                        OmnilogicSensor(
+                            coordinator,
+                            "csad_orp",
+                            "CSAD",
+                            backyard,
+                            bow,
+                            "none",
+                            "mdi:gauge",
+                            PERCENT_UNITS,
+                            bow["CSAD"],
+                        )
                     )
-                )
-                sensors.append(
-                    OmnilogicSensor(
-                        coordinator,
-                        "salt_level",
-                        "Salt Level",
-                        backyard,
-                        bow,
-                        "none",
-                        "mdi:gauge",
-                        PERCENT_UNITS,
-                        bow["Chlorinator"],
-                    )
-                )
-                _LOGGER.info(
-                    "OmniLogic - chlorinator "
-                    + bow["Chlorinator"]["Name"]
-                    + " set up successfully."
-                )
-            except Exception as ex:
-                _LOGGER.info("OmniLogic - no chlorinator to set up. (" + str(ex) + ")")
-
-            """CSAD Water Balance Sensors."""
-            try:
-                sensors.append(
-                    OmnilogicSensor(
-                        coordinator,
-                        "csad_ph",
-                        "CSAD",
-                        backyard,
-                        bow,
-                        "none",
-                        "mdi:gauge",
-                        PERCENT_UNITS,
-                        bow["CSAD"],
-                    )
-                )
-                sensors.append(
-                    OmnilogicSensor(
-                        coordinator,
-                        "csad_orp",
-                        "CSAD",
-                        backyard,
-                        bow,
-                        "none",
-                        "mdi:gauge",
-                        PERCENT_UNITS,
-                        bow["CSAD"],
-                    )
-                )
-                _LOGGER.info("OmniLogic - successfully parsed CSAD data.")
-            except Exception as ex:
-                _LOGGER.info("OmniLogic - no CSAD data available. (" + str(ex) + ")")
+                    _LOGGER.info("OmniLogic - successfully parsed CSAD ORP data.")
 
     async_add_entities(sensors, update_before_add=True)
 
