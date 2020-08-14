@@ -1668,7 +1668,7 @@ pysuez==0.1.17
 pysupla==0.0.3
 
 # homeassistant.components.syncthru
-pysyncthru==0.5.0
+pysyncthru==0.7.0
 
 # homeassistant.components.tankerkoenig
 pytankerkoenig==0.0.6
