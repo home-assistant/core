@@ -3,7 +3,7 @@
   "name": "Belkin WeMo",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wemo",
-  "requirements": ["pywemo==0.4.45"],
+  "requirements": ["pywemo==0.4.46"],
   "ssdp": [
     {
       "manufacturer": "Belkin International Inc."
