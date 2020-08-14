@@ -334,9 +334,8 @@ async def test_pair_try_later_errors_on_start(hass, controller, exception, expec
     test_exc = exception("error")
     with patch.object(device, "start_pairing", side_effect=test_exc):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result2["step_id"] == "try_pair_later"
+    assert result2["step_id"] == expected
     assert result2["type"] == "form"
-    assert result2["errors"]["base"] == expected
 
     # Device is rebooted or placed into pairing mode as they have been instructed
 
