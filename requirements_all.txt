@@ -1081,6 +1081,7 @@ piglow==1.2.4
 pilight==0.1.1
 
 # homeassistant.components.doods
+# homeassistant.components.media_manager
 # homeassistant.components.proxy
 # homeassistant.components.qrcode
 # homeassistant.components.seven_segments
