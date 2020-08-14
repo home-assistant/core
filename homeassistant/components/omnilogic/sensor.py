@@ -234,6 +234,17 @@ class OmnilogicSensor(Entity):
         """Return the state."""
         return self._state
 
+    @property
+    def device_info(self):
+        """Define the device as back yard/MSP System."""
+
+        return {
+            "identifiers": {(DOMAIN, self.attrs["MspSystemId"])},
+            "name": self._backyard.get("BackyardName"),
+            "manufacturer": "Hayward",
+            "model": "OmniLogic",
+        }
+
     async def async_update(self):
         """Update Omnilogic entity."""
         await self.coordinator.async_request_refresh()
