@@ -104,7 +104,7 @@ aioguardian==1.0.1
 aioharmony==0.2.6
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.46
+aiohomekit[IP]==0.2.47
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
