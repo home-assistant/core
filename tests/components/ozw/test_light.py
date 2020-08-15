@@ -350,6 +350,48 @@ async def test_light(hass, light_data, light_msg, light_rgb_msg, sent_messages):
     assert state.attributes["color_temp"] == 153
 
 
+async def test_pure_rgb_dimmer_light(
+    hass, light_pure_rgb_dimmer_data, light_msg, light_pure_rgb_msg, sent_messages
+):
+    """Test light with no color channels command class."""
+    receive_message = await setup_ozw(hass, fixture=light_pure_rgb_dimmer_data)
+
+    # Test loaded
+    state = hass.states.get("light.kitchen_rgb_strip_level")
+    assert state is not None
+    assert state.state == "on"
+    assert state.attributes["supported_features"] == 17
+
+    # Test setting hs_color
+    new_color = [300, 70]
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": "light.kitchen_rgb_strip_level", "hs_color": new_color},
+        blocking=True,
+    )
+    assert len(sent_messages) == 2
+    msg = sent_messages[-1]
+    assert msg["topic"] == "OpenZWave/1/command/setvalue/"
+    assert msg["payload"] == {"Value": 255, "ValueIDKey": 122257425}
+
+    msg = sent_messages[-2]
+    assert msg["topic"] == "OpenZWave/1/command/setvalue/"
+    assert msg["payload"] == {"Value": "#ff4cff0000", "ValueIDKey": 122470423}
+
+    # Feedback on state
+    light_pure_rgb_msg.decode()
+    light_pure_rgb_msg.payload["Value"] = "#ff4cff0000"
+    light_pure_rgb_msg.encode()
+    receive_message(light_pure_rgb_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.kitchen_rgb_strip_level")
+    assert state is not None
+    assert state.state == "on"
+    assert state.attributes["hs_color"] == (300.0, 70.196)
+
+
 async def test_no_rgb_light(hass, light_no_rgb_data, light_no_rgb_msg, sent_messages):
     """Test setting up config entry."""
     receive_message = await setup_ozw(hass, fixture=light_no_rgb_data)
