@@ -21,64 +21,65 @@ import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEFAULT_COLOR = "default_color"
 CONF_PRIORITY = "priority"
-CONF_HDMI_PRIORITY = "hdmi_priority"
 CONF_EFFECT_LIST = "effect_list"
 
+KEY_ADJUSTMENT = "adjustment"
+KEY_BRIGHTNESS = "brightness"
+KEY_CLEAR = "clear"
+KEY_COLOR = "color"
+KEY_COMMAND = "command"
+KEY_COMPONENT = "component"
+KEY_COMPONENTSTATE ="componentstate"
+KEY_COMPONENTS = "components"
+KEY_EFFECT = "effect"
+KEY_EFFECTS = "effects"
+KEY_ENABLED = "enabled"
+KEY_INFO = "info"
+KEY_NAME = "name"
+KEY_ORIGIN = "origin"
+KEY_OWNER = "owner"
+KEY_PRIORITY = "priority"
+KEY_PRIORITIES = "priorities"
+KEY_RGB = "RGB"
+KEY_SERVERINFO = "serverinfo"
+KEY_STATE = "state"
+KEY_VALUE = "value"
+KEY_VISIBLE = "visible"
+
+# ComponentIDs from: https://docs.hyperion-project.org/en/json/Control.html#components-ids-explained
+KEY_COMPONENTID = "componentId"
+KEY_COMPONENTID_ALL = "ALL"
+KEY_COMPONENTID_COLOR = "COLOR"
+KEY_COMPONENTID_EFFECT = "EFFECT"
+KEY_COMPONENTID_EXTERNAL_SOURCES = ["BOBLIGHTSERVER", "GRABBER", "V4L", "IMAGE", "FLATBUFSERVER", "PROTOSERVER"]
+KEY_COMPONENTID_LEDDEVICE = "LEDDEVICE"
+
+# As we want to preserve brightness control for effects (e.g. to reduce the
+# brightness for V4L), we need to persist the effect that is in flight, so
+# subsequent calls to turn_on will know the keep the effect enabled.
+# Unfortunately the Home Assistant UI does not easily expose a way to remove a
+# selected effect (there is no 'No Effect' option by default). Instead, we
+# create a new fake effect ("Solid") that is always selected by default for
+# showing a solid color. This is the same method used by WLED.
+KEY_EFFECT_SOLID = "Solid"
+
 DEFAULT_COLOR = [255, 255, 255]
+DEFAULT_BRIGHTNESS = 255
+DEFAULT_EFFECT = KEY_EFFECT_SOLID
 DEFAULT_NAME = "Hyperion"
+DEFAULT_ORIGIN = "Home Assistant"
 DEFAULT_PORT = 19444
 DEFAULT_PRIORITY = 128
-DEFAULT_HDMI_PRIORITY = 880
-DEFAULT_EFFECT_LIST = [
-    "HDMI",
-    "Cinema brighten lights",
-    "Cinema dim lights",
-    "Knight rider",
-    "Blue mood blobs",
-    "Cold mood blobs",
-    "Full color mood blobs",
-    "Green mood blobs",
-    "Red mood blobs",
-    "Warm mood blobs",
-    "Police Lights Single",
-    "Police Lights Solid",
-    "Rainbow mood",
-    "Rainbow swirl fast",
-    "Rainbow swirl",
-    "Random",
-    "Running dots",
-    "System Shutdown",
-    "Snake",
-    "Sparks Color",
-    "Sparks",
-    "Strobe blue",
-    "Strobe Raspbmc",
-    "Strobe white",
-    "Color traces",
-    "UDP multicast listener",
-    "UDP listener",
-    "X-Mas",
-]
-
 SUPPORT_HYPERION = SUPPORT_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_DEFAULT_COLOR, default=DEFAULT_COLOR): vol.All(
-            list,
-            vol.Length(min=3, max=3),
-            [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))],
-        ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PRIORITY, default=DEFAULT_PRIORITY): cv.positive_int,
-        vol.Optional(
-            CONF_HDMI_PRIORITY, default=DEFAULT_HDMI_PRIORITY
-        ): cv.positive_int,
-        vol.Optional(CONF_EFFECT_LIST, default=DEFAULT_EFFECT_LIST): vol.All(
+        vol.Optional(CONF_EFFECT_LIST, default=[]): vol.All(
             cv.ensure_list, [cv.string]
         ),
     }
@@ -91,12 +92,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config[CONF_HOST]
     port = config[CONF_PORT]
     priority = config[CONF_PRIORITY]
-    hdmi_priority = config[CONF_HDMI_PRIORITY]
-    default_color = config[CONF_DEFAULT_COLOR]
     effect_list = config[CONF_EFFECT_LIST]
 
     device = Hyperion(
-        name, host, port, priority, default_color, hdmi_priority, effect_list
+        name, host, port, priority, effect_list
     )
 
     if device.setup():
@@ -106,23 +105,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class Hyperion(LightEntity):
     """Representation of a Hyperion remote."""
 
-    def __init__(
-        self, name, host, port, priority, default_color, hdmi_priority, effect_list
-    ):
+    def __init__(self, name, host, port, priority, effect_list):
         """Initialize the light."""
         self._host = host
         self._port = port
         self._name = name
         self._priority = priority
-        self._hdmi_priority = hdmi_priority
-        self._default_color = default_color
-        self._rgb_color = [0, 0, 0]
-        self._rgb_mem = [0, 0, 0]
+        self._rgb_color = DEFAULT_COLOR
         self._brightness = 255
         self._icon = "mdi:lightbulb"
         self._effect_list = effect_list
-        self._effect = None
+        self._effect = KEY_EFFECT_SOLID
         self._skip_update = False
+        self._on = False
+
+        _LOGGER.error('New Hyperion init!')
 
     @property
     def name(self):
@@ -142,7 +139,7 @@ class Hyperion(LightEntity):
     @property
     def is_on(self):
         """Return true if not black."""
-        return self._rgb_color != [0, 0, 0]
+        return self._on
 
     @property
     def icon(self):
@@ -157,7 +154,7 @@ class Hyperion(LightEntity):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        return self._effect_list
+        return self._effect_list + KEY_COMPONENTID_EXTERNAL_SOURCES + [KEY_EFFECT_SOLID]
 
     @property
     def supported_features(self):
@@ -166,119 +163,183 @@ class Hyperion(LightEntity):
 
     def turn_on(self, **kwargs):
         """Turn the lights on."""
-        if ATTR_HS_COLOR in kwargs:
-            rgb_color = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
-        elif self._rgb_mem == [0, 0, 0]:
-            rgb_color = self._default_color
-        else:
-            rgb_color = self._rgb_mem
+        _LOGGER.debug('On: %s' % kwargs)
 
+        # Skip the next update to avoid a timing clash between this request and
+        # the polling.
+        self._skip_update = True
+
+        # == Turn device on ==
+        # Turn on both ALL (Hyperion itself) and LEDDEVICE. It would be
+        # preferable to enable LEDDEVICE after the settings (e.g. brightness,
+        # color, effect), but this is not possible due to:
+        # https://github.com/hyperion-project/hyperion.ng/issues/967
+        self.json_request({
+            KEY_COMMAND: KEY_COMPONENTSTATE,
+            KEY_COMPONENTSTATE: {
+                KEY_COMPONENT: KEY_COMPONENTID_ALL,
+                KEY_STATE: True,
+            }
+        })
+        self.json_request({
+            KEY_COMMAND: KEY_COMPONENTSTATE,
+            KEY_COMPONENTSTATE: {
+                KEY_COMPONENT: KEY_COMPONENTID_LEDDEVICE,
+                KEY_STATE: True,
+            }
+        })
+        self._on = True
+
+        # == Set brightness ==
         brightness = kwargs.get(ATTR_BRIGHTNESS, self._brightness)
+        self.json_request({
+            KEY_COMMAND: KEY_ADJUSTMENT,
+            KEY_ADJUSTMENT: {
+                KEY_BRIGHTNESS: int(round((float(brightness)*100) / 255))
+            }
+        })
+        self._brightness = brightness
 
-        if ATTR_EFFECT in kwargs:
-            self._skip_update = True
-            self._effect = kwargs[ATTR_EFFECT]
-            if self._effect == "HDMI":
-                self.json_request({"command": "clearall"})
-                self._icon = "mdi:video-input-hdmi"
-                self._brightness = 255
-                self._rgb_color = [125, 125, 125]
-            else:
-                self.json_request(
-                    {
-                        "command": "effect",
-                        "priority": self._priority,
-                        "effect": {"name": self._effect},
+        effect = kwargs.get(ATTR_EFFECT, self._effect)
+        if effect and effect in KEY_COMPONENTID_EXTERNAL_SOURCES:
+            # Clear any color/effect.
+            self.json_request({
+                KEY_COMMAND: KEY_CLEAR,
+                KEY_PRIORITY: self._priority
+            })
+
+            # Turn off all external sources, except the intended.
+            for key in KEY_COMPONENTID_EXTERNAL_SOURCES:
+                self.json_request({
+                    KEY_COMMAND: KEY_COMPONENTSTATE,
+                    KEY_COMPONENTSTATE: {
+                        KEY_COMPONENT: key,
+                        KEY_STATE: effect == key,
                     }
-                )
-                self._icon = "mdi:lava-lamp"
-                self._rgb_color = [175, 0, 255]
-            return
+                })
 
-        cal_color = [int(round(x * float(brightness) / 255)) for x in rgb_color]
-        self.json_request(
-            {"command": "color", "priority": self._priority, "color": cal_color}
-        )
+            self._icon = "mdi:video-input-hdmi"
+        elif effect and effect != KEY_EFFECT_SOLID:
+            self.json_request({
+                KEY_COMMAND: KEY_EFFECT,
+                KEY_PRIORITY: self._priority,
+                KEY_EFFECT: { KEY_NAME: effect },
+                KEY_ORIGIN: DEFAULT_ORIGIN,
+            })
+            self._icon = "mdi:lava-lamp"
+        else:
+            if ATTR_HS_COLOR in kwargs:
+                rgb_color = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
+            else:
+                rgb_color = self._rgb_color
+
+            self.json_request({
+                KEY_COMMAND: KEY_COLOR,
+                KEY_PRIORITY: self._priority,
+                KEY_COLOR: rgb_color,
+                KEY_ORIGIN: DEFAULT_ORIGIN
+            })
+            self._rgb_color = rgb_color
+            self._icon = "mdi:lightbulb"
+        self._effect = effect
 
     def turn_off(self, **kwargs):
-        """Disconnect all remotes."""
-        self.json_request({"command": "clearall"})
-        self.json_request(
-            {"command": "color", "priority": self._priority, "color": [0, 0, 0]}
-        )
+        """Disable the LED output component"""
+        self.json_request({
+            KEY_COMMAND: KEY_COMPONENTSTATE,
+            KEY_COMPONENTSTATE: {
+                KEY_COMPONENT: KEY_COMPONENTID_LEDDEVICE,
+                KEY_STATE: False
+            }
+        })
+        self._on = False
 
     def update(self):
         """Get the lights status."""
-        # postpone the immediate state check for changes that take time
         if self._skip_update:
             self._skip_update = False
             return
-        response = self.json_request({"command": "serverinfo"})
-        if response:
-            # workaround for outdated Hyperion
-            if "activeLedColor" not in response["info"]:
-                self._rgb_color = self._default_color
-                self._rgb_mem = self._default_color
-                self._brightness = 255
-                self._icon = "mdi:lightbulb"
-                self._effect = None
-                return
-            # Check if Hyperion is in ambilight mode trough an HDMI grabber
-            try:
-                active_priority = response["info"]["priorities"][0]["priority"]
-                if active_priority == self._hdmi_priority:
-                    self._brightness = 255
-                    self._rgb_color = [125, 125, 125]
-                    self._icon = "mdi:video-input-hdmi"
-                    self._effect = "HDMI"
-                    return
-            except (KeyError, IndexError):
-                pass
 
-            led_color = response["info"]["activeLedColor"]
-            if not led_color or led_color[0]["RGB Value"] == [0, 0, 0]:
-                # Get the active effect
-                if response["info"].get("activeEffects"):
-                    self._rgb_color = [175, 0, 255]
-                    self._icon = "mdi:lava-lamp"
-                    try:
-                        s_name = response["info"]["activeEffects"][0]["script"]
-                        s_name = s_name.split("/")[-1][:-3].split("-")[0]
-                        self._effect = [
-                            x for x in self._effect_list if s_name.lower() in x.lower()
-                        ][0]
-                    except (KeyError, IndexError):
-                        self._effect = None
-                # Bulb off state
-                else:
-                    self._rgb_color = [0, 0, 0]
-                    self._icon = "mdi:lightbulb"
-                    self._effect = None
+        response = self.json_request({KEY_COMMAND: KEY_SERVERINFO})
+        if response and KEY_INFO in response:
+            info = response[KEY_INFO]
+            visible_priority = None
+
+            led_device_enabled = False
+            hyperion_enabled = False
+
+            # Determine on/off by checking if both hyperion is enabled, and LED
+            # output is enabled.
+            for component in info.get(KEY_COMPONENTS, []):
+                if (component[KEY_NAME] == KEY_COMPONENTID_ALL and
+                    component[KEY_ENABLED]):
+                    hyperion_enabled = True
+                elif (component[KEY_NAME] == KEY_COMPONENTID_LEDDEVICE and
+                      component[KEY_ENABLED]):
+                    led_device_enabled = True
+            self._on = hyperion_enabled and led_device_enabled
+
+            # Determine brightness by checking the light adjustments.
+            if info.get(KEY_ADJUSTMENT, []):
+              brightness_pct = info[KEY_ADJUSTMENT][0].get(
+                  KEY_BRIGHTNESS, DEFAULT_BRIGHTNESS)
+              self._brightness = int(round((brightness_pct*255) / float(100)))
             else:
-                # Get the RGB color
-                self._rgb_color = led_color[0]["RGB Value"]
-                self._brightness = max(self._rgb_color)
-                self._rgb_mem = [
-                    int(round(float(x) * 255 / self._brightness))
-                    for x in self._rgb_color
-                ]
-                self._icon = "mdi:lightbulb"
-                self._effect = None
+              self._brightness = DEFAULT_BRIGHTNESS
+
+            # The visible priority is supposed to be the first returned by the
+            # API, but due to a bug the ordering is incorrect search for it instead,
+            # see: https://github.com/hyperion-project/hyperion.ng/issues/964
+            for priority in info.get(KEY_PRIORITIES, []):
+                if priority.get(KEY_VISIBLE, False):
+                    visible_priority = priority
+                    break
+
+            _LOGGER.debug('Update: On=%s,Brightness=%i / VP=%s' % (self._on, self._brightness, visible_priority))
+
+            if self._on and visible_priority:
+                componentid = visible_priority.get(KEY_COMPONENTID)
+                if componentid in KEY_COMPONENTID_EXTERNAL_SOURCES:
+                    self._rgb_color = DEFAULT_COLOR
+                    self._icon = "mdi:video-input-hdmi"
+                    self._effect = componentid
+                elif componentid == KEY_COMPONENTID_EFFECT:
+                    self._rgb_color = DEFAULT_COLOR
+                    self._icon = "mdi:lava-lamp"
+
+                    # Owner is the effect name.
+                    # See: https://docs.hyperion-project.org/en/json/ServerInfo.html#priorities
+                    self._effect = visible_priority[KEY_OWNER]
+                elif componentid == KEY_COMPONENTID_COLOR:
+                    self._rgb_color = visible_priority[KEY_VALUE][KEY_RGB]
+                    self._icon = "mdi:lightbulb"
+                    self._effect = KEY_EFFECT_SOLID
+            return True
+        return False
 
     def setup(self):
         """Get the hostname of the remote."""
-        response = self.json_request({"command": "serverinfo"})
-        if response:
-            if self._name == self._host:
-                self._name = response["info"]["hostname"]
+        response = self.json_request({KEY_COMMAND: KEY_SERVERINFO})
+        effect_list = []
+        if response and KEY_INFO in response:
+            info = response[KEY_INFO]
+            for effect in info.get(KEY_EFFECTS, {}):
+                if KEY_NAME in effect:
+                    effect_list.append(effect[KEY_NAME])
+            if not self._effect_list:
+                self._effect_list = effect_list
             return True
         return False
 
     def json_request(self, request, wait_for_response=False):
         """Communicate with the JSON server."""
+        # TODO: Deal with AUTH failures when API authentication is enabled.
+        # TODO: Evaluate using a pre-packaged JSON library rather than hand-rolled.
+        # TODO: Evaluate using subscription feedback from Hyperion rather than only poll.
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(5)
 
+        _LOGGER.debug('json_request: %s' % request)
         try:
             sock.connect((self._host, self._port))
         except OSError:
