@@ -48,6 +48,7 @@ class TestMfiSwitchSetup(unittest.TestCase):
             mock.MagicMock(ports=ports)
         ]
         assert setup_component(self.hass, switch.DOMAIN, self.GOOD_CONFIG)
+        self.hass.block_till_done()
         for ident, port in ports.items():
             if ident != "bad":
                 mock_switch.assert_any_call(port)

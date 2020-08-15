@@ -49,6 +49,7 @@ async def assert_setup_sensor(hass, config, count=1):
     """Set up the sensor and assert it's been created."""
     with assert_setup_component(count):
         assert await async_setup_component(hass, sensor.DOMAIN, config)
+        await hass.async_block_till_done()
 
 
 @pytest.fixture

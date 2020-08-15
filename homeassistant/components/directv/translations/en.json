@@ -10,14 +10,12 @@
         "flow_title": "DirecTV: {name}",
         "step": {
             "ssdp_confirm": {
-                "description": "Do you want to set up {name}?",
-                "title": "Connect to the DirecTV receiver"
+                "description": "Do you want to set up {name}?"
             },
             "user": {
                 "data": {
                     "host": "Host"
-                },
-                "title": "Connect to the DirecTV receiver"
+                }
             }
         }
     }

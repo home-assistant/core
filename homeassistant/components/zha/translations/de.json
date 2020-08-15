@@ -25,9 +25,7 @@
             },
             "user": {
                 "data": {
-                    "path": "Serieller Ger\u00e4tepfad",
-                    "radio_type": "Radio-Type",
-                    "usb_path": "USB-Ger\u00e4te-Pfad"
+                    "path": "Serieller Ger\u00e4tepfad"
                 },
                 "description": "W\u00e4hlen Sie die serielle Schnittstelle f\u00fcr den ZigBee-Funk",
                 "title": "ZHA"

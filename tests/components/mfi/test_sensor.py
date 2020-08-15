@@ -64,6 +64,7 @@ class TestMfiSensorSetup(unittest.TestCase):
         config = dict(self.GOOD_CONFIG)
         del config[self.THING]["port"]
         assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
+        self.hass.block_till_done()
         assert mock_client.call_count == 1
         assert mock_client.call_args == mock.call(
             "foo", "user", "pass", port=6443, use_tls=True, verify=True
@@ -75,6 +76,7 @@ class TestMfiSensorSetup(unittest.TestCase):
         config = dict(self.GOOD_CONFIG)
         config[self.THING]["port"] = 6123
         assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
+        self.hass.block_till_done()
         assert mock_client.call_count == 1
         assert mock_client.call_args == mock.call(
             "foo", "user", "pass", port=6123, use_tls=True, verify=True
@@ -88,6 +90,7 @@ class TestMfiSensorSetup(unittest.TestCase):
         config[self.THING]["ssl"] = False
         config[self.THING]["verify_ssl"] = False
         assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
+        self.hass.block_till_done()
         assert mock_client.call_count == 1
         assert mock_client.call_args == mock.call(
             "foo", "user", "pass", port=6080, use_tls=False, verify=False
@@ -105,6 +108,7 @@ class TestMfiSensorSetup(unittest.TestCase):
             mock.MagicMock(ports=ports)
         ]
         assert setup_component(self.hass, sensor.DOMAIN, self.GOOD_CONFIG)
+        self.hass.block_till_done()
         for ident, port in ports.items():
             if ident != "bad":
                 mock_sensor.assert_any_call(port, self.hass)

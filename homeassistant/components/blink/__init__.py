@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -25,12 +26,10 @@ from .const import (
     SERVICE_REFRESH,
     SERVICE_SAVE_VIDEO,
     SERVICE_SEND_PIN,
-    SERVICE_TRIGGER,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_TRIGGER_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 SERVICE_SAVE_VIDEO_SCHEMA = vol.Schema(
     {vol.Required(CONF_NAME): cv.string, vol.Required(CONF_FILENAME): cv.string}
 )
@@ -60,7 +59,7 @@ def _blink_startup_wrapper(entry):
         no_prompt=True,
         device_id=DEVICE_ID,
     )
-    blink.refresh_rate = entry.data[CONF_SCAN_INTERVAL]
+    blink.refresh_rate = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     try:
         blink.login_response = entry.data["login_response"]
@@ -93,6 +92,8 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up Blink via config entry."""
+    _async_import_options_from_data_if_missing(hass, entry)
+
     hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(
         _blink_startup_wrapper, entry
     )
@@ -105,14 +106,6 @@ async def async_setup_entry(hass, entry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
-
-    def trigger_camera(call):
-        """Trigger a camera."""
-        cameras = hass.data[DOMAIN][entry.entry_id].cameras
-        name = call.data[CONF_NAME]
-        if name in cameras:
-            cameras[name].snap_picture()
-        blink_refresh()
 
     def blink_refresh(event_time=None):
         """Call blink to refresh info."""
@@ -131,9 +124,6 @@ async def async_setup_entry(hass, entry):
 
     hass.services.async_register(DOMAIN, SERVICE_REFRESH, blink_refresh)
     hass.services.async_register(
-        DOMAIN, SERVICE_TRIGGER, trigger_camera, schema=SERVICE_TRIGGER_SCHEMA
-    )
-    hass.services.async_register(
         DOMAIN, SERVICE_SAVE_VIDEO, async_save_video, schema=SERVICE_SAVE_VIDEO_SCHEMA
     )
     hass.services.async_register(
@@ -141,6 +131,16 @@ async def async_setup_entry(hass, entry):
     )
 
     return True
+
+
+@callback
+def _async_import_options_from_data_if_missing(hass, entry):
+    options = dict(entry.options)
+    if CONF_SCAN_INTERVAL not in entry.options:
+        options[CONF_SCAN_INTERVAL] = entry.data.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+        )
+        hass.config_entries.async_update_entry(entry, options=options)
 
 
 async def async_unload_entry(hass, entry):
@@ -163,7 +163,6 @@ async def async_unload_entry(hass, entry):
         return True
 
     hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
-    hass.services.async_remove(DOMAIN, SERVICE_TRIGGER)
     hass.services.async_remove(DOMAIN, SERVICE_SAVE_VIDEO_SCHEMA)
     hass.services.async_remove(DOMAIN, SERVICE_SEND_PIN)
 

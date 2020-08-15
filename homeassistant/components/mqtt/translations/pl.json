@@ -15,8 +15,7 @@
                     "port": "Port",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "description": "Wprowad\u017a informacje o po\u0142\u0105czeniu po\u015brednika MQTT.",
-                "title": "MQTT"
+                "description": "Wprowad\u017a informacje o po\u0142\u0105czeniu po\u015brednika MQTT."
             },
             "hassio_confirm": {
                 "data": {

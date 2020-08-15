@@ -1,6 +1,7 @@
 """Support to embed Plex."""
 import asyncio
 import functools
+import json
 import logging
 
 import plexapi.exceptions
@@ -8,18 +9,17 @@ from plexwebsocket import PlexWebsocket
 import requests.exceptions
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
+from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
+)
 from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_TOKEN,
+    ATTR_ENTITY_ID,
     CONF_URL,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -28,60 +28,20 @@ from homeassistant.helpers.dispatcher import (
 )
 
 from .const import (
-    CONF_IGNORE_NEW_SHARED_USERS,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
-    CONF_SHOW_ALL_CONTROLS,
-    CONF_USE_EPISODE_ART,
-    DEFAULT_PORT,
-    DEFAULT_SSL,
-    DEFAULT_VERIFY_SSL,
     DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
     PLATFORMS,
     PLATFORMS_COMPLETED,
-    PLEX_MEDIA_PLAYER_OPTIONS,
     PLEX_SERVER_CONFIG,
     PLEX_UPDATE_PLATFORMS_SIGNAL,
     SERVERS,
+    SERVICE_PLAY_ON_SONOS,
     WEBSOCKETS,
 )
 from .errors import ShouldUpdateConfigEntry
 from .server import PlexServer
-
-MEDIA_PLAYER_SCHEMA = vol.All(
-    cv.deprecated(CONF_SHOW_ALL_CONTROLS, invalidation_version="0.110"),
-    vol.Schema(
-        {
-            vol.Optional(CONF_USE_EPISODE_ART, default=False): cv.boolean,
-            vol.Optional(CONF_SHOW_ALL_CONTROLS): cv.boolean,
-            vol.Optional(CONF_IGNORE_NEW_SHARED_USERS, default=False): cv.boolean,
-        }
-    ),
-)
-
-SERVER_CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        {
-            vol.Optional(CONF_HOST): cv.string,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Optional(CONF_TOKEN): cv.string,
-            vol.Optional(CONF_SERVER): cv.string,
-            vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-            vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-            vol.Optional(MP_DOMAIN, default={}): MEDIA_PLAYER_SCHEMA,
-        },
-        cv.has_at_least_one_key(CONF_HOST, CONF_TOKEN),
-    )
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(PLEX_DOMAIN, invalidation_version="0.111"),
-        {PLEX_DOMAIN: SERVER_CONFIG_SCHEMA},
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -93,30 +53,7 @@ async def async_setup(hass, config):
         {SERVERS: {}, DISPATCHERS: {}, WEBSOCKETS: {}, PLATFORMS_COMPLETED: {}},
     )
 
-    plex_config = config.get(PLEX_DOMAIN, {})
-    if plex_config:
-        _async_setup_plex(hass, plex_config)
-
     return True
-
-
-def _async_setup_plex(hass, config):
-    """Pass configuration to a config flow."""
-    server_config = dict(config)
-    if MP_DOMAIN in server_config:
-        hass.data.setdefault(PLEX_MEDIA_PLAYER_OPTIONS, server_config.pop(MP_DOMAIN))
-    if CONF_HOST in server_config:
-        protocol = "https" if server_config.pop(CONF_SSL) else "http"
-        server_config[
-            CONF_URL
-        ] = f"{protocol}://{server_config.pop(CONF_HOST)}:{server_config.pop(CONF_PORT)}"
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            PLEX_DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=server_config,
-        )
-    )
 
 
 async def async_setup_entry(hass, entry):
@@ -127,14 +64,6 @@ async def async_setup_entry(hass, entry):
         hass.config_entries.async_update_entry(
             entry, unique_id=entry.data[CONF_SERVER_IDENTIFIER]
         )
-
-    if MP_DOMAIN not in entry.options:
-        options = dict(entry.options)
-        options.setdefault(
-            MP_DOMAIN,
-            hass.data.get(PLEX_MEDIA_PLAYER_OPTIONS) or MEDIA_PLAYER_SCHEMA({}),
-        )
-        hass.config_entries.async_update_entry(entry, options=options)
 
     plex_server = PlexServer(
         hass, server_config, entry.data[CONF_SERVER_IDENTIFIER], entry.options
@@ -215,6 +144,24 @@ async def async_setup_entry(hass, entry):
         )
         task.add_done_callback(functools.partial(start_websocket_session, platform))
 
+    async def async_play_on_sonos_service(service_call):
+        await hass.async_add_executor_job(play_on_sonos, hass, service_call)
+
+    play_on_sonos_schema = vol.Schema(
+        {
+            vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+            vol.Required(ATTR_MEDIA_CONTENT_ID): str,
+            vol.Optional(ATTR_MEDIA_CONTENT_TYPE): vol.In("music"),
+        }
+    )
+
+    hass.services.async_register(
+        PLEX_DOMAIN,
+        SERVICE_PLAY_ON_SONOS,
+        async_play_on_sonos_service,
+        schema=play_on_sonos_schema,
+    )
+
     return True
 
 
@@ -244,3 +191,52 @@ async def async_options_updated(hass, entry):
     """Triggered by config entry options updates."""
     server_id = entry.data[CONF_SERVER_IDENTIFIER]
     hass.data[PLEX_DOMAIN][SERVERS][server_id].options = entry.options
+
+
+def play_on_sonos(hass, service_call):
+    """Play Plex media on a linked Sonos device."""
+    entity_id = service_call.data[ATTR_ENTITY_ID]
+    content_id = service_call.data[ATTR_MEDIA_CONTENT_ID]
+    content = json.loads(content_id)
+
+    sonos = hass.components.sonos
+    try:
+        sonos_id = sonos.get_coordinator_id(entity_id)
+    except HomeAssistantError as err:
+        _LOGGER.error("Cannot get Sonos device: %s", err)
+        return
+
+    if isinstance(content, int):
+        content = {"plex_key": content}
+
+    plex_server_name = content.get("plex_server")
+    shuffle = content.pop("shuffle", 0)
+
+    plex_servers = hass.data[PLEX_DOMAIN][SERVERS].values()
+    if plex_server_name:
+        plex_server = [x for x in plex_servers if x.friendly_name == plex_server_name]
+        if not plex_server:
+            _LOGGER.error(
+                "Requested Plex server '%s' not found in %s",
+                plex_server_name,
+                list(map(lambda x: x.friendly_name, plex_servers)),
+            )
+            return
+    else:
+        plex_server = next(iter(plex_servers))
+
+    sonos_speaker = plex_server.account.sonos_speaker_by_id(sonos_id)
+    if sonos_speaker is None:
+        _LOGGER.error(
+            "Sonos speaker '%s' could not be found on this Plex account", sonos_id
+        )
+        return
+
+    media = plex_server.lookup_media("music", **content)
+    if media is None:
+        _LOGGER.error("Media could not be found: %s", content)
+        return
+
+    _LOGGER.debug("Attempting to play '%s' on %s", media, sonos_speaker)
+    playqueue = plex_server.create_playqueue(media, shuffle=shuffle)
+    sonos_speaker.playMedia(playqueue)

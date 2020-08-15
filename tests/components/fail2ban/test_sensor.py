@@ -66,10 +66,7 @@ class TestBanSensor(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     @patch("os.path.isfile", Mock(return_value=True))
     def test_setup(self):

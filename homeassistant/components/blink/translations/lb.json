@@ -1,5 +1,12 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "unknown": "Onerwaarte Feeler"
+        },
         "step": {
             "2fa": {
                 "data": {
@@ -9,6 +16,10 @@
                 "title": "2-Faktor-Authentifikatioun"
             },
             "user": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                },
                 "title": "Mam Blink Kont verbannen"
             }
         }

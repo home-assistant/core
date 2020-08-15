@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane.",
-            "device_fail": "Nieoczekiwany b\u0142\u0105d tworzenia urz\u0105dzenia.",
-            "device_timeout": "Przekroczono limit czasu \u0142\u0105czenia z urz\u0105dzeniem."
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane."
         },
         "error": {
             "device_fail": "Nieoczekiwany b\u0142\u0105d.",

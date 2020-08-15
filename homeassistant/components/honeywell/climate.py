@@ -47,24 +47,29 @@ ATTR_FAN_ACTION = "fan_action"
 
 CONF_COOL_AWAY_TEMPERATURE = "away_cool_temperature"
 CONF_HEAT_AWAY_TEMPERATURE = "away_heat_temperature"
+CONF_DEV_ID = "thermostat"
+CONF_LOC_ID = "location"
 
 DEFAULT_COOL_AWAY_TEMPERATURE = 88
 DEFAULT_HEAT_AWAY_TEMPERATURE = 61
-DEFAULT_REGION = "eu"
-REGIONS = ["eu", "us"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(
-            CONF_COOL_AWAY_TEMPERATURE, default=DEFAULT_COOL_AWAY_TEMPERATURE
-        ): vol.Coerce(int),
-        vol.Optional(
-            CONF_HEAT_AWAY_TEMPERATURE, default=DEFAULT_HEAT_AWAY_TEMPERATURE
-        ): vol.Coerce(int),
-        vol.Optional(CONF_REGION, default=DEFAULT_REGION): vol.In(REGIONS),
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_REGION),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+            vol.Optional(
+                CONF_COOL_AWAY_TEMPERATURE, default=DEFAULT_COOL_AWAY_TEMPERATURE
+            ): vol.Coerce(int),
+            vol.Optional(
+                CONF_HEAT_AWAY_TEMPERATURE, default=DEFAULT_HEAT_AWAY_TEMPERATURE
+            ): vol.Coerce(int),
+            vol.Optional(CONF_REGION): cv.string,
+            vol.Optional(CONF_DEV_ID): cv.string,
+            vol.Optional(CONF_LOC_ID): cv.string,
+        }
+    ),
 )
 
 HVAC_MODE_TO_HW_MODE = {
@@ -104,44 +109,36 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    if config.get(CONF_REGION) == "us":
-        try:
-            client = somecomfort.SomeComfort(username, password)
-        except somecomfort.AuthError:
-            _LOGGER.error("Failed to login to honeywell account %s", username)
-            return
-        except somecomfort.SomeComfortError:
-            _LOGGER.error(
-                "Failed to initialize the Honeywell client: "
-                "Check your configuration (username, password), "
-                "or maybe you have exceeded the API rate limit?"
-            )
-            return
-
-        dev_id = config.get("thermostat")
-        loc_id = config.get("location")
-        cool_away_temp = config.get(CONF_COOL_AWAY_TEMPERATURE)
-        heat_away_temp = config.get(CONF_HEAT_AWAY_TEMPERATURE)
-
-        add_entities(
-            [
-                HoneywellUSThermostat(
-                    client, device, cool_away_temp, heat_away_temp, username, password
-                )
-                for location in client.locations_by_id.values()
-                for device in location.devices_by_id.values()
-                if (
-                    (not loc_id or location.locationid == loc_id)
-                    and (not dev_id or device.deviceid == dev_id)
-                )
-            ]
+    try:
+        client = somecomfort.SomeComfort(username, password)
+    except somecomfort.AuthError:
+        _LOGGER.error("Failed to login to honeywell account %s", username)
+        return
+    except somecomfort.SomeComfortError:
+        _LOGGER.error(
+            "Failed to initialize the Honeywell client: "
+            "Check your configuration (username, password), "
+            "or maybe you have exceeded the API rate limit?"
         )
         return
 
-    _LOGGER.warning(
-        "The honeywell component has been deprecated for EU (i.e. non-US) "
-        "systems. For EU-based systems, use the evohome component, "
-        "see: https://www.home-assistant.io/integrations/evohome"
+    dev_id = config.get(CONF_DEV_ID)
+    loc_id = config.get(CONF_LOC_ID)
+    cool_away_temp = config.get(CONF_COOL_AWAY_TEMPERATURE)
+    heat_away_temp = config.get(CONF_HEAT_AWAY_TEMPERATURE)
+
+    add_entities(
+        [
+            HoneywellUSThermostat(
+                client, device, cool_away_temp, heat_away_temp, username, password,
+            )
+            for location in client.locations_by_id.values()
+            for device in location.devices_by_id.values()
+            if (
+                (not loc_id or location.locationid == loc_id)
+                and (not dev_id or device.deviceid == dev_id)
+            )
+        ]
     )
 
 

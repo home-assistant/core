@@ -25,9 +25,7 @@
             },
             "user": {
                 "data": {
-                    "path": "\uc2dc\ub9ac\uc5bc \uc7a5\uce58 \uacbd\ub85c",
-                    "radio_type": "\ubb34\uc120 \uc720\ud615",
-                    "usb_path": "USB \uc7a5\uce58 \uacbd\ub85c"
+                    "path": "\uc2dc\ub9ac\uc5bc \uc7a5\uce58 \uacbd\ub85c"
                 },
                 "description": "Zigbee \ubb34\uc120 \uc7a5\uce58\uc758 \uc2dc\ub9ac\uc5bc \ud3ec\ud2b8\ub97c \uc120\ud0dd\ud574\uc8fc\uc138\uc694",
                 "title": "ZHA"

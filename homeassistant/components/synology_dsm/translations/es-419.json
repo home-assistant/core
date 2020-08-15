@@ -20,7 +20,6 @@
             },
             "link": {
                 "data": {
-                    "api_version": "Versi\u00f3n DSM",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto (opcional)",
                     "ssl": "Utilice SSL/TLS para conectarse a su NAS",
@@ -31,7 +30,6 @@
             },
             "user": {
                 "data": {
-                    "api_version": "Versi\u00f3n DSM",
                     "host": "Host",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto (opcional)",

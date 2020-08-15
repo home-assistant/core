@@ -59,6 +59,7 @@ class TestFilterSensor(unittest.TestCase):
         }
         with assert_setup_component(0):
             assert setup_component(self.hass, "sensor", config)
+            self.hass.block_till_done()
 
     def test_chain(self):
         """Test if filter chaining works."""
@@ -77,6 +78,7 @@ class TestFilterSensor(unittest.TestCase):
 
         with assert_setup_component(1, "sensor"):
             assert setup_component(self.hass, "sensor", config)
+            self.hass.block_till_done()
 
             for value in self.values:
                 self.hass.states.set(config["sensor"]["entity_id"], value.state)
@@ -128,6 +130,7 @@ class TestFilterSensor(unittest.TestCase):
             ):
                 with assert_setup_component(1, "sensor"):
                     assert setup_component(self.hass, "sensor", config)
+                    self.hass.block_till_done()
 
                 for value in self.values:
                     self.hass.states.set(config["sensor"]["entity_id"], value.state)
@@ -176,6 +179,7 @@ class TestFilterSensor(unittest.TestCase):
             ):
                 with assert_setup_component(1, "sensor"):
                     assert setup_component(self.hass, "sensor", config)
+                    self.hass.block_till_done()
 
                 self.hass.block_till_done()
                 state = self.hass.states.get("sensor.test")

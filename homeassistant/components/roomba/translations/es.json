@@ -1,14 +1,12 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "No se pudo conectar, por favor, int\u00e9ntalo de nuevo",
-            "unknown": "Error inesperado"
+            "cannot_connect": "No se pudo conectar, por favor, int\u00e9ntalo de nuevo"
         },
         "step": {
             "user": {
                 "data": {
                     "blid": "BLID",
-                    "certificate": "Certificado",
                     "continuous": "Continuo",
                     "delay": "Retardo",
                     "host": "Nombre del host o direcci\u00f3n IP",

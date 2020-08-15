@@ -13,6 +13,8 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
     CONF_UNIT_SYSTEM,
     MASS_KILOGRAMS,
     MASS_MILLIGRAMS,
@@ -32,8 +34,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_ACCESS_TOKEN = "access_token"
 ATTR_REFRESH_TOKEN = "refresh_token"
-ATTR_CLIENT_ID = "client_id"
-ATTR_CLIENT_SECRET = "client_secret"
 ATTR_LAST_SAVED_AT = "last_saved_at"
 
 CONF_MONITORED_RESOURCES = "monitored_resources"
@@ -47,7 +47,10 @@ FITBIT_DEFAULT_RESOURCES = ["activities/steps"]
 
 SCAN_INTERVAL = datetime.timedelta(minutes=30)
 
-DEFAULT_CONFIG = {"client_id": "CLIENT_ID_HERE", "client_secret": "CLIENT_SECRET_HERE"}
+DEFAULT_CONFIG = {
+    CONF_CLIENT_ID: "CLIENT_ID_HERE",
+    CONF_CLIENT_SECRET: "CLIENT_SECRET_HERE",
+}
 
 FITBIT_RESOURCES_LIST = {
     "activities/activityCalories": ["Activity Calories", "cal", "fire"],
@@ -251,8 +254,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     expires_at = config_file.get(ATTR_LAST_SAVED_AT)
     if None not in (access_token, refresh_token):
         authd_client = Fitbit(
-            config_file.get(ATTR_CLIENT_ID),
-            config_file.get(ATTR_CLIENT_SECRET),
+            config_file.get(CONF_CLIENT_ID),
+            config_file.get(CONF_CLIENT_SECRET),
             access_token=access_token,
             refresh_token=refresh_token,
             expires_at=expires_at,
@@ -305,7 +308,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     else:
         oauth = FitbitOauth2Client(
-            config_file.get(ATTR_CLIENT_ID), config_file.get(ATTR_CLIENT_SECRET)
+            config_file.get(CONF_CLIENT_ID), config_file.get(CONF_CLIENT_SECRET)
         )
 
         redirect_uri = f"{get_url(hass)}{FITBIT_AUTH_CALLBACK_PATH}"
@@ -388,8 +391,8 @@ class FitbitAuthCallbackView(HomeAssistantView):
             config_contents = {
                 ATTR_ACCESS_TOKEN: result.get("access_token"),
                 ATTR_REFRESH_TOKEN: result.get("refresh_token"),
-                ATTR_CLIENT_ID: self.oauth.client_id,
-                ATTR_CLIENT_SECRET: self.oauth.client_secret,
+                CONF_CLIENT_ID: self.oauth.client_id,
+                CONF_CLIENT_SECRET: self.oauth.client_secret,
                 ATTR_LAST_SAVED_AT: int(time.time()),
             }
         save_json(hass.config.path(FITBIT_CONFIG_FILE), config_contents)
@@ -514,8 +517,8 @@ class FitbitSensor(Entity):
         config_contents = {
             ATTR_ACCESS_TOKEN: token.get("access_token"),
             ATTR_REFRESH_TOKEN: token.get("refresh_token"),
-            ATTR_CLIENT_ID: self.client.client.client_id,
-            ATTR_CLIENT_SECRET: self.client.client.client_secret,
+            CONF_CLIENT_ID: self.client.client.client_id,
+            CONF_CLIENT_SECRET: self.client.client.client_secret,
             ATTR_LAST_SAVED_AT: int(time.time()),
         }
         save_json(self.config_path, config_contents)

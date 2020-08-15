@@ -59,9 +59,10 @@ class TestImageProcessing:
         config = {ip.DOMAIN: {"platform": "test"}, "camera": {"platform": "demo"}}
 
         setup_component(self.hass, ip.DOMAIN, config)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("camera.demo_camera")
-        self.url = f"{self.hass.config.api.base_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
+        self.url = f"{self.hass.config.internal_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
     def teardown_method(self):
         """Stop everything that was started."""
@@ -113,9 +114,10 @@ class TestImageProcessingAlpr:
             new_callable=PropertyMock(return_value=False),
         ):
             setup_component(self.hass, ip.DOMAIN, config)
+            self.hass.block_till_done()
 
         state = self.hass.states.get("camera.demo_camera")
-        self.url = f"{self.hass.config.api.base_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
+        self.url = f"{self.hass.config.internal_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
         self.alpr_events = []
 
@@ -218,9 +220,10 @@ class TestImageProcessingFace:
             new_callable=PropertyMock(return_value=False),
         ):
             setup_component(self.hass, ip.DOMAIN, config)
+            self.hass.block_till_done()
 
         state = self.hass.states.get("camera.demo_camera")
-        self.url = f"{self.hass.config.api.base_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
+        self.url = f"{self.hass.config.internal_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
         self.face_events = []
 

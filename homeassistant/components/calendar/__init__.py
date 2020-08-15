@@ -172,7 +172,7 @@ class CalendarEventView(http.HomeAssistantView):
     url = "/api/calendars/{entity_id}"
     name = "api:calendars:calendar"
 
-    def __init__(self, component):
+    def __init__(self, component: EntityComponent) -> None:
         """Initialize calendar view."""
         self.component = component
 
@@ -200,11 +200,11 @@ class CalendarListView(http.HomeAssistantView):
     url = "/api/calendars"
     name = "api:calendars"
 
-    def __init__(self, component):
+    def __init__(self, component: EntityComponent) -> None:
         """Initialize calendar view."""
         self.component = component
 
-    async def get(self, request):
+    async def get(self, request: web.Request) -> web.Response:
         """Retrieve calendar list."""
         hass = request.app["hass"]
         calendar_list = []

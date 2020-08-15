@@ -1,45 +1,25 @@
 """Support for Avri waste curbside collection pickup."""
-from datetime import timedelta
 import logging
 
 from avri.api import Avri, AvriException
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ID, DEVICE_CLASS_TIMESTAMP
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
+
+from .const import DOMAIN, ICON
 
 _LOGGER = logging.getLogger(__name__)
-CONF_COUNTRY_CODE = "country_code"
-CONF_ZIP_CODE = "zip_code"
-CONF_HOUSE_NUMBER = "house_number"
-CONF_HOUSE_NUMBER_EXTENSION = "house_number_extension"
-DEFAULT_NAME = "avri"
-ICON = "mdi:trash-can-outline"
-SCAN_INTERVAL = timedelta(hours=4)
-DEFAULT_COUNTRY_CODE = "NL"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ZIP_CODE): cv.string,
-        vol.Required(CONF_HOUSE_NUMBER): cv.positive_int,
-        vol.Optional(CONF_HOUSE_NUMBER_EXTENSION): cv.string,
-        vol.Optional(CONF_COUNTRY_CODE, default=DEFAULT_COUNTRY_CODE): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up the Avri Waste platform."""
-    client = Avri(
-        postal_code=config[CONF_ZIP_CODE],
-        house_nr=config[CONF_HOUSE_NUMBER],
-        house_nr_extension=config.get(CONF_HOUSE_NUMBER_EXTENSION),
-        country_code=config[CONF_COUNTRY_CODE],
-    )
+    client = hass.data[DOMAIN][entry.entry_id]
+    integration_id = entry.data[CONF_ID]
 
     try:
         each_upcoming = client.upcoming_of_each()
@@ -47,22 +27,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         raise PlatformNotReady from ex
     else:
         entities = [
-            AvriWasteUpcoming(config[CONF_NAME], client, upcoming.name)
+            AvriWasteUpcoming(client, upcoming.name, integration_id)
             for upcoming in each_upcoming
         ]
-        add_entities(entities, True)
+        async_add_entities(entities, True)
 
 
 class AvriWasteUpcoming(Entity):
     """Avri Waste Sensor."""
 
-    def __init__(self, name: str, client: Avri, waste_type: str):
+    def __init__(self, client: Avri, waste_type: str, integration_id: str):
         """Initialize the sensor."""
         self._waste_type = waste_type
-        self._name = f"{name}_{self._waste_type}"
+        self._name = f"{self._waste_type}".title()
         self._state = None
         self._client = client
         self._state_available = False
+        self._integration_id = integration_id
 
     @property
     def name(self):
@@ -72,13 +53,7 @@ class AvriWasteUpcoming(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return (
-            f"{self._waste_type}"
-            f"-{self._client.country_code}"
-            f"-{self._client.postal_code}"
-            f"-{self._client.house_nr}"
-            f"-{self._client.house_nr_extension}"
-        )
+        return (f"{self._integration_id}" f"-{self._waste_type}").replace(" ", "")
 
     @property
     def state(self):
@@ -91,12 +66,20 @@ class AvriWasteUpcoming(Entity):
         return self._state_available
 
     @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_TIMESTAMP
+
+    @property
     def icon(self):
         """Icon to use in the frontend."""
         return ICON
 
-    def update(self):
-        """Update device state."""
+    async def async_update(self):
+        """Update the data."""
+        if not self.enabled:
+            return
+
         try:
             pickup_events = self._client.upcoming_of_each()
         except AvriException as ex:

@@ -25,9 +25,7 @@
             },
             "user": {
                 "data": {
-                    "path": "Ruta del Dispositivo Serie",
-                    "radio_type": "Tipo de radio",
-                    "usb_path": "Ruta del Dispositivo USB"
+                    "path": "Ruta del Dispositivo Serie"
                 },
                 "description": "Selecciona puerto serie para radio Zigbee",
                 "title": "ZHA"

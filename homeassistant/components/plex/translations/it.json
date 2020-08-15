@@ -35,10 +35,6 @@
                 "description": "Sono disponibili pi\u00f9 server, selezionarne uno:",
                 "title": "Selezionare il server Plex"
             },
-            "start_website_auth": {
-                "description": "Continuare ad autorizzare su plex.tv.",
-                "title": "Collegare il server Plex"
-            },
             "user": {
                 "description": "Continuare su [plex.tv](https://plex.tv) per collegare un server Plex.",
                 "title": "Plex Media Server"

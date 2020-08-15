@@ -28,10 +28,7 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API \ud0a4",
                     "cloud_api": "\uc9c0\ub9ac\uc801 \uc704\uce58",
-                    "latitude": "\uc704\ub3c4",
-                    "longitude": "\uacbd\ub3c4",
                     "node_pro": "AirVisual Node Pro",
                     "type": "\uc5f0\ub3d9 \uc720\ud615"
                 },
@@ -46,7 +43,6 @@
                 "data": {
                     "show_on_map": "\uc9c0\ub3c4\uc5d0 \ubaa8\ub2c8\ud130\ub9c1\ub41c \uc9c0\ub9ac \uc815\ubcf4 \ud45c\uc2dc"
                 },
-                "description": "AirVisual \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\uc5d0 \ub300\ud55c \ub2e4\uc591\ud55c \uc635\uc158\uc744 \uc124\uc815\ud574\uc8fc\uc138\uc694.",
                 "title": "AirVisual \uad6c\uc131\ud558\uae30"
             }
         }

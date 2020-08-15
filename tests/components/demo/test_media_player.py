@@ -29,6 +29,7 @@ async def test_source_select(hass):
     assert await async_setup_component(
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.attributes.get("source") == "dvd"
 
@@ -47,6 +48,7 @@ async def test_clear_playlist(hass):
     assert await async_setup_component(
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
     assert hass.states.is_state(TEST_ENTITY_ID, "playing")
 
     await common.async_clear_playlist(hass, TEST_ENTITY_ID)
@@ -58,6 +60,7 @@ async def test_volume_services(hass):
     assert await async_setup_component(
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes.get("volume_level") == 1.0
 
@@ -95,6 +98,7 @@ async def test_turning_off_and_on(hass):
     assert await async_setup_component(
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
     assert hass.states.is_state(TEST_ENTITY_ID, "playing")
 
     await common.async_turn_off(hass, TEST_ENTITY_ID)
@@ -114,6 +118,7 @@ async def test_playing_pausing(hass):
     assert await async_setup_component(
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
     assert hass.states.is_state(TEST_ENTITY_ID, "playing")
 
     await common.async_media_pause(hass, TEST_ENTITY_ID)
@@ -134,6 +139,7 @@ async def test_prev_next_track(hass):
     assert await async_setup_component(
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes.get("media_track") == 1
 
@@ -152,6 +158,7 @@ async def test_prev_next_track(hass):
     assert await async_setup_component(
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
     ent_id = "media_player.lounge_room"
     state = hass.states.get(ent_id)
     assert state.attributes.get("media_episode") == 1
@@ -170,6 +177,7 @@ async def test_play_media(hass):
     assert await async_setup_component(
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
     ent_id = "media_player.living_room"
     state = hass.states.get(ent_id)
     assert mp.SUPPORT_PLAY_MEDIA & state.attributes.get("supported_features") > 0
@@ -192,6 +200,7 @@ async def test_seek(hass, mock_media_seek):
     assert await async_setup_component(
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
     ent_id = "media_player.living_room"
     state = hass.states.get(ent_id)
     assert state.attributes["supported_features"] & mp.SUPPORT_SEEK
@@ -209,6 +218,7 @@ async def test_media_image_proxy(hass, hass_client):
     assert await async_setup_component(
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
     fake_picture_data = "test.test"
 

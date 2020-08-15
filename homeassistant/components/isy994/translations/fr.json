@@ -1,5 +1,6 @@
 {
     "config": {
+        "flow_title": "Appareils universels ISY994 {name} ( {host} )",
         "step": {
             "user": {
                 "data": {

@@ -16,8 +16,7 @@
                     "password": "Mot de passe",
                     "username": "Nom d'utilisateur"
                 },
-                "description": "Voulez-vous configurer {name} ?",
-                "title": "AVM FRITZ!Box"
+                "description": "Voulez-vous configurer {name} ?"
             },
             "user": {
                 "data": {
@@ -25,8 +24,7 @@
                     "password": "Mot de passe",
                     "username": "Nom d'utilisateur"
                 },
-                "description": "Entrez les informations de votre AVM FRITZ!Box.",
-                "title": "AVM FRITZ!Box"
+                "description": "Entrez les informations de votre AVM FRITZ!Box."
             }
         }
     }

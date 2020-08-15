@@ -43,6 +43,7 @@ async def setup_demo_climate(hass):
     """Initialize setup demo climate."""
     hass.config.units = METRIC_SYSTEM
     assert await async_setup_component(hass, DOMAIN, {"climate": {"platform": "demo"}})
+    await hass.async_block_till_done()
 
 
 def test_setup_params(hass):

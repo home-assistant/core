@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_in_progress": "La configuration de Tuya est d\u00e9j\u00e0 en cours."
-        },
         "flow_title": "Configuration Tuya",
         "step": {
             "user": {

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Configurer Tile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_inactive": "Afficher les Tiles inactives"
+                },
+                "title": "Configurer Tile"
+            }
+        }
+    }
+}

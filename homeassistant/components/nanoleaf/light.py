@@ -210,6 +210,10 @@ class NanoleafLight(LightEntity):
                 self._light.brightness = int(brightness / 2.55)
 
         if effect:
+            if effect not in self._effects_list:
+                raise ValueError(
+                    f"Attempting to apply effect not in the effect list: '{effect}'"
+                )
             self._light.effect = effect
 
     def turn_off(self, **kwargs):
@@ -227,8 +231,13 @@ class NanoleafLight(LightEntity):
             self._available = self._light.available
             self._brightness = self._light.brightness
             self._color_temp = self._light.color_temperature
-            self._effect = self._light.effect
             self._effects_list = self._light.effects
+            # Nanoleaf api returns non-existent effect named "*Solid*" when light set to solid color.
+            # This causes various issues with scening (see https://github.com/home-assistant/core/issues/36359).
+            # Until fixed at the library level, we should ensure the effect exists before saving to light properties
+            self._effect = (
+                self._light.effect if self._light.effect in self._effects_list else None
+            )
             self._hs_color = self._light.hue, self._light.saturation
             self._state = self._light.on
         except Unavailable as err:

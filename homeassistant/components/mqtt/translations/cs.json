@@ -15,8 +15,7 @@
                     "port": "Port",
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
                 },
-                "description": "Zadejte informace proo p\u0159ipojen\u00ed zprost\u0159edkovatele protokolu MQTT.",
-                "title": "MQTT"
+                "description": "Zadejte informace proo p\u0159ipojen\u00ed zprost\u0159edkovatele protokolu MQTT."
             },
             "hassio_confirm": {
                 "data": {

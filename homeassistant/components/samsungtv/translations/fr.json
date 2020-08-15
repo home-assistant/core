@@ -18,8 +18,7 @@
                     "host": "H\u00f4te ou adresse IP",
                     "name": "Nom"
                 },
-                "description": "Entrez les informations relatives \u00e0 votre t\u00e9l\u00e9viseur Samsung. Si vous n'avez jamais connect\u00e9 Home Assistant avant, vous devriez voir une fen\u00eatre contextuelle sur votre t\u00e9l\u00e9viseur demandant une authentification.",
-                "title": "TV Samsung"
+                "description": "Entrez les informations relatives \u00e0 votre t\u00e9l\u00e9viseur Samsung. Si vous n'avez jamais connect\u00e9 Home Assistant avant, vous devriez voir une fen\u00eatre contextuelle sur votre t\u00e9l\u00e9viseur demandant une authentification."
             }
         }
     }

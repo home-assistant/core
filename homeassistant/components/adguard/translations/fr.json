@@ -23,8 +23,7 @@
                     "username": "Nom d'utilisateur",
                     "verify_ssl": "AdGuard Home utilise un certificat appropri\u00e9"
                 },
-                "description": "Configurez votre instance AdGuard Home pour permettre la surveillance et le contr\u00f4le.",
-                "title": "Liez votre AdGuard Home."
+                "description": "Configurez votre instance AdGuard Home pour permettre la surveillance et le contr\u00f4le."
             }
         }
     }

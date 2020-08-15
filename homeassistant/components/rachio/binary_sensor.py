@@ -4,6 +4,7 @@ import logging
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_MOISTURE,
     BinarySensorEntity,
 )
 from homeassistant.core import callback
@@ -12,13 +13,21 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import (
     DOMAIN as DOMAIN_RACHIO,
     KEY_DEVICE_ID,
+    KEY_RAIN_SENSOR_TRIPPED,
     KEY_STATUS,
     KEY_SUBTYPE,
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
+    SIGNAL_RACHIO_RAIN_SENSOR_UPDATE,
     STATUS_ONLINE,
 )
 from .entity import RachioDevice
-from .webhooks import SUBTYPE_COLD_REBOOT, SUBTYPE_OFFLINE, SUBTYPE_ONLINE
+from .webhooks import (
+    SUBTYPE_COLD_REBOOT,
+    SUBTYPE_OFFLINE,
+    SUBTYPE_ONLINE,
+    SUBTYPE_RAIN_SENSOR_DETECTION_OFF,
+    SUBTYPE_RAIN_SENSOR_DETECTION_ON,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +43,7 @@ def _create_entities(hass, config_entry):
     entities = []
     for controller in hass.data[DOMAIN_RACHIO][config_entry.entry_id].controllers:
         entities.append(RachioControllerOnlineBinarySensor(controller))
+        entities.append(RachioRainSensor(controller))
     return entities
 
 
@@ -64,16 +74,6 @@ class RachioControllerBinarySensor(RachioDevice, BinarySensorEntity):
     def _async_handle_update(self, *args, **kwargs) -> None:
         """Handle an update to the state of this sensor."""
 
-    async def async_added_to_hass(self):
-        """Subscribe to updates."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_RACHIO_CONTROLLER_UPDATE,
-                self._async_handle_any_update,
-            )
-        )
-
 
 class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
     """Represent a binary sensor that reflects if the controller is online."""
@@ -98,11 +98,6 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
         """Return the name of an icon for this sensor."""
         return "mdi:wifi-strength-4" if self.is_on else "mdi:wifi-strength-off-outline"
 
-    async def async_added_to_hass(self):
-        """Get initial state."""
-        self._state = self._controller.init_data[KEY_STATUS] == STATUS_ONLINE
-        await super().async_added_to_hass()
-
     @callback
     def _async_handle_update(self, *args, **kwargs) -> None:
         """Handle an update to the state of this sensor."""
@@ -115,3 +110,61 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
             self._state = False
 
         self.async_write_ha_state()
+
+    async def async_added_to_hass(self):
+        """Subscribe to updates."""
+        self._state = self._controller.init_data[KEY_STATUS] == STATUS_ONLINE
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_RACHIO_CONTROLLER_UPDATE,
+                self._async_handle_any_update,
+            )
+        )
+
+
+class RachioRainSensor(RachioControllerBinarySensor):
+    """Represent a binary sensor that reflects the status of the rain sensor."""
+
+    @property
+    def name(self) -> str:
+        """Return the name of this sensor including the controller name."""
+        return f"{self._controller.name} rain sensor"
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique id for this entity."""
+        return f"{self._controller.controller_id}-rain_sensor"
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device."""
+        return DEVICE_CLASS_MOISTURE
+
+    @property
+    def icon(self) -> str:
+        """Return the icon for this sensor."""
+        return "mdi:water" if self.is_on else "mdi:water-off"
+
+    @callback
+    def _async_handle_update(self, *args, **kwargs) -> None:
+        """Handle an update to the state of this sensor."""
+        if args[0][0][KEY_SUBTYPE] == SUBTYPE_RAIN_SENSOR_DETECTION_ON:
+            self._state = True
+        elif args[0][0][KEY_SUBTYPE] == SUBTYPE_RAIN_SENSOR_DETECTION_OFF:
+            self._state = False
+
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self):
+        """Subscribe to updates."""
+        self._state = self._controller.init_data[KEY_RAIN_SENSOR_TRIPPED]
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_RACHIO_RAIN_SENSOR_UPDATE,
+                self._async_handle_any_update,
+            )
+        )

@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Queste coordinate sono gi\u00e0 registrate."
+        },
         "error": {
             "identifier_exists": "Coordinate gi\u00e0 registrate",
             "invalid_api_key": "Chiave API non valida"

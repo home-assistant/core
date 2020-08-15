@@ -9,7 +9,12 @@ from pysmartapp.event import EVENT_TYPE_DEVICE
 from pysmartthings import Attribute, Capability, SmartThings
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, HTTP_FORBIDDEN
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    HTTP_FORBIDDEN,
+)
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -25,8 +30,6 @@ from .const import (
     CONF_APP_ID,
     CONF_INSTALLED_APP_ID,
     CONF_LOCATION_ID,
-    CONF_OAUTH_CLIENT_ID,
-    CONF_OAUTH_CLIENT_SECRET,
     CONF_REFRESH_TOKEN,
     DATA_BROKERS,
     DATA_MANAGER,
@@ -115,8 +118,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
         # Get SmartApp token to sync subscriptions
         token = await api.generate_tokens(
-            entry.data[CONF_OAUTH_CLIENT_ID],
-            entry.data[CONF_OAUTH_CLIENT_SECRET],
+            entry.data[CONF_CLIENT_ID],
+            entry.data[CONF_CLIENT_SECRET],
             entry.data[CONF_REFRESH_TOKEN],
         )
         hass.config_entries.async_update_entry(
@@ -312,8 +315,7 @@ class DeviceBroker:
         async def regenerate_refresh_token(now):
             """Generate a new refresh token and update the config entry."""
             await self._token.refresh(
-                self._entry.data[CONF_OAUTH_CLIENT_ID],
-                self._entry.data[CONF_OAUTH_CLIENT_SECRET],
+                self._entry.data[CONF_CLIENT_ID], self._entry.data[CONF_CLIENT_SECRET],
             )
             self._hass.config_entries.async_update_entry(
                 self._entry,

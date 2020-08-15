@@ -60,16 +60,14 @@ class TestBOMWeatherSensor(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.config = VALID_CONFIG
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     @patch("requests.get", side_effect=mocked_requests)
     def test_setup(self, mock_get):
         """Test the setup with custom settings."""
         with assert_setup_component(1, sensor.DOMAIN):
             assert setup_component(self.hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
+            self.hass.block_till_done()
 
         fake_entities = [
             "bom_fake_feels_like_c",
@@ -85,6 +83,7 @@ class TestBOMWeatherSensor(unittest.TestCase):
     def test_sensor_values(self, mock_get):
         """Test retrieval of sensor values."""
         assert setup_component(self.hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
+        self.hass.block_till_done()
 
         weather = self.hass.states.get("sensor.bom_fake_weather").state
         assert "Fine" == weather

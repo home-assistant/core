@@ -18,8 +18,9 @@ class TestRFXTRX(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         rfxtrx.RECEIVED_EVT_SUBSCRIBERS = []
         rfxtrx.RFX_DEVICES = {}

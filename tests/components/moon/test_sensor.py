@@ -29,6 +29,7 @@ class TestMoonSensor(unittest.TestCase):
         config = {"sensor": {"platform": "moon", "name": "moon_day1"}}
 
         assert setup_component(self.hass, "sensor", config)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.moon_day1")
         assert state.state == "waxing_crescent"
@@ -39,6 +40,7 @@ class TestMoonSensor(unittest.TestCase):
         config = {"sensor": {"platform": "moon", "name": "moon_day2"}}
 
         assert setup_component(self.hass, "sensor", config)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.moon_day2")
         assert state.state == "waning_gibbous"

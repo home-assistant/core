@@ -13,8 +13,7 @@
                 "data": {
                     "host": "Vert eller IP-adresse"
                 },
-                "description": "Sett opp WLED til \u00e5 integreres med Home Assistant.",
-                "title": "Linken din WLED"
+                "description": "Sett opp WLED til \u00e5 integreres med Home Assistant."
             },
             "zeroconf_confirm": {
                 "description": "Vil du legge til WLED med navnet ' {name} ' i Home Assistant?",

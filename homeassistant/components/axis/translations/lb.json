@@ -25,5 +25,14 @@
             }
         }
     },
-    "title": "Axis Apparat"
+    "options": {
+        "step": {
+            "configure_stream": {
+                "data": {
+                    "stream_profile": "Stream Profile auswielen"
+                },
+                "title": "Axis Apparat Video Stream Optiounen"
+            }
+        }
+    }
 }

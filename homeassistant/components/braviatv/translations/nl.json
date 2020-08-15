@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Deze tv is al geconfigureerd."
+            "already_configured": "Deze tv is al geconfigureerd.",
+            "no_ip_control": "IP-besturing is uitgeschakeld op uw tv of de tv wordt niet ondersteund."
         },
         "error": {
             "cannot_connect": "Geen verbinding, ongeldige host of PIN-code.",

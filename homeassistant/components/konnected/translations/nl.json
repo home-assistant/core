@@ -17,8 +17,7 @@
                     "host": "IP-adres van Konnected apparaat",
                     "port": "Konnected apparaat poort"
                 },
-                "description": "Voer de host-informatie in voor uw Konnected-paneel.",
-                "title": "Ontdek Konnected Device"
+                "description": "Voer de host-informatie in voor uw Konnected-paneel."
             }
         }
     },

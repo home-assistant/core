@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Witryna kontrolera jest ju\u017c skonfigurowana.",
-            "no_local_user": "Nie znaleziono lokalnego u\u017cytkownika, skonfiguruj konto lokalne na kontrolerze i spr\u00f3buj ponownie.",
-            "user_privilege": "U\u017cytkownik musi by\u0107 administratorem"
+            "already_configured": "Witryna kontrolera jest ju\u017c skonfigurowana."
         },
         "error": {
             "faulty_credentials": "Niepoprawne uwierzytelnienie.",
@@ -29,7 +27,6 @@
             "client_control": {
                 "data": {
                     "block_client": "Klienci z kontrol\u0105 dost\u0119pu do sieci",
-                    "new_client": "Dodaj nowego klienta do kontroli dost\u0119pu do sieci",
                     "poe_clients": "Zezwalaj na kontrol\u0119 POE klient\u00f3w"
                 },
                 "description": "Konfigurowanie kontroli klienta\n\nUtw\u00f3rz prze\u0142\u0105czniki dla numer\u00f3w seryjnych, dla kt\u00f3rych chcesz kontrolowa\u0107 dost\u0119p do sieci.",

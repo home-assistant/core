@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_in_progress": "Tuya konfigurasjon er allerede i gang."
-        },
         "flow_title": "Tuya konfigurasjon",
         "step": {
             "user": {

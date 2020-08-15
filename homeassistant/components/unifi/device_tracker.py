@@ -301,7 +301,7 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
             self.cancel_scheduled_update = async_track_point_in_utc_time(
                 self.hass,
                 _no_heartbeat,
-                dt_util.utcnow() + timedelta(seconds=self.device.next_interval + 10),
+                dt_util.utcnow() + timedelta(seconds=self.device.next_interval + 60),
             )
 
         elif (

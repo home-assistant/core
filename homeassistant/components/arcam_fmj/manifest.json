@@ -1,8 +1,14 @@
 {
   "domain": "arcam_fmj",
   "name": "Arcam FMJ Receivers",
-  "config_flow": false,
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/arcam_fmj",
-  "requirements": ["arcam-fmj==0.4.6"],
+  "requirements": ["arcam-fmj==0.5.1"],
+  "ssdp": [
+    {
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+      "manufacturer": "ARCAM"
+    }
+  ],
   "codeowners": ["@elupus"]
 }

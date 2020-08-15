@@ -11,7 +11,7 @@
         },
         "step": {
             "auth": {
-                "description": "Per collegare il tuo account TelldusLive:\n 1. Clicca sul link sottostante\n 2. Accedi a Telldus Live\n 3. Autorizzare **{app_name}**** (cliccare **S\u00ec**).\n 4. Torna qui e clicca su **SUBMIT**.\n\n [Collega account TelldusLive]({auth_url})",
+                "description": "Per collegare il tuo account TelldusLive:\n 1. Clicca sul link sottostante\n 2. Accedi a Telldus Live\n 3. Autorizzare **{app_name}** (cliccare **S\u00ec**).\n 4. Torna qui e clicca su **SUBMIT**.\n\n [Link per account TelldusLive]({auth_url})",
                 "title": "Autenticati con TelldusLive"
             },
             "user": {

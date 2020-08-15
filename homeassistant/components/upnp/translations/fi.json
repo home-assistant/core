@@ -1,14 +1,8 @@
 {
     "config": {
         "step": {
-            "confirm": {
-                "description": "Haluatko m\u00e4\u00e4ritt\u00e4\u00e4 UPnP/IGD:n?",
-                "title": "UPnP/IGD"
-            },
             "user": {
                 "data": {
-                    "enable_sensors": "Lis\u00e4\u00e4 liikenneanturit",
-                    "igd": "UPnP/IGD",
                     "scan_interval": "P\u00e4ivitysv\u00e4li (sekuntia, v\u00e4hint\u00e4\u00e4n 30)",
                     "usn": "Laite"
                 }

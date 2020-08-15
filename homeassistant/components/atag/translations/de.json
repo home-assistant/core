@@ -11,7 +11,7 @@
                 "data": {
                     "email": "Email (Optional)",
                     "host": "Host",
-                    "port": "Port (10000)"
+                    "port": "Port"
                 },
                 "title": "Stellen Sie eine Verbindung zum Ger\u00e4t her"
             }

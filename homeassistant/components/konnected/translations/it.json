@@ -23,8 +23,7 @@
                     "host": "Indirizzo IP",
                     "port": "Porta"
                 },
-                "description": "Si prega di inserire le informazioni dell'host per il tuo Pannello Konnected.",
-                "title": "Rileva il dispositivo Konnected"
+                "description": "Si prega di inserire le informazioni dell'host per il tuo Pannello Konnected."
             }
         }
     },

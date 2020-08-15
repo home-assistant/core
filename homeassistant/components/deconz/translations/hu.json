@@ -16,18 +16,9 @@
             "hassio_confirm": {
                 "title": "deCONZ Zigbee \u00e1tj\u00e1r\u00f3 a Hass.io kieg\u00e9sz\u00edt\u0151 seg\u00edts\u00e9g\u00e9vel"
             },
-            "init": {
-                "title": "deCONZ \u00e1tj\u00e1r\u00f3 megad\u00e1sa"
-            },
             "link": {
                 "description": "Oldja fel a deCONZ \u00e1tj\u00e1r\u00f3t a Home Assistant-ban val\u00f3 regisztr\u00e1l\u00e1shoz.\n\n1. Menjen a deCONZ rendszer be\u00e1ll\u00edt\u00e1sokhoz\n2. Nyomja meg az \"\u00c1tj\u00e1r\u00f3 felold\u00e1sa\" gombot",
                 "title": "Kapcsol\u00f3d\u00e1s a deCONZ-hoz"
-            },
-            "manual_confirm": {
-                "data": {
-                    "host": "Hoszt",
-                    "port": "Port"
-                }
             },
             "manual_input": {
                 "data": {

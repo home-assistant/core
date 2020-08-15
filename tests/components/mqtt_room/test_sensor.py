@@ -68,6 +68,7 @@ async def test_room_update(hass):
             }
         },
     )
+    await hass.async_block_till_done()
 
     await send_message(hass, BEDROOM_TOPIC, FAR_MESSAGE)
     await assert_state(hass, BEDROOM)

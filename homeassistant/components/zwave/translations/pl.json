@@ -5,7 +5,7 @@
             "one_instance_only": "Komponent obs\u0142uguje tylko jedn\u0105 instancj\u0119 Z-Wave"
         },
         "error": {
-            "option_error": "Walidacja Z-Wave nie powiod\u0142a si\u0119. Czy \u015bcie\u017cka do kontrolera Z-Wave USB jest prawid\u0142owa?"
+            "option_error": "Walidacja Z-Wave si\u0119 nie powiod\u0142a. Czy \u015bcie\u017cka do kontrolera Z-Wave USB jest prawid\u0142owa?"
         },
         "step": {
             "user": {

@@ -23,8 +23,7 @@
                     "username": "Uporabni\u0161ko ime",
                     "verify_ssl": "AdGuard Home uporablja ustrezen certifikat"
                 },
-                "description": "Nastavite primerek AdGuard Home, da omogo\u010dite spremljanje in nadzor.",
-                "title": "Pove\u017eite svoj AdGuard Home."
+                "description": "Nastavite primerek AdGuard Home, da omogo\u010dite spremljanje in nadzor."
             }
         }
     }

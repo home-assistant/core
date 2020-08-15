@@ -20,7 +20,6 @@
             },
             "link": {
                 "data": {
-                    "api_version": "Razli\u010dica DSM",
                     "password": "Geslo",
                     "port": "Vrata (Izbirno)",
                     "ssl": "Uporabite SSL/TLS za povezavo z va\u0161im NAS-om",
@@ -31,7 +30,6 @@
             },
             "user": {
                 "data": {
-                    "api_version": "Razli\u010dica DSM",
                     "host": "Gostitelj",
                     "password": "Geslo",
                     "port": "Vrata (Izbirno)",

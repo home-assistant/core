@@ -15,7 +15,7 @@ from homeassistant.components.withings import (
     const,
 )
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .common import (
@@ -55,9 +55,9 @@ def test_config_schema_basic_config() -> None:
     """Test schema."""
     config_schema_validate(
         {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.PROFILES: ["Person 1", "Person 2"],
+            CONF_CLIENT_ID: "my_client_id",
+            CONF_CLIENT_SECRET: "my_client_secret",
+            const.CONF_PROFILES: ["Person 1", "Person 2"],
         }
     )
 
@@ -66,22 +66,22 @@ def test_config_schema_client_id() -> None:
     """Test schema."""
     config_schema_assert_fail(
         {
-            const.CLIENT_SECRET: "my_client_secret",
-            const.PROFILES: ["Person 1", "Person 2"],
+            CONF_CLIENT_SECRET: "my_client_secret",
+            const.CONF_PROFILES: ["Person 1", "Person 2"],
         }
     )
     config_schema_assert_fail(
         {
-            const.CLIENT_SECRET: "my_client_secret",
-            const.CLIENT_ID: "",
-            const.PROFILES: ["Person 1"],
+            CONF_CLIENT_SECRET: "my_client_secret",
+            CONF_CLIENT_ID: "",
+            const.CONF_PROFILES: ["Person 1"],
         }
     )
     config_schema_validate(
         {
-            const.CLIENT_SECRET: "my_client_secret",
-            const.CLIENT_ID: "my_client_id",
-            const.PROFILES: ["Person 1"],
+            CONF_CLIENT_SECRET: "my_client_secret",
+            CONF_CLIENT_ID: "my_client_id",
+            const.CONF_PROFILES: ["Person 1"],
         }
     )
 
@@ -89,20 +89,20 @@ def test_config_schema_client_id() -> None:
 def test_config_schema_client_secret() -> None:
     """Test schema."""
     config_schema_assert_fail(
-        {const.CLIENT_ID: "my_client_id", const.PROFILES: ["Person 1"]}
+        {CONF_CLIENT_ID: "my_client_id", const.CONF_PROFILES: ["Person 1"]}
     )
     config_schema_assert_fail(
         {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "",
-            const.PROFILES: ["Person 1"],
+            CONF_CLIENT_ID: "my_client_id",
+            CONF_CLIENT_SECRET: "",
+            const.CONF_PROFILES: ["Person 1"],
         }
     )
     config_schema_validate(
         {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.PROFILES: ["Person 1"],
+            CONF_CLIENT_ID: "my_client_id",
+            CONF_CLIENT_SECRET: "my_client_secret",
+            const.CONF_PROFILES: ["Person 1"],
         }
     )
 
@@ -110,41 +110,41 @@ def test_config_schema_client_secret() -> None:
 def test_config_schema_profiles() -> None:
     """Test schema."""
     config_schema_assert_fail(
-        {const.CLIENT_ID: "my_client_id", const.CLIENT_SECRET: "my_client_secret"}
+        {CONF_CLIENT_ID: "my_client_id", CONF_CLIENT_SECRET: "my_client_secret"}
     )
     config_schema_assert_fail(
         {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.PROFILES: "",
+            CONF_CLIENT_ID: "my_client_id",
+            CONF_CLIENT_SECRET: "my_client_secret",
+            const.CONF_PROFILES: "",
         }
     )
     config_schema_assert_fail(
         {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.PROFILES: [],
+            CONF_CLIENT_ID: "my_client_id",
+            CONF_CLIENT_SECRET: "my_client_secret",
+            const.CONF_PROFILES: [],
         }
     )
     config_schema_assert_fail(
         {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.PROFILES: ["Person 1", "Person 1"],
+            CONF_CLIENT_ID: "my_client_id",
+            CONF_CLIENT_SECRET: "my_client_secret",
+            const.CONF_PROFILES: ["Person 1", "Person 1"],
         }
     )
     config_schema_validate(
         {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.PROFILES: ["Person 1"],
+            CONF_CLIENT_ID: "my_client_id",
+            CONF_CLIENT_SECRET: "my_client_secret",
+            const.CONF_PROFILES: ["Person 1"],
         }
     )
     config_schema_validate(
         {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.PROFILES: ["Person 1", "Person 2"],
+            CONF_CLIENT_ID: "my_client_id",
+            CONF_CLIENT_SECRET: "my_client_secret",
+            const.CONF_PROFILES: ["Person 1", "Person 2"],
         }
     )
 
@@ -163,7 +163,7 @@ async def test_upgrade_token(
 ) -> None:
     """Test upgrading from old config data format to new one."""
     config = await setup_hass(hass)
-    profiles = config[const.DOMAIN][const.PROFILES]
+    profiles = config[const.DOMAIN][const.CONF_PROFILES]
 
     await async_process_ha_core_config(
         hass, {"internal_url": "http://example.local"},
@@ -197,7 +197,7 @@ async def test_upgrade_token(
                 "token_expiry": token.get("expires_at"),
                 "token_type": token.get("type"),
                 "userid": token.get("userid"),
-                "client_id": token.get("my_client_id"),
+                CONF_CLIENT_ID: token.get("my_client_id"),
                 "consumer_secret": token.get("my_consumer_secret"),
             },
         },
@@ -228,7 +228,7 @@ async def test_upgrade_token(
     assert token.get("expires_at") > time.time()
     assert token.get("type") == "Bearer"
     assert token.get("userid") == "myuserid"
-    assert not token.get("client_id")
+    assert not token.get(CONF_CLIENT_ID)
     assert not token.get("consumer_secret")
 
 
@@ -237,7 +237,7 @@ async def test_auth_failure(
 ) -> None:
     """Test auth failure."""
     config = await setup_hass(hass)
-    profiles = config[const.DOMAIN][const.PROFILES]
+    profiles = config[const.DOMAIN][const.CONF_PROFILES]
 
     await async_process_ha_core_config(
         hass, {"internal_url": "http://example.local"},
@@ -276,7 +276,7 @@ async def test_auth_failure(
 async def test_full_setup(hass: HomeAssistant, aiohttp_client, aioclient_mock) -> None:
     """Test the whole component lifecycle."""
     config = await setup_hass(hass)
-    profiles = config[const.DOMAIN][const.PROFILES]
+    profiles = config[const.DOMAIN][const.CONF_PROFILES]
 
     await async_process_ha_core_config(
         hass, {"internal_url": "http://example.local"},

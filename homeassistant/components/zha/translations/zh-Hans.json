@@ -8,9 +8,6 @@
         },
         "step": {
             "user": {
-                "data": {
-                    "radio_type": "\u65e0\u7ebf\u7535\u7c7b\u578b"
-                },
                 "title": "ZHA"
             }
         }

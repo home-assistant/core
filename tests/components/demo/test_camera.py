@@ -22,13 +22,12 @@ ENTITY_CAMERA = "camera.demo_camera"
 
 
 @pytest.fixture(autouse=True)
-def demo_camera(hass):
+async def demo_camera(hass):
     """Initialize a demo camera platform."""
-    hass.loop.run_until_complete(
-        async_setup_component(
-            hass, CAMERA_DOMAIN, {CAMERA_DOMAIN: {"platform": DOMAIN}}
-        )
+    assert await async_setup_component(
+        hass, CAMERA_DOMAIN, {CAMERA_DOMAIN: {"platform": DOMAIN}}
     )
+    await hass.async_block_till_done()
 
 
 async def test_init_state_is_streaming(hass):

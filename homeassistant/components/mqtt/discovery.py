@@ -58,9 +58,9 @@ class MQTTConfig(dict):
 
 
 async def async_start(
-    hass: HomeAssistantType, discovery_topic, hass_config, config_entry=None
+    hass: HomeAssistantType, discovery_topic, config_entry=None
 ) -> bool:
-    """Initialize of MQTT Discovery."""
+    """Start MQTT Discovery."""
 
     async def async_device_message_received(msg):
         """Process the received message."""

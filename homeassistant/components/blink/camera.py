@@ -1,14 +1,21 @@
 """Support for Blink system camera."""
 import logging
 
-from homeassistant.components.camera import Camera
+import voluptuous as vol
 
-from .const import DEFAULT_BRAND, DOMAIN
+from homeassistant.components.camera import Camera
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.helpers import entity_platform
+import homeassistant.helpers.config_validation as cv
+
+from .const import DEFAULT_BRAND, DOMAIN, SERVICE_TRIGGER
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_VIDEO_CLIP = "video"
 ATTR_IMAGE = "image"
+
+SERVICE_TRIGGER_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids})
 
 
 async def async_setup_entry(hass, config, async_add_entities):
@@ -19,6 +26,12 @@ async def async_setup_entry(hass, config, async_add_entities):
         entities.append(BlinkCamera(data, name, camera))
 
     async_add_entities(entities)
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_TRIGGER, SERVICE_TRIGGER_SCHEMA, "trigger_camera"
+    )
 
 
 class BlinkCamera(Camera):
@@ -68,6 +81,11 @@ class BlinkCamera(Camera):
     def brand(self):
         """Return the camera brand."""
         return DEFAULT_BRAND
+
+    def trigger_camera(self):
+        """Trigger camera to take a snapshot."""
+        self._camera.snap_picture()
+        self.data.refresh()
 
     def camera_image(self):
         """Return a still image response from the camera."""

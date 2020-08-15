@@ -8,15 +8,11 @@
         },
         "flow_title": "ESPHome: {name}",
         "step": {
-            "authenticate": {
-                "title": "Sy\u00f6t\u00e4 salasana"
-            },
             "user": {
                 "data": {
                     "host": "Palvelin",
                     "port": "Portti"
-                },
-                "title": "[%key:component::esphome::title%]"
+                }
             }
         }
     }

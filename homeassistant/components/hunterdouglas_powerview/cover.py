@@ -45,6 +45,8 @@ _LOGGER = logging.getLogger(__name__)
 # from one state to another
 TRANSITION_COMPLETE_DURATION = 30
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the hunter douglas shades."""

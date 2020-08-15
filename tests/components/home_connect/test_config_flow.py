@@ -5,6 +5,7 @@ from homeassistant.components.home_connect.const import (
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
 CLIENT_ID = "1234"
@@ -17,7 +18,10 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
         hass,
         "home_connect",
         {
-            "home_connect": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
+            "home_connect": {
+                CONF_CLIENT_ID: CLIENT_ID,
+                CONF_CLIENT_SECRET: CLIENT_SECRET,
+            },
             "http": {"base_url": "https://example.com"},
         },
     )

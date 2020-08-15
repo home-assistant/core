@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Any, Dict
 
-from rokuecp import Roku, RokuError
+from rokuecp import Roku, RokuConnectionError, RokuError
 from rokuecp.models import Device
 import voluptuous as vol
 
@@ -90,6 +90,22 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+def roku_exception_handler(func):
+    """Decorate Roku calls to handle Roku exceptions."""
+
+    async def handler(self, *args, **kwargs):
+        try:
+            await func(self, *args, **kwargs)
+        except RokuConnectionError as error:
+            if self.available:
+                _LOGGER.error("Error communicating with API: %s", error)
+        except RokuError as error:
+            if self.available:
+                _LOGGER.error("Invalid response from API: %s", error)
+
+    return handler
 
 
 class RokuDataUpdateCoordinator(DataUpdateCoordinator):

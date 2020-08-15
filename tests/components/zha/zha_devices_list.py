@@ -813,7 +813,7 @@ DEVICES = [
                 "entity_id": "sensor.ikea_of_sweden_tradfri_on_off_switch_77665544_power",
             }
         },
-        "event_channels": ["1:0x0006", "1:0x0008", "1:0x0019"],
+        "event_channels": ["1:0x0006", "1:0x0008", "1:0x0019", "1:0x0102"],
         "manufacturer": "IKEA of Sweden",
         "model": "TRADFRI on/off switch",
         "node_descriptor": b"\x02@\x80|\x11RR\x00\x00,R\x00\x00",

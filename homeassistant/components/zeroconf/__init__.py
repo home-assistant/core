@@ -130,10 +130,10 @@ def setup(hass, config):
         "location_name": hass.config.location_name,
         "uuid": uuid,
         "version": __version__,
-        "external_url": None,
-        "internal_url": None,
+        "external_url": "",
+        "internal_url": "",
         # Old base URL, for backward compatibility
-        "base_url": None,
+        "base_url": "",
         # Always needs authentication
         "requires_api_password": True,
     }
@@ -192,6 +192,7 @@ def setup(hass, config):
         if not service_info:
             # Prevent the browser thread from collapsing as
             # service_info can be None
+            _LOGGER.debug("Failed to get info for device %s", name)
             return
 
         info = info_from_service(service_info)

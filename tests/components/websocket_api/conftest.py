@@ -16,6 +16,7 @@ async def websocket_client(hass, hass_ws_client):
 async def no_auth_websocket_client(hass, aiohttp_client):
     """Websocket connection that requires authentication."""
     assert await async_setup_component(hass, "websocket_api", {})
+    await hass.async_block_till_done()
 
     client = await aiohttp_client(hass.http.app)
     ws = await client.ws_connect(URL)
@@ -23,6 +24,7 @@ async def no_auth_websocket_client(hass, aiohttp_client):
     auth_ok = await ws.receive_json()
     assert auth_ok["type"] == TYPE_AUTH_REQUIRED
 
+    ws.client = client
     yield ws
 
     if not ws.closed:

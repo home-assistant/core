@@ -17,8 +17,7 @@
                 "data": {
                     "host": "Vert eller IP-adresse"
                 },
-                "description": "Fyll inn Roku-informasjonen din.",
-                "title": ""
+                "description": "Fyll inn Roku-informasjonen din."
             }
         }
     }

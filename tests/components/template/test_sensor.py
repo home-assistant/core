@@ -42,6 +42,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -75,6 +76,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -108,6 +110,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -138,6 +141,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -168,6 +172,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -200,6 +205,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -229,6 +235,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
         assert self.hass.states.all() == []
@@ -252,6 +259,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -276,6 +284,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -295,6 +304,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
 
         assert self.hass.states.all() == []
@@ -306,6 +316,7 @@ class TestTemplateSensor:
                 self.hass, "sensor", {"sensor": {"platform": "template"}}
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -329,6 +340,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -401,6 +413,7 @@ class TestTemplateSensor:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -445,6 +458,7 @@ async def test_available_template_with_entities(hass):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -510,6 +524,7 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -549,6 +564,7 @@ async def test_no_template_match_all(hass, caplog):
             }
         },
     )
+    await hass.async_block_till_done()
 
     assert hass.states.get("sensor.invalid_state").state == "unknown"
     assert hass.states.get("sensor.invalid_icon").state == "unknown"

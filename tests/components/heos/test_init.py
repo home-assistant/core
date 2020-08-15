@@ -31,6 +31,7 @@ async def test_async_setup_creates_entry(hass, config):
     entry = entries[0]
     assert entry.title == "Controller (127.0.0.1)"
     assert entry.data == {CONF_HOST: "127.0.0.1"}
+    assert entry.unique_id == DOMAIN
 
 
 async def test_async_setup_updates_entry(hass, config_entry, config, controller):
@@ -44,6 +45,7 @@ async def test_async_setup_updates_entry(hass, config_entry, config, controller)
     entry = entries[0]
     assert entry.title == "Controller (127.0.0.2)"
     assert entry.data == {CONF_HOST: "127.0.0.2"}
+    assert entry.unique_id == DOMAIN
 
 
 async def test_async_setup_returns_true(hass, config_entry, config):

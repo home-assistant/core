@@ -68,6 +68,7 @@ async def test_state_value(hass):
             )
             is True
         )
+        await hass.async_block_till_done()
 
         assert "unknown" == hass.states.get("cover.test").state
 

@@ -3,15 +3,13 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entityfilter
 
 from . import flash_briefings, intent, smart_home_http
 from .const import (
     CONF_AUDIO,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
     CONF_DESCRIPTION,
     CONF_DISPLAY_CATEGORIES,
     CONF_DISPLAY_URL,

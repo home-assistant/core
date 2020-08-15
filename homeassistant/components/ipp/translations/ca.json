@@ -27,7 +27,7 @@
                 "title": "Enlla\u00e7 d'impressora"
             },
             "zeroconf_confirm": {
-                "description": "Vols afegir la impressora {name} a Home Assistant?",
+                "description": "Vols configurar {name}?",
                 "title": "Impressora descoberta"
             }
         }

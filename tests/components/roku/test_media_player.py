@@ -332,7 +332,7 @@ async def test_services(
 
         remote_mock.assert_called_once_with("home")
 
-    with patch("homeassistant.components.roku.Roku.launch") as remote_mock:
+    with patch("homeassistant.components.roku.Roku.launch") as launch_mock:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_SELECT_SOURCE,
@@ -340,7 +340,17 @@ async def test_services(
             blocking=True,
         )
 
-        remote_mock.assert_called_once_with("12")
+        launch_mock.assert_called_once_with("12")
+
+    with patch("homeassistant.components.roku.Roku.launch") as launch_mock:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_SELECT_SOURCE,
+            {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_INPUT_SOURCE: 12},
+            blocking=True,
+        )
+
+        launch_mock.assert_called_once_with("12")
 
 
 async def test_tv_services(

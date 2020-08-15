@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "device_fail": "Az eszk\u00f6z l\u00e9trehoz\u00e1sakor v\u00e1ratlan hiba l\u00e9pett fel.",
-            "device_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s a k\u00e9sz\u00fcl\u00e9k csatlakoz\u00e1sakor."
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
         },
         "error": {
             "device_fail": "V\u00e1ratlan hiba",

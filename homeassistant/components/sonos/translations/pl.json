@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Czy chcesz skonfigurowa\u0107 Sonos?",
-                "title": "Sonos"
+                "description": "Czy chcesz skonfigurowa\u0107 Sonos?"
             }
         }
     }

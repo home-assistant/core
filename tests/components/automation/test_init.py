@@ -3,17 +3,21 @@ from datetime import timedelta
 
 import pytest
 
+from homeassistant.components import logbook
 import homeassistant.components.automation as automation
-from homeassistant.components.automation import DOMAIN
+from homeassistant.components.automation import (
+    DOMAIN,
+    EVENT_AUTOMATION_RELOADED,
+    EVENT_AUTOMATION_TRIGGERED,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
-    EVENT_AUTOMATION_TRIGGERED,
     EVENT_HOMEASSISTANT_STARTED,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Context, CoreState, State
+from homeassistant.core import Context, CoreState, Event, State
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -483,6 +487,11 @@ async def test_reload_config_service(hass, calls, hass_admin_user, hass_read_onl
     assert len(calls) == 1
     assert calls[0].data.get("event") == "test_event"
 
+    test_reload_event = []
+    hass.bus.async_listen(
+        EVENT_AUTOMATION_RELOADED, lambda event: test_reload_event.append(event)
+    )
+
     with patch(
         "homeassistant.config.load_yaml_config_file",
         autospec=True,
@@ -504,6 +513,8 @@ async def test_reload_config_service(hass, calls, hass_admin_user, hass_read_onl
         await hass.async_block_till_done()
         # De-flake ?!
         await hass.async_block_till_done()
+
+    assert len(test_reload_event) == 1
 
     assert hass.states.get("automation.hello") is None
     assert hass.states.get("automation.bye") is not None
@@ -1023,3 +1034,34 @@ async def test_extraction_functions(hass):
         "device-in-both",
         "device-in-last",
     }
+
+
+async def test_logbook_humanify_automation_triggered_event(hass):
+    """Test humanifying Automation Trigger event."""
+    await async_setup_component(hass, automation.DOMAIN, {})
+
+    event1, event2 = list(
+        logbook.humanify(
+            hass,
+            [
+                Event(
+                    EVENT_AUTOMATION_TRIGGERED,
+                    {ATTR_ENTITY_ID: "automation.hello", ATTR_NAME: "Hello Automation"},
+                ),
+                Event(
+                    EVENT_AUTOMATION_TRIGGERED,
+                    {ATTR_ENTITY_ID: "automation.bye", ATTR_NAME: "Bye Automation"},
+                ),
+            ],
+        )
+    )
+
+    assert event1["name"] == "Hello Automation"
+    assert event1["domain"] == "automation"
+    assert event1["message"] == "has been triggered"
+    assert event1["entity_id"] == "automation.hello"
+
+    assert event2["name"] == "Bye Automation"
+    assert event2["domain"] == "automation"
+    assert event2["message"] == "has been triggered"
+    assert event2["entity_id"] == "automation.bye"

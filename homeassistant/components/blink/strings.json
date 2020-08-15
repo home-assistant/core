@@ -21,5 +21,16 @@
     "abort": {
         "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
-  }
+  },
+  "options": {
+    "step": {
+      "simple_options": {
+        "data": {
+          "scan_interval": "Scan Interval (seconds)"
+        },
+        "title": "Blink options",
+        "description": "Configure Blink integration"
+      }
+    }
+  }     
 }

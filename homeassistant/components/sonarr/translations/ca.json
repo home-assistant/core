@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servei ja est\u00e0 configurat",
+            "unknown": "Error inesperat"
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+        },
+        "flow_title": "Sonarr: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Clau API",
+                    "base_path": "Ruta a l'API",
+                    "host": "Amfitri\u00f3",
+                    "port": "Port",
+                    "ssl": "Sonarr utilitza un certificat SSL",
+                    "verify_ssl": "Sonarr utilitza un certificat adequat"
+                },
+                "title": "Connexi\u00f3 amb Sonarr"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "upcoming_days": "Nombre de dies propers a mostrar",
+                    "wanted_max_items": "Nombre m\u00e0xim d'elements a mostrar"
+                }
+            }
+        }
+    },
+    "title": "Sonarr"
+}

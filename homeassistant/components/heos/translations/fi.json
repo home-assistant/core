@@ -2,9 +2,6 @@
     "config": {
         "step": {
             "user": {
-                "data": {
-                    "access_token": "Palvelin"
-                },
                 "title": "Yhdist\u00e4 Heosiin"
             }
         }

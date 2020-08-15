@@ -9,7 +9,6 @@
         "step": {
             "user": {
                 "data": {
-                    "access_token": "Gostitelj",
                     "host": "Gostitelj"
                 },
                 "description": "Vnesite ime gostitelja ali naslov IP naprave Heos (po mo\u017enosti eno, ki je z omre\u017ejem povezana \u017ei\u010dno).",

@@ -14,8 +14,7 @@
                     "port": "Port",
                     "username": "Nama pengguna"
                 },
-                "description": "Harap masukkan informasi koneksi dari broker MQTT Anda.",
-                "title": "MQTT"
+                "description": "Harap masukkan informasi koneksi dari broker MQTT Anda."
             }
         }
     }

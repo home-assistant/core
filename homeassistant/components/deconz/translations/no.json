@@ -17,31 +17,20 @@
                 "description": "Vil du konfigurere Home Assistant til \u00e5 koble seg til deCONZ-gateway levert av Hass.io-tillegget {addon} ?",
                 "title": "deCONZ Zigbee gateway via Hass.io tillegg"
             },
-            "init": {
-                "title": "Definer deCONZ-gatewayen"
-            },
             "link": {
                 "description": "L\u00e5s opp deCONZ-gatewayen din for \u00e5 registrere deg med Home Assistant. \n\n 1. G\u00e5 til deCONZ-systeminnstillinger -> Gateway -> Avansert \n 2. Trykk p\u00e5 \"Autentiser app\" knappen",
                 "title": "Koble til deCONZ"
-            },
-            "manual_confirm": {
-                "data": {
-                    "host": "Vert",
-                    "port": ""
-                }
             },
             "manual_input": {
                 "data": {
                     "host": "Vert",
                     "port": "Port"
-                },
-                "title": "Konfigurer deCONZ gateway"
+                }
             },
             "user": {
                 "data": {
                     "host": "Velg oppdaget deCONZ gateway"
-                },
-                "title": "Velg deCONZ gateway"
+                }
             }
         }
     },

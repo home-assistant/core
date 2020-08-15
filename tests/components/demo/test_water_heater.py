@@ -13,14 +13,13 @@ ENTITY_WATER_HEATER_CELSIUS = "water_heater.demo_water_heater_celsius"
 
 
 @pytest.fixture(autouse=True)
-def setup_comp(hass):
+async def setup_comp(hass):
     """Set up demo component."""
     hass.config.units = IMPERIAL_SYSTEM
-    hass.loop.run_until_complete(
-        async_setup_component(
-            hass, water_heater.DOMAIN, {"water_heater": {"platform": "demo"}}
-        )
+    assert await async_setup_component(
+        hass, water_heater.DOMAIN, {"water_heater": {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
 
 async def test_setup_params(hass):

@@ -73,8 +73,9 @@ class TestScriptComponent(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    # pylint: disable=invalid-name
-    def tearDown(self):
+        self.addCleanup(self.tear_down_cleanup)
+
+    def tear_down_cleanup(self):
         """Stop down everything that was started."""
         self.hass.stop()
 

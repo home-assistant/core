@@ -23,8 +23,7 @@
                 "data": {
                     "host": "Nazwa hosta lub adres IP"
                 },
-                "description": "Wprowad\u017a dane Roku.",
-                "title": "Roku"
+                "description": "Wprowad\u017a dane Roku."
             }
         }
     }

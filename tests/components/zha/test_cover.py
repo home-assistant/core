@@ -15,18 +15,24 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER,
 )
-from homeassistant.const import STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_COMMAND,
+    STATE_CLOSED,
+    STATE_OPEN,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import CoreState, State
 
 from .common import (
     async_enable_traffic,
     async_test_rejoin,
     find_entity_id,
+    make_zcl_header,
     send_attributes_report,
 )
 
 from tests.async_mock import AsyncMock, MagicMock, call, patch
-from tests.common import mock_coro, mock_restore_cache
+from tests.common import async_capture_events, mock_coro, mock_restore_cache
 
 
 @pytest.fixture
@@ -38,6 +44,20 @@ def zigpy_cover_device(zigpy_device_mock):
             "device_type": 1026,
             "in_clusters": [closures.WindowCovering.cluster_id],
             "out_clusters": [],
+        }
+    }
+    return zigpy_device_mock(endpoints)
+
+
+@pytest.fixture
+def zigpy_cover_remote(zigpy_device_mock):
+    """Zigpy cover remote device."""
+
+    endpoints = {
+        1: {
+            "device_type": 0x0203,
+            "in_clusters": [],
+            "out_clusters": [closures.WindowCovering.cluster_id],
         }
     }
     return zigpy_device_mock(endpoints)
@@ -375,3 +395,31 @@ async def test_keen_vent(hass, zha_device_joined_restored, zigpy_keen_vent):
         assert cluster_level.request.call_count == 1
         assert hass.states.get(entity_id).state == STATE_OPEN
         assert hass.states.get(entity_id).attributes[ATTR_CURRENT_POSITION] == 100
+
+
+async def test_cover_remote(hass, zha_device_joined_restored, zigpy_cover_remote):
+    """Test zha cover remote."""
+
+    # load up cover domain
+    await zha_device_joined_restored(zigpy_cover_remote)
+
+    cluster = zigpy_cover_remote.endpoints[1].out_clusters[
+        closures.WindowCovering.cluster_id
+    ]
+    zha_events = async_capture_events(hass, "zha_event")
+
+    # up command
+    hdr = make_zcl_header(0, global_command=False)
+    cluster.handle_message(hdr, [])
+    await hass.async_block_till_done()
+
+    assert len(zha_events) == 1
+    assert zha_events[0].data[ATTR_COMMAND] == "up_open"
+
+    # down command
+    hdr = make_zcl_header(1, global_command=False)
+    cluster.handle_message(hdr, [])
+    await hass.async_block_till_done()
+
+    assert len(zha_events) == 2
+    assert zha_events[1].data[ATTR_COMMAND] == "down_close"

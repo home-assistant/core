@@ -17,31 +17,20 @@
                 "description": "W\u00ebllt dir Home Assistant konfigur\u00e9iere fir sech mat der deCONZ gateway ze verbannen d\u00e9i vum hass.io add-on {addon} bereet gestallt g\u00ebtt?",
                 "title": "deCONZ Zigbee gateway via Hass.io add-on"
             },
-            "init": {
-                "title": "deCONZ gateway d\u00e9fin\u00e9ieren"
-            },
             "link": {
                 "description": "Entsperrt \u00e4r deCONZ gateway fir se mat Home Assistant ze registr\u00e9ieren.\n\n1. Gidd op deCONZ System Astellungen\n2. Dr\u00e9ckt \"Unlock\" Gateway Kn\u00e4ppchen",
                 "title": "Link mat deCONZ"
-            },
-            "manual_confirm": {
-                "data": {
-                    "host": "Host",
-                    "port": "Port"
-                }
             },
             "manual_input": {
                 "data": {
                     "host": "Apparat",
                     "port": "Port"
-                },
-                "title": "deCONZ Gateway ariichten"
+                }
             },
             "user": {
                 "data": {
                     "host": "Entdeckte deCONZ Gateway auswielen"
-                },
-                "title": "deCONZ Gateway auswielen"
+                }
             }
         }
     },

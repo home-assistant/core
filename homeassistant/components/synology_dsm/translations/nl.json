@@ -20,7 +20,6 @@
             },
             "link": {
                 "data": {
-                    "api_version": "DSM-versie",
                     "password": "Wachtwoord",
                     "port": "Poort (optioneel)",
                     "ssl": "Gebruik SSL/TLS om verbinding te maken met uw NAS",
@@ -31,7 +30,6 @@
             },
             "user": {
                 "data": {
-                    "api_version": "DSM-versie",
                     "host": "Host",
                     "password": "Wachtwoord",
                     "port": "Poort (optioneel)",

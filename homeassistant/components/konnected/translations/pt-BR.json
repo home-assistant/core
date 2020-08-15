@@ -2,8 +2,7 @@
     "config": {
         "step": {
             "user": {
-                "description": "Por favor, digite as informa\u00e7\u00f5es do host para o seu Painel Konnected.",
-                "title": "Descubra o dispositivo Konnected"
+                "description": "Por favor, digite as informa\u00e7\u00f5es do host para o seu Painel Konnected."
             }
         }
     },

@@ -1,21 +1,8 @@
 {
     "config": {
-        "abort": {
-            "no_sensors_or_port_mapping": "I det minste, aktiver sensor eller portkartlegging"
-        },
         "error": {
             "one": "Ein",
             "other": "Andre"
-        },
-        "step": {
-            "confirm": {
-                "title": "UPnP/IGD"
-            },
-            "user": {
-                "data": {
-                    "igd": "UPnP/IGD"
-                }
-            }
         }
     }
 }

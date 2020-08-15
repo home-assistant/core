@@ -13,7 +13,13 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import conversation
-from homeassistant.const import CONF_HOST, CONF_TYPE, EVENT_HOMEASSISTANT_START
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_HOST,
+    CONF_TYPE,
+    EVENT_HOMEASSISTANT_START,
+)
 from homeassistant.core import Context, CoreState, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -28,9 +34,6 @@ from homeassistant.helpers import (
 
 from . import config_flow
 from .const import DOMAIN, TYPE_LOCAL, TYPE_OAUTH2
-
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 
 STORAGE_VERSION = 1
 STORAGE_KEY = DOMAIN

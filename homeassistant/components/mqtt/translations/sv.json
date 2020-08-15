@@ -15,8 +15,7 @@
                     "port": "Port",
                     "username": "Anv\u00e4ndarnamn"
                 },
-                "description": "V\u00e4nligen ange anslutningsinformationen f\u00f6r din MQTT broker.",
-                "title": "MQTT"
+                "description": "V\u00e4nligen ange anslutningsinformationen f\u00f6r din MQTT broker."
             },
             "hassio_confirm": {
                 "data": {

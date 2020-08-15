@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_in_progress": "Tuya configuration is already in progress.",
             "auth_failed": "Invalid authentication",
             "conn_error": "Failed to connect",
             "single_instance_allowed": "Already configured. Only a single configuration possible."

@@ -1,7 +1,6 @@
 """Support for Axis switches."""
 
 from axis.event_stream import CLASS_OUTPUT
-from axis.port_cgi import ACTION_HIGH, ACTION_LOW
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
@@ -39,13 +38,13 @@ class AxisSwitch(AxisEventBase, SwitchEntity):
     async def async_turn_on(self, **kwargs):
         """Turn on switch."""
         await self.hass.async_add_executor_job(
-            self.device.api.vapix.ports[self.event.id].action, ACTION_HIGH
+            self.device.api.vapix.ports[self.event.id].close
         )
 
     async def async_turn_off(self, **kwargs):
         """Turn off switch."""
         await self.hass.async_add_executor_job(
-            self.device.api.vapix.ports[self.event.id].action, ACTION_LOW
+            self.device.api.vapix.ports[self.event.id].open
         )
 
     @property

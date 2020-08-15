@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Vil du konfigurere TP-Link-smartenheder?",
-                "title": "TP-Link Smart Home"
+                "description": "Vil du konfigurere TP-Link-smartenheder?"
             }
         }
     }

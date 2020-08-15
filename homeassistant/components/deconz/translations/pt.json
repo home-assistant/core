@@ -9,18 +9,9 @@
             "no_key": "N\u00e3o foi poss\u00edvel obter uma chave de API"
         },
         "step": {
-            "init": {
-                "title": "Defina o gateway deCONZ"
-            },
             "link": {
                 "description": "Desbloqueie o seu gateway deCONZ para se registar no Home Assistant. \n\n 1. V\u00e1 para as configura\u00e7\u00f5es do sistema deCONZ \n 2. Pressione o bot\u00e3o \"Desbloquear Gateway\"",
                 "title": "Liga\u00e7\u00e3o com deCONZ"
-            },
-            "manual_confirm": {
-                "data": {
-                    "host": "Servidor",
-                    "port": "Porta"
-                }
             },
             "manual_input": {
                 "data": {

@@ -28,8 +28,6 @@ from homeassistant.components.smartthings.const import (
     CONF_INSTALLED_APP_ID,
     CONF_INSTANCE_ID,
     CONF_LOCATION_ID,
-    CONF_OAUTH_CLIENT_ID,
-    CONF_OAUTH_CLIENT_SECRET,
     CONF_REFRESH_TOKEN,
     DATA_BROKERS,
     DOMAIN,
@@ -39,7 +37,12 @@ from homeassistant.components.smartthings.const import (
 )
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import CONN_CLASS_CLOUD_PUSH, SOURCE_USER, ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_WEBHOOK_ID
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_WEBHOOK_ID,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import Mock, patch
@@ -217,8 +220,8 @@ def config_entry_fixture(hass, installed_app, location):
         CONF_APP_ID: installed_app.app_id,
         CONF_LOCATION_ID: location.location_id,
         CONF_REFRESH_TOKEN: str(uuid4()),
-        CONF_OAUTH_CLIENT_ID: str(uuid4()),
-        CONF_OAUTH_CLIENT_SECRET: str(uuid4()),
+        CONF_CLIENT_ID: str(uuid4()),
+        CONF_CLIENT_SECRET: str(uuid4()),
     }
     return MockConfigEntry(
         domain=DOMAIN,

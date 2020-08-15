@@ -42,6 +42,7 @@ class TestFileSensor(unittest.TestCase):
         create_file(TEST_FILE)
         config = {"sensor": {"platform": "filesize", CONF_FILE_PATHS: [TEST_FILE]}}
         assert setup_component(self.hass, "sensor", config)
+        self.hass.block_till_done()
         assert len(self.hass.states.entity_ids()) == 1
         state = self.hass.states.get("sensor.mock_file_test_filesize_txt")
         assert state.state == "0.0"

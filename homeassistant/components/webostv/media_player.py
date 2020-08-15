@@ -24,6 +24,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.webostv.const import (
+    ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
     CONF_ON_ACTION,
     CONF_SOURCES,
@@ -450,6 +451,6 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         await self._client.button(button)
 
     @cmd
-    async def async_command(self, command):
+    async def async_command(self, command, **kwargs):
         """Send a command."""
-        await self._client.request(command)
+        await self._client.request(command, payload=kwargs.get(ATTR_PAYLOAD))

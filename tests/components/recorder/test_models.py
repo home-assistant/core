@@ -88,8 +88,9 @@ class TestRecorderRuns(unittest.TestCase):
         session.query(Events).delete()
         session.query(States).delete()
         session.query(RecorderRuns).delete()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Clean up."""
         self.session.rollback()
 

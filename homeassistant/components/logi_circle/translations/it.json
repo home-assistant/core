@@ -4,7 +4,7 @@
             "already_setup": "\u00c8 possibile configurare solo un singolo account Logi Circle.",
             "external_error": "Si \u00e8 verificata un'eccezione da un altro flusso.",
             "external_setup": "Logi Circle configurato con successo da un altro flusso.",
-            "no_flows": "Devi configurare Logi Circle prima di poter eseguire l'autenticazione. [Si prega di leggere le istruzioni] (https://www.home-assistant.io/components/logi_circle/)."
+            "no_flows": "Devi configurare Logi Circle prima di poter eseguire l'autenticazione. [Si prega di leggere le istruzioni](https://www.home-assistant.io/components/logi_circle/)."
         },
         "create_entry": {
             "default": "Autenticato con successo con Logi Circle."

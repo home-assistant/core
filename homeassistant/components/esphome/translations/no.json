@@ -15,8 +15,7 @@
                 "data": {
                     "password": "Passord"
                 },
-                "description": "Vennligst fyll inn passordet du har angitt i din konfigurasjon for {name}.",
-                "title": "Fyll inn passord"
+                "description": "Vennligst fyll inn passordet du har angitt i din konfigurasjon for {name}."
             },
             "discovery_confirm": {
                 "description": "\u00d8nsker du \u00e5 legge ESPHome noden `{name}` til Home Assistant?",
@@ -27,8 +26,7 @@
                     "host": "Vert",
                     "port": "Port"
                 },
-                "description": "Vennligst fyll inn tilkoblingsinnstillinger for din [ESPHome](https://esphomelib.com/) node.",
-                "title": ""
+                "description": "Vennligst fyll inn tilkoblingsinnstillinger for din [ESPHome](https://esphomelib.com/) node."
             }
         }
     }

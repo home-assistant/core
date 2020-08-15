@@ -14,8 +14,7 @@
                     "host": "Host",
                     "port": "Port"
                 },
-                "description": "Set up your Elgato Key Light to integrate with Home Assistant.",
-                "title": "Link your Elgato Key Light"
+                "description": "Set up your Elgato Key Light to integrate with Home Assistant."
             },
             "zeroconf_confirm": {
                 "description": "Do you want to add the Elgato Key Light with serial number `{serial_number}` to Home Assistant?",

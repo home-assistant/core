@@ -9,9 +9,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import callback
 
-from .const import CLIENT_ID, CLIENT_SECRET, DOMAIN
+from .const import DOMAIN
 
 AUTH_CALLBACK_PATH = "/api/minut"
 AUTH_CALLBACK_NAME = "api:minut"
@@ -34,8 +35,8 @@ def register_flow_implementation(hass, domain, client_id, client_secret):
         hass.data[DATA_FLOW_IMPL] = OrderedDict()
 
     hass.data[DATA_FLOW_IMPL][domain] = {
-        CLIENT_ID: client_id,
-        CLIENT_SECRET: client_secret,
+        CONF_CLIENT_ID: client_id,
+        CONF_CLIENT_SECRET: client_secret,
     }
 
 
@@ -112,8 +113,8 @@ class PointFlowHandler(config_entries.ConfigFlow):
         """Create Minut Point session and get authorization url."""
 
         flow = self.hass.data[DATA_FLOW_IMPL][self.flow_impl]
-        client_id = flow[CLIENT_ID]
-        client_secret = flow[CLIENT_SECRET]
+        client_id = flow[CONF_CLIENT_ID]
+        client_secret = flow[CONF_CLIENT_SECRET]
         point_session = PointSession(client_id, client_secret=client_secret)
 
         self.hass.http.register_view(MinutAuthCallbackView())
@@ -140,8 +141,8 @@ class PointFlowHandler(config_entries.ConfigFlow):
         """Create point session and entries."""
 
         flow = self.hass.data[DATA_FLOW_IMPL][DOMAIN]
-        client_id = flow[CLIENT_ID]
-        client_secret = flow[CLIENT_SECRET]
+        client_id = flow[CONF_CLIENT_ID]
+        client_secret = flow[CONF_CLIENT_SECRET]
         point_session = PointSession(client_id, client_secret=client_secret)
         token = await self.hass.async_add_executor_job(
             point_session.get_access_token, code
@@ -159,8 +160,8 @@ class PointFlowHandler(config_entries.ConfigFlow):
             data={
                 "token": token,
                 "refresh_args": {
-                    "client_id": client_id,
-                    "client_secret": client_secret,
+                    CONF_CLIENT_ID: client_id,
+                    CONF_CLIENT_SECRET: client_secret,
                 },
             },
         )

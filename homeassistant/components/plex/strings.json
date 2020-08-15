@@ -41,8 +41,6 @@
       "all_configured": "All linked servers already configured",
       "already_configured": "This Plex server is already configured",
       "already_in_progress": "Plex is being configured",
-      "invalid_import": "Imported configuration is invalid",
-      "non-interactive": "Non-interactive import",
       "token_request_timeout": "Timed out obtaining token",
       "unknown": "Failed for unknown reason"
     }

@@ -25,9 +25,7 @@
             },
             "user": {
                 "data": {
-                    "path": "Stien til seriel enhed",
-                    "radio_type": "Radio-type",
-                    "usb_path": "USB-enheds sti"
+                    "path": "Stien til seriel enhed"
                 },
                 "description": "V\u00e6lg seriel port til Zigbee-radio",
                 "title": "ZHA"

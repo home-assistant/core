@@ -4,6 +4,7 @@ import asyncio
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.almond import config_flow
 from homeassistant.components.almond.const import DOMAIN
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.async_mock import patch
@@ -17,9 +18,7 @@ async def test_import(hass):
     """Test that we can import a config entry."""
     with patch("pyalmond.WebAlmondAPI.async_list_apps"):
         assert await setup.async_setup_component(
-            hass,
-            "almond",
-            {"almond": {"type": "local", "host": "http://localhost:3000"}},
+            hass, DOMAIN, {DOMAIN: {"type": "local", "host": "http://localhost:3000"}},
         )
         await hass.async_block_till_done()
 
@@ -35,9 +34,7 @@ async def test_import_cannot_connect(hass):
         "pyalmond.WebAlmondAPI.async_list_apps", side_effect=asyncio.TimeoutError
     ):
         assert await setup.async_setup_component(
-            hass,
-            "almond",
-            {"almond": {"type": "local", "host": "http://localhost:3000"}},
+            hass, DOMAIN, {DOMAIN: {"type": "local", "host": "http://localhost:3000"}},
         )
         await hass.async_block_till_done()
 
@@ -94,19 +91,19 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,
-        "almond",
+        DOMAIN,
         {
-            "almond": {
+            DOMAIN: {
                 "type": "oauth2",
-                "client_id": CLIENT_ID_VALUE,
-                "client_secret": CLIENT_SECRET_VALUE,
+                CONF_CLIENT_ID: CLIENT_ID_VALUE,
+                CONF_CLIENT_SECRET: CLIENT_SECRET_VALUE,
             },
             "http": {"base_url": "https://example.com"},
         },
     )
 
     result = await hass.config_entries.flow.async_init(
-        "almond", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
 

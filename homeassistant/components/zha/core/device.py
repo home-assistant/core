@@ -263,8 +263,13 @@ class ZHADevice(LogMixin):
 
     @property
     def available(self):
-        """Return True if sensor is available."""
+        """Return True if device is available."""
         return self._available
+
+    @available.setter
+    def available(self, new_availability: bool) -> None:
+        """Set device availability."""
+        self._available = new_availability
 
     @property
     def zigbee_signature(self) -> Dict[str, Any]:
@@ -273,10 +278,6 @@ class ZHADevice(LogMixin):
             ATTR_NODE_DESCRIPTOR: str(self._zigpy_device.node_desc),
             ATTR_ENDPOINTS: self._channels.zigbee_signature,
         }
-
-    def set_available(self, available):
-        """Set availability from restore and prevent signals."""
-        self._available = available
 
     @classmethod
     def new(

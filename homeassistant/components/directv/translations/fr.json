@@ -14,14 +14,12 @@
                     "one": "Vide",
                     "other": "Vide"
                 },
-                "description": "Voulez-vous configurer {name} ?",
-                "title": "Connectez-vous au r\u00e9cepteur DirecTV"
+                "description": "Voulez-vous configurer {name} ?"
             },
             "user": {
                 "data": {
                     "host": "H\u00f4te ou adresse IP"
-                },
-                "title": "Connectez-vous au r\u00e9cepteur DirecTV"
+                }
             }
         }
     }

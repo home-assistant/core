@@ -101,6 +101,11 @@ class NX584ZoneSensor(BinarySensorEntity):
         # True means "faulted" or "open" or "abnormal state"
         return self._zone["state"]
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {"zone_number": self._zone["number"]}
+
 
 class NX584Watcher(threading.Thread):
     """Event listener thread to process NX584 events."""

@@ -4,8 +4,6 @@ import os
 import shutil
 from urllib.parse import urlencode
 
-from mock import Mock, patch
-
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
@@ -16,6 +14,7 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.setup import setup_component
 
+from tests.async_mock import Mock, patch
 from tests.common import assert_setup_component, get_test_home_assistant, mock_service
 
 

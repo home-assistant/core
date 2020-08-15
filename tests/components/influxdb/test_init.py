@@ -29,8 +29,9 @@ class TestInfluxDB(unittest.TestCase):
         self.hass = get_test_home_assistant()
         self.handler_method = None
         self.hass.bus.listen = mock.Mock()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Clear data."""
         self.hass.stop()
 

@@ -163,7 +163,7 @@ class PS4Device(MediaPlayerEntity):
         status = self._ps4.status
 
         if status is not None:
-            self._games = load_games(self.hass)
+            self._games = load_games(self.hass, self._unique_id)
             if self._games:
                 self.get_source_list()
 
@@ -300,7 +300,7 @@ class PS4Device(MediaPlayerEntity):
                 self._media_image,
                 self._media_type,
             )
-            self._games = load_games(self.hass)
+            self._games = load_games(self.hass, self._unique_id)
 
         self.get_source_list()
 
@@ -324,7 +324,7 @@ class PS4Device(MediaPlayerEntity):
                 }
             }
             games.update(game)
-            save_games(self.hass, games)
+            save_games(self.hass, games, self._unique_id)
 
     async def async_get_device_info(self, status):
         """Set device info for registry."""

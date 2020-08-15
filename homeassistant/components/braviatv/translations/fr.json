@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ce t\u00e9l\u00e9viseur est d\u00e9j\u00e0 configur\u00e9."
+            "already_configured": "Ce t\u00e9l\u00e9viseur est d\u00e9j\u00e0 configur\u00e9.",
+            "no_ip_control": "Le contr\u00f4le IP est d\u00e9sactiv\u00e9 sur votre t\u00e9l\u00e9viseur ou le t\u00e9l\u00e9viseur n'est pas pris en charge."
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion, h\u00f4te ou code PIN non valide.",

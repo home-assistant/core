@@ -4,7 +4,7 @@ import voluptuous as vol
 import voluptuous_serialize
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES
+from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import HTTP_NOT_FOUND
@@ -180,7 +180,7 @@ class OptionManagerFlowIndexView(FlowManagerIndexView):
         handler in request is entry_id.
         """
         if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="edit")
+            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
 
         # pylint: disable=no-value-for-parameter
         return await super().post(request)
@@ -195,7 +195,7 @@ class OptionManagerFlowResourceView(FlowManagerResourceView):
     async def get(self, request, flow_id):
         """Get the current state of a data_entry_flow."""
         if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="edit")
+            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
 
         return await super().get(request, flow_id)
 
@@ -203,7 +203,7 @@ class OptionManagerFlowResourceView(FlowManagerResourceView):
     async def post(self, request, flow_id):
         """Handle a POST request."""
         if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="edit")
+            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
 
         # pylint: disable=no-value-for-parameter
         return await super().post(request, flow_id)

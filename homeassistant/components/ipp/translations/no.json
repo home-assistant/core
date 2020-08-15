@@ -27,7 +27,7 @@
                 "title": "Koble til skriveren din"
             },
             "zeroconf_confirm": {
-                "description": "\u00d8nsker du \u00e5 legge skriveren med navnet {name} til Home Assistant?",
+                "description": "Vil du konfigurere {name}?",
                 "title": "Oppdaget skriver"
             }
         }
