@@ -902,7 +902,7 @@ messagebird==1.2.0
 meteoalertapi==0.1.6
 
 # homeassistant.components.meteo_france
-meteofrance-api==0.1.0
+meteofrance-api==0.1.1
 
 # homeassistant.components.mfi
 mficlient==0.3.0
