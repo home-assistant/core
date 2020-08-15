@@ -24,8 +24,8 @@ def generate_h264_video(container_format="mp4", audio_codec=None):
     def generate_audio_frame(pcm_mulaw=False):
         """Generate a blank audio frame."""
         if pcm_mulaw:
-            audio_frame = av.AudioFrame(format="u8", layout="mono", samples=1)
-            audio_bytes = b"\x00"
+            audio_frame = av.AudioFrame(format="s16", layout="mono", samples=1)
+            audio_bytes = b"\x00\x00"
         else:
             audio_frame = av.AudioFrame(format="dbl", layout="mono", samples=1024)
             audio_bytes = b"\x00\x00\x00\x00\x00\x00\x00\x00" * 1024
