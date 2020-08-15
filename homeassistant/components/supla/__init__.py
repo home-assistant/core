@@ -54,7 +54,12 @@ async def async_setup(hass, base_config):
 
     server_confs = base_config[DOMAIN][CONF_SERVERS]
 
+<<<<<<< HEAD
     hass.data[DOMAIN] = {SUPLA_SERVERS: {}, SUPLA_COORDINATORS: {}}
+=======
+    hass.data[SUPLA_SERVERS] = {}
+    hass.data[SUPLA_COORDINATORS] = {}
+>>>>>>> 1851273651... Store coordinator in hass.data[supla_coordinators]
 
     for server_conf in server_confs:
 
@@ -125,7 +130,11 @@ async def discover_devices(hass, hass_config):
 
         await coordinator.async_refresh()
 
+<<<<<<< HEAD
         hass.data[DOMAIN][SUPLA_COORDINATORS][server_name] = coordinator
+=======
+        hass.data[SUPLA_COORDINATORS][server_name] = coordinator
+>>>>>>> 1851273651... Store coordinator in hass.data[supla_coordinators]
 
         for channel_id, channel in coordinator.data.items():
             channel_function = channel["function"]["name"]
@@ -176,6 +185,11 @@ class SuplaChannel(Entity):
     def channel_data(self):
         """Return channel data taken from coordinator."""
         return self.coordinator.data.get(self.channel_id)
+
+    @property
+    def coordinator(self):
+        """Return shared coordinator."""
+        return self.hass.data[SUPLA_COORDINATORS][self.server_name]
 
     @property
     def channel_data(self):
