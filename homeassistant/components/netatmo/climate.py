@@ -263,6 +263,9 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 if self._id == room["id"]:
                     if room["therm_setpoint_mode"] == "off":
                         self._hvac_mode = HVAC_MODE_OFF
+                    elif room["therm_setpoint_mode"] == "max":
+                        self._hvac_mode = HVAC_MODE_HEAT
+                        self._target_temperature = DEFAULT_MAX_TEMP
                     else:
                         self._target_temperature = room["therm_setpoint_temperature"]
                     self.async_write_ha_state()
