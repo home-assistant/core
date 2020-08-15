@@ -29,6 +29,7 @@ CONF_PLANT_ID = "plant_id"
 DEFAULT_PLANT_ID = "0"
 DEFAULT_NAME = "Growatt"
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
+MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=295)
 
 # Sensor type order is: Sensor name, Unit of measurement, api data name, additional options
 
@@ -293,7 +294,117 @@ STORAGE_SENSOR_TYPES = {
     ),
 }
 
-SENSOR_TYPES = {**TOTAL_SENSOR_TYPES, **INVERTER_SENSOR_TYPES, **STORAGE_SENSOR_TYPES}
+TLX_SENSOR_TYPES = {
+    "inverter_energy_today": (
+        "Energy today",
+        ENERGY_KILO_WATT_HOUR,
+        "eacToday",
+        {"round": 1},
+    ),
+    "inverter_energy_total": (
+        "Lifetime energy output",
+        ENERGY_KILO_WATT_HOUR,
+        "eacTotal",
+        {"round": 1},
+    ),
+    "inverter_voltage_input_1": ("Input 1 voltage", VOLT, "vpv1", {"round": 2}),
+    "inverter_amperage_input_1": (
+        "Input 1 Amperage",
+        ELECTRICAL_CURRENT_AMPERE,
+        "ipv1",
+        {"round": 1},
+    ),
+    "inverter_wattage_input_1": (
+        "Input 1 Wattage",
+        POWER_WATT,
+        "ppv1",
+        {"device_class": "power", "round": 1},
+    ),
+    "inverter_voltage_input_2": ("Input 2 voltage", VOLT, "vpv2", {"round": 1}),
+    "inverter_amperage_input_2": (
+        "Input 2 Amperage",
+        ELECTRICAL_CURRENT_AMPERE,
+        "ipv2",
+        {"round": 1},
+    ),
+    "inverter_wattage_input_2": (
+        "Input 2 Wattage",
+        POWER_WATT,
+        "ppv2",
+        {"device_class": "power", "round": 1},
+    ),
+    "inverter_voltage_input_3": ("Input 3 voltage", VOLT, "vpv3", {"round": 1}),
+    "inverter_amperage_input_3": (
+        "Input 3 Amperage",
+        ELECTRICAL_CURRENT_AMPERE,
+        "ipv3",
+        {"round": 1},
+    ),
+    "inverter_wattage_input_3": (
+        "Input 3 Wattage",
+        POWER_WATT,
+        "ppv3",
+        {"device_class": "power", "round": 1},
+    ),
+    "inverter_internal_wattage": (
+        "Internal wattage",
+        POWER_WATT,
+        "ppv",
+        {"device_class": "power", "round": 1},
+    ),
+    "inverter_reactive_voltage": ("Reactive voltage", VOLT, "vacr", {"round": 1}),
+    "inverter_inverter_reactive_amperage": (
+        "Reactive amperage",
+        ELECTRICAL_CURRENT_AMPERE,
+        "iacr",
+        {"round": 1},
+    ),
+    "inverter_frequency": ("AC frequency", FREQUENCY_HERTZ, "fac", {"round": 1}),
+    "inverter_current_wattage": (
+        "Output power",
+        POWER_WATT,
+        "pac",
+        {"device_class": "power", "round": 1},
+    ),
+    "inverter_current_reactive_wattage": (
+        "Reactive wattage",
+        POWER_WATT,
+        "pacr",
+        {"device_class": "power", "round": 1},
+    ),
+    "temperature_1": (
+        "Temperature 1",
+        TEMP_CELSIUS,
+        "temp1",
+        {"device_class": "temperature", "round": 1},
+    ),
+    "temperature_2": (
+        "Temperature 2",
+       TEMP_CELSIUS,
+        "temp2",
+        {"device_class": "temperature", "round": 1},
+    ),
+    "temperature_3": (
+        "Temperature 3",
+        TEMP_CELSIUS,
+        "temp3",
+        {"device_class": "temperature", "round": 1},
+    ),
+    "temperature_4": (
+        "Temperature 4",
+        TEMP_CELSIUS,
+        "temp4",
+        {"device_class": "temperature", "round": 1},
+    ),
+    "temperature_5": (
+        "Temperature 5",
+        TEMP_CELSIUS,
+        "temp5",
+        {"device_class": "temperature", "round": 1},
+    ),
+}
+
+SENSOR_TYPES = {**TOTAL_SENSOR_TYPES, **INVERTER_SENSOR_TYPES, **STORAGE_SENSOR_TYPES, **TLX_SENSOR_TYPES}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -341,6 +452,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         sensors = []
         if device["deviceType"] == "inverter":
             sensors = INVERTER_SENSOR_TYPES
+        elif device["deviceType"] == "tlx":
+            sensors = TLX_SENSOR_TYPES
         elif device["deviceType"] == "storage":
             probe.plant_id = plant_id
             sensors = STORAGE_SENSOR_TYPES
@@ -408,6 +521,7 @@ class GrowattInverter(Entity):
         """Return the unit of measurement of this entity, if any."""
         return SENSOR_TYPES[self.sensor][1]
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from the Growat API and updates the state."""
         self.probe.update()
@@ -426,8 +540,8 @@ class GrowattData:
         self.data = {}
         self.username = username
         self.password = password
-
-    @Throttle(SCAN_INTERVAL)
+                
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update probe data."""
         self.api.login(self.username, self.password)
@@ -435,16 +549,26 @@ class GrowattData:
         try:
             if self.growatt_type == "total":
                 total_info = self.api.plant_info(self.device_id)
+                _LOGGER.debug("Updating Total data for %s", self.device_id)
                 del total_info["deviceList"]
                 # PlantMoneyText comes in as "3.1/€" remove anything that isn't part of the number
                 total_info["plantMoneyText"] = re.sub(
                     r"[^\d.,]", "", total_info["plantMoneyText"]
                 )
                 self.data = total_info
+                _LOGGER.debug(total_info)
             elif self.growatt_type == "inverter":
+                _LOGGER.debug("Updating Inverter data for %s", self.device_id)
                 inverter_info = self.api.inverter_detail(self.device_id)
                 self.data = inverter_info
+                _LOGGER.debug(inverter_info)
+            elif self.growatt_type == "tlx":
+                _LOGGER.debug("Updating TLX data for %s", self.device_id)
+                tlx_info = self.api.tlx_detail(self.device_id)
+                self.data = tlx_info['data']
+                _LOGGER.debug(tlx_info['data'])
             elif self.growatt_type == "storage":
+                _LOGGER.debug("Updating Storage data for %s", self.device_id)
                 storage_info_detail = self.api.storage_params(self.device_id)[
                     "storageDetailBean"
                 ]
@@ -452,9 +576,12 @@ class GrowattData:
                     self.plant_id, self.device_id
                 )
                 self.data = {**storage_info_detail, **storage_energy_overview}
+                _LOGGER.debug(storage_info_detail)
+                _LOGGER.debug(storage_energy_overview)
         except json.decoder.JSONDecodeError:
             _LOGGER.error("Unable to fetch data from Growatt server")
 
     def get_data(self, variable):
         """Get the data."""
+        _LOGGER.debug(f"The value for {variable} is: {self.data.get(variable)}")
         return self.data.get(variable)
