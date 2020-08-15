@@ -172,7 +172,7 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
 
         else:
             # transition specified by user
-            new_value = max(0, min(7620, kwargs[ATTR_TRANSITION]))
+            new_value = int(max(0, min(7620, kwargs[ATTR_TRANSITION])))
             if ozw_version < (1, 6, 1205):
                 transition = kwargs[ATTR_TRANSITION]
                 if transition <= 127:
