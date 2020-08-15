@@ -11,7 +11,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .const import DEFAULT_MODEL, DEFAULT_NAME_TEMPLATE, DOMAIN
+from .const import DOMAIN
 from .exceptions import SyncThruNotSupported
 
 
@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         connections=device_connections(printer),
         identifiers={(DOMAIN, printer.serial_number())},
         model=printer.model(),
-        name=DEFAULT_NAME_TEMPLATE.format(printer.model() or DEFAULT_MODEL),
+        name=printer.hostname(),
     )
 
     hass.async_create_task(
