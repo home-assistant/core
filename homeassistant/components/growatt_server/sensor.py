@@ -29,7 +29,6 @@ CONF_PLANT_ID = "plant_id"
 DEFAULT_PLANT_ID = "0"
 DEFAULT_NAME = "Growatt"
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
-MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=295)
 
 # Sensor type order is: Sensor name, Unit of measurement, api data name, additional options
 
@@ -521,7 +520,6 @@ class GrowattInverter(Entity):
         """Return the unit of measurement of this entity, if any."""
         return SENSOR_TYPES[self.sensor][1]
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from the Growat API and updates the state."""
         self.probe.update()
@@ -541,7 +539,7 @@ class GrowattData:
         self.username = username
         self.password = password
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    @Throttle(SCAN_INTERVAL)
     def update(self):
         """Update probe data."""
         self.api.login(self.username, self.password)
