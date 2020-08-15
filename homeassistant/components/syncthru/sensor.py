@@ -59,7 +59,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up from config entry."""
 
-    printer = hass.data[DOMAIN][config_entry.data[CONF_URL]]
+    printer = hass.data[DOMAIN][config_entry.entry_id]
 
     supp_toner = printer.toner_status(filter_supported=True)
     supp_drum = printer.drum_status(filter_supported=True)

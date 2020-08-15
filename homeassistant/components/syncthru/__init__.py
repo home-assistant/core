@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     """Set up config entry."""
 
     session = aiohttp_client.async_get_clientsession(hass)
-    printer = hass.data[DOMAIN][entry.data[CONF_URL]] = SyncThru(
+    printer = hass.data[DOMAIN][entry.entry_id] = SyncThru(
         entry.data[CONF_URL], session
     )
 
@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Unload the config entry."""
     await hass.config_entries.async_forward_entry_unload(entry, SENSOR_DOMAIN)
-    hass.data[DOMAIN].pop(entry.data[CONF_URL], None)
+    hass.data[DOMAIN].pop(entry.entry_id, None)
     return True
 
 
