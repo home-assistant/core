@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections=device_connections(printer),
-        identifiers={(DOMAIN, printer.serial_number())},
+        identifiers=device_identifiers(printer),
         model=printer.model(),
         name=printer.hostname(),
     )
@@ -63,6 +63,11 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     await hass.config_entries.async_forward_entry_unload(entry, SENSOR_DOMAIN)
     hass.data[DOMAIN].pop(entry.entry_id, None)
     return True
+
+
+def device_identifiers(printer: SyncThru) -> Set[Tuple[str, str]]:
+    """Get device identifiers for device registry."""
+    return {(DOMAIN, printer.serial_number())}
 
 
 def device_connections(printer: SyncThru) -> Set[Tuple[str, str]]:

@@ -11,7 +11,7 @@ from homeassistant.const import CONF_NAME, CONF_RESOURCE, CONF_URL, UNIT_PERCENT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-from . import device_connections
+from . import device_identifiers
 from .const import DEFAULT_MODEL, DEFAULT_NAME_TEMPLATE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -128,7 +128,7 @@ class SyncThruSensor(Entity):
     @property
     def device_info(self):
         """Return device information."""
-        return {"connections": device_connections(self.syncthru)}
+        return {"identifiers": device_identifiers(self.syncthru)}
 
 
 class SyncThruMainSensor(SyncThruSensor):
