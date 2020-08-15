@@ -74,38 +74,45 @@ async def async_setup_entry(
 
     items_of_category = await get_items_of_category(hass, entry, CONTROL4_CATEGORY)
     for item in items_of_category:
-        if item["type"] == CONTROL4_ENTITY_TYPE:
-            item_name = item["name"]
-            item_id = item["id"]
-            item_parent_id = item["parentId"]
-            item_is_dimmer = item["capabilities"]["dimmer"]
+        try:
+            if item["type"] == CONTROL4_ENTITY_TYPE:
+                item_name = item["name"]
+                item_id = item["id"]
+                item_parent_id = item["parentId"]
+                item_is_dimmer = item["capabilities"]["dimmer"]
 
-            if item_is_dimmer:
-                item_coordinator = dimmer_coordinator
-            else:
-                item_coordinator = non_dimmer_coordinator
+                if item_is_dimmer:
+                    item_coordinator = dimmer_coordinator
+                else:
+                    item_coordinator = non_dimmer_coordinator
 
-            for parent_item in items_of_category:
-                if parent_item["id"] == item_parent_id:
-                    item_manufacturer = parent_item["manufacturer"]
-                    item_device_name = parent_item["name"]
-                    item_model = parent_item["model"]
-            async_add_entities(
-                [
-                    Control4Light(
-                        entry_data,
-                        entry,
-                        item_coordinator,
-                        item_name,
-                        item_id,
-                        item_device_name,
-                        item_manufacturer,
-                        item_model,
-                        item_parent_id,
-                        item_is_dimmer,
-                    )
-                ],
-                True,
+                for parent_item in items_of_category:
+                    if parent_item["id"] == item_parent_id:
+                        item_manufacturer = parent_item["manufacturer"]
+                        item_device_name = parent_item["name"]
+                        item_model = parent_item["model"]
+                async_add_entities(
+                    [
+                        Control4Light(
+                            entry_data,
+                            entry,
+                            item_coordinator,
+                            item_name,
+                            item_id,
+                            item_device_name,
+                            item_manufacturer,
+                            item_model,
+                            item_parent_id,
+                            item_is_dimmer,
+                        )
+                    ],
+                    True,
+                )
+        except (KeyError, UnboundLocalError) as exception:
+            _LOGGER.error(
+                "Unknown device properties recieved from Control4: %s %s",
+                item,
+                exception,
             )
 
 
