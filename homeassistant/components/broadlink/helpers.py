@@ -18,13 +18,14 @@ def data_packet(value):
 
 
 def mac_address(mac):
-    """Encode a MAC address."""
+    """Validate and convert a MAC address to bytes."""
+    mac = cv.string(mac)
     if len(mac) == 17:
         mac = "".join(mac[i : i + 2] for i in range(0, 17, 3))
     elif len(mac) == 14:
         mac = "".join(mac[i : i + 4] for i in range(0, 14, 5))
     elif len(mac) != 12:
-        raise ValueError
+        raise ValueError("Invalid MAC address")
     return bytes.fromhex(mac)
 
 
