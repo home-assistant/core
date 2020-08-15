@@ -110,8 +110,8 @@ class Gateway:
                     _LOGGER.debug("Deleting message")
                     try:
                         state_machine.DeleteSMS(Folder=0, Location=entry[0]["Location"])
-                    except Exception as ex:  # pylint: disable=broad-except
-                        _LOGGER.error("Error deleting SMS:%s", ex)
+                    except gammu.ERR_MEMORY_NOT_AVAILABLE:
+                        _LOGGER.error("Error deleting SMS, memory not available")
                 else:
                     _LOGGER.debug("Not all parts have arrived")
                     break
