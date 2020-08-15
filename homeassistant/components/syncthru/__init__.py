@@ -1,5 +1,6 @@
 """The syncthru component."""
 
+import logging
 from typing import Set, Tuple
 
 from pysyncthru import SyncThru
@@ -12,7 +13,8 @@ from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import DOMAIN
-from .exceptions import SyncThruNotSupported
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
@@ -31,8 +33,12 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     try:
         await printer.update()
-    except ValueError as ex:
-        raise SyncThruNotSupported from ex
+    except ValueError:
+        _LOGGER.error(
+            "Device at %s not appear to be a SyncThru printer, aborting setup",
+            printer.url,
+        )
+        return False
     else:
         if printer.is_unknown_state():
             raise ConfigEntryNotReady
