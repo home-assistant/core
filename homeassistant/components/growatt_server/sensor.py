@@ -16,6 +16,7 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     POWER_WATT,
+    TEMP_CELSIUS,
     VOLT,
 )
 import homeassistant.helpers.config_validation as cv
@@ -56,77 +57,94 @@ TOTAL_SENSOR_TYPES = {
 }
 
 INVERTER_SENSOR_TYPES = {
-    "inverter_energy_today": ("Energy today", ENERGY_KILO_WATT_HOUR, "e_today", {},),
+    "inverter_energy_today": (
+        "Energy today",
+        ENERGY_KILO_WATT_HOUR,
+        "powerToday",
+        {"round": 1},
+    ),
     "inverter_energy_total": (
         "Lifetime energy output",
         ENERGY_KILO_WATT_HOUR,
-        "e_total",
-        {},
+        "powerTotal",
+        {"round": 1},
     ),
-    "inverter_voltage_input_1": ("Input 1 voltage", VOLT, "vpv1", {}),
+    "inverter_voltage_input_1": ("Input 1 voltage", VOLT, "vpv1", {"round": 2}),
     "inverter_amperage_input_1": (
         "Input 1 Amperage",
         ELECTRICAL_CURRENT_AMPERE,
         "ipv1",
-        {},
+        {"round": 1},
     ),
     "inverter_wattage_input_1": (
         "Input 1 Wattage",
         POWER_WATT,
         "ppv1",
-        {"device_class": "power"},
+        {"device_class": "power", "round": 1},
     ),
-    "inverter_voltage_input_2": ("Input 2 voltage", VOLT, "vpv2", {}),
+    "inverter_voltage_input_2": ("Input 2 voltage", VOLT, "vpv2", {"round": 1}),
     "inverter_amperage_input_2": (
         "Input 2 Amperage",
         ELECTRICAL_CURRENT_AMPERE,
         "ipv2",
-        {},
+        {"round": 1},
     ),
     "inverter_wattage_input_2": (
         "Input 2 Wattage",
         POWER_WATT,
         "ppv2",
-        {"device_class": "power"},
+        {"device_class": "power", "round": 1},
     ),
-    "inverter_voltage_input_3": ("Input 3 voltage", VOLT, "vpv3", {}),
+    "inverter_voltage_input_3": ("Input 3 voltage", VOLT, "vpv3", {"round": 1}),
     "inverter_amperage_input_3": (
         "Input 3 Amperage",
         ELECTRICAL_CURRENT_AMPERE,
         "ipv3",
-        {},
+        {"round": 1},
     ),
     "inverter_wattage_input_3": (
         "Input 3 Wattage",
         POWER_WATT,
         "ppv3",
-        {"device_class": "power"},
+        {"device_class": "power", "round": 1},
     ),
     "inverter_internal_wattage": (
         "Internal wattage",
         POWER_WATT,
         "ppv",
-        {"device_class": "power"},
+        {"device_class": "power", "round": 1},
     ),
-    "inverter_reactive_voltage": ("Reactive voltage", VOLT, "vacr", {}),
+    "inverter_reactive_voltage": ("Reactive voltage", VOLT, "vacr", {"round": 1}),
     "inverter_inverter_reactive_amperage": (
         "Reactive amperage",
         ELECTRICAL_CURRENT_AMPERE,
         "iacr",
-        {},
+        {"round": 1},
     ),
-    "inverter_frequency": ("AC frequency", FREQUENCY_HERTZ, "fac", {}),
+    "inverter_frequency": ("AC frequency", FREQUENCY_HERTZ, "fac", {"round": 1}),
     "inverter_current_wattage": (
         "Output power",
         POWER_WATT,
         "pac",
-        {"device_class": "power"},
+        {"device_class": "power", "round": 1},
     ),
     "inverter_current_reactive_wattage": (
         "Reactive wattage",
         POWER_WATT,
         "pacr",
-        {"device_class": "power"},
+        {"device_class": "power", "round": 1},
+    ),
+    "inverter_ipm_temperature": (
+        "Intelligent Power Management temperature",
+        TEMP_CELSIUS,
+        "ipmTemperature",
+        {"device_class": "temperature", "round": 1},
+    ),
+    "inverter_temperature": (
+        "Temperature",
+        TEMP_CELSIUS,
+        "temperature",
+        {"device_class": "temperature", "round": 1},
     ),
 }
 
@@ -326,6 +344,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         elif device["deviceType"] == "storage":
             probe.plant_id = plant_id
             sensors = STORAGE_SENSOR_TYPES
+        else:
+            _LOGGER.debug(
+                "Device type %s was found but is not supported right now.",
+                device["deviceType"],
+            )
 
         for sensor in sensors:
             entities.append(
@@ -420,7 +443,7 @@ class GrowattData:
                 self.data = total_info
             elif self.growatt_type == "inverter":
                 inverter_info = self.api.inverter_detail(self.device_id)
-                self.data = inverter_info["data"]
+                self.data = inverter_info
             elif self.growatt_type == "storage":
                 storage_info_detail = self.api.storage_params(self.device_id)[
                     "storageDetailBean"
