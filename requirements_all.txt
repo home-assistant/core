@@ -697,7 +697,7 @@ greenwavereality==0.5.1
 griddypower==0.1.0
 
 # homeassistant.components.growatt_server
-growattServer==0.0.4
+growattServer==0.1.1
 
 # homeassistant.components.gstreamer
 gstreamer-player==1.1.2
