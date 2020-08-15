@@ -100,7 +100,7 @@ async def discover_devices(hass, hass_config):
     """
     Run periodically to discover new devices.
 
-    Currently it"s only run at startup.
+    Currently it is only run at startup.
     """
     component_configs = {}
 
