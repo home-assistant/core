@@ -156,7 +156,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
             )
     else:
         _LOGGER.warning(
-            "Weather alert not available: The city %s is not in France Métropole or Andorre.",
+            "Weather alert not available: The city %s is not in metropolitan France or Andorre.",
             entry.title,
         )
 
