@@ -90,7 +90,7 @@ class ECCamera(Camera):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update radar image."""
-        if CONF_LOOP:
+        if config.get(CONF_LOOP):
             self.image = self.radar_object.get_loop()
         else:
             self.image = self.radar_object.get_latest_frame()
