@@ -80,24 +80,24 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
         if self.values.dimming_duration is not None:
             self._supported_features |= SUPPORT_TRANSITION
 
-        if self.values.color is None or self.values.color_channels is None:
-            return
+        if self.values.color is not None:
+            self._supported_features |= SUPPORT_COLOR
 
-        self._supported_features |= SUPPORT_COLOR
+        if self.values.color_channels is not None:
+            # Support Color Temp if both white channels
+            if (self.values.color_channels.value & COLOR_CHANNEL_WARM_WHITE) and (
+                self.values.color_channels.value & COLOR_CHANNEL_COLD_WHITE
+            ):
+                self._supported_features |= SUPPORT_COLOR_TEMP
 
-        # Support Color Temp if both white channels
-        if (self.values.color_channels.value & COLOR_CHANNEL_WARM_WHITE) and (
-            self.values.color_channels.value & COLOR_CHANNEL_COLD_WHITE
-        ):
-            self._supported_features |= SUPPORT_COLOR_TEMP
+            # Support White value if only a single white channel
+            if ((self.values.color_channels.value & COLOR_CHANNEL_WARM_WHITE) != 0) ^ (
+                (self.values.color_channels.value & COLOR_CHANNEL_COLD_WHITE) != 0
+            ):
+                self._supported_features |= SUPPORT_WHITE_VALUE
 
-        # Support White value if only a single white channel
-        if ((self.values.color_channels.value & COLOR_CHANNEL_WARM_WHITE) != 0) ^ (
-            (self.values.color_channels.value & COLOR_CHANNEL_COLD_WHITE) != 0
-        ):
-            self._supported_features |= SUPPORT_WHITE_VALUE
-
-        self._calculate_rgb_values()
+        if self.values.color is not None:
+            self._calculate_color_values()
 
     @property
     def brightness(self):
@@ -248,16 +248,20 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
 
         self.values.primary.send_value(0)
 
-    def _calculate_rgb_values(self):
-        # Color Channels
-        self._color_channels = self.values.color_channels.data[ATTR_VALUE]
-
+    def _calculate_color_values(self):
+        """Parse color rgb and color temperature data."""
         # Color Data String
         data = self.values.color.data[ATTR_VALUE]
 
         # RGB is always present in the OpenZWave color data string.
         rgb = [int(data[1:3], 16), int(data[3:5], 16), int(data[5:7], 16)]
         self._hs = color_util.color_RGB_to_hs(*rgb)
+
+        if self.values.color_channels is None:
+            return
+
+        # Color Channels
+        self._color_channels = self.values.color_channels.data[ATTR_VALUE]
 
         # Parse remaining color channels. OpenZWave appends white channels
         # that are present.
