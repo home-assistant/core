@@ -6,9 +6,7 @@ import sentry_sdk
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
-import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import __version__ as current_version
 from homeassistant.core import HomeAssistant
@@ -17,14 +15,7 @@ from homeassistant.loader import async_get_custom_components
 
 from .const import CONF_DSN, CONF_ENVIRONMENT, DOMAIN, ENTITY_COMPONENTS
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {vol.Required(CONF_DSN): cv.string, CONF_ENVIRONMENT: cv.string}
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.117")
 
 
 LOGGER_INFO_REGEX = re.compile(r"^(\w+)\.?(\w+)?\.?(\w+)?\.?(\w+)?(?:\..*)?$")
@@ -32,22 +23,11 @@ LOGGER_INFO_REGEX = re.compile(r"^(\w+)\.?(\w+)?\.?(\w+)?\.?(\w+)?(?:\..*)?$")
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Sentry component."""
-    conf = config.get(DOMAIN)
-    if conf is not None:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-            )
-        )
-
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Sentry from a config entry."""
-    conf = entry.data
-
-    hass.data[DOMAIN] = conf
 
     # https://docs.sentry.io/platforms/python/logging/
     sentry_logging = LoggingIntegration(
@@ -62,8 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     custom_components = await async_get_custom_components(hass)
 
     sentry_sdk.init(
-        dsn=conf.get(CONF_DSN),
-        environment=conf.get(CONF_ENVIRONMENT),
+        dsn=entry.data.get(CONF_DSN),
+        environment=entry.data.get(CONF_ENVIRONMENT),
         integrations=[sentry_logging, AioHttpIntegration(), SqlalchemyIntegration()],
         release=current_version,
         before_send=lambda event, hint: process_before_send(
