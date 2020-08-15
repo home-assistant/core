@@ -3,8 +3,10 @@ import asyncio
 import datetime
 import functools
 import logging
+import ssl
 import threading
 
+from aiohttp.test_utils import make_mocked_request
 import pytest
 import requests_mock as _requests_mock
 
@@ -24,7 +26,7 @@ from homeassistant.helpers import event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
 
-from tests.async_mock import MagicMock, patch
+from tests.async_mock import MagicMock, Mock, patch
 from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 
 pytest.register_assert_rewrite("tests.common")
@@ -261,6 +263,20 @@ def hass_client(hass, aiohttp_client, hass_access_token):
         )
 
     return auth_client
+
+
+@pytest.fixture
+def current_request(hass):
+    """Mock current request."""
+    with patch("homeassistant.helpers.network.current_request") as mock_request_context:
+        mocked_request = make_mocked_request(
+            "GET",
+            "/some/request",
+            headers={"Host": "example.com"},
+            sslcontext=ssl.SSLContext(ssl.PROTOCOL_TLS),
+        )
+        mock_request_context.get = Mock(return_value=mocked_request)
+        yield mock_request_context
 
 
 @pytest.fixture
