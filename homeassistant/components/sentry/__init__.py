@@ -89,13 +89,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             if integration != "auth" and "." not in integration
         ]
 
-        # Additional extra data to add to the event
-        extra_data = {
-            **system_info,
-            "custom_components": "\n".join(sorted(custom_components)),
-            "integrations": "\n".join(sorted(integrations)),
-        }
-
         # Add additional tags based on what caused the event.
         platform = entity_platform.current_platform.get()
         if platform is not None:
@@ -131,10 +124,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         ):
             additional_tags["custom_component"] = "yes"
 
-        # Update event with all additional data
+        # Update event with the additional tags
         event.setdefault("tags", {}).update(additional_tags)
-        event.setdefault("extra", {}).update(extra_data)
 
+        # Update event data with Home Assistant Context
+        event.setdefault("contexts", {}).update(
+            {
+                "Home Assistant": {
+                    "channel": channel,
+                    "custom_components": "\n".join(sorted(custom_components)),
+                    "integrations": "\n".join(sorted(integrations)),
+                    **system_info,
+                },
+            }
+        )
         return event
 
     sentry_sdk.init(
