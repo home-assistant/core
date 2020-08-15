@@ -25,6 +25,7 @@ SUPLA_FUNCTION_HA_CMP_MAP = {
 }
 SUPLA_FUNCTION_NONE = "NONE"
 SUPLA_SERVERS = "supla_servers"
+SUPLA_COORDINATORS = "supla_coordinators"
 
 SERVER_CONFIG = vol.Schema(
     {
@@ -50,6 +51,7 @@ async def async_setup(hass, base_config):
     server_confs = base_config[DOMAIN][CONF_SERVERS]
 
     hass.data[SUPLA_SERVERS] = {}
+    hass.data[SUPLA_COORDINATORS] = {}
 
     for server_conf in server_confs:
 
@@ -111,6 +113,8 @@ async def discover_devices(hass, hass_config):
 
         await coordinator.async_refresh()
 
+        hass.data[SUPLA_COORDINATORS][server_name] = coordinator
+
         for channel_id, channel in coordinator.data.items():
             channel_function = channel["function"]["name"]
 
@@ -133,12 +137,10 @@ async def discover_devices(hass, hass_config):
                 continue
 
             channel["server_name"] = server_name
-            channel["coordinator"] = coordinator
             component_configs.setdefault(component_name, []).append(
                 {
                     "channel_id": channel_id,
                     "server_name": server_name,
-                    "coordinator": coordinator,
                     "function_name": channel["function"]["name"],
                 }
             )
@@ -154,13 +156,17 @@ class SuplaChannel(Entity):
     def __init__(self, config):
         """Hookup channel to coordinator."""
         self.server_name = config["server_name"]
-        self.coordinator = config["coordinator"]
         self.channel_id = config["channel_id"]
 
     @property
     def server(self):
         """Return PySupla"s server component associated with entity."""
         return self.hass.data[SUPLA_SERVERS][self.server_name]
+
+    @property
+    def coordinator(self):
+        """Return shared coordinator."""
+        return self.hass.data[SUPLA_COORDINATORS][self.server_name]
 
     @property
     def channel_data(self):
