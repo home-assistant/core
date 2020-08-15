@@ -234,6 +234,10 @@ async def test_get_config(hass, websocket_client):
         msg["result"]["whitelist_external_dirs"] = set(
             msg["result"]["whitelist_external_dirs"]
         )
+    if "allowlist_external_dirs" in msg["result"]:
+        msg["result"]["allowlist_external_dirs"] = set(
+            msg["result"]["allowlist_external_dirs"]
+        )
     if "allowlist_external_urls" in msg["result"]:
         msg["result"]["allowlist_external_urls"] = set(
             msg["result"]["allowlist_external_urls"]

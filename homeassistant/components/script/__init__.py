@@ -24,6 +24,9 @@ from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.script import (
+    ATTR_CUR,
+    ATTR_MAX,
+    ATTR_MODE,
     CONF_MAX,
     SCRIPT_MODE_SINGLE,
     Script,
@@ -35,7 +38,7 @@ from homeassistant.loader import bind_hass
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "script"
-ATTR_CAN_CANCEL = "can_cancel"
+
 ATTR_LAST_ACTION = "last_action"
 ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_VARIABLES = "variables"
@@ -252,10 +255,12 @@ class ScriptEntity(ToggleEntity):
             hass,
             cfg[CONF_SEQUENCE],
             cfg.get(CONF_ALIAS, object_id),
-            self.async_change_listener,
-            cfg[CONF_MODE],
-            cfg[CONF_MAX],
-            logging.getLogger(f"{__name__}.{object_id}"),
+            DOMAIN,
+            running_description="script sequence",
+            change_listener=self.async_change_listener,
+            script_mode=cfg[CONF_MODE],
+            max_runs=cfg[CONF_MAX],
+            logger=logging.getLogger(f"{__name__}.{object_id}"),
         )
         self._changed = asyncio.Event()
 
@@ -272,9 +277,13 @@ class ScriptEntity(ToggleEntity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        attrs = {ATTR_LAST_TRIGGERED: self.script.last_triggered}
-        if self.script.can_cancel:
-            attrs[ATTR_CAN_CANCEL] = self.script.can_cancel
+        attrs = {
+            ATTR_LAST_TRIGGERED: self.script.last_triggered,
+            ATTR_MODE: self.script.script_mode,
+            ATTR_CUR: self.script.runs,
+        }
+        if self.script.supports_max:
+            attrs[ATTR_MAX] = self.script.max_runs
         if self.script.last_action:
             attrs[ATTR_LAST_ACTION] = self.script.last_action
         return attrs

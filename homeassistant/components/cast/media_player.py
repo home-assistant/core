@@ -279,6 +279,8 @@ class CastDevice(MediaPlayerEntity):
                 cast_info.uuid,
                 cast_info.model_name,
                 cast_info.friendly_name,
+                None,
+                None,
             ),
             ChromeCastZeroconf.get_zeroconf(),
         )
@@ -600,7 +602,9 @@ class CastDevice(MediaPlayerEntity):
 
         images = media_status.images
 
-        return images[0].url if images and images[0].url else None
+        return (
+            images[0].url.replace("http://", "//") if images and images[0].url else None
+        )
 
     @property
     def media_image_remotely_accessible(self) -> bool:

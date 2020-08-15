@@ -1,9 +1,12 @@
 """Set up some common test helper things."""
 import asyncio
+import datetime
 import functools
 import logging
+import ssl
 import threading
 
+from aiohttp.test_utils import make_mocked_request
 import pytest
 import requests_mock as _requests_mock
 
@@ -23,7 +26,7 @@ from homeassistant.helpers import event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
 
-from tests.async_mock import MagicMock, patch
+from tests.async_mock import MagicMock, Mock, patch
 from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 
 pytest.register_assert_rewrite("tests.common")
@@ -263,6 +266,20 @@ def hass_client(hass, aiohttp_client, hass_access_token):
 
 
 @pytest.fixture
+def current_request(hass):
+    """Mock current request."""
+    with patch("homeassistant.helpers.network.current_request") as mock_request_context:
+        mocked_request = make_mocked_request(
+            "GET",
+            "/some/request",
+            headers={"Host": "example.com"},
+            sslcontext=ssl.SSLContext(ssl.PROTOCOL_TLS),
+        )
+        mock_request_context.get = Mock(return_value=mocked_request)
+        yield mock_request_context
+
+
+@pytest.fixture
 def hass_ws_client(aiohttp_client, hass_access_token, hass):
     """Websocket client fixture connected to websocket server."""
 
@@ -387,8 +404,71 @@ def legacy_patchable_time():
 
         return async_unsub
 
+    @ha.callback
+    @loader.bind_hass
+    def async_track_utc_time_change(
+        hass, action, hour=None, minute=None, second=None, local=False
+    ):
+        """Add a listener that will fire if time matches a pattern."""
+        # We do not have to wrap the function with time pattern matching logic
+        # if no pattern given
+        if all(val is None for val in (hour, minute, second)):
+
+            @ha.callback
+            def time_change_listener(ev) -> None:
+                """Fire every time event that comes in."""
+                hass.async_run_job(action, ev.data[ATTR_NOW])
+
+            return hass.bus.async_listen(EVENT_TIME_CHANGED, time_change_listener)
+
+        matching_seconds = event.dt_util.parse_time_expression(second, 0, 59)
+        matching_minutes = event.dt_util.parse_time_expression(minute, 0, 59)
+        matching_hours = event.dt_util.parse_time_expression(hour, 0, 23)
+
+        next_time = None
+
+        def calculate_next(now) -> None:
+            """Calculate and set the next time the trigger should fire."""
+            nonlocal next_time
+
+            localized_now = event.dt_util.as_local(now) if local else now
+            next_time = event.dt_util.find_next_time_expression_time(
+                localized_now, matching_seconds, matching_minutes, matching_hours
+            )
+
+        # Make sure rolling back the clock doesn't prevent the timer from
+        # triggering.
+        last_now = None
+
+        @ha.callback
+        def pattern_time_change_listener(ev) -> None:
+            """Listen for matching time_changed events."""
+            nonlocal next_time, last_now
+
+            now = ev.data[ATTR_NOW]
+
+            if last_now is None or now < last_now:
+                # Time rolled back or next time not yet calculated
+                calculate_next(now)
+
+            last_now = now
+
+            if next_time <= now:
+                hass.async_run_job(
+                    action, event.dt_util.as_local(now) if local else now
+                )
+                calculate_next(now + datetime.timedelta(seconds=1))
+
+        # We can't use async_track_point_in_utc_time here because it would
+        # break in the case that the system time abruptly jumps backwards.
+        # Our custom last_now logic takes care of resolving that scenario.
+        return hass.bus.async_listen(EVENT_TIME_CHANGED, pattern_time_change_listener)
+
     with patch(
         "homeassistant.helpers.event.async_track_point_in_utc_time",
         async_track_point_in_utc_time,
+    ), patch(
+        "homeassistant.helpers.event.async_track_utc_time_change",
+        async_track_utc_time_change,
     ):
         yield

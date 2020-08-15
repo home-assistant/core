@@ -1,5 +1,5 @@
 """Test the Coolmaster config flow."""
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.coolmaster.const import AVAILABLE_MODES, DOMAIN
 
 from tests.async_mock import patch
@@ -14,7 +14,6 @@ def _flow_data():
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -22,8 +21,8 @@ async def test_form(hass):
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.coolmaster.config_flow.CoolMasterNet.devices",
-        return_value=[1],
+        "homeassistant.components.coolmaster.config_flow.CoolMasterNet.status",
+        return_value={"test_id": "test_unit"},
     ), patch(
         "homeassistant.components.coolmaster.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -52,7 +51,7 @@ async def test_form_timeout(hass):
     )
 
     with patch(
-        "homeassistant.components.coolmaster.config_flow.CoolMasterNet.devices",
+        "homeassistant.components.coolmaster.config_flow.CoolMasterNet.status",
         side_effect=TimeoutError(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -70,7 +69,7 @@ async def test_form_connection_refused(hass):
     )
 
     with patch(
-        "homeassistant.components.coolmaster.config_flow.CoolMasterNet.devices",
+        "homeassistant.components.coolmaster.config_flow.CoolMasterNet.status",
         side_effect=ConnectionRefusedError(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -88,8 +87,8 @@ async def test_form_no_units(hass):
     )
 
     with patch(
-        "homeassistant.components.coolmaster.config_flow.CoolMasterNet.devices",
-        return_value=[],
+        "homeassistant.components.coolmaster.config_flow.CoolMasterNet.status",
+        return_value={},
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], _flow_data()

@@ -73,12 +73,9 @@ IGNORE_DOMAINS = ("zone", "scene")
 NEED_ATTRIBUTE_DOMAINS = {
     "climate",
     "humidifier",
-    "script",
     "thermostat",
     "water_heater",
 }
-SCRIPT_DOMAIN = "script"
-ATTR_CAN_CANCEL = "can_cancel"
 
 QUERY_STATES = [
     States.domain,
@@ -380,17 +377,7 @@ def _sorted_states_to_json(
         domain = split_entity_id(ent_id)[0]
         ent_results = result[ent_id]
         if not minimal_response or domain in NEED_ATTRIBUTE_DOMAINS:
-            if domain == SCRIPT_DOMAIN:
-                ent_results.extend(
-                    [
-                        native_state
-                        for native_state in (LazyState(db_state) for db_state in group)
-                        if native_state.attributes.get(ATTR_CAN_CANCEL)
-                    ]
-                )
-            else:
-                ent_results.extend(LazyState(db_state) for db_state in group)
-            continue
+            ent_results.extend(LazyState(db_state) for db_state in group)
 
         # With minimal response we only provide a native
         # State for the first and last response. All the states

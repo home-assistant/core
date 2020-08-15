@@ -58,5 +58,5 @@ class PoolSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
             ),
-            errors=errors or {},
+            errors=errors,
         )

@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.const import CONF_UNIQUE_ID  # noqa: F401
 from homeassistant.core import Event, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
@@ -44,6 +45,7 @@ from . import config_flow  # noqa: F401 pylint: disable=unused-import
 from . import debug_info, discovery
 from .const import (
     ATTR_DISCOVERY_HASH,
+    ATTR_DISCOVERY_PAYLOAD,
     ATTR_DISCOVERY_TOPIC,
     ATTR_PAYLOAD,
     ATTR_QOS,
@@ -56,9 +58,14 @@ from .const import (
     CONF_RETAIN,
     CONF_STATE_TOPIC,
     CONF_WILL_MESSAGE,
+    DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
+    DEFAULT_PAYLOAD_AVAILABLE,
+    DEFAULT_PAYLOAD_NOT_AVAILABLE,
+    DEFAULT_PREFIX,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
+    DEFAULT_WILL,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
     PROTOCOL_311,
@@ -96,7 +103,6 @@ CONF_PAYLOAD_NOT_AVAILABLE = "payload_not_available"
 CONF_JSON_ATTRS_TOPIC = "json_attributes_topic"
 CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
 
-CONF_UNIQUE_ID = "unique_id"
 CONF_IDENTIFIERS = "identifiers"
 CONF_CONNECTIONS = "connections"
 CONF_MANUFACTURER = "manufacturer"
@@ -110,10 +116,7 @@ PROTOCOL_31 = "3.1"
 DEFAULT_PORT = 1883
 DEFAULT_KEEPALIVE = 60
 DEFAULT_PROTOCOL = PROTOCOL_311
-DEFAULT_PREFIX = "homeassistant"
 DEFAULT_TLS_PROTOCOL = "auto"
-DEFAULT_PAYLOAD_AVAILABLE = "online"
-DEFAULT_PAYLOAD_NOT_AVAILABLE = "offline"
 
 ATTR_PAYLOAD_TEMPLATE = "payload_template"
 
@@ -138,20 +141,6 @@ CLIENT_KEY_AUTH_MSG = (
     "client_key and client_cert must both be present in "
     "the MQTT broker configuration"
 )
-
-DEFAULT_BIRTH = {
-    ATTR_TOPIC: DEFAULT_PREFIX + "/status",
-    CONF_PAYLOAD: DEFAULT_PAYLOAD_AVAILABLE,
-    ATTR_QOS: DEFAULT_QOS,
-    ATTR_RETAIN: DEFAULT_RETAIN,
-}
-
-DEFAULT_WILL = {
-    ATTR_TOPIC: DEFAULT_PREFIX + "/status",
-    CONF_PAYLOAD: DEFAULT_PAYLOAD_NOT_AVAILABLE,
-    ATTR_QOS: DEFAULT_QOS,
-    ATTR_RETAIN: DEFAULT_RETAIN,
-}
 
 MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
     {
@@ -612,10 +601,10 @@ async def async_setup_entry(hass, entry):
 class Subscription:
     """Class to hold data about an active subscription."""
 
-    topic = attr.ib(type=str)
-    callback = attr.ib(type=MessageCallbackType)
-    qos = attr.ib(type=int, default=0)
-    encoding = attr.ib(type=str, default="utf-8")
+    topic: str = attr.ib()
+    callback: MessageCallbackType = attr.ib()
+    qos: int = attr.ib(default=0)
+    encoding: str = attr.ib(default="utf-8")
 
 
 class MQTT:
@@ -677,6 +666,9 @@ class MQTT:
         else:
             self._mqttc = mqtt.Client(client_id, protocol=proto)
 
+        # Enable logging
+        self._mqttc.enable_logger()
+
         username = self.conf.get(CONF_USERNAME)
         password = self.conf.get(CONF_PASSWORD)
         if username is not None:
@@ -726,10 +718,10 @@ class MQTT:
 
         if will_message is not None:
             self._mqttc.will_set(  # pylint: disable=no-value-for-parameter
-                *attr.astuple(
-                    will_message,
-                    filter=lambda attr, value: attr.name != "subscribed_topic",
-                )
+                topic=will_message.topic,
+                payload=will_message.payload,
+                qos=will_message.qos,
+                retain=will_message.retain,
             )
 
     async def async_publish(
@@ -876,11 +868,10 @@ class MQTT:
             birth_message = Message(**self.conf[CONF_BIRTH_MESSAGE])
             self.hass.add_job(
                 self.async_publish(  # pylint: disable=no-value-for-parameter
-                    *attr.astuple(
-                        birth_message,
-                        filter=lambda attr, value: attr.name
-                        not in ["subscribed_topic", "timestamp"],
-                    )
+                    topic=birth_message.topic,
+                    payload=birth_message.payload,
+                    qos=birth_message.qos,
+                    retain=birth_message.retain,
                 )
             )
 
@@ -1182,6 +1173,7 @@ class MqttDiscoveryUpdate(Entity):
             _LOGGER.info(
                 "Got update for entity with hash: %s '%s'", discovery_hash, payload,
             )
+            old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
             debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
             if not payload:
                 # Empty payload: Remove component
@@ -1189,9 +1181,13 @@ class MqttDiscoveryUpdate(Entity):
                 self._cleanup_discovery_on_remove()
                 await _async_remove_state_and_registry_entry(self)
             elif self._discovery_update:
-                # Non-empty payload: Notify component
-                _LOGGER.info("Updating component: %s", self.entity_id)
-                await self._discovery_update(payload)
+                if old_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]:
+                    # Non-empty, changed payload: Notify component
+                    _LOGGER.info("Updating component: %s", self.entity_id)
+                    await self._discovery_update(payload)
+                else:
+                    # Non-empty, unchanged payload: Ignore to avoid changing states
+                    _LOGGER.info("Ignoring unchanged update for: %s", self.entity_id)
 
         if discovery_hash:
             debug_info.add_entity_discovery_data(

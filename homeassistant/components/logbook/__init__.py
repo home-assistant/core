@@ -212,18 +212,16 @@ class LogbookView(HomeAssistantView):
                 )
             )
 
-        return await hass.async_add_job(json_events)
+        return await hass.async_add_executor_job(json_events)
 
 
-def humanify(hass, events, entity_attr_cache, prev_states=None):
+def humanify(hass, events, entity_attr_cache):
     """Generate a converted list of events into Entry objects.
 
     Will try to group events if possible:
     - if 2+ sensor updates in GROUP_BY_MINUTES, show last
     - if Home Assistant stop and start happen in same minute call it restarted
     """
-    if prev_states is None:
-        prev_states = {}
 
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
@@ -270,12 +268,6 @@ def humanify(hass, events, entity_attr_cache, prev_states=None):
 
             if event.event_type == EVENT_STATE_CHANGED:
                 entity_id = event.entity_id
-
-                # Skip events that have not changed state
-                if entity_id in prev_states and prev_states[entity_id] == event.state:
-                    continue
-
-                prev_states[entity_id] = event.state
                 domain = event.domain
 
                 if (
@@ -385,16 +377,10 @@ def _get_events(
             .outerjoin(old_state, (States.old_state_id == old_state.state_id))
             # The below filter, removes state change events that do not have
             # and old_state, new_state, or the old and
-            # new state are the same for v8 schema or later.
+            # new state.
             #
-            # If the events/states were stored before v8 schema, we relay on the
-            # prev_states dict to remove them.
-            #
-            # When all data is schema v8 or later, the check for EMPTY_JSON_OBJECT
-            # can be removed.
             .filter(
                 (Events.event_type != EVENT_STATE_CHANGED)
-                | (Events.event_data != EMPTY_JSON_OBJECT)
                 | (
                     (States.state_id.isnot(None))
                     & (old_state.state_id.isnot(None))
@@ -438,18 +424,12 @@ def _get_events(
                     entity_filter | (Events.event_type != EVENT_STATE_CHANGED)
                 )
 
-        # When all data is schema v8 or later, prev_states can be removed
-        prev_states = {}
-        return list(humanify(hass, yield_events(query), entity_attr_cache, prev_states))
+        return list(humanify(hass, yield_events(query), entity_attr_cache))
 
 
 def _keep_event(hass, event, entities_filter):
     if event.event_type == EVENT_STATE_CHANGED:
         entity_id = event.entity_id
-        # Do not report on new entities
-        # Do not report on entity removal
-        if not event.has_old_and_new_state:
-            return False
     elif event.event_type in HOMEASSISTANT_EVENTS:
         entity_id = f"{HA_DOMAIN}."
     elif event.event_type in hass.data[DOMAIN] and ATTR_ENTITY_ID not in event.data:
@@ -640,25 +620,6 @@ class LazyEventPartialState:
                 )
         return self._time_fired_isoformat
 
-    @property
-    def has_old_and_new_state(self):
-        """Check the json data to see if new_state and old_state is present without decoding."""
-        # Delete this check once all states are saved in the v8 schema
-        # format or later (they have the old_state_id column).
-
-        # New events in v8+ schema format
-        if self._row.event_data == EMPTY_JSON_OBJECT:
-            # Events are already pre-filtered in sql
-            # to exclude missing old and new state
-            # if they are in v8+ format
-            return True
-
-        # Old events not in v8 schema format
-        return (
-            '"old_state": {' in self._row.event_data
-            and '"new_state": {' in self._row.event_data
-        )
-
 
 class EntityAttributeCache:
     """A cache to lookup static entity_id attribute.
@@ -684,9 +645,7 @@ class EntityAttributeCache:
         if current_state:
             # Try the current state as its faster than decoding the
             # attributes
-            self._cache[entity_id][attribute] = current_state.attributes.get(
-                attribute, None
-            )
+            self._cache[entity_id][attribute] = current_state.attributes.get(attribute)
         else:
             # If the entity has been removed, decode the attributes
             # instead

@@ -188,7 +188,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
 
     storage_collection = ZoneStorageCollection(
         storage.Store(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}_storage_collection"),
+        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     collection.attach_entity_component_collection(
@@ -323,6 +323,8 @@ class Zone(entity.Entity):
 
     async def async_update_config(self, config: Dict) -> None:
         """Handle when the config is updated."""
+        if self._config == config:
+            return
         self._config = config
         self._generate_attrs()
         self.async_write_ha_state()

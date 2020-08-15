@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.auth.models import User
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.http.const import KEY_HASS_USER, KEY_REAL_IP
+from homeassistant.components.http.const import KEY_HASS_USER
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import HTTP_OK
 from homeassistant.core import callback
@@ -63,8 +63,10 @@ class HassIOBaseAuth(HomeAssistantView):
         """Check if this call is from Supervisor."""
         # Check caller IP
         hassio_ip = os.environ["HASSIO"].split(":")[0]
-        if request[KEY_REAL_IP] != ip_address(hassio_ip):
-            _LOGGER.error("Invalid auth request from %s", request[KEY_REAL_IP])
+        if ip_address(request.transport.get_extra_info("peername")[0]) != ip_address(
+            hassio_ip
+        ):
+            _LOGGER.error("Invalid auth request from %s", request.remote)
             raise HTTPUnauthorized()
 
         # Check caller token

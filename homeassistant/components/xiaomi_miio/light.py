@@ -102,7 +102,7 @@ SERVICE_SCHEMA_SET_SCENE = XIAOMI_MIIO_SERVICE_SCHEMA.extend(
 )
 
 SERVICE_SCHEMA_SET_DELAYED_TURN_OFF = XIAOMI_MIIO_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_TIME_PERIOD): vol.All(cv.time_period, cv.positive_timedelta)}
+    {vol.Required(ATTR_TIME_PERIOD): cv.positive_time_period}
 )
 
 SERVICE_TO_METHOD = {

@@ -21,10 +21,13 @@ from homeassistant.components.fan import (
 from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
+    MATCH_ALL,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
@@ -70,6 +73,7 @@ FAN_SCHEMA = vol.Schema(
             CONF_SPEED_LIST, default=[SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
         ): cv.ensure_list,
         vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -98,6 +102,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         set_direction_action = device_config.get(CONF_SET_DIRECTION_ACTION)
 
         speed_list = device_config[CONF_SPEED_LIST]
+        unique_id = device_config.get(CONF_UNIQUE_ID)
 
         templates = {
             CONF_VALUE_TEMPLATE: state_template,
@@ -127,6 +132,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 set_direction_action,
                 speed_list,
                 entity_ids,
+                unique_id,
             )
         )
 
@@ -153,6 +159,7 @@ class TemplateFan(FanEntity):
         set_direction_action,
         speed_list,
         entity_ids,
+        unique_id,
     ):
         """Initialize the fan."""
         self.hass = hass
@@ -169,20 +176,28 @@ class TemplateFan(FanEntity):
         self._available = True
         self._supported_features = 0
 
-        self._on_script = Script(hass, on_action)
-        self._off_script = Script(hass, off_action)
+        domain = __name__.split(".")[-2]
+
+        self._on_script = Script(hass, on_action, friendly_name, domain)
+        self._off_script = Script(hass, off_action, friendly_name, domain)
 
         self._set_speed_script = None
         if set_speed_action:
-            self._set_speed_script = Script(hass, set_speed_action)
+            self._set_speed_script = Script(
+                hass, set_speed_action, friendly_name, domain
+            )
 
         self._set_oscillating_script = None
         if set_oscillating_action:
-            self._set_oscillating_script = Script(hass, set_oscillating_action)
+            self._set_oscillating_script = Script(
+                hass, set_oscillating_action, friendly_name, domain
+            )
 
         self._set_direction_script = None
         if set_direction_action:
-            self._set_direction_script = Script(hass, set_direction_action)
+            self._set_direction_script = Script(
+                hass, set_direction_action, friendly_name, domain
+            )
 
         self._state = STATE_OFF
         self._speed = None
@@ -197,6 +212,8 @@ class TemplateFan(FanEntity):
             self._supported_features |= SUPPORT_DIRECTION
 
         self._entities = entity_ids
+        self._unique_id = unique_id
+
         # List of valid speeds
         self._speed_list = speed_list
 
@@ -204,6 +221,11 @@ class TemplateFan(FanEntity):
     def name(self):
         """Return the display name of this fan."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id of this fan."""
+        return self._unique_id
 
     @property
     def supported_features(self) -> int:
@@ -313,16 +335,18 @@ class TemplateFan(FanEntity):
         """Register callbacks."""
 
         @callback
-        def template_fan_state_listener(entity, old_state, new_state):
+        def template_fan_state_listener(event):
             """Handle target device state changes."""
             self.async_schedule_update_ha_state(True)
 
         @callback
         def template_fan_startup(event):
             """Update template on startup."""
-            self.hass.helpers.event.async_track_state_change(
-                self._entities, template_fan_state_listener
-            )
+            if self._entities != MATCH_ALL:
+                # Track state change only for valid templates
+                self.hass.helpers.event.async_track_state_change_event(
+                    self._entities, template_fan_state_listener
+                )
 
             self.async_schedule_update_ha_state(True)
 
@@ -341,7 +365,7 @@ class TemplateFan(FanEntity):
         # Validate state
         if state in _VALID_STATES:
             self._state = state
-        elif state == STATE_UNKNOWN:
+        elif state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
             self._state = None
         else:
             _LOGGER.error(
@@ -363,7 +387,7 @@ class TemplateFan(FanEntity):
             # Validate speed
             if speed in self._speed_list:
                 self._speed = speed
-            elif speed == STATE_UNKNOWN:
+            elif speed in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
                 self._speed = None
             else:
                 _LOGGER.error(
@@ -385,7 +409,7 @@ class TemplateFan(FanEntity):
                 self._oscillating = True
             elif oscillating == "False" or oscillating is False:
                 self._oscillating = False
-            elif oscillating == STATE_UNKNOWN:
+            elif oscillating in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
                 self._oscillating = None
             else:
                 _LOGGER.error(
@@ -406,7 +430,7 @@ class TemplateFan(FanEntity):
             # Validate speed
             if direction in _VALID_DIRECTIONS:
                 self._direction = direction
-            elif direction == STATE_UNKNOWN:
+            elif direction in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
                 self._direction = None
             else:
                 _LOGGER.error(

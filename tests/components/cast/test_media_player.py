@@ -440,6 +440,45 @@ async def test_entity_media_states(hass: HomeAssistantType):
     assert state.state == "unknown"
 
 
+async def test_url_replace(hass: HomeAssistantType):
+    """Test functionality of replacing URL for HTTPS."""
+    info = get_fake_chromecast_info()
+    full_info = attr.evolve(
+        info, model_name="google home", friendly_name="Speaker", uuid=FakeUUID
+    )
+
+    chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    entity._available = True
+    entity.schedule_update_ha_state()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.speaker")
+    assert state is not None
+    assert state.name == "Speaker"
+    assert state.state == "unknown"
+    assert entity.unique_id == full_info.uuid
+
+    class FakeHTTPImage:
+        url = "http://example.com/test.png"
+
+    class FakeHTTPSImage:
+        url = "https://example.com/test.png"
+
+    media_status = MagicMock(images=[FakeHTTPImage()])
+    media_status.player_is_playing = True
+    entity.new_media_status(media_status)
+    await hass.async_block_till_done()
+    state = hass.states.get("media_player.speaker")
+    assert state.attributes.get("entity_picture") == "//example.com/test.png"
+
+    media_status.images = [FakeHTTPSImage()]
+    entity.new_media_status(media_status)
+    await hass.async_block_till_done()
+    state = hass.states.get("media_player.speaker")
+    assert state.attributes.get("entity_picture") == "https://example.com/test.png"
+
+
 async def test_group_media_states(hass: HomeAssistantType):
     """Test media states are read from group if entity has no state."""
     info = get_fake_chromecast_info()

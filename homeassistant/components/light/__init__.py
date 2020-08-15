@@ -123,7 +123,12 @@ LIGHT_TURN_ON_SCHEMA = {
 
 
 PROFILE_SCHEMA = vol.Schema(
-    vol.ExactSequence((str, cv.small_float, cv.small_float, cv.byte))
+    vol.Any(
+        vol.ExactSequence((str, cv.small_float, cv.small_float, cv.byte)),
+        vol.ExactSequence(
+            (str, cv.small_float, cv.small_float, cv.byte, cv.positive_int)
+        ),
+    )
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -141,6 +146,8 @@ def preprocess_turn_on_alternatives(params):
     if profile is not None:
         params.setdefault(ATTR_XY_COLOR, profile[:2])
         params.setdefault(ATTR_BRIGHTNESS, profile[2])
+        if len(profile) > 3:
+            params.setdefault(ATTR_TRANSITION, profile[3])
 
     color_name = params.pop(ATTR_COLOR_NAME, None)
     if color_name is not None:
@@ -313,8 +320,22 @@ class Profiles:
 
                     try:
                         for rec in reader:
-                            profile, color_x, color_y, brightness = PROFILE_SCHEMA(rec)
-                            profiles[profile] = (color_x, color_y, brightness)
+                            (
+                                profile,
+                                color_x,
+                                color_y,
+                                brightness,
+                                *transition,
+                            ) = PROFILE_SCHEMA(rec)
+
+                            transition = transition[0] if transition else 0
+
+                            profiles[profile] = (
+                                color_x,
+                                color_y,
+                                brightness,
+                                transition,
+                            )
                     except vol.MultipleInvalid as ex:
                         _LOGGER.error(
                             "Error parsing light profile from %s: %s", profile_path, ex

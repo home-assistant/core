@@ -23,8 +23,7 @@
             "advanced": {
                 "data": {
                     "auto_start": "[%key::component::homekit::config::step::user::data::auto_start%]",
-                    "safe_mode": "Mode segur (habilita-ho nom\u00e9s si falla la vinculaci\u00f3)",
-                    "zeroconf_default_interface": "Utilitza la interf\u00edcie zeroconf predeterminada. Activa-ho si no es pot trobar l'enlla\u00e7 a l'aplicaci\u00f3 Casa (Home app)."
+                    "safe_mode": "Mode segur (habilita-ho nom\u00e9s si falla la vinculaci\u00f3)"
                 },
                 "description": "Aquests par\u00e0metres nom\u00e9s s'han d'ajustar si l'enlla\u00e7 HomeKit no \u00e9s funcional.",
                 "title": "Configuraci\u00f3 avan\u00e7ada"

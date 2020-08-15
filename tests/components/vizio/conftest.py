@@ -47,15 +47,32 @@ def skip_notifications_fixture():
         yield
 
 
+@pytest.fixture(name="vizio_get_unique_id", autouse=True)
+def vizio_get_unique_id_fixture():
+    """Mock get vizio unique ID."""
+    with patch(
+        "homeassistant.components.vizio.config_flow.VizioAsync.get_unique_id",
+        return_value=UNIQUE_ID,
+    ):
+        yield
+
+
+@pytest.fixture(name="vizio_no_unique_id")
+def vizio_no_unique_id_fixture():
+    """Mock no vizio unique ID returrned."""
+    with patch(
+        "homeassistant.components.vizio.config_flow.VizioAsync.get_unique_id",
+        return_value=None,
+    ):
+        yield
+
+
 @pytest.fixture(name="vizio_connect")
 def vizio_connect_fixture():
     """Mock valid vizio device and entry setup."""
     with patch(
         "homeassistant.components.vizio.config_flow.VizioAsync.validate_ha_config",
         return_value=True,
-    ), patch(
-        "homeassistant.components.vizio.config_flow.VizioAsync.get_unique_id",
-        return_value=UNIQUE_ID,
     ):
         yield
 

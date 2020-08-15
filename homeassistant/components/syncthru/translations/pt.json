@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "unknown_state": "Estado da impressora desconhecido, verifique a conectividade de URL e de rede"
+        },
+        "step": {
+            "confirm": {
+                "data": {
+                    "name": "Nome"
+                }
+            },
+            "user": {
+                "data": {
+                    "name": "Nome"
+                }
+            }
+        }
+    }
+}

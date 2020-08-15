@@ -1,10 +1,10 @@
 """The tests for the Rfxtrx component."""
 
-from homeassistant.components import rfxtrx
+from homeassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
-from . import _signal_event
+from tests.async_mock import call
 
 
 async def test_valid_config(hass):
@@ -16,7 +16,6 @@ async def test_valid_config(hass):
             "rfxtrx": {
                 "device": "/dev/serial/by-id/usb"
                 + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                "dummy": True,
             }
         },
     )
@@ -31,7 +30,6 @@ async def test_valid_config2(hass):
             "rfxtrx": {
                 "device": "/dev/serial/by-id/usb"
                 + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                "dummy": True,
                 "debug": True,
             }
         },
@@ -55,7 +53,7 @@ async def test_invalid_config(hass):
     )
 
 
-async def test_fire_event(hass):
+async def test_fire_event(hass, rfxtrx):
     """Test fire event."""
     assert await async_setup_component(
         hass,
@@ -64,11 +62,10 @@ async def test_fire_event(hass):
             "rfxtrx": {
                 "device": "/dev/serial/by-id/usb"
                 + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                "dummy": True,
                 "automatic_add": True,
                 "devices": {
-                    "0b1100cd0213c7f210010f51": {rfxtrx.CONF_FIRE_EVENT: True},
-                    "0716000100900970": {rfxtrx.CONF_FIRE_EVENT: True},
+                    "0b1100cd0213c7f210010f51": {"fire_event": True},
+                    "0716000100900970": {"fire_event": True},
                 },
             }
         },
@@ -84,10 +81,10 @@ async def test_fire_event(hass):
         assert event.event_type == "rfxtrx_event"
         calls.append(event.data)
 
-    hass.bus.async_listen(rfxtrx.const.EVENT_RFXTRX_EVENT, record_event)
+    hass.bus.async_listen(EVENT_RFXTRX_EVENT, record_event)
 
-    await _signal_event(hass, "0b1100cd0213c7f210010f51")
-    await _signal_event(hass, "0716000100900970")
+    await rfxtrx.signal("0b1100cd0213c7f210010f51")
+    await rfxtrx.signal("0716000100900970")
 
     assert calls == [
         {
@@ -106,4 +103,20 @@ async def test_fire_event(hass):
             "data": "0716000100900970",
             "values": {"Sound": 9, "Battery numeric": 0, "Rssi numeric": 7},
         },
+    ]
+
+
+async def test_send(hass, rfxtrx):
+    """Test configuration."""
+    assert await async_setup_component(
+        hass, "rfxtrx", {"rfxtrx": {"device": "/dev/null"}}
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "rfxtrx", "send", {"event": "0a520802060101ff0f0269"}, blocking=True
+    )
+
+    assert rfxtrx.transport.send.mock_calls == [
+        call(bytearray(b"\x0a\x52\x08\x02\x06\x01\x01\xff\x0f\x02\x69"))
     ]

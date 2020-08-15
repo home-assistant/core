@@ -33,11 +33,7 @@ TRIGGER_SCHEMA = vol.All(
             # These are str on purpose. Want to catch YAML conversions
             vol.Optional(CONF_FROM): vol.Any(str, [str]),
             vol.Optional(CONF_TO): vol.Any(str, [str]),
-            vol.Optional(CONF_FOR): vol.Any(
-                vol.All(cv.time_period, cv.positive_timedelta),
-                cv.template,
-                cv.template_complex,
-            ),
+            vol.Optional(CONF_FOR): cv.positive_time_period_template,
         }
     ),
     cv.key_dependency(CONF_FOR, CONF_TO),
@@ -73,16 +69,13 @@ async def async_attach_trigger(
 
         from_s = event.data.get("old_state")
         to_s = event.data.get("new_state")
+        old_state = getattr(from_s, "state", None)
+        new_state = getattr(to_s, "state", None)
 
         if (
-            (from_s is not None and not match_from_state(from_s.state))
-            or (to_s is not None and not match_to_state(to_s.state))
-            or (
-                not match_all
-                and from_s is not None
-                and to_s is not None
-                and from_s.state == to_s.state
-            )
+            not match_from_state(old_state)
+            or not match_to_state(new_state)
+            or (not match_all and old_state == new_state)
         ):
             return
 
@@ -104,15 +97,6 @@ async def async_attach_trigger(
                 )
             )
 
-        # Ignore changes to state attributes if from/to is in use
-        if (
-            not match_all
-            and from_s is not None
-            and to_s is not None
-            and from_s.state == to_s.state
-        ):
-            return
-
         if not time_delta:
             call_action()
             return
@@ -127,18 +111,9 @@ async def async_attach_trigger(
         }
 
         try:
-            if isinstance(time_delta, template.Template):
-                period[entity] = vol.All(cv.time_period, cv.positive_timedelta)(
-                    time_delta.async_render(variables)
-                )
-            elif isinstance(time_delta, dict):
-                time_delta_data = {}
-                time_delta_data.update(template.render_complex(time_delta, variables))
-                period[entity] = vol.All(cv.time_period, cv.positive_timedelta)(
-                    time_delta_data
-                )
-            else:
-                period[entity] = time_delta
+            period[entity] = cv.positive_time_period(
+                template.render_complex(time_delta, variables)
+            )
         except (exceptions.TemplateError, vol.Invalid) as ex:
             _LOGGER.error(
                 "Error rendering '%s' for template: %s", automation_info["name"], ex

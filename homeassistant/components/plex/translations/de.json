@@ -4,8 +4,6 @@
             "all_configured": "Alle verkn\u00fcpften Server sind bereits konfiguriert",
             "already_configured": "Dieser Plex-Server ist bereits konfiguriert",
             "already_in_progress": "Plex wird konfiguriert",
-            "invalid_import": "Die importierte Konfiguration ist ung\u00fcltig",
-            "non-interactive": "Nicht interaktiver Import",
             "token_request_timeout": "Zeit\u00fcberschreitung beim Erhalt des Tokens",
             "unknown": "Aus unbekanntem Grund fehlgeschlagen"
         },

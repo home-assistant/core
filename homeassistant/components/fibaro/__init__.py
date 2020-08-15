@@ -227,10 +227,7 @@ class FibaroController:
                     device_type = "sensor"
 
         # Switches that control lights should show up as lights
-        if (
-            device_type == "switch"
-            and device.properties.get("isLight", "false") == "true"
-        ):
+        if device_type == "switch" and device.properties.get("isLight", False):
             device_type = "light"
         return device_type
 
@@ -238,7 +235,7 @@ class FibaroController:
         scenes = self._client.scenes.list()
         self._scene_map = {}
         for device in scenes:
-            if not device.visible:
+            if "visible" in device and not device.visible:
                 continue
             device.fibaro_controller = self
             if device.roomID == 0:
@@ -295,7 +292,11 @@ class FibaroController:
                         # otherwise add the first visible device in the group
                         # which is a hack, but solves a problem with FGT having
                         # hidden compatibility devices before the real device
-                        if last_climate_parent != device.parentId and device.visible:
+                        if (
+                            last_climate_parent != device.parentId
+                            and "visible" in device
+                            and device.visible
+                        ):
                             self.fibaro_devices[dtype].append(device)
                             last_climate_parent = device.parentId
                 _LOGGER.debug(

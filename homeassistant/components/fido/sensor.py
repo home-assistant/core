@@ -35,8 +35,8 @@ REQUESTS_TIMEOUT = 15
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 SENSOR_TYPES = {
-    "fido_dollar": ["Fido dollar", PRICE, "mdi:square-inc-cash"],
-    "balance": ["Balance", PRICE, "mdi:square-inc-cash"],
+    "fido_dollar": ["Fido dollar", PRICE, "mdi:cash-usd"],
+    "balance": ["Balance", PRICE, "mdi:cash-usd"],
     "data_used": ["Data used", DATA_KILOBITS, "mdi:download"],
     "data_limit": ["Data limit", DATA_KILOBITS, "mdi:download"],
     "data_remaining": ["Data remaining", DATA_KILOBITS, "mdi:download"],

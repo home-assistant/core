@@ -86,7 +86,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class IPPDataUpdateCoordinator(DataUpdateCoordinator):
+class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
     """Class to manage fetching IPP data from single endpoint."""
 
     def __init__(

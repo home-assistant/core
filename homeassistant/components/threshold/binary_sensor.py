@@ -17,7 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,8 +93,12 @@ class ThresholdSensor(BinarySensorEntity):
         self.sensor_value = None
 
         @callback
-        def async_threshold_sensor_state_listener(entity, old_state, new_state):
+        def async_threshold_sensor_state_listener(event):
             """Handle sensor state changes."""
+            new_state = event.data.get("new_state")
+            if new_state is None:
+                return
+
             try:
                 self.sensor_value = (
                     None if new_state.state == STATE_UNKNOWN else float(new_state.state)
@@ -105,7 +109,9 @@ class ThresholdSensor(BinarySensorEntity):
 
             hass.async_add_job(self.async_update_ha_state, True)
 
-        async_track_state_change(hass, entity_id, async_threshold_sensor_state_listener)
+        async_track_state_change_event(
+            hass, [entity_id], async_threshold_sensor_state_listener
+        )
 
     @property
     def name(self):
