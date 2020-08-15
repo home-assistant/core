@@ -2,17 +2,19 @@
 import logging
 from typing import Optional
 
-from pysupla import SuplaAPI
+import async_timeout
+from asyncpysupla import SuplaAPI
 import voluptuous as vol
 
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_SCAN_INTERVAL
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-DOMAIN = "supla"
 
+DOMAIN = "supla"
 CONF_SERVER = "server"
 CONF_SERVERS = "servers"
 
@@ -22,11 +24,14 @@ SUPLA_FUNCTION_HA_CMP_MAP = {
     "LIGHTSWITCH": "switch",
 }
 SUPLA_FUNCTION_NONE = "NONE"
-SUPLA_CHANNELS = "supla_channels"
 SUPLA_SERVERS = "supla_servers"
 
 SERVER_CONFIG = vol.Schema(
-    {vol.Required(CONF_SERVER): cv.string, vol.Required(CONF_ACCESS_TOKEN): cv.string}
+    {
+        vol.Required(CONF_SERVER): cv.string,
+        vol.Required(CONF_ACCESS_TOKEN): cv.string,
+        vol.Optional(CONF_SCAN_INTERVAL, default=10): cv.time_period,
+    }
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -39,23 +44,23 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, base_config):
+async def async_setup(hass, base_config):
     """Set up the Supla component."""
 
     server_confs = base_config[DOMAIN][CONF_SERVERS]
 
     hass.data[SUPLA_SERVERS] = {}
-    hass.data[SUPLA_CHANNELS] = {}
 
     for server_conf in server_confs:
 
         server_address = server_conf[CONF_SERVER]
 
         server = SuplaAPI(server_address, server_conf[CONF_ACCESS_TOKEN])
+        server.update_interval = server_conf[CONF_SCAN_INTERVAL]
 
         # Test connection
         try:
-            srv_info = server.get_server_info()
+            srv_info = await server.get_server_info()
             if srv_info.get("authenticated"):
                 hass.data[SUPLA_SERVERS][server_conf[CONF_SERVER]] = server
             else:
@@ -71,23 +76,44 @@ def setup(hass, base_config):
             )
             return False
 
-    discover_devices(hass, base_config)
+    await discover_devices(hass, base_config)
 
     return True
 
 
-def discover_devices(hass, hass_config):
+async def discover_devices(hass, hass_config):
     """
     Run periodically to discover new devices.
 
-    Currently it's only run at startup.
+    Currently it"s only run at startup.
     """
     component_configs = {}
 
     for server_name, server in hass.data[SUPLA_SERVERS].items():
 
-        for channel in server.get_channels(include=["iodevice"]):
+        async def fetch_channels():
+            async with async_timeout.timeout(30):
+                channels = {
+                    channel["id"]: channel
+                    for channel in await server.get_channels(
+                        include=["iodevice", "state", "connected"]
+                    )
+                }
+                return channels
+
+        coordinator = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name="supla",
+            update_method=fetch_channels,
+            update_interval=server.update_interval,
+        )
+
+        await coordinator.async_refresh()
+
+        for channel_id, channel in coordinator.data.items():
             channel_function = channel["function"]["name"]
+
             if channel_function == SUPLA_FUNCTION_NONE:
                 _LOGGER.debug(
                     "Ignored function: %s, channel id: %s",
@@ -107,25 +133,39 @@ def discover_devices(hass, hass_config):
                 continue
 
             channel["server_name"] = server_name
-            component_configs.setdefault(component_name, []).append(channel)
+            channel["coordinator"] = coordinator
+            component_configs.setdefault(component_name, []).append(
+                {
+                    "channel_id": channel_id,
+                    "server_name": server_name,
+                    "coordinator": coordinator,
+                    "function_name": channel["function"]["name"],
+                }
+            )
 
     # Load discovered devices
-    for component_name, channel in component_configs.items():
-        load_platform(hass, component_name, "supla", channel, hass_config)
+    for component_name, config in component_configs.items():
+        await async_load_platform(hass, component_name, "supla", config, hass_config)
 
 
 class SuplaChannel(Entity):
-    """Base class of a Supla Channel (an equivalent of HA's Entity)."""
+    """Base class of a Supla Channel (an equivalent of HA"s Entity)."""
 
-    def __init__(self, channel_data):
-        """Channel data -- raw channel information from PySupla."""
-        self.server_name = channel_data["server_name"]
-        self.channel_data = channel_data
+    def __init__(self, config):
+        """Hookup channel to coordinator."""
+        self.server_name = config["server_name"]
+        self.coordinator = config["coordinator"]
+        self.channel_id = config["channel_id"]
 
     @property
     def server(self):
-        """Return PySupla's server component associated with entity."""
+        """Return PySupla"s server component associated with entity."""
         return self.hass.data[SUPLA_SERVERS][self.server_name]
+
+    @property
+    def channel_data(self):
+        """Return channel data taken from coordinator."""
+        return self.coordinator.data.get(self.channel_id)
 
     @property
     def unique_id(self) -> str:
@@ -150,12 +190,18 @@ class SuplaChannel(Entity):
             return False
         return state.get("connected")
 
-    def action(self, action, **add_pars):
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
+
+    async def async_action(self, action, **add_pars):
         """
         Run server action.
 
         Actions are currently hardcoded in components.
-        Supla's API enables autodiscovery
+        Supla"s API enables autodiscovery
         """
         _LOGGER.debug(
             "Executing action %s on channel %d, params: %s",
@@ -163,10 +209,14 @@ class SuplaChannel(Entity):
             self.channel_data["id"],
             add_pars,
         )
-        self.server.execute_action(self.channel_data["id"], action, **add_pars)
+        await self.server.execute_action(self.channel_data["id"], action, **add_pars)
 
-    def update(self):
-        """Call to update state."""
-        self.channel_data = self.server.get_channel(
-            self.channel_data["id"], include=["connected", "state"]
-        )
+        # Update state
+        await self.coordinator.async_request_refresh()
+
+    async def async_update(self):
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """
+        await self.coordinator.async_request_refresh()

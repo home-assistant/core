@@ -8,26 +8,26 @@ from homeassistant.components.switch import SwitchEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Supla switches."""
     if discovery_info is None:
         return
 
     _LOGGER.debug("Discovery: %s", pformat(discovery_info))
 
-    add_entities([SuplaSwitch(device) for device in discovery_info])
+    async_add_entities([SuplaSwitch(device) for device in discovery_info])
 
 
 class SuplaSwitch(SuplaChannel, SwitchEntity):
     """Representation of a Supla Switch."""
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn on the switch."""
-        self.action("TURN_ON")
+        await self.async_action("TURN_ON")
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn off the switch."""
-        self.action("TURN_OFF")
+        await self.async_action("TURN_OFF")
 
     @property
     def is_on(self):
