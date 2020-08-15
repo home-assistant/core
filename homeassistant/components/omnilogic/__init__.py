@@ -6,7 +6,6 @@ import logging
 from omnilogic import OmniLogic
 import voluptuous as vol
 
-# from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -18,7 +17,6 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-# For your initial PR, limit it to 1 platform.
 PLATFORMS = ["sensor"]
 
 

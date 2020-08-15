@@ -99,7 +99,6 @@ class OmnilogicSensor(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        # need a more unique id
         return self.entity_id
 
     @property
