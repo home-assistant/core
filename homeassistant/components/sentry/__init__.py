@@ -55,97 +55,107 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         event_level=logging.ERROR,  # Send errors as events
     )
 
-    # Find channel based on version number
-    channel = "stable"
-    if "dev0" in current_version:
-        channel = "dev"
-    elif "dev" in current_version:
-        channel = "nightly"
-    elif "b" in current_version:
-        channel = "beta"
-
     # Additional/extra data collection
+    channel = get_channel(current_version)
     huuid = await hass.helpers.instance_id.async_get()
     system_info = await hass.helpers.system_info.async_get_system_info()
     custom_components = await async_get_custom_components(hass)
-
-    def before_send(event, hint):
-        # Filter out handled events by default
-        if "tags" in event and event.tags.get("handled", "no") == "yes":
-            return None
-
-        # Additional tags to add to the event
-        additional_tags = {
-            "channel": channel,
-            "installation_type": system_info["installation_type"],
-            "uuid": huuid,
-        }
-
-        # Find out all integrations in use, filter "auth", because it
-        # triggers security rules, hiding all data.
-        integrations = [
-            integration
-            for integration in hass.config.components
-            if integration != "auth" and "." not in integration
-        ]
-
-        # Add additional tags based on what caused the event.
-        platform = entity_platform.current_platform.get()
-        if platform is not None:
-            # This event happened in a platform
-            additional_tags["custom_component"] = "no"
-            additional_tags["integration"] = platform.platform_name
-            additional_tags["platform"] = platform.domain
-        elif "logger" in event:
-            # Logger event, try to get integration information from the logger name.
-            matches = LOGGER_INFO_REGEX.findall(event["logger"])
-            if matches:
-                group1, group2, group3, group4 = matches[0]
-                # Handle the "homeassistant." package differently
-                if group1 == "homeassistant" and group2 and group3:
-                    if group2 == "components":
-                        # This logger is from a component
-                        additional_tags["custom_component"] = "no"
-                        additional_tags["integration"] = group3
-                        if group4 and group4 in ENTITY_COMPONENTS:
-                            additional_tags["platform"] = group4
-                    else:
-                        # Not a component, could be helper, or something else.
-                        additional_tags[group2] = group3
-                else:
-                    # Not the "homeassistant" package, this third-party
-                    additional_tags["package"] = group1
-
-        # If this event is caused by an integration, add a tag if this
-        # integration is custom or not.
-        if (
-            "integration" in additional_tags
-            and additional_tags["integration"] in custom_components
-        ):
-            additional_tags["custom_component"] = "yes"
-
-        # Update event with the additional tags
-        event.setdefault("tags", {}).update(additional_tags)
-
-        # Update event data with Home Assistant Context
-        event.setdefault("contexts", {}).update(
-            {
-                "Home Assistant": {
-                    "channel": channel,
-                    "custom_components": "\n".join(sorted(custom_components)),
-                    "integrations": "\n".join(sorted(integrations)),
-                    **system_info,
-                },
-            }
-        )
-        return event
 
     sentry_sdk.init(
         dsn=conf.get(CONF_DSN),
         environment=conf.get(CONF_ENVIRONMENT),
         integrations=[sentry_logging, AioHttpIntegration(), SqlalchemyIntegration()],
         release=current_version,
-        before_send=before_send,
+        before_send=lambda event, hint: process_before_send(
+            hass, channel, huuid, system_info, custom_components, event, hint
+        ),
     )
 
     return True
+
+
+def get_channel(version) -> str:
+    """Find channel based on version number."""
+    if "dev0" in version:
+        return "dev"
+    if "dev" in version:
+        return "nightly"
+    if "b" in version:
+        return "beta"
+    return "stable"
+
+
+def process_before_send(
+    hass, channel, huuid, system_info, custom_components, event, hint
+):
+    """Process a Sentry event before sending it to Sentry."""
+
+    # Filter out handled events by default
+    if "tags" in event and event.tags.get("handled", "no") == "yes":
+        return None
+
+    # Additional tags to add to the event
+    additional_tags = {
+        "channel": channel,
+        "installation_type": system_info["installation_type"],
+        "uuid": huuid,
+    }
+
+    # Find out all integrations in use, filter "auth", because it
+    # triggers security rules, hiding all data.
+    integrations = [
+        integration
+        for integration in hass.config.components
+        if integration != "auth" and "." not in integration
+    ]
+
+    # Add additional tags based on what caused the event.
+    platform = entity_platform.current_platform.get()
+    if platform is not None:
+        # This event happened in a platform
+        additional_tags["custom_component"] = "no"
+        additional_tags["integration"] = platform.platform_name
+        additional_tags["platform"] = platform.domain
+    elif "logger" in event:
+        # Logger event, try to get integration information from the logger name.
+        matches = LOGGER_INFO_REGEX.findall(event["logger"])
+        if matches:
+            group1, group2, group3, group4 = matches[0]
+            # Handle the "homeassistant." package differently
+            if group1 == "homeassistant" and group2 and group3:
+                if group2 == "components":
+                    # This logger is from a component
+                    additional_tags["custom_component"] = "no"
+                    additional_tags["integration"] = group3
+                    if group4 and group4 in ENTITY_COMPONENTS:
+                        additional_tags["platform"] = group4
+                else:
+                    # Not a component, could be helper, or something else.
+                    additional_tags[group2] = group3
+            else:
+                # Not the "homeassistant" package, this third-party
+                additional_tags["package"] = group1
+
+    # If this event is caused by an integration, add a tag if this
+    # integration is custom or not.
+    if (
+        "integration" in additional_tags
+        and additional_tags["integration"] in custom_components
+    ):
+        additional_tags["custom_component"] = "yes"
+
+    # Update event with the additional tags
+    event.setdefault("tags", {}).update(additional_tags)
+
+    # Update event data with Home Assistant Context
+    event.setdefault("contexts", {}).update(
+        {
+            "Home Assistant": {
+                "channel": channel,
+                "custom_components": "\n".join(sorted(custom_components)),
+                "integrations": "\n".join(sorted(integrations)),
+                **system_info,
+            },
+        }
+    )
+    return event
