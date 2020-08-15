@@ -194,7 +194,7 @@ async def test_abort_discovered_existing_entries(hass, flow_handler, local_impl)
 
 
 async def test_full_flow(
-    hass, flow_handler, local_impl, aiohttp_client, aioclient_mock
+    hass, flow_handler, local_impl, aiohttp_client, aioclient_mock, current_request
 ):
     """Check full flow."""
     await async_process_ha_core_config(
