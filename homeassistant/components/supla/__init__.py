@@ -6,7 +6,11 @@ import async_timeout
 from asyncpysupla import SuplaAPI
 import voluptuous as vol
 
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_SCAN_INTERVAL
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_CLOSE,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
@@ -65,6 +69,7 @@ async def async_setup(hass, base_config):
             srv_info = await server.get_server_info()
             if srv_info.get("authenticated"):
                 hass.data[SUPLA_SERVERS][server_conf[CONF_SERVER]] = server
+
             else:
                 _LOGGER.error(
                     "Server: %s not configured. API call returned: %s",
@@ -77,6 +82,14 @@ async def async_setup(hass, base_config):
                 "Server: %s not configured. Error on Supla API access: ", server_address
             )
             return False
+
+    # Register a cleanup callback
+    async def _async_close_supla_servers(event):
+        for server_name, server in hass.data[SUPLA_SERVERS].items():
+            _LOGGER.info("Closing up Supla server: %s", server_name)
+            await server.close()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_close_supla_servers)
 
     await discover_devices(hass, base_config)
 
