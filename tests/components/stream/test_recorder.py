@@ -82,6 +82,7 @@ async def test_recorder_save():
     assert output.getvalue()
 
 
+@pytest.mark.skip("Flaky in CI")
 async def test_record_stream_audio(hass, hass_client):
     """
     Test treatment of different audio inputs.
