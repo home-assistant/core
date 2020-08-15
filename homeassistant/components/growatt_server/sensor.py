@@ -581,5 +581,5 @@ class GrowattData:
 
     def get_data(self, variable):
         """Get the data."""
-        _LOGGER.debug(f"The value for {variable} is: {self.data.get(variable)}")
+        _LOGGER.debug("The value for %s is: %s", variable, self.data.get(variable))
         return self.data.get(variable)
