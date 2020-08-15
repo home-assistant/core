@@ -8,6 +8,7 @@ import voluptuous as vol
 from zeroconf import (
     DNSPointer,
     DNSRecord,
+    Error as ZeroconfError,
     InterfaceChoice,
     IPVersion,
     NonUniqueNameException,
@@ -208,7 +209,12 @@ def setup(hass, config):
         if state_change != ServiceStateChange.Added:
             return
 
-        service_info = zeroconf.get_service_info(service_type, name)
+        try:
+            service_info = zeroconf.get_service_info(service_type, name)
+        except ZeroconfError:
+            _LOGGER.exception("Failed to get info for device %s", name)
+            return
+
         if not service_info:
             # Prevent the browser thread from collapsing as
             # service_info can be None

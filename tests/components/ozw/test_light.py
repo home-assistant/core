@@ -85,7 +85,7 @@ async def test_light(hass, light_data, light_msg, light_rgb_msg, sent_messages):
     assert state.state == "off"
 
     # Test turn on without brightness
-    new_transition = 127
+    new_transition = 127.0
     await hass.services.async_call(
         "light",
         "turn_on",
