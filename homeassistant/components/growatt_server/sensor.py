@@ -380,7 +380,7 @@ TLX_SENSOR_TYPES = {
     ),
     "temperature_2": (
         "Temperature 2",
-       TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "temp2",
         {"device_class": "temperature", "round": 1},
     ),
@@ -540,7 +540,7 @@ class GrowattData:
         self.data = {}
         self.username = username
         self.password = password
-                
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update probe data."""
