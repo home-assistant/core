@@ -25,6 +25,8 @@
         "step": {
             "init": {
                 "data": {
+                    "limit": "Limite",
+                    "order": "Reiefolleg",
                     "scan_interval": "Intervalle vun de Mise \u00e0 jour"
                 },
                 "title": "Optioune fir Transmission konfigur\u00e9ieren"

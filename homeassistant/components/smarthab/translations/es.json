@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "service": "Error al intentar contactar con SmartHab. El servicio podr\u00eda estar ca\u00eddo. Verifica tu conexi\u00f3n.",
+            "unknown_error": "Error inesperado",
+            "wrong_login": "Autenticaci\u00f3n no v\u00e1lida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Correo electr\u00f3nico",
+                    "password": "Contrase\u00f1a"
+                },
+                "description": "Por razones t\u00e9cnicas, aseg\u00farate de usar una cuenta secundaria espec\u00edfica para su configuraci\u00f3n de Home Assistant. Puedes crear una desde la aplicaci\u00f3n SmartHab.",
+                "title": "Configurar SmartHab"
+            }
+        }
+    }
+}

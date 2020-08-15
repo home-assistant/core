@@ -23,5 +23,16 @@
                 "title": "\u4ee5 Blink \u5e33\u865f\u767b\u5165"
             }
         }
+    },
+    "options": {
+        "step": {
+            "simple_options": {
+                "data": {
+                    "scan_interval": "\u6383\u63cf\u9593\u8ddd\uff08\u79d2\uff09"
+                },
+                "description": "\u8a2d\u5b9a Blink \u6574\u5408",
+                "title": "Blink \u9078\u9805"
+            }
+        }
     }
 }

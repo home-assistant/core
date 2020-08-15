@@ -14,7 +14,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers import condition, config_validation as cv, template
-from homeassistant.helpers.event import async_track_same_state, async_track_state_change
+from homeassistant.helpers.event import (
+    async_track_same_state,
+    async_track_state_change_event,
+)
 
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs
@@ -44,11 +47,7 @@ TRIGGER_SCHEMA = vol.All(
             vol.Optional(CONF_BELOW): vol.Coerce(float),
             vol.Optional(CONF_ABOVE): vol.Coerce(float),
             vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_FOR): vol.Any(
-                vol.All(cv.time_period, cv.positive_timedelta),
-                cv.template,
-                cv.template_complex,
-            ),
+            vol.Optional(CONF_FOR): cv.positive_time_period_template,
         }
     ),
     cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
@@ -94,8 +93,11 @@ async def async_attach_trigger(
         )
 
     @callback
-    def state_automation_listener(entity, from_s, to_s):
+    def state_automation_listener(event):
         """Listen for state changes and calls action."""
+        entity = event.data.get("entity_id")
+        from_s = event.data.get("old_state")
+        to_s = event.data.get("new_state")
 
         @callback
         def call_action():
@@ -135,20 +137,9 @@ async def async_attach_trigger(
                 }
 
                 try:
-                    if isinstance(time_delta, template.Template):
-                        period[entity] = vol.All(cv.time_period, cv.positive_timedelta)(
-                            time_delta.async_render(variables)
-                        )
-                    elif isinstance(time_delta, dict):
-                        time_delta_data = {}
-                        time_delta_data.update(
-                            template.render_complex(time_delta, variables)
-                        )
-                        period[entity] = vol.All(cv.time_period, cv.positive_timedelta)(
-                            time_delta_data
-                        )
-                    else:
-                        period[entity] = time_delta
+                    period[entity] = cv.positive_time_period(
+                        template.render_complex(time_delta, variables)
+                    )
                 except (exceptions.TemplateError, vol.Invalid) as ex:
                     _LOGGER.error(
                         "Error rendering '%s' for template: %s",
@@ -168,7 +159,7 @@ async def async_attach_trigger(
             else:
                 call_action()
 
-    unsub = async_track_state_change(hass, entity_id, state_automation_listener)
+    unsub = async_track_state_change_event(hass, entity_id, state_automation_listener)
 
     @callback
     def async_remove():

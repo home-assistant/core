@@ -230,7 +230,6 @@ class NanoleafLight(LightEntity):
         try:
             self._available = self._light.available
             self._brightness = self._light.brightness
-            self._color_temp = self._light.color_temperature
             self._effects_list = self._light.effects
             # Nanoleaf api returns non-existent effect named "*Solid*" when light set to solid color.
             # This causes various issues with scening (see https://github.com/home-assistant/core/issues/36359).
@@ -238,7 +237,12 @@ class NanoleafLight(LightEntity):
             self._effect = (
                 self._light.effect if self._light.effect in self._effects_list else None
             )
-            self._hs_color = self._light.hue, self._light.saturation
+            if self._effect is None:
+                self._color_temp = self._light.color_temperature
+                self._hs_color = self._light.hue, self._light.saturation
+            else:
+                self._color_temp = None
+                self._hs_color = None
             self._state = self._light.on
         except Unavailable as err:
             _LOGGER.error("Could not update status for %s (%s)", self.name, err)

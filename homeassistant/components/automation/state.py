@@ -6,12 +6,13 @@ from typing import Dict
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.const import CONF_FOR, CONF_PLATFORM, EVENT_STATE_CHANGED, MATCH_ALL
+from homeassistant.const import CONF_FOR, CONF_PLATFORM, MATCH_ALL
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.event import (
     Event,
     async_track_same_state,
+    async_track_state_change_event,
     process_state_match,
 )
 
@@ -32,11 +33,7 @@ TRIGGER_SCHEMA = vol.All(
             # These are str on purpose. Want to catch YAML conversions
             vol.Optional(CONF_FROM): vol.Any(str, [str]),
             vol.Optional(CONF_TO): vol.Any(str, [str]),
-            vol.Optional(CONF_FOR): vol.Any(
-                vol.All(cv.time_period, cv.positive_timedelta),
-                cv.template,
-                cv.template_complex,
-            ),
+            vol.Optional(CONF_FOR): cv.positive_time_period_template,
         }
     ),
     cv.key_dependency(CONF_FOR, CONF_TO),
@@ -72,16 +69,13 @@ async def async_attach_trigger(
 
         from_s = event.data.get("old_state")
         to_s = event.data.get("new_state")
+        old_state = getattr(from_s, "state", None)
+        new_state = getattr(to_s, "state", None)
 
         if (
-            (from_s is not None and not match_from_state(from_s.state))
-            or (to_s is not None and not match_to_state(to_s.state))
-            or (
-                not match_all
-                and from_s is not None
-                and to_s is not None
-                and from_s.state == to_s.state
-            )
+            not match_from_state(old_state)
+            or not match_to_state(new_state)
+            or (not match_all and old_state == new_state)
         ):
             return
 
@@ -103,15 +97,6 @@ async def async_attach_trigger(
                 )
             )
 
-        # Ignore changes to state attributes if from/to is in use
-        if (
-            not match_all
-            and from_s is not None
-            and to_s is not None
-            and from_s.state == to_s.state
-        ):
-            return
-
         if not time_delta:
             call_action()
             return
@@ -126,18 +111,9 @@ async def async_attach_trigger(
         }
 
         try:
-            if isinstance(time_delta, template.Template):
-                period[entity] = vol.All(cv.time_period, cv.positive_timedelta)(
-                    time_delta.async_render(variables)
-                )
-            elif isinstance(time_delta, dict):
-                time_delta_data = {}
-                time_delta_data.update(template.render_complex(time_delta, variables))
-                period[entity] = vol.All(cv.time_period, cv.positive_timedelta)(
-                    time_delta_data
-                )
-            else:
-                period[entity] = time_delta
+            period[entity] = cv.positive_time_period(
+                template.render_complex(time_delta, variables)
+            )
         except (exceptions.TemplateError, vol.Invalid) as ex:
             _LOGGER.error(
                 "Error rendering '%s' for template: %s", automation_info["name"], ex
@@ -153,7 +129,7 @@ async def async_attach_trigger(
             hass, period[entity], call_action, _check_same_state, entity_ids=entity,
         )
 
-    unsub = hass.bus.async_listen(EVENT_STATE_CHANGED, state_automation_listener)
+    unsub = async_track_state_change_event(hass, entity_id, state_automation_listener)
 
     @callback
     def async_remove():

@@ -122,8 +122,7 @@ class PwThermostat(SmileGateway, ClimateEntity):
         """Return the device specific state attributes."""
         attributes = {}
         if self._schema_names:
-            if len(self._schema_names) > 1:
-                attributes["available_schemas"] = self._schema_names
+            attributes["available_schemas"] = self._schema_names
         if self._selected_schema:
             attributes["selected_schema"] = self._selected_schema
         return attributes

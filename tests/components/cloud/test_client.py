@@ -141,7 +141,7 @@ async def test_handler_google_actions_disabled(hass, mock_cloud_fixture):
     assert resp["payload"]["errorCode"] == "deviceTurnedOff"
 
 
-async def test_webhook_msg(hass):
+async def test_webhook_msg(hass, caplog):
     """Test webhook msg."""
     with patch("hass_nabucasa.Cloud.start"):
         setup = await async_setup_component(hass, "cloud", {"cloud": {}})
@@ -151,7 +151,14 @@ async def test_webhook_msg(hass):
     await cloud.client.prefs.async_initialize()
     await cloud.client.prefs.async_update(
         cloudhooks={
-            "hello": {"webhook_id": "mock-webhook-id", "cloudhook_id": "mock-cloud-id"}
+            "mock-webhook-id": {
+                "webhook_id": "mock-webhook-id",
+                "cloudhook_id": "mock-cloud-id",
+            },
+            "no-longere-existing": {
+                "webhook_id": "no-longere-existing",
+                "cloudhook_id": "mock-nonexisting-id",
+            },
         }
     )
 
@@ -182,6 +189,31 @@ async def test_webhook_msg(hass):
 
     assert len(received) == 1
     assert await received[0].json() == {"hello": "world"}
+
+    # Non existing webhook
+    caplog.clear()
+
+    response = await cloud.client.async_webhook_message(
+        {
+            "cloudhook_id": "mock-nonexisting-id",
+            "body": '{"nonexisting": "payload"}',
+            "headers": {"content-type": "application/json"},
+            "method": "POST",
+            "query": None,
+        }
+    )
+
+    assert response == {
+        "status": 200,
+        "body": None,
+        "headers": {"Content-Type": "application/octet-stream"},
+    }
+
+    assert (
+        "Received message for unregistered webhook no-longere-existing from cloud"
+        in caplog.text
+    )
+    assert '{"nonexisting": "payload"}' in caplog.text
 
 
 async def test_google_config_expose_entity(hass, mock_cloud_setup, mock_cloud_login):

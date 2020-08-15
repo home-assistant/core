@@ -6,6 +6,7 @@ import aiohomekit
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.core import callback
 
 from .connection import get_accessory_name, get_bridge_information
@@ -59,8 +60,13 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         self.model = None
         self.hkid = None
         self.devices = {}
-        self.controller = aiohomekit.Controller()
+        self.controller = None
         self.finish_pairing = None
+
+    async def _async_setup_controller(self):
+        """Create the controller."""
+        zeroconf_instance = await zeroconf.async_get_instance(self.hass)
+        self.controller = aiohomekit.Controller(zeroconf_instance=zeroconf_instance)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
@@ -74,6 +80,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
                 normalize_hkid(self.hkid), raise_on_progress=False
             )
             return await self.async_step_pair()
+
+        if self.controller is None:
+            await self._async_setup_controller()
 
         all_hosts = await self.controller.discover_ip()
 
@@ -101,7 +110,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         unique_id = user_input["unique_id"]
         await self.async_set_unique_id(unique_id)
 
-        devices = await self.controller.discover_ip(5)
+        if self.controller is None:
+            await self._async_setup_controller()
+
+        devices = await self.controller.discover_ip(max_seconds=5)
         for device in devices:
             if normalize_hkid(device.device_id) != unique_id:
                 continue
@@ -227,7 +239,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
         errors = {}
 
-        if pair_info:
+        if self.controller is None:
+            await self._async_setup_controller()
+
+        if pair_info and self.finish_pairing:
             code = pair_info["pairing_code"]
             try:
                 code = ensure_pin_format(code)
@@ -243,44 +258,77 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
                 # PairVerify M4 - Device not recognised
                 # PairVerify M4 - Ed25519 signature verification failed
                 errors["pairing_code"] = "authentication_error"
+                self.finish_pairing = None
             except aiohomekit.UnknownError:
                 # An error occurred on the device whilst performing this
                 # operation.
                 errors["pairing_code"] = "unknown_error"
+                self.finish_pairing = None
             except aiohomekit.MaxPeersError:
                 # The device can't pair with any more accessories.
                 errors["pairing_code"] = "max_peers_error"
+                self.finish_pairing = None
             except aiohomekit.AccessoryNotFoundError:
                 # Can no longer find the device on the network
                 return self.async_abort(reason="accessory_not_found_error")
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
+                self.finish_pairing = None
                 errors["pairing_code"] = "pairing_failed"
 
-        discovery = await self.controller.find_ip_by_device_id(self.hkid)
+        if not self.finish_pairing:
+            # Its possible that the first try may have been busy so
+            # we always check to see if self.finish_paring has been
+            # set.
+            discovery = await self.controller.find_ip_by_device_id(self.hkid)
 
-        try:
-            self.finish_pairing = await discovery.start_pairing(self.hkid)
+            try:
+                self.finish_pairing = await discovery.start_pairing(self.hkid)
 
-        except aiohomekit.BusyError:
-            # Already performing a pair setup operation with a different
-            # controller
-            errors["pairing_code"] = "busy_error"
-        except aiohomekit.MaxTriesError:
-            # The accessory has received more than 100 unsuccessful auth
-            # attempts.
-            errors["pairing_code"] = "max_tries_error"
-        except aiohomekit.UnavailableError:
-            # The accessory is already paired - cannot try to pair again.
-            return self.async_abort(reason="already_paired")
-        except aiohomekit.AccessoryNotFoundError:
-            # Can no longer find the device on the network
-            return self.async_abort(reason="accessory_not_found_error")
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Pairing attempt failed with an unhandled exception")
-            errors["pairing_code"] = "pairing_failed"
+            except aiohomekit.BusyError:
+                # Already performing a pair setup operation with a different
+                # controller
+                return await self.async_step_busy_error()
+            except aiohomekit.MaxTriesError:
+                # The accessory has received more than 100 unsuccessful auth
+                # attempts.
+                return await self.async_step_max_tries_error()
+            except aiohomekit.UnavailableError:
+                # The accessory is already paired - cannot try to pair again.
+                return self.async_abort(reason="already_paired")
+            except aiohomekit.AccessoryNotFoundError:
+                # Can no longer find the device on the network
+                return self.async_abort(reason="accessory_not_found_error")
+            except IndexError:
+                # TLV error, usually not in pairing mode
+                _LOGGER.exception("Pairing communication failed")
+                return await self.async_step_protocol_error()
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Pairing attempt failed with an unhandled exception")
+                errors["pairing_code"] = "pairing_failed"
 
         return self._async_step_pair_show_form(errors)
+
+    async def async_step_busy_error(self, user_input=None):
+        """Retry pairing after the accessory is busy."""
+        if user_input is not None:
+            return await self.async_step_pair()
+
+        return self.async_show_form(step_id="busy_error")
+
+    async def async_step_max_tries_error(self, user_input=None):
+        """Retry pairing after the accessory has reached max tries."""
+        if user_input is not None:
+            return await self.async_step_pair()
+
+        return self.async_show_form(step_id="max_tries_error")
+
+    async def async_step_protocol_error(self, user_input=None):
+        """Retry pairing after the accessory has a protocol error."""
+        if user_input is not None:
+            return await self.async_step_pair()
+
+        return self.async_show_form(step_id="protocol_error")
 
     @callback
     def _async_step_pair_show_form(self, errors=None):

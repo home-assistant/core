@@ -202,21 +202,6 @@ class TestAlert(unittest.TestCase):
         self.hass.block_till_done()
         assert STATE_ON == self.hass.states.get(ENTITY_ID).state
 
-    def test_hidden(self):
-        """Test entity hiding."""
-        assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
-        hidden = self.hass.states.get(ENTITY_ID).attributes.get("hidden")
-        assert hidden
-
-        self.hass.states.set("sensor.test", STATE_ON)
-        self.hass.block_till_done()
-        hidden = self.hass.states.get(ENTITY_ID).attributes.get("hidden")
-        assert not hidden
-
-        turn_off(self.hass, ENTITY_ID)
-        hidden = self.hass.states.get(ENTITY_ID).attributes.get("hidden")
-        assert not hidden
-
     def test_notification_no_done_message(self):
         """Test notifications."""
         events = []
@@ -358,8 +343,6 @@ class TestAlert(unittest.TestCase):
         entity = alert.Alert(self.hass, *TEST_NOACK)
         self.hass.add_job(entity.begin_alerting)
         self.hass.block_till_done()
-
-        assert entity.hidden is True
 
     def test_done_message_state_tracker_reset_on_cancel(self):
         """Test that the done message is reset when canceled."""

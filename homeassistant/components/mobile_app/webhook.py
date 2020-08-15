@@ -8,9 +8,11 @@ from aiohttp.web import HTTPBadRequest, Request, Response, json_response
 from nacl.secret import SecretBox
 import voluptuous as vol
 
+from homeassistant.components import tag
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_CLASSES,
 )
+from homeassistant.components.camera import SUPPORT_STREAM as CAMERA_SUPPORT_STREAM
 from homeassistant.components.device_tracker import (
     ATTR_BATTERY,
     ATTR_GPS,
@@ -29,7 +31,7 @@ from homeassistant.const import (
     HTTP_CREATED,
 )
 from homeassistant.core import EventOrigin
-from homeassistant.exceptions import ServiceNotFound, TemplateError
+from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, TemplateError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.template import attach
@@ -40,6 +42,7 @@ from .const import (
     ATTR_ALTITUDE,
     ATTR_APP_DATA,
     ATTR_APP_VERSION,
+    ATTR_CAMERA_ENTITY_ID,
     ATTR_COURSE,
     ATTR_DEVICE_ID,
     ATTR_DEVICE_NAME,
@@ -238,6 +241,32 @@ async def webhook_fire_event(hass, config_entry, data):
         context=registration_context(config_entry.data),
     )
     return empty_okay_response()
+
+
+@WEBHOOK_COMMANDS.register("stream_camera")
+@validate_schema({vol.Required(ATTR_CAMERA_ENTITY_ID): cv.string})
+async def webhook_stream_camera(hass, config_entry, data):
+    """Handle a request to HLS-stream a camera."""
+    camera = hass.states.get(data[ATTR_CAMERA_ENTITY_ID])
+
+    if camera is None:
+        return webhook_response(
+            {"success": False}, registration=config_entry.data, status=HTTP_BAD_REQUEST,
+        )
+
+    resp = {"mjpeg_path": "/api/camera_proxy_stream/%s" % (camera.entity_id)}
+
+    if camera.attributes["supported_features"] & CAMERA_SUPPORT_STREAM:
+        try:
+            resp["hls_path"] = await hass.components.camera.async_request_stream(
+                camera.entity_id, "hls"
+            )
+        except HomeAssistantError:
+            resp["hls_path"] = None
+    else:
+        resp["hls_path"] = None
+
+    return webhook_response(resp, registration=config_entry.data)
 
 
 @WEBHOOK_COMMANDS.register("render_template")
@@ -510,3 +539,16 @@ async def webhook_get_config(hass, config_entry, data):
         pass
 
     return webhook_response(resp, registration=config_entry.data)
+
+
+@WEBHOOK_COMMANDS.register("scan_tag")
+@validate_schema({vol.Required("tag_id"): cv.string})
+async def webhook_scan_tag(hass, config_entry, data):
+    """Handle a fire event webhook."""
+    await tag.async_scan_tag(
+        hass,
+        data["tag_id"],
+        config_entry.data[ATTR_DEVICE_ID],
+        registration_context(config_entry.data),
+    )
+    return empty_okay_response()

@@ -20,7 +20,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Vert eller IP-adresse",
+                    "host": "Vert ",
                     "password": "Passord",
                     "username": "Brukernavn"
                 },

@@ -5,7 +5,7 @@
             "unknown": "Error inesperat"
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar"
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "flow_title": "Roku: {name}",
         "step": {

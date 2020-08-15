@@ -76,7 +76,7 @@ class AlarmPanel:
 
     @property
     def device_id(self):
-        """Device id is the MAC address as string with punctuation removed."""
+        """Device id is the chipId (pro) or MAC address as string with punctuation removed."""
         return self.config.get(CONF_ID)
 
     @property

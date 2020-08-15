@@ -163,7 +163,7 @@ def aiolifx_effects():
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the LIFX light platform. Obsolete."""
-    _LOGGER.warning("LIFX no longer works with light platform configuration.")
+    _LOGGER.warning("LIFX no longer works with light platform configuration")
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -641,7 +641,9 @@ class LIFXLight(LightEntity):
         """Start an effect with default parameters."""
         service = kwargs[ATTR_EFFECT]
         data = {ATTR_ENTITY_ID: self.entity_id}
-        await self.hass.services.async_call(LIFX_DOMAIN, service, data)
+        await self.hass.services.async_call(
+            LIFX_DOMAIN, service, data, context=self._context
+        )
 
     async def async_update(self):
         """Update bulb status."""

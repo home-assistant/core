@@ -123,10 +123,13 @@ class LoopEnergyElec(LoopEnergyDevice):
         """Initialize the sensor."""
         super().__init__(controller)
         self._name = "Power Usage"
+
+    async def async_added_to_hass(self):
+        """Subscribe to updates."""
         self._controller.subscribe_elecricity(self._callback)
 
     def update(self):
-        """Get the cached Loop energy."""
+        """Get the cached Loop energy reading."""
         self._state = round(self._controller.electricity_useage, 2)
 
 
@@ -137,8 +140,11 @@ class LoopEnergyGas(LoopEnergyDevice):
         """Initialize the sensor."""
         super().__init__(controller)
         self._name = "Gas Usage"
+
+    async def async_added_to_hass(self):
+        """Subscribe to updates."""
         self._controller.subscribe_gas(self._callback)
 
     def update(self):
-        """Get the cached Loop energy."""
+        """Get the cached Loop gas reading."""
         self._state = round(self._controller.gas_useage, 2)

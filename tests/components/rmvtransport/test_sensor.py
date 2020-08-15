@@ -48,7 +48,7 @@ VALID_CONFIG_DEST = {
 
 def get_departures_mock():
     """Mock rmvtransport departures loading."""
-    data = {
+    return {
         "station": "Frankfurt (Main) Hauptbahnhof",
         "stationId": "3000010",
         "filter": "11111111111",
@@ -145,18 +145,16 @@ def get_departures_mock():
             },
         ],
     }
-    return data
 
 
 def get_no_departures_mock():
     """Mock no departures in results."""
-    data = {
+    return {
         "station": "Frankfurt (Main) Hauptbahnhof",
         "stationId": "3000010",
         "filter": "11111111111",
         "journeys": [],
     }
-    return data
 
 
 async def test_rmvtransport_min_config(hass):
@@ -232,4 +230,4 @@ async def test_rmvtransport_no_departures(hass):
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.frankfurt_main_hauptbahnhof")
-    assert not state
+    assert state.state == "unavailable"

@@ -7,6 +7,7 @@ import zigpy.config
 import zigpy.group
 import zigpy.types
 
+from homeassistant.components.zha import DOMAIN
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.device as zha_core_device
 from homeassistant.setup import async_setup_component
@@ -100,6 +101,7 @@ def zigpy_device_mock(zigpy_app_controller):
         model="FakeModel",
         node_descriptor=b"\x02@\x807\x10\x7fd\x00\x00*d\x00\x00",
         nwk=0xB79C,
+        patch_cluster=True,
     ):
         """Make a fake device using the specified cluster classes."""
         device = FakeDevice(
@@ -115,10 +117,10 @@ def zigpy_device_mock(zigpy_app_controller):
                 endpoint.profile_id = profile_id
 
             for cluster_id in ep.get("in_clusters", []):
-                endpoint.add_input_cluster(cluster_id)
+                endpoint.add_input_cluster(cluster_id, _patch_cluster=patch_cluster)
 
             for cluster_id in ep.get("out_clusters", []):
-                endpoint.add_output_cluster(cluster_id)
+                endpoint.add_output_cluster(cluster_id, _patch_cluster=patch_cluster)
 
         return device
 
@@ -140,11 +142,27 @@ def zha_device_joined(hass, setup_zha):
 
 
 @pytest.fixture
-def zha_device_restored(hass, zigpy_app_controller, setup_zha):
+def zha_device_restored(hass, zigpy_app_controller, setup_zha, hass_storage):
     """Return a restored ZHA device."""
 
-    async def _zha_device(zigpy_dev):
+    async def _zha_device(zigpy_dev, last_seen=None):
         zigpy_app_controller.devices[zigpy_dev.ieee] = zigpy_dev
+
+        if last_seen is not None:
+            hass_storage[f"{DOMAIN}.storage"] = {
+                "key": f"{DOMAIN}.storage",
+                "version": 1,
+                "data": {
+                    "devices": [
+                        {
+                            "ieee": str(zigpy_dev.ieee),
+                            "last_seen": last_seen,
+                            "name": f"{zigpy_dev.manufacturer} {zigpy_dev.model}",
+                        }
+                    ],
+                },
+            }
+
         await setup_zha()
         zha_gateway = hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
         return zha_gateway.get_device(zigpy_dev.ieee)
@@ -170,6 +188,7 @@ def zha_device_mock(hass, zigpy_device_mock):
         manufacturer="mock manufacturer",
         model="mock model",
         node_desc=b"\x02@\x807\x10\x7fd\x00\x00*d\x00\x00",
+        patch_cluster=True,
     ):
         if endpoints is None:
             endpoints = {
@@ -185,9 +204,18 @@ def zha_device_mock(hass, zigpy_device_mock):
                 },
             }
         zigpy_device = zigpy_device_mock(
-            endpoints, ieee, manufacturer, model, node_desc
+            endpoints, ieee, manufacturer, model, node_desc, patch_cluster=patch_cluster
         )
         zha_device = zha_core_device.ZHADevice(hass, zigpy_device, MagicMock())
         return zha_device
 
     return _zha_device
+
+
+@pytest.fixture
+def hass_disable_services(hass):
+    """Mock service register."""
+    with patch.object(hass.services, "async_register"), patch.object(
+        hass.services, "has_service", return_value=True
+    ):
+        yield hass

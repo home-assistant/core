@@ -1,20 +1,29 @@
 """Support for Toon binary sensors."""
-
 import logging
-from typing import Any
+from typing import Optional
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import (
+from .const import (
+    ATTR_DEFAULT_ENABLED,
+    ATTR_DEVICE_CLASS,
+    ATTR_ICON,
+    ATTR_INVERTED,
+    ATTR_MEASUREMENT,
+    ATTR_NAME,
+    ATTR_SECTION,
+    BINARY_SENSOR_ENTITIES,
+    DOMAIN,
+)
+from .coordinator import ToonDataUpdateCoordinator
+from .models import (
     ToonBoilerDeviceEntity,
     ToonBoilerModuleDeviceEntity,
-    ToonData,
     ToonDisplayDeviceEntity,
     ToonEntity,
 )
-from .const import DATA_TOON, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,87 +32,27 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up a Toon binary sensor based on a config entry."""
-    toon = hass.data[DATA_TOON][entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors = [
         ToonBoilerModuleBinarySensor(
-            toon,
-            "thermostat_info",
-            "boiler_connected",
-            None,
-            "Boiler Module Connection",
-            "mdi:check-network-outline",
-            "connectivity",
+            coordinator, key="thermostat_info_boiler_connected_None"
         ),
-        ToonDisplayBinarySensor(
-            toon,
-            "thermostat_info",
-            "active_state",
-            4,
-            "Toon Holiday Mode",
-            "mdi:airport",
-            None,
-        ),
-        ToonDisplayBinarySensor(
-            toon,
-            "thermostat_info",
-            "next_program",
-            None,
-            "Toon Program",
-            "mdi:calendar-clock",
-            None,
-        ),
+        ToonDisplayBinarySensor(coordinator, key="thermostat_program_overridden"),
     ]
 
-    if toon.thermostat_info.have_ot_boiler:
+    if coordinator.data.thermostat.have_opentherm_boiler:
         sensors.extend(
             [
-                ToonBoilerBinarySensor(
-                    toon,
-                    "thermostat_info",
-                    "ot_communication_error",
-                    "0",
-                    "OpenTherm Connection",
-                    "mdi:check-network-outline",
-                    "connectivity",
-                ),
-                ToonBoilerBinarySensor(
-                    toon,
-                    "thermostat_info",
-                    "error_found",
-                    255,
-                    "Boiler Status",
-                    "mdi:alert",
-                    "problem",
-                    inverted=True,
-                ),
-                ToonBoilerBinarySensor(
-                    toon,
-                    "thermostat_info",
-                    "burner_info",
-                    None,
-                    "Boiler Burner",
-                    "mdi:fire",
-                    None,
-                ),
-                ToonBoilerBinarySensor(
-                    toon,
-                    "thermostat_info",
-                    "burner_info",
-                    "2",
-                    "Hot Tap Water",
-                    "mdi:water-pump",
-                    None,
-                ),
-                ToonBoilerBinarySensor(
-                    toon,
-                    "thermostat_info",
-                    "burner_info",
-                    "3",
-                    "Boiler Preheating",
-                    "mdi:fire",
-                    None,
-                ),
+                ToonBoilerBinarySensor(coordinator, key=key)
+                for key in [
+                    "thermostat_info_ot_communication_error_0",
+                    "thermostat_info_error_found_255",
+                    "thermostat_info_burner_info_None",
+                    "thermostat_info_burner_info_1",
+                    "thermostat_info_burner_info_2",
+                    "thermostat_info_burner_info_3",
+                ]
             ]
         )
 
@@ -113,65 +62,45 @@ async def async_setup_entry(
 class ToonBinarySensor(ToonEntity, BinarySensorEntity):
     """Defines an Toon binary sensor."""
 
-    def __init__(
-        self,
-        toon: ToonData,
-        section: str,
-        measurement: str,
-        on_value: Any,
-        name: str,
-        icon: str,
-        device_class: str,
-        inverted: bool = False,
-    ) -> None:
+    def __init__(self, coordinator: ToonDataUpdateCoordinator, *, key: str) -> None:
         """Initialize the Toon sensor."""
-        self._state = inverted
-        self._device_class = device_class
-        self.section = section
-        self.measurement = measurement
-        self.on_value = on_value
-        self.inverted = inverted
+        self.key = key
 
-        super().__init__(toon, name, icon)
+        super().__init__(
+            coordinator,
+            enabled_default=BINARY_SENSOR_ENTITIES[key][ATTR_DEFAULT_ENABLED],
+            icon=BINARY_SENSOR_ENTITIES[key][ATTR_ICON],
+            name=BINARY_SENSOR_ENTITIES[key][ATTR_NAME],
+        )
 
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this binary sensor."""
-        return "_".join(
-            [
-                DOMAIN,
-                self.toon.agreement.id,
-                "binary_sensor",
-                self.section,
-                self.measurement,
-                str(self.on_value),
-            ]
-        )
+        agreement_id = self.coordinator.data.agreement.agreement_id
+        # This unique ID is a bit ugly and contains unneeded information.
+        # It is here for legacy / backward compatible reasons.
+        return f"{DOMAIN}_{agreement_id}_binary_sensor_{self.key}"
 
     @property
     def device_class(self) -> str:
         """Return the device class."""
-        return self._device_class
+        return BINARY_SENSOR_ENTITIES[self.key][ATTR_DEVICE_CLASS]
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> Optional[bool]:
         """Return the status of the binary sensor."""
-        if self.on_value is not None:
-            value = self._state == self.on_value
-        elif self._state is None:
-            value = False
-        else:
-            value = bool(max(0, int(self._state)))
+        section = getattr(
+            self.coordinator.data, BINARY_SENSOR_ENTITIES[self.key][ATTR_SECTION]
+        )
+        value = getattr(section, BINARY_SENSOR_ENTITIES[self.key][ATTR_MEASUREMENT])
 
-        if self.inverted:
+        if value is None:
+            return None
+
+        if BINARY_SENSOR_ENTITIES[self.key][ATTR_INVERTED]:
             return not value
 
         return value
-
-    def update(self) -> None:
-        """Get the latest data from the binary sensor."""
-        section = getattr(self.toon, self.section)
-        self._state = getattr(section, self.measurement)
 
 
 class ToonBoilerBinarySensor(ToonBinarySensor, ToonBoilerDeviceEntity):

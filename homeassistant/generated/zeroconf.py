@@ -6,12 +6,18 @@ To update, run python3 -m script.hassfest
 # fmt: off
 
 ZEROCONF = {
+    "_Volumio._tcp.local.": [
+        "volumio"
+    ],
     "_api._udp.local.": [
         "guardian"
     ],
     "_axis-video._tcp.local.": [
         "axis",
         "doorbird"
+    ],
+    "_bond._tcp.local.": [
+        "bond"
     ],
     "_daap._tcp.local.": [
         "forked_daapd"
@@ -38,13 +44,23 @@ ZEROCONF = {
         "ipp"
     ],
     "_miio._udp.local.": [
+        "xiaomi_aqara",
         "xiaomi_miio"
+    ],
+    "_nut._tcp.local.": [
+        "nut"
+    ],
+    "_plugwise._tcp.local.": [
+        "plugwise"
     ],
     "_printer._tcp.local.": [
         "brother"
     ],
     "_spotify-connect._tcp.local.": [
         "spotify"
+    ],
+    "_ssh._tcp.local.": [
+        "smappee"
     ],
     "_viziocast._tcp.local.": [
         "vizio"
@@ -57,8 +73,10 @@ ZEROCONF = {
 HOMEKIT = {
     "819LMB": "myq",
     "AC02": "tado",
+    "Abode": "abode",
     "BSB002": "hue",
     "Healty Home Coach": "netatmo",
+    "Iota": "abode",
     "LIFX": "lifx",
     "Netatmo Relay": "netatmo",
     "PowerView": "hunterdouglas_powerview",

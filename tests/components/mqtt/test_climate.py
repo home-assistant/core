@@ -23,6 +23,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.const import STATE_OFF
+from homeassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -33,6 +34,7 @@ from .test_common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_discovery_update_unchanged,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -47,8 +49,8 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.async_mock import call
-from tests.common import async_fire_mqtt_message, async_setup_component
+from tests.async_mock import call, patch
+from tests.common import async_fire_mqtt_message
 from tests.components.climate import common
 
 ENTITY_CLIMATE = "climate.test"
@@ -870,7 +872,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     )
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass, mqtt_mock):
     """Test unique id option only creates one climate per unique_id."""
     config = {
         CLIMATE_DOMAIN: [
@@ -890,7 +892,7 @@ async def test_unique_id(hass):
             },
         ]
     }
-    await help_test_unique_id(hass, CLIMATE_DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, CLIMATE_DOMAIN, config)
 
 
 async def test_discovery_removal_climate(hass, mqtt_mock, caplog):
@@ -908,11 +910,22 @@ async def test_discovery_update_climate(hass, mqtt_mock, caplog):
     )
 
 
+async def test_discovery_update_unchanged_climate(hass, mqtt_mock, caplog):
+    """Test update of discovered climate."""
+    data1 = '{ "name": "Beer" }'
+    with patch(
+        "homeassistant.components.mqtt.climate.MqttClimate.discovery_update"
+    ) as discovery_update:
+        await help_test_discovery_update_unchanged(
+            hass, mqtt_mock, caplog, CLIMATE_DOMAIN, data1, discovery_update
+        )
+
+
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
-    data1 = '{ "name": "Beer",' '  "power_command_topic": "test_topic#" }'
-    data2 = '{ "name": "Milk", ' '  "power_command_topic": "test_topic" }'
+    data1 = '{ "name": "Beer", "power_command_topic": "test_topic#" }'
+    data2 = '{ "name": "Milk", "power_command_topic": "test_topic" }'
     await help_test_discovery_broken(
         hass, mqtt_mock, caplog, CLIMATE_DOMAIN, data1, data2
     )

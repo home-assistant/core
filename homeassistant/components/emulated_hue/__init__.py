@@ -5,7 +5,6 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.http import real_ip
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -101,7 +100,6 @@ async def async_setup(hass, yaml_config):
     app = web.Application()
     app["hass"] = hass
 
-    real_ip.setup_real_ip(app, False, [])
     # We misunderstood the startup signal. You're not allowed to change
     # anything during startup. Temp workaround.
     # pylint: disable=protected-access
@@ -174,6 +172,7 @@ class Config:
         self.type = conf.get(CONF_TYPE)
         self.numbers = None
         self.cached_states = {}
+        self._exposed_cache = {}
 
         if self.type == TYPE_ALEXA:
             _LOGGER.warning(
@@ -279,6 +278,24 @@ class Config:
         return entity.attributes.get(ATTR_EMULATED_HUE_NAME, entity.name)
 
     def is_entity_exposed(self, entity):
+        """Cache determine if an entity should be exposed on the emulated bridge."""
+        entity_id = entity.entity_id
+        if entity_id not in self._exposed_cache:
+            self._exposed_cache[entity_id] = self._is_entity_exposed(entity)
+        return self._exposed_cache[entity_id]
+
+    def filter_exposed_entities(self, states):
+        """Filter a list of all states down to exposed entities."""
+        exposed = []
+        for entity in states:
+            entity_id = entity.entity_id
+            if entity_id not in self._exposed_cache:
+                self._exposed_cache[entity_id] = self._is_entity_exposed(entity)
+            if self._exposed_cache[entity_id]:
+                exposed.append(entity)
+        return exposed
+
+    def _is_entity_exposed(self, entity):
         """Determine if an entity should be exposed on the emulated bridge.
 
         Async friendly.

@@ -71,6 +71,8 @@ _CLOUD_ERRORS = {
         HTTP_INTERNAL_SERVER_ERROR,
         "Remote UI not compatible with 127.0.0.1/::1 as trusted proxies.",
     ),
+    asyncio.TimeoutError: (502, "Unable to reach the Home Assistant cloud."),
+    aiohttp.ClientError: (HTTP_INTERNAL_SERVER_ERROR, "Error making internal request",),
 }
 
 
@@ -120,11 +122,6 @@ async def async_setup(hass):
                 HTTP_BAD_REQUEST,
                 "Password change required.",
             ),
-            asyncio.TimeoutError: (502, "Unable to reach the Home Assistant cloud."),
-            aiohttp.ClientError: (
-                HTTP_INTERNAL_SERVER_ERROR,
-                "Error making internal request",
-            ),
         }
     )
 
@@ -166,10 +163,17 @@ def _ws_handle_cloud_errors(handler):
 
 def _process_cloud_exception(exc, where):
     """Process a cloud exception."""
-    err_info = _CLOUD_ERRORS.get(exc.__class__)
+    err_info = None
+
+    for err, value_info in _CLOUD_ERRORS.items():
+        if isinstance(exc, err):
+            err_info = value_info
+            break
+
     if err_info is None:
         _LOGGER.exception("Unexpected error processing request for %s", where)
         err_info = (502, f"Unexpected error: {exc}")
+
     return err_info
 
 

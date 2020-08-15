@@ -3,7 +3,7 @@ import asyncio
 from datetime import timedelta
 
 from pytile import async_login
-from pytile.errors import TileError
+from pytile.errors import SessionExpiredError, TileError
 
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
@@ -44,6 +44,9 @@ async def async_setup_entry(hass, config_entry):
         """Get new data from the API."""
         try:
             return await client.tiles.all()
+        except SessionExpiredError:
+            LOGGER.info("Tile session expired; creating a new one")
+            await client.async_init()
         except TileError as err:
             raise UpdateFailed(f"Error while retrieving data: {err}")
 

@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Cannot connect to Firmata board during setup"
+        }
+    }
+}

@@ -9,7 +9,7 @@ import jwt
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
-from .const import KEY_AUTHENTICATED, KEY_HASS_USER, KEY_REAL_IP
+from .const import KEY_AUTHENTICATED, KEY_HASS_USER
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -118,7 +118,7 @@ def setup_auth(hass, app):
         if authenticated:
             _LOGGER.debug(
                 "Authenticated %s for %s using %s",
-                request[KEY_REAL_IP],
+                request.remote,
                 request.path,
                 auth_type,
             )

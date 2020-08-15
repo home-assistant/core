@@ -545,13 +545,11 @@ async def test_service_calls(hass):
     state = hass.states.get("light.ceiling_lights")
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 128
-    assert state.attributes[ATTR_EFFECT] == "Random"
     assert state.attributes[ATTR_RGB_COLOR] == (42, 255, 255)
 
     state = hass.states.get("light.kitchen_lights")
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 128
-    assert state.attributes[ATTR_EFFECT] == "Random"
     assert state.attributes[ATTR_RGB_COLOR] == (42, 255, 255)
 
 
@@ -570,14 +568,14 @@ async def test_invalid_service_calls(hass):
         await grouped_light.async_turn_on(brightness=150, four_oh_four="404")
         data = {ATTR_ENTITY_ID: ["light.test1", "light.test2"], ATTR_BRIGHTNESS: 150}
         mock_call.assert_called_once_with(
-            LIGHT_DOMAIN, SERVICE_TURN_ON, data, blocking=True
+            LIGHT_DOMAIN, SERVICE_TURN_ON, data, blocking=True, context=None
         )
         mock_call.reset_mock()
 
         await grouped_light.async_turn_off(transition=4, four_oh_four="404")
         data = {ATTR_ENTITY_ID: ["light.test1", "light.test2"], ATTR_TRANSITION: 4}
         mock_call.assert_called_once_with(
-            LIGHT_DOMAIN, SERVICE_TURN_OFF, data, blocking=True
+            LIGHT_DOMAIN, SERVICE_TURN_OFF, data, blocking=True, context=None
         )
         mock_call.reset_mock()
 
@@ -596,5 +594,5 @@ async def test_invalid_service_calls(hass):
         data.pop(ATTR_RGB_COLOR)
         data.pop(ATTR_XY_COLOR)
         mock_call.assert_called_once_with(
-            LIGHT_DOMAIN, SERVICE_TURN_ON, data, blocking=True
+            LIGHT_DOMAIN, SERVICE_TURN_ON, data, blocking=True, context=None
         )

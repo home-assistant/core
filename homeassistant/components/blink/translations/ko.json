@@ -23,5 +23,16 @@
                 "title": "Blink \uacc4\uc815\uc73c\ub85c \ub85c\uadf8\uc778\ud558\uae30"
             }
         }
+    },
+    "options": {
+        "step": {
+            "simple_options": {
+                "data": {
+                    "scan_interval": "\uc2a4\uce94 \uac04\uaca9 (\ucd08)"
+                },
+                "description": "Blink \ud1b5\ud569 \uad6c\uc131\uc694\uc18c \uad6c\uc131",
+                "title": "Blink \uc635\uc158"
+            }
+        }
     }
 }

@@ -5,7 +5,7 @@
             "updated_entry": "Aquesta entrada ja s'ha configurat per\u00f2 el nom, les aplicacions i/o les opcions definides a la configuraci\u00f3 no coincideixen amb els valors importats anteriorment, en conseq\u00fc\u00e8ncia, l'entrada de configuraci\u00f3 s'ha actualitzat."
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
             "complete_pairing_failed": "No s'ha pogut completar l'emparellament. Verifica que el PIN proporcionat sigui el correcte i que el televisor segueix connectat a la xarxa abans de provar-ho de nou.",
             "host_exists": "Dispositiu VIZIO SmartCast amb aquest nom d'amfitri\u00f3 ja configurat.",
             "name_exists": "Dispositiu VIZIO SmartCast amb aquest nom ja configurat."

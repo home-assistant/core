@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Servi\u00e7o j\u00e1 configurado",
-            "duplicated_name": "O nome j\u00e1 existe"
+            "already_configured": "Servi\u00e7o j\u00e1 configurado"
         },
         "error": {
             "cannot_connect": "Falha ao conectar"

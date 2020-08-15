@@ -16,7 +16,7 @@ DEFAULT_BRAND = "Agent DVR by ispyconnect.com"
 
 _LOGGER = logging.getLogger(__name__)
 
-FORWARDS = ["camera"]
+FORWARDS = ["alarm_control_panel", "camera"]
 
 
 async def async_setup(hass, config):

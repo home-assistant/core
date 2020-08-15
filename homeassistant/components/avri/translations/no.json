@@ -13,12 +13,12 @@
                     "country_code": "2 Bokstavs landskode",
                     "house_number": "Husnummer",
                     "house_number_extension": "Utvidelse av husnummer",
-                    "zip_code": "postnummer"
+                    "zip_code": "Postnummer"
                 },
                 "description": "Skriv inn adressen din",
-                "title": "Avri"
+                "title": ""
             }
         }
     },
-    "title": "Avri"
+    "title": ""
 }

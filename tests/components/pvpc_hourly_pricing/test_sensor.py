@@ -7,11 +7,12 @@ from pytz import timezone
 from homeassistant.components.pvpc_hourly_pricing import ATTR_TARIFF, DOMAIN
 from homeassistant.const import CONF_NAME
 from homeassistant.core import ATTR_NOW, EVENT_TIME_CHANGED
+from homeassistant.setup import async_setup_component
 
 from .conftest import check_valid_state
 
 from tests.async_mock import patch
-from tests.common import async_setup_component, date_util
+from tests.common import date_util
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -28,7 +29,7 @@ async def _process_time_step(
 
 
 async def test_sensor_availability(
-    hass, caplog, pvpc_aioclient_mock: AiohttpClientMocker
+    hass, caplog, legacy_patchable_time, pvpc_aioclient_mock: AiohttpClientMocker
 ):
     """Test sensor availability and handling of cloud access."""
     hass.config.time_zone = timezone("Europe/Madrid")

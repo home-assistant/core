@@ -5,7 +5,11 @@ import pyitachip2ir
 import voluptuous as vol
 
 from homeassistant.components import remote
-from homeassistant.components.remote import ATTR_NUM_REPEATS, PLATFORM_SCHEMA
+from homeassistant.components.remote import (
+    ATTR_NUM_REPEATS,
+    DEFAULT_NUM_REPEATS,
+    PLATFORM_SCHEMA,
+)
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -20,11 +24,15 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PORT = 4998
 CONNECT_TIMEOUT = 5000
+DEFAULT_MODADDR = 1
+DEFAULT_CONNADDR = 1
+DEFAULT_IR_COUNT = 1
 
 CONF_MODADDR = "modaddr"
 CONF_CONNADDR = "connaddr"
 CONF_COMMANDS = "commands"
 CONF_DATA = "data"
+CONF_IR_COUNT = "ir_count"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -36,8 +44,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             [
                 {
                     vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_MODADDR): vol.Coerce(int),
-                    vol.Required(CONF_CONNADDR): vol.Coerce(int),
+                    vol.Optional(CONF_MODADDR): cv.positive_int,
+                    vol.Required(CONF_CONNADDR): cv.positive_int,
+                    vol.Optional(CONF_IR_COUNT): cv.positive_int,
                     vol.Required(CONF_COMMANDS): vol.All(
                         cv.ensure_list,
                         [
@@ -67,8 +76,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devices = []
     for data in config.get(CONF_DEVICES):
         name = data.get(CONF_NAME)
-        modaddr = int(data.get(CONF_MODADDR, 1))
-        connaddr = int(data.get(CONF_CONNADDR, 1))
+        modaddr = int(data.get(CONF_MODADDR, DEFAULT_MODADDR))
+        connaddr = int(data.get(CONF_CONNADDR, DEFAULT_CONNADDR))
+        ir_count = int(data.get(CONF_IR_COUNT, DEFAULT_IR_COUNT))
         cmddatas = ""
         for cmd in data.get(CONF_COMMANDS):
             cmdname = cmd[CONF_NAME].strip()
@@ -79,7 +89,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 cmddata = '""'
             cmddatas += f"{cmdname}\n{cmddata}\n"
         itachip2ir.addDevice(name, modaddr, connaddr, cmddatas)
-        devices.append(ITachIP2IRRemote(itachip2ir, name))
+        devices.append(ITachIP2IRRemote(itachip2ir, name, ir_count))
     add_entities(devices, True)
     return True
 
@@ -87,11 +97,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ITachIP2IRRemote(remote.RemoteEntity):
     """Device that sends commands to an ITachIP2IR device."""
 
-    def __init__(self, itachip2ir, name):
+    def __init__(self, itachip2ir, name, ir_count):
         """Initialize device."""
         self.itachip2ir = itachip2ir
         self._power = False
         self._name = name or DEVICE_DEFAULT_NAME
+        self._ir_count = ir_count or DEFAULT_IR_COUNT
 
     @property
     def name(self):
@@ -106,22 +117,22 @@ class ITachIP2IRRemote(remote.RemoteEntity):
     def turn_on(self, **kwargs):
         """Turn the device on."""
         self._power = True
-        num_repeats = kwargs.get(ATTR_NUM_REPEATS, 1)
-        self.itachip2ir.send(self._name, "ON", num_repeats)
+        self.itachip2ir.send(self._name, "ON", self._ir_count)
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         self._power = False
-        num_repeats = kwargs.get(ATTR_NUM_REPEATS, 1)
-        self.itachip2ir.send(self._name, "OFF", num_repeats)
+        self.itachip2ir.send(self._name, "OFF", self._ir_count)
         self.schedule_update_ha_state()
 
     def send_command(self, command, **kwargs):
         """Send a command to one device."""
-        num_repeats = kwargs.get(ATTR_NUM_REPEATS, 1)
+        num_repeats = kwargs.get(ATTR_NUM_REPEATS, DEFAULT_NUM_REPEATS)
         for single_command in command:
-            self.itachip2ir.send(self._name, single_command, num_repeats)
+            self.itachip2ir.send(
+                self._name, single_command, self._ir_count * num_repeats
+            )
 
     def update(self):
         """Update the device."""

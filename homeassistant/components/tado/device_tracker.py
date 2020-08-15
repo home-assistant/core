@@ -115,7 +115,7 @@ class TadoDeviceScanner(DeviceScanner):
                 response = await self.websession.get(url)
 
                 if response.status != HTTP_OK:
-                    _LOGGER.warning("Error %d on %s.", response.status, self.tadoapiurl)
+                    _LOGGER.warning("Error %d on %s", response.status, self.tadoapiurl)
                     return False
 
                 tado_json = await response.json()

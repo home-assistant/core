@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "no_devices": "Nessun dispositivo trovato sulla rete",
+            "reauth_successful": "Token di accesso aggiornato correttamente"
+        },
+        "error": {
+            "auth": "Token di accesso non valido",
+            "unknown": "Errore API Awair sconosciuto."
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "access_token": "Token di accesso",
+                    "email": "E-mail"
+                },
+                "description": "Inserisci nuovamente il tuo token di accesso per sviluppatori Awair."
+            },
+            "user": {
+                "data": {
+                    "access_token": "Token di accesso",
+                    "email": "E-mail"
+                },
+                "description": "\u00c8 necessario registrarsi per un token di accesso per sviluppatori Awair all'indirizzo: https://developer.getawair.com/onboard/login"
+            }
+        }
+    }
+}

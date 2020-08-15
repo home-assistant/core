@@ -9,7 +9,6 @@ from pyhap.const import (
     CATEGORY_SWITCH,
 )
 
-from homeassistant.components.script import ATTR_CAN_CANCEL
 from homeassistant.components.switch import DOMAIN
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
@@ -111,10 +110,7 @@ class Switch(HomeAccessory):
 
     def is_activate(self, state):
         """Check if entity is activate only."""
-        can_cancel = state.attributes.get(ATTR_CAN_CANCEL)
         if self._domain == "scene":
-            return True
-        if self._domain == "script" and not can_cancel:
             return True
         return False
 

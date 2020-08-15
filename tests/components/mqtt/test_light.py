@@ -170,6 +170,7 @@ from .test_common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_discovery_update_unchanged,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -185,11 +186,7 @@ from .test_common import (
 )
 
 from tests.async_mock import call, patch
-from tests.common import (
-    MockConfigEntry,
-    assert_setup_component,
-    async_fire_mqtt_message,
-)
+from tests.common import assert_setup_component, async_fire_mqtt_message
 from tests.components.light import common
 
 DEFAULT_CONFIG = {
@@ -1390,7 +1387,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     )
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass, mqtt_mock):
     """Test unique id option only creates one light per unique_id."""
     config = {
         light.DOMAIN: [
@@ -1410,7 +1407,7 @@ async def test_unique_id(hass):
             },
         ]
     }
-    await help_test_unique_id(hass, light.DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, light.DOMAIN, config)
 
 
 async def test_discovery_removal_light(hass, mqtt_mock, caplog):
@@ -1425,7 +1422,7 @@ async def test_discovery_removal_light(hass, mqtt_mock, caplog):
 
 async def test_discovery_deprecated(hass, mqtt_mock, caplog):
     """Test discovery of mqtt light with deprecated platform option."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     await async_start(hass, "homeassistant", entry)
     data = (
         '{ "name": "Beer",' '  "platform": "mqtt",' '  "command_topic": "test_topic"}'
@@ -1452,6 +1449,21 @@ async def test_discovery_update_light(hass, mqtt_mock, caplog):
     await help_test_discovery_update(
         hass, mqtt_mock, caplog, light.DOMAIN, data1, data2
     )
+
+
+async def test_discovery_update_unchanged_light(hass, mqtt_mock, caplog):
+    """Test update of discovered light."""
+    data1 = (
+        '{ "name": "Beer",'
+        '  "state_topic": "test_topic",'
+        '  "command_topic": "test_topic" }'
+    )
+    with patch(
+        "homeassistant.components.mqtt.light.schema_basic.MqttLight.discovery_update"
+    ) as discovery_update:
+        await help_test_discovery_update_unchanged(
+            hass, mqtt_mock, caplog, light.DOMAIN, data1, discovery_update
+        )
 
 
 @pytest.mark.no_fail_on_log_exception

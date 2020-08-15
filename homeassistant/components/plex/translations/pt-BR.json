@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "non-interactive": "Importa\u00e7\u00e3o n\u00e3o interativa"
-        },
         "error": {
             "ssl_error": "Problema no certificado SSL"
         },

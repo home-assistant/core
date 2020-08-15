@@ -28,7 +28,7 @@ from tests.components.geonetnz_volcano import _generate_mock_feed_entry
 CONFIG = {geonetnz_volcano.DOMAIN: {CONF_RADIUS: 200}}
 
 
-async def test_setup(hass):
+async def test_setup(hass, legacy_patchable_time):
     """Test the general setup of the integration."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
