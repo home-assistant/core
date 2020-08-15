@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 
 from meteofrance.client import MeteoFranceClient
+from meteofrance.helpers import is_valid_warning_department
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -131,7 +132,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     _LOGGER.debug(
         "Department corresponding to %s is %s", entry.title, department,
     )
-    if department:
+    if is_valid_warning_department(department):
         if not hass.data[DOMAIN].get(department):
             coordinator_alert = DataUpdateCoordinator(
                 hass,
@@ -155,7 +156,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
             )
     else:
         _LOGGER.warning(
-            "Weather alert not available: The city %s is not in France or Andorre.",
+            "Weather alert not available: The city %s is not in metropolitan France or Andorre.",
             entry.title,
         )
 
