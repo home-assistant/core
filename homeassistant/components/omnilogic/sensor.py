@@ -91,6 +91,7 @@ class OmnilogicSensor(Entity):
         self.coordinator = coordinator
         self.attrs = {}
         self.attrs["MspSystemId"] = backyard["systemId"]
+
     @property
     def should_poll(self) -> bool:
         """Return the polling requirement of the entity."""
