@@ -86,10 +86,12 @@ async def async_setup_entry(
                     item_is_dimmer = False
                     item_coordinator = non_dimmer_coordinator
                 else:
+                    director = entry_data[CONF_DIRECTOR]
+                    item_variables = director.getItemVariables(item_id)
                     _LOGGER.error(
-                        "Couldn't get light state data for %s, skipping setup: %s",
+                        "Couldn't get light state data for %s, skipping setup. Available item variables: %s",
                         item_name,
-                        item,
+                        item_variables,
                     )
                     continue
 
