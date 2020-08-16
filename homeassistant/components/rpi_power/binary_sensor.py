@@ -4,34 +4,28 @@ A sensor platform which detects underruns and capped status from the official Ra
 Minimal Kernel needed is 4.14+
 """
 import logging
-import os
+
+from rpi_bad_power import new_under_voltage
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PROBLEM,
     BinarySensorEntity,
 )
+from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
-
-SYSFILE = "/sys/class/hwmon/hwmon0/in0_lcrit_alarm"
-SYSFILE_LEGACY = "/sys/devices/platform/soc/soc:firmware/get_throttled"
-
-UNDERVOLTAGE_STICKY_BIT = 1 << 16
 
 DESCRIPTION_NORMALIZED = "Voltage normalized. Everything is working as intended."
 DESCRIPTION_UNDER_VOLTAGE = "Under-voltage was detected. Consider getting a uninterruptible power supply for your Raspberry Pi."
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(hass: HomeAssistant, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
     if discovery_info is None:
         return
 
-    if os.path.isfile(SYSFILE):
-        under_voltage = UnderVoltage()
-    elif os.path.isfile(SYSFILE_LEGACY):  # support older kernel
-        under_voltage = UnderVoltage(legacy=True)
-    else:
+    under_voltage = new_under_voltage()
+    if under_voltage is None:
         _LOGGER.error(
             "Can't find the system class needed for this component, make sure that your kernel is recent and the hardware is supported."
         )
@@ -78,27 +72,3 @@ class RaspberryChargerBinarySensor(BinarySensorEntity):
     def device_class(self):
         """Return the class of this device."""
         return DEVICE_CLASS_PROBLEM
-
-
-class UnderVoltage:
-    """Read under voltage status."""
-
-    def __init__(self, legacy=False):
-        """Initialize the under voltage bit reader."""
-        self._legacy = legacy
-
-    def get(self):
-        """Get under voltage status."""
-        # Using legacy get_throttled entry
-        if self._legacy:
-            throttled = open(SYSFILE_LEGACY).read()[:-1]
-            _LOGGER.debug("Get throttled value: %s", throttled)
-            return (
-                int(throttled, base=16) & UNDERVOLTAGE_STICKY_BIT
-                == UNDERVOLTAGE_STICKY_BIT
-            )
-
-        # Use new hwmon entry
-        bit = open(SYSFILE).read()[:-1]
-        _LOGGER.debug("Get under voltage status: %s", bit)
-        return bit == "1"
