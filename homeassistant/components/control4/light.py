@@ -82,9 +82,16 @@ async def async_setup_entry(
                 if item_id in dimmer_coordinator.data:
                     item_is_dimmer = True
                     item_coordinator = dimmer_coordinator
-                else:
+                elif item_id in non_dimmer_coordinator.data:
                     item_is_dimmer = False
                     item_coordinator = non_dimmer_coordinator
+                else:
+                    _LOGGER.error(
+                        "Couldn't get light state data for %s, skipping setup: %s",
+                        item_name,
+                        item,
+                    )
+                    continue
 
                 item_manufacturer = None
                 item_device_name = None
