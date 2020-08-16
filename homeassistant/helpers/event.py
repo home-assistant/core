@@ -679,7 +679,7 @@ def async_track_template_result(
 
     """
     tracker = _TrackTemplateResultInfo(hass, template, action, variables)
-    tracker.setup()
+    tracker.async_setup()
     return tracker
 
 
