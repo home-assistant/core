@@ -454,7 +454,7 @@ class _TrackTemplateResultInfo:
         self._info: Optional[RenderInfo] = None
         self._last_info: Optional[RenderInfo] = None
 
-    def setup(self) -> None:
+    def async_setup(self) -> None:
         """Activation of template tracking."""
         self._info = self._template.async_render_to_info(self._variables)
         if self._info.exception:
