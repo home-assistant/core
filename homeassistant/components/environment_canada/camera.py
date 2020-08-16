@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         )
 
     add_devices(
-        [ECCamera(radar_object, config.get(CONF_NAME), config.get(CONF_LOOP))], True
+        [ECCamera(radar_object, config.get(CONF_NAME), config[CONF_LOOP])], True
     )
 
 
