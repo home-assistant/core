@@ -1,0 +1,8 @@
+{
+  "domain": "iaqualink",
+  "name": "Jandy iAqualink",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/iaqualink/",
+  "codeowners": ["@flz"],
+  "requirements": ["iaqualink==0.3.4"]
+}

@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ta tiskalnik je \u017ee konfiguriran.",
+            "connection_error": "Povezava s tiskalnikom ni uspela.",
+            "connection_upgrade": "Povezava s tiskalnikom ni uspela, ker je potrebna nadgradnja povezave.",
+            "ipp_error": "Naletel na napako IPP.",
+            "ipp_version_error": "Razli\u010dica IPP ni podprta s tiskalnikom.",
+            "parse_error": "Odziva tiskalnika ni bilo mogo\u010de raz\u010dleniti."
+        },
+        "error": {
+            "connection_error": "Povezava s tiskalnikom ni uspela.",
+            "connection_upgrade": "Povezave s tiskalnikom ni bilo mogo\u010de vzpostaviti. Prosimo, poskusite znova z odkljukano mo\u017enostjo SSL/TLS."
+        },
+        "flow_title": "Tiskalnik: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "base_path": "Relativna pot do tiskalnika",
+                    "host": "Gostitelj ali IP naslov",
+                    "port": "Vrata",
+                    "ssl": "Tiskalnik podpira komunikacijo prek SSL/TLS",
+                    "verify_ssl": "Tiskalnik uporablja pravilno SSL potrdilo"
+                },
+                "description": "Tiskalnik nastavite s protokolom za internetni tiskanje (IPP) tako, da se bo integriral s programom Home Assistant.",
+                "title": "Pove\u017eite svoj tiskalnik"
+            },
+            "zeroconf_confirm": {
+                "description": "Ali \u017eelite tiskalnik z imenom {name} dodati v Home Assistant?",
+                "title": "Odkrit tiskalnik"
+            }
+        }
+    }
+}

@@ -1,0 +1,7 @@
+{
+  "domain": "environment_canada",
+  "name": "Environment Canada",
+  "documentation": "https://www.home-assistant.io/integrations/environment_canada",
+  "requirements": ["env_canada==0.2.0"],
+  "codeowners": ["@michaeldavie"]
+}

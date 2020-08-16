@@ -6,10 +6,10 @@ write_data_by_name:
   fields:
     adsvar:
       description: The name of the variable to write to.
-      example: '.global_var'
+      example: ".global_var"
     adstype:
       description: The data type of the variable to write to.
-      example: 'int'
+      example: "int"
     value:
       description: The value to write to the variable.
       example: 1

@@ -1,86 +1,112 @@
 """Support for Axis binary sensors."""
-from datetime import timedelta
-import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import (
-    ATTR_LOCATION, CONF_EVENT, CONF_NAME, CONF_TRIGGER_TIME)
+from datetime import timedelta
+
+from axis.event_stream import (
+    CLASS_INPUT,
+    CLASS_LIGHT,
+    CLASS_MOTION,
+    CLASS_OUTPUT,
+    CLASS_SOUND,
+)
+
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_LIGHT,
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_SOUND,
+    BinarySensorEntity,
+)
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-DEPENDENCIES = ['axis']
+from .axis_base import AxisEventBase
+from .const import DOMAIN as AXIS_DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+DEVICE_CLASS = {
+    CLASS_INPUT: DEVICE_CLASS_CONNECTIVITY,
+    CLASS_LIGHT: DEVICE_CLASS_LIGHT,
+    CLASS_MOTION: DEVICE_CLASS_MOTION,
+    CLASS_SOUND: DEVICE_CLASS_SOUND,
+}
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Axis binary devices."""
-    add_entities([AxisBinarySensor(discovery_info)], True)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up a Axis binary sensor."""
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+
+    @callback
+    def async_add_sensor(event_id):
+        """Add binary sensor from Axis device."""
+        event = device.api.event[event_id]
+
+        if event.CLASS != CLASS_OUTPUT and not (
+            event.CLASS == CLASS_LIGHT and event.TYPE == "Light"
+        ):
+            async_add_entities([AxisBinarySensor(event, device)], True)
+
+    device.listeners.append(
+        async_dispatcher_connect(hass, device.signal_new_event, async_add_sensor)
+    )
 
 
-class AxisBinarySensor(BinarySensorDevice):
+class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
     """Representation of a binary Axis event."""
 
-    def __init__(self, event_config):
+    def __init__(self, event, device):
         """Initialize the Axis binary sensor."""
-        self.axis_event = event_config[CONF_EVENT]
-        self.device_name = event_config[CONF_NAME]
-        self.location = event_config[ATTR_LOCATION]
-        self.delay = event_config[CONF_TRIGGER_TIME]
-        self.remove_timer = None
+        super().__init__(event, device)
+        self.cancel_scheduled_update = None
 
-    async def async_added_to_hass(self):
-        """Subscribe sensors events."""
-        self.axis_event.callback = self._update_callback
+    @callback
+    def update_callback(self, no_delay=False):
+        """Update the sensor's state, if needed.
 
-    def _update_callback(self):
-        """Update the sensor's state, if needed."""
-        if self.remove_timer is not None:
-            self.remove_timer()
-            self.remove_timer = None
+        Parameter no_delay is True when device_event_reachable is sent.
+        """
 
-        if self.delay == 0 or self.is_on:
-            self.schedule_update_ha_state()
-        else:  # Run timer to delay updating the state
-            @callback
-            def _delay_update(now):
-                """Timer callback for sensor update."""
-                _LOGGER.debug("%s called delayed (%s sec) update",
-                              self.name, self.delay)
-                self.async_schedule_update_ha_state()
-                self.remove_timer = None
+        @callback
+        def scheduled_update(now):
+            """Timer callback for sensor update."""
+            self.cancel_scheduled_update = None
+            self.async_write_ha_state()
 
-            self.remove_timer = async_track_point_in_utc_time(
-                self.hass, _delay_update,
-                utcnow() + timedelta(seconds=self.delay))
+        if self.cancel_scheduled_update is not None:
+            self.cancel_scheduled_update()
+            self.cancel_scheduled_update = None
+
+        if self.is_on or self.device.option_trigger_time == 0 or no_delay:
+            self.async_write_ha_state()
+            return
+
+        self.cancel_scheduled_update = async_track_point_in_utc_time(
+            self.hass,
+            scheduled_update,
+            utcnow() + timedelta(seconds=self.device.option_trigger_time),
+        )
 
     @property
     def is_on(self):
         """Return true if event is active."""
-        return self.axis_event.is_tripped
+        return self.event.is_tripped
 
     @property
     def name(self):
         """Return the name of the event."""
-        return '{}_{}_{}'.format(
-            self.device_name, self.axis_event.event_type, self.axis_event.id)
+        if (
+            self.event.CLASS == CLASS_INPUT
+            and self.event.id
+            and self.device.api.vapix.ports[self.event.id].name
+        ):
+            return (
+                f"{self.device.name} {self.device.api.vapix.ports[self.event.id].name}"
+            )
+
+        return super().name
 
     @property
     def device_class(self):
-        """Return the class of the event."""
-        return self.axis_event.event_class
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the event."""
-        attr = {}
-
-        attr[ATTR_LOCATION] = self.location
-
-        return attr
+        """Return the class of the sensor."""
+        return DEVICE_CLASS.get(self.event.CLASS)

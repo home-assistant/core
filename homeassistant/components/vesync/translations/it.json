@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "\u00c8 consentita una sola istanza di Vesync"
+        },
+        "error": {
+            "invalid_login": "Nome utente o password non validi"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "E-mail"
+                },
+                "title": "Immettere nome utente e password"
+            }
+        }
+    }
+}

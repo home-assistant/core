@@ -1,0 +1,6 @@
+{
+  "domain": "vacuum",
+  "name": "Vacuum",
+  "documentation": "https://www.home-assistant.io/integrations/vacuum",
+  "codeowners": []
+}

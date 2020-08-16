@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "invalid_webhook_url": "Home Assistant not est\u00e0 configurat correctament per a rebre actualitzacions de SmartThings.\nEl seg\u00fcent URL webhook no \u00e9s v\u00e0lid:\n> {webhook_url}\n\nActualitza la teva configuraci\u00f3 segons les [instruccions]({component_url}), reinicia Home Assistant i torna-ho a provar.",
+            "no_available_locations": "No hi ha ubicacions SmartThings configurables amb Home Assistant."
+        },
+        "error": {
+            "app_setup_error": "No s'ha pogut configurar SmartApp. Siusplau, torna-ho a provar.",
+            "token_forbidden": "El token d'autenticaci\u00f3 no t\u00e9 cont\u00e9 els apartats OAuth obligatoris.",
+            "token_invalid_format": "El token d'autenticaci\u00f3 ha d'estar en format UID/GUID",
+            "token_unauthorized": "El token d'autenticaci\u00f3 no \u00e9s v\u00e0lid o ja no est\u00e0 autoritzat.",
+            "webhook_error": "SmartThings no ha pogut validar l'URL webhook. Comprova que l'URL pot ser accedit des d'Internet i torna-ho a provar."
+        },
+        "step": {
+            "authorize": {
+                "title": "Autoritzaci\u00f3 de Home Assistant"
+            },
+            "pat": {
+                "data": {
+                    "access_token": "[%key::common::config_flow::data::access_token%]"
+                },
+                "description": "Introdueix un [token d'acc\u00e9s personal]({token_url}) d'SmartThings creat a partir de les [instruccions]({component_url}). S'utilitzar\u00e0 per crear la integraci\u00f3 de Home Assistant dins el teu compte de SmartThings.",
+                "title": "Introdueix el token d'acc\u00e9s personal"
+            },
+            "select_location": {
+                "data": {
+                    "location_id": "Ubicaci\u00f3"
+                },
+                "description": "Selecciona la ubicaci\u00f3 de SmartThings que vols afegir a Home Assistant. A continuaci\u00f3, s'obrir\u00e0 una finestra on se't demanar\u00e0 que inici\u00efs sessi\u00f3 i autoritzis la instal\u00b7laci\u00f3 de la integraci\u00f3 de Home Assistant a la ubicaci\u00f3 seleccionada.",
+                "title": "Selecci\u00f3 d'ubicaci\u00f3"
+            },
+            "user": {
+                "description": "SmartThings es configurar\u00e0 per a enviar actualitzacions push a Home Assistant a:\n> {webhook_url}\n\nSi no \u00e9s correcte, actualitza la teva configuraci\u00f3, reinicia Home Assistant i torna-ho a provar.",
+                "title": "Introdueix el token d'autenticaci\u00f3 personal"
+            }
+        }
+    }
+}

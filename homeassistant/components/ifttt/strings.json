@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "IFTTT",
     "step": {
       "user": {
         "title": "Set up the IFTTT Webhook Applet",

@@ -1,0 +1,8 @@
+{
+  "domain": "pi_hole",
+  "name": "Pi-hole",
+  "documentation": "https://www.home-assistant.io/integrations/pi_hole",
+  "requirements": ["hole==0.5.1"],
+  "codeowners": ["@fabaff", "@johnluetke", "@shenxn"],
+  "config_flow": true
+}

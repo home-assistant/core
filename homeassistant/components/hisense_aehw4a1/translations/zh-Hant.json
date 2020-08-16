@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "\u5728\u7db2\u8def\u4e0a\u627e\u4e0d\u5230\u6d77\u4fe1 AEH-W4A1 \u8a2d\u5099\u3002",
+            "single_instance_allowed": "\u50c5\u5141\u8a31\u8a2d\u5b9a\u4e00\u7d44\u6d77\u4fe1 AEH-W4A1\u3002"
+        },
+        "step": {
+            "confirm": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a\u6d77\u4fe1 AEH-W4A1\uff1f"
+            }
+        }
+    }
+}

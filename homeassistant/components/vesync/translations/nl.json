@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Er is slechts \u00e9\u00e9n Vesync instantie toegestaan."
+        },
+        "error": {
+            "invalid_login": "Ongeldige gebruikersnaam of wachtwoord"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "E-mailadres"
+                },
+                "title": "Voer gebruikersnaam en wachtwoord in"
+            }
+        }
+    }
+}

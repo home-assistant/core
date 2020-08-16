@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "No se ha podido conectar, por favor, int\u00e9ntelo de nuevo.",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "no_results": "No hay resultados. Int\u00e9ntalo con una estaci\u00f3n/direcci\u00f3n diferente"
+        },
+        "step": {
+            "station": {
+                "data": {
+                    "station": "Estacion/Direccion"
+                },
+                "title": "Introducir Estaci\u00f3n/Direcci\u00f3n"
+            },
+            "station_select": {
+                "data": {
+                    "station": "Estacion/Direccion"
+                },
+                "title": "Seleccionar Estaci\u00f3n/Direcci\u00f3n"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Contrase\u00f1a",
+                    "username": "Usuario"
+                },
+                "title": "Conectar con el API de HVV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "filter": "Seleccionar l\u00edneas",
+                    "offset": "Desfase (minutos)",
+                    "real_time": "Usar datos en tiempo real"
+                },
+                "description": "Cambiar opciones para este sensor de salidas",
+                "title": "Opciones"
+            }
+        }
+    },
+    "title": "Salidas de HVV"
+}

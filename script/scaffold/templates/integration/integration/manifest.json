@@ -1,0 +1,12 @@
+{
+  "domain": "NEW_DOMAIN",
+  "name": "NEW_NAME",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/NEW_DOMAIN",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": []
+}

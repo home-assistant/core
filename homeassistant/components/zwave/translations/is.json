@@ -1,0 +1,14 @@
+{
+    "state": {
+        "_": {
+            "dead": "Dau\u00f0ur",
+            "initializing": "Frumstilli",
+            "ready": "Tilb\u00fainn",
+            "sleeping": "\u00cd dvala"
+        },
+        "query_stage": {
+            "dead": "Dau\u00f0ur ({query_stage})",
+            "initializing": "Frumstilli ({query_stage})"
+        }
+    }
+}

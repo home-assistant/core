@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Esta combinaci\u00f3n de host y puerto ya est\u00e1 configurada",
+            "import_failed": "No se pudo importar desde la configuraci\u00f3n"
+        },
+        "error": {
+            "connection_refused": "Conexi\u00f3n rechazada al conectarse al host",
+            "connection_timeout": "Tiempo de espera agotado al conectar a este host",
+            "resolve_failed": "Este host no se puede resolver"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "El nombre del certificado",
+                    "port": "Puerto"
+                },
+                "title": "Defina el certificado para probar"
+            }
+        }
+    },
+    "title": "Caducidad del certificado"
+}

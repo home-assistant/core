@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Az Home Assistantnek el\u00e9rhet\u0151nek kell lennie az internetr\u0151l, hogy megkapja a Geofency \u00fczeneteit.",
+            "one_instance_allowed": "Csak egy p\u00e9ld\u00e1ny sz\u00fcks\u00e9ges."
+        },
+        "step": {
+            "user": {
+                "description": "Biztosan be szeretn\u00e9d \u00e1ll\u00edtani a Locative Webhook-ot?",
+                "title": "Locative Webhook be\u00e1ll\u00edt\u00e1sa"
+            }
+        }
+    }
+}

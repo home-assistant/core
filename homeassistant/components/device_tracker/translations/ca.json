@@ -1,0 +1,15 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_home": "{entity_name} \u00e9s a casa",
+            "is_not_home": "{entity_name} no \u00e9s a casa"
+        }
+    },
+    "state": {
+        "_": {
+            "home": "A casa",
+            "not_home": "Fora"
+        }
+    },
+    "title": "Seguiment de dispositius"
+}

@@ -1,0 +1,9 @@
+{
+    "state": {
+        "_": {
+            "home": "Rumah",
+            "not_home": "Keluar"
+        }
+    },
+    "title": "Pelacak perangkat"
+}

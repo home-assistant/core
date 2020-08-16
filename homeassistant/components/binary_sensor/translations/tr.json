@@ -1,0 +1,85 @@
+{
+    "state": {
+        "_": {
+            "off": "Kapal\u0131",
+            "on": "A\u00e7\u0131k"
+        },
+        "battery": {
+            "off": "Normal",
+            "on": "D\u00fc\u015f\u00fck"
+        },
+        "cold": {
+            "off": "Normal",
+            "on": "So\u011fuk"
+        },
+        "connectivity": {
+            "off": "Ba\u011flant\u0131 kesildi",
+            "on": "Ba\u011fl\u0131"
+        },
+        "door": {
+            "off": "Kapal\u0131",
+            "on": "A\u00e7\u0131k"
+        },
+        "garage_door": {
+            "off": "Kapal\u0131",
+            "on": "A\u00e7\u0131k"
+        },
+        "gas": {
+            "off": "Temiz",
+            "on": "Alg\u0131land\u0131"
+        },
+        "heat": {
+            "off": "Normal",
+            "on": "S\u0131cak"
+        },
+        "lock": {
+            "off": "Kilit kapal\u0131",
+            "on": "Kilit a\u00e7\u0131k"
+        },
+        "moisture": {
+            "off": "Kuru",
+            "on": "Islak"
+        },
+        "motion": {
+            "off": "Temiz",
+            "on": "Alg\u0131land\u0131"
+        },
+        "occupancy": {
+            "off": "Temiz",
+            "on": "Alg\u0131land\u0131"
+        },
+        "opening": {
+            "off": "Kapal\u0131",
+            "on": "A\u00e7\u0131k"
+        },
+        "presence": {
+            "off": "D\u0131\u015farda",
+            "on": "Evde"
+        },
+        "problem": {
+            "off": "Tamam",
+            "on": "Sorun"
+        },
+        "safety": {
+            "off": "G\u00fcvenli",
+            "on": "G\u00fcvensiz"
+        },
+        "smoke": {
+            "off": "Temiz",
+            "on": "Alg\u0131land\u0131"
+        },
+        "sound": {
+            "off": "Temiz",
+            "on": "Alg\u0131land\u0131"
+        },
+        "vibration": {
+            "off": "Temiz",
+            "on": "Alg\u0131land\u0131"
+        },
+        "window": {
+            "off": "Kapal\u0131",
+            "on": "A\u00e7\u0131k"
+        }
+    },
+    "title": "\u0130kili sens\u00f6r"
+}

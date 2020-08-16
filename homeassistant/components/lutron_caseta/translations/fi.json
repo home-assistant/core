@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cas\u00e9ta-silta on jo konfiguroitu."
+        },
+        "step": {
+            "import_failed": {
+                "title": "Cas\u00e9ta-sillan asetuksien tuonti ep\u00e4onnistui."
+            }
+        }
+    }
+}

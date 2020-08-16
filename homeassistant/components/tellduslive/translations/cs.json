@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostitel"
+                }
+            }
+        }
+    }
+}

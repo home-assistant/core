@@ -1,0 +1,7 @@
+{
+  "domain": "rova",
+  "name": "ROVA",
+  "documentation": "https://www.home-assistant.io/integrations/rova",
+  "requirements": ["rova==0.1.0"],
+  "codeowners": []
+}

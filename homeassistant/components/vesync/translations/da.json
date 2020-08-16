@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Kun en Vesync-forekomst er tilladt"
+        },
+        "error": {
+            "invalid_login": "Ugyldigt brugernavn eller adgangskode"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Adgangskode",
+                    "username": "Emailadresse"
+                },
+                "title": "Indtast brugernavn og adgangskode"
+            }
+        }
+    }
+}

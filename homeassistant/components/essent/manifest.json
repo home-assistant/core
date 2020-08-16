@@ -1,0 +1,7 @@
+{
+  "domain": "essent",
+  "name": "Essent",
+  "documentation": "https://www.home-assistant.io/integrations/essent",
+  "requirements": ["PyEssent==0.13"],
+  "codeowners": ["@TheLastProject"]
+}

@@ -1,0 +1,7 @@
+{
+  "domain": "pocketcasts",
+  "name": "Pocket Casts",
+  "documentation": "https://www.home-assistant.io/integrations/pocketcasts",
+  "requirements": ["pocketcasts==0.1"],
+  "codeowners": []
+}

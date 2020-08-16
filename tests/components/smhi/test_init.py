@@ -1,15 +1,15 @@
 """Test SMHI component setup process."""
-from unittest.mock import Mock
-
 from homeassistant.components import smhi
 
 from .common import AsyncMock
+
+from tests.async_mock import Mock
 
 TEST_CONFIG = {
     "config": {
         "name": "0123456789ABCDEF",
         "longitude": "62.0022",
-        "latitude": "17.0022"
+        "latitude": "17.0022",
     }
 }
 

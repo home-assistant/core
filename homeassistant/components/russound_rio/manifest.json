@@ -1,0 +1,7 @@
+{
+  "domain": "russound_rio",
+  "name": "Russound RIO",
+  "documentation": "https://www.home-assistant.io/integrations/russound_rio",
+  "requirements": ["russound_rio==0.1.7"],
+  "codeowners": []
+}

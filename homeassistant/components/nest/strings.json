@@ -1,20 +1,15 @@
 {
   "config": {
-    "title": "Nest",
     "step": {
       "init": {
         "title": "Authentication Provider",
         "description": "Pick via which authentication provider you want to authenticate with Nest.",
-        "data": {
-          "flow_impl": "Provider"
-        }
+        "data": { "flow_impl": "Provider" }
       },
       "link": {
         "title": "Link Nest Account",
         "description": "To link your Nest account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided pin code below.",
-        "data": {
-          "code": "Pin code"
-        }
+        "data": { "code": "Pin code" }
       }
     },
     "error": {

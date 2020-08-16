@@ -1,0 +1,6 @@
+{
+  "domain": "no_ip",
+  "name": "No-IP.com",
+  "documentation": "https://www.home-assistant.io/integrations/no_ip",
+  "codeowners": ["@fabaff"]
+}

@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_fail": "Neznana napaka pri generiranju potrditvenega URL-ja.",
+            "authorize_url_timeout": "\u010casovna omejitev za generiranje URL-ja je potekla.",
+            "unknown": "Pri\u0161lo je do neznane napake"
+        },
+        "error": {
+            "auth_error": "Napaka pri preverjanju pristnosti, poskusite znova"
+        },
+        "step": {
+            "auth": {
+                "description": "\u010ce \u017eelite povezati svoj ra\u010dun TelldusLive: \n 1. Kliknite spodnjo povezavo \n 2. Prijavite se v Telldus Live \n 3. Dovolite ** {app_name} ** (kliknite ** Da **). \n 4. Pridi nazaj in kliknite ** SUBMIT **. \n\n [Link TelldusLive ra\u010dun] ( {auth_url} )",
+                "title": "Preverjanje pristnosti za TelldusLive"
+            },
+            "user": {
+                "data": {
+                    "host": "Gostitelj"
+                },
+                "description": "Prazno",
+                "title": "Izberite kon\u010dno to\u010dko."
+            }
+        }
+    }
+}

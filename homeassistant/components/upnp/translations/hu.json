@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az UPnP / IGD m\u00e1r konfigur\u00e1l\u00e1sra ker\u00fclt",
+            "no_devices_discovered": "Nem tal\u00e1ltam UPnP / IGD-ket",
+            "no_devices_found": "Nincsenek UPnPIGD eszk\u00f6z\u00f6k a h\u00e1l\u00f3zaton."
+        },
+        "error": {
+            "one": "hiba",
+            "other": ""
+        }
+    }
+}

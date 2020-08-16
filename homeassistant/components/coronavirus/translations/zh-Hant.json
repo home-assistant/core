@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u6b64\u570b\u5bb6\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3002"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country": "\u570b\u5bb6"
+                },
+                "title": "\u9078\u64c7\u6240\u8981\u76e3\u8996\u7684\u570b\u5bb6"
+            }
+        }
+    }
+}

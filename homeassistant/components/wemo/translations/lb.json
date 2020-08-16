@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Keng Wemo Apparater am Netzwierk fonnt.",
+            "single_instance_allowed": "N\u00ebmmen eng eenzeg Konfiguratioun vun Wemo ass erlaabt."
+        },
+        "step": {
+            "confirm": {
+                "description": "Soll Wemo konfigur\u00e9iert ginn?"
+            }
+        }
+    }
+}

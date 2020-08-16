@@ -1,0 +1,8 @@
+{
+  "domain": "rfxtrx",
+  "name": "RFXCOM RFXtrx",
+  "documentation": "https://www.home-assistant.io/integrations/rfxtrx",
+  "requirements": ["pyRFXtrx==0.25"],
+  "codeowners": ["@danielhiversen", "@elupus"],
+  "config_flow": false
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "history_stats",
+  "name": "History Stats",
+  "documentation": "https://www.home-assistant.io/integrations/history_stats",
+  "dependencies": ["history"],
+  "codeowners": [],
+  "quality_scale": "internal"
+}

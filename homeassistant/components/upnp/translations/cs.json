@@ -1,0 +1,9 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "UPnP/IGD je ji\u017e nakonfigurov\u00e1no",
+            "no_devices_discovered": "Nebyly zji\u0161t\u011bny \u017e\u00e1dn\u00e9 UPnP/IGD",
+            "no_devices_found": "V s\u00edti nejsou nalezena \u017e\u00e1dn\u00e1 za\u0159\u00edzen\u00ed UPnP/IGD."
+        }
+    }
+}

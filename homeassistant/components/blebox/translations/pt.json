@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "unsupported_version": "O dispositivo BleBox possui firmware desatualizado. Atualize-o primeiro."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Endere\u00e7o IP",
+                    "port": "Porta"
+                }
+            }
+        }
+    }
+}

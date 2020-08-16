@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Denne Vilfo-router er allerede konfigureret."
+        },
+        "error": {
+            "cannot_connect": "Forbindelsen kunne ikke oprettes. Tjek de oplysninger, du har angivet, og pr\u00f8v igen.",
+            "invalid_auth": "Ugyldig godkendelse. Kontroller adgangstoken og pr\u00f8v igen.",
+            "unknown": "Der opstod en uventet fejl under konfiguration af integrationen."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Adgangstoken til Vilfo-router-API",
+                    "host": "Router-v\u00e6rtsnavn eller IP"
+                },
+                "description": "Indstil Vilfo-routerintegration. Du har brug for dit Vilfo-routerv\u00e6rtsnavn/IP og et API-adgangstoken. For yderligere information om denne integration og hvordan du f\u00e5r disse detaljer, kan du bes\u00f8ge: https://www.home-assistant.io/integrations/vilfo",
+                "title": "Opret forbindelse til Vilfo-router"
+            }
+        }
+    }
+}

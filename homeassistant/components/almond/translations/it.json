@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "\u00c8 possibile configurare un solo account Almond.",
+            "cannot_connect": "Impossibile connettersi al server Almond.",
+            "missing_configuration": "Si prega di controllare la documentazione su come impostare Almond."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Vuoi configurare Home Assistant a connettersi ad Almond tramite il componente aggiuntivo Hass.io: {addon} ?",
+                "title": "Almond tramite il componente aggiuntivo di Hass.io"
+            },
+            "pick_implementation": {
+                "title": "Seleziona metodo di autenticazione"
+            }
+        }
+    }
+}

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Une seule instance est n\u00e9cessaire."
+        },
+        "step": {
+            "user": {
+                "description": "Voulez-vous configurer Islamic Prayer Times?",
+                "title": "Configurer Islamic Prayer Times"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calculation_method": "M\u00e9thode de calcul de la pri\u00e8re"
+                }
+            }
+        }
+    },
+    "title": "Islamic Prayer Times"
+}

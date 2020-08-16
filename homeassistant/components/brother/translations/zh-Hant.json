@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u6b64\u5370\u8868\u6a5f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "unsupported_model": "\u4e0d\u652f\u63f4\u6b64\u6b3e\u5370\u8868\u6a5f\u3002"
+        },
+        "error": {
+            "connection_error": "\u9023\u7dda\u932f\u8aa4\u3002",
+            "snmp_error": "SNMP \u4f3a\u670d\u5668\u70ba\u95dc\u9589\u72c0\u614b\u6216\u5370\u8868\u6a5f\u4e0d\u652f\u63f4\u3002",
+            "wrong_host": "\u7121\u6548\u4e3b\u6a5f\u540d\u6216 IP \u4f4d\u5740"
+        },
+        "flow_title": "Brother \u5370\u8868\u6a5f\uff1a{model} {serial_number}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "type": "\u5370\u8868\u6a5f\u985e\u578b"
+                },
+                "description": "\u8a2d\u5b9a Brother \u5370\u8868\u6a5f\u6574\u5408\u3002\u5047\u5982\u9700\u8981\u5354\u52a9\uff0c\u8acb\u53c3\u8003\uff1ahttps://www.home-assistant.io/integrations/brother"
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "type": "\u5370\u8868\u6a5f\u985e\u578b"
+                },
+                "description": "\u662f\u5426\u8981\u5c07\u5e8f\u865f {serial_number} \u4e4bBrother \u5370\u8868\u6a5f {model} \u65b0\u589e\u81f3 Home Assistant\uff1f",
+                "title": "\u81ea\u52d5\u63a2\u7d22\u5230 Brother \u5370\u8868\u6a5f"
+            }
+        }
+    }
+}

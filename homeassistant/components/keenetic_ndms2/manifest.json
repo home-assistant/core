@@ -1,0 +1,7 @@
+{
+  "domain": "keenetic_ndms2",
+  "name": "Keenetic NDMS2 Routers",
+  "documentation": "https://www.home-assistant.io/integrations/keenetic_ndms2",
+  "requirements": ["ndms2_client==0.0.11"],
+  "codeowners": ["@foxel"]
+}

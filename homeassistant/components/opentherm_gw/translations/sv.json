@@ -1,0 +1,31 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Gateway redan konfigurerad",
+            "id_exists": "Gateway-id finns redan",
+            "serial_error": "Fel vid anslutning till enheten",
+            "timeout": "Anslutningsf\u00f6rs\u00f6ket avbr\u00f6ts"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "device": "S\u00f6kv\u00e4g eller URL",
+                    "id": "ID",
+                    "name": "Namn"
+                },
+                "title": "OpenTherm Gateway"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "floor_temperature": "Golvetemperatur",
+                    "precision": "Precision"
+                },
+                "description": "Alternativ f\u00f6r OpenTherm Gateway"
+            }
+        }
+    }
+}

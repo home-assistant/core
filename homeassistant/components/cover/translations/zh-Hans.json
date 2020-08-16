@@ -1,0 +1,12 @@
+{
+    "state": {
+        "_": {
+            "closed": "\u5df2\u5173\u95ed",
+            "closing": "\u6b63\u5728\u5173\u95ed",
+            "open": "\u5df2\u6253\u5f00",
+            "opening": "\u6b63\u5728\u6253\u5f00",
+            "stopped": "\u5df2\u505c\u6b62"
+        }
+    },
+    "title": "\u5377\u5e18"
+}

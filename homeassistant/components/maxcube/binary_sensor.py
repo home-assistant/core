@@ -1,8 +1,9 @@
 """Support for MAX! binary sensors via MAX! Cube."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.maxcube import DATA_KEY
+from homeassistant.components.binary_sensor import BinarySensorEntity
+
+from . import DATA_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -13,25 +14,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for handler in hass.data[DATA_KEY].values():
         cube = handler.cube
         for device in cube.devices:
-            name = "{} {}".format(
-                cube.room_by_id(device.room_id).name, device.name)
+            name = f"{cube.room_by_id(device.room_id).name} {device.name}"
 
             # Only add Window Shutters
             if cube.is_windowshutter(device):
-                devices.append(
-                    MaxCubeShutter(handler, name, device.rf_address))
+                devices.append(MaxCubeShutter(handler, name, device.rf_address))
 
     if devices:
         add_entities(devices)
 
 
-class MaxCubeShutter(BinarySensorDevice):
+class MaxCubeShutter(BinarySensorEntity):
     """Representation of a MAX! Cube Binary Sensor device."""
 
     def __init__(self, handler, name, rf_address):
-        """Initialize MAX! Cube BinarySensorDevice."""
+        """Initialize MAX! Cube BinarySensorEntity."""
         self._name = name
-        self._sensor_type = 'window'
+        self._sensor_type = "window"
         self._rf_address = rf_address
         self._cubehandle = handler
         self._state = None
@@ -43,7 +42,7 @@ class MaxCubeShutter(BinarySensorDevice):
 
     @property
     def name(self):
-        """Return the name of the BinarySensorDevice."""
+        """Return the name of the BinarySensorEntity."""
         return self._name
 
     @property

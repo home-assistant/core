@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "MELCloud integration already configured for this email. Access token has been refreshed."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect, please try again",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Email"
+                },
+                "description": "Connect using your MELCloud account.",
+                "title": "Connect to MELCloud"
+            }
+        }
+    }
+}

@@ -4,62 +4,63 @@ import asyncio
 import logging
 import os
 
+from homeassistant import runner
 from homeassistant.auth import auth_manager_from_config
 from homeassistant.auth.providers import homeassistant as hass_auth
-from homeassistant.core import HomeAssistant
 from homeassistant.config import get_default_config_dir
+from homeassistant.core import HomeAssistant
+
+# mypy: allow-untyped-calls, allow-untyped-defs
 
 
 def run(args):
     """Handle Home Assistant auth provider script."""
-    parser = argparse.ArgumentParser(
-        description="Manage Home Assistant users")
+    parser = argparse.ArgumentParser(description="Manage Home Assistant users")
+    parser.add_argument("--script", choices=["auth"])
     parser.add_argument(
-        '--script', choices=['auth'])
-    parser.add_argument(
-        '-c', '--config',
+        "-c",
+        "--config",
         default=get_default_config_dir(),
-        help="Directory that contains the Home Assistant configuration")
+        help="Directory that contains the Home Assistant configuration",
+    )
 
-    subparsers = parser.add_subparsers(dest='func')
+    subparsers = parser.add_subparsers(dest="func")
     subparsers.required = True
-    parser_list = subparsers.add_parser('list')
+    parser_list = subparsers.add_parser("list")
     parser_list.set_defaults(func=list_users)
 
-    parser_add = subparsers.add_parser('add')
-    parser_add.add_argument('username', type=str)
-    parser_add.add_argument('password', type=str)
+    parser_add = subparsers.add_parser("add")
+    parser_add.add_argument("username", type=str)
+    parser_add.add_argument("password", type=str)
     parser_add.set_defaults(func=add_user)
 
-    parser_validate_login = subparsers.add_parser('validate')
-    parser_validate_login.add_argument('username', type=str)
-    parser_validate_login.add_argument('password', type=str)
+    parser_validate_login = subparsers.add_parser("validate")
+    parser_validate_login.add_argument("username", type=str)
+    parser_validate_login.add_argument("password", type=str)
     parser_validate_login.set_defaults(func=validate_login)
 
-    parser_change_pw = subparsers.add_parser('change_password')
-    parser_change_pw.add_argument('username', type=str)
-    parser_change_pw.add_argument('new_password', type=str)
+    parser_change_pw = subparsers.add_parser("change_password")
+    parser_change_pw.add_argument("username", type=str)
+    parser_change_pw.add_argument("new_password", type=str)
     parser_change_pw.set_defaults(func=change_password)
 
-    args = parser.parse_args(args)
-    loop = asyncio.get_event_loop()
-    hass = HomeAssistant(loop=loop)
-    loop.run_until_complete(run_command(hass, args))
-
-    # Triggers save on used storage helpers with delay (core auth)
-    logging.getLogger('homeassistant.core').setLevel(logging.WARNING)
-    loop.run_until_complete(hass.async_stop())
+    asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
+    asyncio.run(run_command(parser.parse_args(args)))
 
 
-async def run_command(hass, args):
+async def run_command(args):
     """Run the command."""
+    hass = HomeAssistant()
     hass.config.config_dir = os.path.join(os.getcwd(), args.config)
-    hass.auth = await auth_manager_from_config(hass, [{
-        'type': 'homeassistant',
-    }], [])
+    hass.auth = await auth_manager_from_config(hass, [{"type": "homeassistant"}], [])
     provider = hass.auth.auth_providers[0]
     await provider.async_initialize()
     await args.func(hass, provider, args)
+
+    # Triggers save on used storage helpers with delay (core auth)
+    logging.getLogger("homeassistant.core").setLevel(logging.WARNING)
+
+    await hass.async_stop()
 
 
 async def list_users(hass, provider, args):
@@ -67,7 +68,7 @@ async def list_users(hass, provider, args):
     count = 0
     for user in provider.data.users:
         count += 1
-        print(user['username'])
+        print(user["username"])
 
     print()
     print("Total users:", count)

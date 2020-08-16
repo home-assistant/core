@@ -1,0 +1,7 @@
+{
+  "domain": "persistent_notification",
+  "name": "Persistent Notification",
+  "documentation": "https://www.home-assistant.io/integrations/persistent_notification",
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
+}

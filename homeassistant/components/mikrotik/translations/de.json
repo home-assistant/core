@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Mikrotik ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "name_exists": "Name vorhanden",
+            "wrong_credentials": "Falsche Zugangsdaten"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername",
+                    "verify_ssl": "Verwenden Sie SSL"
+                },
+                "title": "Richten Sie den Mikrotik Router ein"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "device_tracker": {
+                "data": {
+                    "arp_ping": "ARP Ping aktivieren",
+                    "force_dhcp": "Erzwingen Sie das Scannen \u00fcber DHCP"
+                }
+            }
+        }
+    }
+}

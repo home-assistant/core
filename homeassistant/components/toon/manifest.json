@@ -1,0 +1,10 @@
+{
+  "domain": "toon",
+  "name": "Toon",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/toon",
+  "requirements": ["toonapi==0.2.0"],
+  "dependencies": ["http"],
+  "after_dependencies": ["cloud"],
+  "codeowners": ["@frenck"]
+}

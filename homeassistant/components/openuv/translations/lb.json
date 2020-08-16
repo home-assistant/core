@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "D\u00ebs Koordinate si scho registr\u00e9iert"
+        },
+        "error": {
+            "identifier_exists": "Koordinate si scho\u00a0registr\u00e9iert",
+            "invalid_api_key": "Ong\u00ebltegen API Schl\u00ebssel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Schl\u00ebssel",
+                    "elevation": "H\u00e9icht",
+                    "latitude": "Breedegrad",
+                    "longitude": "L\u00e4ngegrad"
+                },
+                "title": "F\u00ebllt \u00e4r Informatiounen aus"
+            }
+        }
+    }
+}

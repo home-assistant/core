@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Denne printer er allerede konfigureret.",
+            "connection_error": "Kunne ikke oprette forbindelse til printeren.",
+            "connection_upgrade": "Der kunne ikke oprettes forbindelse til printeren, fordi der kr\u00e6ves opgradering af forbindelsen."
+        },
+        "error": {
+            "connection_error": "Kunne ikke oprette forbindelse til printeren.",
+            "connection_upgrade": "Kunne ikke oprette forbindelse til printeren. Pr\u00f8v igen med indstillingen SSL/TLS markeret."
+        },
+        "flow_title": "Printer: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "base_path": "Relativ sti til printeren",
+                    "host": "V\u00e6rt eller IP-adresse",
+                    "port": "Port",
+                    "ssl": "Printeren underst\u00f8tter kommunikation via SSL/TLS",
+                    "verify_ssl": "Printeren bruger et korrekt SSL-certifikat"
+                },
+                "description": "Konfigurer din printer via Internet Printing Protocol (IPP) til at integrere med Home Assistant.",
+                "title": "Forbind din printer"
+            },
+            "zeroconf_confirm": {
+                "description": "Vil du tilf\u00f8je printeren med navnet '{name}' til Home Assistant?",
+                "title": "Fandt printer"
+            }
+        }
+    }
+}

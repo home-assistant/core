@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Integracja Airly dla tych wsp\u00f3\u0142rz\u0119dnych jest ju\u017c skonfigurowana."
+        },
+        "error": {
+            "auth": "Klucz API jest nieprawid\u0142owy.",
+            "wrong_location": "Brak stacji pomiarowych Airly w tym rejonie."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Klucz API",
+                    "latitude": "Szeroko\u015b\u0107 geograficzna",
+                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna",
+                    "name": "Nazwa integracji"
+                },
+                "description": "Konfiguracja integracji Airly. By wygenerowa\u0107 klucz API, przejd\u017a na stron\u0119 https://developer.airly.eu/register",
+                "title": "Airly"
+            }
+        }
+    }
+}

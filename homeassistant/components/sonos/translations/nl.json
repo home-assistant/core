@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Geen Sonos-apparaten gevonden op het netwerk.",
+            "single_instance_allowed": "Er is slechts \u00e9\u00e9n configuratie van Sonos nodig."
+        },
+        "step": {
+            "confirm": {
+                "description": "Wilt u Sonos instellen?"
+            }
+        }
+    }
+}

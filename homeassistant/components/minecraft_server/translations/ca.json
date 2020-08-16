@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'amfitri\u00f3 ja est\u00e0 configurat."
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3 amb el servidor. Comprova l'amfitri\u00f3 i el port i torna-ho a provar. Assegurat que estas utilitzant la versi\u00f3 del servidor 1.7 o superior.",
+            "invalid_ip": "L'adre\u00e7a IP \u00e9s inv\u00e0lida (no s'ha pogut determinar l'adre\u00e7a MAC). Corregeix-la i torna-ho a provar.",
+            "invalid_port": "El port ha d'estar compr\u00e8s entre 1024 i 65535. Corregeix-lo i torna-ho a provar."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "name": "Nom"
+                },
+                "description": "Configura una inst\u00e0ncia del teu servidor de Minecraft per poder monitoritzar-lo.",
+                "title": "Enlla\u00e7 del servidor de Minecraft"
+            }
+        }
+    }
+}

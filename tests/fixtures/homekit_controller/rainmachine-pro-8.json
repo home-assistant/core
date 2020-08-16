@@ -1,0 +1,1137 @@
+[
+    {
+        "aid": 1,
+        "services": [
+            {
+                "iid": 1,
+                "type": "0000003E-0000-1000-8000-0026BB765291",
+                "primary": false,
+                "hidden": false,
+                "linked": [],
+                "characteristics": [
+                    {
+                        "iid": 2,
+                        "type": "00000014-0000-1000-8000-0026BB765291",
+                        "format": "bool",
+                        "perms": [
+                            "pw"
+                        ]
+                    },
+                    {
+                        "iid": 3,
+                        "type": "00000020-0000-1000-8000-0026BB765291",
+                        "format": "string",
+                        "value": "Green Electronics LLC",
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false
+                    },
+                    {
+                        "iid": 4,
+                        "type": "00000021-0000-1000-8000-0026BB765291",
+                        "format": "string",
+                        "value": "SPK5 Pro",
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false
+                    },
+                    {
+                        "iid": 5,
+                        "type": "00000023-0000-1000-8000-0026BB765291",
+                        "format": "string",
+                        "value": "RainMachine-00ce4a",
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false
+                    },
+                    {
+                        "iid": 6,
+                        "type": "00000030-0000-1000-8000-0026BB765291",
+                        "format": "string",
+                        "value": "00aa0000aa0a",
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false
+                    },
+                    {
+                        "iid": 7,
+                        "type": "00000052-0000-1000-8000-0026BB765291",
+                        "format": "string",
+                        "value": "1.0.4",
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false
+                    },
+                    {
+                        "iid": 8,
+                        "type": "00000053-0000-1000-8000-0026BB765291",
+                        "format": "string",
+                        "value": "1",
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false
+                    },
+                    {
+                        "iid": 9,
+                        "type": "34AB8811-AC7F-4340-BAC3-FD6A85F9943B",
+                        "format": "string",
+                        "value": "2.0;16A62",
+                        "perms": [
+                            "pr",
+                            "hd"
+                        ],
+                        "ev": false
+                    }
+                ]
+            },
+            {
+                "iid": 16,
+                "type": "000000A2-0000-1000-8000-0026BB765291",
+                "primary": false,
+                "hidden": false,
+                "linked": [],
+                "characteristics": [
+                    {
+                        "iid": 18,
+                        "type": "00000037-0000-1000-8000-0026BB765291",
+                        "format": "string",
+                        "value": "1.1.0",
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false
+                    }
+                ]
+            },
+            {
+                "iid": 64,
+                "type": "000000CF-0000-1000-8000-0026BB765291",
+                "primary": true,
+                "hidden": false,
+                "linked": [
+                    512,
+                    768,
+                    1024,
+                    1280,
+                    1536,
+                    1792,
+                    2048,
+                    2304
+                ],
+                "characteristics": [
+                    {
+                        "iid": 67,
+                        "type": "000000B0-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 65,
+                        "type": "000000D1-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 2,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 68,
+                        "type": "000000D2-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 66,
+                        "type": "00000023-0000-1000-8000-0026BB765291",
+                        "format": "string",
+                        "value": "RainMachine",
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false
+                    }
+                ]
+            },
+            {
+                "iid": 512,
+                "type": "000000D0-0000-1000-8000-0026BB765291",
+                "primary": false,
+                "hidden": false,
+                "linked": [],
+                "characteristics": [
+                    {
+                        "iid": 544,
+                        "type": "000000B0-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 560,
+                        "type": "000000D2-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 576,
+                        "type": "000000D5-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 1,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 3,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 592,
+                        "type": "000000D6-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 1,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 608,
+                        "type": "000000D4-0000-1000-8000-0026BB765291",
+                        "format": "uint32",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 86400,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 624,
+                        "type": "000000D3-0000-1000-8000-0026BB765291",
+                        "format": "uint32",
+                        "value": 300,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 86400,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 640,
+                        "type": "000000CB-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 1,
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false,
+                        "minValue": 1,
+                        "maxValue": 255,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 528,
+                        "type": "00000023-0000-1000-8000-0026BB765291",
+                        "format": "string",
+                        "value": "",
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false
+                    }
+                ]
+            },
+            {
+                "iid": 768,
+                "type": "000000D0-0000-1000-8000-0026BB765291",
+                "primary": false,
+                "hidden": false,
+                "linked": [],
+                "characteristics": [
+                    {
+                        "iid": 800,
+                        "type": "000000B0-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 816,
+                        "type": "000000D2-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 832,
+                        "type": "000000D5-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 1,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 3,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 848,
+                        "type": "000000D6-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 1,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 864,
+                        "type": "000000D4-0000-1000-8000-0026BB765291",
+                        "format": "uint32",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 86400,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 880,
+                        "type": "000000D3-0000-1000-8000-0026BB765291",
+                        "format": "uint32",
+                        "value": 300,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 86400,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 896,
+                        "type": "000000CB-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 2,
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false,
+                        "minValue": 1,
+                        "maxValue": 255,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 784,
+                        "type": "00000023-0000-1000-8000-0026BB765291",
+                        "format": "string",
+                        "value": "",
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false
+                    }
+                ]
+            },
+            {
+                "iid": 1024,
+                "type": "000000D0-0000-1000-8000-0026BB765291",
+                "primary": false,
+                "hidden": false,
+                "linked": [],
+                "characteristics": [
+                    {
+                        "iid": 1056,
+                        "type": "000000B0-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1072,
+                        "type": "000000D2-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1088,
+                        "type": "000000D5-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 1,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 3,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1104,
+                        "type": "000000D6-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 1,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1120,
+                        "type": "000000D4-0000-1000-8000-0026BB765291",
+                        "format": "uint32",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 86400,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1136,
+                        "type": "000000D3-0000-1000-8000-0026BB765291",
+                        "format": "uint32",
+                        "value": 300,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 86400,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1152,
+                        "type": "000000CB-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 3,
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false,
+                        "minValue": 1,
+                        "maxValue": 255,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1040,
+                        "type": "00000023-0000-1000-8000-0026BB765291",
+                        "format": "string",
+                        "value": "",
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false
+                    }
+                ]
+            },
+            {
+                "iid": 1280,
+                "type": "000000D0-0000-1000-8000-0026BB765291",
+                "primary": false,
+                "hidden": false,
+                "linked": [],
+                "characteristics": [
+                    {
+                        "iid": 1312,
+                        "type": "000000B0-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1328,
+                        "type": "000000D2-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1344,
+                        "type": "000000D5-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 1,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 3,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1360,
+                        "type": "000000D6-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 1,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1376,
+                        "type": "000000D4-0000-1000-8000-0026BB765291",
+                        "format": "uint32",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 86400,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1392,
+                        "type": "000000D3-0000-1000-8000-0026BB765291",
+                        "format": "uint32",
+                        "value": 300,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 86400,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1408,
+                        "type": "000000CB-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 4,
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false,
+                        "minValue": 1,
+                        "maxValue": 255,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1296,
+                        "type": "00000023-0000-1000-8000-0026BB765291",
+                        "format": "string",
+                        "value": "",
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false
+                    }
+                ]
+            },
+            {
+                "iid": 1536,
+                "type": "000000D0-0000-1000-8000-0026BB765291",
+                "primary": false,
+                "hidden": false,
+                "linked": [],
+                "characteristics": [
+                    {
+                        "iid": 1568,
+                        "type": "000000B0-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1584,
+                        "type": "000000D2-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1600,
+                        "type": "000000D5-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 1,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 3,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1616,
+                        "type": "000000D6-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 1,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1632,
+                        "type": "000000D4-0000-1000-8000-0026BB765291",
+                        "format": "uint32",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 86400,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1648,
+                        "type": "000000D3-0000-1000-8000-0026BB765291",
+                        "format": "uint32",
+                        "value": 300,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 86400,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1664,
+                        "type": "000000CB-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 5,
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false,
+                        "minValue": 1,
+                        "maxValue": 255,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1552,
+                        "type": "00000023-0000-1000-8000-0026BB765291",
+                        "format": "string",
+                        "value": "",
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false
+                    }
+                ]
+            },
+            {
+                "iid": 1792,
+                "type": "000000D0-0000-1000-8000-0026BB765291",
+                "primary": false,
+                "hidden": false,
+                "linked": [],
+                "characteristics": [
+                    {
+                        "iid": 1824,
+                        "type": "000000B0-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1840,
+                        "type": "000000D2-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1856,
+                        "type": "000000D5-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 1,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 3,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1872,
+                        "type": "000000D6-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 1,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1888,
+                        "type": "000000D4-0000-1000-8000-0026BB765291",
+                        "format": "uint32",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 86400,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1904,
+                        "type": "000000D3-0000-1000-8000-0026BB765291",
+                        "format": "uint32",
+                        "value": 300,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 86400,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1920,
+                        "type": "000000CB-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 6,
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false,
+                        "minValue": 1,
+                        "maxValue": 255,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 1808,
+                        "type": "00000023-0000-1000-8000-0026BB765291",
+                        "format": "string",
+                        "value": "",
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false
+                    }
+                ]
+            },
+            {
+                "iid": 2048,
+                "type": "000000D0-0000-1000-8000-0026BB765291",
+                "primary": false,
+                "hidden": false,
+                "linked": [],
+                "characteristics": [
+                    {
+                        "iid": 2080,
+                        "type": "000000B0-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 2096,
+                        "type": "000000D2-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 2112,
+                        "type": "000000D5-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 1,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 3,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 2128,
+                        "type": "000000D6-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 1,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 2144,
+                        "type": "000000D4-0000-1000-8000-0026BB765291",
+                        "format": "uint32",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 86400,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 2160,
+                        "type": "000000D3-0000-1000-8000-0026BB765291",
+                        "format": "uint32",
+                        "value": 300,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 86400,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 2176,
+                        "type": "000000CB-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 7,
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false,
+                        "minValue": 1,
+                        "maxValue": 255,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 2064,
+                        "type": "00000023-0000-1000-8000-0026BB765291",
+                        "format": "string",
+                        "value": "",
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false
+                    }
+                ]
+            },
+            {
+                "iid": 2304,
+                "type": "000000D0-0000-1000-8000-0026BB765291",
+                "primary": false,
+                "hidden": false,
+                "linked": [],
+                "characteristics": [
+                    {
+                        "iid": 2336,
+                        "type": "000000B0-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 2352,
+                        "type": "000000D2-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 2368,
+                        "type": "000000D5-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 1,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 3,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 2384,
+                        "type": "000000D6-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 1,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 1,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 2400,
+                        "type": "000000D4-0000-1000-8000-0026BB765291",
+                        "format": "uint32",
+                        "value": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 86400,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 2416,
+                        "type": "000000D3-0000-1000-8000-0026BB765291",
+                        "format": "uint32",
+                        "value": 300,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "ev": false,
+                        "minValue": 0,
+                        "maxValue": 86400,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 2432,
+                        "type": "000000CB-0000-1000-8000-0026BB765291",
+                        "format": "uint8",
+                        "value": 8,
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false,
+                        "minValue": 1,
+                        "maxValue": 255,
+                        "minStep": 1
+                    },
+                    {
+                        "iid": 2320,
+                        "type": "00000023-0000-1000-8000-0026BB765291",
+                        "format": "string",
+                        "value": "",
+                        "perms": [
+                            "pr"
+                        ],
+                        "ev": false
+                    }
+                ]
+            }
+        ]
+    }
+]

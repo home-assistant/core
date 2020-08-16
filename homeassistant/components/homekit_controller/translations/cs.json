@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "accessory_not_found_error": "P\u00e1rov\u00e1n\u00ed nelze p\u0159idat, proto\u017ee za\u0159\u00edzen\u00ed ji\u017e nelze nal\u00e9zt."
+        },
+        "error": {
+            "busy_error": "Za\u0159\u00edzen\u00ed odm\u00edtlo p\u0159idat p\u00e1rov\u00e1n\u00ed, proto\u017ee je ji\u017e sp\u00e1rov\u00e1no s jin\u00fdm \u0159adi\u010dem.",
+            "max_peers_error": "Za\u0159\u00edzen\u00ed odm\u00edtlo p\u0159idat p\u00e1rov\u00e1n\u00ed, proto\u017ee nem\u00e1 voln\u00e9 \u00falo\u017ei\u0161t\u011b pro p\u00e1rov\u00e1n\u00ed.",
+            "max_tries_error": "Za\u0159\u00edzen\u00ed odm\u00edtlo p\u0159idat p\u00e1rov\u00e1n\u00ed, proto\u017ee p\u0159ijalo v\u00edce ne\u017e 100 ne\u00fasp\u011b\u0161n\u00fdch pokus\u016f o ov\u011b\u0159en\u00ed.",
+            "pairing_failed": "P\u0159i pokusu o sp\u00e1rov\u00e1n\u00ed s t\u00edmto za\u0159\u00edzen\u00edm do\u0161lo k neo\u0161et\u0159en\u00e9 chyb\u011b. M\u016f\u017ee se jednat o do\u010dasn\u00e9 selh\u00e1n\u00ed nebo za\u0159\u00edzen\u00ed nen\u00ed aktu\u00e1ln\u011b podporov\u00e1no."
+        },
+        "step": {
+            "pair": {
+                "description": "Chcete-li pou\u017e\u00edt toto p\u0159\u00edslu\u0161enstv\u00ed, zadejte k\u00f3d p\u00e1rov\u00e1n\u00ed HomeKit (ve form\u00e1tu XXX-XX-XXX)",
+                "title": "P\u00e1rov\u00e1n\u00ed s dopl\u0148kem HomeKit"
+            }
+        }
+    }
+}

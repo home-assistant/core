@@ -1,0 +1,6 @@
+{
+  "domain": "itunes",
+  "name": "Apple iTunes",
+  "documentation": "https://www.home-assistant.io/integrations/itunes",
+  "codeowners": []
+}

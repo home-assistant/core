@@ -1,0 +1,41 @@
+{
+    "config": {
+        "error": {
+            "error_auth_app": "Feil applikasjons-ID eller hemmelighet",
+            "error_auth_mfa": "Feil kode",
+            "error_auth_user": "Ugyldig brukernavn eller passord"
+        },
+        "step": {
+            "auth_app": {
+                "data": {
+                    "app_id": "App-ID",
+                    "app_secret": "Hemmelig"
+                },
+                "description": "Applikasjons-ID og hemmelig kode fra [StarLine utviklerkonto](https://my.starline.ru/developer)",
+                "title": "Programlegitimasjon"
+            },
+            "auth_captcha": {
+                "data": {
+                    "captcha_code": "Kode fra bilde"
+                },
+                "description": "",
+                "title": ""
+            },
+            "auth_mfa": {
+                "data": {
+                    "mfa_code": "SMS-kode"
+                },
+                "description": "Angi koden som er sendt til telefonen {phone_number}",
+                "title": "Totrinnsbekreftelse"
+            },
+            "auth_user": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "description": "E-postadresse og passord for StarLine-kontoen",
+                "title": "Brukerlegitimasjon"
+            }
+        }
+    }
+}

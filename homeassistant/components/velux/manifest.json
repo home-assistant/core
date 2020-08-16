@@ -1,0 +1,7 @@
+{
+  "domain": "velux",
+  "name": "Velux",
+  "documentation": "https://www.home-assistant.io/integrations/velux",
+  "requirements": ["pyvlx==0.2.16"],
+  "codeowners": ["@Julius2342"]
+}

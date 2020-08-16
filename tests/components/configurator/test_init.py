@@ -3,7 +3,7 @@
 import unittest
 
 import homeassistant.components.configurator as configurator
-from homeassistant.const import EVENT_TIME_CHANGED, ATTR_FRIENDLY_NAME
+from homeassistant.const import ATTR_FRIENDLY_NAME, EVENT_TIME_CHANGED
 
 from tests.common import get_test_home_assistant
 
@@ -15,20 +15,17 @@ class TestConfigurator(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_request_least_info(self):
         """Test request config with least amount of data."""
         request_id = configurator.request_config(
-            self.hass, "Test Request", lambda _: None)
+            self.hass, "Test Request", lambda _: None
+        )
 
-        assert 1 == \
-            len(self.hass.services.services.get(configurator.DOMAIN, [])), \
-            "No new service registered"
+        assert 1 == len(
+            self.hass.services.services.get(configurator.DOMAIN, [])
+        ), "No new service registered"
 
         states = self.hass.states.all()
 
@@ -37,8 +34,7 @@ class TestConfigurator(unittest.TestCase):
         state = states[0]
 
         assert configurator.STATE_CONFIGURE == state.state
-        assert \
-            request_id == state.attributes.get(configurator.ATTR_CONFIGURE_ID)
+        assert request_id == state.attributes.get(configurator.ATTR_CONFIGURE_ID)
 
     def test_request_all_info(self):
         """Test request config with all possible info."""
@@ -63,7 +59,7 @@ class TestConfigurator(unittest.TestCase):
                 link_name="link name",
                 link_url="link url",
                 entity_picture="config entity picture",
-            )
+            ),
         }
 
         states = self.hass.states.all()
@@ -77,11 +73,14 @@ class TestConfigurator(unittest.TestCase):
         """Test if our callback gets called when configure service called."""
         calls = []
         request_id = configurator.request_config(
-            self.hass, "Test Request", lambda _: calls.append(1))
+            self.hass, "Test Request", lambda _: calls.append(1)
+        )
 
         self.hass.services.call(
-            configurator.DOMAIN, configurator.SERVICE_CONFIGURE,
-            {configurator.ATTR_CONFIGURE_ID: request_id})
+            configurator.DOMAIN,
+            configurator.SERVICE_CONFIGURE,
+            {configurator.ATTR_CONFIGURE_ID: request_id},
+        )
 
         self.hass.block_till_done()
         assert 1 == len(calls), "Callback not called"
@@ -89,7 +88,8 @@ class TestConfigurator(unittest.TestCase):
     def test_state_change_on_notify_errors(self):
         """Test state change on notify errors."""
         request_id = configurator.request_config(
-            self.hass, "Test Request", lambda _: None)
+            self.hass, "Test Request", lambda _: None
+        )
         error = "Oh no bad bad bad"
         configurator.notify_errors(self.hass, request_id, error)
 
@@ -103,7 +103,8 @@ class TestConfigurator(unittest.TestCase):
     def test_request_done_works(self):
         """Test if calling request done works."""
         request_id = configurator.request_config(
-            self.hass, "Test Request", lambda _: None)
+            self.hass, "Test Request", lambda _: None
+        )
         configurator.request_done(self.hass, request_id)
         assert 1 == len(self.hass.states.all())
 

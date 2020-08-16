@@ -1,0 +1,8 @@
+{
+  "domain": "tesla",
+  "name": "Tesla",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/tesla",
+  "requirements": ["teslajsonpy==0.10.4"],
+  "codeowners": ["@zabuldon", "@alandtse"]
+}

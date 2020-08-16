@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja ha estat configurat",
+            "no_device": "Cap dels teus dispositius t\u00e9 activada la opci\u00f3 \"Troba el meu iPhone\""
+        },
+        "error": {
+            "login": "Error d'inici de sessi\u00f3: comprova el correu electr\u00f2nic i la contrasenya",
+            "send_verification_code": "No s'ha pogut enviar el codi de verificaci\u00f3",
+            "validate_verification_code": "No s'ha pogut verificar el codi de verificaci\u00f3, tria un dispositiu de confian\u00e7a i torna a iniciar el proc\u00e9s"
+        },
+        "step": {
+            "trusted_device": {
+                "data": {
+                    "trusted_device": "Dispositiu de confian\u00e7a"
+                },
+                "description": "Selecciona el teu dispositiu de confian\u00e7a",
+                "title": "Dispositiu de confian\u00e7a iCloud"
+            },
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Correu electr\u00f2nic",
+                    "with_family": "Amb fam\u00edlia"
+                },
+                "description": "Introdueix les teves credencials",
+                "title": "Credencials d'iCloud"
+            },
+            "verification_code": {
+                "data": {
+                    "verification_code": "Codi de verificaci\u00f3"
+                },
+                "description": "Introdueix el codi de verificaci\u00f3 que rebis d'iCloud",
+                "title": "Codi de verificaci\u00f3 iCloud"
+            }
+        }
+    }
+}

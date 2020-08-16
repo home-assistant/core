@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Host is already configured."
+        },
+        "error": {
+            "cannot_connect": "Unable to Connect to host",
+            "name_exists": "Name already exists",
+            "wrong_credentials": "Wrong username or password"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
+                },
+                "title": "Setup Transmission Client"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "limit": "Limit",
+                    "order": "Order",
+                    "scan_interval": "Update frequency"
+                },
+                "title": "Configure options for Transmission"
+            }
+        }
+    }
+}

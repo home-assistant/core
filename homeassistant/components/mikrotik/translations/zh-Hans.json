@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u673a",
+                    "name": "\u540d\u5b57",
+                    "password": "\u5bc6\u7801",
+                    "port": "\u7aef\u53e3",
+                    "username": "\u7528\u6237\u540d",
+                    "verify_ssl": "\u4f7f\u7528 ssl"
+                }
+            }
+        }
+    }
+}

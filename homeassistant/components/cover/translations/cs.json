@@ -1,0 +1,25 @@
+{
+    "device_automation": {
+        "action_type": {
+            "stop": "Zastavit {entity_name}"
+        },
+        "condition_type": {
+            "is_closed": "{entity_name} je zav\u0159eno",
+            "is_closing": "{entity_name} se zav\u00edr\u00e1",
+            "is_open": "{entity_name} je otev\u0159eno",
+            "is_opening": "{entity_name} se otev\u00edr\u00e1",
+            "is_position": "pozice {entity_name} je",
+            "is_tilt_position": "pozice naklon\u011bn\u00ed {entity_name} je"
+        }
+    },
+    "state": {
+        "_": {
+            "closed": "Zav\u0159eno",
+            "closing": "Zav\u00edr\u00e1n\u00ed",
+            "open": "Otev\u0159eno",
+            "opening": "Otev\u00edr\u00e1n\u00ed",
+            "stopped": "Zastaveno"
+        }
+    },
+    "title": "Roleta"
+}

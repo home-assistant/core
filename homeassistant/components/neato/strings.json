@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Neato Account Info",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "vendor": "Vendor"
+        },
+        "description": "See [Neato documentation]({docs_url})."
+      }
+    },
+    "error": {
+      "invalid_credentials": "Invalid credentials",
+      "unexpected_error": "Unexpected error"
+    },
+    "create_entry": {
+      "default": "See [Neato documentation]({docs_url})."
+    },
+    "abort": {
+      "already_configured": "Already configured",
+      "invalid_credentials": "Invalid credentials"
+    }
+  }
+}

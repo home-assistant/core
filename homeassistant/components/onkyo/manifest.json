@@ -1,0 +1,7 @@
+{
+  "domain": "onkyo",
+  "name": "Onkyo",
+  "documentation": "https://www.home-assistant.io/integrations/onkyo",
+  "requirements": ["onkyo-eiscp==1.2.7"],
+  "codeowners": []
+}

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "Yhteyden muodostaminen ep\u00e4onnistui. Yrit\u00e4 uudelleen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Palvelin",
+                    "port": "Portti (10000)"
+                },
+                "title": "Yhdist\u00e4 laitteeseen"
+            }
+        }
+    },
+    "title": "Atag"
+}

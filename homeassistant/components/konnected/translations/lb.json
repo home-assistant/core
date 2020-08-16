@@ -1,0 +1,109 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "already_in_progress": "Konfiguratioun's Oflaf fir den Apparat ass schonn am gaangen.",
+            "not_konn_panel": "Keen erkannten Konnected.io Apparat",
+            "unknown": "Onbekannten Fehler opgetrueden"
+        },
+        "error": {
+            "cannot_connect": "Kann sech net mam Konnected Panel um {host}:{port} verbannen"
+        },
+        "step": {
+            "confirm": {
+                "description": "Modell: {model}\nID: {id}\nHost: {host}\nPort: {port}\n\nDir k\u00ebnnt den I/O a Panel Verhaalen an de Konnected Alarm Panel Astellunge konfigur\u00e9ieren.",
+                "title": "Konnected Apparat parat"
+            },
+            "import_confirm": {
+                "description": "Ee Konnected Alarm Pael mat der ID {id} gouf an der configuration.yaml entdeckt. D\u00ebsen Oflaf erlaabt et als eng Konfiguratioun z'import\u00e9ieren.",
+                "title": "Konnected Apparat import\u00e9ieren"
+            },
+            "user": {
+                "data": {
+                    "host": "IP Adress",
+                    "port": "Port"
+                },
+                "description": "Informatioune vum Konnected Panel aginn."
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "not_konn_panel": "Keen erkannten Konnected.io Apparat"
+        },
+        "error": {
+            "bad_host": "Iwwerschriwwen API Host URL ong\u00eblteg",
+            "one": "Ee",
+            "other": "M\u00e9i"
+        },
+        "step": {
+            "options_binary": {
+                "data": {
+                    "inverse": "Op/Zou Zoustand vertauschen",
+                    "name": "Numm (optional)",
+                    "type": "Typ vun Bin\u00e4re Sensor"
+                },
+                "description": "Wiel d'Optioune fir den bin\u00e4ren Sensor dee mat {zone} verbonnen ass",
+                "title": "Bin\u00e4re Sensor konfigur\u00e9ieren"
+            },
+            "options_digital": {
+                "data": {
+                    "name": "Numm (optional)",
+                    "poll_interval": "Intervall vun den Offroen (Minutten) (optional)",
+                    "type": "Typ vum Sensor"
+                },
+                "description": "Wiel d'Optioune fir den digitale Sensor dee mat {zone} verbonnen ass",
+                "title": "Digitale Sensor konfigur\u00e9ieren"
+            },
+            "options_io": {
+                "data": {
+                    "1": "Zon 2",
+                    "2": "Zon 1",
+                    "3": "Zon 3",
+                    "4": "Zon 4",
+                    "5": "Zon 5",
+                    "6": "Zon 6",
+                    "7": "Zon 7",
+                    "out": "OUT"
+                },
+                "description": "{model} um {host} entdeckt.\u00a0Wiel Basis Konfiguratioun vun den I/O hei dr\u00ebnner aus - ofh\u00e4ngeg vum I/O erlaabt et bin\u00e4r Sensoren (op / zou Kontakter), digital Sensoren (dht an ds18b20) oder schaltbar Ausgab. D\u00e9i detaill\u00e9iert Optioune k\u00ebnnen en an den n\u00e4chste Schr\u00ebtt konfigur\u00e9iert ginn.",
+                "title": "I/O konfigur\u00e9ieren"
+            },
+            "options_io_ext": {
+                "data": {
+                    "10": "Zon 10",
+                    "11": "Zon 11",
+                    "12": "Zon 12",
+                    "8": "Zon 8",
+                    "9": "Zon 9",
+                    "alarm1": "ALARM1",
+                    "alarm2_out2": "OUT2/ALARM2",
+                    "out1": "OUT1"
+                },
+                "description": "Wiel d'Konfiguratioun vun de verbleiwenden I/O hei dr\u00ebnner. D\u00e9i detaill\u00e9iert Optioune k\u00ebnnen en an den n\u00e4chste Schr\u00ebtt konfigur\u00e9iert ginn.",
+                "title": "Erweiderten I/O konfigur\u00e9ieren"
+            },
+            "options_misc": {
+                "data": {
+                    "api_host": "API Host URL iwwerschr\u00e9iwen (optionell)",
+                    "blink": "Blink panel LED un wann Status \u00c4nnerung gesch\u00e9ckt g\u00ebtt",
+                    "override_api_host": "Standard Home Assistant API Host Tableau URL iwwerschr\u00e9iwen"
+                },
+                "description": "Wielt w.e.g. dat gew\u00ebnschte Verhalen fir \u00c4re Panel aus",
+                "title": "Divers Optioune astellen"
+            },
+            "options_switch": {
+                "data": {
+                    "activation": "Ausgang wann un",
+                    "momentary": "Pulsatiounsdauer (ms) (optional)",
+                    "more_states": "Zous\u00e4tzlesch Zoust\u00e4nn fir d\u00ebs Zon konfigur\u00e9ieren",
+                    "name": "Numm (optional)",
+                    "pause": "Pausen zw\u00ebscht den Impulser (ms) (optional)",
+                    "repeat": "Unzuel vu Widderhuelungen (-1= onendlech) (optional)"
+                },
+                "description": "Wielt w.e.g. d'Ausgaboptiounen fir {zone}: Status {state}",
+                "title": "\u00cbmschltbaren Ausgang konfigur\u00e9ieren"
+            }
+        }
+    }
+}

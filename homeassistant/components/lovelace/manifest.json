@@ -1,0 +1,6 @@
+{
+  "domain": "lovelace",
+  "name": "Lovelace",
+  "documentation": "https://www.home-assistant.io/integrations/lovelace",
+  "codeowners": ["@home-assistant/frontend"]
+}

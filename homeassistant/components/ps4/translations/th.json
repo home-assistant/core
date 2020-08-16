@@ -1,0 +1,21 @@
+{
+    "config": {
+        "step": {
+            "creds": {
+                "title": "PlayStation 4"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN",
+                    "ip_address": "\u0e17\u0e35\u0e48\u0e2d\u0e22\u0e39\u0e48 IP",
+                    "name": "\u0e0a\u0e37\u0e48\u0e2d",
+                    "region": "\u0e20\u0e39\u0e21\u0e34\u0e20\u0e32\u0e04"
+                },
+                "title": "PlayStation 4"
+            },
+            "mode": {
+                "title": "PlayStation 4"
+            }
+        }
+    }
+}

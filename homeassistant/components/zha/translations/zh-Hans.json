@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\u53ea\u5141\u8bb8\u4e00\u4e2a ZHA \u914d\u7f6e\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u65e0\u6cd5\u8fde\u63a5\u5230 ZHA \u8bbe\u5907\u3002"
+        },
+        "step": {
+            "user": {
+                "title": "ZHA"
+            }
+        }
+    }
+}

@@ -1,0 +1,27 @@
+{
+  "title": "Light",
+  "device_automation": {
+    "action_type": {
+      "brightness_decrease": "Decrease {entity_name} brightness",
+      "brightness_increase": "Increase {entity_name} brightness",
+      "toggle": "Toggle {entity_name}",
+      "turn_on": "Turn on {entity_name}",
+      "turn_off": "Turn off {entity_name}",
+      "flash": "Flash {entity_name}"
+    },
+    "condition_type": {
+      "is_on": "{entity_name} is on",
+      "is_off": "{entity_name} is off"
+    },
+    "trigger_type": {
+      "turned_on": "{entity_name} turned on",
+      "turned_off": "{entity_name} turned off"
+    }
+  },
+  "state": {
+    "_": {
+      "off": "[%key:common::state::off%]",
+      "on": "[%key:common::state::on%]"
+    }
+  }
+}

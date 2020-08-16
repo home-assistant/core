@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Conta j\u00e1 registada",
+            "invalid_credentials": "Credenciais inv\u00e1lidas"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Palavra-passe",
+                    "username": "Email"
+                },
+                "title": "Preencha as suas informa\u00e7\u00f5es"
+            }
+        }
+    }
+}

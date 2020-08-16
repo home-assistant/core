@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive messages from Plaato Airlock.",
+            "one_instance_allowed": "Only a single instance is necessary."
+        },
+        "create_entry": {
+            "default": "To send events to Home Assistant, you will need to setup the webhook feature in Plaato Airlock.\n\nFill in the following info:\n\n- URL: `{webhook_url}`\n- Method: POST\n\nSee [the documentation]({docs_url}) for further details."
+        },
+        "step": {
+            "user": {
+                "description": "Are you sure you want to set up the Plaato Airlock?",
+                "title": "Set up the Plaato Webhook"
+            }
+        }
+    }
+}

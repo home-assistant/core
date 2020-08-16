@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La ciudad ya est\u00e1 configurada",
+            "unknown": "Error desconocido: por favor, vuelva a intentarlo m\u00e1s tarde"
+        },
+        "error": {
+            "empty": "No hay resultado en la b\u00fasqueda de la ciudad: por favor, comprueba el campo de la ciudad"
+        },
+        "step": {
+            "cities": {
+                "data": {
+                    "city": "Ciudad"
+                },
+                "description": "Elige tu ciudad de la lista",
+                "title": "M\u00e9t\u00e9o-France"
+            },
+            "user": {
+                "data": {
+                    "city": "Ciudad"
+                },
+                "description": "Introduzca el c\u00f3digo postal (solo para Francia, recomendado) o el nombre de la ciudad",
+                "title": "M\u00e9t\u00e9o-France"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "mode": "Modo de pron\u00f3stico"
+                }
+            }
+        }
+    }
+}

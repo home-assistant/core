@@ -1,0 +1,14 @@
+{
+    "state": {
+        "_": {
+            "auto": "Sj\u00e1lfvirkt",
+            "cool": "K\u00e6ling",
+            "dry": "\u00deurrt",
+            "fan_only": "Vifta eing\u00f6ngu",
+            "heat": "Hitun",
+            "heat_cool": "Hita/K\u00e6la",
+            "off": "Sl\u00f6kkt"
+        }
+    },
+    "title": "Loftslag"
+}

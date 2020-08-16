@@ -1,0 +1,1 @@
+"""The xmpp component."""

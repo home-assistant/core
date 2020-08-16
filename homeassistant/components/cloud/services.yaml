@@ -1,0 +1,7 @@
+# Describes the format for available cloud services
+
+remote_connect:
+  description: Make instance UI available outside over NabuCasa cloud.
+
+remote_disconnect:
+  description: Disconnect UI from NabuCasa cloud.

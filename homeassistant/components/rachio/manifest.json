@@ -1,0 +1,13 @@
+{
+  "domain": "rachio",
+  "name": "Rachio",
+  "documentation": "https://www.home-assistant.io/integrations/rachio",
+  "requirements": ["rachiopy==0.1.4"],
+  "dependencies": ["http"],
+  "after_dependencies": ["cloud"],
+  "codeowners": ["@bdraco"],
+  "config_flow": true,
+  "homekit": {
+    "models": ["Rachio"]
+  }
+}

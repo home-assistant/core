@@ -1,14 +1,7 @@
-"""
-Support for Qwikswitch Relays and Dimmers.
+"""Support for Qwikswitch Relays and Dimmers."""
+from homeassistant.components.light import SUPPORT_BRIGHTNESS, LightEntity
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.qwikswitch/
-"""
-from homeassistant.components.qwikswitch import (
-    QSToggleEntity, DOMAIN as QWIKSWITCH)
-from homeassistant.components.light import SUPPORT_BRIGHTNESS, Light
-
-DEPENDENCIES = [QWIKSWITCH]
+from . import DOMAIN as QWIKSWITCH, QSToggleEntity
 
 
 async def async_setup_platform(hass, _, add_entities, discovery_info=None):
@@ -21,7 +14,7 @@ async def async_setup_platform(hass, _, add_entities, discovery_info=None):
     add_entities(devs)
 
 
-class QSLight(QSToggleEntity, Light):
+class QSLight(QSToggleEntity, LightEntity):
     """Light based on a Qwikswitch relay/dimmer module."""
 
     @property

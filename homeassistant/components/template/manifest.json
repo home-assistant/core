@@ -1,0 +1,8 @@
+{
+  "domain": "template",
+  "name": "Template",
+  "documentation": "https://www.home-assistant.io/integrations/template",
+  "codeowners": ["@PhracturedBlue", "@tetienne"],
+  "quality_scale": "internal",
+  "after_dependencies": ["group"]
+}

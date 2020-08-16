@@ -1,0 +1,11 @@
+# Describes the format for available hue services
+
+hue_activate_scene:
+  description: Activate a hue scene stored in the hue hub.
+  fields:
+    group_name:
+      description: Name of hue group/room from the hue app.
+      example: "Living Room"
+    scene_name:
+      description: Name of hue scene from the hue app.
+      example: "Energize"

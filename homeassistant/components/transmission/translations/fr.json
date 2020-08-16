@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'h\u00f4te est d\u00e9j\u00e0 configur\u00e9."
+        },
+        "error": {
+            "cannot_connect": "Impossible de se connecter \u00e0 l'h\u00f4te",
+            "name_exists": "Ce nom est d\u00e9j\u00e0 utilis\u00e9",
+            "wrong_credentials": "Mauvais nom d'utilisateur ou mot de passe"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "name": "Nom",
+                    "password": "Mot de passe",
+                    "port": "Port",
+                    "username": "Nom d'utilisateur"
+                },
+                "title": "Configuration du client Transmission"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "limit": "Limite",
+                    "order": "Ordre",
+                    "scan_interval": "Fr\u00e9quence de mise \u00e0 jour"
+                },
+                "title": "Configurer les options pour Transmission"
+            }
+        }
+    }
+}

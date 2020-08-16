@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Z-Wave est d\u00e9j\u00e0 configur\u00e9",
+            "one_instance_only": "Le composant ne prend en charge qu'une seule instance Z-Wave"
+        },
+        "error": {
+            "option_error": "La validation Z-Wave a \u00e9chou\u00e9. Le chemin d'acc\u00e8s \u00e0 la cl\u00e9 USB est-il correct?"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "network_key": "Cl\u00e9 r\u00e9seau (laisser vide pour g\u00e9n\u00e9rer automatiquement)",
+                    "usb_path": "Chemin USB"
+                },
+                "description": "Voir https://www.home-assistant.io/docs/z-wave/installation/ pour plus d'informations sur les variables de configuration.",
+                "title": "Configurer Z-Wave"
+            }
+        }
+    },
+    "state": {
+        "_": {
+            "dead": "Morte",
+            "initializing": "Initialisation",
+            "ready": "Pr\u00eat",
+            "sleeping": "En veille"
+        },
+        "query_stage": {
+            "dead": "Morte ( {query_stage} )",
+            "initializing": "Initialisation ( {query_stage} )"
+        }
+    }
+}

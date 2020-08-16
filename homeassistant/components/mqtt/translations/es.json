@@ -1,0 +1,85 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "S\u00f3lo se permite una \u00fanica configuraci\u00f3n de MQTT."
+        },
+        "error": {
+            "cannot_connect": "No se puede conectar con el agente"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Agente",
+                    "discovery": "Habilitar descubrimiento",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto",
+                    "username": "Usuario"
+                },
+                "description": "Por favor, introduce la informaci\u00f3n de tu agente MQTT"
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Habilitar descubrimiento"
+                },
+                "description": "\u00bfQuieres configurar Home Assistant para conectar con el broker de MQTT proporcionado por el complemento Hass.io {addon}?",
+                "title": "MQTT Broker a trav\u00e9s del complemento Hass.io"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Primer bot\u00f3n",
+            "button_2": "Segundo bot\u00f3n",
+            "button_3": "Tercer bot\u00f3n",
+            "button_4": "Cuarto bot\u00f3n",
+            "button_5": "Quinto bot\u00f3n",
+            "button_6": "Sexto bot\u00f3n",
+            "turn_off": "Apagar",
+            "turn_on": "Encender"
+        },
+        "trigger_type": {
+            "button_double_press": "\"{subtype}\" doble pulsaci\u00f3n",
+            "button_long_press": "\"{subtype}\" pulsado continuamente",
+            "button_long_release": "\"{subtype}\" soltado despu\u00e9s de pulsaci\u00f3n larga",
+            "button_quadruple_press": "\"{subtype}\" cu\u00e1druple pulsaci\u00f3n",
+            "button_quintuple_press": "\"{subtype}\" quintuple pulsaci\u00f3n",
+            "button_short_press": "\"{subtype}\" pulsado",
+            "button_short_release": "\"{subtype}\" soltado",
+            "button_triple_press": "\"{subtype}\" triple pulsaci\u00f3n"
+        }
+    },
+    "options": {
+        "error": {
+            "bad_birth": "Tema de nacimiento inv\u00e1lido.",
+            "bad_will": "Tema deseado inv\u00e1lido.",
+            "cannot_connect": "No se puede conectar con el agente."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Agente",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto",
+                    "username": "Usuario"
+                },
+                "description": "Por favor, introduce la informaci\u00f3n de tu agente MQTT."
+            },
+            "options": {
+                "data": {
+                    "birth_enable": "Habilitar mensaje de nacimiento",
+                    "birth_payload": "Carga del mensaje de nacimiento",
+                    "birth_qos": "QoS del mensaje de nacimiento",
+                    "birth_retain": "Retenci\u00f3n del mensaje de nacimiento",
+                    "birth_topic": "Tema del mensaje de nacimiento",
+                    "discovery": "Habilitar descubrimiento",
+                    "will_enable": "Habilitar mensaje de nacimiento",
+                    "will_payload": "Enviar\u00e1 la carga",
+                    "will_qos": "El mensaje usar\u00e1 el QoS",
+                    "will_retain": "Retendr\u00e1 el mensaje",
+                    "will_topic": "Enviar\u00e1 un mensaje al tema"
+                },
+                "description": "Por favor, selecciona las opciones para MQTT."
+            }
+        }
+    }
+}

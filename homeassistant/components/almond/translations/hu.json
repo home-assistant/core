@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Csak egy Almond fi\u00f3kot konfigur\u00e1lhat.",
+            "cannot_connect": "Nem lehet csatlakozni az Almond szerverhez.",
+            "missing_configuration": "K\u00e9rj\u00fck, ellen\u0151rizze az Almond be\u00e1ll\u00edt\u00e1s\u00e1nak dokument\u00e1ci\u00f3j\u00e1t."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Be szeretn\u00e9 \u00e1ll\u00edtani a Home Assistant alkalmaz\u00e1st az Almondhoz val\u00f3 csatlakoz\u00e1shoz, amelyet a Hass.io kieg\u00e9sz\u00edt\u0151 biztos\u00edt: {addon} ?",
+                "title": "Almond a Hass.io kieg\u00e9sz\u00edt\u0151n kereszt\u00fcl"
+            },
+            "pick_implementation": {
+                "title": "V\u00e1lassza ki a hiteles\u00edt\u00e9si m\u00f3dszert"
+            }
+        }
+    }
+}

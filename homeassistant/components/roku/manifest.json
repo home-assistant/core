@@ -1,0 +1,16 @@
+{
+  "domain": "roku",
+  "name": "Roku",
+  "documentation": "https://www.home-assistant.io/integrations/roku",
+  "requirements": ["rokuecp==0.6.0"],
+  "ssdp": [
+    {
+      "st": "roku:ecp",
+      "manufacturer": "Roku",
+      "deviceType": "urn:roku-com:device:player:1-0"
+    }
+  ],
+  "codeowners": ["@ctalkington"],
+  "quality_scale": "silver",
+  "config_flow": true
+}

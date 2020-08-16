@@ -1,68 +1,119 @@
-"""Support for Eneco Slimmer stekkers (Smart Plugs)."""
+"""Support for Toon switches."""
 import logging
+from typing import Any
 
-from homeassistant.components.switch import SwitchDevice
-import homeassistant.components.toon as toon_main
+from toonapi import (
+    ACTIVE_STATE_AWAY,
+    ACTIVE_STATE_HOLIDAY,
+    PROGRAM_STATE_OFF,
+    PROGRAM_STATE_ON,
+)
+
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.typing import HomeAssistantType
+
+from .const import (
+    ATTR_DEFAULT_ENABLED,
+    ATTR_ICON,
+    ATTR_INVERTED,
+    ATTR_MEASUREMENT,
+    ATTR_NAME,
+    ATTR_SECTION,
+    DOMAIN,
+    SWITCH_ENTITIES,
+)
+from .coordinator import ToonDataUpdateCoordinator
+from .helpers import toon_exception_handler
+from .models import ToonDisplayDeviceEntity, ToonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the discovered Toon Smart Plugs."""
-    _toon_main = hass.data[toon_main.TOON_HANDLE]
-    switch_items = []
-    for plug in _toon_main.toon.smartplugs:
-        switch_items.append(EnecoSmartPlug(hass, plug))
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
+    """Set up a Toon switches based on a config entry."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    add_entities(switch_items)
+    async_add_entities(
+        [ToonProgramSwitch(coordinator), ToonHolidayModeSwitch(coordinator)]
+    )
 
 
-class EnecoSmartPlug(SwitchDevice):
-    """Representation of a Toon Smart Plug."""
+class ToonSwitch(ToonEntity, SwitchEntity):
+    """Defines an Toon switch."""
 
-    def __init__(self, hass, plug):
-        """Initialize the Smart Plug."""
-        self.smartplug = plug
-        self.toon_data_store = hass.data[toon_main.TOON_HANDLE]
+    def __init__(self, coordinator: ToonDataUpdateCoordinator, *, key: str) -> None:
+        """Initialize the Toon switch."""
+        self.key = key
 
-    @property
-    def unique_id(self):
-        """Return the ID of this switch."""
-        return self.smartplug.device_uuid
-
-    @property
-    def name(self):
-        """Return the name of the switch if any."""
-        return self.smartplug.name
+        super().__init__(
+            coordinator,
+            enabled_default=SWITCH_ENTITIES[key][ATTR_DEFAULT_ENABLED],
+            icon=SWITCH_ENTITIES[key][ATTR_ICON],
+            name=SWITCH_ENTITIES[key][ATTR_NAME],
+        )
 
     @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        return self.toon_data_store.get_data('current_power', self.name)
+    def unique_id(self) -> str:
+        """Return the unique ID for this binary sensor."""
+        agreement_id = self.coordinator.data.agreement.agreement_id
+        return f"{agreement_id}_{self.key}"
 
     @property
-    def today_energy_kwh(self):
-        """Return the today total energy usage in kWh."""
-        return self.toon_data_store.get_data('today_energy', self.name)
+    def is_on(self) -> bool:
+        """Return the status of the binary sensor."""
+        section = getattr(
+            self.coordinator.data, SWITCH_ENTITIES[self.key][ATTR_SECTION]
+        )
+        value = getattr(section, SWITCH_ENTITIES[self.key][ATTR_MEASUREMENT])
 
-    @property
-    def is_on(self):
-        """Return true if switch is on. Standby is on."""
-        return self.toon_data_store.get_data('current_state', self.name)
+        if SWITCH_ENTITIES[self.key][ATTR_INVERTED]:
+            return not value
 
-    @property
-    def available(self):
-        """Return true if switch is available."""
-        return self.smartplug.can_toggle
+        return value
 
-    def turn_on(self, **kwargs):
-        """Turn the switch on."""
-        return self.smartplug.turn_on()
 
-    def turn_off(self, **kwargs):
-        """Turn the switch off."""
-        return self.smartplug.turn_off()
+class ToonProgramSwitch(ToonSwitch, ToonDisplayDeviceEntity):
+    """Defines a Toon program switch."""
 
-    def update(self):
-        """Update state."""
-        self.toon_data_store.update()
+    def __init__(self, coordinator: ToonDataUpdateCoordinator) -> None:
+        """Initialize the Toon program switch."""
+        super().__init__(coordinator, key="thermostat_program")
+
+    @toon_exception_handler
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the Toon program switch."""
+        await self.coordinator.toon.set_active_state(
+            ACTIVE_STATE_AWAY, PROGRAM_STATE_OFF
+        )
+
+    @toon_exception_handler
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the Toon program switch."""
+        await self.coordinator.toon.set_active_state(
+            ACTIVE_STATE_AWAY, PROGRAM_STATE_ON
+        )
+
+
+class ToonHolidayModeSwitch(ToonSwitch, ToonDisplayDeviceEntity):
+    """Defines a Toon Holiday mode switch."""
+
+    def __init__(self, coordinator: ToonDataUpdateCoordinator) -> None:
+        """Initialize the Toon holiday switch."""
+        super().__init__(coordinator, key="thermostat_holiday_mode")
+
+    @toon_exception_handler
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the Toon holiday mode switch."""
+        await self.coordinator.toon.set_active_state(
+            ACTIVE_STATE_AWAY, PROGRAM_STATE_ON
+        )
+
+    @toon_exception_handler
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the Toon holiday mode switch."""
+        await self.coordinator.toon.set_active_state(
+            ACTIVE_STATE_HOLIDAY, PROGRAM_STATE_OFF
+        )

@@ -1,0 +1,1 @@
+"""The soundtouch component."""

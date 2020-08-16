@@ -1,0 +1,7 @@
+{
+  "domain": "nilu",
+  "name": "Norwegian Institute for Air Research (NILU)",
+  "documentation": "https://www.home-assistant.io/integrations/nilu",
+  "requirements": ["niluclient==0.1.2"],
+  "codeowners": ["@hfurubotten"]
+}

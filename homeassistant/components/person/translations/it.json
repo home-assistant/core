@@ -1,0 +1,9 @@
+{
+    "state": {
+        "_": {
+            "home": "In casa",
+            "not_home": "Fuori casa"
+        }
+    },
+    "title": "Persona"
+}

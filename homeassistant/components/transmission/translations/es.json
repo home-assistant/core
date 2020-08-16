@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El host ya est\u00e1 configurado."
+        },
+        "error": {
+            "cannot_connect": "No se puede conectar al host",
+            "name_exists": "El nombre ya existe",
+            "wrong_credentials": "Nombre de usuario o contrase\u00f1a incorrectos"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nombre",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto",
+                    "username": "Usuario"
+                },
+                "title": "Configuraci\u00f3n del cliente de transmisi\u00f3n"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "limit": "L\u00edmite",
+                    "order": "Pedido",
+                    "scan_interval": "Frecuencia de actualizaci\u00f3n"
+                },
+                "title": "Configurar opciones para la transmisi\u00f3n"
+            }
+        }
+    }
+}

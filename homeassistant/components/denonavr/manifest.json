@@ -1,0 +1,58 @@
+{
+  "domain": "denonavr",
+  "name": "Denon AVR Network Receivers",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/denonavr",
+  "requirements": ["denonavr==0.9.4", "getmac==0.8.2"],
+  "codeowners": ["@scarface-4711", "@starkillerOG"],
+  "ssdp": [
+    {
+      "manufacturer": "Denon",
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"
+    },
+    {
+      "manufacturer": "DENON",
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"
+    },
+    {
+      "manufacturer": "DENON PROFESSIONAL",
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"
+    },
+    {
+      "manufacturer": "Marantz",
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"
+    },
+    {
+      "manufacturer": "Denon",
+      "deviceType": "urn:schemas-upnp-org:device:MediaServer:1"
+    },
+    {
+      "manufacturer": "DENON",
+      "deviceType": "urn:schemas-upnp-org:device:MediaServer:1"
+    },
+    {
+      "manufacturer": "DENON PROFESSIONAL",
+      "deviceType": "urn:schemas-upnp-org:device:MediaServer:1"
+    },
+    {
+      "manufacturer": "Marantz",
+      "deviceType": "urn:schemas-upnp-org:device:MediaServer:1"
+    },
+    {
+      "manufacturer": "Denon",
+      "deviceType": "urn:schemas-denon-com:device:AiosDevice:1"
+    },
+    {
+      "manufacturer": "DENON",
+      "deviceType": "urn:schemas-denon-com:device:AiosDevice:1"
+    },
+    {
+      "manufacturer": "DENON PROFESSIONAL",
+      "deviceType": "urn:schemas-denon-com:device:AiosDevice:1"
+    },
+    {
+      "manufacturer": "Marantz",
+      "deviceType": "urn:schemas-denon-com:device:AiosDevice:1"
+    }
+  ]
+}

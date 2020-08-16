@@ -1,0 +1,12 @@
+play_media:
+  description: Downloads file from given url.
+  fields:
+    entity_id:
+      description: Name(s) of entities to play media on.
+      example: "media_player.living_room_chromecast"
+    media_content_id:
+      description: The ID of the content to play. Platform dependent.
+      example: "https://soundcloud.com/bruttoband/brutto-11"
+    media_content_type:
+      description: The type of the content to play. Must be one of MUSIC, TVSHOW, VIDEO, EPISODE, CHANNEL or PLAYLIST MUSIC.
+      example: "music"

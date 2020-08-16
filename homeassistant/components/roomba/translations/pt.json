@@ -1,0 +1,28 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Falha ao conectar, tente novamente"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "continuous": "Cont\u00ednuo",
+                    "delay": "Atraso",
+                    "host": "Servidor",
+                    "password": "Palavra-passe"
+                },
+                "title": "Conectar ao dispositivo"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "Cont\u00ednuo",
+                    "delay": "Atraso"
+                }
+            }
+        }
+    }
+}
