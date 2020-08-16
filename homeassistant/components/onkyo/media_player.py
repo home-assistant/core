@@ -276,7 +276,7 @@ class OnkyoDevice(MediaPlayerEntity):
         if self._hdmi_out_supported:
             hdmi_out_raw = self.command("hdmi-output-selector query")
         else:
-            hdmi_out_raw = False
+            hdmi_out_raw = []
         preset_raw = self.command("preset query")
         if not (volume_raw and mute_raw and current_source_raw):
             return
