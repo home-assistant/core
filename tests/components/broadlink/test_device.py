@@ -1,7 +1,8 @@
 """Tests for Broadlink devices."""
 import broadlink.exceptions as blke
 
-from homeassistant.components.broadlink.const import DOMAIN, DOMAINS_AND_TYPES
+from homeassistant.components.broadlink.const import DOMAIN
+from homeassistant.components.broadlink.device import get_domains
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
@@ -32,7 +33,7 @@ async def test_device_setup(hass):
     assert mock_api.auth.call_count == 1
     assert mock_api.get_fwversion.call_count == 1
     forward_entries = {c[1][1] for c in mock_forward.mock_calls}
-    domains = {domain for domain, types in DOMAINS_AND_TYPES if mock_api.type in types}
+    domains = get_domains(mock_api.type)
     assert mock_forward.call_count == len(domains)
     assert forward_entries == domains
 
@@ -132,7 +133,7 @@ async def test_device_setup_get_fwversion_broadlink_exception(hass):
 
     assert mock_entry.state == ENTRY_STATE_LOADED
     forward_entries = {c[1][1] for c in mock_forward.mock_calls}
-    domains = {domain for domain, types in DOMAINS_AND_TYPES if mock_api.type in types}
+    domains = get_domains(mock_api.type)
     assert mock_forward.call_count == len(domains)
     assert forward_entries == domains
 
@@ -152,7 +153,7 @@ async def test_device_setup_get_fwversion_os_error(hass):
 
     assert mock_entry.state == ENTRY_STATE_LOADED
     forward_entries = {c[1][1] for c in mock_forward.mock_calls}
-    domains = {domain for domain, types in DOMAINS_AND_TYPES if mock_api.type in types}
+    domains = get_domains(mock_api.type)
     assert mock_forward.call_count == len(domains)
     assert forward_entries == domains
 
@@ -205,7 +206,7 @@ async def test_device_unload_works(hass):
 
     assert mock_entry.state == ENTRY_STATE_NOT_LOADED
     forward_entries = {c[1][1] for c in mock_forward.mock_calls}
-    domains = {domain for domain, types in DOMAINS_AND_TYPES if mock_api.type in types}
+    domains = get_domains(mock_api.type)
     assert mock_forward.call_count == len(domains)
     assert forward_entries == domains
 
@@ -226,7 +227,7 @@ async def test_device_unload_authentication_error(hass):
     with patch.object(
         hass.config_entries, "async_forward_entry_unload", return_value=True
     ) as mock_forward:
-        assert await hass.config_entries.async_unload(mock_entry.entry_id)
+        await hass.config_entries.async_unload(mock_entry.entry_id)
 
     assert mock_entry.state == ENTRY_STATE_NOT_LOADED
     assert mock_forward.call_count == 0
@@ -252,7 +253,7 @@ async def test_device_unload_update_failed(hass):
     with patch.object(
         hass.config_entries, "async_forward_entry_unload", return_value=True
     ) as mock_forward:
-        assert await hass.config_entries.async_unload(mock_entry.entry_id)
+        await hass.config_entries.async_unload(mock_entry.entry_id)
 
     assert mock_entry.state == ENTRY_STATE_NOT_LOADED
     assert mock_forward.call_count == 0
