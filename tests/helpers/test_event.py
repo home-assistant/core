@@ -4,6 +4,7 @@ import asyncio
 from datetime import datetime, timedelta
 
 from astral import Astral
+import jinja2
 import pytest
 
 from homeassistant.components import sun
@@ -942,7 +943,7 @@ async def test_track_template_result_errors(hass, caplog):
     hass.states.async_set("switch.not_exist", "on")
     await hass.async_block_till_done()
 
-    assert len(syntax_error_runs) == 0
+    assert len(syntax_error_runs) == 1
     assert len(not_exist_runs) == 2
     assert not_exist_runs[1][0].data.get("entity_id") == "switch.not_exist"
     assert not_exist_runs[1][1] == template_not_exist
@@ -950,7 +951,7 @@ async def test_track_template_result_errors(hass, caplog):
     assert not_exist_runs[1][3] == "on"
 
     with patch.object(Template, "async_render") as render:
-        render.side_effect = TemplateError("Test")
+        render.side_effect = TemplateError(jinja2.TemplateError())
 
         hass.states.async_set("switch.not_exist", "off")
         await hass.async_block_till_done()

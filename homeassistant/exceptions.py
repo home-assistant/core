@@ -24,6 +24,7 @@ class TemplateError(HomeAssistantError):
 
     def __init__(self, exception: jinja2.TemplateError) -> None:
         """Init the error."""
+        self.message = exception.message
         super().__init__(f"{exception.__class__.__name__}: {exception}")
 
 
