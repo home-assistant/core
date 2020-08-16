@@ -1,6 +1,8 @@
 """Test Dynalite __init__."""
 
 
+import json
+
 import pytest
 from voluptuous import MultipleInvalid
 
@@ -282,3 +284,36 @@ async def test_unload_entry(hass):
         ]
         for cur_call in mock_unload.mock_calls:
             assert cur_call in expected_calls
+
+
+async def test_dynalite_ws_subscription(hass, hass_ws_client):
+    """Test the web socket functions for the frontend."""
+    host = "1.2.3.4"
+    host2 = "5.6.7.8"
+    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={CONF_HOST: host})
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
+        return_value=True,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    assert len(hass.config_entries.async_entries(dynalite.DOMAIN)) == 1
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 5, "type": "dynalite/get_entry", "entry_id": entry.entry_id}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["data"]["host"] == host
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "dynalite/update_entry",
+            "entry_id": entry.entry_id,
+            "entry_data": json.dumps({CONF_HOST: host2}),
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert hass.config_entries.async_get_entry(entry.entry_id).data["host"] == host2
