@@ -796,6 +796,52 @@ async def test_track_template_result_with_group(hass):
     assert specific_runs[-1] == str(100.1 + 200.2 + 0 + 800.8)
 
 
+async def test_track_template_result_and_conditional(hass):
+    """Test tracking template with an and conditional."""
+    specific_runs = []
+    hass.states.async_set("light.a", "off")
+    hass.states.async_set("light.b", "off")
+    template_str = '{% if states.light.a.state == "on" and states.light.b.state == "on" %}on{% else %}off{% endif %}'
+
+    template = Template(template_str, hass)
+
+    def specific_run_callback(event, template, old_result, new_result):
+        import pprint
+
+        pprint.pprint([event, template, old_result, new_result])
+        specific_runs.append(new_result)
+
+    async_track_template_result(hass, template, specific_run_callback)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("light.b", "on")
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 0
+
+    hass.states.async_set("light.a", "on")
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
+    assert specific_runs[0] == "on"
+
+    hass.states.async_set("light.b", "off")
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 2
+    assert specific_runs[1] == "off"
+
+    hass.states.async_set("light.a", "off")
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 2
+
+    hass.states.async_set("light.b", "on")
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 2
+
+    hass.states.async_set("light.a", "on")
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 3
+    assert specific_runs[2] == "on"
+
+
 async def test_track_template_result_iterator(hass):
     """Test tracking template."""
     iterator_runs = []
