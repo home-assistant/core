@@ -1,7 +1,7 @@
 """Tests for Broadlink devices."""
 import broadlink.exceptions as blke
 
-from homeassistant.components.broadlink.const import DOMAIN
+from homeassistant.components.broadlink.const import DOMAIN, DOMAINS_AND_TYPES
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
@@ -31,9 +31,10 @@ async def test_device_setup(hass):
     assert mock_entry.state == ENTRY_STATE_LOADED
     assert mock_api.auth.call_count == 1
     assert mock_api.get_fwversion.call_count == 1
-    assert len(mock_forward.mock_calls) == 3
     forward_entries = {c[1][1] for c in mock_forward.mock_calls}
-    assert forward_entries == {"remote", "sensor", "switch"}
+    domains = {domain for domain, types in DOMAINS_AND_TYPES if mock_api.type in types}
+    assert mock_forward.call_count == len(domains)
+    assert forward_entries == domains
 
 
 async def test_device_setup_authentication_error(hass):
@@ -52,8 +53,8 @@ async def test_device_setup_authentication_error(hass):
         await hass.config_entries.async_setup(mock_entry.entry_id)
 
     assert mock_entry.state == ENTRY_STATE_SETUP_ERROR
-    assert len(mock_forward.mock_calls) == 0
-    assert len(mock_init.mock_calls) == 1
+    assert mock_forward.call_count == 0
+    assert mock_init.call_count == 1
     assert mock_init.mock_calls[0][2]["context"]["source"] == "reauth"
     assert mock_init.mock_calls[0][2]["data"] == {
         "name": device.name,
@@ -69,10 +70,13 @@ async def test_device_setup_device_offline(hass):
     mock_entry = device.get_mock_entry()
     mock_entry.add_to_hass(hass)
 
-    with patch("broadlink.gendevice", return_value=mock_api):
+    with patch("broadlink.gendevice", return_value=mock_api), patch.object(
+        hass.config_entries, "async_forward_entry_setup"
+    ) as mock_forward:
         await hass.config_entries.async_setup(mock_entry.entry_id)
 
     assert mock_entry.state == ENTRY_STATE_SETUP_RETRY
+    assert mock_forward.call_count == 0
 
 
 async def test_device_setup_os_error(hass):
@@ -83,10 +87,13 @@ async def test_device_setup_os_error(hass):
     mock_entry = device.get_mock_entry()
     mock_entry.add_to_hass(hass)
 
-    with patch("broadlink.gendevice", return_value=mock_api):
+    with patch("broadlink.gendevice", return_value=mock_api), patch.object(
+        hass.config_entries, "async_forward_entry_setup"
+    ) as mock_forward:
         await hass.config_entries.async_setup(mock_entry.entry_id)
 
     assert mock_entry.state == ENTRY_STATE_SETUP_RETRY
+    assert mock_forward.call_count == 0
 
 
 async def test_device_setup_update_failed(hass):
@@ -103,10 +110,11 @@ async def test_device_setup_update_failed(hass):
     with patch("broadlink.gendevice", return_value=mock_api), patch(
         "homeassistant.components.broadlink.device.get_update_manager",
         return_value=mock_update_manager,
-    ):
+    ), patch.object(hass.config_entries, "async_forward_entry_setup") as mock_forward:
         await hass.config_entries.async_setup(mock_entry.entry_id)
 
     assert mock_entry.state == ENTRY_STATE_SETUP_RETRY
+    assert mock_forward.call_count == 0
 
 
 async def test_device_setup_get_fwversion_broadlink_exception(hass):
@@ -119,10 +127,14 @@ async def test_device_setup_get_fwversion_broadlink_exception(hass):
 
     with patch("broadlink.gendevice", return_value=mock_api), patch.object(
         hass.config_entries, "async_forward_entry_setup"
-    ):
+    ) as mock_forward:
         await hass.config_entries.async_setup(mock_entry.entry_id)
 
     assert mock_entry.state == ENTRY_STATE_LOADED
+    forward_entries = {c[1][1] for c in mock_forward.mock_calls}
+    domains = {domain for domain, types in DOMAINS_AND_TYPES if mock_api.type in types}
+    assert mock_forward.call_count == len(domains)
+    assert forward_entries == domains
 
 
 async def test_device_setup_get_fwversion_os_error(hass):
@@ -135,10 +147,14 @@ async def test_device_setup_get_fwversion_os_error(hass):
 
     with patch("broadlink.gendevice", return_value=mock_api), patch.object(
         hass.config_entries, "async_forward_entry_setup"
-    ):
+    ) as mock_forward:
         await hass.config_entries.async_setup(mock_entry.entry_id)
 
     assert mock_entry.state == ENTRY_STATE_LOADED
+    forward_entries = {c[1][1] for c in mock_forward.mock_calls}
+    domains = {domain for domain, types in DOMAINS_AND_TYPES if mock_api.type in types}
+    assert mock_forward.call_count == len(domains)
+    assert forward_entries == domains
 
 
 async def test_device_setup_registry(hass):
@@ -188,9 +204,58 @@ async def test_device_unload_works(hass):
         await hass.config_entries.async_unload(mock_entry.entry_id)
 
     assert mock_entry.state == ENTRY_STATE_NOT_LOADED
-    assert len(mock_forward.mock_calls) == 3
     forward_entries = {c[1][1] for c in mock_forward.mock_calls}
-    assert forward_entries == {"remote", "sensor", "switch"}
+    domains = {domain for domain, types in DOMAINS_AND_TYPES if mock_api.type in types}
+    assert mock_forward.call_count == len(domains)
+    assert forward_entries == domains
+
+
+async def test_device_unload_authentication_error(hass):
+    """Test we unload a device that failed the authentication step."""
+    device = pick_device(1)
+    mock_api = device.get_mock_api()
+    mock_api.auth.side_effect = blke.AuthenticationError()
+    mock_entry = device.get_mock_entry()
+    mock_entry.add_to_hass(hass)
+
+    with patch("broadlink.gendevice", return_value=mock_api), patch.object(
+        hass.config_entries, "async_forward_entry_setup"
+    ), patch.object(hass.config_entries.flow, "async_init"):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+
+    with patch.object(
+        hass.config_entries, "async_forward_entry_unload", return_value=True
+    ) as mock_forward:
+        assert await hass.config_entries.async_unload(mock_entry.entry_id)
+
+    assert mock_entry.state == ENTRY_STATE_NOT_LOADED
+    assert mock_forward.call_count == 0
+
+
+async def test_device_unload_update_failed(hass):
+    """Test we unload a device that failed the update step."""
+    device = pick_device(1)
+    mock_api = device.get_mock_api()
+    mock_entry = device.get_mock_entry()
+    mock_entry.add_to_hass(hass)
+
+    mock_update_manager = MagicMock()
+    mock_update_manager.coordinator.last_update_success = False
+    mock_update_manager.coordinator.async_refresh = AsyncMock()
+
+    with patch("broadlink.gendevice", return_value=mock_api), patch(
+        "homeassistant.components.broadlink.device.get_update_manager",
+        return_value=mock_update_manager,
+    ), patch.object(hass.config_entries, "async_forward_entry_setup"):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+
+    with patch.object(
+        hass.config_entries, "async_forward_entry_unload", return_value=True
+    ) as mock_forward:
+        assert await hass.config_entries.async_unload(mock_entry.entry_id)
+
+    assert mock_entry.state == ENTRY_STATE_NOT_LOADED
+    assert mock_forward.call_count == 0
 
 
 async def test_device_update_listener(hass):
