@@ -505,6 +505,7 @@ homeassistant/components/yi/* @bachya
 homeassistant/components/zeroconf/* @Kane610
 homeassistant/components/zerproc/* @emlove
 homeassistant/components/zha/* @dmulcahey @adminiuga
+homeassistant/components/zodiac/* @JulienTant
 homeassistant/components/zone/* @home-assistant/core
 homeassistant/components/zoneminder/* @rohankapoorcom @vangorra
 homeassistant/components/zwave/* @home-assistant/z-wave
