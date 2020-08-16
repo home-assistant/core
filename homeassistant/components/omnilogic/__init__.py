@@ -3,8 +3,7 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from omnilogic import OmniLogic
-from requests.exceptions import RequestException
+from omnilogic import LoginException, OmniLogic
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -40,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             data = await api.get_telemetry_data()
             await api.close()
             return data
-        except RequestException:
+        except LoginException:
             raise PlatformNotReady
 
     coordinator = DataUpdateCoordinator(
