@@ -259,14 +259,19 @@ class OmnilogicSensor(Entity):
                         break
 
             temp_return = int(sensordata)
+            temp_state = int(sensordata)
             unit_of_measurement = TEMP_FAHRENHEIT
             if self._backyard["Unit-of-Measurement"] == "Metric":
                 temp_return = round((temp_return - 32) * 5 / 9, 1)
                 unit_of_measurement = TEMP_CELSIUS
 
+            if int(sensordata) == -1:
+                temp_return = None
+                temp_state = None
+
             self.attrs["hayward_temperature"] = temp_return
             self.attrs["hayward_unit_of_measure"] = unit_of_measurement
-            self._state = float(sensordata)
+            self._state = temp_state
             self._unit = TEMP_FAHRENHEIT
             self.attrs["systemId"] = self.bow.get("systemId")
             self._name = (
@@ -365,8 +370,15 @@ class OmnilogicSensor(Entity):
                         sensordata = bow.get("Chlorinator")
                         break
 
-            self._state = sensordata.get("Timed-Percent")
-            self._unit = "%"
+            if sensordata.get("operatingMode") == "1":
+                self._state = sensordata.get("Timed-Percent")
+                self._unit = "%"
+            elif sensordata.get("operatingMode") == "2":
+                if sensordata.get("Timed-Percent") == "100":
+                    self._state = "on"
+                else:
+                    self._state = "off"
+
             self._name = (
                 self._backyard["BackyardName"]
                 + " "
