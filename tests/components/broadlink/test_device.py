@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from . import pick_device
 
-from tests.async_mock import AsyncMock, MagicMock, patch
+from tests.async_mock import patch
 from tests.common import mock_device_registry, mock_registry
 
 
@@ -101,17 +101,13 @@ async def test_device_setup_update_failed(hass):
     """Test we handle an update failure at startup."""
     device = pick_device(1)
     mock_api = device.get_mock_api()
+    mock_api.check_sensors.side_effect = blke.DeviceOfflineError()
     mock_entry = device.get_mock_entry()
     mock_entry.add_to_hass(hass)
 
-    mock_update_manager = MagicMock()
-    mock_update_manager.coordinator.last_update_success = False
-    mock_update_manager.coordinator.async_refresh = AsyncMock()
-
-    with patch("broadlink.gendevice", return_value=mock_api), patch(
-        "homeassistant.components.broadlink.device.get_update_manager",
-        return_value=mock_update_manager,
-    ), patch.object(hass.config_entries, "async_forward_entry_setup") as mock_forward:
+    with patch("broadlink.gendevice", return_value=mock_api), patch.object(
+        hass.config_entries, "async_forward_entry_setup"
+    ) as mock_forward:
         await hass.config_entries.async_setup(mock_entry.entry_id)
 
     assert mock_entry.state == ENTRY_STATE_SETUP_RETRY
@@ -237,17 +233,13 @@ async def test_device_unload_update_failed(hass):
     """Test we unload a device that failed the update step."""
     device = pick_device(1)
     mock_api = device.get_mock_api()
+    mock_api.check_sensors.side_effect = blke.DeviceOfflineError()
     mock_entry = device.get_mock_entry()
     mock_entry.add_to_hass(hass)
 
-    mock_update_manager = MagicMock()
-    mock_update_manager.coordinator.last_update_success = False
-    mock_update_manager.coordinator.async_refresh = AsyncMock()
-
-    with patch("broadlink.gendevice", return_value=mock_api), patch(
-        "homeassistant.components.broadlink.device.get_update_manager",
-        return_value=mock_update_manager,
-    ), patch.object(hass.config_entries, "async_forward_entry_setup"):
+    with patch("broadlink.gendevice", return_value=mock_api), patch.object(
+        hass.config_entries, "async_forward_entry_setup"
+    ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
 
     with patch.object(
