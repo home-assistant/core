@@ -1,4 +1,6 @@
 """Support for Hyperion remotes."""
+import aiohttp
+import asyncio
 import json
 import logging
 import socket
@@ -118,6 +120,8 @@ class Hyperion(LightEntity):
         self._effect = KEY_EFFECT_SOLID
         self._skip_update = False
         self._on = False
+
+        self._components = {}
 
         _LOGGER.error('New Hyperion init!')
 
@@ -254,6 +258,48 @@ class Hyperion(LightEntity):
         })
         self._on = False
 
+    def update_components(self, components):
+      for component in components:
+          if KEY_NAME in component and KEY_ENABLED in component:
+              self._components[component[KEY_NAME]] = KEY_ENABLED
+
+      if (KEY_COMPONENTID_ALL in self._components and
+          KEY_COMPONENTID_LEDDEVICE in self._components):
+          self._on = (self._components[KEY_COMPONENTID_ALL] and
+                      self._components[KEY_COMPONENTID_LEDDEVICE])
+
+    def update_adjustments(self, adjustment):
+        brightness_pct = adjustment.get(KEY_BRIGHTNESS, DEFAULT_BRIGHTNESS)
+        self._brightness = int(round((brightness_pct*255) / float(100)))
+
+    def update_priorities(self, priorities):
+        # The visible priority is supposed to be the first returned by the
+        # API, but due to a bug the ordering is incorrect search for it instead,
+        # see: https://github.com/hyperion-project/hyperion.ng/issues/964
+        visible_priority = None
+        for priority in priorities:
+            if priority.get(KEY_VISIBLE, False):
+                visible_priority = priority
+                break
+
+        if visible_priority:
+            componentid = visible_priority.get(KEY_COMPONENTID)
+            if componentid in KEY_COMPONENTID_EXTERNAL_SOURCES:
+                self._rgb_color = DEFAULT_COLOR
+                self._icon = "mdi:video-input-hdmi"
+                self._effect = componentid
+            elif componentid == KEY_COMPONENTID_EFFECT:
+                self._rgb_color = DEFAULT_COLOR
+                self._icon = "mdi:lava-lamp"
+
+                # Owner is the effect name.
+                # See: https://docs.hyperion-project.org/en/json/ServerInfo.html#priorities
+                self._effect = visible_priority[KEY_OWNER]
+            elif componentid == KEY_COMPONENTID_COLOR:
+                self._rgb_color = visible_priority[KEY_VALUE][KEY_RGB]
+                self._icon = "mdi:lightbulb"
+                self._effect = KEY_EFFECT_SOLID
+
     def update(self):
         """Get the lights status."""
         if self._skip_update:
@@ -263,57 +309,15 @@ class Hyperion(LightEntity):
         response = self.json_request({KEY_COMMAND: KEY_SERVERINFO})
         if response and KEY_INFO in response:
             info = response[KEY_INFO]
-            visible_priority = None
 
-            led_device_enabled = False
-            hyperion_enabled = False
-
-            # Determine on/off by checking if both hyperion is enabled, and LED
-            # output is enabled.
-            for component in info.get(KEY_COMPONENTS, []):
-                if (component[KEY_NAME] == KEY_COMPONENTID_ALL and
-                    component[KEY_ENABLED]):
-                    hyperion_enabled = True
-                elif (component[KEY_NAME] == KEY_COMPONENTID_LEDDEVICE and
-                      component[KEY_ENABLED]):
-                    led_device_enabled = True
-            self._on = hyperion_enabled and led_device_enabled
-
-            # Determine brightness by checking the light adjustments.
+            self.update_components(info.get(KEY_COMPONENTS, []))
             if info.get(KEY_ADJUSTMENT, []):
-              brightness_pct = info[KEY_ADJUSTMENT][0].get(
-                  KEY_BRIGHTNESS, DEFAULT_BRIGHTNESS)
-              self._brightness = int(round((brightness_pct*255) / float(100)))
-            else:
-              self._brightness = DEFAULT_BRIGHTNESS
+              self.update_adjustments(info[KEY_ADJUSTMENT][0])
+            self.update_priorities(info.get(KEY_PRIORITIES, []))
 
-            # The visible priority is supposed to be the first returned by the
-            # API, but due to a bug the ordering is incorrect search for it instead,
-            # see: https://github.com/hyperion-project/hyperion.ng/issues/964
-            for priority in info.get(KEY_PRIORITIES, []):
-                if priority.get(KEY_VISIBLE, False):
-                    visible_priority = priority
-                    break
-
-            _LOGGER.debug('Update: On=%s,Brightness=%i / VP=%s' % (self._on, self._brightness, visible_priority))
-
-            if self._on and visible_priority:
-                componentid = visible_priority.get(KEY_COMPONENTID)
-                if componentid in KEY_COMPONENTID_EXTERNAL_SOURCES:
-                    self._rgb_color = DEFAULT_COLOR
-                    self._icon = "mdi:video-input-hdmi"
-                    self._effect = componentid
-                elif componentid == KEY_COMPONENTID_EFFECT:
-                    self._rgb_color = DEFAULT_COLOR
-                    self._icon = "mdi:lava-lamp"
-
-                    # Owner is the effect name.
-                    # See: https://docs.hyperion-project.org/en/json/ServerInfo.html#priorities
-                    self._effect = visible_priority[KEY_OWNER]
-                elif componentid == KEY_COMPONENTID_COLOR:
-                    self._rgb_color = visible_priority[KEY_VALUE][KEY_RGB]
-                    self._icon = "mdi:lightbulb"
-                    self._effect = KEY_EFFECT_SOLID
+            _LOGGER.debug(
+                'Hyperion update: On=%s,Brightness=%i,Effect=%s,Color=%s' % (
+                self._on, self._brightness, self._effect, self._rgb_color))
             return True
         return False
 
