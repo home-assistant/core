@@ -79,18 +79,11 @@ async def async_setup_entry(
                 item_name = item["name"]
                 item_id = item["id"]
                 item_parent_id = item["parentId"]
-                try:
-                    item_is_dimmer = item["capabilities"]["dimmer"]
-                except KeyError:
-                    _LOGGER.debug(
-                        "Couldn't determine if light is dimmer, defaulting to dimming enabled: %s",
-                        item,
-                    )
+                if item_id in dimmer_coordinator.data:
                     item_is_dimmer = True
-
-                if item_is_dimmer:
                     item_coordinator = dimmer_coordinator
                 else:
+                    item_is_dimmer = False
                     item_coordinator = non_dimmer_coordinator
 
                 item_manufacturer = None
