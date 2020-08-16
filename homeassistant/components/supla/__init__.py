@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_SCAN_INTERVAL,
-    EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -89,7 +89,7 @@ async def async_setup(hass, base_config):
             _LOGGER.info("Closing up Supla server: %s", server_name)
             await server.close()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_close_supla_servers)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close_supla_servers)
 
     await discover_devices(hass, base_config)
 
@@ -164,7 +164,7 @@ async def discover_devices(hass, hass_config):
 
 
 class SuplaChannel(Entity):
-    """Base class of a Supla Channel (an equivalent of HA"s Entity)."""
+    """Base class of a Supla Channel (an equivalent of HA's Entity)."""
 
     def __init__(self, config):
         """Hookup channel to coordinator."""
@@ -173,7 +173,7 @@ class SuplaChannel(Entity):
 
     @property
     def server(self):
-        """Return PySupla"s server component associated with entity."""
+        """Return PySupla's server component associated with entity."""
         return self.hass.data[SUPLA_SERVERS][self.server_name]
 
     @property
@@ -220,7 +220,7 @@ class SuplaChannel(Entity):
         Run server action.
 
         Actions are currently hardcoded in components.
-        Supla"s API enables autodiscovery
+        Supla's API enables autodiscovery
         """
         _LOGGER.debug(
             "Executing action %s on channel %d, params: %s",
