@@ -73,6 +73,9 @@ class AlarmPanel:
         self.client = None
         self.status = None
         self.api_version = KONN_API_VERSIONS[KONN_MODEL]
+        self.connected = False
+        self.connect_attempts = 0
+        self.cancel_connect_retry = None
 
     @property
     def device_id(self):
@@ -84,6 +87,11 @@ class AlarmPanel:
         """Return the configuration stored in `hass.data` for this device."""
         return self.hass.data[DOMAIN][CONF_DEVICES].get(self.device_id)
 
+    @property
+    def available(self):
+        """Return whether the device is available."""
+        return self.connected
+
     def format_zone(self, zone, other_items=None):
         """Get zone or pin based dict based on the client type."""
         payload = {
@@ -94,8 +102,15 @@ class AlarmPanel:
         payload.update(other_items or {})
         return payload
 
-    async def async_connect(self):
+    async def async_connect(self, now=None):
         """Connect to and setup a Konnected device."""
+        if self.connected:
+            return
+
+        if self.cancel_connect_retry:
+            # cancel any pending connect attempt and try now
+            self.cancel_connect_retry()
+
         try:
             self.client = konnected.Client(
                 host=self.host,
@@ -118,8 +133,16 @@ class AlarmPanel:
 
         except self.client.ClientError as err:
             _LOGGER.warning("Exception trying to connect to panel: %s", err)
-            raise CannotConnect
 
+            # retry in a bit, never more than ~3 min
+            self.connect_attempts += 1
+            self.cancel_connect_retry = self.hass.helpers.event.async_call_later(
+                2 ** min(self.connect_attempts, 5) * 5, self.async_connect
+            )
+            return
+
+        self.connect_attempts = 0
+        self.connected = True
         _LOGGER.info(
             "Set up Konnected device %s. Open http://%s:%s in a "
             "web browser to view device status",
@@ -129,7 +152,6 @@ class AlarmPanel:
         )
 
         device_registry = await dr.async_get_registry(self.hass)
-
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, self.status.get("mac"))},
