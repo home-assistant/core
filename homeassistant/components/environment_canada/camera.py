@@ -52,18 +52,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             coordinates=(lat, lon), precip_type=config.get(CONF_PRECIP_TYPE)
         )
 
-    add_devices([ECCamera(radar_object, config.get(CONF_NAME))], True)
+    add_devices(
+        [ECCamera(radar_object, config.get(CONF_NAME), config[CONF_LOOP])], True
+    )
 
 
 class ECCamera(Camera):
     """Implementation of an Environment Canada radar camera."""
 
-    def __init__(self, radar_object, camera_name):
+    def __init__(self, radar_object, camera_name, is_loop):
         """Initialize the camera."""
         super().__init__()
 
         self.radar_object = radar_object
         self.camera_name = camera_name
+        self.is_loop = is_loop
         self.content_type = "image/gif"
         self.image = None
         self.timestamp = None
@@ -90,7 +93,7 @@ class ECCamera(Camera):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update radar image."""
-        if CONF_LOOP:
+        if self.is_loop:
             self.image = self.radar_object.get_loop()
         else:
             self.image = self.radar_object.get_latest_frame()
