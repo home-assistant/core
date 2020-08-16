@@ -1,4 +1,6 @@
 """Test the condition helper."""
+from logging import ERROR
+
 import pytest
 
 from homeassistant.exceptions import HomeAssistantError
@@ -576,3 +578,18 @@ async def test_extract_devices():
             ],
         }
     ) == {"abcd", "qwer", "abcd_not", "qwer_not", "abcd_or", "qwer_or"}
+
+
+async def test_condition_template_error(hass, caplog):
+    """Test invalid template."""
+    caplog.set_level(ERROR)
+
+    test = await condition.async_from_config(
+        hass, {"condition": "template", "value_template": "{{ undefined.state }}"}
+    )
+
+    assert not test(hass)
+    assert len(caplog.records) == 1
+    assert caplog.records[0].message.startswith(
+        "Error during template condition: UndefinedError:"
+    )
