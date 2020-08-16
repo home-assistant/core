@@ -163,7 +163,7 @@ def whitespace(value: Any) -> str:
     if isinstance(value, str) and _WS.fullmatch(value):
         return value
 
-    raise vol.Invalid(f"contain non-whitespace: {value}")
+    raise vol.Invalid(f"contains non-whitespace: {value}")
 
 
 def isdevice(value: Any) -> str:
