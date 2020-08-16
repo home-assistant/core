@@ -28,7 +28,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.sun import get_astral_event_next
-from homeassistant.helpers.template import Template, result_as_boolean
+from homeassistant.helpers.template import RenderInfo, Template, result_as_boolean
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
@@ -431,7 +431,7 @@ track_template = threaded_listener_factory(async_track_template)
 _UNCHANGED = object()
 
 
-class TrackTemplateResultInfo:
+class _TrackTemplateResultInfo:
     """Handle removal / refresh of tracker."""
 
     def __init__(
@@ -451,7 +451,12 @@ class TrackTemplateResultInfo:
         self._all_listener: Optional[Callable] = None
         self._domains_listener: Optional[Callable] = None
         self._entities_listener: Optional[Callable] = None
-        self._info = template.async_render_to_info(variables)
+        self._info: Optional[RenderInfo] = None
+        self._last_info: Optional[RenderInfo] = None
+
+    def async_setup(self) -> None:
+        """Activation of template tracking."""
+        self._info = self._template.async_render_to_info(self._variables)
         if self._info.exception:
             self._last_exception = True
             _LOGGER.exception(self._info.exception)
@@ -460,6 +465,8 @@ class TrackTemplateResultInfo:
 
     @property
     def _needs_all_listener(self) -> bool:
+        assert self._info
+
         # Tracking all states
         if self._info.all_states:
             return True
@@ -480,6 +487,8 @@ class TrackTemplateResultInfo:
 
     @callback
     def _create_listeners(self) -> None:
+        assert self._info
+
         if self._info.is_static:
             return
 
@@ -516,6 +525,9 @@ class TrackTemplateResultInfo:
 
     @callback
     def _update_listeners(self) -> None:
+        assert self._info
+        assert self._last_info
+
         if self._needs_all_listener:
             if self._all_listener:
                 return
@@ -544,6 +556,8 @@ class TrackTemplateResultInfo:
 
     @callback
     def _setup_entities_listener(self) -> None:
+        assert self._info
+
         entities = set(self._info.entities)
         for entity_id in self.hass.states.async_entity_ids(self._info.domains):
             entities.add(entity_id)
@@ -553,6 +567,8 @@ class TrackTemplateResultInfo:
 
     @callback
     def _setup_domains_listener(self) -> None:
+        assert self._info
+
         self._domains_listener = async_track_state_added_domain(
             self.hass, self._info.domains, self._refresh
         )
@@ -631,7 +647,7 @@ def async_track_template_result(
     template: Template,
     action: TrackTemplateResultListener,
     variables: Optional[TemplateVarsType] = None,
-) -> TrackTemplateResultInfo:
+) -> _TrackTemplateResultInfo:
     """Add a listener that fires when a the result of a template changes.
 
     The action will fire with the initial result from the template, and
@@ -662,7 +678,9 @@ def async_track_template_result(
     Info object used to unregister the listener, and refresh the template.
 
     """
-    return TrackTemplateResultInfo(hass, template, action, variables)
+    tracker = _TrackTemplateResultInfo(hass, template, action, variables)
+    tracker.async_setup()
+    return tracker
 
 
 @callback
