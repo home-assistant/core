@@ -350,10 +350,8 @@ class CastDevice(MediaPlayerEntity):
             tts_base_url = None
             url_description = ""
             if "tts" in self.hass.config.components:
-                from homeassistant.components.tts import getBaseURL
-
                 try:
-                    tts_base_url = getBaseURL(self.hass)
+                    tts_base_url = self.hass.components.tts.get_base_url(self.hass)
                 except KeyError:
                     # base_url not configured, ignore
                     pass

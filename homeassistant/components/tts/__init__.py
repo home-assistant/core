@@ -597,6 +597,6 @@ class TextToSpeechView(HomeAssistantView):
         return web.Response(body=data, content_type=content)
 
 
-def getBaseURL(hass):
+def get_base_url(hass):
     """Get base URL."""
     return hass.data[BASE_URL_KEY]
