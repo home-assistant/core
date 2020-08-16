@@ -163,7 +163,7 @@ async def discover_devices(hass, hass_config):
 
 
 class SuplaChannel(Entity):
-    """Base class of a Supla Channel (an equivalent of HA"s Entity)."""
+    """Base class of a Supla Channel (an equivalent of HA's Entity)."""
 
     def __init__(self, config, server, coordinator):
         """Init from config, hookup[ server and coordinator."""
@@ -221,7 +221,7 @@ class SuplaChannel(Entity):
         Run server action.
 
         Actions are currently hardcoded in components.
-        Supla"s API enables autodiscovery
+        Supla's API enables autodiscovery
         """
         _LOGGER.debug(
             "Executing action %s on channel %d, params: %s",
