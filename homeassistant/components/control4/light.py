@@ -79,12 +79,23 @@ async def async_setup_entry(
                 item_name = item["name"]
                 item_id = item["id"]
                 item_parent_id = item["parentId"]
-                item_is_dimmer = item["capabilities"]["dimmer"]
+                try:
+                    item_is_dimmer = item["capabilities"]["dimmer"]
+                except KeyError:
+                    _LOGGER.debug(
+                        "Couldn't determine if light is dimmer, defaulting to dimming enabled: %s",
+                        item,
+                    )
+                    item_is_dimmer = True
 
                 if item_is_dimmer:
                     item_coordinator = dimmer_coordinator
                 else:
                     item_coordinator = non_dimmer_coordinator
+
+                item_manufacturer = None
+                item_device_name = None
+                item_model = None
 
                 for parent_item in items_of_category:
                     if parent_item["id"] == item_parent_id:
@@ -108,11 +119,11 @@ async def async_setup_entry(
                     ],
                     True,
                 )
-        except (KeyError, UnboundLocalError) as exception:
+        except KeyError as exception:
             _LOGGER.error(
                 "Unknown device properties recieved from Control4: %s %s",
-                item,
                 exception,
+                item,
             )
 
 
