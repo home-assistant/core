@@ -1017,7 +1017,7 @@ open-garage==0.1.4
 openerz-api==0.1.0
 
 # homeassistant.components.openevse
-openevsewifi==0.4
+openevsewifi==1.1.0
 
 # homeassistant.components.openhome
 openhomedevice==0.7.2
