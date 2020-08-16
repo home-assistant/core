@@ -1252,7 +1252,9 @@ async def test_closest_function_home_vs_group_entity_id(hass):
     await group.Group.async_create_group(hass, "location group", ["test_domain.object"])
 
     info = render_to_info(hass, '{{ closest("group.location_group").entity_id }}')
-    assert_result_info(info, "test_domain.object", ["test_domain.object"])
+    assert_result_info(
+        info, "test_domain.object", {"group.location_group", "test_domain.object"}
+    )
 
 
 async def test_closest_function_home_vs_group_state(hass):
@@ -1275,10 +1277,14 @@ async def test_closest_function_home_vs_group_state(hass):
     await group.Group.async_create_group(hass, "location group", ["test_domain.object"])
 
     info = render_to_info(hass, '{{ closest("group.location_group").entity_id }}')
-    assert_result_info(info, "test_domain.object", ["test_domain.object"])
+    assert_result_info(
+        info, "test_domain.object", {"group.location_group", "test_domain.object"}
+    )
 
     info = render_to_info(hass, "{{ closest(states.group.location_group).entity_id }}")
-    assert_result_info(info, "test_domain.object", ["test_domain.object"])
+    assert_result_info(
+        info, "test_domain.object", {"test_domain.object", "group.location_group"}
+    )
 
 
 async def test_expand(hass):
@@ -1313,26 +1319,45 @@ async def test_expand(hass):
         hass,
         "{{ expand('group.new_group') | map(attribute='entity_id') | join(', ') }}",
     )
-    assert_result_info(info, "test.object", ["test.object"])
+    assert_result_info(info, "test.object", {"group.new_group", "test.object"})
 
     info = render_to_info(
         hass, "{{ expand(states.group) | map(attribute='entity_id') | join(', ') }}"
     )
-    assert_result_info(info, "test.object", ["test.object"], ["group"])
+    assert_result_info(
+        info, "test.object", {"test.object", "group.new_group"}, ["group"]
+    )
 
     info = render_to_info(
         hass,
         "{{ expand('group.new_group', 'test.object')"
         " | map(attribute='entity_id') | join(', ') }}",
     )
-    assert_result_info(info, "test.object", ["test.object"])
+    assert_result_info(info, "test.object", {"test.object", "group.new_group"})
 
     info = render_to_info(
         hass,
         "{{ ['group.new_group', 'test.object'] | expand"
         " | map(attribute='entity_id') | join(', ') }}",
     )
-    assert_result_info(info, "test.object", ["test.object"])
+    assert_result_info(info, "test.object", {"test.object", "group.new_group"})
+
+    hass.states.async_set("sensor.power_1", 0)
+    hass.states.async_set("sensor.power_2", 200.2)
+    hass.states.async_set("sensor.power_3", 400.4)
+    await group.Group.async_create_group(
+        hass, "power sensors", ["sensor.power_1", "sensor.power_2", "sensor.power_3"]
+    )
+
+    info = render_to_info(
+        hass,
+        "{{ states.group.power_sensors.attributes.entity_id | expand | map(attribute='state')|map('float')|sum  }}",
+    )
+    assert_result_info(
+        info,
+        str(200.2 + 400.4),
+        {"group.power_sensors", "sensor.power_1", "sensor.power_2", "sensor.power_3"},
+    )
 
 
 def test_closest_function_to_coord(hass):

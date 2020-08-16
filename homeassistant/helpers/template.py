@@ -560,27 +560,13 @@ def expand(hass: HomeAssistantType, *args: Any) -> Iterable[State]:
             continue
 
         if entity_id.startswith(_GROUP_DOMAIN_PREFIX):
-            # Collect state would be called in here since it's wrapped
-            # so we call hass.states.get since we only want to collect
-            # the underlying entity ids.
-            #
-            # We only want to look at the underlying entities because
-            # when a expand() is in the template we check each entity
-            # instead of the state of the group. If we were to include
-            # the group we would end up re-rendering the template again
-            # when the group had finished processing the state change of
-            # the underlying entities.
-            #
-            state = hass.states.get(entity_id)
-            if state:
-                group_entities = state.attributes.get(ATTR_ENTITY_ID)
-                if group_entities:
-                    search += group_entities
+            # Collect state will be called in here since it's wrapped
+            group_entities = entity.attributes.get(ATTR_ENTITY_ID)
+            if group_entities:
+                search += group_entities
         else:
+            _collect_state(hass, entity_id)
             found[entity_id] = entity
-
-    for entity_id in found:
-        _collect_state(hass, entity_id)
 
     return sorted(found.values(), key=lambda a: a.entity_id)
 
