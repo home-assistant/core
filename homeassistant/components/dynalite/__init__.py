@@ -257,14 +257,14 @@ async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
             {"data": dict(hass.config_entries.async_get_entry(msg["entry_id"]).data)},
         )
 
-    WS_TYPE_DYNALITE_GET_ENTRY = "dynalite/get_entry"
-    SCHEMA_WEBSOCKET_GET_ENTRY = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-        {"type": WS_TYPE_DYNALITE_GET_ENTRY, "entry_id": str}
+    ws_type_dynalite_get_entry = "dynalite/get_entry"
+    schema_websocket_get_entry = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+        {"type": ws_type_dynalite_get_entry, "entry_id": str}
     )
     hass.components.websocket_api.async_register_command(
-        WS_TYPE_DYNALITE_GET_ENTRY,
+        ws_type_dynalite_get_entry,
         websocket_get_config_entry_data,
-        SCHEMA_WEBSOCKET_GET_ENTRY,
+        schema_websocket_get_entry,
     )
 
     def websocket_update_config_entry_data(hass, connection, msg):
@@ -276,14 +276,14 @@ async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
             hass.config_entries.async_update_entry(entry, data=entry_data)
         connection.send_result(msg["id"], {})
 
-    WS_TYPE_DYNALITE_UPDATE_ENTRY = "dynalite/update_entry"
-    SCHEMA_WEBSOCKET_UPDATE_ENTRY = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-        {"type": WS_TYPE_DYNALITE_UPDATE_ENTRY, "entry_id": str, "entry_data": str}
+    ws_type_dynalite_update_entry = "dynalite/update_entry"
+    schema_websocket_update_entry = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+        {"type": ws_type_dynalite_update_entry, "entry_id": str, "entry_data": str}
     )
     hass.components.websocket_api.async_register_command(
-        WS_TYPE_DYNALITE_UPDATE_ENTRY,
+        ws_type_dynalite_update_entry,
         websocket_update_config_entry_data,
-        SCHEMA_WEBSOCKET_UPDATE_ENTRY,
+        schema_websocket_update_entry,
     )
 
     return True
