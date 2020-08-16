@@ -39,6 +39,11 @@ async def async_setup_entry(
         "Scan interval = %s", scan_interval,
     )
 
+    # TODO: remove this
+    director = entry_data[CONF_DIRECTOR]
+    full_item_list = await director.getAllItemInfo()
+    _LOGGER.error("Full item list: %s", full_item_list)
+
     async def async_update_data_non_dimmer():
         """Fetch data from Control4 director for non-dimmer lights."""
         try:
