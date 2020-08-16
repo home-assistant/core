@@ -4,12 +4,13 @@ from datetime import timedelta
 import logging
 
 from omnilogic import OmniLogic
+from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -34,10 +35,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     async def async_update_data():
         """Fetch data from API endpoint."""
-        api = OmniLogic(username, password)
-        data = await api.get_telemetry_data()
-        await api.close()
-        return data
+        try:
+            api = OmniLogic(username, password)
+            data = await api.get_telemetry_data()
+            await api.close()
+            return data
+        except RequestException:
+            raise PlatformNotReady
 
     coordinator = DataUpdateCoordinator(
         hass,
