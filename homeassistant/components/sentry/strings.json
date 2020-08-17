@@ -1,9 +1,15 @@
 {
   "config": {
     "step": {
-      "user": { "title": "Sentry", "description": "Enter your Sentry DSN" }
+      "user": {
+        "title": "Sentry",
+        "description": "Enter your Sentry DSN",
+        "data": { "dsn": "DSN" }
+      }
     },
     "error": { "unknown": "Unexpected error", "bad_dsn": "Invalid DSN" },
-    "abort": { "already_configured": "Sentry is already configured" }
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
   }
 }

@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     custom_components = await async_get_custom_components(hass)
 
     sentry_sdk.init(
-        dsn=entry.data.get(CONF_DSN),
+        dsn=entry.data[CONF_DSN],
         environment=entry.data.get(CONF_ENVIRONMENT),
         integrations=[sentry_logging, AioHttpIntegration(), SqlalchemyIntegration()],
         release=current_version,
