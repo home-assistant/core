@@ -59,7 +59,7 @@ class WiLightParent:
 
         async def connect(api_device):
             # Set up connection and hook it into HA for reconnect/shutdown.
-            _LOGGER.info("Initiating WiLight connection to %s", api_device.device_id)
+            _LOGGER.debug("Initiating connection to %s", api_device.device_id)
 
             client = await api_device.config_client(
                 disconnect_callback=disconnected,
