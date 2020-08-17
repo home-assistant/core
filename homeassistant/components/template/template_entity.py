@@ -26,6 +26,7 @@ class _TemplateAttribute:
         template: Template,
         validator: Callable[[Any], Any] = match_all,
         on_update: Optional[Callable[[Any], None]] = None,
+        none_on_template_error: Optional[bool] = False,
     ):
         """Template attribute."""
         self._entity = entity
@@ -35,6 +36,7 @@ class _TemplateAttribute:
         self.on_update = on_update
         self.async_update = None
         self.add_complete = False
+        self.none_on_template_error = none_on_template_error
 
     @callback
     def async_setup(self):
@@ -75,7 +77,10 @@ class _TemplateAttribute:
                 self._attribute,
                 self._entity.entity_id,
             )
-            self.on_update(result)
+            if self.none_on_template_error:
+                self._default_update(result)
+            else:
+                self.on_update(result)
             self._write_update_if_added()
 
             return
@@ -139,6 +144,7 @@ class TemplateEntity(Entity):
         template: Template,
         validator: Callable[[Any], Any] = match_all,
         on_update: Optional[Callable[[Any], None]] = None,
+        none_on_template_error: bool = False,
     ) -> None:
         """
         Call in the constructor to add a template linked to a attribute.
@@ -158,7 +164,9 @@ class TemplateEntity(Entity):
             if the template or validator resulted in an error.
 
         """
-        attribute = _TemplateAttribute(self, attribute, template, validator, on_update)
+        attribute = _TemplateAttribute(
+            self, attribute, template, validator, on_update, none_on_template_error
+        )
         attribute.async_setup()
         self._template_attrs.append(attribute)
 
