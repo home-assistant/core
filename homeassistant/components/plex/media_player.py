@@ -21,9 +21,9 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
+from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.util import dt as dt_util
@@ -692,7 +692,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
         }
         response = await self.hass.async_add_executor_job(build_item_response, payload)
         if response is None:
-            raise HomeAssistantError(
+            raise BrowseError(
                 f"Media not found: {media_content_type} / {media_content_id}"
             )
         return response

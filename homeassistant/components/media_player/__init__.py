@@ -41,7 +41,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_PLAYING,
 )
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -103,6 +102,7 @@ from .const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from .errors import BrowseError
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -999,7 +999,7 @@ async def websocket_browse_media(hass, connection, msg):
             )
         )
         return
-    except HomeAssistantError as err:
+    except BrowseError as err:
         connection.send_message(
             websocket_api.error_message(msg["id"], "browse_failed", str(err))
         )
