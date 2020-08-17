@@ -32,7 +32,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     if not await parent.async_setup():
         raise ConfigEntryNotReady
-        # return False
 
     # For backwards compat, set unique ID
     if entry.unique_id is None:
