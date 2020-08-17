@@ -165,7 +165,7 @@ class WiLightLightColor(WiLightDevice, LightEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_BRIGHTNESS + SUPPORT_COLOR
+        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
     @property
     def brightness(self):
