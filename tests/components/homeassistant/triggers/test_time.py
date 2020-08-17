@@ -361,7 +361,7 @@ async def test_untrack_time_change(hass):
     """Test for removing tracked time changes."""
     mock_track_time_change = Mock()
     with patch(
-        "homeassistant.components.automation.time.async_track_time_change",
+        "homeassistant.components.homeassistant.triggers.time.async_track_time_change",
         return_value=mock_track_time_change,
     ):
         assert await async_setup_component(
