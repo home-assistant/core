@@ -1,11 +1,11 @@
 """Provides device automations for deconz events."""
 import voluptuous as vol
 
-import homeassistant.components.automation.event as event
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
+from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -432,13 +432,13 @@ async def async_attach_trigger(hass, config, action, automation_info):
     event_id = deconz_event.serial
 
     event_config = {
-        event.CONF_PLATFORM: "event",
-        event.CONF_EVENT_TYPE: CONF_DECONZ_EVENT,
-        event.CONF_EVENT_DATA: {CONF_UNIQUE_ID: event_id, **trigger},
+        event_trigger.CONF_PLATFORM: "event",
+        event_trigger.CONF_EVENT_TYPE: CONF_DECONZ_EVENT,
+        event_trigger.CONF_EVENT_DATA: {CONF_UNIQUE_ID: event_id, **trigger},
     }
 
-    event_config = event.TRIGGER_SCHEMA(event_config)
-    return await event.async_attach_trigger(
+    event_config = event_trigger.TRIGGER_SCHEMA(event_config)
+    return await event_trigger.async_attach_trigger(
         hass, event_config, action, automation_info, platform_type="device"
     )
 

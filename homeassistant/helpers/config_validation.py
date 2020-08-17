@@ -995,6 +995,10 @@ CONDITION_SCHEMA: vol.Schema = key_value_schemas(
     },
 )
 
+TRIGGER_SCHEMA = vol.All(
+    ensure_list, [vol.Schema({vol.Required(CONF_PLATFORM): str}, extra=vol.ALLOW_EXTRA)]
+)
+
 _SCRIPT_DELAY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ALIAS): string,
