@@ -5,6 +5,7 @@ from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_KILO_WATT_HOUR, POWER
 
 DOMAIN = "plugwise_stick"
 CONF_USB_PATH = "usb_path"
+UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 # Sensor IDs
 AVAILABLE_SENSOR_ID = "available"

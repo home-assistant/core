@@ -17,7 +17,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
 
-from .const import AVAILABLE_SENSOR_ID, CONF_USB_PATH, DOMAIN, SENSORS
+from .const import (
+    AVAILABLE_SENSOR_ID,
+    CONF_USB_PATH,
+    DOMAIN,
+    SENSORS,
+    UNDO_UPDATE_LISTENER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 CB_TYPE_NEW_NODE = "NEW_NODE"
@@ -106,6 +112,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     # Listen when EVENT_HOMEASSISTANT_STOP is fired
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
+    # Listen for entry updates
+    hass.data[DOMAIN][config_entry.entry_id][
+        UNDO_UPDATE_LISTENER
+    ] = config_entry.add_update_listener(_async_update_listener)
+
     return True
 
 
@@ -119,11 +130,17 @@ async def async_unload_entry(hass, config_entry):
             ]
         )
     )
+    hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
     if unload_ok:
         stick = hass.data[DOMAIN][config_entry.entry_id]["stick"]
         await hass.async_add_executor_job(stick.stop)
         hass.data[DOMAIN].pop(config_entry.entry_id)
     return unload_ok
+
+
+async def _async_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 class PlugwiseNodeEntity(Entity):
