@@ -18,39 +18,41 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class TimePattern:
-    """Limit a value to a time pattern.
+    """Validate a time pattern value.
 
     :raises Invalid: If the value has a wrong format or is outside the range.
     """
 
-    def __init__(self, max):
-        self.max = max
+    def __init__(self, maximum):
+        """Initialize time pattern."""
+        self.maximum = maximum
 
-    def __call__(self, v):
+    def __call__(self, value):
+        """Validate input."""
         try:
-            value = str(v)
             if value == "*":
-                return v
-            if value[0] == "/":
-                value = int(value[1:])
+                return value
+
+            if isinstance(value, str) and value.startswith("/"):
+                number = int(value[1:])
             else:
-                value = int(value)
+                number = int(value)
 
-            if not (0 <= value <= self.max):
-                raise vol.Invalid(f"must be a value between 0 and {self.max}")
+            if not (0 <= number <= self.maximum):
+                raise vol.Invalid(f"must be a value between 0 and {self.maximum}")
         except ValueError:
-            raise vol.Invalid(f"invalid time_pattern value")
+            raise vol.Invalid("invalid time_pattern value")
 
-        return v
+        return value
 
 
 TRIGGER_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required(CONF_PLATFORM): "time_pattern",
-            CONF_HOURS: TimePattern(max=23),
-            CONF_MINUTES: TimePattern(max=59),
-            CONF_SECONDS: TimePattern(max=59),
+            CONF_HOURS: TimePattern(maximum=23),
+            CONF_MINUTES: TimePattern(maximum=59),
+            CONF_SECONDS: TimePattern(maximum=59),
         }
     ),
     cv.has_at_least_one_key(CONF_HOURS, CONF_MINUTES, CONF_SECONDS),

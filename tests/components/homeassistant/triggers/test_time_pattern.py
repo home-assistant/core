@@ -304,10 +304,10 @@ async def test_invalid_schemas(hass, calls):
         None,
         {},
         {"platform": "time_pattern"},
-        {"platform": "time_pattern", "minutes": "/",},
-        {"platform": "time_pattern", "minutes": "*/5",},
-        {"platform": "time_pattern", "minutes": "/90",},
-        {"platform": "time_pattern", "hours": "12", "minutes": "0", "seconds": "100",},
+        {"platform": "time_pattern", "minutes": "/"},
+        {"platform": "time_pattern", "minutes": "*/5"},
+        {"platform": "time_pattern", "minutes": "/90"},
+        {"platform": "time_pattern", "hours": 12, "minutes": 0, "seconds": 100},
     )
 
     for value in schemas:
