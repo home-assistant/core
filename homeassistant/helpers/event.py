@@ -448,6 +448,7 @@ class _TrackTemplateResultInfo:
         """Handle removal / refresh of tracker init."""
         self.hass = hass
         self._template = template
+        self._template.hass = hass
         self._action = action
         self._variables = variables
         self._last_result: Optional[Union[str, TemplateError]] = None
