@@ -18,6 +18,11 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
+from homeassistant.components.websocket_api.const import (
+    ERR_NOT_FOUND,
+    ERR_NOT_SUPPORTED,
+    ERR_UNKNOWN_ERROR,
+)
 from homeassistant.const import (
     HTTP_INTERNAL_SERVER_ERROR,
     HTTP_NOT_FOUND,
@@ -914,9 +919,7 @@ async def websocket_handle_thumbnail(hass, connection, msg):
 
     if player is None:
         connection.send_message(
-            websocket_api.error_message(
-                msg["id"], "entity_not_found", "Entity not found"
-            )
+            websocket_api.error_message(msg["id"], ERR_NOT_FOUND, "Entity not found")
         )
         return
 
@@ -980,7 +983,7 @@ async def websocket_browse_media(hass, connection, msg):
     if not player.supported_features & SUPPORT_BROWSE_MEDIA:
         connection.send_message(
             websocket_api.error_message(
-                msg["id"], "browse_failed", "Player does not support browsing media"
+                msg["id"], ERR_NOT_SUPPORTED, "Player does not support browsing media"
             )
         )
         return
@@ -994,14 +997,14 @@ async def websocket_browse_media(hass, connection, msg):
         connection.send_message(
             websocket_api.error_message(
                 msg["id"],
-                "browse_failed",
+                ERR_NOT_SUPPORTED,
                 "Integration does not support browsing media",
             )
         )
         return
     except BrowseError as err:
         connection.send_message(
-            websocket_api.error_message(msg["id"], "browse_failed", str(err))
+            websocket_api.error_message(msg["id"], ERR_UNKNOWN_ERROR, str(err))
         )
         return
 
