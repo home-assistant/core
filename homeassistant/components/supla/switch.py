@@ -3,7 +3,10 @@ import logging
 from pprint import pformat
 
 from homeassistant.components.supla import (
-    DOMAIN, SUPLA_SERVERS, SUPLA_COORDINATORS, SuplaChannel
+    DOMAIN,
+    SUPLA_COORDINATORS,
+    SUPLA_SERVERS,
+    SuplaChannel,
 )
 from homeassistant.components.switch import SwitchEntity
 
@@ -25,7 +28,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             SuplaSwitch(
                 device,
                 hass.data[DOMAIN][SUPLA_SERVERS][server_name],
-                hass.data[DOMAIN][SUPLA_COORDINATORS][server_name]
+                hass.data[DOMAIN][SUPLA_COORDINATORS][server_name],
             )
         )
 

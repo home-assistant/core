@@ -8,7 +8,10 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.components.supla import (
-    DOMAIN, SUPLA_SERVERS, SUPLA_COORDINATORS, SuplaChannel
+    DOMAIN,
+    SUPLA_COORDINATORS,
+    SUPLA_SERVERS,
+    SuplaChannel,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +37,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 SuplaCover(
                     device,
                     hass.data[DOMAIN][SUPLA_SERVERS][server_name],
-                    hass.data[DOMAIN][SUPLA_COORDINATORS][server_name]
+                    hass.data[DOMAIN][SUPLA_COORDINATORS][server_name],
                 )
             )
 
@@ -43,7 +46,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 SuplaGateDoor(
                     device,
                     hass.data[DOMAIN][SUPLA_SERVERS][server_name],
-                    hass.data[DOMAIN][SUPLA_COORDINATORS][server_name]
+                    hass.data[DOMAIN][SUPLA_COORDINATORS][server_name],
                 )
             )
 

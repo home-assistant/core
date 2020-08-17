@@ -54,10 +54,7 @@ async def async_setup(hass, base_config):
 
     server_confs = base_config[DOMAIN][CONF_SERVERS]
 
-    hass.data[DOMAIN] = {
-        SUPLA_SERVERS: {},
-        SUPLA_COORDINATORS: {}
-    }
+    hass.data[DOMAIN] = {SUPLA_SERVERS: {}, SUPLA_COORDINATORS: {}}
 
     for server_conf in server_confs:
 
