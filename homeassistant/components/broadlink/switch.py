@@ -5,7 +5,12 @@ import logging
 from broadlink.exceptions import BroadlinkException
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    DEVICE_CLASS_OUTLET,
+    DEVICE_CLASS_SWITCH,
+    PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
@@ -125,11 +130,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BroadlinkSwitch(SwitchEntity, RestoreEntity, ABC):
     """Representation of a Broadlink switch."""
 
-    def __init__(self, device, command_on, command_off):
+    def __init__(self, device, command_on, command_off, device_class):
         """Initialize the switch."""
         self._device = device
         self._command_on = command_on
         self._command_off = command_off
+        self._device_class = device_class
         self._coordinator = device.update_manager.coordinator
         self._state = None
 
@@ -157,6 +163,11 @@ class BroadlinkSwitch(SwitchEntity, RestoreEntity, ABC):
     def should_poll(self):
         """Return True if the switch has to be polled for state."""
         return False
+
+    @property
+    def device_class(self):
+        """Return device class."""
+        return self._device_class
 
     @property
     def device_info(self):
@@ -208,7 +219,10 @@ class BroadlinkRMSwitch(BroadlinkSwitch):
     def __init__(self, device, config):
         """Initialize the switch."""
         super().__init__(
-            device, config.get(CONF_COMMAND_ON), config.get(CONF_COMMAND_OFF)
+            device,
+            config.get(CONF_COMMAND_ON),
+            config.get(CONF_COMMAND_OFF),
+            DEVICE_CLASS_SWITCH,
         )
         self._name = config[CONF_NAME]
 
@@ -235,7 +249,7 @@ class BroadlinkSP1Switch(BroadlinkSwitch):
 
     def __init__(self, device):
         """Initialize the switch."""
-        super().__init__(device, 1, 0)
+        super().__init__(device, 1, 0, DEVICE_CLASS_OUTLET)
 
     @property
     def unique_id(self):
@@ -255,11 +269,13 @@ class BroadlinkSP1Switch(BroadlinkSwitch):
 class BroadlinkSP2Switch(BroadlinkSP1Switch):
     """Representation of a Broadlink SP2 switch."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, device, *args, **kwargs):
         """Initialize the switch."""
-        super().__init__(*args, **kwargs)
+        super().__init__(device, *args, **kwargs)
         self._state = self._coordinator.data["state"]
         self._load_power = self._coordinator.data["load_power"]
+        if device.api.model == "SC1":
+            self._device_class = DEVICE_CLASS_SWITCH
 
     @property
     def assumed_state(self):
@@ -285,7 +301,7 @@ class BroadlinkMP1Slot(BroadlinkSwitch):
 
     def __init__(self, device, slot):
         """Initialize the switch."""
-        super().__init__(device, 1, 0)
+        super().__init__(device, 1, 0, DEVICE_CLASS_OUTLET)
         self._slot = slot
         self._state = self._coordinator.data[f"s{slot}"]
 

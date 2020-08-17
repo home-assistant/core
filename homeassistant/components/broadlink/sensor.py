@@ -3,7 +3,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_TEMPERATURE,
+    PLATFORM_SCHEMA,
+)
 from homeassistant.const import CONF_HOST, TEMP_CELSIUS, UNIT_PERCENTAGE
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
@@ -15,11 +20,11 @@ from .helpers import import_device
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    "temperature": ["Temperature", TEMP_CELSIUS],
-    "air_quality": ["Air Quality", " "],
-    "humidity": ["Humidity", UNIT_PERCENTAGE],
-    "light": ["Light", " "],
-    "noise": ["Noise", " "],
+    "temperature": ("Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE),
+    "air_quality": ("Air Quality", None, None),
+    "humidity": ("Humidity", UNIT_PERCENTAGE, DEVICE_CLASS_HUMIDITY),
+    "light": ("Light", None, DEVICE_CLASS_ILLUMINANCE),
+    "noise": ("Noise", None, None),
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -59,7 +64,6 @@ class BroadlinkSensor(Entity):
         self._device = device
         self._coordinator = device.update_manager.coordinator
         self._monitored_condition = monitored_condition
-        self._unit_of_measurement = SENSOR_TYPES[monitored_condition][1]
         self._state = self._coordinator.data[monitored_condition]
 
     @property
@@ -85,12 +89,17 @@ class BroadlinkSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of the sensor."""
-        return self._unit_of_measurement
+        return SENSOR_TYPES[self._monitored_condition][1]
 
     @property
     def should_poll(self):
         """Return True if the sensor has to be polled for state."""
         return False
+
+    @property
+    def device_class(self):
+        """Return device class."""
+        return SENSOR_TYPES[self._monitored_condition][2]
 
     @property
     def device_info(self):
