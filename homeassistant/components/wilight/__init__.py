@@ -33,7 +33,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not await parent.async_setup():
         raise ConfigEntryNotReady
 
-
     hass.data[DOMAIN][entry.entry_id] = parent
 
     # Set up all platforms for this device/entry.
@@ -74,7 +73,7 @@ class WiLightDevice(Entity):
         """Initialize the device."""
         # WiLight specific attributes for every component type
         self._device_id = api_device.device_id
-        self._swversion = api_device.swversion
+        self._sw_version = api_device.swversion
         self._client = api_device.client
         self._model = api_device.model
         self._name = item_name
@@ -105,7 +104,7 @@ class WiLightDevice(Entity):
             "identifiers": {(DOMAIN, self._unique_id)},
             "model": self._model,
             "manufacturer": "WiLight",
-            "sw_version": self._swversion,
+            "sw_version": self._sw_version,
             "via_device": (DOMAIN, self._device_id),
         }
 

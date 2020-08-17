@@ -81,9 +81,9 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_wilight")
 
         component_ok = False
-        for self_component in self._components:
+        for wilight_component in self._components:
             for component in PLATFORMS:
-                if self_component == component:
+                if wilight_component == component:
                     component_ok = True
                     break
 
