@@ -224,9 +224,9 @@ async def test_create_and_setup_pro(hass, mock_panel):
                 "2": "Binary Sensor",
                 "6": "Binary Sensor",
                 "10": "Binary Sensor",
+                "11": "Binary Sensor",
                 "3": "Digital Sensor",
                 "7": "Digital Sensor",
-                "11": "Digital Sensor",
                 "4": "Switchable Output",
                 "8": "Switchable Output",
                 "out1": "Switchable Output",
@@ -236,11 +236,11 @@ async def test_create_and_setup_pro(hass, mock_panel):
                 {"zone": "2", "type": "door"},
                 {"zone": "6", "type": "window", "name": "winder", "inverse": True},
                 {"zone": "10", "type": "door"},
+                {"zone": "11", "type": "window"},
             ],
             "sensors": [
-                {"zone": "3", "type": "dht"},
+                {"zone": "3", "type": "dht", "poll_interval": 5},
                 {"zone": "7", "type": "ds18b20", "name": "temper"},
-                {"zone": "11", "type": "dht", "poll_interval": 5},
             ],
             "switches": [
                 {"zone": "4"},
@@ -294,17 +294,14 @@ async def test_create_and_setup_pro(hass, mock_panel):
     # confirm the settings are sent to the panel
     # pylint: disable=no-member
     assert mock_panel.put_settings.call_args_list[0][1] == {
-        "sensors": [{"zone": "2"}, {"zone": "6"}, {"zone": "10"}],
+        "sensors": [{"zone": "2"}, {"zone": "6"}, {"zone": "10"}, {"zone": "11"}],
         "actuators": [
             {"trigger": 1, "zone": "4"},
             {"trigger": 0, "zone": "8"},
             {"trigger": 1, "zone": "out1"},
             {"trigger": 1, "zone": "alarm1"},
         ],
-        "dht_sensors": [
-            {"poll_interval": 3, "zone": "3"},
-            {"poll_interval": 5, "zone": "11"},
-        ],
+        "dht_sensors": [{"poll_interval": 5, "zone": "3"}],
         "ds18b20_sensors": [{"zone": "7"}],
         "auth_token": "11223344556677889900",
         "blink": True,
@@ -315,6 +312,12 @@ async def test_create_and_setup_pro(hass, mock_panel):
     # confirm the device settings are saved in hass.data
     assert device.stored_configuration == {
         "binary_sensors": {
+            "11": {
+                "inverse": False,
+                "name": "Konnected 445566 Zone 11",
+                "state": None,
+                "type": "window",
+            },
             "10": {
                 "inverse": False,
                 "name": "Konnected 445566 Zone 10",
@@ -337,17 +340,11 @@ async def test_create_and_setup_pro(hass, mock_panel):
         "sensors": [
             {
                 "name": "Konnected 445566 Sensor 3",
-                "poll_interval": 3,
+                "poll_interval": 5,
                 "type": "dht",
                 "zone": "3",
             },
             {"name": "temper", "poll_interval": 3, "type": "ds18b20", "zone": "7"},
-            {
-                "name": "Konnected 445566 Sensor 11",
-                "poll_interval": 5,
-                "type": "dht",
-                "zone": "11",
-            },
         ],
         "switches": [
             {
