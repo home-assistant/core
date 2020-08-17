@@ -201,31 +201,25 @@ class DiscoveryOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         """Initialize the option flow."""
         self._config_entry = config_entry
-        self._devices = None
         self._picked_device = None
 
     async def async_step_init(self, user_input=None):
         """Handle option flow initialization."""
+        if user_input is not None:
+            self._picked_device = user_input[CONF_DEVICE]
+            return await self.async_step_options()
+
         device_registry = await dr.async_get_registry(self.hass)
-        self._devices = {}
+        devices = {}
         for unique_id in self._config_entry.options:
             device = device_registry.async_get_device(
                 identifiers={(DOMAIN, unique_id)}, connections={}
             )
             name = device.name_by_user or device.name
-            self._devices[f"{name} ({unique_id})"] = unique_id
-        return await self.async_step_device()
-
-    async def async_step_device(self, user_input=None):
-        """Handle step to pick a device."""
-        if user_input is not None:
-            self._picked_device = self._devices[user_input[CONF_DEVICE]]
-            return await self.async_step_options()
+            devices[unique_id] = f"{name} ({unique_id})"
         return self.async_show_form(
-            step_id="device",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_DEVICE): vol.In(self._devices.keys())}
-            ),
+            step_id="init",
+            data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices)}),
         )
 
     async def async_step_options(self, user_input=None):

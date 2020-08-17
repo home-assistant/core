@@ -233,10 +233,9 @@ async def test_option_discovery(hass: HomeAssistant):
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == "form"
-    assert result["step_id"] == "device"
-    device = f"{NAME} ({ID})"
+    assert result["step_id"] == "init"
     result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"], {CONF_DEVICE: device}
+        result["flow_id"], {CONF_DEVICE: ID}
     )
     assert result2["type"] == "form"
     assert result2["step_id"] == "options"
