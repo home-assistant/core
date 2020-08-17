@@ -4,7 +4,7 @@ import pytest
 import voluptuous as vol
 
 import homeassistant.components.automation as automation
-import homeassistant.components.automation.time_pattern as time_pattern
+import homeassistant.components.homeassistant.triggers.time_pattern as time_pattern
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
