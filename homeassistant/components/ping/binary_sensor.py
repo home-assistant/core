@@ -3,7 +3,6 @@ import asyncio
 from datetime import timedelta
 import logging
 import re
-import subprocess
 import sys
 from typing import Any, Dict
 
@@ -12,7 +11,6 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_HOST, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.process import kill_subprocess
 
 from .const import PING_TIMEOUT
 
@@ -180,9 +178,20 @@ class PingData:
             rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
             return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
         except asyncio.TimeoutError:
-            kill_subprocess(pinger)
+            _LOGGER.exception(
+                "Timed out running command: `%s`, after: %ss",
+                self._ping_cmd,
+                self._count + PING_TIMEOUT,
+            )
+            if pinger:
+                try:
+                    await pinger.kill()
+                except TypeError:
+                    pass
+                del pinger
+
             return False
-        except (subprocess.CalledProcessError, AttributeError):
+        except (AttributeError):
             return False
 
     async def async_update(self) -> None:
