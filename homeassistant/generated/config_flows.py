@@ -141,6 +141,7 @@ FLOWS = [
     "nzbget",
     "omnilogic",
     "onewire",
+    "ondilo_ico",
     "onvif",
     "opentherm_gw",
     "openuv",

@@ -1,0 +1,14 @@
+{
+  "domain": "ondilo_ico",
+  "name": "Ondilo ICO",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/ondilo_ico",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@JeromeHXP"
+  ]
+}
