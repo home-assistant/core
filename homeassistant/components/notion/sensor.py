@@ -3,8 +3,8 @@ import logging
 from typing import Callable
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import NotionEntity
@@ -86,6 +86,6 @@ class NotionSensor(NotionEntity):
         else:
             _LOGGER.error(
                 "Unknown task type: %s: %s",
-                self._notion.sensors[self._sensor_id],
+                self._coordinator.data["sensors"][self._sensor_id],
                 task["task_type"],
             )
