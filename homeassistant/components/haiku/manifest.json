@@ -3,7 +3,7 @@
   "name": "Haiku",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/haiku",
-  "requirements": ["haiku-Josh-codes==0.4"],
+  "requirements": ["haiku-Josh-codes==0.6"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
