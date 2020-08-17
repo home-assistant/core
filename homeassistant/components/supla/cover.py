@@ -7,7 +7,9 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_GARAGE,
     CoverEntity,
 )
-from homeassistant.components.supla import SuplaChannel
+from homeassistant.components.supla import (
+    DOMAIN, SUPLA_SERVERS, SUPLA_COORDINATORS, SuplaChannel
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,12 +27,25 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     entities = []
     for device in discovery_info:
         device_name = device["function_name"]
+        server_name = device["server_name"]
 
         if device_name == SUPLA_SHUTTER:
-            entities.append(SuplaCover(device))
+            entities.append(
+                SuplaCover(
+                    device,
+                    hass.data[DOMAIN][SUPLA_SERVERS][server_name],
+                    hass.data[DOMAIN][SUPLA_COORDINATORS][server_name]
+                )
+            )
 
         elif device_name == SUPLA_GATE:
-            entities.append(SuplaGateDoor(device))
+            entities.append(
+                SuplaGateDoor(
+                    device,
+                    hass.data[DOMAIN][SUPLA_SERVERS][server_name],
+                    hass.data[DOMAIN][SUPLA_COORDINATORS][server_name]
+                )
+            )
 
     async_add_entities(entities)
 

@@ -54,8 +54,10 @@ async def async_setup(hass, base_config):
 
     server_confs = base_config[DOMAIN][CONF_SERVERS]
 
-    hass.data[SUPLA_SERVERS] = {}
-    hass.data[SUPLA_COORDINATORS] = {}
+    hass.data[DOMAIN] = {
+        SUPLA_SERVERS: {},
+        SUPLA_COORDINATORS: {}
+    }
 
     for server_conf in server_confs:
 
@@ -68,7 +70,7 @@ async def async_setup(hass, base_config):
         try:
             srv_info = await server.get_server_info()
             if srv_info.get("authenticated"):
-                hass.data[SUPLA_SERVERS][server_conf[CONF_SERVER]] = server
+                hass.data[DOMAIN][SUPLA_SERVERS][server_conf[CONF_SERVER]] = server
 
             else:
                 _LOGGER.error(
@@ -85,7 +87,7 @@ async def async_setup(hass, base_config):
 
     # Register a cleanup callback
     async def _async_close_supla_servers(event):
-        for server_name, server in hass.data[SUPLA_SERVERS].items():
+        for server_name, server in hass.data[DOMAIN][SUPLA_SERVERS].items():
             _LOGGER.info("Closing up Supla server: %s", server_name)
             await server.close()
 
@@ -104,7 +106,7 @@ async def discover_devices(hass, hass_config):
     """
     component_configs = {}
 
-    for server_name, server in hass.data[SUPLA_SERVERS].items():
+    for server_name, server in hass.data[DOMAIN][SUPLA_SERVERS].items():
 
         async def fetch_channels():
             async with async_timeout.timeout(30):
@@ -119,14 +121,14 @@ async def discover_devices(hass, hass_config):
         coordinator = DataUpdateCoordinator(
             hass,
             _LOGGER,
-            name="supla",
+            name=DOMAIN,
             update_method=fetch_channels,
             update_interval=server.update_interval,
         )
 
         await coordinator.async_refresh()
 
-        hass.data[SUPLA_COORDINATORS][server_name] = coordinator
+        hass.data[DOMAIN][SUPLA_COORDINATORS][server_name] = coordinator
 
         for channel_id, channel in coordinator.data.items():
             channel_function = channel["function"]["name"]
@@ -160,26 +162,18 @@ async def discover_devices(hass, hass_config):
 
     # Load discovered devices
     for component_name, config in component_configs.items():
-        await async_load_platform(hass, component_name, "supla", config, hass_config)
+        await async_load_platform(hass, component_name, DOMAIN, config, hass_config)
 
 
 class SuplaChannel(Entity):
     """Base class of a Supla Channel (an equivalent of HA's Entity)."""
 
-    def __init__(self, config):
-        """Hookup channel to coordinator."""
+    def __init__(self, config, server, coordinator):
+        """Init from config, hookup[ server and coordinator."""
         self.server_name = config["server_name"]
         self.channel_id = config["channel_id"]
-
-    @property
-    def server(self):
-        """Return PySupla's server component associated with entity."""
-        return self.hass.data[SUPLA_SERVERS][self.server_name]
-
-    @property
-    def coordinator(self):
-        """Return shared coordinator."""
-        return self.hass.data[SUPLA_COORDINATORS][self.server_name]
+        self.server = server
+        self.coordinator = coordinator
 
     @property
     def channel_data(self):
