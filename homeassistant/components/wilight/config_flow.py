@@ -70,7 +70,7 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
         ):
             return self.async_abort(reason="not_wilight")
         # Filter out non-WiLight devices
-        if discovery_info.get(ssdp.ATTR_UPNP_MANUFACTURER) != WILIGHT_MANUFACTURER:
+        if discovery_info[ssdp.ATTR_UPNP_MANUFACTURER] != WILIGHT_MANUFACTURER:
             return self.async_abort(reason="not_wilight")
 
         host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
