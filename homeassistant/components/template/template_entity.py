@@ -108,12 +108,8 @@ class _TemplateAttribute:
     @callback
     def async_added_to_hass(self) -> None:
         """Call from containing entity when added to hass."""
-        hass = self._entity.hass
-
-        self.template.hass = hass
-
         result_info = async_track_template_result(
-            hass, self.template, self._handle_result
+            self._entity.hass, self.template, self._handle_result
         )
         self.async_update = result_info.async_refresh
 
