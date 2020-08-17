@@ -50,6 +50,8 @@ DATA_CUSTOM_EFFECTS = "custom_effects"
 DATA_DEVICES = "devices"
 DATA_SCANNER = "scanner"
 DATA_UNSUB_UPDATE_LISTENER = "unsub_update_listener"
+DATA_REMOVE_BINARY_SENSOR_DISPATCHER = "remove_binary_sensor_dispatcher"
+DATA_REMOVE_LIGHT_DISPATCHER = "remove_light_dispatcher"
 
 SIGNAL_SETUP_BINARY_SENSOR = "setup_binary_sensor"
 SIGNAL_SETUP_LIGHT = "setup_light"
@@ -280,6 +282,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             for ipaddr in scanner.seen:
                 hass.data[DOMAIN][DATA_DEVICES].pop(ipaddr)
             data[DATA_UNSUB_UPDATE_LISTENER]()
+            data[DATA_REMOVE_BINARY_SENSOR_DISPATCHER]()
+            data[DATA_REMOVE_LIGHT_DISPATCHER]()
         else:
             hass.data[DOMAIN][DATA_DEVICES].pop(entry.data[CONF_IP_ADDRESS])
             data = hass.data[DOMAIN][DATA_CONFIG_ENTRIES].pop(entry.entry_id)

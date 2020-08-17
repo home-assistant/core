@@ -61,8 +61,10 @@ from . import (
     CONF_NIGHTLIGHT_SWITCH,
     CONF_SAVE_ON_CHANGE,
     CONF_TRANSITION,
+    DATA_CONFIG_ENTRIES,
     DATA_CUSTOM_EFFECTS,
     DATA_DEVICES,
+    DATA_REMOVE_LIGHT_DISPATCHER,
     DATA_UPDATED,
     DATA_YEELIGHT,
     DOMAIN,
@@ -303,7 +305,9 @@ async def async_setup_entry(
         await hass.async_add_executor_job(partial(setup_services, hass))
 
     if config_entry.data[CONF_DISCOVERY]:
-        async_dispatcher_connect(hass, SIGNAL_SETUP_LIGHT, async_setup_light)
+        hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][
+            DATA_REMOVE_LIGHT_DISPATCHER
+        ] = async_dispatcher_connect(hass, SIGNAL_SETUP_LIGHT, async_setup_light)
     else:
         await async_setup_light(config_entry.data[CONF_IP_ADDRESS])
 
