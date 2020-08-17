@@ -39,47 +39,29 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Establish connection with plugwise USB-stick."""
     hass.data.setdefault(DOMAIN, {})
 
-    def add_discovered_node(mac):
-        """Add plugwise node discovered after initialization."""
-        _LOGGER.debug("Add new discovered Plugwise node: %s", mac)
-        for platform in PLUGWISE_STICK_PLATFORMS:
-            if platform in stick.node(mac).get_categories():
-                hass.async_create_task(
-                    hass.config_entries.async_forward_entry_unload(
-                        config_entry, platform
-                    )
-                )
-                hass.data[DOMAIN][config_entry.entry_id][platform].append(mac)
-                hass.async_create_task(
-                    hass.config_entries.async_forward_entry_setup(
-                        config_entry, platform
-                    )
-                )
-
     def discover_finished():
         """Create entities for all discovered nodes."""
         nodes = stick.nodes()
-        _LOGGER.debug("Successfully discovered %s plugwise nodes", str(len(nodes)))
-        discovery_info = {"stick": stick}
-        for platform in PLUGWISE_STICK_PLATFORMS:
-            discovery_info[platform] = []
-        hass.data[DOMAIN][config_entry.entry_id] = discovery_info
-        for mac in nodes:
-            for platform in PLUGWISE_STICK_PLATFORMS:
-                if platform in stick.node(mac).get_categories():
-                    hass.data[DOMAIN][config_entry.entry_id][platform].append(mac)
-        for platform in PLUGWISE_STICK_PLATFORMS:
+        _LOGGER.debug(
+            "Successfully discovered %s out of %s registered nodes",
+            str(len(nodes)),
+            str(stick.registered_nodes()),
+        )
+        for component in PLUGWISE_STICK_PLATFORMS:
+            hass.data[DOMAIN][config_entry.entry_id][component] = []
+            for mac in nodes:
+                if component in stick.node(mac).get_categories():
+                    hass.data[DOMAIN][config_entry.entry_id][component].append(mac)
             hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(config_entry, platform)
+                hass.config_entries.async_forward_entry_setup(config_entry, component)
             )
         stick.auto_update()
 
-        # Subscribe callback for nodes discovered after initial scan
-        stick.subscribe_stick_callback(add_discovered_node, CB_TYPE_NEW_NODE)
     def shutdown(event):
         hass.async_add_executor_job(stick.disconnect)
 
     stick = plugwise.stick(config_entry.data[CONF_USB_PATH])
+    hass.data[DOMAIN][config_entry.entry_id] = {"stick": stick}
     try:
         _LOGGER.debug("Connect to USB-Stick")
         await hass.async_add_executor_job(stick.connect)
@@ -106,6 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         _LOGGER.warning("Timeout")
         await hass.async_add_executor_job(stick.disconnect)
         raise ConfigEntryNotReady
+    _LOGGER.debug("Start discovery of registered nodes")
     stick.scan(discover_finished)
 
     # Listen when EVENT_HOMEASSISTANT_STOP is fired
