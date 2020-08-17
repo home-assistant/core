@@ -250,7 +250,7 @@ class FibaroController:
             device.unique_id_str = f"{self.hub_serial}.scene.{device.id}"
             self._scene_map[device.id] = device
             self.fibaro_devices["scene"].append(device)
-            _LOGGER.debug("%s scene -> %s", device.ha_id, str(device))
+            _LOGGER.debug("%s scene -> %s", device.ha_id, device)
 
     def _read_devices(self):
         """Read and process the device list."""
