@@ -815,14 +815,19 @@ class MediaPlayerEntity(Entity):
         Return a payload for the "media_player/browse_media" websocket command.
 
         Payload should follow this format:
-            [{
+            {
                 "title": str - Title of the item
-                "thumbnail": str - URL to image thumbnail for item if available
-                "media_content_id": str - Can be used as-is to send to media_player.play_media
-                "media_content_type": str - Can be used as-is to send to media_player.play_media
+                "media_content_type": str - see below
+                "media_content_id": str - see below
+                  - Can be passed back in to browse further
+                  - Can be used as-is with media_player.play_media service
                 "can_play": bool - If item is playable
                 "can_expand": bool - If item contains other media
-            }]
+                "thumbnail": str (Optional) - URL to image thumbnail for item
+                "children": list (Optional) - [{<item_with_keys_above>}, ...]
+            }
+
+        Note: Only one level of children should be provided in a given response.
         """
         raise NotImplementedError()
 
@@ -959,7 +964,7 @@ async def websocket_handle_thumbnail(hass, connection, msg):
             ATTR_MEDIA_CONTENT_ID,
             "media_ids",
             "media_content_type and media_content_id must be provided together",
-        ): int,
+        ): str,
     }
 )
 @websocket_api.async_response

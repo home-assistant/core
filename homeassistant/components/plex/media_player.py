@@ -657,7 +657,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
         def library_info(media_content_id):
             """Create response payload to describe contents of a specific library."""
-            library = self.plex_server.library.sectionByID(str(media_content_id))
+            library = self.plex_server.library.sectionByID(media_content_id)
             library_info = library_section_payload(library)
             library_info["children"] = []
             for item in library.all():
@@ -688,7 +688,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
         payload = {
             "media_type": PLEX_DOMAIN,
-            "plex_key": media_content_id,
+            "plex_key": int(media_content_id),
         }
         response = await self.hass.async_add_executor_job(build_item_response, payload)
         if response is None:
