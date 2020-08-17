@@ -1,9 +1,6 @@
 """Test Yeelight."""
 from homeassistant.components.yeelight import (
     CONF_NIGHTLIGHT_SWITCH_TYPE,
-    DATA_CONFIG_ENTRIES,
-    DATA_CUSTOM_EFFECTS,
-    DATA_DEVICES,
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
 )
@@ -41,11 +38,6 @@ async def test_setup_discovery(hass: HomeAssistant):
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     assert hass.states.get(f"binary_sensor.{NAME}_nightlight") is None
     assert hass.states.get(f"light.{NAME}") is None
-    assert hass.data[DOMAIN] == {
-        DATA_CUSTOM_EFFECTS: {},
-        DATA_CONFIG_ENTRIES: {},
-        DATA_DEVICES: {},
-    }
 
 
 async def test_setup_import(hass: HomeAssistant):
