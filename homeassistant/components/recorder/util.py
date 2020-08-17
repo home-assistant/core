@@ -158,22 +158,27 @@ def validate_sqlite_database(dbpath: str) -> bool:
 
     try:
         conn = sqlite3.connect(dbpath)
-        cursor = conn.cursor()
-        if last_run_was_recently_clean(cursor) and basic_sanity_check(cursor):
-            _LOGGER.debug(
-                "The quick_check will be skipped as the system was restarted cleanly and passed the basic sanity check"
-            )
-        else:
-            _LOGGER.debug(
-                "A quick_check is being performed on the sqlite3 database at %s", dbpath
-            )
-            cursor.execute("PRAGMA QUICK_CHECK")
+        run_checks_on_open_db(dbpath, conn.cursor())
         conn.close()
     except sqlite3.DatabaseError:
         _LOGGER.exception("The database at %s is corrupt or malformed.", dbpath)
         return False
 
     return True
+
+
+def run_checks_on_open_db(dbpath, cursor):
+    """Run checks that will generate a databsae exception if there is corruption."""
+    if basic_sanity_check(cursor) and last_run_was_recently_clean(cursor):
+        _LOGGER.debug(
+            "The quick_check will be skipped as the system was restarted cleanly and passed the basic sanity check"
+        )
+        return
+
+    _LOGGER.debug(
+        "A quick_check is being performed on the sqlite3 database at %s", dbpath
+    )
+    cursor.execute("PRAGMA QUICK_CHECK")
 
 
 def _move_away_broken_database(dbfile: str) -> None:

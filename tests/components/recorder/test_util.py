@@ -81,9 +81,13 @@ def test_validate_or_move_away_sqlite_database(hass, tmpdir, caplog):
 
     _corrupt_db_file(test_db_file)
 
+    assert util.validate_sqlite_database(dburl) is False
+
     assert util.validate_or_move_away_sqlite_database(dburl) is False
 
     assert "corrupt or malformed" in caplog.text
+
+    assert util.validate_sqlite_database(dburl) is False
 
     assert util.validate_or_move_away_sqlite_database(dburl) is True
 
@@ -121,6 +125,31 @@ def test_basic_sanity_check(hass_recorder):
 
     with pytest.raises(sqlite3.DatabaseError):
         util.basic_sanity_check(cursor)
+
+
+def test_combined_checks(hass_recorder):
+    """Run Checks on the open database."""
+    hass = hass_recorder()
+
+    cursor = hass.data[DATA_INSTANCE].engine.raw_connection().cursor()
+
+    assert util.run_checks_on_open_db("fake_db_path", cursor) is None
+
+    # We are patching recorder.util here in order
+    # to avoid creating the full database on disk
+    with patch("homeassistant.components.recorder.util.last_run_was_recently_clean"):
+        assert util.run_checks_on_open_db("fake_db_path", cursor) is None
+
+    with patch(
+        "homeassistant.components.recorder.util.last_run_was_recently_clean",
+        side_effect=sqlite3.DatabaseError,
+    ), pytest.raises(sqlite3.DatabaseError):
+        util.run_checks_on_open_db("fake_db_path", cursor)
+
+    cursor.execute("DROP TABLE events;")
+
+    with pytest.raises(sqlite3.DatabaseError):
+        util.run_checks_on_open_db("fake_db_path", cursor)
 
 
 def _corrupt_db_file(test_db_file):
