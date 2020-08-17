@@ -544,6 +544,9 @@ async def test_invalid_attribute_template(hass, caplog):
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 2
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
     await hass.helpers.entity_component.async_update_entity("sensor.invalid_template")
 
     assert "TemplateError" in caplog.text

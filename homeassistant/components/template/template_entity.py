@@ -65,16 +65,15 @@ class _TemplateAttribute:
         result: Union[str, TemplateError],
     ) -> None:
         if isinstance(result, TemplateError):
-            if self.add_complete:
-                _LOGGER.error(
-                    "TemplateError('%s') "
-                    "while processing template '%s' "
-                    "for attribute '%s' in entity '%s'",
-                    result,
-                    self.template,
-                    self._attribute,
-                    self._entity.entity_id,
-                )
+            _LOGGER.error(
+                "TemplateError('%s') "
+                "while processing template '%s' "
+                "for attribute '%s' in entity '%s'",
+                result,
+                self.template,
+                self._attribute,
+                self._entity.entity_id,
+            )
             self.on_update(result)
             self._write_update_if_added()
 
@@ -88,18 +87,17 @@ class _TemplateAttribute:
         try:
             validated = self.validator(result)
         except vol.Invalid as ex:
-            if self.add_complete:
-                _LOGGER.error(
-                    "Error validating template result '%s' "
-                    "from template '%s' "
-                    "for attribute '%s' in entity %s "
-                    "validation message '%s'",
-                    result,
-                    self.template,
-                    self._attribute,
-                    self._entity.entity_id,
-                    ex.msg,
-                )
+            _LOGGER.error(
+                "Error validating template result '%s' "
+                "from template '%s' "
+                "for attribute '%s' in entity %s "
+                "validation message '%s'",
+                result,
+                self.template,
+                self._attribute,
+                self._entity.entity_id,
+                ex.msg,
+            )
             self.on_update(None)
             self._write_update_if_added()
             return
@@ -108,7 +106,7 @@ class _TemplateAttribute:
         self._write_update_if_added()
 
     @callback
-    def async_added_to_hass(self) -> None:
+    def async_template_startup(self) -> None:
         """Call from containing entity when added to hass."""
         result_info = async_track_template_result(
             self._entity.hass, self.template, self._handle_result
@@ -161,6 +159,8 @@ class TemplateEntity(Entity):
     async def _async_template_startup(self, _) -> None:
         # async_update will not write state
         # until "add_complete" is set on the attribute
+        for attribute in self._template_attrs:
+            self.async_on_remove(attribute.async_template_startup())
         await self.async_update()
         for attribute in self._template_attrs:
             attribute.add_complete = True
@@ -168,9 +168,6 @@ class TemplateEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        for attribute in self._template_attrs:
-            self.async_on_remove(attribute.async_added_to_hass())
-
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, self._async_template_startup
         )
