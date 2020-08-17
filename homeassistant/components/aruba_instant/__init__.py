@@ -7,6 +7,7 @@ from requests.packages import urllib3
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
@@ -36,10 +37,52 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
-    # hass.data[DOMAIN].update({'unsub_device_tracker': {entry.entry_id: set()}})
-    # hass.data[DOMAIN].update({'sub_device_tracker': {entry.entry_id: set()}})
+    entry.add_update_listener(async_update_options)
+    hass.data[DOMAIN].update({"sub_device_tracker": {entry.entry_id: set()}})
+    hass.data[DOMAIN].update({"discovered_devices": {entry.entry_id: set()}})
     return True
 
+
+async def async_update_options(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle an options update."""
+    tracked_set = set(hass.data[DOMAIN]['sub_device_tracker'][entry.entry_id])
+    selected_set = set(entry.options.keys())
+    if 'track_none' not in entry.options.keys():
+        # Start tracking new clients.
+        for client in selected_set:
+            if client not in tracked_set:
+                    _LOGGER.debug(f"Enabling entity: {client}")
+                    EntityRegistry.async_update_entity(
+                        hass.data["entity_registry"],
+                        hass.data["entity_registry"].async_get_entity_id(
+                            "device_tracker", DOMAIN, client
+                        ),
+                        disabled_by=None,
+                    )
+        # Stop tracking clients.
+        for client in tracked_set.difference(selected_set):
+            _LOGGER.debug(f"Disabling entity: {client}")
+            EntityRegistry.async_update_entity(
+                hass.data["entity_registry"],
+                hass.data["entity_registry"].async_get_entity_id(
+                    "device_tracker", DOMAIN, client
+                ),
+                disabled_by='user',
+            )
+            hass.data[DOMAIN]['sub_device_tracker'][entry.entry_id].remove(client)
+    else:
+        # Stop tracking all clients.
+        _LOGGER.debug("Disabling all enabled entities.")
+        for client in tracked_set:
+            _LOGGER.debug(f"Disabling entity: {client}")
+            EntityRegistry.async_update_entity(
+                hass.data["entity_registry"],
+                hass.data["entity_registry"].async_get_entity_id(
+                    "device_tracker", DOMAIN, client
+                ),
+                disabled_by='user',
+            )
+            hass.data[DOMAIN]['sub_device_tracker'][entry.entry_id].remove(client)
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
@@ -56,3 +99,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+

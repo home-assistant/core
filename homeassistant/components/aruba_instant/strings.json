@@ -12,6 +12,16 @@
           "scan_interval": "Scan Interval in Seconds (minimum 10)"
         }
       }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "clients": "Track Clients:",
+          "track_none": "Stop tracking all clients."
+        }
+      }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

@@ -69,7 +69,6 @@ class InstantCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, config_entry):
         """Initialize Instant Coordinator."""
         self.virtual_controller = hass.data[DOMAIN][config_entry.entry_id]
-
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=timedelta(seconds=config_entry.data.get('scan_interval'))
         )
@@ -111,10 +110,11 @@ class InstantClientEntity(ScannerEntity):
         self._lat = self.coordinator.hass.config.latitude
         self._lon = self.coordinator.hass.config.longitude
         self._is_connected = True
+        # self._enabled_default = False
+        self.hass.data[DOMAIN]['discovered_devices'][self.coordinator.virtual_controller.entry_id].add(self._mac)
 
     def update_entity(self):
         """Update entity data."""
-        # _LOGGER.debug(f"Updating info for client {self._mac}")
         try:
             self._name = self.coordinator.data[self._mac].get("name")
             self._ip = self.coordinator.data[self._mac].get("ip")
@@ -165,8 +165,15 @@ class InstantClientEntity(ScannerEntity):
         """Return if entity is available."""
         return self.coordinator.last_update_success
 
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        # return self._enabled_default
+        return False
+
     async def async_added_to_hass(self):
         """When entity is added to hass."""
+        self.hass.data[DOMAIN]['sub_device_tracker'][self.coordinator.virtual_controller.entry_id].add(self._mac)
         self.async_on_remove(
             self.coordinator.async_add_listener(self.async_write_ha_state)
         )
@@ -181,7 +188,6 @@ class InstantClientEntity(ScannerEntity):
     @property
     def is_connected(self):
         """Return the status of a client on the network."""
-        # TODO research a way to determine status
         return self._is_connected
 
     @property
@@ -219,5 +225,5 @@ class InstantClientEntity(ScannerEntity):
             "speed": self._speed,
             "speed_text": self._speed_text,
             "latitude": self._lat,
-            "longitude": self._lon
+            "longitude": self._lon,
         }
