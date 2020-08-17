@@ -48,8 +48,10 @@ CONF_DEVICE = "device"
 DATA_CONFIG_ENTRIES = "config_entries"
 DATA_CUSTOM_EFFECTS = "custom_effects"
 DATA_DEVICES = "devices"
+DATA_SCAN_INTERVAL = "scan_interval"
 DATA_SCANNER = "scanner"
 DATA_UNSUB_UPDATE_LISTENER = "unsub_update_listener"
+DATA_REMOVE_POOLING_TRACKER = "remove_pooling_tracker"
 DATA_REMOVE_BINARY_SENSOR_DISPATCHER = "remove_binary_sensor_dispatcher"
 DATA_REMOVE_LIGHT_DISPATCHER = "remove_light_dispatcher"
 
@@ -161,23 +163,12 @@ PLATFORMS = ["binary_sensor", "light"]
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the Yeelight bulbs."""
     conf = config.get(DOMAIN, {})
-    yeelight_data = hass.data[DOMAIN] = {
+    hass.data[DOMAIN] = {
         DATA_CUSTOM_EFFECTS: conf.get(CONF_CUSTOM_EFFECTS, {}),
         DATA_CONFIG_ENTRIES: {},
         DATA_DEVICES: {},
+        DATA_SCAN_INTERVAL: conf.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
     }
-
-    async def async_update(_):
-        await asyncio.gather(
-            *[
-                hass.async_add_executor_job(device.update)
-                for device in list(yeelight_data[DATA_DEVICES].values())
-            ]
-        )
-
-    async_track_time_interval(
-        hass, async_update, conf.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
-    )
 
     # Import manually configured devices
     for ipaddr, device_config in config.get(DOMAIN, {}).get(CONF_DEVICES, {}).items():
@@ -200,20 +191,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def _initialize(is_discovery) -> None:
         unset = entry.add_update_listener(_async_update_listener)
-        hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id] = {
+        entry_data = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id] = {
             DATA_UNSUB_UPDATE_LISTENER: unset,
         }
         if is_discovery:
             scanner = YeelightScanner(hass, entry)
-            hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id][
-                DATA_SCANNER
-            ] = scanner
+            entry_data[DATA_SCANNER] = scanner
 
         platform_setups = [
             hass.config_entries.async_forward_entry_setup(entry, component)
             for component in PLATFORMS
         ]
-
         if is_discovery:
             # Wait for platform setup is important. Make sure callbacks are set up before scanning.
             await asyncio.gather(*platform_setups)
@@ -222,10 +210,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             for platform_setup in platform_setups:
                 hass.async_create_task(platform_setup)
 
+        async def async_update(_):
+            devices = hass.data[DOMAIN][DATA_DEVICES]
+            if is_discovery:
+                await asyncio.gather(
+                    *[
+                        hass.async_add_executor_job(device.update)
+                        for device in [
+                            devices[ipaddr]
+                            for ipaddr in scanner.seen
+                            if ipaddr in devices
+                        ]
+                    ]
+                )
+            else:
+                await hass.async_add_executor_job(
+                    devices[entry.data[CONF_IP_ADDRESS]].update
+                )
+
+        entry_data[DATA_REMOVE_POOLING_TRACKER] = async_track_time_interval(
+            hass, async_update, hass.data[DOMAIN][DATA_SCAN_INTERVAL]
+        )
+
     if entry.data[CONF_DISCOVERY]:
         hass.async_create_task(_initialize(True))
     else:
-
         # Move options from data for imported entries
         if not entry.options:
             hass.config_entries.async_update_entry(
@@ -275,8 +284,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     if unload_ok:
+        data = hass.data[DOMAIN][DATA_CONFIG_ENTRIES].pop(entry.entry_id)
+        data[DATA_REMOVE_POOLING_TRACKER]()
         if entry.data[CONF_DISCOVERY]:
-            data = hass.data[DOMAIN][DATA_CONFIG_ENTRIES].pop(entry.entry_id)
             scanner = data[DATA_SCANNER]
             await scanner.stop_scan()
             for ipaddr in scanner.seen:
@@ -286,7 +296,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             data[DATA_REMOVE_LIGHT_DISPATCHER]()
         else:
             hass.data[DOMAIN][DATA_DEVICES].pop(entry.data[CONF_IP_ADDRESS])
-            data = hass.data[DOMAIN][DATA_CONFIG_ENTRIES].pop(entry.entry_id)
             data[DATA_UNSUB_UPDATE_LISTENER]()
 
     return unload_ok
