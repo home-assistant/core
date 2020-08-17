@@ -173,30 +173,6 @@ def is_on(hass, entity_id=None):
     )
 
 
-WS_TYPE_MEDIA_PLAYER_THUMBNAIL = "media_player_thumbnail"
-SCHEMA_WEBSOCKET_GET_THUMBNAIL = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {"type": WS_TYPE_MEDIA_PLAYER_THUMBNAIL, "entity_id": cv.entity_id}
-)
-
-WS_TYPE_MEDIA_PLAYER_BROWSE_MEDIA = "media_player/browse_media"
-SCHEMA_WEBSOCKET_BROWSE_MEDIA = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        "type": WS_TYPE_MEDIA_PLAYER_BROWSE_MEDIA,
-        vol.Required("entity_id"): cv.entity_id,
-        vol.Inclusive(
-            "media_content_type",
-            "media_ids",
-            "media_content_type and media_content_id must be provided together",
-        ): str,
-        vol.Inclusive(
-            "media_content_id",
-            "media_ids",
-            "media_content_type and media_content_id must be provided together",
-        ): int,
-    }
-)
-
-
 def _rename_keys(**keys):
     """Create validator that renames keys.
 
@@ -220,16 +196,8 @@ async def async_setup(hass, config):
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
     )
 
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_MEDIA_PLAYER_THUMBNAIL,
-        websocket_handle_thumbnail,
-        SCHEMA_WEBSOCKET_GET_THUMBNAIL,
-    )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_MEDIA_PLAYER_BROWSE_MEDIA,
-        websocket_browse_media,
-        SCHEMA_WEBSOCKET_BROWSE_MEDIA,
-    )
+    hass.components.websocket_api.async_register_command(websocket_handle_thumbnail)
+    hass.components.websocket_api.async_register_command(websocket_browse_media)
     hass.http.register_view(MediaPlayerImageView(component))
 
     await component.async_setup(config)
@@ -929,6 +897,12 @@ class MediaPlayerImageView(HomeAssistantView):
         return web.Response(body=data, content_type=content_type, headers=headers)
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "media_player_thumbnail",
+        vol.Required("entity_id"): cv.entity_id,
+    }
+)
 @websocket_api.async_response
 async def websocket_handle_thumbnail(hass, connection, msg):
     """Handle get media player cover command.
@@ -969,6 +943,22 @@ async def websocket_handle_thumbnail(hass, connection, msg):
     )
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "media_player/browse_media",
+        vol.Required("entity_id"): cv.entity_id,
+        vol.Inclusive(
+            ATTR_MEDIA_CONTENT_TYPE,
+            "media_ids",
+            "media_content_type and media_content_id must be provided together",
+        ): str,
+        vol.Inclusive(
+            ATTR_MEDIA_CONTENT_ID,
+            "media_ids",
+            "media_content_type and media_content_id must be provided together",
+        ): int,
+    }
+)
 @websocket_api.async_response
 async def websocket_browse_media(hass, connection, msg):
     """
@@ -995,8 +985,8 @@ async def websocket_browse_media(hass, connection, msg):
         )
         return
 
-    media_content_type = msg.get("media_content_type")
-    media_content_id = msg.get("media_content_id")
+    media_content_type = msg.get(ATTR_MEDIA_CONTENT_TYPE)
+    media_content_id = msg.get(ATTR_MEDIA_CONTENT_ID)
 
     try:
         payload = await player.async_browse_media(media_content_type, media_content_id)
