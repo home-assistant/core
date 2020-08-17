@@ -228,12 +228,11 @@ class PairedSensorManager:
         to_add = new.difference(old)
         to_remove = old.difference(new)
 
-        if to_add:
-            add_tasks = [self.async_pair_sensor(uid) for uid in to_add]
-            await asyncio.gather(*add_tasks)
+        tasks = [self.async_pair_sensor(uid) for uid in to_add]
+        tasks += [self.async_unpair_sensor(uid) for uid in to_remove]
 
-        for uid in to_remove:
-            self.async_unpair_sensor(uid)
+        if tasks:
+            await asyncio.gather(*tasks)
 
     async def async_unpair_sensor(self, uid: str) -> None:
         """Remove a paired sensor coordinator."""
