@@ -338,7 +338,7 @@ class YeelightScanner:
                 if ipaddr in self.seen:
                     continue
                 self.seen.add(ipaddr)
-                _LOGGER.debug("Yeelight discoevered at %s", ipaddr)
+                _LOGGER.debug("Yeelight discovered at %s", ipaddr)
 
                 # Initialize default configuration
                 if unique_id not in self._config_entry.options:
