@@ -12,6 +12,9 @@ DOMAIN = "plugwise_stick"
 CONF_USB_PATH = "usb_path"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 
+# Callback types
+CB_NEW_NODE = "NEW_NODE"
+
 # Sensor IDs
 AVAILABLE_SENSOR_ID = "available"
 CURRENT_POWER_SENSOR_ID = "power_1s"

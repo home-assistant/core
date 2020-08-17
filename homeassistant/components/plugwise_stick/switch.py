@@ -4,6 +4,7 @@ from homeassistant.components.switch import SwitchEntity
 from . import PlugwiseNodeEntity
 from .const import (
     AVAILABLE_SENSOR_ID,
+    CB_NEW_NODE,
     CURRENT_POWER_SENSOR_ID,
     DOMAIN,
     SENSORS,
@@ -15,14 +16,23 @@ from .const import (
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Plugwise switch based on config_entry."""
     stick = hass.data[DOMAIN][entry.entry_id]["stick"]
-    nodes_data = hass.data[DOMAIN][entry.entry_id]["switch"]
-    entities = []
-    for mac in nodes_data:
+
+    async def async_add_switch(mac):
+        """Add plugwise switch."""
         node = stick.node(mac)
         for switch_type in node.get_switches():
             if switch_type in SWITCHES:
-                entities.append(PlugwiseSwitch(node, mac, switch_type))
-    async_add_entities(entities)
+                async_add_entities([PlugwiseSwitch(node, mac, switch_type)])
+
+    for mac in hass.data[DOMAIN][entry.entry_id]["switch"]:
+        hass.async_create_task(async_add_switch(mac))
+
+    def discoved_switch(mac):
+        """Add newly discovered switch"""
+        hass.async_create_task(async_add_switch(mac))
+
+    # Listen for discovered nodes
+    stick.subscribe_stick_callback(discoved_switch, CB_NEW_NODE)
 
 
 class PlugwiseSwitch(PlugwiseNodeEntity, SwitchEntity):
