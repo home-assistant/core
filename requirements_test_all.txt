@@ -335,7 +335,7 @@ griddypower==0.1.0
 ha-ffmpeg==2.0
 
 # homeassistant.components.haiku
-haiku-Josh-codes==0.4
+haiku-Josh-codes==0.6
 
 # homeassistant.components.hangouts
 hangups==0.4.9
