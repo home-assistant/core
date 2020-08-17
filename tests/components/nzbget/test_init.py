@@ -19,9 +19,7 @@ from tests.common import MockConfigEntry
 async def test_import_from_yaml(hass) -> None:
     """Test import from YAML."""
     with _patch_version(), _patch_status(), _patch_history(), _patch_async_setup_entry():
-        assert await async_setup_component(
-            hass, DOMAIN, {DOMAIN: ENTRY_CONFIG},
-        )
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: ENTRY_CONFIG})
         await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
