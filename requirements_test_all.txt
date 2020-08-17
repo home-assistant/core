@@ -424,7 +424,7 @@ mbddns==0.1.2
 mcstatus==2.3.0
 
 # homeassistant.components.meteo_france
-meteofrance-api==0.1.0
+meteofrance-api==0.1.1
 
 # homeassistant.components.mfi
 mficlient==0.3.0
