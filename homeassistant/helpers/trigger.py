@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant.loader import async_get_integration
+from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 _PLATFORM_ALIASES = {
     "device_automation": ("device",),
@@ -26,13 +26,13 @@ async def _async_get_trigger_platform(
             break
     try:
         integration = await async_get_integration(hass, platform)
-    except ImportError:
-        raise vol.Invalid("Invalid platform '{platform}' specified") from None
+    except IntegrationNotFound:
+        raise vol.Invalid(f"Invalid platform '{platform}' specified") from None
     try:
         return integration.get_platform("trigger")
     except ImportError:
         raise vol.Invalid(
-            "Integration '{platform}' does not provide trigger support"
+            f"Integration '{platform}' does not provide trigger support"
         ) from None
 
 
