@@ -108,7 +108,11 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistantType) -> None:
         """Initialize."""
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(days=1),
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=timedelta(days=1),
+            update_method=self._async_update_data,
         )
         self.data = APPS
 
