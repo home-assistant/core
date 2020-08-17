@@ -7,13 +7,8 @@ from aionotion import async_get_client
 from aionotion.errors import InvalidCredentialsError, NotionError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
