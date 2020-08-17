@@ -5,7 +5,7 @@ from typing import Any, Callable, Optional, Union
 
 import voluptuous as vol
 
-from homeassistant.core import callback
+from homeassistant.core import EVENT_HOMEASSISTANT_START, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.config_validation import match_all
 from homeassistant.helpers.entity import Entity
@@ -156,15 +156,22 @@ class TemplateEntity(Entity):
         attribute.async_setup()
         self._template_attrs.append(attribute)
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        for attribute in self._template_attrs:
-            self.async_on_remove(attribute.async_added_to_hass())
+    async def _async_template_startup(self, _) -> None:
         # async_update will not write state
         # until "add_complete" is set on the attribute
         await self.async_update()
         for attribute in self._template_attrs:
             attribute.add_complete = True
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        for attribute in self._template_attrs:
+            self.async_on_remove(attribute.async_added_to_hass())
+
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, self._async_template_startup
+        )
 
     async def async_update(self) -> None:
         """Call for forced update."""

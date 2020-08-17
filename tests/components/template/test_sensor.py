@@ -5,6 +5,7 @@ from unittest.mock import patch
 from homeassistant.bootstrap import async_from_config_dict
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
+    EVENT_HOMEASSISTANT_START,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -578,7 +579,7 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
 
 async def test_no_template_match_all(hass, caplog):
     """Test that we allow static templates."""
-    hass.states.async_set("sensor.test_sensor", "init")
+    hass.states.async_set("sensor.test_sensor", "startup")
 
     await async_setup_component(
         hass,
@@ -608,15 +609,30 @@ async def test_no_template_match_all(hass, caplog):
             }
         },
     )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.invalid_state").state == "unknown"
+    assert hass.states.get("sensor.invalid_icon").state == "unknown"
+    assert hass.states.get("sensor.invalid_entity_picture").state == "unknown"
+    assert hass.states.get("sensor.invalid_friendly_name").state == "unknown"
 
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 6
 
+    assert hass.states.get("sensor.invalid_state").state == "unknown"
+    assert hass.states.get("sensor.invalid_icon").state == "unknown"
+    assert hass.states.get("sensor.invalid_entity_picture").state == "unknown"
+    assert hass.states.get("sensor.invalid_friendly_name").state == "unknown"
+    assert hass.states.get("sensor.invalid_attribute").state == "unknown"
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
     assert hass.states.get("sensor.invalid_state").state == "2"
-    assert hass.states.get("sensor.invalid_icon").state == "init"
-    assert hass.states.get("sensor.invalid_entity_picture").state == "init"
-    assert hass.states.get("sensor.invalid_friendly_name").state == "init"
-    assert hass.states.get("sensor.invalid_attribute").state == "init"
+    assert hass.states.get("sensor.invalid_icon").state == "startup"
+    assert hass.states.get("sensor.invalid_entity_picture").state == "startup"
+    assert hass.states.get("sensor.invalid_friendly_name").state == "startup"
+    assert hass.states.get("sensor.invalid_attribute").state == "startup"
 
     hass.states.async_set("sensor.test_sensor", "hello")
     await hass.async_block_till_done()
