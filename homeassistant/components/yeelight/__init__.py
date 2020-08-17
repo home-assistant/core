@@ -179,13 +179,13 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     # Import manually configured devices
     for ipaddr, device_config in config.get(DOMAIN, {}).get(CONF_DEVICES, {}).items():
         _LOGGER.debug("Importing configured %s", ipaddr)
-        config = {
+        entry_config = {
             CONF_IP_ADDRESS: ipaddr,
             **device_config,
         }
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config,
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_config,
             ),
         )
 
