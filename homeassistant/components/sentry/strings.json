@@ -11,5 +11,19 @@
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "environment": "Optional name of the environment.",
+          "event_custom_components": "Send events from custom components",
+          "event_handled": "Send handled events",
+          "event_third_party_packages": "Send events from third-party packages",
+          "logging_event_level": "The log level Sentry will register an event for",
+          "logging_level": "The log level Sentry will record logs as breadcrums for"
+        }
+      }
+    }
   }
 }

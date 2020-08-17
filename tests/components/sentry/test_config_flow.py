@@ -1,7 +1,17 @@
 """Test the sentry config flow."""
+import logging
+
 from sentry_sdk.utils import BadDsn
 
-from homeassistant.components.sentry.const import DOMAIN
+from homeassistant.components.sentry.const import (
+    CONF_ENVIRONMENT,
+    CONF_EVENT_CUSTOM_COMPONENTS,
+    CONF_EVENT_HANDLED,
+    CONF_EVENT_THIRD_PARTY_PACKAGES,
+    CONF_LOGGING_EVENT_LEVEL,
+    CONF_LOGGING_LEVEL,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
 from homeassistant.setup import async_setup_component
@@ -82,3 +92,42 @@ async def test_user_flow_unkown_exception(hass):
 
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_options_flow(hass):
+    """Test options config flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"dsn": "http://public@sentry.local/1"},
+    )
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.sentry.async_setup_entry", return_value=True):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ENVIRONMENT: "Test",
+            CONF_EVENT_CUSTOM_COMPONENTS: True,
+            CONF_EVENT_HANDLED: True,
+            CONF_EVENT_THIRD_PARTY_PACKAGES: True,
+            CONF_LOGGING_EVENT_LEVEL: logging.DEBUG,
+            CONF_LOGGING_LEVEL: logging.DEBUG,
+        },
+    )
+
+    assert result["type"] == "create_entry"
+    assert result["data"] == {
+        CONF_ENVIRONMENT: "Test",
+        CONF_EVENT_CUSTOM_COMPONENTS: True,
+        CONF_EVENT_HANDLED: True,
+        CONF_EVENT_THIRD_PARTY_PACKAGES: True,
+        CONF_LOGGING_EVENT_LEVEL: logging.DEBUG,
+        CONF_LOGGING_LEVEL: logging.DEBUG,
+    }
