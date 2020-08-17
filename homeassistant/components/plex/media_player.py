@@ -619,35 +619,50 @@ class PlexMediaPlayer(MediaPlayerEntity):
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
 
-        def libraries_info():
-            """Create response payload to describe available libraries."""
-            response = []
-            for library in self.plex_server.library.sections():
-                response.append(
-                    {
-                        "title": library.title,
-                        "media_content_id": library.key,
-                        "media_content_type": "library",
-                        "can_play": False,
-                        "can_expand": True,
-                    }
-                )
-            return response
+        def item_payload(item):
+            """Create response payload for a single media item."""
+            payload = {
+                "title": item.title,
+                "thumbnail": item.thumbUrl,
+                "media_content_id": item.ratingKey,
+                "media_content_type": item.type,
+                "can_play": True,
+            }
+            if item.type in EXPANDABLES:
+                payload["can_expand"] = True
+            return payload
 
-        def library_contents_info():
+        def library_section_payload(section):
+            return {
+                "title": section.title,
+                "media_content_id": section.key,
+                "media_content_type": "library",
+                "can_play": False,
+                "can_expand": True,
+            }
+
+        def server_info():
+            """Create response payload to describe libraries of the Plex server."""
+            server_info = {
+                "title": self.plex_server.friendly_name,
+                "media_content_id": self.plex_server.machine_identifier,
+                "media_content_type": "server",
+                "can_play": False,
+                "can_expand": True,
+            }
+            server_info["children"] = []
+            for library in self.plex_server.library.sections():
+                server_info["children"].append(library_section_payload(library))
+            return server_info
+
+        def library_info(media_content_id):
             """Create response payload to describe contents of a specific library."""
-            response = []
+            library = self.plex_server.library.sectionByID(str(media_content_id))
+            library_info = library_section_payload(library)
+            library_info["children"] = []
             for item in library.all():
-                response.append(
-                    {
-                        "title": item.title,
-                        "media_content_id": item.ratingKey,
-                        "media_content_type": item.type,
-                        "can_play": True,
-                        "can_expand": True,
-                    }
-                )
-            return response
+                library_info["children"].append(item_payload(item))
+            return library_info
 
         def build_item_response(payload):
             """Build the response payload for the provided media query."""
@@ -656,33 +671,20 @@ class PlexMediaPlayer(MediaPlayerEntity):
             if media is None:
                 return None
 
-            def item_payload(item):
-                payload = {
-                    "title": item.title,
-                    "thumbnail": item.thumbUrl,
-                    "media_content_id": item.ratingKey,
-                    "media_content_type": item.type,
-                    "can_play": True,
-                }
-                if item.type in EXPANDABLES:
-                    payload["can_expand"] = True
-                return payload
-
-            if media.type in EXPANDABLES:
-                media_info = []
+            media_info = item_payload(media)
+            if media_info["can_expand"]:
+                media_info["children"] = []
                 for item in media:
-                    child_info = item_payload(item)
-                    media_info.append(child_info)
-            else:
-                media_info = [item_payload(media)]
+                    media_info["children"].append(item_payload(item))
             return media_info
 
         if media_content_type is None:
-            return await self.hass.async_add_executor_job(libraries_info)
+            return await self.hass.async_add_executor_job(server_info)
 
         if media_content_type == "library":
-            library = self.plex_server.library.sectionByID(str(media_content_id))
-            return await self.hass.async_add_executor_job(library_contents_info)
+            return await self.hass.async_add_executor_job(
+                library_info, media_content_id
+            )
 
         payload = {
             "media_type": PLEX_DOMAIN,
