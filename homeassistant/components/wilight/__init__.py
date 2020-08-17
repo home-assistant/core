@@ -60,8 +60,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     parent = hass.data[DOMAIN][entry.entry_id]
     await parent.async_reset()
     del hass.data[DOMAIN][entry.entry_id]
-    if not hass.data[DOMAIN]:
-        del hass.data[DOMAIN]
 
     return True
 
