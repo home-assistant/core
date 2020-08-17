@@ -1,7 +1,12 @@
 """Const for Plugwise USB-stick."""
 
 from homeassistant.components.switch import DEVICE_CLASS_OUTLET
-from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.const import (
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
+)
 
 DOMAIN = "plugwise_stick"
 CONF_USB_PATH = "usb_path"
@@ -31,7 +36,7 @@ SENSORS = {
         "unit": POWER_WATT,
     },
     TODAY_ENERGY_SENSOR_ID: {
-        "class": DEVICE_CLASS_POWER,
+        "class": DEVICE_CLASS_ENERGY,
         "enabled_default": True,
         "icon": None,
         "name": "Power consumption today",
