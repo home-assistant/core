@@ -189,30 +189,30 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Yeelight from a config entry."""
 
-    async def _initialize(is_discovery) -> None:
+    async def _initialize() -> None:
+        is_discovery = entry.data[CONF_DISCOVERY]
         unset = entry.add_update_listener(_async_update_listener)
         entry_data = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id] = {
             DATA_UNSUB_UPDATE_LISTENER: unset,
         }
+
+        # Wait for platform setup is important. Make sure callbacks are set up before scanning.
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_setup(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+
         if is_discovery:
             scanner = YeelightScanner(hass, entry)
             entry_data[DATA_SCANNER] = scanner
-
-        platform_setups = [
-            hass.config_entries.async_forward_entry_setup(entry, component)
-            for component in PLATFORMS
-        ]
-        if is_discovery:
-            # Wait for platform setup is important. Make sure callbacks are set up before scanning.
-            await asyncio.gather(*platform_setups)
             await scanner.start_scan()
-        else:
-            for platform_setup in platform_setups:
-                hass.async_create_task(platform_setup)
 
         async def async_update(_):
             devices = hass.data[DOMAIN][DATA_DEVICES]
             if is_discovery:
+                scanner = entry_data[DATA_SCANNER]
                 await asyncio.gather(
                     *[
                         hass.async_add_executor_job(device.update)
@@ -232,9 +232,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, async_update, hass.data[DOMAIN][DATA_SCAN_INTERVAL]
         )
 
-    if entry.data[CONF_DISCOVERY]:
-        hass.async_create_task(_initialize(True))
-    else:
+    if not entry.data[CONF_DISCOVERY]:
         # Move options from data for imported entries
         if not entry.options:
             hass.config_entries.async_update_entry(
@@ -267,7 +265,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         }
         await _async_setup_device(hass, entry.data[CONF_IP_ADDRESS], config)
 
-        await _initialize(False)
+    hass.async_create_task(_initialize())
 
     return True
 
