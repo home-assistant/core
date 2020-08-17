@@ -56,12 +56,6 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Unload a config entry."""
-
-    return True
-
-
 class WiLightLightOnOff(WiLightDevice, LightEntity):
     """Representation of a WiLights light on-off."""
 
