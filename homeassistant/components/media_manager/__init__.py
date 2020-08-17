@@ -172,7 +172,7 @@ class ImageServeView(HomeAssistantView):
                 # Another check in case another request already finished it while waiting
                 if not target_file.is_file():
                     await hass.async_add_executor_job(
-                        self._generate,
+                        _generate_thumbnail,
                         self.image_folder / image_id / "original",
                         image_info["content_type"],
                         target_file,
@@ -181,8 +181,9 @@ class ImageServeView(HomeAssistantView):
 
         return web.FileResponse(target_file)
 
-    def _generate(self, original_path, content_type, target_path, target_size):
-        """Generate a size."""
-        image = Image.open(original_path)
-        image.thumbnail(target_size)
-        image.save(target_path, format=content_type.split("/", 1)[1])
+
+def _generate_thumbnail(original_path, content_type, target_path, target_size):
+    """Generate a size."""
+    image = Image.open(original_path)
+    image.thumbnail(target_size)
+    image.save(target_path, format=content_type.split("/", 1)[1])

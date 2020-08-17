@@ -52,7 +52,6 @@ async def test_upload_image(hass, hass_client, hass_ws_client):
         res = await client.get(f"/api/media_manager/serve/{item['id']}/256x256")
         assert res.status == 200
         assert (item_folder / "256x256").is_file()
-        (item_folder / "256x256").rename("./logo-thumb.png")
 
         # List item
         await ws_client.send_json({"id": 6, "type": "media_manager/list"})
