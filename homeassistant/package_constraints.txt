@@ -28,7 +28,7 @@ sqlalchemy==1.3.18
 voluptuous-serialize==2.4.0
 voluptuous==0.11.7
 yarl==1.4.2
-zeroconf==0.28.0
+zeroconf==0.28.1
 
 pycryptodome>=3.6.6
 
