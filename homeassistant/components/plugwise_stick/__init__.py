@@ -76,6 +76,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
         # Subscribe callback for nodes discovered after initial scan
         stick.subscribe_stick_callback(add_discovered_node, CB_TYPE_NEW_NODE)
+    def shutdown(event):
+        hass.async_add_executor_job(stick.disconnect)
 
     stick = plugwise.stick(config_entry.data[CONF_USB_PATH])
     try:
@@ -105,9 +107,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         await hass.async_add_executor_job(stick.disconnect)
         raise ConfigEntryNotReady
     stick.scan(discover_finished)
-
-    def shutdown(event):
-        hass.async_add_executor_job(stick.disconnect)
 
     # Listen when EVENT_HOMEASSISTANT_STOP is fired
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
