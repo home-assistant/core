@@ -27,12 +27,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
     for mac in hass.data[DOMAIN][entry.entry_id]["switch"]:
         hass.async_create_task(async_add_switch(mac))
 
-    def discoved_switch(mac):
-        """Add newly discovered switch"""
+    def add_switch(mac):
+        """Add switch."""
         hass.async_create_task(async_add_switch(mac))
 
     # Listen for discovered nodes
-    stick.subscribe_stick_callback(discoved_switch, CB_NEW_NODE)
+    stick.subscribe_stick_callback(add_switch, CB_NEW_NODE)
 
 
 class PlugwiseSwitch(PlugwiseNodeEntity, SwitchEntity):
