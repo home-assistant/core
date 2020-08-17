@@ -184,17 +184,13 @@ class ManualOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Handle the initial step."""
-        return await self.async_step_options()
-
-    async def async_step_options(self, user_input=None):
-        """Handle the step to change options."""
         if user_input is not None:
             return self.async_create_entry(
                 title=self._config_entry.data[CONF_IP_ADDRESS], data=user_input
             )
 
         return self.async_show_form(
-            step_id="options",
+            step_id="init",
             data_schema=_async_options_data_schema(self._config_entry.options),
         )
 
