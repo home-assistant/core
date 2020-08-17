@@ -847,6 +847,9 @@ pyvolumio==0.1.1
 # homeassistant.components.html5
 pywebpush==1.9.2
 
+# homeassistant.components.wemo
+pywemo==0.4.46
+
 # homeassistant.components.zerproc
 pyzerproc==0.2.5
 
