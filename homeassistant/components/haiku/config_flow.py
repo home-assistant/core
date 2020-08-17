@@ -1,8 +1,10 @@
 """Config flow for Haiku."""
 
+from haiku.discover import discover
+
 from homeassistant import config_entries
 from homeassistant.helpers import config_entry_flow
-from haiku.discover import discover
+
 from .const import DOMAIN
 
 
