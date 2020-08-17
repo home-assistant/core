@@ -20,7 +20,7 @@ SQLITE3_POSTFIXES = ["", "-wal", "-shm"]
 
 # This is the maximum time after the recorder ends the session
 # before we no longer consider startup to be a "restart" and we
-# should conisder doing a check on the database.
+# should do a check on the sqlite3 database.
 MAX_RESTART_TIME = timedelta(minutes=6)
 
 
