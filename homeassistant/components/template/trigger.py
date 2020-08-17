@@ -23,7 +23,7 @@ TRIGGER_SCHEMA = IF_ACTION_SCHEMA = vol.Schema(
 
 
 async def async_attach_trigger(
-    hass, config, action, automation_info, *, platform_type="numeric_state"
+    hass, config, action, automation_info, *, platform_type="template"
 ):
     """Listen for state changes based on configuration."""
     value_template = config.get(CONF_VALUE_TEMPLATE)
