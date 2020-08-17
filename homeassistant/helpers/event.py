@@ -600,6 +600,7 @@ class _TrackTemplateResultInfo:
             self._variables = variables
         self._refresh(None)
 
+    @callback
     def _refresh(self, event: Optional[Event]) -> None:
         self._info = self._template.async_render_to_info(self._variables)
         self._update_listeners()
