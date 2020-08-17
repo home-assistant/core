@@ -196,28 +196,32 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Yeelight from a config entry."""
 
-    if entry.data[CONF_DISCOVERY]:
-
-        async def _initialize() -> None:
+    async def _initialize(is_discovery) -> None:
+        unset = entry.add_update_listener(_async_update_listener)
+        hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id] = {
+            DATA_UNSUB_UPDATE_LISTENER: unset,
+        }
+        if is_discovery:
             scanner = YeelightScanner(hass, entry)
-            unset = entry.add_update_listener(_async_update_listener)
-            hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id] = {
-                DATA_SCANNER: scanner,
-                DATA_UNSUB_UPDATE_LISTENER: unset,
-            }
+            hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id][
+                DATA_SCANNER
+            ] = scanner
 
+        platform_setups = [
+            hass.config_entries.async_forward_entry_setup(entry, component)
+            for component in PLATFORMS
+        ]
+
+        if is_discovery:
             # Wait for platform setup is important. Make sure callbacks are set up before scanning.
-            await asyncio.gather(
-                *[
-                    hass.config_entries.async_forward_entry_setup(entry, component)
-                    for component in PLATFORMS
-                ]
-            )
-
+            await asyncio.gather(*platform_setups)
             await scanner.start_scan()
+        else:
+            for platform_setup in platform_setups:
+                hass.async_create_task(platform_setup)
 
-        hass.async_create_task(_initialize())
-
+    if entry.data[CONF_DISCOVERY]:
+        hass.async_create_task(_initialize(True))
     else:
 
         # Move options from data for imported entries
@@ -251,14 +255,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             **entry.options,
         }
         await _async_setup_device(hass, entry.data[CONF_IP_ADDRESS], config)
-        unset = entry.add_update_listener(_async_update_listener)
-        hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id] = {
-            DATA_UNSUB_UPDATE_LISTENER: unset,
-        }
-        for component in PLATFORMS:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, component)
-            )
+
+        await _initialize(False)
 
     return True
 
