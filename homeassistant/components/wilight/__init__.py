@@ -33,9 +33,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not await parent.async_setup():
         raise ConfigEntryNotReady
 
-    # For backwards compat, set unique ID
-    if entry.unique_id is None:
-        hass.config_entries.async_update_entry(entry, unique_id=parent.api.device_id)
 
     hass.data[DOMAIN][entry.entry_id] = parent
 
