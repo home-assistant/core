@@ -132,7 +132,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
     if unload_ok:
         stick = hass.data[DOMAIN][config_entry.entry_id]["stick"]
-        await hass.async_add_executor_job(stick.stop)
+        await hass.async_add_executor_job(stick.disconnect)
         hass.data[DOMAIN].pop(config_entry.entry_id)
     return unload_ok
 
