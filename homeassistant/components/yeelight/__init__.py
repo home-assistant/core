@@ -205,9 +205,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 DATA_UNSUB_UPDATE_LISTENER: unset,
             }
 
-            for component in PLATFORMS:
-                # Wait for platform setup is important. Make sure callbacks are set up before scanning.
-                await hass.config_entries.async_forward_entry_setup(entry, component)
+            # Wait for platform setup is important. Make sure callbacks are set up before scanning.
+            await asyncio.gather(
+                *[
+                    hass.config_entries.async_forward_entry_setup(entry, component)
+                    for component in PLATFORMS
+                ]
+            )
 
             await scanner.start_scan()
 
