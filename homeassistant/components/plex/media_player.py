@@ -672,7 +672,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 return None
 
             media_info = item_payload(media)
-            if media_info["can_expand"]:
+            if media_info.get("can_expand"):
                 media_info["children"] = []
                 for item in media:
                     media_info["children"].append(item_payload(item))
