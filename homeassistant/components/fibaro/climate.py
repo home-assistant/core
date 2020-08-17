@@ -120,7 +120,8 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         self._preset_support = []
         self._fan_support = []
 
-        siblings = fibaro_device.fibaro_controller.get_siblings(fibaro_device.id)
+        siblings = fibaro_device.fibaro_controller.get_siblings(fibaro_device)
+        _LOGGER.debug("%s siblings: %s", fibaro_device.ha_id, siblings)
         tempunit = "C"
         for device in siblings:
             if device.type == "com.fibaro.temperatureSensor":
@@ -188,9 +189,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         await super().async_added_to_hass()
 
         # Register update callback for child devices
-        siblings = self.fibaro_device.fibaro_controller.get_siblings(
-            self.fibaro_device.id
-        )
+        siblings = self.fibaro_device.fibaro_controller.get_siblings(self.fibaro_device)
         for device in siblings:
             if device != self.fibaro_device:
                 self.controller.register(device.id, self._update_callback)
