@@ -17,6 +17,7 @@ async def _async_has_devices(hass) -> bool:
         result = True
     return result
 
+
 config_entry_flow.register_discovery_flow(
     DOMAIN, "Haiku", _async_has_devices, config_entries.CONN_CLASS_UNKNOWN
 )
