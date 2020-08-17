@@ -105,7 +105,7 @@ async def discover_devices(hass, hass_config):
 
     for server_name, server in hass.data[DOMAIN][SUPLA_SERVERS].items():
 
-        async def fetch_channels():
+        async def _fetch_channels():
             async with async_timeout.timeout(30):
                 channels = {
                     channel["id"]: channel
@@ -119,7 +119,7 @@ async def discover_devices(hass, hass_config):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_method=fetch_channels,
+            update_method=_fetch_channels,
             update_interval=server.update_interval,
         )
 
