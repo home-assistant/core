@@ -18,7 +18,10 @@ from . import (
     CONF_NIGHTLIGHT_SWITCH_TYPE,
     CONF_SAVE_ON_CHANGE,
     CONF_TRANSITION,
+    DATA_CONFIG_ENTRIES,
+    DATA_SCANNER,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
+    _async_default_config,
 )
 from . import DOMAIN  # pylint:disable=unused-import
 
@@ -211,7 +214,13 @@ class DiscoveryOptionsFlowHandler(config_entries.OptionsFlow):
 
         device_registry = await dr.async_get_registry(self.hass)
         devices = {}
-        for unique_id in self._config_entry.options:
+        unique_ids = (
+            set(self._config_entry.options.keys())
+            | self.hass.data[DOMAIN][DATA_CONFIG_ENTRIES][self._config_entry.entry_id][
+                DATA_SCANNER
+            ].unique_ids
+        )
+        for unique_id in unique_ids:
             device = device_registry.async_get_device(
                 identifiers={(DOMAIN, unique_id)}, connections={}
             )
@@ -229,7 +238,9 @@ class DiscoveryOptionsFlowHandler(config_entries.OptionsFlow):
             options[self._picked_device] = user_input
             return self.async_create_entry(title="Discovery", data=options,)
 
-        options = self._config_entry.options[self._picked_device]
+        options = self._config_entry.options.get(self._picked_device)
+        if options is None:
+            options = _async_default_config()
         return self.async_show_form(
             step_id="options", data_schema=_async_options_data_schema(options)
         )

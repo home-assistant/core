@@ -228,7 +228,7 @@ async def test_option_discovery(hass: HomeAssistant):
         CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
         CONF_NIGHTLIGHT_SWITCH: DEFAULT_NIGHTLIGHT_SWITCH,
     }
-    assert config_entry.options == {ID: config}
+    assert config_entry.options == {}
     assert hass.states.get(f"light.{NAME}_nightlight") is None
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)

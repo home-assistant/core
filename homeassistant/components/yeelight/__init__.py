@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.entity import Entity
@@ -292,12 +292,26 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
+@callback
+def _async_default_config():
+    return {
+        CONF_MODEL: "",
+        CONF_TRANSITION: DEFAULT_TRANSITION,
+        CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
+        CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
+        CONF_NIGHTLIGHT_SWITCH: DEFAULT_NIGHTLIGHT_SWITCH,
+    }
+
+
 async def _async_setup_device(
     hass: HomeAssistant,
     ipaddr: str,
-    config: dict,
+    config: Optional[dict],
     discovery_config_entry: Optional[ConfigEntry] = None,
 ) -> None:
+    if config is None:
+        config = _async_default_config()
+
     # Set up device
     bulb = Bulb(ipaddr, model=config.get(CONF_MODEL) or None)
     capabilities = await hass.async_add_executor_job(bulb.get_capabilities)
@@ -328,6 +342,7 @@ class YeelightScanner:
         self._config_entry = config_entry
         self._remove_listender = None
         self.seen = set()
+        self.unique_ids = set()
 
     async def _async_scan(self, _):
         _LOGGER.debug("Yeelight scanning")
@@ -340,38 +355,13 @@ class YeelightScanner:
                 if ipaddr in self.seen:
                     continue
                 self.seen.add(ipaddr)
+                self.unique_ids.add(unique_id)
                 _LOGGER.debug("Yeelight discovered at %s", ipaddr)
 
-                # Initialize default configuration
-                if unique_id not in self._config_entry.options:
-                    # Temporarily disable update listener to avoid reload
-                    self._hass.data[DOMAIN][DATA_CONFIG_ENTRIES][
-                        self._config_entry.entry_id
-                    ][DATA_UNSUB_UPDATE_LISTENER]()
-                    self._hass.config_entries.async_update_entry(
-                        self._config_entry,
-                        options={
-                            **self._config_entry.options,
-                            unique_id: {
-                                CONF_MODEL: "",
-                                CONF_TRANSITION: DEFAULT_TRANSITION,
-                                CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
-                                CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
-                                CONF_NIGHTLIGHT_SWITCH: DEFAULT_NIGHTLIGHT_SWITCH,
-                            },
-                        },
-                    )
-                    self._hass.data[DOMAIN][DATA_CONFIG_ENTRIES][
-                        self._config_entry.entry_id
-                    ][
-                        DATA_UNSUB_UPDATE_LISTENER
-                    ] = self._config_entry.add_update_listener(
-                        _async_update_listener
-                    )
                 await _async_setup_device(
                     self._hass,
                     ipaddr,
-                    self._config_entry.options[unique_id],
+                    self._config_entry.options.get(unique_id),
                     self._config_entry,
                 )
 
