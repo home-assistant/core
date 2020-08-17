@@ -178,16 +178,6 @@ class SuplaChannel(Entity):
         return self.coordinator.data.get(self.channel_id)
 
     @property
-    def coordinator(self):
-        """Return shared coordinator."""
-        return self.hass.data[SUPLA_COORDINATORS][self.server_name]
-
-    @property
-    def channel_data(self):
-        """Return channel data taken from coordinator."""
-        return self.coordinator.data.get(self.channel_id)
-
-    @property
     def unique_id(self) -> str:
         """Return a unique ID."""
         return "supla-{}-{}".format(
