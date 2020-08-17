@@ -65,15 +65,16 @@ class _TemplateAttribute:
         result: Union[str, TemplateError],
     ) -> None:
         if isinstance(result, TemplateError):
-            _LOGGER.error(
-                "TemplateError('%s') "
-                "while processing template '%s' "
-                "for attribute '%s' in entity '%s'",
-                result,
-                self.template,
-                self._attribute,
-                self._entity.entity_id,
-            )
+            if self.add_complete:
+                _LOGGER.error(
+                    "TemplateError('%s') "
+                    "while processing template '%s' "
+                    "for attribute '%s' in entity '%s'",
+                    result,
+                    self.template,
+                    self._attribute,
+                    self._entity.entity_id,
+                )
             self.on_update(result)
             self._write_update_if_added()
 
@@ -87,17 +88,18 @@ class _TemplateAttribute:
         try:
             validated = self.validator(result)
         except vol.Invalid as ex:
-            _LOGGER.error(
-                "Error validating template result '%s' "
-                "from template '%s' "
-                "for attribute '%s' in entity %s "
-                "validation message '%s'",
-                result,
-                self.template,
-                self._attribute,
-                self._entity.entity_id,
-                ex.msg,
-            )
+            if self.add_complete:
+                _LOGGER.error(
+                    "Error validating template result '%s' "
+                    "from template '%s' "
+                    "for attribute '%s' in entity %s "
+                    "validation message '%s'",
+                    result,
+                    self.template,
+                    self._attribute,
+                    self._entity.entity_id,
+                    ex.msg,
+                )
             self.on_update(None)
             self._write_update_if_added()
             return
