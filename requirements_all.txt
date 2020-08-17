@@ -1776,7 +1776,7 @@ python-telnet-vlc==1.0.4
 python-twitch-client==0.6.0
 
 # homeassistant.components.velbus
-python-velbus==2.0.43
+python-velbus==2.0.44
 
 # homeassistant.components.vlc
 python-vlc==1.1.2
