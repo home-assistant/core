@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -50,8 +50,9 @@ DATA_CUSTOM_EFFECTS = "custom_effects"
 DATA_DEVICES = "devices"
 DATA_SCANNER = "scanner"
 DATA_UNSUB_UPDATE_LISTENER = "unsub_update_listener"
-DATA_SETUP_BINARY_SENSOR = "setup_binary_sensor"
-DATA_SETUP_LIGHT = "setup_light"
+
+SIGNAL_SETUP_BINARY_SENSOR = "setup_binary_sensor"
+SIGNAL_SETUP_LIGHT = "setup_light"
 
 ATTR_COUNT = "count"
 ATTR_ACTION = "action"
@@ -307,9 +308,8 @@ async def _async_setup_device(
 
     # Trigger platform setup
     if discovery_config_entry is not None:
-        data = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][discovery_config_entry.entry_id]
-        hass.async_create_task(data[DATA_SETUP_BINARY_SENSOR](ipaddr))
-        hass.async_create_task(data[DATA_SETUP_LIGHT](ipaddr))
+        async_dispatcher_send(hass, SIGNAL_SETUP_BINARY_SENSOR, ipaddr)
+        async_dispatcher_send(hass, SIGNAL_SETUP_LIGHT, ipaddr)
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):

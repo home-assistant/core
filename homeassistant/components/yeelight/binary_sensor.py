@@ -9,11 +9,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
-    DATA_CONFIG_ENTRIES,
     DATA_DEVICES,
-    DATA_SETUP_BINARY_SENSOR,
     DATA_UPDATED,
     DOMAIN,
+    SIGNAL_SETUP_BINARY_SENSOR,
     YeelightEntity,
 )
 
@@ -33,9 +32,9 @@ async def async_setup_entry(
             async_add_entities([YeelightNightlightModeSensor(device)])
 
     if config_entry.data[CONF_DISCOVERY]:
-        hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][
-            DATA_SETUP_BINARY_SENSOR
-        ] = async_setup_binary_sensor
+        async_dispatcher_connect(
+            hass, SIGNAL_SETUP_BINARY_SENSOR, async_setup_binary_sensor
+        )
     else:
         await async_setup_binary_sensor(config_entry.data[CONF_IP_ADDRESS])
 
