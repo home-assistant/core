@@ -6,12 +6,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.service import extract_entity_ids
 from homeassistant.util.dt import as_timestamp, now, parse_datetime, utc_from_timestamp
 
 from .const import (
@@ -36,6 +34,7 @@ from .const import (
     KEY_TYPE,
     KEY_ZONE_ID,
     KEY_ZONE_NUMBER,
+    SCHEDULE_TYPE_FLEX,
     SERVICE_SET_ZONE_MOISTURE,
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
     SIGNAL_RACHIO_RAIN_DELAY_UPDATE,
@@ -74,50 +73,23 @@ ATTR_ZONE_SUMMARY = "Summary"
 ATTR_ZONE_TYPE = "Type"
 
 
-SERVICE_SET_ZONE_MOISTURE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_PERCENT): cv.positive_int,
-    }
-)
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Rachio switches."""
-    # Add all zones from all controllers as switches
-    zones = []
     has_flex_sched = False
     entities = await hass.async_add_executor_job(_create_entities, hass, config_entry)
     for entity in entities:
-        if isinstance(entity, RachioZone):
-            zones.append(entity)
-        if isinstance(entity, RachioSchedule):
-            if entity.type == "FLEX":
-                has_flex_sched = True
+        if isinstance(entity, RachioSchedule) and entity.type == SCHEDULE_TYPE_FLEX:
+            has_flex_sched = True
 
     async_add_entities(entities)
     _LOGGER.info("%d Rachio switch(es) added", len(entities))
 
-    def set_moisture_service(call):
-        """Service to set zone moisture percent."""
-        for zone in service_to_entities(call):
-            percent = call.data.get(ATTR_PERCENT)
-            zone.set_moisture_percent(percent)
-
-    def service_to_entities(call):
-        """Return the zone(s) that a service call mentions."""
-        entity_ids = extract_entity_ids(hass, call)
-        entities = [entity for entity in zones if entity.entity_id in entity_ids]
-        return entities
-
-    # Setting zone moisture is only useful with flex daily schedules
-    # if the user has none, we skip loading the service
+    platform = entity_platform.current_platform.get()
     if has_flex_sched:
-        hass.services.async_register(
-            DOMAIN_RACHIO,
+        platform.async_register_entity_service(
             SERVICE_SET_ZONE_MOISTURE,
-            set_moisture_service,
-            schema=SERVICE_SET_ZONE_MOISTURE_SCHEMA,
+            {vol.Required(ATTR_PERCENT): cv.positive_int},
+            "set_moisture_percent",
         )
 
 
