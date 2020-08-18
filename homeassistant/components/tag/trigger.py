@@ -33,5 +33,5 @@ async def async_attach_trigger(hass, config, action, automation_info):
     event_config = event_trigger.TRIGGER_SCHEMA(event_config)
 
     return await event_trigger.async_attach_trigger(
-        hass, event_config, action, automation_info
+        hass, event_config, action, automation_info, platform_type=DOMAIN
     )
