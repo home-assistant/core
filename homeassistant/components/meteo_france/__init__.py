@@ -85,7 +85,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     async def _async_update_data_rain():
         """Fetch data from API endpoint."""
-        return await hass.async_add_executor_job(client.get_rain, latitude, longitude)
+        return await hass.async_add_executor_job(
+            client.get_rain, latitude, longitude, "en"
+        )
 
     async def _async_update_data_alert():
         """Fetch data from API endpoint."""
