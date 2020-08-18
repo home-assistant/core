@@ -81,13 +81,6 @@ class WiLightLightOnOff(WiLightDevice, LightEntity):
 class WiLightLightDimmer(WiLightDevice, LightEntity):
     """Representation of a WiLights light dimmer."""
 
-    def __init__(self, *args, **kwargs):
-        """Initialize the device."""
-        WiLightDevice.__init__(self, *args, **kwargs)
-        # Initialize the WiLights dimmer.
-        self._on = False
-        self._brightness = 0
-
     @property
     def supported_features(self):
         """Flag supported features."""
