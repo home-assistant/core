@@ -888,7 +888,6 @@ omit =
     homeassistant/components/wemo/*
     homeassistant/components/whois/sensor.py
     homeassistant/components/wiffi/*
-    homeassistant/components/wilight/*
     homeassistant/components/wink/*
     homeassistant/components/wirelesstag/*
     homeassistant/components/worldtidesinfo/sensor.py

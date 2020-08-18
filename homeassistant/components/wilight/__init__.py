@@ -2,7 +2,6 @@
 import asyncio
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
@@ -24,9 +23,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up a wilight config entry."""
-
-    if CONF_HOST not in entry.data:
-        return False
 
     parent = WiLightParent(hass, entry)
 
