@@ -827,7 +827,7 @@ class MediaPlayerEntity(Entity):
                 "children": list (Optional) - [{<item_with_keys_above>}, ...]
             }
 
-        Note: Only one level of children should be provided in a given response.
+        Note: Children should omit the children key.
         """
         raise NotImplementedError()
 
@@ -978,10 +978,8 @@ async def websocket_browse_media(hass, connection, msg):
     player = component.get_entity(msg["entity_id"])
 
     if player is None:
-        connection.send_message(
-            websocket_api.error_message(
-                msg["id"], "entity_not_found", "Entity not found"
-            )
+        connection.send_error(
+            msg["id"], "entity_not_found", "Entity not found"
         )
         return
 
