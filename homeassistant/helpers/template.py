@@ -76,7 +76,10 @@ def render_complex(value: Any, variables: TemplateVarsType = None) -> Any:
     if isinstance(value, list):
         return [render_complex(item, variables) for item in value]
     if isinstance(value, dict):
-        return {key: render_complex(item, variables) for key, item in value.items()}
+        return {
+            render_complex(key, variables): render_complex(item, variables)
+            for key, item in value.items()
+        }
     if isinstance(value, Template):
         return value.async_render(variables)
     return value
