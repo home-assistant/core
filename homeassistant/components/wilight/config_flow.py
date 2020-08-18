@@ -29,7 +29,7 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the WiLight flow."""
         self._host = None
         self._serial_number = None
-        self._device_id = None
+        self._title = None
         self._model_name = None
         self._components = []
         self._components_text = ""
@@ -37,7 +37,7 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
     def _self_update(self, host, serial_number, model_name):
         self._host = host
         self._serial_number = serial_number
-        self._device_id = f"WL{serial_number}"
+        self._title = f"WL{serial_number}"
         self._model_name = model_name
         self._components = pywilight.get_components_from_model(model_name)
         self._components_text = ", ".join(self._components)
@@ -49,7 +49,7 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_SERIAL_NUMBER: self._serial_number,
             CONF_MODEL_NAME: self._model_name,
         }
-        return self.async_create_entry(title=self._device_id, data=data)
+        return self.async_create_entry(title=self._title, data=data)
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered WiLight."""
@@ -82,11 +82,11 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
         if not component_ok:
             return self.async_abort(reason="not_supported")
 
-        await self.async_set_unique_id(self._device_id)
+        await self.async_set_unique_id(self._serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context["title_placeholders"] = {"name": self._device_id}
+        self.context["title_placeholders"] = {"name": self._title}
         return await self.async_step_confirm()
 
     async def async_step_confirm(self, user_input=None):
@@ -97,7 +97,7 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="confirm",
             description_placeholders={
-                "name": self._device_id,
+                "name": self._title,
                 "components": self._components_text,
             },
             errors={},
