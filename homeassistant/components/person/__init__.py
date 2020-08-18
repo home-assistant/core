@@ -44,7 +44,7 @@ from homeassistant.helpers import (
     service,
 )
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -440,14 +440,14 @@ class Person(RestoreEntity):
         if trackers:
             _LOGGER.debug("Subscribe to device trackers for %s", self.entity_id)
 
-            self._unsub_track_device = async_track_state_change(
+            self._unsub_track_device = async_track_state_change_event(
                 self.hass, trackers, self._async_handle_tracker_update
             )
 
         self._update_state()
 
     @callback
-    def _async_handle_tracker_update(self, entity, old_state, new_state):
+    def _async_handle_tracker_update(self, event):
         """Handle the device tracker state changes."""
         self._update_state()
 

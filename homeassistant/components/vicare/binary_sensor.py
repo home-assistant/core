@@ -5,7 +5,7 @@ import requests
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_POWER,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 
@@ -77,7 +77,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class ViCareBinarySensor(BinarySensorDevice):
+class ViCareBinarySensor(BinarySensorEntity):
     """Representation of a ViCare sensor."""
 
     def __init__(self, name, api, sensor_type):

@@ -673,7 +673,7 @@ async def test_manual_config(hass):
 
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
         "homeassistant.components.plex.PlexWebsocket", autospec=True
-    ):
+    ), patch("plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MANUAL_SERVER
         )

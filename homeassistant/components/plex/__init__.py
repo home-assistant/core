@@ -215,13 +215,16 @@ def play_on_sonos(hass, service_call):
 
     sonos = hass.components.sonos
     try:
-        sonos_id = sonos.get_coordinator_id(entity_id)
+        sonos_name = sonos.get_coordinator_name(entity_id)
     except HomeAssistantError as err:
         _LOGGER.error("Cannot get Sonos device: %s", err)
         return
 
     if isinstance(content, int):
         content = {"plex_key": content}
+        content_type = PLEX_DOMAIN
+    else:
+        content_type = "music"
 
     plex_server_name = content.get("plex_server")
     shuffle = content.pop("shuffle", 0)
@@ -239,14 +242,14 @@ def play_on_sonos(hass, service_call):
     else:
         plex_server = next(iter(plex_servers))
 
-    sonos_speaker = plex_server.account.sonos_speaker_by_id(sonos_id)
+    sonos_speaker = plex_server.account.sonos_speaker(sonos_name)
     if sonos_speaker is None:
         _LOGGER.error(
-            "Sonos speaker '%s' could not be found on this Plex account", sonos_id
+            "Sonos speaker '%s' could not be found on this Plex account", sonos_name
         )
         return
 
-    media = plex_server.lookup_media("music", **content)
+    media = plex_server.lookup_media(content_type, **content)
     if media is None:
         _LOGGER.error("Media could not be found: %s", content)
         return

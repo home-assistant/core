@@ -72,7 +72,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the MiTempBt sensor."""
     backend = BACKEND
-    _LOGGER.debug("MiTempBt is using %s backend.", backend.__name__)
+    _LOGGER.debug("MiTempBt is using %s backend", backend.__name__)
 
     cache = config.get(CONF_CACHE)
     poller = mitemp_bt_poller.MiTempBtPoller(

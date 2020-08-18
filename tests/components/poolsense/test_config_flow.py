@@ -29,7 +29,7 @@ async def test_invalid_credentials(hass):
         )
 
     assert result["type"] == "form"
-    assert result["errors"] == {"base": "auth"}
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_valid_credentials(hass):

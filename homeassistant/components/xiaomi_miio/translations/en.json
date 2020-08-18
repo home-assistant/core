@@ -12,7 +12,7 @@
         "step": {
             "gateway": {
                 "data": {
-                    "host": "IP address",
+                    "host": "IP Address",
                     "name": "Name of the Gateway",
                     "token": "API Token"
                 },

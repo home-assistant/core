@@ -27,7 +27,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "Config flow for this Denon AVR is already in progress",
-      "connection_error": "Failed to connect, please try again",
+      "connection_error": "Failed to connect, please try again, disconnecting mains power and ethernet cables and reconnecting them may help",
       "not_denonavr_manufacturer": "Not a Denon AVR Network Receiver, discovered manafucturer did not match",
       "not_denonavr_missing": "Not a Denon AVR Network Receiver, discovery information not complete"
     }

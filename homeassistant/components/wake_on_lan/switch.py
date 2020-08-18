@@ -81,7 +81,10 @@ class WolSwitch(SwitchEntity):
         self._mac_address = mac_address
         self._broadcast_address = broadcast_address
         self._broadcast_port = broadcast_port
-        self._off_script = Script(hass, off_action) if off_action else None
+        domain = __name__.split(".")[-2]
+        self._off_script = (
+            Script(hass, off_action, name, domain) if off_action else None
+        )
         self._state = False
 
     @property
@@ -96,14 +99,20 @@ class WolSwitch(SwitchEntity):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        if self._broadcast_address:
-            wakeonlan.send_magic_packet(
-                self._mac_address,
-                ip_address=self._broadcast_address,
-                port=self._broadcast_port,
-            )
-        else:
-            wakeonlan.send_magic_packet(self._mac_address)
+        service_kwargs = {}
+        if self._broadcast_address is not None:
+            service_kwargs["ip_address"] = self._broadcast_address
+        if self._broadcast_port is not None:
+            service_kwargs["port"] = self._broadcast_port
+
+        _LOGGER.info(
+            "Send magic packet to mac %s (broadcast: %s, port: %s)",
+            self._mac_address,
+            self._broadcast_address,
+            self._broadcast_port,
+        )
+
+        wakeonlan.send_magic_packet(self._mac_address, **service_kwargs)
 
     def turn_off(self, **kwargs):
         """Turn the device off if an off action is present."""

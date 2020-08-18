@@ -26,6 +26,7 @@ from .test_common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_discovery_update_unchanged,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -257,6 +258,76 @@ async def test_setting_sensor_value_via_mqtt_message_and_template(hass, mqtt_moc
     async_fire_mqtt_message(hass, "test-topic", "")
     state = hass.states.get("binary_sensor.test")
     assert state.state == STATE_OFF
+
+
+async def test_setting_sensor_value_via_mqtt_message_and_template2(
+    hass, mqtt_mock, caplog
+):
+    """Test the setting of the value via MQTT."""
+    assert await async_setup_component(
+        hass,
+        binary_sensor.DOMAIN,
+        {
+            binary_sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+                "payload_on": "ON",
+                "payload_off": "OFF",
+                "value_template": "{{value | upper}}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_OFF
+
+    async_fire_mqtt_message(hass, "test-topic", "on")
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_ON
+
+    async_fire_mqtt_message(hass, "test-topic", "off")
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_OFF
+
+    async_fire_mqtt_message(hass, "test-topic", "illegal")
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_OFF
+    assert "template output: 'ILLEGAL'" in caplog.text
+
+
+async def test_setting_sensor_value_via_mqtt_message_empty_template(
+    hass, mqtt_mock, caplog
+):
+    """Test the setting of the value via MQTT."""
+    assert await async_setup_component(
+        hass,
+        binary_sensor.DOMAIN,
+        {
+            binary_sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+                "payload_on": "ON",
+                "payload_off": "OFF",
+                "value_template": '{%if value == "ABC"%}ON{%endif%}',
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_OFF
+
+    async_fire_mqtt_message(hass, "test-topic", "DEF")
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_OFF
+    assert "Empty template output" in caplog.text
+
+    async_fire_mqtt_message(hass, "test-topic", "ABC")
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_ON
 
 
 async def test_valid_device_class(hass, mqtt_mock):
@@ -521,6 +592,20 @@ async def test_discovery_update_binary_sensor(hass, mqtt_mock, caplog):
     await help_test_discovery_update(
         hass, mqtt_mock, caplog, binary_sensor.DOMAIN, data1, data2
     )
+
+
+async def test_discovery_update_unchanged_binary_sensor(hass, mqtt_mock, caplog):
+    """Test update of discovered binary_sensor."""
+    config1 = copy.deepcopy(DEFAULT_CONFIG[binary_sensor.DOMAIN])
+    config1["name"] = "Beer"
+
+    data1 = json.dumps(config1)
+    with patch(
+        "homeassistant.components.mqtt.binary_sensor.MqttBinarySensor.discovery_update"
+    ) as discovery_update:
+        await help_test_discovery_update_unchanged(
+            hass, mqtt_mock, caplog, binary_sensor.DOMAIN, data1, discovery_update
+        )
 
 
 async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(

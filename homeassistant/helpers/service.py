@@ -5,6 +5,7 @@ import logging
 from typing import (
     TYPE_CHECKING,
     Any,
+    Awaitable,
     Callable,
     Dict,
     Iterable,
@@ -486,7 +487,7 @@ async def _handle_entity_call(hass, entity, func, data, context):
 
     if asyncio.iscoroutine(result):
         _LOGGER.error(
-            "Service %s for %s incorrectly returns a coroutine object. Await result instead in service handler. Report bug to integration author.",
+            "Service %s for %s incorrectly returns a coroutine object. Await result instead in service handler. Report bug to integration author",
             func,
             entity.entity_id,
         )
@@ -499,7 +500,7 @@ def async_register_admin_service(
     hass: HomeAssistantType,
     domain: str,
     service: str,
-    service_func: Callable,
+    service_func: Callable[[ha.ServiceCall], Optional[Awaitable]],
     schema: vol.Schema = vol.Schema({}, extra=vol.PREVENT_EXTRA),
 ) -> None:
     """Register a service that requires admin access."""

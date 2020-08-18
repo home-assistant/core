@@ -38,6 +38,13 @@ async def test_hls_stream(hass, hass_client):
     playlist_response = await http_client.get(parsed_url.path)
     assert playlist_response.status == 200
 
+    # Fetch init
+    playlist = await playlist_response.text()
+    playlist_url = "/".join(parsed_url.path.split("/")[:-1])
+    init_url = playlist_url + "/init.mp4"
+    init_response = await http_client.get(init_url)
+    assert init_response.status == 200
+
     # Fetch segment
     playlist = await playlist_response.text()
     playlist_url = "/".join(parsed_url.path.split("/")[:-1])
@@ -99,15 +106,16 @@ async def test_stream_ended(hass):
     source = generate_h264_video()
     stream = preload_stream(hass, source)
     track = stream.add_provider("hls")
-    track.num_segments = 2
 
     # Request stream
     request_stream(hass, source)
 
     # Run it dead
-    segments = 0
-    while await track.recv() is not None:
-        segments += 1
+    while True:
+        segment = await track.recv()
+        if segment is None:
+            break
+        segments = segment.sequence
 
     assert segments > 1
     assert not track.get_segment()

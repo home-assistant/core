@@ -1,6 +1,8 @@
 """The tests for the demo platform."""
 import unittest
 
+import pytest
+
 from homeassistant.components import geo_location
 from homeassistant.components.demo.geo_location import (
     DEFAULT_UPDATE_INTERVAL,
@@ -18,6 +20,12 @@ from tests.common import (
 )
 
 CONFIG = {geo_location.DOMAIN: [{"platform": "demo"}]}
+
+
+@pytest.fixture(autouse=True)
+def mock_legacy_time(legacy_patchable_time):
+    """Make time patchable for all the tests."""
+    yield
 
 
 class TestDemoPlatform(unittest.TestCase):

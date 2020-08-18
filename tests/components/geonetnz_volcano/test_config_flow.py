@@ -11,6 +11,8 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM,
 )
 
+from tests.async_mock import patch
+
 
 async def test_duplicate_error(hass, config_entry):
     """Test that errors are shown when duplicates are added."""
@@ -48,7 +50,12 @@ async def test_step_import(hass):
     flow = config_flow.GeonetnzVolcanoFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_import(import_config=conf)
+    with patch(
+        "homeassistant.components.geonetnz_volcano.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.geonetnz_volcano.async_setup", return_value=True
+    ):
+        result = await flow.async_step_import(import_config=conf)
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "-41.2, 174.7"
     assert result["data"] == {
@@ -69,7 +76,12 @@ async def test_step_user(hass):
     flow = config_flow.GeonetnzVolcanoFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_user(user_input=conf)
+    with patch(
+        "homeassistant.components.geonetnz_volcano.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.geonetnz_volcano.async_setup", return_value=True
+    ):
+        result = await flow.async_step_user(user_input=conf)
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "-41.2, 174.7"
     assert result["data"] == {

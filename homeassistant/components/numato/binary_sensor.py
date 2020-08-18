@@ -4,7 +4,7 @@ import logging
 
 from numato_gpio import NumatoGpioError
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -63,7 +63,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(binary_sensors, True)
 
 
-class NumatoGpioBinarySensor(BinarySensorDevice):
+class NumatoGpioBinarySensor(BinarySensorEntity):
     """Represents a binary sensor (input) port of a Numato GPIO expander."""
 
     def __init__(self, name, device_id, port, invert_logic, api):

@@ -133,14 +133,14 @@ async def async_setup_platform(
     _LOGGER.warning(
         "Setting configuration for Cast via platform is deprecated. "
         "Configure via Cast integration instead."
-        "This option will become invalid in version 0.116."
+        "This option will become invalid in version 0.116"
     )
     await _async_setup_platform(hass, config, async_add_entities, discovery_info)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Cast from a config entry."""
-    config = hass.data[CAST_DOMAIN].get("media_player", {})
+    config = hass.data[CAST_DOMAIN].get("media_player") or {}
     if not isinstance(config, list):
         config = [config]
 
@@ -226,7 +226,6 @@ class CastDevice(MediaPlayerEntity):
         self._hass_cast_controller: Optional[HomeAssistantController] = None
 
         self._add_remove_handler = None
-        self._del_remove_handler = None
         self._cast_view_remove_handler = None
 
     async def async_added_to_hass(self):
@@ -253,9 +252,6 @@ class CastDevice(MediaPlayerEntity):
         if self._add_remove_handler:
             self._add_remove_handler()
             self._add_remove_handler = None
-        if self._del_remove_handler:
-            self._del_remove_handler()
-            self._del_remove_handler = None
         if self._cast_view_remove_handler:
             self._cast_view_remove_handler()
             self._cast_view_remove_handler = None
@@ -283,6 +279,8 @@ class CastDevice(MediaPlayerEntity):
                 cast_info.uuid,
                 cast_info.model_name,
                 cast_info.friendly_name,
+                None,
+                None,
             ),
             ChromeCastZeroconf.get_zeroconf(),
         )
@@ -306,7 +304,7 @@ class CastDevice(MediaPlayerEntity):
             # Can't disconnect if not connected.
             return
         _LOGGER.debug(
-            "[%s %s] Disconnecting from chromecast socket.",
+            "[%s %s] Disconnecting from chromecast socket",
             self.entity_id,
             self._cast_info.friendly_name,
         )
@@ -479,7 +477,7 @@ class CastDevice(MediaPlayerEntity):
                 self._chromecast.start_app(app_id)
                 if app_data:
                     _LOGGER.warning(
-                        "Extra keys %s were ignored. Please use app_name to cast media.",
+                        "Extra keys %s were ignored. Please use app_name to cast media",
                         app_data.keys(),
                     )
                 return
@@ -604,7 +602,9 @@ class CastDevice(MediaPlayerEntity):
 
         images = media_status.images
 
-        return images[0].url if images and images[0].url else None
+        return (
+            images[0].url.replace("http://", "//") if images and images[0].url else None
+        )
 
     @property
     def media_image_remotely_accessible(self) -> bool:

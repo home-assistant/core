@@ -31,12 +31,11 @@ async def test_record_stream(hass, hass_client):
         recorder = stream.add_provider("recorder")
         stream.start()
 
-        segments = 0
         while True:
             segment = await recorder.recv()
             if not segment:
                 break
-            segments += 1
+            segments = segment.sequence
 
         stream.stop()
 
@@ -76,7 +75,7 @@ async def test_recorder_save():
     output.name = "test.mp4"
 
     # Run
-    recorder_save_worker(output, [Segment(1, source, 4)])
+    recorder_save_worker(output, [Segment(1, source, 4, (360000, 176400))])
 
     # Assert
     assert output.getvalue()

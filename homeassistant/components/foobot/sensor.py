@@ -39,11 +39,7 @@ SENSOR_TYPES = {
     "pm": [ATTR_PM2_5, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, "mdi:cloud"],
     "tmp": [ATTR_TEMPERATURE, TEMP_CELSIUS, "mdi:thermometer"],
     "hum": [ATTR_HUMIDITY, UNIT_PERCENTAGE, "mdi:water-percent"],
-    "co2": [
-        ATTR_CARBON_DIOXIDE,
-        CONCENTRATION_PARTS_PER_MILLION,
-        "mdi:periodic-table-co2",
-    ],
+    "co2": [ATTR_CARBON_DIOXIDE, CONCENTRATION_PARTS_PER_MILLION, "mdi:molecule-co2"],
     "voc": [
         ATTR_VOLATILE_ORGANIC_COMPOUNDS,
         CONCENTRATION_PARTS_PER_BILLION,
@@ -87,10 +83,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         FoobotClient.TooManyRequests,
         FoobotClient.InternalError,
     ):
-        _LOGGER.exception("Failed to connect to foobot servers.")
+        _LOGGER.exception("Failed to connect to foobot servers")
         raise PlatformNotReady
     except FoobotClient.ClientError:
-        _LOGGER.error("Failed to fetch data from foobot servers.")
+        _LOGGER.error("Failed to fetch data from foobot servers")
         return
     async_add_entities(dev, True)
 

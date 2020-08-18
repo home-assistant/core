@@ -27,6 +27,7 @@ def rs(hass):
         "command_stop",
         "command_state",
         None,
+        15,
     )
 
 
@@ -45,7 +46,7 @@ def test_query_state_value(rs):
         assert "foo bar" == result
         assert mock_run.call_count == 1
         assert mock_run.call_args == mock.call(
-            "runme", shell=True,  # nosec # shell by design
+            "runme", shell=True, timeout=15  # nosec # shell by design
         )
 
 

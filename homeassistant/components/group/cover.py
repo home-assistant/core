@@ -41,7 +41,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import State, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs
@@ -95,12 +95,14 @@ class CoverGroup(CoverEntity):
         }
 
     @callback
+    def _update_supported_features_event(self, event):
+        self.update_supported_features(
+            event.data.get("entity_id"), event.data.get("new_state")
+        )
+
+    @callback
     def update_supported_features(
-        self,
-        entity_id: str,
-        old_state: Optional[State],
-        new_state: Optional[State],
-        update_state: bool = True,
+        self, entity_id: str, new_state: Optional[State], update_state: bool = True,
     ) -> None:
         """Update dictionaries with supported features."""
         if not new_state:
@@ -147,11 +149,9 @@ class CoverGroup(CoverEntity):
         """Register listeners."""
         for entity_id in self._entities:
             new_state = self.hass.states.get(entity_id)
-            self.update_supported_features(
-                entity_id, None, new_state, update_state=False
-            )
-        async_track_state_change(
-            self.hass, self._entities, self.update_supported_features
+            self.update_supported_features(entity_id, new_state, update_state=False)
+        async_track_state_change_event(
+            self.hass, self._entities, self._update_supported_features_event
         )
         await self.async_update()
 

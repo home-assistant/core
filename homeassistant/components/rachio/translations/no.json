@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API-n\u00f8kkelen for Rachio-kontoen."
+                    "api_key": "API n\u00f8kkel"
                 },
                 "description": "Du trenger API-n\u00f8kkelen fra https://app.rach.io/. Velg 'Kontoinnstillinger' og klikk deretter p\u00e5 'F\u00e5 API n\u00f8kkel'.",
                 "title": "Koble til Rachio-enheten din"

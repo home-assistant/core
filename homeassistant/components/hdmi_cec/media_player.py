@@ -43,7 +43,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 
-from . import ATTR_NEW, CecDevice
+from . import ATTR_NEW, CecEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,16 +57,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         entities = []
         for device in discovery_info[ATTR_NEW]:
             hdmi_device = hass.data.get(device)
-            entities.append(CecPlayerDevice(hdmi_device, hdmi_device.logical_address))
+            entities.append(CecPlayerEntity(hdmi_device, hdmi_device.logical_address))
         add_entities(entities, True)
 
 
-class CecPlayerDevice(CecDevice, MediaPlayerEntity):
+class CecPlayerEntity(CecEntity, MediaPlayerEntity):
     """Representation of a HDMI device as a Media player."""
 
     def __init__(self, device, logical) -> None:
         """Initialize the HDMI device."""
-        CecDevice.__init__(self, device, logical)
+        CecEntity.__init__(self, device, logical)
         self.entity_id = f"{DOMAIN}.hdmi_{hex(self._logical_address)[2:]}"
 
     def send_keypress(self, key):

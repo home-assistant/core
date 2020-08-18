@@ -512,7 +512,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         if other_player_id:
             await self._player.async_sync(other_player_id)
         else:
-            _LOGGER.info("Could not find player_id for %s. Not syncing.", other_player)
+            _LOGGER.info("Could not find player_id for %s. Not syncing", other_player)
 
     async def async_unsync(self):
         """Unsync this Squeezebox player."""

@@ -1,33 +1,7 @@
 {
     "config": {
         "abort": {
-            "client_id": "Client ID fr\u00e5n konfiguration \u00e4r ogiltig.",
-            "client_secret": "Client secret fr\u00e5n konfigurationen \u00e4r ogiltig.",
-            "no_agreements": "Det h\u00e4r kontot har inga Toon-sk\u00e4rmar.",
-            "no_app": "Du m\u00e5ste konfigurera Toon innan du kan autentisera med den. [L\u00e4s instruktioner] (https://www.home-assistant.io/components/toon/).",
-            "unknown_auth_fail": "Ov\u00e4ntat fel uppstod under autentisering."
-        },
-        "error": {
-            "credentials": "De angivna uppgifterna \u00e4r ogiltiga.",
-            "display_exists": "Den valda sk\u00e4rmen \u00e4r redan konfigurerad"
-        },
-        "step": {
-            "authenticate": {
-                "data": {
-                    "password": "L\u00f6senord",
-                    "tenant": "Hyresg\u00e4st",
-                    "username": "Anv\u00e4ndarnamn"
-                },
-                "description": "Autentisera med ditt Eneco Toon-konto (inte developer-kontot).",
-                "title": "L\u00e4nk ditt Toon-konto"
-            },
-            "display": {
-                "data": {
-                    "display": "V\u00e4lj sk\u00e4rm"
-                },
-                "description": "V\u00e4lj Toon-sk\u00e4rm att ansluta till.",
-                "title": "V\u00e4lj sk\u00e4rm"
-            }
+            "no_agreements": "Det h\u00e4r kontot har inga Toon-sk\u00e4rmar."
         }
     }
 }

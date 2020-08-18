@@ -411,12 +411,14 @@ async def test_api(hass, aiohttp_client, mock_panel):
             "id": "112233445566",
             "model": "Konnected Pro",
             "access_token": "abcdefgh",
+            "api_host": "http://192.168.86.32:8123",
             "default_options": config_flow.OPTIONS_SCHEMA({config_flow.CONF_IO: {}}),
         }
     )
 
     device_options = config_flow.OPTIONS_SCHEMA(
         {
+            "api_host": "http://192.168.86.32:8123",
             "io": {
                 "1": "Binary Sensor",
                 "2": "Binary Sensor",

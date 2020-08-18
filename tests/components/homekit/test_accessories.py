@@ -207,6 +207,7 @@ async def test_battery_service(hass, hk_driver, caplog):
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
+
     assert acc._char_battery.value == 15
     assert acc._char_low_battery.value == 1
     assert acc._char_charging.value == 2
@@ -218,6 +219,7 @@ async def test_battery_service(hass, hk_driver, caplog):
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
+
     assert acc._char_battery.value == 15
     assert acc._char_low_battery.value == 1
     assert acc._char_charging.value == 2
@@ -341,7 +343,12 @@ async def test_linked_battery_sensor(hass, hk_driver, caplog):
 
     hass.states.async_set(linked_battery, 100, {ATTR_BATTERY_CHARGING: False})
     await hass.async_block_till_done()
-    state = hass.states.get(entity_id)
+    assert acc._char_battery.value == 100
+    assert acc._char_low_battery.value == 0
+    assert acc._char_charging.value == 0
+
+    hass.states.async_remove(linked_battery)
+    await hass.async_block_till_done()
     assert acc._char_battery.value == 100
     assert acc._char_low_battery.value == 0
     assert acc._char_charging.value == 0
@@ -396,6 +403,14 @@ async def test_linked_battery_charging_sensor(hass, hk_driver, caplog):
         mock_async_update_state.assert_called_with(state)
     assert acc._char_charging.value == 1
 
+    with patch(
+        "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
+    ) as mock_async_update_state:
+        hass.states.async_remove(linked_battery_charging_sensor)
+        await acc.run_handler()
+        await hass.async_block_till_done()
+    assert acc._char_charging.value == 1
+
 
 async def test_linked_battery_sensor_and_linked_battery_charging_sensor(
     hass, hk_driver, caplog
@@ -439,6 +454,12 @@ async def test_linked_battery_sensor_and_linked_battery_charging_sensor(
     assert acc._char_low_battery.value == 0
     assert acc._char_charging.value == 0
 
+    hass.states.async_remove(linked_battery_charging_sensor)
+    await hass.async_block_till_done()
+    assert acc._char_battery.value == 50
+    assert acc._char_low_battery.value == 0
+    assert acc._char_charging.value == 0
+
 
 async def test_missing_linked_battery_charging_sensor(hass, hk_driver, caplog):
     """Test battery service with linked_battery_charging_sensor that is mapping to a missing entity."""
@@ -456,6 +477,24 @@ async def test_missing_linked_battery_charging_sensor(hass, hk_driver, caplog):
         {CONF_LINKED_BATTERY_CHARGING_SENSOR: linked_battery_charging_sensor},
     )
     assert acc.linked_battery_charging_sensor is None
+
+    # Make sure we don't throw if the linked_battery_charging_sensor
+    # is removed
+    hass.states.async_remove(linked_battery_charging_sensor)
+    with patch(
+        "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
+    ):
+        await acc.run_handler()
+        await hass.async_block_till_done()
+
+    # Make sure we don't throw if the entity_id
+    # is removed
+    hass.states.async_remove(entity_id)
+    with patch(
+        "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
+    ):
+        await acc.run_handler()
+        await hass.async_block_till_done()
 
 
 async def test_missing_linked_battery_sensor(hass, hk_driver, caplog):
@@ -488,6 +527,18 @@ async def test_missing_linked_battery_sensor(hass, hk_driver, caplog):
     assert acc._char_low_battery is None
     assert acc._char_charging is None
 
+    with patch(
+        "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
+    ) as mock_async_update_state:
+        hass.states.async_remove(entity_id)
+        await acc.run_handler()
+        await hass.async_block_till_done()
+
+    assert not acc.linked_battery_sensor
+    assert acc._char_battery is None
+    assert acc._char_low_battery is None
+    assert acc._char_charging is None
+
 
 async def test_battery_appears_after_startup(hass, hk_driver, caplog):
     """Test battery level appears after homekit is started."""
@@ -511,6 +562,13 @@ async def test_battery_appears_after_startup(hass, hk_driver, caplog):
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ):
         hass.states.async_set(entity_id, None, {ATTR_BATTERY_LEVEL: 15})
+        await hass.async_block_till_done()
+    assert acc._char_battery is None
+
+    with patch(
+        "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
+    ):
+        hass.states.async_remove(entity_id)
         await hass.async_block_till_done()
     assert acc._char_battery is None
 

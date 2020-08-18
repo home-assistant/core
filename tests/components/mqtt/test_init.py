@@ -755,7 +755,7 @@ async def test_setup_without_tls_config_uses_tlsv1_under_python36(hass):
         }
     ],
 )
-async def test_birth_message(hass, mqtt_client_mock, mqtt_mock):
+async def test_custom_birth_message(hass, mqtt_client_mock, mqtt_mock):
     """Test sending birth message."""
     calls = []
     mqtt_client_mock.publish.side_effect = lambda *args: calls.append(args)
@@ -764,6 +764,64 @@ async def test_birth_message(hass, mqtt_client_mock, mqtt_mock):
     assert calls[-1] == ("birth", "birth", 0, False)
 
 
+async def test_default_birth_message(hass, mqtt_client_mock, mqtt_mock):
+    """Test sending birth message."""
+    calls = []
+    mqtt_client_mock.publish.side_effect = lambda *args: calls.append(args)
+    mqtt_mock._mqtt_on_connect(None, None, 0, 0)
+    await hass.async_block_till_done()
+    assert calls[-1] == ("homeassistant/status", "online", 0, False)
+
+
+@pytest.mark.parametrize(
+    "mqtt_config", [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}],
+)
+async def test_no_birth_message(hass, mqtt_client_mock, mqtt_mock):
+    """Test sending birth message."""
+    calls = []
+    mqtt_client_mock.publish.side_effect = lambda *args: calls.append(args)
+    mqtt_mock._mqtt_on_connect(None, None, 0, 0)
+    await hass.async_block_till_done()
+    assert not calls
+
+
+@pytest.mark.parametrize(
+    "mqtt_config",
+    [
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            mqtt.CONF_WILL_MESSAGE: {
+                mqtt.ATTR_TOPIC: "death",
+                mqtt.ATTR_PAYLOAD: "death",
+            },
+        }
+    ],
+)
+async def test_custom_will_message(hass, mqtt_client_mock, mqtt_mock):
+    """Test will message."""
+    mqtt_client_mock.will_set.assert_called_with(
+        topic="death", payload="death", qos=0, retain=False
+    )
+
+
+async def test_default_will_message(hass, mqtt_client_mock, mqtt_mock):
+    """Test will message."""
+    mqtt_client_mock.will_set.assert_called_with(
+        topic="homeassistant/status", payload="offline", qos=0, retain=False
+    )
+
+
+@pytest.mark.parametrize(
+    "mqtt_config", [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_WILL_MESSAGE: {}}],
+)
+async def test_no_will_message(hass, mqtt_client_mock, mqtt_mock):
+    """Test will message."""
+    mqtt_client_mock.will_set.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "mqtt_config", [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}],
+)
 async def test_mqtt_subscribes_topics_on_connect(hass, mqtt_client_mock, mqtt_mock):
     """Test subscription to topic on connect."""
     await mqtt.async_subscribe(hass, "topic/test", None)

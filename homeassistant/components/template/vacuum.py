@@ -33,6 +33,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
     MATCH_ALL,
@@ -84,6 +85,7 @@ VACUUM_SCHEMA = vol.Schema(
         vol.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
         vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -114,6 +116,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         set_fan_speed_action = device_config.get(SERVICE_SET_FAN_SPEED)
 
         fan_speed_list = device_config[CONF_FAN_SPEED_LIST]
+        unique_id = device_config.get(CONF_UNIQUE_ID)
 
         templates = {
             CONF_VALUE_TEMPLATE: state_template,
@@ -146,6 +149,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 fan_speed_list,
                 entity_ids,
                 attribute_templates,
+                unique_id,
             )
         )
 
@@ -174,6 +178,7 @@ class TemplateVacuum(StateVacuumEntity):
         fan_speed_list,
         entity_ids,
         attribute_templates,
+        unique_id,
     ):
         """Initialize the vacuum."""
         self.hass = hass
@@ -190,36 +195,44 @@ class TemplateVacuum(StateVacuumEntity):
         self._attribute_templates = attribute_templates
         self._attributes = {}
 
-        self._start_script = Script(hass, start_action)
+        domain = __name__.split(".")[-2]
+
+        self._start_script = Script(hass, start_action, friendly_name, domain)
 
         self._pause_script = None
         if pause_action:
-            self._pause_script = Script(hass, pause_action)
+            self._pause_script = Script(hass, pause_action, friendly_name, domain)
             self._supported_features |= SUPPORT_PAUSE
 
         self._stop_script = None
         if stop_action:
-            self._stop_script = Script(hass, stop_action)
+            self._stop_script = Script(hass, stop_action, friendly_name, domain)
             self._supported_features |= SUPPORT_STOP
 
         self._return_to_base_script = None
         if return_to_base_action:
-            self._return_to_base_script = Script(hass, return_to_base_action)
+            self._return_to_base_script = Script(
+                hass, return_to_base_action, friendly_name, domain
+            )
             self._supported_features |= SUPPORT_RETURN_HOME
 
         self._clean_spot_script = None
         if clean_spot_action:
-            self._clean_spot_script = Script(hass, clean_spot_action)
+            self._clean_spot_script = Script(
+                hass, clean_spot_action, friendly_name, domain
+            )
             self._supported_features |= SUPPORT_CLEAN_SPOT
 
         self._locate_script = None
         if locate_action:
-            self._locate_script = Script(hass, locate_action)
+            self._locate_script = Script(hass, locate_action, friendly_name, domain)
             self._supported_features |= SUPPORT_LOCATE
 
         self._set_fan_speed_script = None
         if set_fan_speed_action:
-            self._set_fan_speed_script = Script(hass, set_fan_speed_action)
+            self._set_fan_speed_script = Script(
+                hass, set_fan_speed_action, friendly_name, domain
+            )
             self._supported_features |= SUPPORT_FAN_SPEED
 
         self._state = None
@@ -233,6 +246,8 @@ class TemplateVacuum(StateVacuumEntity):
             self._supported_features |= SUPPORT_BATTERY
 
         self._entities = entity_ids
+        self._unique_id = unique_id
+
         # List of valid fan speeds
         self._fan_speed_list = fan_speed_list
 
@@ -240,6 +255,11 @@ class TemplateVacuum(StateVacuumEntity):
     def name(self):
         """Return the display name of this vacuum."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id of this vacuum."""
+        return self._unique_id
 
     @property
     def supported_features(self) -> int:
@@ -332,7 +352,7 @@ class TemplateVacuum(StateVacuumEntity):
             )
         else:
             _LOGGER.error(
-                "Received invalid fan speed: %s. Expected: %s.",
+                "Received invalid fan speed: %s. Expected: %s",
                 fan_speed,
                 self._fan_speed_list,
             )
@@ -341,7 +361,7 @@ class TemplateVacuum(StateVacuumEntity):
         """Register callbacks."""
 
         @callback
-        def template_vacuum_state_listener(entity, old_state, new_state):
+        def template_vacuum_state_listener(event):
             """Handle target device state changes."""
             self.async_schedule_update_ha_state(True)
 
@@ -350,7 +370,7 @@ class TemplateVacuum(StateVacuumEntity):
             """Update template on startup."""
             if self._entities != MATCH_ALL:
                 # Track state changes only for valid templates
-                self.hass.helpers.event.async_track_state_change(
+                self.hass.helpers.event.async_track_state_change_event(
                     self._entities, template_vacuum_state_listener
                 )
 
@@ -378,7 +398,7 @@ class TemplateVacuum(StateVacuumEntity):
                 self._state = None
             else:
                 _LOGGER.error(
-                    "Received invalid vacuum state: %s. Expected: %s.",
+                    "Received invalid vacuum state: %s. Expected: %s",
                     state,
                     ", ".join(_VALID_STATES),
                 )
@@ -417,7 +437,7 @@ class TemplateVacuum(StateVacuumEntity):
                 self._fan_speed = None
             else:
                 _LOGGER.error(
-                    "Received invalid fan speed: %s. Expected: %s.",
+                    "Received invalid fan speed: %s. Expected: %s",
                     fan_speed,
                     self._fan_speed_list,
                 )

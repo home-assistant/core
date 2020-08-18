@@ -171,7 +171,7 @@ async def test_extract_from_service_available_device(hass):
     )
 
 
-async def test_platform_not_ready(hass):
+async def test_platform_not_ready(hass, legacy_patchable_time):
     """Test that we retry when platform not ready."""
     platform1_setup = Mock(side_effect=[PlatformNotReady, PlatformNotReady, None])
     mock_integration(hass, MockModule("mod1"))

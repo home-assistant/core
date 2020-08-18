@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "Token di accesso aggiornato correttamente"
+        },
+        "error": {
+            "authorization_error": "Errore di autorizzazione. Verificare di avere accesso al progetto e disporre delle credenziali corrette.",
+            "connection_error": "Impossibile connettersi ad Azure DevOps.",
+            "project_error": "Non \u00e8 stato possibile ottenere informazioni sul progetto."
+        },
+        "flow_title": "Azure DevOps: {project_url}",
+        "step": {
+            "reauth": {
+                "data": {
+                    "personal_access_token": "Token di Accesso Personale (PAT)"
+                },
+                "description": "Autenticazione non riuscita per {project_url}. Si prega di inserire le proprie credenziali attuali.",
+                "title": "Riautenticazione"
+            },
+            "user": {
+                "data": {
+                    "organization": "Organizzazione",
+                    "personal_access_token": "Token di Accesso Personale (PAT)",
+                    "project": "Progetto"
+                },
+                "description": "Configurare un'istanza di DevOps di Azure per accedere al progetto. Un Token di Accesso Personale (PAT) \u00e8 richiesto solo per un progetto privato.",
+                "title": "Aggiungere un progetto Azure DevOps"
+            }
+        }
+    },
+    "title": "Azure DevOps"
+}

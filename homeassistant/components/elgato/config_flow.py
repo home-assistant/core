@@ -55,21 +55,21 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_abort(reason="connection_error")
 
-        # Hostname is format: my-ke.local.
-        host = user_input["hostname"].rstrip(".")
         try:
-            info = await self._get_elgato_info(host, user_input[CONF_PORT])
+            info = await self._get_elgato_info(
+                user_input[CONF_HOST], user_input[CONF_PORT]
+            )
         except ElgatoError:
             return self.async_abort(reason="connection_error")
 
         # Check if already configured
         await self.async_set_unique_id(info.serial_number)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: user_input[CONF_HOST]})
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
             {
-                CONF_HOST: host,
+                CONF_HOST: user_input[CONF_HOST],
                 CONF_PORT: user_input[CONF_PORT],
                 CONF_SERIAL_NUMBER: info.serial_number,
                 "title_placeholders": {"serial_number": info.serial_number},

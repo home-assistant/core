@@ -1,4 +1,4 @@
-"""Proides the constants needed for component."""
+"""Provides the constants needed for component."""
 
 ATTR_APP_ID = "app_id"
 ATTR_APP_NAME = "app_name"

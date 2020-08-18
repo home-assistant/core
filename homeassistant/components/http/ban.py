@@ -16,8 +16,6 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.yaml import dump
 
-from .const import KEY_REAL_IP
-
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,7 +59,7 @@ async def ban_middleware(request, handler):
         return await handler(request)
 
     # Verify if IP is not banned
-    ip_address_ = request[KEY_REAL_IP]
+    ip_address_ = ip_address(request.remote)
     is_banned = any(
         ip_ban.ip_address == ip_address_ for ip_ban in request.app[KEY_BANNED_IPS]
     )
@@ -95,7 +93,7 @@ async def process_wrong_login(request):
     Increase failed login attempts counter for remote IP address.
     Add ip ban entry if failed login attempts exceeds threshold.
     """
-    remote_addr = request[KEY_REAL_IP]
+    remote_addr = ip_address(request.remote)
 
     msg = f"Login attempt or request with invalid authentication from {remote_addr}"
     _LOGGER.warning(msg)
@@ -144,7 +142,7 @@ async def process_success_login(request):
     No release IP address from banned list function, it can only be done by
     manual modify ip bans config file.
     """
-    remote_addr = request[KEY_REAL_IP]
+    remote_addr = ip_address(request.remote)
 
     # Check if ban middleware is loaded
     if KEY_BANNED_IPS not in request.app or request.app[KEY_LOGIN_THRESHOLD] < 1:
