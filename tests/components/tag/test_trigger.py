@@ -3,10 +3,30 @@
 import pytest
 
 import homeassistant.components.automation as automation
-from homeassistant.components.tag.const import DOMAIN, EVENT_TAG_SCANNED, TAG_ID
+from homeassistant.components.tag import async_scan_tag
+from homeassistant.components.tag.const import DOMAIN, TAG_ID
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
+
+
+@pytest.fixture
+def tag_setup(hass, hass_storage):
+    """Tag setup."""
+
+    async def _storage(items=None):
+        if items is None:
+            hass_storage[DOMAIN] = {
+                "key": DOMAIN,
+                "version": 1,
+                "data": {"items": [{"id": "test tag"}]},
+            }
+        else:
+            hass_storage[DOMAIN] = items
+        config = {DOMAIN: {}}
+        return await async_setup_component(hass, DOMAIN, config)
+
+    return _storage
 
 
 @pytest.fixture
@@ -15,9 +35,9 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_triggers(hass, calls):
+async def test_triggers(hass, tag_setup, calls):
     """Test tag triggers."""
-
+    assert await tag_setup()
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -36,7 +56,7 @@ async def test_triggers(hass, calls):
 
     await hass.async_block_till_done()
 
-    hass.bus.async_fire(EVENT_TAG_SCANNED, {TAG_ID: "abc123"})
+    await async_scan_tag(hass, "abc123", None)
     await hass.async_block_till_done()
 
     assert len(calls) == 1
