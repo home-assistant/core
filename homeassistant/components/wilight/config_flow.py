@@ -25,7 +25,6 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
 
-    # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
     def __init__(self):
         """Initialize the WiLight flow."""
         self._host = None
@@ -92,6 +91,7 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self._device_id)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {"name": self._device_id}
         return await self.async_step_confirm()
 
