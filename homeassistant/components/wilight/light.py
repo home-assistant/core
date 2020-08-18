@@ -94,9 +94,7 @@ class WiLightLightDimmer(WiLightDevice, LightEntity):
     @property
     def is_on(self):
         """Return true if device is on."""
-        if "on" in self._status:
-            self._on = self._status["on"]
-        return self._on
+        return self._status.get("on")
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on,set brightness if needed."""
