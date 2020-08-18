@@ -17,6 +17,8 @@ from homeassistant.components.smart_meter_texas.const import DATA_COORDINATOR, D
 
 from tests.common import MockConfigEntry, load_fixture
 
+TEST_ENTITY_ID = "sensor.electric_meter_123456789"
+
 
 def load_smt_fixture(name):
     """Return a dict of the json fixture."""
@@ -39,7 +41,9 @@ async def refresh_data(hass, config_entry, aioclient_mock):
     await hass.async_block_till_done()
 
 
-def mock_connection(aioclient_mock, auth_fail=False, auth_timeout=False):
+def mock_connection(
+    aioclient_mock, auth_fail=False, auth_timeout=False, bad_reading=False
+):
     """Mock all calls to the API."""
     aioclient_mock.get(BASE_URL)
 
@@ -61,10 +65,15 @@ def mock_connection(aioclient_mock, auth_fail=False, auth_timeout=False):
         f"{BASE_ENDPOINT}{METER_ENDPOINT}", json=load_smt_fixture("meter"),
     )
     aioclient_mock.post(f"{BASE_ENDPOINT}{OD_READ_ENDPOINT}", json={"data": None})
-    aioclient_mock.post(
-        f"{BASE_ENDPOINT}{LATEST_OD_READ_ENDPOINT}",
-        json=load_smt_fixture("latestodrread"),
-    )
+    if bad_reading:
+        aioclient_mock.post(
+            f"{BASE_ENDPOINT}{LATEST_OD_READ_ENDPOINT}", json={},
+        )
+    else:
+        aioclient_mock.post(
+            f"{BASE_ENDPOINT}{LATEST_OD_READ_ENDPOINT}",
+            json=load_smt_fixture("latestodrread"),
+        )
 
 
 @pytest.fixture(name="config_entry")
