@@ -3,6 +3,7 @@ from collections import defaultdict
 from datetime import datetime
 from ipaddress import ip_address
 import logging
+from socket import gethostbyaddr, herror
 from typing import List, Optional
 
 from aiohttp.web import middleware
@@ -93,12 +94,25 @@ async def process_wrong_login(request):
     Increase failed login attempts counter for remote IP address.
     Add ip ban entry if failed login attempts exceeds threshold.
     """
-    remote_addr = ip_address(request.remote)
+    hass = request.app["hass"]
 
-    msg = f"Login attempt or request with invalid authentication from {remote_addr}"
+    remote_addr = ip_address(request.remote)
+    remote_host = request.remote
+    try:
+        remote_host, _, _ = await hass.async_add_executor_job(
+            gethostbyaddr, request.remote
+        )
+    except herror:
+        pass
+
+    msg = f"Login attempt or request with invalid authentication from {remote_host} ({remote_addr})"
+
+    user_agent = request.headers.get("user-agent")
+    if user_agent:
+        msg = f"{msg} ({user_agent})"
+
     _LOGGER.warning(msg)
 
-    hass = request.app["hass"]
     hass.components.persistent_notification.async_create(
         msg, "Login attempt failed", NOTIFICATION_ID_LOGIN
     )
