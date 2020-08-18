@@ -191,7 +191,7 @@ class PingData:
                 del pinger
 
             return False
-        except (AttributeError):
+        except AttributeError:
             return False
 
     async def async_update(self) -> None:
