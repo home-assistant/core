@@ -130,13 +130,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BroadlinkSwitch(SwitchEntity, RestoreEntity, ABC):
     """Representation of a Broadlink switch."""
 
-    def __init__(self, device, command_on, command_off, device_class):
+    def __init__(self, device, command_on, command_off):
         """Initialize the switch."""
         self._device = device
         self._command_on = command_on
         self._command_off = command_off
-        self._device_class = device_class
         self._coordinator = device.update_manager.coordinator
+        self._device_class = None
         self._state = None
 
     @property
@@ -219,10 +219,7 @@ class BroadlinkRMSwitch(BroadlinkSwitch):
     def __init__(self, device, config):
         """Initialize the switch."""
         super().__init__(
-            device,
-            config.get(CONF_COMMAND_ON),
-            config.get(CONF_COMMAND_OFF),
-            DEVICE_CLASS_SWITCH,
+            device, config.get(CONF_COMMAND_ON), config.get(CONF_COMMAND_OFF)
         )
         self._name = config[CONF_NAME]
 
@@ -249,7 +246,8 @@ class BroadlinkSP1Switch(BroadlinkSwitch):
 
     def __init__(self, device):
         """Initialize the switch."""
-        super().__init__(device, 1, 0, DEVICE_CLASS_OUTLET)
+        super().__init__(device, 1, 0)
+        self._device_class = DEVICE_CLASS_OUTLET
 
     @property
     def unique_id(self):
@@ -301,9 +299,10 @@ class BroadlinkMP1Slot(BroadlinkSwitch):
 
     def __init__(self, device, slot):
         """Initialize the switch."""
-        super().__init__(device, 1, 0, DEVICE_CLASS_OUTLET)
+        super().__init__(device, 1, 0)
         self._slot = slot
         self._state = self._coordinator.data[f"s{slot}"]
+        self._device_class = DEVICE_CLASS_OUTLET
 
     @property
     def unique_id(self):
