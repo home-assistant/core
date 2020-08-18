@@ -6,7 +6,7 @@ import secrets
 import shutil
 import typing
 
-from PIL import Image
+from PIL import Image, ImageOps
 from aiohttp import hdrs, web
 from aiohttp.web_request import FileField
 import voluptuous as vol
@@ -24,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 VALID_SIZES = {256, 512}
+MAX_SIZE = 1024 * 1024 * 10
 
 CREATE_FIELDS = {
     vol.Required("file"): FileField,
@@ -125,7 +126,7 @@ class ImageUploadView(HomeAssistantView):
     async def post(self, request):
         """Handle upload."""
         # Increase max payload
-        request._client_max_size = 1024 * 1024 * 1  # pylint: disable=protected-access
+        request._client_max_size = MAX_SIZE  # pylint: disable=protected-access
 
         data = await request.post()
         item = await request.app["hass"].data[DOMAIN].async_create_item(data)
@@ -187,6 +188,6 @@ class ImageServeView(HomeAssistantView):
 
 def _generate_thumbnail(original_path, content_type, target_path, target_size):
     """Generate a size."""
-    image = Image.open(original_path)
+    image = ImageOps.exif_transpose(Image.open(original_path))
     image.thumbnail(target_size)
     image.save(target_path, format=content_type.split("/", 1)[1])
