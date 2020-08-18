@@ -55,6 +55,7 @@ async def test_if_fires_using_at(hass, calls):
                 }
             },
         )
+        await hass.async_block_till_done()
 
     now = dt_util.utcnow()
 
@@ -114,6 +115,7 @@ async def test_if_fires_using_at_input_datetime(hass, calls, has_date, has_time)
                 }
             },
         )
+        await hass.async_block_till_done()
 
     async_fire_time_changed(hass, trigger_dt)
     await hass.async_block_till_done()
@@ -170,6 +172,7 @@ async def test_if_fires_using_multiple_at(hass, calls):
                 }
             },
         )
+        await hass.async_block_till_done()
 
     now = dt_util.utcnow()
 
@@ -219,6 +222,7 @@ async def test_if_not_fires_using_wrong_at(hass, calls):
                     }
                 },
             )
+            await hass.async_block_till_done()
 
     async_fire_time_changed(
         hass, now.replace(year=now.year + 1, hour=1, minute=0, second=5)
@@ -378,6 +382,7 @@ async def test_untrack_time_change(hass):
                 }
             },
         )
+        await hass.async_block_till_done()
 
     await hass.services.async_call(
         automation.DOMAIN,
