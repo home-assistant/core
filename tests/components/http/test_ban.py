@@ -134,7 +134,7 @@ async def test_ban_middleware_loaded_by_default(hass):
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_ip_bans_file_creation(hass, aiohttp_client, caplog):
+async def test_ip_bans_file_creation(hass, aiohttp_client):
     """Testing if banned IP file created."""
     notification_calls = async_mock_service(hass, "persistent_notification", "create")
 
