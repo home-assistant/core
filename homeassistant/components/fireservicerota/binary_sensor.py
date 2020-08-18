@@ -16,7 +16,7 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up FireServiceRota binary sensor based on a config entry."""
-    data = hass.data[DOMAIN]
+    data = hass.data[DOMAIN][entry.entry_id]
     unique_id = entry.unique_id
 
     entities = []
@@ -163,4 +163,4 @@ class ResponseBinarySensor(BinarySensorEntity):
         except (KeyError, TypeError) as err:
             _LOGGER.debug("Error while updating %s device state: %s", self._name, err)
 
-        _LOGGER.debug("Entity %s state changed to: %s", self._name, self._state)
+        _LOGGER.debug("Entity '%s' state set to: %s", self._name, self._state)

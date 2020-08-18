@@ -11,6 +11,10 @@ from .const import DOMAIN, URL_LIST  # pylint: disable=unused-import
 class FireServiceRotaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a FireServiceRota config flow."""
 
+    VERSION = 1
+    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+    DOMAIN = DOMAIN
+
     def __init__(self):
         """Initialize the config flow."""
         self.data_schema = vol.Schema(

@@ -1,16 +1,12 @@
 """Sensor platform for FireServiceRota integration."""
 import logging
-import threading
 from typing import Any, Dict
 
-from pyfireservicerota import FireServiceRotaIncidents
+# from pyfireservicerota import FireServiceRotaIncidents
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_TOKEN, CONF_URL
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import (async_dispatcher_connect)
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -19,7 +15,6 @@ from .const import (
     DOMAIN,
     SENSOR_ENTITY_LIST,
     SIGNAL_UPDATE_INCIDENTS,
-    WSS_BWRURL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +24,8 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up FireServiceRota sensor based on a config entry."""
-    incidents_data = IncidentsDataProvider(hass, entry)
+    data = hass.data[DOMAIN][entry.entry_id]
+    entry_id = entry.entry_id
     unique_id = entry.unique_id
 
     entities = []
@@ -49,7 +45,8 @@ async def async_setup_entry(
         )
         entities.append(
             IncidentsSensor(
-                incidents_data,
+                data,
+                entry_id,
                 unique_id,
                 sensor_type,
                 name,
@@ -63,63 +60,13 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class IncidentsDataProvider:
-    """Open a websocket connection to FireServiceRota to get incidents data."""
-
-    def __init__(self, hass, entry):
-        """Initialize the data object."""
-        self._hass = hass
-        self._entry = entry
-
-        self._token_info = self._entry.data[CONF_TOKEN]
-        self._wsurl = WSS_BWRURL.format(
-            self._entry.data[CONF_URL], self._token_info["access_token"]
-        )
-        self._data = None
-
-        self._listener = None
-        self._thread = threading.Thread(target=self.incidents_listener)
-        self._thread.daemon = True
-        self._thread.start()
-
-    def on_incident(self, data):
-        """Update the current data."""
-        _LOGGER.debug("Got data from listener: %s", data)
-        self._data = data
-        self._hass.data[DOMAIN].set_incident_data(data)
-
-        async_dispatcher_send(self._hass, SIGNAL_UPDATE_INCIDENTS)
-
-    @property
-    def data(self):
-        """Return the current data."""
-        return self._data
-
-    def on_close(self):
-        """Log websocket close and restart listener."""
-        _LOGGER.debug("Websocket closed")
-
-    def incidents_listener(self):
-        """(re)start a websocket listener."""
-        while True:
-            try:
-                _LOGGER.debug("Starting incidents listener forever")
-                self._listener = FireServiceRotaIncidents(
-                    url=self._wsurl,
-                    on_incident=self.on_incident,
-                    on_close=self.on_close,
-                )
-                self._listener.run_forever()
-            except ConnectionAbortedError:
-                pass
-
-
 class IncidentsSensor(RestoreEntity):
     """Representation of FireServiceRota incidents sensor."""
 
     def __init__(
         self,
         data,
+        entry_id,
         unique_id,
         sensor_type,
         name,
@@ -130,6 +77,7 @@ class IncidentsSensor(RestoreEntity):
     ):
         """Initialize."""
         self._data = data
+        self._entry_id = entry_id
         self._unique_id = unique_id
         self._type = sensor_type
         self._name = name
@@ -244,9 +192,11 @@ class IncidentsSensor(RestoreEntity):
             self._state = state.state
             self._state_attributes = state.attributes
 
+        self.async_on_remove(self._data.stop_listener)
+
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, SIGNAL_UPDATE_INCIDENTS, self.async_on_demand_update
+                self.hass, f"{SIGNAL_UPDATE_INCIDENTS}-{self._entry_id}", self.async_on_demand_update
             )
         )
 
@@ -256,7 +206,7 @@ class IncidentsSensor(RestoreEntity):
         return False
 
     async def async_on_demand_update(self):
-        """Update state."""
+        """Update state on demand."""
         self.async_schedule_update_ha_state(True)
 
     async def async_update(self):
@@ -265,9 +215,9 @@ class IncidentsSensor(RestoreEntity):
             return
 
         try:
-            self._state = self._data.data["body"]
-            self._state_attributes = self._data.data
+            self._state = self._data.incident_data["body"]
+            self._state_attributes = self._data.incident_data
         except (KeyError, TypeError):
             pass
 
-        _LOGGER.debug("Entity state changed to: %s", self._state)
+        _LOGGER.debug("Entity '%s' state set to: %s", self._name, self._state)

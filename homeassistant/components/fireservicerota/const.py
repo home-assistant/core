@@ -1,7 +1,6 @@
 """Constants for the FireServiceRota integration."""
 
 DOMAIN = "fireservicerota"
-PLATFORMS = ["sensor", "binary_sensor", "switch"]
 
 SENSOR_ENTITY_LIST = {
     "incidents": ["Incidents", "", "mdi:fire-truck", None, True],

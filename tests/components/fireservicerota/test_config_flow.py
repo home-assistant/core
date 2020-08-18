@@ -18,14 +18,14 @@ MOCK_CONF = {
 }
 
 
-@pytest.fixture(name="mock_fireservicerota")
-def mock_fireservicerota():
-    """Mock FireServiceRota."""
-    with patch(
-        "homeassistant.components.fireservicerota.config_flow.FireServiceRota",
-    ) as fireservice:
-        fireservice.return_value.get_full_name.return_value = MOCK_CONF[CONF_ID]
-        yield fireservice.return_value
+# @pytest.fixture(name="mock_fireservicerota")
+# def mock_fireservicerota():
+#     """Mock FireServiceRota."""
+#     with patch(
+#         "homeassistant.components.fireservicerota.config_flow.FireServiceRota",
+#     ) as fireservice:
+#         fireservice.return_value.get_full_name.return_value = MOCK_CONF[CONF_ID]
+#         yield fireservice.return_value
 
 
 async def test_show_form(hass):

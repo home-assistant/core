@@ -17,7 +17,8 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up FireServiceRota switch based on a config entry."""
-    data = hass.data[DOMAIN]
+    data = hass.data[DOMAIN][entry.entry_id]
+    entry_id = entry.entry_id
     unique_id = entry.unique_id
 
     entities = []
@@ -38,6 +39,7 @@ async def async_setup_entry(
         entities.append(
             ResponseSwitch(
                 data,
+                entry_id,
                 unique_id,
                 sensor_type,
                 name,
@@ -57,6 +59,7 @@ class ResponseSwitch(SwitchEntity):
     def __init__(
         self,
         data,
+        entry_id,
         unique_id,
         sensor_type,
         name,
@@ -67,6 +70,7 @@ class ResponseSwitch(SwitchEntity):
     ):
         """Initialize."""
         self._data = data
+        self._entry_id = entry_id
         self._unique_id = unique_id
         self._type = sensor_type
         self._name = name
@@ -155,7 +159,7 @@ class ResponseSwitch(SwitchEntity):
         """Register update callback."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, SIGNAL_UPDATE_INCIDENTS, self.async_on_demand_update
+                self.hass, f"{SIGNAL_UPDATE_INCIDENTS}-{self._entry_id}", self.async_on_demand_update
             )
         )
 
@@ -184,4 +188,4 @@ class ResponseSwitch(SwitchEntity):
             except (KeyError, TypeError):
                 pass
 
-        _LOGGER.debug("Entity %s state changed to: %s", self._name, self._state)
+        _LOGGER.debug("Entity '%s' state set to: %s", self._name, self._state)
