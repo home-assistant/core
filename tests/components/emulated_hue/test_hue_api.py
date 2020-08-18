@@ -467,6 +467,24 @@ async def test_discover_config(hue_client):
     assert "linkbutton" in config_json
     assert config_json["linkbutton"] is True
 
+    # Test without username
+    result = await hue_client.get("/api/config")
+
+    assert result.status == 200
+    assert "application/json" in result.headers["content-type"]
+
+    config_json = await result.json()
+    assert "error" not in config_json
+
+    # Test with wrong username username
+    result = await hue_client.get("/api/wronguser/config")
+
+    assert result.status == 200
+    assert "application/json" in result.headers["content-type"]
+
+    config_json = await result.json()
+    assert "error" not in config_json
+
 
 async def test_get_light_state(hass_hue, hue_client):
     """Test the getting of light state."""
@@ -1177,7 +1195,6 @@ async def test_unauthorized_user_blocked(hue_client):
     """Test unauthorized_user blocked."""
     getUrls = [
         "/api/wronguser",
-        "/api/wronguser/config",
     ]
     for getUrl in getUrls:
         result = await hue_client.get(getUrl)
