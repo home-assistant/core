@@ -27,6 +27,7 @@ from .helpers import format_mac
 class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Broadlink config flow."""
 
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
     VERSION = 1
 
     def __init__(self):
