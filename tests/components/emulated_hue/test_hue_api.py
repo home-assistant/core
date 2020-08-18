@@ -466,18 +466,18 @@ async def test_discover_config(hue_client):
     # Make sure the device announces a link button
     assert "linkbutton" in config_json
     assert config_json["linkbutton"] is True
-    
+
     # Test without username
-    result = await hue_client.get(f"/api/config")
+    result = await hue_client.get("/api/config")
 
     assert result.status == 200
     assert "application/json" in result.headers["content-type"]
 
     config_json = await result.json()
     assert "error" not in config_json
-    
+
     # Test with wrong username username
-    result = await hue_client.get(f"/api/wronguser/config")
+    result = await hue_client.get("/api/wronguser/config")
 
     assert result.status == 200
     assert "application/json" in result.headers["content-type"]
