@@ -48,31 +48,31 @@ def mock_connection(
     aioclient_mock.get(BASE_URL)
 
     auth_endpoint = f"{BASE_ENDPOINT}{AUTH_ENDPOINT}"
-    if auth_fail:
+    if not auth_fail and not auth_timeout:
+        aioclient_mock.post(
+            auth_endpoint, json={"token": "token123"},
+        )
+    elif auth_fail:
         aioclient_mock.post(
             auth_endpoint,
             status=400,
             json={"errormessage": "ERR-USR-INVALIDPASSWORDERROR"},
         )
-    elif auth_timeout:
+    else:  # auth_timeout
         aioclient_mock.post(auth_endpoint, exc=asyncio.TimeoutError)
-    else:
-        aioclient_mock.post(
-            auth_endpoint, json={"token": "token123"},
-        )
 
     aioclient_mock.post(
         f"{BASE_ENDPOINT}{METER_ENDPOINT}", json=load_smt_fixture("meter"),
     )
     aioclient_mock.post(f"{BASE_ENDPOINT}{OD_READ_ENDPOINT}", json={"data": None})
-    if bad_reading:
-        aioclient_mock.post(
-            f"{BASE_ENDPOINT}{LATEST_OD_READ_ENDPOINT}", json={},
-        )
-    else:
+    if not bad_reading:
         aioclient_mock.post(
             f"{BASE_ENDPOINT}{LATEST_OD_READ_ENDPOINT}",
             json=load_smt_fixture("latestodrread"),
+        )
+    else:
+        aioclient_mock.post(
+            f"{BASE_ENDPOINT}{LATEST_OD_READ_ENDPOINT}", json={},
         )
 
 
