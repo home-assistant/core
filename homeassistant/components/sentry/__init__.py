@@ -1,5 +1,4 @@
 """The sentry integration."""
-import logging
 import re
 
 import sentry_sdk
@@ -13,7 +12,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.loader import async_get_custom_components
 
-from .const import CONF_DSN, CONF_ENVIRONMENT, DOMAIN, ENTITY_COMPONENTS
+from .const import (
+    CONF_DSN,
+    CONF_ENVIRONMENT,
+    CONF_EVENT_CUSTOM_COMPONENTS,
+    CONF_EVENT_HANDLED,
+    CONF_EVENT_THIRD_PARTY_PACKAGES,
+    CONF_LOGGING_EVENT_LEVEL,
+    CONF_LOGGING_LEVEL,
+    DEFAULT_LOGGING_EVENT_LEVEL,
+    DEFAULT_LOGGING_LEVEL,
+    DOMAIN,
+    ENTITY_COMPONENTS,
+)
 
 CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.117")
 
@@ -29,10 +40,23 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Sentry from a config entry."""
 
+    # Migrate environment from config entry data to config entry options
+    if (
+        CONF_ENVIRONMENT not in entry.options
+        and CONF_ENVIRONMENT in entry.data
+        and entry.data[CONF_ENVIRONMENT]
+    ):
+        options = {**entry.options, CONF_ENVIRONMENT: entry.data[CONF_ENVIRONMENT]}
+        data = entry.data.copy()
+        data.pop(CONF_ENVIRONMENT)
+        hass.config_entries.async_update_entry(entry, data=data, options=options)
+
     # https://docs.sentry.io/platforms/python/logging/
     sentry_logging = LoggingIntegration(
-        level=logging.WARNING,  # Capture warning and above as breadcrumbs
-        event_level=logging.ERROR,  # Send errors as events
+        level=entry.options.get(CONF_LOGGING_LEVEL, DEFAULT_LOGGING_LEVEL),
+        event_level=entry.options.get(
+            CONF_LOGGING_EVENT_LEVEL, DEFAULT_LOGGING_EVENT_LEVEL
+        ),
     )
 
     # Additional/extra data collection
@@ -42,12 +66,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     custom_components = await async_get_custom_components(hass)
 
     sentry_sdk.init(
-        dsn=entry.data.get(CONF_DSN),
-        environment=entry.data.get(CONF_ENVIRONMENT),
+        dsn=entry.data[CONF_DSN],
+        environment=entry.options.get(CONF_ENVIRONMENT),
         integrations=[sentry_logging, AioHttpIntegration(), SqlalchemyIntegration()],
         release=current_version,
         before_send=lambda event, hint: process_before_send(
-            hass, channel, huuid, system_info, custom_components, event, hint
+            hass,
+            entry.options,
+            channel,
+            huuid,
+            system_info,
+            custom_components,
+            event,
+            hint,
         ),
     )
 
@@ -66,12 +97,15 @@ def get_channel(version) -> str:
 
 
 def process_before_send(
-    hass, channel, huuid, system_info, custom_components, event, hint
+    hass, options, channel, huuid, system_info, custom_components, event, hint
 ):
     """Process a Sentry event before sending it to Sentry."""
-
     # Filter out handled events by default
-    if "tags" in event and event.tags.get("handled", "no") == "yes":
+    if (
+        "tags" in event
+        and event.tags.get("handled", "no") == "yes"
+        and not options.get(CONF_EVENT_HANDLED)
+    ):
         return None
 
     # Additional tags to add to the event
@@ -114,6 +148,8 @@ def process_before_send(
                     additional_tags[group2] = group3
             else:
                 # Not the "homeassistant" package, this third-party
+                if not options.get(CONF_EVENT_THIRD_PARTY_PACKAGES):
+                    return None
                 additional_tags["package"] = group1
 
     # If this event is caused by an integration, add a tag if this
@@ -122,6 +158,8 @@ def process_before_send(
         "integration" in additional_tags
         and additional_tags["integration"] in custom_components
     ):
+        if not options.get(CONF_EVENT_CUSTOM_COMPONENTS):
+            return None
         additional_tags["custom_component"] = "yes"
 
     # Update event with the additional tags

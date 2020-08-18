@@ -1,9 +1,27 @@
 """Constants for the sentry integration."""
 
+import logging
+
 DOMAIN = "sentry"
 
 CONF_DSN = "dsn"
 CONF_ENVIRONMENT = "environment"
+CONF_EVENT_CUSTOM_COMPONENTS = "event_custom_components"
+CONF_EVENT_HANDLED = "event_handled"
+CONF_EVENT_THIRD_PARTY_PACKAGES = "event_third_party_packages"
+CONF_LOGGING_EVENT_LEVEL = "logging_event_level"
+CONF_LOGGING_LEVEL = "logging_level"
+
+DEFAULT_LOGGING_EVENT_LEVEL = logging.ERROR
+DEFAULT_LOGGING_LEVEL = logging.WARNING
+
+LOGGING_LEVELS = {
+    logging.DEBUG: "debug",
+    logging.INFO: "info",
+    logging.WARNING: "warning",
+    logging.ERROR: "error",
+    logging.CRITICAL: "critical",
+}
 
 ENTITY_COMPONENTS = [
     "air_quality",
