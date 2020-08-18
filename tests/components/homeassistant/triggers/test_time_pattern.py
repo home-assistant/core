@@ -1,8 +1,10 @@
 """The tests for the time_pattern automation."""
 from asynctest.mock import patch
 import pytest
+import voluptuous as vol
 
 import homeassistant.components.automation as automation
+import homeassistant.components.homeassistant.triggers.time_pattern as time_pattern
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -294,3 +296,20 @@ async def test_default_values(hass, calls):
 
     await hass.async_block_till_done()
     assert len(calls) == 2
+
+
+async def test_invalid_schemas(hass, calls):
+    """Test invalid schemas."""
+    schemas = (
+        None,
+        {},
+        {"platform": "time_pattern"},
+        {"platform": "time_pattern", "minutes": "/"},
+        {"platform": "time_pattern", "minutes": "*/5"},
+        {"platform": "time_pattern", "minutes": "/90"},
+        {"platform": "time_pattern", "hours": 12, "minutes": 0, "seconds": 100},
+    )
+
+    for value in schemas:
+        with pytest.raises(vol.Invalid):
+            time_pattern.TRIGGER_SCHEMA(value)
