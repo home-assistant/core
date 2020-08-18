@@ -59,12 +59,6 @@ async def async_setup_entry(
 class WiLightLightOnOff(WiLightDevice, LightEntity):
     """Representation of a WiLights light on-off."""
 
-    def __init__(self, *args, **kwargs):
-        """Initialize the device."""
-        WiLightDevice.__init__(self, *args, **kwargs)
-        # Initialize the WiLights onoff.
-        self._on = False
-
     @property
     def supported_features(self):
         """Flag supported features."""
