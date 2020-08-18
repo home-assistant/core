@@ -978,9 +978,7 @@ async def websocket_browse_media(hass, connection, msg):
     player = component.get_entity(msg["entity_id"])
 
     if player is None:
-        connection.send_error(
-            msg["id"], "entity_not_found", "Entity not found"
-        )
+        connection.send_error(msg["id"], "entity_not_found", "Entity not found")
         return
 
     if not player.supported_features & SUPPORT_BROWSE_MEDIA:
@@ -997,6 +995,11 @@ async def websocket_browse_media(hass, connection, msg):
     try:
         payload = await player.async_browse_media(media_content_type, media_content_id)
     except NotImplementedError:
+        _LOGGER.error(
+            "%s allows media browsing but its integration (%s) does not",
+            player.entity_id,
+            player.platform.platform_name,
+        )
         connection.send_message(
             websocket_api.error_message(
                 msg["id"],
