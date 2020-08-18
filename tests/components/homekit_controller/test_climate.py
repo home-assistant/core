@@ -1,12 +1,12 @@
 """Basic checks for HomeKitclimate."""
-from aiohomekit.model.characteristics import CharacteristicsTypes
-from aiohomekit.model.services import ServicesTypes
 from aiohomekit.model.characteristics import (
-    TargetHeaterCoolerStateValues,
     ActivationStateValues,
-    SwingModeValues,
+    CharacteristicsTypes,
     CurrentHeaterCoolerStateValues,
+    SwingModeValues,
+    TargetHeaterCoolerStateValues,
 )
+from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.climate.const import (
     DOMAIN,
@@ -17,8 +17,8 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_TEMPERATURE,
     SERVICE_SET_SWING_MODE,
+    SERVICE_SET_TEMPERATURE,
 )
 
 from tests.components.homekit_controller.common import setup_test_component
@@ -360,7 +360,7 @@ async def test_heater_cooler_change_thermostat_state(hass, utcnow):
 
 
 async def test_heater_cooler_change_thermostat_temperature(hass, utcnow):
-    """Test that we can change the target temperature"""
+    """Test that we can change the target temperature."""
     helper = await setup_test_component(hass, create_heater_cooler_service)
 
     await hass.services.async_call(
@@ -476,7 +476,7 @@ async def test_heater_cooler_hvac_mode_vs_hvac_action(hass, utcnow):
 
 
 async def test_heater_cooler_change_swing_mode(hass, utcnow):
-    """Test that we can change the swing mode"""
+    """Test that we can change the swing mode."""
     helper = await setup_test_component(hass, create_heater_cooler_service)
 
     await hass.services.async_call(

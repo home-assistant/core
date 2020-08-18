@@ -2,12 +2,12 @@
 import logging
 
 from aiohomekit.model.characteristics import (
+    ActivationStateValues,
     CharacteristicsTypes,
+    CurrentHeaterCoolerStateValues,
     HeatingCoolingCurrentValues,
     HeatingCoolingTargetValues,
-    ActivationStateValues,
     SwingModeValues,
-    CurrentHeaterCoolerStateValues,
     TargetHeaterCoolerStateValues,
 )
 from aiohomekit.utils import clamp_enum_to_char
@@ -18,20 +18,20 @@ from homeassistant.components.climate import (
     ClimateEntity,
 )
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_OFF,
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    SWING_OFF,
-    SWING_VERTICAL,
+    SUPPORT_SWING_MODE,
     SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_SWING_MODE,
+    SWING_OFF,
+    SWING_VERTICAL,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import callback
