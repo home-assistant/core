@@ -276,7 +276,7 @@ async def test_option_manual(hass: HomeAssistant):
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == "form"
-    assert result["step_id"] == "init"
+    assert result["step_id"] == "options"
 
     config[CONF_NIGHTLIGHT_SWITCH] = True
     with patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
