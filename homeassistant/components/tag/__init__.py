@@ -13,15 +13,13 @@ from homeassistant.helpers.storage import Store
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
+from .const import DEVICE_ID, DOMAIN, EVENT_TAG_SCANNED, TAG_ID
 
 _LOGGER = logging.getLogger(__name__)
-DEVICE_ID = "device_id"
-EVENT_TAG_SCANNED = "tag_scanned"
+
 LAST_SCANNED = "last_scanned"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-TAG_ID = "tag_id"
 TAGS = "tags"
 
 CREATE_FIELDS = {

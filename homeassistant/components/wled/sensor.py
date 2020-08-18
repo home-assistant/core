@@ -1,7 +1,7 @@
 """Support for WLED sensors."""
 from datetime import timedelta
 import logging
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional
 
 from homeassistant.components.sensor import DEVICE_CLASS_CURRENT
 from homeassistant.config_entries import ConfigEntry
@@ -102,7 +102,7 @@ class WLEDEstimatedCurrentSensor(WLEDSensor):
         }
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> int:
         """Return the state of the sensor."""
         return self.coordinator.data.info.leds.power
 
@@ -127,7 +127,7 @@ class WLEDUptimeSensor(WLEDSensor):
         )
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> str:
         """Return the state of the sensor."""
         uptime = utcnow() - timedelta(seconds=self.coordinator.data.info.uptime)
         return uptime.replace(microsecond=0).isoformat()
@@ -154,7 +154,7 @@ class WLEDFreeHeapSensor(WLEDSensor):
         )
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> int:
         """Return the state of the sensor."""
         return self.coordinator.data.info.free_heap
 
@@ -175,7 +175,7 @@ class WLEDWifiSignalSensor(WLEDSensor):
         )
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> int:
         """Return the state of the sensor."""
         return self.coordinator.data.info.wifi.signal
 
@@ -196,7 +196,7 @@ class WLEDWifiRSSISensor(WLEDSensor):
         )
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> int:
         """Return the state of the sensor."""
         return self.coordinator.data.info.wifi.rssi
 
@@ -221,7 +221,7 @@ class WLEDWifiChannelSensor(WLEDSensor):
         )
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> int:
         """Return the state of the sensor."""
         return self.coordinator.data.info.wifi.channel
 
@@ -241,6 +241,6 @@ class WLEDWifiBSSIDSensor(WLEDSensor):
         )
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> str:
         """Return the state of the sensor."""
         return self.coordinator.data.info.wifi.bssid

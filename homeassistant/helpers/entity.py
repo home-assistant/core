@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import functools as ft
 import logging
 from timeit import default_timer as timer
-from typing import Any, Awaitable, Dict, Iterable, List, Optional, Union
+from typing import Any, Awaitable, Dict, Iterable, List, Optional
 
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
@@ -29,6 +29,7 @@ from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.event import Event, async_track_entity_registry_updated_event
+from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -127,7 +128,7 @@ class Entity(ABC):
         return None
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> StateType:
         """Return the state of the entity."""
         return STATE_UNKNOWN
 
