@@ -151,27 +151,20 @@ class WiLightLightColor(WiLightDevice, LightEntity):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        if "brightness" in self._status:
-            self._brightness = int(self._status["brightness"])
-        return self._brightness
+        return int(self._status.get("brightness", 0))
 
     @property
     def hs_color(self):
         """Return the hue and saturation color value [float, float]."""
-        if "hue" in self._status:
-            self._hue = wilight_to_hass_hue(int(self._status["hue"]))
-        if "saturation" in self._status:
-            self._saturation = wilight_to_hass_saturation(
-                int(self._status["saturation"])
-            )
-        return [self._hue, self._saturation]
+        return [
+            wilight_to_hass_hue(int(self._status.get("hue", 0))),
+            wilight_to_hass_saturation(int(self._status.get("saturation", 0))),
+        ]
 
     @property
     def is_on(self):
         """Return true if device is on."""
-        if "on" in self._status:
-            self._on = self._status["on"]
-        return self._on
+        return self._status.get("on")
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on,set brightness if needed."""
