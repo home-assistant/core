@@ -40,14 +40,8 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
         self._device_id = f"WL{serial_number}"
         self._model_name = model_name
         self._components = pywilight.get_components_from_model(model_name)
-        text = ""
-        for component in self._components:
-            if text == "":
-                text = component
-            else:
-                text = ", ".join((text, component))
-        self._components_text = text
-        return text != ""
+        self._components_text = ", ".join(self._components)
+        return self._components_text != ""
 
     def _get_entry(self):
         data = {
