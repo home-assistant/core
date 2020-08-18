@@ -57,8 +57,6 @@ async def test_if_fires_using_at(hass, calls):
         )
         await hass.async_block_till_done()
 
-    now = dt_util.utcnow()
-
     async_fire_time_changed(
         hass, now.replace(hour=5, minute=0, second=0) + timedelta(2)
     )
@@ -173,8 +171,6 @@ async def test_if_fires_using_multiple_at(hass, calls):
             },
         )
         await hass.async_block_till_done()
-
-    now = dt_util.utcnow()
 
     async_fire_time_changed(
         hass, now.replace(hour=5, minute=0, second=0) + timedelta(2)

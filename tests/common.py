@@ -67,10 +67,6 @@ INSTANCES = []
 CLIENT_ID = "https://example.com/app"
 CLIENT_REDIRECT_URI = "https://example.com/app/callback"
 
-# There will always be some drift between
-# fetching hass.loop.time and time.time
-MAX_TIME_BETWEEN_LOOP_TIME_AND_TIME = 0.1
-
 
 def threadsafe_callback_factory(func):
     """Create threadsafe functions out of callbacks.
@@ -302,11 +298,7 @@ def async_fire_time_changed(hass, datetime_, fire_all=False):
         mock_seconds_into_future = datetime_.timestamp() - time.time()
         future_seconds = task.when() - hass.loop.time()
 
-        if (
-            fire_all
-            or mock_seconds_into_future - future_seconds
-            >= -MAX_TIME_BETWEEN_LOOP_TIME_AND_TIME
-        ):
+        if fire_all or mock_seconds_into_future >= future_seconds:
             with patch(
                 "homeassistant.helpers.event.pattern_utc_now",
                 return_value=date_util.as_utc(datetime_),
