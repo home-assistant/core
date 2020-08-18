@@ -522,10 +522,10 @@ def template_complex(value: Any) -> Any:
             return_list[idx] = template_complex(element)
         return return_list
     if isinstance(value, dict):
-        return_dict = value.copy()
-        for key, element in return_dict.items():
-            return_dict[key] = template_complex(element)
-        return return_dict
+        return {
+            template_complex(key): template_complex(element)
+            for key, element in value.items()
+        }
     if isinstance(value, str):
         return template(value)
     return value
