@@ -89,9 +89,7 @@ class WiLightLightDimmer(WiLightDevice, LightEntity):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        if "brightness" in self._status:
-            self._brightness = int(self._status["brightness"])
-        return self._brightness
+        return int(self._status.get("brightness", 0))
 
     @property
     def is_on(self):
