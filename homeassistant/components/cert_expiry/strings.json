@@ -29,6 +29,9 @@
           "ca_cert": "Path of CA certificate"
         }
       }
+    },
+    "error": {
+      "ca_cert_not_accessible": "The CA certificate could not be found"
     }
   }
 }

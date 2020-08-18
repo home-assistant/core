@@ -285,9 +285,10 @@ async def test_options_flow_handler(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_CA_CERT: CA_CERT}
-    )
+    with patch("os.path.isfile", return_value=True):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_CA_CERT: CA_CERT}
+        )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
@@ -298,7 +299,7 @@ async def test_options_flow_handler(hass):
 
 
 async def test_options_flow_handler_remove_custom_ca(hass):
-    """Test options handler."""
+    """Test options handler with resetting the ca file."""
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -312,9 +313,34 @@ async def test_options_flow_handler_remove_custom_ca(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_CA_CERT: ""}
-    )
+    with patch("os.path.isfile", return_value=True):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_CA_CERT: ""}
+        )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {CONF_HOST: HOST, CONF_PORT: PORT}
+
+
+async def test_options_flow_handler_invalid_file(hass):
+    """Test options handler with a not existing file."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={CONF_HOST: HOST, CONF_PORT: PORT},
+        unique_id=f"{HOST}:{PORT}",
+        title=HOST,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    with patch("os.path.isfile", return_value=False):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_CA_CERT: CA_CERT}
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {CONF_CA_CERT: "ca_cert_not_accessible"}

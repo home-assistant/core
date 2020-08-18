@@ -1,5 +1,6 @@
 """Config flow for the Cert Expiry platform."""
 import logging
+from os import path
 
 import voluptuous as vol
 
@@ -109,17 +110,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         """Initialize options flow."""
         self.config_entry = config_entry
+        self._errors = {}
 
     async def async_step_init(self, user_input=None):
         """Manage cert_expiry options."""
         if user_input is not None:
             ca_cert = user_input.get(CONF_CA_CERT, "")
-            data = self.config_entry.options.copy()
-            if ca_cert != "":
-                data[CONF_CA_CERT] = ca_cert
-            else:
-                data.pop(CONF_CA_CERT, None)
-            return self.async_create_entry(title="", data=data)
+            if await self._test_ca_cert(ca_cert):
+                data = self.config_entry.options.copy()
+                if ca_cert != "":
+                    data[CONF_CA_CERT] = ca_cert
+                else:
+                    data.pop(CONF_CA_CERT, None)
+                return self.async_create_entry(title="", data=data)
 
         return self.async_show_form(
             step_id="init",
@@ -131,4 +134,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     ): str
                 }
             ),
+            errors=self._errors,
         )
+
+    async def _test_ca_cert(self, ca_cert):
+        """Check the ca file exists."""
+
+        accessible = path.isfile(ca_cert)
+        if not accessible:
+            self._errors[CONF_CA_CERT] = "ca_cert_not_accessible"
+        return accessible
