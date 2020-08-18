@@ -1,9 +1,13 @@
 """The tests for the Jewish calendar sensors."""
+from collections import defaultdict
 from datetime import datetime as dt, timedelta
 
 import pytest
 
 from homeassistant.components import jewish_calendar
+from homeassistant.components.jewish_calendar.binary_sensor import (
+    JewishCalendarBinarySensor,
+)
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -612,3 +616,12 @@ async def test_dafyomi_sensor(hass, legacy_patchable_time, test_time, result):
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.test_daf_yomi").state == result
+
+
+def test_unique_id():
+    """Test sensor unique id."""
+    sensor = "test_sensor"
+    data = defaultdict(str)
+    data["prefix"] = "jcal_ffffff"
+    entity = JewishCalendarBinarySensor(data, sensor, [None, "foobar"])
+    assert entity.unique_id == "jcal_ffffff_test_sensor"

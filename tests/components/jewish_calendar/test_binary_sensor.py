@@ -1,9 +1,13 @@
 """The tests for the Jewish calendar binary sensors."""
+from collections import defaultdict
 from datetime import datetime as dt, timedelta
 
 import pytest
 
 from homeassistant.components import jewish_calendar
+from homeassistant.components.jewish_calendar.binary_sensor import (
+    JewishCalendarBinarySensor,
+)
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -103,3 +107,12 @@ async def test_issur_melacha_sensor(
             hass.states.get("binary_sensor.test_issur_melacha_in_effect").state
             == result
         )
+
+
+def test_unique_id():
+    """Test binary sensor unique id."""
+    sensor = "test_sensor"
+    data = defaultdict(str)
+    data["prefix"] = "jcal_ffffff"
+    entity = JewishCalendarBinarySensor(data, sensor, [None, "foobar"])
+    assert entity.unique_id == "jcal_ffffff_test_sensor"
