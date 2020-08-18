@@ -80,12 +80,11 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
         if not self._self_update(host, serial_number, model_name):
             return self.async_abort(reason="not_wilight")
 
-        component_ok = False
-        for wilight_component in self._components:
-            for component in PLATFORMS:
-                if wilight_component == component:
-                    component_ok = True
-                    break
+        allowed_components = PLATFORMS
+        component_ok = any(
+            wilight_component in allowed_components
+            for wilight_component in self._components
+        )
 
         if not component_ok:
             return self.async_abort(reason="not_supported")
