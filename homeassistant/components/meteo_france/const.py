@@ -151,6 +151,7 @@ CONDITION_CLASSES = {
         "Pluies éparses / Rares averses",
         "Pluies éparses",
         "Rares averses",
+        "Pluie modérée",
         "Pluie / Averses",
         "Averses",
         "Pluie",
