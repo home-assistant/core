@@ -123,6 +123,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 
 async def _get_snapshot_auth(hass, device, entry):
+    if not (device.username and device.password):
+        return HTTP_DIGEST_AUTHENTICATION
+
     snapshot_uri = await device.async_get_snapshot_uri(device.profiles[0])
     auth = HTTPDigestAuth(device.username, device.password)
 
