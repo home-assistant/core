@@ -1,4 +1,4 @@
-"""The Media Manager integration."""
+"""The Picture integration."""
 import asyncio
 import logging
 import pathlib
@@ -7,7 +7,7 @@ import shutil
 import typing
 
 from PIL import Image
-from aiohttp import web
+from aiohttp import hdrs, web
 from aiohttp.web_request import FileField
 import voluptuous as vol
 
@@ -35,33 +35,33 @@ UPDATE_FIELDS = {
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Tag component."""
-    media_dir = pathlib.Path(hass.config.path(DOMAIN))
-    hass.data[DOMAIN] = storage_collection = MediaStorageCollection(hass, media_dir)
+    """Set up the Image integration."""
+    image_dir = pathlib.Path(hass.config.path(DOMAIN))
+    hass.data[DOMAIN] = storage_collection = ImageStorageCollection(hass, image_dir)
     await storage_collection.async_load()
     collection.StorageCollectionWebsocket(
-        storage_collection, DOMAIN, "media", CREATE_FIELDS, UPDATE_FIELDS,
+        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS,
     ).async_setup(hass, create_create=False)
 
     hass.http.register_view(ImageUploadView)
-    hass.http.register_view(ImageServeView(media_dir, storage_collection))
+    hass.http.register_view(ImageServeView(image_dir, storage_collection))
     return True
 
 
-class MediaStorageCollection(collection.StorageCollection):
-    """Media collection stored in storage."""
+class ImageStorageCollection(collection.StorageCollection):
+    """Image collection stored in storage."""
 
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
     UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
 
-    def __init__(self, hass: HomeAssistant, media_dir: pathlib.Path) -> None:
+    def __init__(self, hass: HomeAssistant, image_dir: pathlib.Path) -> None:
         """Initialize media storage collection."""
         super().__init__(
             Store(hass, STORAGE_VERSION, STORAGE_KEY),
             logging.getLogger(f"{__name__}.storage_collection"),
         )
         self.async_add_listener(self._change_listener)
-        self.media_dir = media_dir
+        self.image_dir = image_dir
 
     async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
         """Validate the config is valid."""
@@ -84,7 +84,7 @@ class MediaStorageCollection(collection.StorageCollection):
         """Move data."""
         uploaded_file: FileField = data.pop("file")
 
-        media_folder: pathlib.Path = (self.media_dir / data[CONF_ID])
+        media_folder: pathlib.Path = (self.image_dir / data[CONF_ID])
         media_folder.mkdir(parents=True)
 
         media_file = media_folder / "original"
@@ -113,19 +113,19 @@ class MediaStorageCollection(collection.StorageCollection):
         if change_type != collection.CHANGE_REMOVED:
             return
 
-        await self.hass.async_add_executor_job(shutil.rmtree, self.media_dir / item_id)
+        await self.hass.async_add_executor_job(shutil.rmtree, self.image_dir / item_id)
 
 
 class ImageUploadView(HomeAssistantView):
     """View to upload images."""
 
-    url = "/api/media_manager/upload"
-    name = "api:media_manager:upload"
+    url = "/api/image/upload"
+    name = "api:image:upload"
 
     async def post(self, request):
         """Handle upload."""
         # Increase max payload
-        request._client_max_size = 1024 * 1024 * 6  # pylint: disable=protected-access
+        request._client_max_size = 1024 * 1024 * 1  # pylint: disable=protected-access
 
         data = await request.post()
         item = await request.app["hass"].data[DOMAIN].async_create_item(data)
@@ -135,12 +135,12 @@ class ImageUploadView(HomeAssistantView):
 class ImageServeView(HomeAssistantView):
     """View to download images."""
 
-    url = "/api/media_manager/serve/{image_id}/{filename}"
-    name = "api:media_manager:serve"
+    url = "/api/image/serve/{image_id}/{filename}"
+    name = "api:image:serve"
     requires_auth = False
 
     def __init__(
-        self, image_folder: pathlib.Path, image_collection: MediaStorageCollection
+        self, image_folder: pathlib.Path, image_collection: ImageStorageCollection
     ):
         """Initialize image serve view."""
         self.transform_lock = asyncio.Lock()
@@ -180,7 +180,9 @@ class ImageServeView(HomeAssistantView):
                         (width, height),
                     )
 
-        return web.FileResponse(target_file)
+        return web.FileResponse(
+            target_file, headers={hdrs.CONTENT_TYPE: image_info["content_type"]}
+        )
 
 
 def _generate_thumbnail(original_path, content_type, target_path, target_size):

@@ -1,4 +1,4 @@
-"""Test that we can upload media."""
+"""Test that we can upload images."""
 import pathlib
 import tempfile
 
@@ -19,12 +19,12 @@ async def test_upload_image(hass, hass_client, hass_ws_client):
     with tempfile.TemporaryDirectory() as tempdir, patch.object(
         hass.config, "path", return_value=tempdir
     ), patch("homeassistant.util.dt.utcnow", return_value=now):
-        assert await async_setup_component(hass, "media_manager", {})
+        assert await async_setup_component(hass, "image", {})
         ws_client: ClientWebSocketResponse = await hass_ws_client()
         client: ClientSession = await hass_client()
 
         with test_image.open("rb") as fp:
-            res = await client.post("/api/media_manager/upload", data={"file": fp})
+            res = await client.post("/api/image/upload", data={"file": fp})
 
         assert res.status == 200
 
@@ -40,21 +40,21 @@ async def test_upload_image(hass, hass_client, hass_ws_client):
         assert (item_folder / "original").read_bytes() == test_image.read_bytes()
 
         # fetch non-existing image
-        res = await client.get("/api/media_manager/serve/non-existing/256x256")
+        res = await client.get("/api/image/serve/non-existing/256x256")
         assert res.status == 404
 
         # fetch invalid sizes
         for inv_size in ("256", "256x25A", "100x100", "25Ax256"):
-            res = await client.get(f"/api/media_manager/serve/{item['id']}/{inv_size}")
+            res = await client.get(f"/api/image/serve/{item['id']}/{inv_size}")
             assert res.status == 400
 
         # fetch resized version
-        res = await client.get(f"/api/media_manager/serve/{item['id']}/256x256")
+        res = await client.get(f"/api/image/serve/{item['id']}/256x256")
         assert res.status == 200
         assert (item_folder / "256x256").is_file()
 
         # List item
-        await ws_client.send_json({"id": 6, "type": "media_manager/list"})
+        await ws_client.send_json({"id": 6, "type": "image/list"})
         msg = await ws_client.receive_json()
 
         assert msg["id"] == 6
@@ -64,7 +64,7 @@ async def test_upload_image(hass, hass_client, hass_ws_client):
 
         # Delete item
         await ws_client.send_json(
-            {"id": 7, "type": "media_manager/delete", "media_id": item["id"]}
+            {"id": 7, "type": "image/delete", "image_id": item["id"]}
         )
         msg = await ws_client.receive_json()
 
